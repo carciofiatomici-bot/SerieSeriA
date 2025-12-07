@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const playerId = player.id;
 
-        // 1. RECUPERO: Se la forma è già stata calcolata e salvata, usala
+        // 1. RECUPERO: Se la forma Ã¨ giÃ  stata calcolata e salvata, usala
         if (formsMap.has(playerId)) {
             const savedForm = formsMap.get(playerId);
             return {
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /**
-     * Funzione principale per inizializzare il pannello squadra in modalità Rosa o Formazione.
+     * Funzione principale per inizializzare il pannello squadra in modalitÃ  Rosa o Formazione.
      */
     const initializeSquadraPanel = (event) => {
         if (!event.detail || !event.detail.teamId) {
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTeamId = event.detail.teamId;
         const mode = event.detail.mode;
         
-        // ** AGGIUNTO: Traccia la sotto-modalità per la persistenza **
+        // ** AGGIUNTO: Traccia la sotto-modalitÃ  per la persistenza **
         localStorage.setItem('fanta_squadra_mode', mode);
 
         // ** FIX PRINCIPALE: Ricarica forzata per ottenere playersFormStatus fresco da Firestore **
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  return;
              }
              
-             // Aggiorna il dato globale con la versione più fresca
+             // Aggiorna il dato globale con la versione piÃ¹ fresca
              window.InterfacciaCore.currentTeamData = teamDoc.data();
              currentTeamData = teamDoc.data();
              
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { doc, updateDoc } = firestoreTools;
         const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
         
-        // Usa il dato globale che è stato appena sincronizzato
+        // Usa il dato globale che Ã¨ stato appena sincronizzato
         let teamData = currentTeamData;
 
         try {
@@ -232,19 +232,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // salvato in currentTeamData (che verrebbe riletto in Rosa e mostrerebbe dati con forma).
             let playersForRendering = JSON.parse(JSON.stringify(teamData.players));
             
-            // --- LOGICA FORMA (MODALITÀ FORMAZIONE) ---
+            // --- LOGICA FORMA (MODALITÃ€ FORMAZIONE) ---
             if (mode === 'formazione') {
                 const persistedForms = new Map(Object.entries(teamData.playersFormStatus || {}));
                 const formsToSave = new Map(persistedForms); // Inizializza con i dati esistenti
                 
                 // 1. Applica le forme (esistenti o generate) ai giocatori
                 playersForRendering = playersForRendering.map(player => {
-                    // Nota: formsToSave è passato qui. Se applyFormForDisplay genera una nuova forma, la aggiunge a formsToSave.
+                    // Nota: formsToSave Ã¨ passato qui. Se applyFormForDisplay genera una nuova forma, la aggiunge a formsToSave.
                     const playerWithForm = applyFormForDisplay(player, formsToSave); 
                     return playerWithForm;
                 });
                 
-                // 2. Se formsToSave contiene nuovi dati (cioè la forma è stata generata per la prima volta), SALVALI in Firestore
+                // 2. Se formsToSave contiene nuovi dati (cioÃ¨ la forma Ã¨ stata generata per la prima volta), SALVALI in Firestore
                 if (formsToSave.size > persistedForms.size || Object.keys(teamData.playersFormStatus || {}).length === 0) {
                     const savedFormsObject = Object.fromEntries(formsToSave);
                     
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return playersForRendering.find(rp => rp.id === p.id) || p; 
                 });
                 
-                // Rimuovi giocatori che non sono più in rosa (es. licenziati)
+                // Rimuovi giocatori che non sono piÃ¹ in rosa (es. licenziati)
                 const validPlayersInFormation = (list) => list.filter(p => playersForRendering.some(rp => rp.id === p.id));
                 
                 // Aggiorna la struttura della formazione con gli oggetti giocatore che includono la forma
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- FINE LOGICA FORMA ---
             
             // Imposta i dati globali e renderizza
-            // currentTeamData = teamData; // Non necessario riassegnare currentTeamData qui se è già aggiornato in FormFirestore
+            // currentTeamData = teamData; // Non necessario riassegnare currentTeamData qui se Ã¨ giÃ  aggiornato in FormFirestore
             
             if (mode === 'rosa' || mode === 'icona-swap') {
                 renderRosaManagement(teamData);
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // -------------------------------------------------------------------
-    // MODALITÀ GESTIONE ROSA (CON ORDINAMENTO e ASSEGNAZIONE CAPITANO)
+    // MODALITÃ€ GESTIONE ROSA (CON ORDINAMENTO e ASSEGNAZIONE CAPITANO)
     // -------------------------------------------------------------------
     
     const renderRosaManagement = (teamData) => {
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  return roleComparison;
             }
             
-            // 3. Livello (dal più alto al più basso)
+            // 3. Livello (dal piÃ¹ alto al piÃ¹ basso)
             return b.level - a.level;
         });
         // --- FINE LOGICA DI ORDINAMENTO ---
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Calcoliamo il rimborso solo per i giocatori che hanno avuto un costo > 0
                             const refundCost = player.cost > 0 ? Math.floor(player.cost / 2) : 0;
                             const isCaptain = player.isCaptain; // Usa il flag isCaptain
-                            const isIcona = player.abilities && player.abilities.includes('Icona'); // Controlla l'abilità Icona
+                            const isIcona = player.abilities && player.abilities.includes('Icona'); // Controlla l'abilitÃ  Icona
                             const captainMarker = isCaptain ? ' (CAPITANO)' : '';
                             
                             // Visualizzazione Icona e Avatar
@@ -364,11 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             const typeData = TYPE_ICONS[playerType] || TYPE_ICONS['N/A'];
                             const typeIconHtml = `<i class="${typeData.icon} ${typeData.color} text-lg ml-2" title="Tipo: ${playerType}"></i>`;
                             
-                            // Lista Abilità
+                            // Lista AbilitÃ 
                             const playerAbilities = (player.abilities || []).filter(a => a !== 'Icona'); // Filtra Icona
                             const abilitiesHtml = playerAbilities.length > 0 
-                                ? `<p class="text-xs text-indigo-300 mt-1">Abilità: ${playerAbilities.join(', ')}</p>`
-                                : `<p class="text-xs text-gray-500 mt-1">Abilità: Nessuna</p>`;
+                                ? `<p class="text-xs text-indigo-300 mt-1">AbilitÃ : ${playerAbilities.join(', ')}</p>`
+                                : `<p class="text-xs text-gray-500 mt-1">AbilitÃ : Nessuna</p>`;
 
                             
                             // Pulsante Capitano
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </button>`;
 
                             // Bottone Licenziamento
-                            const isLicenziabile = !isIcona; // L'Icona non è licenziabile
+                            const isLicenziabile = !isIcona; // L'Icona non Ã¨ licenziabile
                             const licenziaButton = `
                                 <button data-player-id="${player.id}" 
                                         data-original-cost="${player.cost}"
@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span class="text-yellow-400">(${player.role})</span>
                                             ${typeIconHtml} 
                                             <p class="text-sm text-gray-400">Livello: ${player.level} | Acquistato per: ${player.cost} CS</p>
-                                            ${abilitiesHtml} <!-- VISUALIZZAZIONE ABILITÀ -->
+                                            ${abilitiesHtml} <!-- VISUALIZZAZIONE ABILITÃ€ -->
                                         </div>
                                     </div>
                                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto items-center">
@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTeamData.players = updatedPlayers; // Aggiorna la variabile locale
 
             
-            displayMessage(msgContainerId, `${newCaptainName} è il nuovo Capitano!`, 'success');
+            displayMessage(msgContainerId, `${newCaptainName} Ã¨ il nuovo Capitano!`, 'success');
             
             // ** FIX BUG NAVIGAZIONE **
             // Invece di lanciare l'evento Dashboard (che reindirizza), carichiamo la vista Rosa fresca
@@ -614,16 +614,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     cost: finalCost,
                     levelRange: finalLevelRange, 
                     abilities: finalAbilities,
-                    isDrafted: false, // Ora è disponibile
+                    isDrafted: false, // Ora Ã¨ disponibile
                     teamId: null,
                     creationDate: new Date().toISOString()
                 };
 
                 if (docExistsInMarket) {
-                    // Caso A: Il documento esisteva già nel Mercato -> usiamo setDoc con merge 
+                    // Caso A: Il documento esisteva giÃ  nel Mercato -> usiamo setDoc con merge 
                     await setDoc(marketDocRef, playerDocumentData, { merge: true });
                 } else {
-                    // Caso B: Il giocatore non era né nel Draft né nel Mercato (giocatore base) o era solo nel Draft.
+                    // Caso B: Il giocatore non era nÃ© nel Draft nÃ© nel Mercato (giocatore base) o era solo nel Draft.
                     // Usiamo setDoc sul Mercato per creare il documento con l'ID del giocatore licenziato.
                     await setDoc(marketDocRef, playerDocumentData);
                 }
@@ -665,11 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 1. Verifica Coerenza e Stato Campionato
         // Utilizza una funzione isSeasonOver globale fittizia per evitare errori,
-        // ma la logica vera sarà nel modulo campionato.js
+        // ma la logica vera sarÃ  nel modulo campionato.js
         if (window.isSeasonOver) {
              const isOver = await window.isSeasonOver();
              if (!isOver) {
-                 displayMessage(msgContainerId, "ERRORE: La sostituzione dell'Icona è consentita SOLO se il campionato è fermo (Pausa/Terminato).", 'error');
+                 displayMessage(msgContainerId, "ERRORE: La sostituzione dell'Icona Ã¨ consentita SOLO se il campionato Ã¨ fermo (Pausa/Terminato).", 'error');
                  return;
              }
         }
@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <button id="btn-cancel-replace"
                         class="w-full bg-gray-600 text-white font-extrabold py-2 rounded-lg transition duration-150">
-                    ← Annulla e Torna alla Gestione Rosa
+                    â† Annulla e Torna alla Gestione Rosa
                 </button>
             </div>
         `;
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
                          id: currentIcona.id, // Mantiene l'ID del vecchio slot Icona
                          isCaptain: p.isCaptain, // Mantiene il flag Capitano
                          level: newIcona.level, // Livello base 12
-                         abilities: ['Icona'] // Assicura che Icona sia l'unica abilità
+                         abilities: ['Icona'] // Assicura che Icona sia l'unica abilitÃ 
                      };
                  }
                  return p;
@@ -790,12 +790,12 @@ document.addEventListener('DOMContentLoaded', () => {
             await updateDoc(teamDocRef, {
                 budget: teamData.budget - cost,
                 players: updatedPlayers,
-                iconaId: currentIcona.id, // L'ID dell'icona rimane lo stesso (è l'ID del documento-giocatore)
+                iconaId: currentIcona.id, // L'ID dell'icona rimane lo stesso (Ã¨ l'ID del documento-giocatore)
                 // Resetta il cooldown per permettere altri acquisti dopo lo swap
                 lastAcquisitionTimestamp: new Date().getTime(), 
             });
 
-            displayMessage(`Icona scambiata! ${newIcona.name} è la nuova Icona. Ti sono stati scalati ${cost} CS.`, 'success', msgId);
+            displayMessage(`Icona scambiata! ${newIcona.name} Ã¨ la nuova Icona. Ti sono stati scalati ${cost} CS.`, 'success', msgId);
             
             // 3. Ricarica la vista Rosa
             setTimeout(() => {
@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // -------------------------------------------------------------------
-    // MODALITÀ GESTIONE FORMAZIONE (Drag & Drop Implementato)
+    // MODALITÃ€ GESTIONE FORMAZIONE (Drag & Drop Implementato)
     // -------------------------------------------------------------------
     
     const renderFormazioneManagement = (teamData) => {
@@ -872,10 +872,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .jersey-container { padding: 0.25rem; width: 96px; height: 96px; } 
                 
                 /* POSIZIONI RIBILANCIATE SUI 700PX DI ALTEZZA */
-                .field-position-P { position: absolute; top: 5%; width: 100%; } /* Più vicino alla porta (sopra) */
-                .field-position-D { position: absolute; top: 30%; width: 100%; } /* Più in alto del centro */
+                .field-position-P { position: absolute; top: 5%; width: 100%; } /* PiÃ¹ vicino alla porta (sopra) */
+                .field-position-D { position: absolute; top: 30%; width: 100%; } /* PiÃ¹ in alto del centro */
                 .field-position-C { position: absolute; top: 55%; width: 100%; } /* Centro-basso */
-                .field-position-A { position: absolute; top: 80%; width: 100%; } /* Più vicino alla porta (sotto) */
+                .field-position-A { position: absolute; top: 80%; width: 100%; } /* PiÃ¹ vicino alla porta (sotto) */
                 
                 .slot-target { 
                     z-index: 10; 
@@ -1005,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOutOfPosition = playerWithForm && role !== 'B' && playerWithForm.role !== role;
 
         if (isOutOfPosition) {
-            tooltipText = `ATTENZIONE: ${playerWithForm.name} è un ${playerWithForm.role} ma gioca come ${role}. L'impatto in partita sarà minore.`;
+            tooltipText = `ATTENZIONE: ${playerWithForm.name} Ã¨ un ${playerWithForm.role} ma gioca come ${role}. L'impatto in partita sarÃ  minore.`;
             warningHtml = `
                 <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 cursor-help" 
                       title="${tooltipText}">
@@ -1106,13 +1106,13 @@ document.addEventListener('DOMContentLoaded', () => {
                  return roleComparison;
             }
             
-            // 3. Livello (dal più alto al più basso)
+            // 3. Livello (dal piÃ¹ alto al piÃ¹ basso)
             return b.level - a.level;
         });
         // =======================================================
 
         
-        // Copia dei titolari per il rendering a slot (perché la lista è piatta)
+        // Copia dei titolari per il rendering a slot (perchÃ© la lista Ã¨ piatta)
         let titolariToRender = [...formationData.titolari];
         
         titolariSlots.innerHTML = '';
@@ -1193,10 +1193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             fullSquadList.innerHTML = availablePlayers.map(player => {
                 // Recupera i dati di forma corretti dalla Form Status Mappa
-                // Nota: In modalità Formazione, teamData.players contiene gli oggetti playersForRendering con la forma
+                // Nota: In modalitÃ  Formazione, teamData.players contiene gli oggetti playersForRendering con la forma
                 const playerWithForm = teamData.players.find(p => p.id === player.id) || player; 
                 
-                // Visualizzazione Abilità in Rosa Libera
+                // Visualizzazione AbilitÃ  in Rosa Libera
                 const playerAbilities = (player.abilities || []).filter(a => a !== 'Icona');
                 const abilitiesSummary = playerAbilities.length > 0 
                     ? ` (${playerAbilities.slice(0, 2).join(', ')}${playerAbilities.length > 2 ? '...' : ''})`
@@ -1272,10 +1272,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalTargetRole = actualDropSlot.dataset.role || targetRole;
         
-        // 3. Verifica slot occupato nello slot di destinazione (solo se il drop è su uno SLOT)
+        // 3. Verifica slot occupato nello slot di destinazione (solo se il drop Ã¨ su uno SLOT)
         let playerInSlotBeforeDrop = null;
         if (actualDropSlot.classList.contains('player-card') || (actualDropSlot.classList.contains('slot-target') && actualDropSlot.dataset.id)) {
-            const occupiedPlayerId = actualDropSlot.dataset.id || droppedId; // Se droppo su me stesso, occupato è comunque me stesso.
+            const occupiedPlayerId = actualDropSlot.dataset.id || droppedId; // Se droppo su me stesso, occupato Ã¨ comunque me stesso.
             
             // Troviamo il giocatore che era nello slot (SE DIVERSO)
             if (occupiedPlayerId && occupiedPlayerId !== droppedId) {
@@ -1301,8 +1301,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 removePlayerFromPosition(playerInSlotBeforeDrop.id); 
                 displayMessage('formation-message', `${player.name} in panchina. ${playerInSlotBeforeDrop.name} liberato.`, 'info');
             } else if (currentTeamData.formation.panchina.length >= 3) {
-                 // Se non c'era un giocatore da scambiare e la panchina è piena, non permettere l'aggiunta
-                 return displayMessage('formation-message', 'La panchina è piena (Max 3). Ridisegna per riprovare.', 'error');
+                 // Se non c'era un giocatore da scambiare e la panchina Ã¨ piena, non permettere l'aggiunta
+                 return displayMessage('formation-message', 'La panchina Ã¨ piena (Max 3). Ridisegna per riprovare.', 'error');
             }
             
             // Aggiunge il giocatore alla panchina

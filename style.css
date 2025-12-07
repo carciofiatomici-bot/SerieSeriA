@@ -17,7 +17,7 @@ body {
     margin: 0; 
 }
 
-/* 2. Stile per l'immagine che non è più fissa, ma scorre col contenuto */
+/* 2. Stile per l'immagine che non Ã¨ piÃ¹ fissa, ma scorre col contenuto */
 #footer-logo {
     /* Rimosso position: fixed; */
     margin: 40px auto; /* Aggiunge spazio sopra e sotto e lo centra */

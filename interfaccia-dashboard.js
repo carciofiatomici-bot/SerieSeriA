@@ -15,7 +15,7 @@ window.InterfacciaDashboard = {
         
         elements.teamDashboardTitle.textContent = `Dashboard di ${teamName}`;
         elements.teamWelcomeMessage.textContent = isNew 
-            ? `Benvenuto/a, Manager! La tua squadra '${teamName}' è stata appena creata. Inizia il calciomercato!`
+            ? `Benvenuto/a, Manager! La tua squadra '${teamName}' Ã¨ stata appena creata. Inizia il calciomercato!`
             : `Bentornato/a, Manager di ${teamName}! Sei pronto per la prossima giornata?`;
         elements.teamFirestoreId.textContent = teamDocId;
         
@@ -324,8 +324,8 @@ window.InterfacciaDashboard = {
     }
 };
 
-// Esponi le funzioni globalmente per compatibilità con admin.js
+// Esponi le funzioni globalmente per compatibilitÃ  con admin.js
 window.loadSchedule = () => window.InterfacciaDashboard.loadSchedule();
 window.loadLeaderboard = () => window.InterfacciaDashboard.loadLeaderboard();
 
-console.log("✅ Modulo interfaccia-dashboard.js caricato.");
+console.log("âœ… Modulo interfaccia-dashboard.js caricato.");

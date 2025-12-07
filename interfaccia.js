@@ -13,29 +13,64 @@
 //
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Verifica che gli oggetti globali Firebase siano disponibili
-    if (typeof window.auth === 'undefined' || typeof window.db === 'undefined' || typeof window.firestoreTools === 'undefined' || typeof window.showScreen === 'undefined') {
-        console.warn("Servizi Firebase o showScreen non pronti, ritento caricamento interfaccia...");
-        setTimeout(() => document.dispatchEvent(new Event('DOMContentLoaded')), 100);
-        return;
-    }
+    // Variabile per tracciare i tentativi di inizializzazione
+    let initRetryCount = 0;
+    const MAX_INIT_RETRIES = 10;
     
-    // Verifica che tutti i moduli siano caricati
-    if (!window.InterfacciaCore || !window.InterfacciaAuth || !window.InterfacciaDashboard || 
-        !window.InterfacciaNavigation || !window.InterfacciaOnboarding || !window.InterfacciaTeam) {
-        console.warn("Moduli interfaccia non ancora caricati, ritento...");
-        setTimeout(() => document.dispatchEvent(new Event('DOMContentLoaded')), 100);
-        return;
-    }
+    const attemptInitialization = () => {
+        // Verifica che gli oggetti globali Firebase siano disponibili
+        if (typeof window.auth === 'undefined' || typeof window.db === 'undefined' || typeof window.firestoreTools === 'undefined' || typeof window.showScreen === 'undefined') {
+            if (initRetryCount >= MAX_INIT_RETRIES) {
+                console.error("ERRORE CRITICO: Impossibile inizializzare Firebase dopo", MAX_INIT_RETRIES, "tentativi.");
+                const gateBox = document.getElementById('gate-box');
+                if (gateBox) {
+                    gateBox.innerHTML = `
+                        <div class="text-center">
+                            <h2 class="text-2xl font-bold text-red-400 mb-4">Errore di Inizializzazione</h2>
+                            <p class="text-gray-300 mb-4">Impossibile caricare i servizi Firebase.</p>
+                            <button onclick="location.reload()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-400">
+                                Ricarica Pagina
+                            </button>
+                        </div>
+                    `;
+                    gateBox.classList.remove('hidden-on-load');
+                }
+                return;
+            }
+            
+            initRetryCount++;
+            console.warn("Servizi Firebase non pronti, ritento caricamento interfaccia... (tentativo", initRetryCount, "di", MAX_INIT_RETRIES, ")");
+            setTimeout(attemptInitialization, 100);
+            return;
+        }
+        
+        // Verifica che tutti i moduli siano caricati
+        if (!window.InterfacciaCore || !window.InterfacciaAuth || !window.InterfacciaDashboard || 
+            !window.InterfacciaNavigation || !window.InterfacciaOnboarding || !window.InterfacciaTeam) {
+            if (initRetryCount >= MAX_INIT_RETRIES) {
+                console.error("ERRORE CRITICO: Impossibile caricare i moduli dell'interfaccia dopo", MAX_INIT_RETRIES, "tentativi.");
+                return;
+            }
+            
+            initRetryCount++;
+            console.warn("Moduli interfaccia non ancora caricati, ritento... (tentativo", initRetryCount, "di", MAX_INIT_RETRIES, ")");
+            setTimeout(attemptInitialization, 100);
+            return;
+        }
+        
+        // Inizializzazione riuscita - continua con il setup
+        initializeApplication();
+    };
     
+    const initializeApplication = () => {
     // --- INIZIALIZZAZIONE VARIABILI GLOBALI ---
     window.InterfacciaCore.auth = window.auth;
     window.InterfacciaCore.db = window.db;
     
     // Assicura che firestoreTools sia disponibile e contenga tutte le funzioni necessarie
-    // Le funzioni sono già state esposte in index.html durante l'inizializzazione di Firebase
+    // Le funzioni sono giÃ  state esposte in index.html durante l'inizializzazione di Firebase
     if (!window.firestoreTools) {
-        console.error('firestoreTools non è stato inizializzato correttamente');
+        console.error('firestoreTools non Ã¨ stato inizializzato correttamente');
         return;
     }
     
@@ -81,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Statistiche
         statRosaLevel: document.getElementById('stat-rosa-level'),
         statFormazioneLevel: document.getElementById('stat-formazione-level'),
-        statRosaCount: document.getElementById('stat-rosa-level')?.nextElementSibling,
+        statRosaCount: document.getElementById('stat-rosa-count'),
         statCoachName: document.getElementById('stat-coach-name'),
         statCoachLevel: document.getElementById('stat-coach-level'),
 
@@ -164,4 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.elements = elements;
 
     console.log("✅ Interfaccia principale inizializzata.");
+    }; // Fine initializeApplication
+    
+    // Avvia il processo di inizializzazione
+    attemptInitialization();
 });

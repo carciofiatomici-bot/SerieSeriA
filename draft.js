@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /**
-     * Funzione principale per inizializzare il pannello Draft in base alla modalità.
+     * Funzione principale per inizializzare il pannello Draft in base alla modalitÃ .
      */
     const initializeDraftPanel = (event) => {
         // Pulisce l'intervallo precedente se esiste
@@ -128,11 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
         CHAMPIONSHIP_CONFIG_PATH = `artifacts/${appId}/public/data/config`;
         TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
 
-        // Imposta la modalità e l'ID della squadra (solo se è utente)
+        // Imposta la modalitÃ  e l'ID della squadra (solo se è utente)
         currentMode = event.detail && event.detail.mode === 'utente' ? 'utente' : 'admin';
         currentTeamId = event.detail ? event.detail.teamId : null;
         
-        console.log(`Caricamento pannello Draft, Modalità: ${currentMode}`);
+        console.log(`Caricamento pannello Draft, ModalitÃ : ${currentMode}`);
 
         if (currentMode === 'admin') {
             renderAdminDraftPanel();
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // -------------------------------------------------------------------
-    // MODALITÀ ADMIN: CREAZIONE GIOCATORI E GESTIONE STATO DRAFT
+    // MODALITÃ€ ADMIN: CREAZIONE GIOCATORI E GESTIONE STATO DRAFT
     // -------------------------------------------------------------------
 
     const renderAdminDraftPanel = async () => {
@@ -210,9 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </select>
                     </div>
                     
-                    <!-- Età (Range 15-50) -->
+                    <!-- EtÃ  (Range 15-50) -->
                     <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-age">Età (15 - 50)</label>
+                        <label class="text-gray-300 mb-1" for="player-age">EtÃ  (15 - 50)</label>
                         <input type="number" id="player-age" min="15" max="50" placeholder="25"
                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400">
                     </div>
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <!-- Dati Giocatore -->
                         <div class="w-full sm:w-auto mb-2 sm:mb-0">
                             <p class="text-lg font-bold text-white">${player.name} <span class="text-yellow-400">(${player.role} - ${playerType})</span></p>
-                            <p class="text-sm text-gray-400">Età: ${player.age} | Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${player.cost} CS</p>
+                            <p class="text-sm text-gray-400">EtÃ : ${player.age} | Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${player.cost} CS</p>
                         </div>
                         
                         <!-- Stato e Azioni -->
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // -------------------------------------------------------------------
-    // MODALITÀ UTENTE: ACQUISTO GIOCATORI
+    // MODALITÃ€ UTENTE: ACQUISTO GIOCATORI
     // -------------------------------------------------------------------
 
     const renderUserDraftPanel = async () => {
@@ -697,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // ... (Validazione) ...
         if (!name || !role || !type || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) || isNaN(cost) || age < 15 || age > 50 || levelMin < 1 || levelMin > 20 || levelMax < 1 || levelMax > 20 || levelMin > levelMax || cost < 1) {
-             displayMessage("Errore: controlla che tutti i campi (incluso Tipologia) siano compilati e validi (Età 15-50, Livello 1-20, LivMin <= LivMax, Costo >= 1).", 'error');
+             displayMessage("Errore: controlla che tutti i campi (incluso Tipologia) siano compilati e validi (EtÃ  15-50, Livello 1-20, LivMin <= LivMax, Costo >= 1).", 'error');
              return;
         }
 

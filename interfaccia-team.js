@@ -26,7 +26,7 @@ window.InterfacciaTeam = {
         if (trimmedUrl === "" || !trimmedUrl.startsWith('http')) {
             const finalUrl = trimmedUrl.startsWith('http') ? trimmedUrl : DEFAULT_LOGO_URL;
             if (trimmedUrl !== "" && !trimmedUrl.startsWith('http')) {
-                console.warn("Per favore, inserisci un URL valido (deve iniziare con http/https). Verrà utilizzato il placeholder.");
+                console.warn("Per favore, inserisci un URL valido (deve iniziare con http/https). VerrÃ  utilizzato il placeholder.");
             }
             elements.teamLogoElement.src = finalUrl;
             window.InterfacciaCore.currentTeamData.logoUrl = finalUrl;
@@ -176,4 +176,4 @@ window.InterfacciaTeam = {
     }
 };
 
-console.log("✅ Modulo interfaccia-team.js caricato.");
+console.log("âœ… Modulo interfaccia-team.js caricato.");

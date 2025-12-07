@@ -263,8 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const schedule = window.ChampionshipSchedule.generateRoundRobinSchedule(teams);
             const result = await window.ChampionshipSchedule.saveScheduleAndInitialize(teams, schedule);
             
-            // Aggiorna anche la data di ultima simulazione automatica a 0 (per innescare subito il cronometro)
-            await window.ChampionshipMain.updateLastAutoSimulatedDate(0); 
+            // FIX: Imposta la data CORRENTE invece di 0 per evitare simulazione immediata
+            // Il countdown partirà da ORA (48h da adesso)
+            await window.ChampionshipMain.updateLastAutoSimulatedDate(Date.now()); 
 
             displayConfigMessage(
                 `Calendario di ${result.totalRounds} giornate (Andata/Ritorno) generato e salvato per ${result.numTeams} squadre flaggate! Classifica azzerata.`, 
@@ -472,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (timerElement) {
                      timerElement.classList.remove('text-yellow-300');
                      timerElement.classList.add('text-gray-400');
-                     timerElement.textContent = "Funzionalità cron non attiva (Stagione non iniziata o conclusa).";
+                     timerElement.textContent = "FunzionalitÃ  cron non attiva (Stagione non iniziata o conclusa).";
                  }
             }
 
@@ -512,8 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const confirmSeasonEnd = (isTestMode) => {
         const message = isTestMode
-            ? "ATTENZIONE: Stai per terminare il campionato SENZA assegnare crediti o livellare gli allenatori. Il calendario verrà eliminato. Continuare?"
-            : "AZIONE CRITICA: Stai per terminare la stagione UFFICIALE. Premi, crediti e progressione allenatori verranno assegnati. Il calendario verrà eliminato. Continuare?";
+            ? "ATTENZIONE: Stai per terminare il campionato SENZA assegnare crediti o livellare gli allenatori. Il calendario verrÃ  eliminato. Continuare?"
+            : "AZIONE CRITICA: Stai per terminare la stagione UFFICIALE. Premi, crediti e progressione allenatori verranno assegnati. Il calendario verrÃ  eliminato. Continuare?";
         
         const title = isTestMode ? "Conferma Reset Campionato (TEST)" : "Conferma Chiusura Stagione Ufficiale";
         const confirmation = prompt(`${title}\n\n${message}\n\nDigita 'SI' per confermare:`);

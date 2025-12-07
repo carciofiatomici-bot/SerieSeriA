@@ -191,4 +191,4 @@ const generateCaptainCandidates = () => {
 };
 window.generateCaptainCandidates = generateCaptainCandidates;
 
-console.log("✅ Modulo interfaccia-core.js caricato.");
+console.log("âœ… Modulo interfaccia-core.js caricato.");

@@ -37,7 +37,7 @@ window.InterfacciaOnboarding = {
         const coachName = elements.coachNameInput.value.trim();
         
         if (!coachName) {
-            elements.coachSelectionMessage.textContent = "Il nome dell'allenatore è obbligatorio!";
+            elements.coachSelectionMessage.textContent = "Il nome dell'allenatore Ã¨ obbligatorio!";
             return;
         }
 
@@ -68,7 +68,7 @@ window.InterfacciaOnboarding = {
             captainSelectionBoxTitle.textContent = "Seleziona la tua Icona!";
         }
 
-        // Genera i candidati solo se non sono già stati generati
+        // Genera i candidati solo se non sono giÃ  stati generati
         let captainCandidates = window.InterfacciaCore.captainCandidates;
         if (!captainCandidates || captainCandidates.length === 0) {
             captainCandidates = window.generateCaptainCandidates();
@@ -92,7 +92,7 @@ window.InterfacciaOnboarding = {
                  
                  <p class="text-lg font-extrabold text-white">${player.name}</p>
                  <p class="text-sm font-semibold text-yellow-400">${player.role} (${player.type})</p>
-                 <p class="text-xs text-green-400 font-bold mt-1">Abilità: ICONA</p>
+                 <p class="text-xs text-green-400 font-bold mt-1">AbilitÃ : ICONA</p>
                  <p class="text-xs text-gray-400">Livello Iniziale: ${player.level} (Fisso)</p>
              </div>
         `).join('');
@@ -111,7 +111,7 @@ window.InterfacciaOnboarding = {
         elements.captainCandidatesContainer.addEventListener('click', (e) => self.handleCaptainCardClick(e, elements));
         elements.btnConfirmCaptain.addEventListener('click', () => self.handleCaptainConfirmation(elements));
         
-        // Abilita il bottone se un capitano era già selezionato
+        // Abilita il bottone se un capitano era giÃ  selezionato
         const previouslySelected = elements.btnConfirmCaptain.dataset.selectedCaptainId;
         elements.btnConfirmCaptain.disabled = !previouslySelected;
         elements.btnConfirmCaptain.textContent = 'Conferma Icona e Vai alla Dashboard';
@@ -271,4 +271,4 @@ window.InterfacciaOnboarding = {
     }
 };
 
-console.log("✅ Modulo interfaccia-onboarding.js caricato.");
+console.log("âœ… Modulo interfaccia-onboarding.js caricato.");

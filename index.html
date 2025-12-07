@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SerieSeriA</title>
+    <title>Interfaccia App Base</title>
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Collega il foglio di stile esterno -->
@@ -82,7 +82,7 @@
                 <div class="p-4 bg-gray-800 rounded-lg border-2 border-green-500 text-center shadow-lg">
                     <p class="text-sm text-gray-400 font-semibold">Livello Medio Rosa</p>
                     <p id="stat-rosa-level" class="text-3xl font-extrabold text-green-400 mt-1">N/A</p>
-                    <p class="text-xs text-gray-500">(${0} giocatori)</p>
+                    <p id="stat-rosa-count" class="text-xs text-gray-500">(0 giocatori)</p>
                 </div>
                 <!-- Statistica 2: Livello Medio Formazione -->
                 <div class="p-4 bg-gray-800 rounded-lg border-2 border-yellow-500 text-center shadow-lg">
@@ -163,7 +163,7 @@
             
             <!-- Contenitore per i pulsanti principali e liste squadre -->
             <div id="admin-dashboard-container" class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl">
-                <!-- Il layout è generato da admin.js -->
+                <!-- Il layout Ã¨ generato da admin.js -->
                 <p class="text-gray-400 text-center">Inizializzazione...</p>
             </div>
             
@@ -255,7 +255,7 @@
         <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Calciatori (Creazione e Liste)</h2>
              
-             <!-- Il contenuto è iniettato da admin.js -->
+             <!-- Il contenuto Ã¨ iniettato da admin.js -->
              <div id="player-management-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento strumenti...</p>
              </div>
@@ -270,7 +270,7 @@
         <div id="team-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-blue-500 text-center mb-4 border-b-4 border-blue-700 pb-2">Gestione Squadre Registrate</h2>
              
-             <!-- Il contenuto è iniettato da admin.js -->
+             <!-- Il contenuto Ã¨ iniettato da admin.js -->
              <div id="team-management-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento strumenti...</p>
              </div>
@@ -284,7 +284,7 @@
         <!-- 13. NUOVO CONTENUTO: SELEZIONE ALLENATORE -->
         <div id="coach-selection-box" class="football-box w-full max-w-xl transition duration-500 hidden-on-load">
             <h2 class="text-4xl font-extrabold text-red-500 text-center mb-4 border-b-4 border-red-700 pb-2">Un Manager per la Tua Squadra</h2>
-            <p class="text-center text-lg text-gray-300 mb-6">Inserisci il nome dell'allenatore che guiderà la squadra. Partirà da Livello 1 e potrà crescere.</p>
+            <p class="text-center text-lg text-gray-300 mb-6">Inserisci il nome dell'allenatore che guiderÃ  la squadra. PartirÃ  da Livello 1 e potrÃ  crescere.</p>
             
             <input type="text" id="coach-name-input" placeholder="Nome Allenatore (es. Carlo Ancelotti)"
                    class="w-full p-3 border border-red-600 rounded-lg focus:ring-red-400 focus:border-red-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
@@ -300,7 +300,7 @@
         <!-- 14. NUOVO CONTENUTO: SELEZIONE CAPITANO -->
         <div id="captain-selection-box" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Seleziona la tua Icona!</h2>
-             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli il giocatore che guiderà la tua squadra. Sarà il tuo sesto giocatore in rosa.</p>
+             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli il giocatore che guiderÃ  la tua squadra. SarÃ  il tuo sesto giocatore in rosa.</p>
              
              <div id="captain-candidates-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <p class="text-center text-gray-400 col-span-4">Caricamento candidati...</p>
@@ -321,7 +321,7 @@
                 <h3 class="text-3xl font-bold text-red-400 mb-4 border-b border-red-600 pb-2 text-center">ELIMINA SQUADRA</h3>
                 <p class="text-lg text-gray-300 mb-4 text-center">Sei sicuro di voler eliminare definitivamente <span id="team-name-to-delete" class="font-extrabold text-yellow-400">[Nome Squadra]</span>?</p>
                 
-                <p class="text-red-400 font-bold mb-4 text-center">Questa azione è irreversibile.</p>
+                <p class="text-red-400 font-bold mb-4 text-center">Questa azione Ã¨ irreversibile.</p>
 
                 <label for="delete-confirmation-input" class="block text-gray-300 font-semibold mb-2">Digita "ELIMINA" per confermare:</label>
                 <input type="text" id="delete-confirmation-input" 
@@ -344,7 +344,7 @@
 
     </main>
 
-    <!-- Logo che Scorrerà con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
+    <!-- Logo che ScorrerÃ  con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
     <img id="footer-logo" 
          src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/serie%20sera%20256.png?raw=true" 
          alt="Logo in fondo alla pagina">
@@ -366,7 +366,6 @@
 
         // Configurazione e inizializzazione standard (inclusa la tua config come fallback per i test locali)
         window.firebaseConfig = {
-
             apiKey: "AIzaSyDL0n4qFzpPd3v-aoJoI_GJCQ_hlpwbaSA",
             authDomain: "lega-fantacalcio-unica-2024.firebaseapp.com",
             projectId: "lega-fantacalcio-unica-2024",
@@ -375,10 +374,8 @@
             appId: "1:219665032240:web:14cfa85e5186384cc339f5",
             measurementId: "G-4WFPVEF886",
             // Unisce la configurazione fornita dal Canvas (se disponibile e valida)
-            ...firebaseConfig
-        ,
-  ...(firebaseConfig || {})
-};
+            ...(firebaseConfig || {})
+        };
         
         // Inizializzazione Firebase
         window.app = initializeApp(window.firebaseConfig);
@@ -387,7 +384,7 @@
         
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
-        // Questo è il punto chiave che garantisce la disponibilità di 'where'.
+        // Questo Ã¨ il punto chiave che garantisce la disponibilitÃ  di 'where'.
         window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, appId }; 
         
         // Funzione globale per cambiare schermata
@@ -432,11 +429,11 @@
                 } else {
                     // Altrimenti, usa l'accesso anonimo come fallback
                     await signInAnonymously(window.auth);
-                    console.log("Autenticazione Firebase riuscita in modalità anonima.");
+                    console.log("Autenticazione Firebase riuscita in modalitÃ  anonima.");
                 }
             } catch (error) {
                 console.error("Errore durante l'autenticazione iniziale:", error);
-                // In caso di errore critico, si può mostrare un messaggio di fallback all'utente
+                // In caso di errore critico, si puÃ² mostrare un messaggio di fallback all'utente
             }
         }
         

@@ -18,8 +18,8 @@ window.TYPE_TECNICA = TYPE_TECNICA;
 window.TYPE_VELOCITA = TYPE_VELOCITA;
 window.CAPTAIN_PLACEHOLDER_URL = CAPTAIN_PLACEHOLDER_URL;
 
-// Nota: Il livello base (p.level) per tutte le icone è fissato a 12.
-// Il COSTO è stato AZZERATO (0).
+// Nota: Il livello base (p.level) per tutte le icone Ã¨ fissato a 12.
+// Il COSTO Ã¨ stato AZZERATO (0).
 
 /**
  * Lista completa dei candidati ICONA.

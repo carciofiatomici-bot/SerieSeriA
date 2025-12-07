@@ -58,8 +58,8 @@ window.AdminUI = {
                 </div>
             </div>
             
-            <!-- UTILITÀ ADMIN -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilità Admin</h3>
+            <!-- UTILITÃ€ ADMIN -->
+            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">UtilitÃ  Admin</h3>
             <div class="grid grid-cols-2 gap-4 mb-4">
                  <button id="btn-sync-data"
                         class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
@@ -143,7 +143,7 @@ window.AdminUI = {
                     </div>
                     
                     <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-age">Età (15 - 50)</label>
+                        <label class="text-gray-300 mb-1" for="player-age">EtÃ  (15 - 50)</label>
                         <input type="number" id="player-age" min="15" max="50" placeholder="25" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                     </div>
 
@@ -165,9 +165,9 @@ window.AdminUI = {
                 </div>
                 
                 <div class="flex flex-col lg:col-span-4 border border-gray-600 p-4 rounded-lg bg-gray-800">
-                    <label class="text-gray-300 mb-2 font-semibold text-lg">Abilità (Max 3)</label>
+                    <label class="text-gray-300 mb-2 font-semibold text-lg">AbilitÃ  (Max 3)</label>
                     <div id="abilities-checklist" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilità disponibili.</p>
+                        <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilitÃ  disponibili.</p>
                     </div>
                 </div>
 

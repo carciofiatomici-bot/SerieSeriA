@@ -64,13 +64,13 @@ window.InterfacciaAuth = {
         if (userType === 'admin' && teamId === ADMIN_USERNAME_LOWER) {
             window.InterfacciaCore.currentTeamId = teamId;
             
-            // Definisce gli ID dei pannelli Admin validi (con controlli di nullità)
+            // Definisce gli ID dei pannelli Admin validi (con controlli di nullitÃ )
             const adminScreens = [
         elements.adminContent?.id,
         elements.championshipContent?.id,
         elements.playerManagementContent?.id,
         elements.teamManagementContent?.id,
-    ].filter(Boolean).filter(id => id !== null); // Filtra gli ID nulli
+    ].filter(Boolean); // Filtra già i valori falsy inclusi null e undefined
 
             // Reindirizza alla schermata Admin specifica, se salvata e valida
             const savedScreenIsValidAdmin = lastScreenId && 
@@ -93,7 +93,7 @@ window.InterfacciaAuth = {
 
             document.dispatchEvent(new CustomEvent('adminLoggedIn'));
             
-            // Se la destinazione è un pannello specifico, forzo il ricaricamento del contenuto
+            // Se la destinazione Ã¨ un pannello specifico, forzo il ricaricamento del contenuto
             if (targetScreenId === elements.championshipContent.id) {
                 document.dispatchEvent(new CustomEvent('championshipPanelLoaded'));
             } else if (elements.playerManagementContent && targetScreenId === elements.playerManagementContent.id) {
@@ -121,7 +121,7 @@ window.InterfacciaAuth = {
                     window.InterfacciaCore.currentTeamId = teamId;
                     await window.fetchAllTeamLogos();
                     
-                    // Priorità 1: Onboarding
+                    // PrioritÃ  1: Onboarding
                     if (requiresCoachSelection && !teamData.coach) {
                         window.showScreen(elements.coachSelectionBox);
                         if (window.InterfacciaOnboarding) {
@@ -138,7 +138,7 @@ window.InterfacciaAuth = {
                         return true;
                     }
 
-                    // Priorità 2: Ripristino Schermata salvata
+                    // PrioritÃ  2: Ripristino Schermata salvata
                     const savedScreenElement = document.getElementById(lastScreenId);
                     if (lastScreenId && savedScreenElement && lastScreenId !== elements.adminContent.id) {
                         targetScreenId = lastScreenId;
@@ -160,9 +160,9 @@ window.InterfacciaAuth = {
                     const targetElement = document.getElementById(targetScreenId);
                     window.showScreen(targetElement || elements.appContent);
                     
-                    // Se la destinazione è un pannello utente, lanciamo l'evento di caricamento
+                    // Se la destinazione Ã¨ un pannello utente, lanciamo l'evento di caricamento
                     if (targetScreenId === elements.squadraContent.id) {
-                        // Ripristina la sotto-modalità (Rosa o Formazione)
+                        // Ripristina la sotto-modalitÃ  (Rosa o Formazione)
                         const mode = localStorage.getItem('fanta_squadra_mode') || 'rosa';
                          document.dispatchEvent(new CustomEvent('squadraPanelLoaded', { 
                             detail: { mode: mode, teamId: teamId } 
@@ -186,6 +186,14 @@ window.InterfacciaAuth = {
             } catch (error) {
                 console.error("Errore nel ripristino della sessione utente:", error);
                 this.clearSession();
+                
+                // Mostra messaggio all'utente
+                if (elements.loginMessage) {
+                    elements.loginMessage.textContent = "Sessione scaduta o non valida. Effettua nuovamente l'accesso.";
+                    elements.loginMessage.classList.remove('text-green-500');
+                    elements.loginMessage.classList.add('text-yellow-400');
+                }
+                
                 return false;
             }
         }
@@ -233,7 +241,7 @@ window.InterfacciaAuth = {
         
         const inputTeamName = elements.loginUsernameInput.value.trim();
         const password = elements.loginPasswordInput.value.trim();
-        // FIX: Controllo di nullità per window.auth.currentUser
+        // FIX: Controllo di nullitÃ  per window.auth.currentUser
         const userId = window.auth.currentUser?.uid || 'anon_user';
         
         elements.loginMessage.textContent = "Accesso in corso...";
@@ -251,7 +259,7 @@ window.InterfacciaAuth = {
         const teamDocId = cleanedTeamName.toLowerCase();
 
         if (inputTeamName.includes(' ') || inputTeamName !== cleanedTeamName) {
-            elements.loginMessage.textContent = "Errore: Il Nome Squadra non può contenere spazi bianchi. Riprova.";
+            elements.loginMessage.textContent = "Errore: Il Nome Squadra non puÃ² contenere spazi bianchi. Riprova.";
             elements.loginMessage.classList.remove('text-green-500');
             elements.loginMessage.classList.add('text-red-400');
             return;
@@ -469,4 +477,4 @@ window.InterfacciaAuth = {
     }
 };
 
-console.log("✅ Modulo interfaccia-auth.js caricato.");
+console.log("âœ… Modulo interfaccia-auth.js caricato.");

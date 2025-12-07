@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentTeamId = event.detail.teamId;
         
-        // Cabla il bottone di ritorno (se non è già cablato)
+        // Cabla il bottone di ritorno (se non Ã¨ giÃ  cablato)
         if (mercatoBackButton) {
             mercatoBackButton.onclick = () => {
                 // Pulisce il timer quando si esce
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!isMarketOpen) {
                  mainMessage = 'MERCATO CHIUSO.';
-                 secondaryMessageHtml = '<p class="text-center text-lg text-gray-300 mt-2">Non è possibile acquistare giocatori dal Mercato al momento. Attendi che l\'Admin apra il Mercato.</p>';
+                 secondaryMessageHtml = '<p class="text-center text-lg text-gray-300 mt-2">Non Ã¨ possibile acquistare giocatori dal Mercato al momento. Attendi che l\'Admin apra il Mercato.</p>';
                  disableAcquisition = true;
             } else if (isCooldownActive) {
                 mainMessage = 'COOLDOWN ATTIVO.';
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const availablePlayers = playersSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(player => !player.isDrafted); // isDrafted significa 'già acquistato'
+                .filter(player => !player.isDrafted); // isDrafted significa 'giÃ  acquistato'
 
             
             // 4. Renderizza la lista dei giocatori
@@ -350,9 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const playerDoc = await getDoc(doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId));
-                // Verifica anche che non sia già stato acquistato (isDrafted = true)
+                // Verifica anche che non sia giÃ  stato acquistato (isDrafted = true)
                 if (!playerDoc.exists() || playerDoc.data().isDrafted) {
-                     throw new Error("Il giocatore non è disponibile (già acquistato). Riprova a ricaricare.");
+                     throw new Error("Il giocatore non Ã¨ disponibile (giÃ  acquistato). Riprova a ricaricare.");
                 }
                 
                 // Genera Livello Casuale
@@ -384,9 +384,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     teamId: currentTeamId,
                 });
 
-                displayMessage(`Acquisto Riuscito! ${playerName} (${finalLevel}) è nella tua rosa dal Mercato. Budget: ${currentBudget - playerCost} CS.`, 'success');
+                displayMessage(`Acquisto Riuscito! ${playerName} (${finalLevel}) Ã¨ nella tua rosa dal Mercato. Budget: ${currentBudget - playerCost} CS.`, 'success');
                 
-                // Ricarica la lista per mostrare che il giocatore non è più disponibile
+                // Ricarica la lista per mostrare che il giocatore non Ã¨ piÃ¹ disponibile
                 renderUserMercatoPanel();
                 document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // GESTIONE NAVIGAZIONE
-    // Il bottone di ritorno è gestito in initializeMercatoPanel
+    // Il bottone di ritorno Ã¨ gestito in initializeMercatoPanel
     
 
 

@@ -26,12 +26,12 @@ window.AdminPlayers = {
     },
 
     /**
-     * Aggiorna la checklist delle abilità in base al ruolo
+     * Aggiorna la checklist delle abilitÃ  in base al ruolo
      */
     
 
 /**
- * Aggiorna il campo costo in base a livelloMax e abilità selezionate
+ * Aggiorna il campo costo in base a livelloMax e abilitÃ  selezionate
  */
 updateCostDisplay() {
     const levelMaxInput = document.getElementById('player-level-max');
@@ -51,7 +51,7 @@ updateAbilitiesChecklist() {
         if (!checklistContainer) return;
 
         if (!selectedRole || !this.ROLE_ABILITIES_MAP[selectedRole]) {
-            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilità disponibili.</p>';
+            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilitÃ  disponibili.</p>';
             return;
         }
 
@@ -79,7 +79,7 @@ updateAbilitiesChecklist() {
 },
 
     /**
-     * Limita la selezione a max 3 abilità
+     * Limita la selezione a max 3 abilitÃ 
      */
     handleAbilitiesLimit(event) {
         const checkedBoxes = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked'));
@@ -87,10 +87,10 @@ updateAbilitiesChecklist() {
             event.target.checked = false;
             const msgElement = document.getElementById('player-creation-message');
             if (msgElement) {
-                msgElement.textContent = 'Limite raggiunto: puoi selezionare al massimo 3 abilità.';
+                msgElement.textContent = 'Limite raggiunto: puoi selezionare al massimo 3 abilitÃ .';
                 msgElement.classList.add('text-red-400');
             
-// Aggiorna il costo mostrato in base a livello max e abilità selezionate
+// Aggiorna il costo mostrato in base a livello max e abilitÃ  selezionate
 try {
     const levelMaxInput = document.getElementById('player-level-max');
     const costDisplayInput = document.getElementById('player-cost-display');
@@ -201,7 +201,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         const invalidAbilities = selectedAbilities.filter(ability => !allowedAbilities.includes(ability));
         if (invalidAbilities.length > 0) {
             if (msgElement) {
-                msgElement.textContent = `Errore: L'abilità/le abilità ${invalidAbilities.join(', ')} non è/sono valide per il ruolo di ${role}.`;
+                msgElement.textContent = `Errore: L'abilitÃ /le abilitÃ  ${invalidAbilities.join(', ')} non è/sono valide per il ruolo di ${role}.`;
                 msgElement.classList.add('text-red-400');
             }
             return;
@@ -209,7 +209,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         
         if (selectedAbilities.length > 3) {
              if (msgElement) {
-                 msgElement.textContent = 'Errore: non puoi selezionare più di 3 abilità.';
+                 msgElement.textContent = 'Errore: non puoi selezionare più di 3 abilitÃ .';
                  msgElement.classList.add('text-red-400');
              }
              return;
@@ -270,7 +270,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         try {
             // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerà l'esecuzione del fallback.
+                 // Questo errore forzerÃ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
             
@@ -295,7 +295,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                         <div>
                             <p class="font-semibold">${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">Abilità: ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -336,7 +336,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                      <div>
                          <p class="font-semibold">${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">Abilità: ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"
@@ -368,7 +368,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         try {
             // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerà l'esecuzione del fallback.
+                 // Questo errore forzerÃ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
             
@@ -392,7 +392,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                         <div>
                             <p class="font-semibold">${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">Abilità: ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -433,7 +433,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                      <div>
                          <p class="font-semibold">${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">Abilità: ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"

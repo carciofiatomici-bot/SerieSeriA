@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await getDocs(q);
             
             if (snapshot.empty) {
-                displayMessage(`Collezione ${collectionName} già vuota.`, 'success', msgId);
+                displayMessage(`Collezione ${collectionName} giÃ  vuota.`, 'success', msgId);
                 return;
             }
 
