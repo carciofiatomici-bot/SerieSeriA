@@ -26,7 +26,7 @@ window.InterfacciaTeam = {
         if (trimmedUrl === "" || !trimmedUrl.startsWith('http')) {
             const finalUrl = trimmedUrl.startsWith('http') ? trimmedUrl : DEFAULT_LOGO_URL;
             if (trimmedUrl !== "" && !trimmedUrl.startsWith('http')) {
-                console.warn("Per favore, inserisci un URL valido (deve iniziare con http/https). VerrÃ  utilizzato il placeholder.");
+                console.warn("Per favore, inserisci un URL valido (deve iniziare con http/https). Verrà utilizzato il placeholder.");
             }
             elements.teamLogoElement.src = finalUrl;
             window.InterfacciaCore.currentTeamData.logoUrl = finalUrl;
@@ -64,11 +64,43 @@ window.InterfacciaTeam = {
 
     /**
      * Apre la modale di conferma per l'eliminazione della squadra.
+     * MODIFICATO: Blocca l'eliminazione se la squadra partecipa al campionato ATTIVO.
      */
-    openDeleteTeamModal(elements) {
+    async openDeleteTeamModal(elements) {
         const currentTeamData = window.InterfacciaCore.currentTeamData;
         
         if (!currentTeamData || !elements.deleteTeamModal) return;
+
+        // NUOVO: Controlla se la squadra partecipa al campionato E il campionato è attivo
+        if (currentTeamData.isParticipating) {
+            // Verifica se il campionato è attivo
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const CHAMPIONSHIP_CONFIG_PATH = `artifacts/${appId}/public/data/config`;
+            
+            try {
+                const configDocRef = doc(window.db, CHAMPIONSHIP_CONFIG_PATH, 'settings');
+                const configDoc = await getDoc(configDocRef);
+                const isSeasonOver = configDoc.exists() ? (configDoc.data().isSeasonOver || false) : false;
+                
+                // Blocca eliminazione SOLO se il campionato è attivo (NON terminato)
+                if (!isSeasonOver) {
+                    alert('⚠️ Non puoi eliminare questa squadra perché sta partecipando a un campionato ATTIVO!\n\n' +
+                          'Opzioni:\n' +
+                          '1. Ritirati dal campionato usando il toggle nella dashboard\n' +
+                          '2. Aspetta che l\'admin termini il campionato');
+                    return;
+                }
+                
+                // Il campionato è terminato, quindi può eliminare anche se isParticipating è true
+                console.log('Campionato terminato: eliminazione permessa anche con isParticipating=true');
+                
+            } catch (error) {
+                console.error('Errore nel controllo stato campionato:', error);
+                alert('⚠️ Errore nel controllo dello stato del campionato. Riprova.');
+                return;
+            }
+        }
 
         elements.teamNameToDeleteSpan.textContent = currentTeamData.teamName;
         elements.deleteConfirmationInput.value = '';
@@ -107,23 +139,54 @@ window.InterfacciaTeam = {
     
     /**
      * Esegue l'eliminazione effettiva del documento della squadra.
+     * MODIFICATO: Doppio controllo della partecipazione al campionato ATTIVO.
      */
     async handleFinalTeamDeletion(elements) {
-        const { doc, deleteDoc } = window.firestoreTools;
+        const { doc, deleteDoc, getDoc } = window.firestoreTools;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+        const CHAMPIONSHIP_CONFIG_PATH = `artifacts/${appId}/public/data/config`;
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         
         if (!currentTeamId || elements.deleteConfirmationInput.value !== "ELIMINA") return;
 
         elements.btnConfirmDeleteFinal.disabled = true;
-        elements.btnConfirmDeleteFinal.textContent = 'Eliminazione in corso...';
-        elements.deleteMessage.textContent = 'Contatto Firestore per eliminare il documento...';
+        elements.btnConfirmDeleteFinal.textContent = 'Verifica in corso...';
+        elements.deleteMessage.textContent = 'Controllo stato partecipazione e campionato...';
         elements.deleteMessage.classList.remove('text-green-500');
         elements.deleteMessage.classList.add('text-yellow-400');
 
         try {
             const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
+            
+            // NUOVO: Ricontrolla lo stato prima dell'eliminazione
+            const teamDoc = await getDoc(teamDocRef);
+            if (teamDoc.exists() && teamDoc.data().isParticipating) {
+                // Controlla se il campionato è attivo
+                const configDocRef = doc(window.db, CHAMPIONSHIP_CONFIG_PATH, 'settings');
+                const configDoc = await getDoc(configDocRef);
+                const isSeasonOver = configDoc.exists() ? (configDoc.data().isSeasonOver || false) : false;
+                
+                if (!isSeasonOver) {
+                    // Campionato ATTIVO: blocca eliminazione
+                    elements.deleteMessage.textContent = '⚠️ Impossibile eliminare: la squadra partecipa a un campionato ATTIVO!';
+                    elements.deleteMessage.classList.remove('text-yellow-400');
+                    elements.deleteMessage.classList.add('text-red-400');
+                    elements.btnConfirmDeleteFinal.textContent = 'Conferma Eliminazione';
+                    elements.btnConfirmDeleteFinal.disabled = false;
+                    
+                    setTimeout(() => {
+                        this.closeDeleteTeamModal(elements);
+                    }, 3000);
+                    return;
+                }
+                
+                // Campionato terminato: può procedere
+                console.log('Campionato terminato: eliminazione permessa');
+            }
+
+            elements.btnConfirmDeleteFinal.textContent = 'Eliminazione in corso...';
+            elements.deleteMessage.textContent = 'Contatto Firestore per eliminare il documento...';
             
             await deleteDoc(teamDocRef);
 
@@ -176,4 +239,4 @@ window.InterfacciaTeam = {
     }
 };
 
-console.log("âœ… Modulo interfaccia-team.js caricato.");
+console.log("✅ Modulo interfaccia-team.js caricato.");

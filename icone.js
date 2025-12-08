@@ -55,7 +55,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0, 
         isCaptain: true, 
         level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/real%20disagio.png?raw=true', 
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/shikanto.jpg?raw=true', 
         type: TYPE_TECNICA, 
         abilities: ['Icona'] 
     },
@@ -229,7 +229,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
     { 
         id: 'sandro', 
         role: 'C', 
-        name: 'Sandro', 
+        name: 'Sandro Diaz', 
         levelRange: [12, 18], 
         age: 29, 
         cost: 0, 

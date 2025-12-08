@@ -1,117 +1,152 @@
 //
 // ====================================================================
-// MODULO ADMIN-PLAYERS.JS (Gestione Giocatori Draft/Mercato)
+// MODULO ADMIN-PLAYERS.JS V3.0 - UI Separata Positive/Negative
 // ====================================================================
 //
 
 window.AdminPlayers = {
     
+    // MAPPA ARRAY per compatibilità con handleRandomPlayer
     ROLE_ABILITIES_MAP: {
-        'P': ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club'],
-        'D': ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club'],
-        'C': ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club'],
-        'A': ['Bomber', 'Doppio: Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club'],
+        'P': ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Mani di burro', 'Respinta Timida', 'Fuori dai pali'],
+        'D': ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione', 'Falloso', 'Insicuro', 'Fuori Posizione'],
+        'C': ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone', 'Impreciso', 'Ingabbiato', 'Fuori Posizione'],
+        'A': ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione'],
         ALL_ABILITIES: [
-            'Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Muro', 'Contrasto Durissimo', 'Antifurto', 
-            'Guardia', 'Regista', 'Motore', 'Tocco Di Velluto', 'Bomber', 'Doppio: Scatto', 'Pivot', 
+            'Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Parata con i piedi', 'Lancio lungo', 'Mani di burro', 'Respinta Timida', 'Fuori dai pali',
+            'Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Tiro dalla distanza', 'Deviazione', 'Falloso', 'Insicuro', 'Fuori Posizione',
+            'Regista', 'Motore', 'Tocco Di Velluto', 'Cross', 'Mago del pallone', 'Impreciso', 'Ingabbiato',
+            'Bomber', 'Doppio Scatto', 'Pivot', 'Rientro Rapido', 'Tiro Fulmineo', 'Piedi a banana', 'Eccesso di sicurezza',
             'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Icona'
         ]
     },
 
-    /**
-     * Calcola il costo basato sul livello massimo
-     */
+    // MAPPA SEPARATA per UI
+    ROLE_ABILITIES_SEPARATED: {
+        'P': {
+            positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo'],
+            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali']
+        },
+        'D': {
+            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione'],
+            negative: ['Falloso', 'Insicuro', 'Fuori Posizione']
+        },
+        'C': {
+            positive: ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone'],
+            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione']
+        },
+        'A': {
+            positive: ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo'],
+            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione']
+        }
+    },
+
     calculateCost(levelMax, abilitiesCount = 0) {
         return 100 + (10 * levelMax) + (50 * abilitiesCount);
     },
 
-    /**
-     * Aggiorna la checklist delle abilitÃ  in base al ruolo
-     */
+    updateCostDisplay() {
+        const levelMaxInput = document.getElementById('player-level-max');
+        const costDisplayInput = document.getElementById('player-cost-display');
+        if (!levelMaxInput || !costDisplayInput) return;
+        const levelMaxVal = parseInt(levelMaxInput.value) || 0;
+        const abilitiesCount = document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').length;
+        const newCost = this.calculateCost(levelMaxVal, abilitiesCount);
+        costDisplayInput.value = `Costo: ${newCost} CS`;
+        costDisplayInput.dataset.calculatedCost = newCost;
+    },
     
-
-/**
- * Aggiorna il campo costo in base a livelloMax e abilitÃ  selezionate
- */
-updateCostDisplay() {
-    const levelMaxInput = document.getElementById('player-level-max');
-    const costDisplayInput = document.getElementById('player-cost-display');
-    if (!levelMaxInput || !costDisplayInput) return;
-    const levelMaxVal = parseInt(levelMaxInput.value) || 0;
-    const abilitiesCount = document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').length;
-    const newCost = this.calculateCost(levelMaxVal, abilitiesCount);
-    costDisplayInput.value = `Costo: ${newCost} CS`;
-    costDisplayInput.dataset.calculatedCost = newCost;
-},
-updateAbilitiesChecklist() {
+    updateAbilitiesChecklist() {
         const roleSelect = document.getElementById('player-role');
         const checklistContainer = document.getElementById('abilities-checklist');
         const selectedRole = roleSelect.value;
 
         if (!checklistContainer) return;
 
-        if (!selectedRole || !this.ROLE_ABILITIES_MAP[selectedRole]) {
-            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilitÃ  disponibili.</p>';
+        if (!selectedRole || !this.ROLE_ABILITIES_SEPARATED[selectedRole]) {
+            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilità disponibili.</p>';
             return;
         }
 
-        const availableAbilities = this.ROLE_ABILITIES_MAP[selectedRole];
-
-        const checklistHtml = availableAbilities.map(ability => {
-            return `
+        const roleAbilities = this.ROLE_ABILITIES_SEPARATED[selectedRole];
+        
+        let checklistHtml = '<div class="space-y-4">';
+        
+        checklistHtml += '<div class="bg-gray-900 p-3 rounded-lg border border-green-500">';
+        checklistHtml += '<h4 class="text-green-400 font-bold mb-2">✅ Abilità Positive (Max 3)</h4>';
+        checklistHtml += '<div class="grid grid-cols-2 gap-2">';
+        
+        roleAbilities.positive.forEach(ability => {
+            checklistHtml += `
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}" name="player-ability" value="${ability}" 
-                           class="form-checkbox h-4 w-4 text-yellow-500 bg-gray-600 border-gray-500 rounded focus:ring-yellow-400">
-                    <label for="ability-${ability.replace(/\s/g, '-')}" class="text-gray-300">
+                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}" 
+                           name="player-ability" value="${ability}" 
+                           class="form-checkbox h-4 w-4 text-green-500 bg-gray-600 border-gray-500 rounded focus:ring-green-400 ability-positive">
+                    <label for="ability-${ability.replace(/\s/g, '-')}" class="text-gray-300 text-sm">
                         ${ability}
                     </label>
                 </div>
             `;
-        }).join('');
+        });
+        
+        checklistHtml += '</div></div>';
+        
+        checklistHtml += '<div class="bg-gray-900 p-3 rounded-lg border border-red-500 mt-3">';
+        checklistHtml += '<h4 class="text-red-400 font-bold mb-2">❌ Abilità Negative (Max 1)</h4>';
+        checklistHtml += '<p class="text-xs text-yellow-300 mb-2">⚠️ Attenzione: effetti dannosi!</p>';
+        checklistHtml += '<div class="grid grid-cols-2 gap-2">';
+        
+        roleAbilities.negative.forEach(ability => {
+            checklistHtml += `
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}" 
+                           name="player-ability" value="${ability}" 
+                           class="form-checkbox h-4 w-4 text-red-500 bg-gray-600 border-gray-500 rounded focus:ring-red-400 ability-negative">
+                    <label for="ability-${ability.replace(/\s/g, '-')}" class="text-gray-300 text-sm">
+                        ${ability}
+                    </label>
+                </div>
+            `;
+        });
+        
+        checklistHtml += '</div></div></div>';
 
         checklistContainer.innerHTML = checklistHtml;
         
         checklistContainer.removeEventListener('change', this.handleAbilitiesLimit);
         checklistContainer.addEventListener('change', this.handleAbilitiesLimit.bind(this));
     
-        // Ricalcola costo quando cambia il checklist
         this.updateCostDisplay();
-},
+    },
 
-    /**
-     * Limita la selezione a max 3 abilitÃ 
-     */
     handleAbilitiesLimit(event) {
-        const checkedBoxes = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked'));
-        if (checkedBoxes.length > 3) {
+        const positiveChecked = document.querySelectorAll('#abilities-checklist .ability-positive:checked');
+        const negativeChecked = document.querySelectorAll('#abilities-checklist .ability-negative:checked');
+        
+        if (event.target.classList.contains('ability-positive') && positiveChecked.length > 3) {
             event.target.checked = false;
             const msgElement = document.getElementById('player-creation-message');
             if (msgElement) {
-                msgElement.textContent = 'Limite raggiunto: puoi selezionare al massimo 3 abilitÃ .';
+                msgElement.textContent = '❌ Massimo 3 abilità positive!';
                 msgElement.classList.add('text-red-400');
-            
-// Aggiorna il costo mostrato in base a livello max e abilitÃ  selezionate
-try {
-    const levelMaxInput = document.getElementById('player-level-max');
-    const costDisplayInput = document.getElementById('player-cost-display');
-    if (levelMaxInput && costDisplayInput) {
-        const abilitiesCount = document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').length;
-        const levelMaxVal = parseInt(levelMaxInput.value) || 0;
-        const newCost = this.calculateCost(levelMaxVal, abilitiesCount);
-        costDisplayInput.value = `Costo: ${newCost} CS`;
-        costDisplayInput.dataset.calculatedCost = newCost;
-    }
-} catch(e) { /* no-op */ }
-
-        }} else {
-            const msgElement = document.getElementById('player-creation-message');
-            if (msgElement) msgElement.textContent = '';
+                setTimeout(() => { msgElement.textContent = ''; }, 2000);
+            }
+            return;
         }
+        
+        if (event.target.classList.contains('ability-negative') && negativeChecked.length > 1) {
+            event.target.checked = false;
+            const msgElement = document.getElementById('player-creation-message');
+            if (msgElement) {
+                msgElement.textContent = '❌ Massimo 1 abilità negativa!';
+                msgElement.classList.add('text-red-400');
+                setTimeout(() => { msgElement.textContent = ''; }, 2000);
+            }
+            return;
+        }
+        
+        this.updateCostDisplay();
     },
-
-    /**
-     * Genera dati casuali per un giocatore
-     */
     handleRandomPlayer() {
         const getRandomInt = window.getRandomInt;
         const getRandomType = window.getRandomType || (() => 'Potenza');
@@ -201,7 +236,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         const invalidAbilities = selectedAbilities.filter(ability => !allowedAbilities.includes(ability));
         if (invalidAbilities.length > 0) {
             if (msgElement) {
-                msgElement.textContent = `Errore: L'abilitÃ /le abilitÃ  ${invalidAbilities.join(', ')} non è/sono valide per il ruolo di ${role}.`;
+                msgElement.textContent = `Errore: L'abilitÃƒÂ /le abilitÃƒÂ  ${invalidAbilities.join(', ')} non Ã¨/sono valide per il ruolo di ${role}.`;
                 msgElement.classList.add('text-red-400');
             }
             return;
@@ -209,7 +244,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         
         if (selectedAbilities.length > 3) {
              if (msgElement) {
-                 msgElement.textContent = 'Errore: non puoi selezionare più di 3 abilitÃ .';
+                 msgElement.textContent = 'Errore: non puoi selezionare piÃ¹ di 3 abilitÃƒÂ .';
                  msgElement.classList.add('text-red-400');
              }
              return;
@@ -270,7 +305,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         try {
             // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerÃ  l'esecuzione del fallback.
+                 // Questo errore forzerÃƒÂ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
             
@@ -295,7 +330,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                         <div>
                             <p class="font-semibold">${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -336,7 +371,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                      <div>
                          <p class="font-semibold">${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"
@@ -368,7 +403,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
         try {
             // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerÃ  l'esecuzione del fallback.
+                 // Questo errore forzerÃƒÂ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
             
@@ -392,7 +427,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                         <div>
                             <p class="font-semibold">${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -433,7 +468,7 @@ const calculatedCost = this.calculateCost(randomLevelMax, numAbilities);
                      <div>
                          <p class="font-semibold">${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">AbilitÃ : ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"

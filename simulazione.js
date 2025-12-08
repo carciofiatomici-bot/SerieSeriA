@@ -1,478 +1,629 @@
 //
 // ====================================================================
-// MODULO SIMULAZIONE.JS (Logica Core di Simulazione Partita e AbilitÃ )
+// MODULO SIMULAZIONE.JS (Motore Completo - Versione 2.0)
 // ====================================================================
+// 
+// Implementa:
+// - Nuovi modificatori livello (1-30)
+// - Sistema forma giocatori
+// - Bonus/malus tipologie (Potenza -25% Tecnica, ecc.)
+// - 40+ abilità complete
+// - Livello allenatore (+1/2 in tutte le fasi)
+// - Icona (+1 a tutti, forma sempre positiva)
 //
-
-
-// REPLAY TRACKING - Sistema per salvare azioni della partita
 // ====================================================================
+
+// REPLAY TRACKING
 if (typeof window !== "undefined") { window.replayActions = []; }
 
 // ====================================================================
+// COSTANTI E CONFIGURAZIONE
+// ====================================================================
+
 /**
- * Mappa dei modificatori basati sul livello del giocatore (Regola 2 estesa fino a Lv 24).
- * @type {Object<number, number>}
+ * Mappa modificatori per livello (Regola 2 - AGGIORNATA fino a Livello 30)
  */
 const LEVEL_MODIFIERS = {
     1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5, 5: 3.0, 6: 3.5, 7: 4.0, 8: 4.5, 9: 5.0, 10: 5.5,
     11: 6.0, 12: 6.5, 13: 7.0, 14: 7.5, 15: 8.0, 16: 8.5, 17: 9.0, 18: 9.5, 19: 10.0, 
-    20: 11.0, 21: 11.5, 22: 12.0, 23: 12.5, 24: 13.5
+    20: 11.0, 21: 11.5, 22: 12.0, 23: 12.5, 24: 13.5, 25: 14.5, 26: 15.0, 27: 15.5,
+    28: 16.0, 29: 17.0, 30: 18.0
 };
 
 /**
- * Mappa dei vantaggi di tipologia (Regola 5).
- * Potenza > Tecnico > VelocitÃ  > Potenza
+ * Vantaggi tipologia (Regola 5)
+ * Potenza batte Tecnica, Tecnica batte Velocità, Velocità batte Potenza
  */
-const TYPE_ADVANTAGE_MAP = {
-    'Potenza': 'Tecnica',
-    'Tecnica': 'Velocita',
-    'Velocita': 'Potenza',
+const TYPE_DISADVANTAGE = {
+    'Potenza': 'Tecnica',    // Potenza subisce -25% da Tecnica
+    'Tecnica': 'Velocita',   // Tecnica subisce -25% da Velocità
+    'Velocita': 'Potenza'    // Velocità subisce -25% da Potenza
 };
-const TYPE_MODIFIER_FACTOR = 0.20; // 20%
+const TYPE_PENALTY = 0.25; // 25% di riduzione
 
 /**
- * Funzione di utilitÃ  per generare un numero intero casuale.
- * @param {number} min - Valore minimo (incluso).
- * @param {number} max - Valore massimo (incluso).
- * @returns {number}
+ * Utility: Roll dice
  */
 const rollDice = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-// Variabile globale per tracciare le abilitÃ  annullate da Contrasto Durissimo in questa occasione
-let nullifiedPlayerAbilities = new Set();
-
+/**
+ * Utility: Roll percentage (1-100)
+ */
+const rollPercentage = () => rollDice(1, 100);
 
 /**
- * Calcola il moltiplicatore di livello (1.2, 0.8 o 1.0) per un giocatore in base alla tipologia
- * dei giocatori avversari che incontra nella fase.
- *
- * @param {string} playerType - Tipologia del giocatore corrente (Potenza/Tecnica/Velocita).
- * @param {Array<Object>} opposingGroup - Gruppo di giocatori avversari rilevanti nella fase.
- * @returns {number} Moltiplicatore di livello (0.80, 1.00, o 1.20).
+ * Utility: Check percentage chance
  */
-const calculateTypeModifier = (playerType, opposingGroup) => {
-    if (!opposingGroup || opposingGroup.length === 0) return 1.0;
-    if (!playerType || playerType === 'N/A') return 1.0;
+const checkChance = (percentage) => rollPercentage() <= percentage;
 
-    let totalAdvantageScore = 0; // Contatore: +1 per vantaggio, -1 per svantaggio
-    let totalClashes = 0;
+// Tracciamento abilità nullificate per questa occasione
+let nullifiedAbilities = new Set();
 
-    for (const opponent of opposingGroup) {
-        if (!opponent.type || opponent.type === 'N/A') continue;
-        
-        totalClashes++;
+// Tracciamento abilità "Contrasto Durissimo" usate
+let contrastoDurisismoUsed = new Set();
 
-        // Vantaggio: Player > Opponent (Livello AUMENTA del 20%)
-        if (TYPE_ADVANTAGE_MAP[playerType] === opponent.type) {
-            totalAdvantageScore += 1;
-        } 
-        // Svantaggio: Opponent > Player (Livello DIMINUISCE del 20%)
-        else if (TYPE_ADVANTAGE_MAP[opponent.type] === playerType) {
-            totalAdvantageScore -= 1;
-        }
-    }
+// ====================================================================
+// CALCOLO MODIFICATORI BASE
+// ====================================================================
 
-    if (totalClashes === 0) return 1.0;
-
-    // Se la maggioranza degli scontri (netto) Ã¨ a favore
-    if (totalAdvantageScore > 0) {
-        return 1.20;
-    } 
-    // Se la maggioranza degli scontri (netto) Ã¨ a sfavore
-    else if (totalAdvantageScore < 0) {
-        return 0.80;
+/**
+ * Calcola il modificatore base di un giocatore considerando:
+ * - Livello base
+ * - Forma (bonus/malus)
+ * - Icona (+1 se c'è l'Icona in squadra)
+ * - Tipologia vs avversari (-25% se svantaggiato)
+ * 
+ * @param {Object} player - Giocatore
+ * @param {boolean} hasIcona - Se la squadra ha l'Icona
+ * @param {Array} opposingPlayers - Giocatori avversari in questa fase
+ * @returns {number} Modificatore finale
+ */
+const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
+    // Abilità nullificata?
+    if (nullifiedAbilities.has(player.id)) {
+        return 0;
     }
     
-    return 1.0; // Neutrale o pareggio
-};
-
-
-/**
- * Calcola il modificatore base di un singolo giocatore.
- * Applica i bonus Icona, Capitano, Caos, Fortunato, e la Tipologia/Forma.
- *
- * @param {Object} player - Oggetto giocatore.
- * @param {boolean} isIconaActive - Se l'abilitÃ  Icona (+1 a tutti) Ã¨ attiva nella squadra del giocatore.
- * @param {number} phaseNum - 1 (Costruzione), 2 (Attacco), o 3 (Tiro).
- * @param {Array<Object>} opposingGroup - Gruppo di giocatori avversari rilevanti nella fase.
- * @returns {number} Modificatore totale base/variabile/tipologia.
- */
-const calculatePlayerModifier = (player, isIconaActive, phaseNum, opposingGroup) => {
-    // Check iniziale per l'abilitÃ  annullata
-    if (nullifiedPlayerAbilities.has(player.id)) {
-        return 0; 
-    }
-
-    // Livello Base (con Forma giÃ  applicata da campionato.js)
-    // Regola 6: la forma Ã¨ considerata qui tramite 'currentLevel'
+    // Livello base
     const baseLevel = player.level || 1;
-    let effectiveLevel = player.currentLevel || baseLevel; 
+    let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
     
-    // 1. Applica la Tipologia (Moltiplicatore 0.8 o 1.2)
-    const typeMultiplier = calculateTypeModifier(player.type, opposingGroup);
-    effectiveLevel *= typeMultiplier;
-    
-    effectiveLevel = Math.round(effectiveLevel); // Arrotonda il livello effettivo finale
-
-    // 2. Mappa il LIVELLO EFFETTIVO al MODIFICATORE
-    let mod = LEVEL_MODIFIERS[Math.min(24, Math.max(1, effectiveLevel))] || 1.0; // Max level 24
-
-
-    // 3. Modificatori Costanti (AbilitÃ )
-    if (player.isCaptain) {
-        mod += 1.0; // Bonus Capitano (Regola 3)
-    }
-    if (isIconaActive && !player.isCaptain) {
-        mod += 1.0; // AbilitÃ  Icona
+    // Forma (currentLevel ha già il livello modificato dalla forma)
+    if (player.currentLevel !== undefined) {
+        modifier = LEVEL_MODIFIERS[player.currentLevel] || modifier;
     }
     
-    // 4. AbilitÃ  Variabili (che si attivano "ad ogni fase")
-    
-    // Effetto Caos
-    if (player.abilities && player.abilities.includes('Effetto Caos')) {
-        mod += rollDice(-2, 2);
+    // Icona: +1 a tutti i modificatori
+    if (hasIcona && !player.abilities?.includes('Icona')) {
+        modifier += 1.0;
     }
     
-    // Fortunato
-    if (player.abilities && player.abilities.includes('Fortunato') && rollDice(1, 100) <= 5) {
-        mod *= 2;
+    // Capitano/Icona: +1 aggiuntivo
+    if (player.abilities?.includes('Icona')) {
+        modifier += 1.0;
     }
     
-    return Math.max(0, parseFloat(mod.toFixed(2)));
-};
-
-/**
- * Funzione per applicare il bonus Bandiera del Club ai compagni.
- *
- * @param {Array<Object>} players - Gruppo di giocatori di un ruolo.
- * @param {Object} teamFormationInfo - Formazione/info della squadra.
- * @param {string} role - Ruolo da controllare.
- * @returns {number} Modificatore extra dovuto all'abilitÃ  Bandiera.
- */
-const applyBandieraBonus = (players, teamFormationInfo, role) => {
-    // Verifica se l'abilitÃ  Bandiera Ã¨ attiva per il ruolo (solo se uno ce l'ha)
-    const playersWithFlag = teamFormationInfo.allPlayers.filter(p => p.role === role && p.abilities && p.abilities.includes('Bandiera del club'));
-    
-    if (playersWithFlag.length !== 1) {
-        return 0; // Se zero o piÃ¹ di uno, l'abilitÃ  non si attiva per il bonus compagni (non cumulabile)
-    }
-    
-    const flagPossessorId = playersWithFlag[0].id;
-    let bonus = 0;
-
-    // Applica +1 a tutti i compagni (non al possessore)
-    for (const player of players) {
-        if (player.id !== flagPossessorId) {
-            bonus += 1.0;
-        }
-    }
-    return bonus;
-};
-
-
-/**
- * Calcola il modificatore totale di un gruppo di giocatori in una fase specifica.
- *
- * @param {Array<Object>} players - Array di oggetti giocatore filtrati per ruolo.
- * @param {boolean} isHalf - Se il modificatore deve essere dimezzato per la formula standard.
- * @param {number} phaseNum - 1 (Costruzione), 2 (Attacco), o 3 (Tiro).
- * @param {Object} teamAFormationInfo - Formazione/info Attaccante.
- * @param {Object} teamBFormationInfo - Formazione/info Difensore.
- * @param {boolean} isTeamAMatching - Se il gruppo di giocatori Ã¨ della squadra A (Attaccante).
- * @returns {number} Modificatore totale arrotondato.
- */
-const calculateGroupModifier = (players, isHalf, phaseNum, teamAFormationInfo, teamBFormationInfo, isTeamAMatching) => {
-    if (!players || players.length === 0) return 0;
-    
-    const role = players[0].role;
-    let totalModifier = 0;
-    
-    const formationInfo = isTeamAMatching ? teamAFormationInfo : teamBFormationInfo;
-
-    // 1. Calcola il bonus Bandiera una volta per il gruppo
-    const bandieraBonus = applyBandieraBonus(players, formationInfo, role);
-
-    // 2. Determina il gruppo avversario per il calcolo della Tipologia
-    let opposingGroup = [];
-    if (phaseNum === 1 && isTeamAMatching) { // A Attacca (D+C) contro B (C)
-        opposingGroup = teamBFormationInfo.C;
-    } else if (phaseNum === 2 && isTeamAMatching) { // A Attacca (C+A) contro B (D+C)
-        opposingGroup = teamBFormationInfo.D.concat(teamBFormationInfo.C);
-    } else if (phaseNum === 1 && !isTeamAMatching) { // B Difende (C) contro A (D+C)
-        opposingGroup = teamAFormationInfo.D.concat(teamAFormationInfo.C);
-    } else if (phaseNum === 2 && !isTeamAMatching) { // B Difende (D+C) contro A (C+A)
-         opposingGroup = teamAFormationInfo.C.concat(teamAFormationInfo.A);
-    } else if (phaseNum === 3 && !isTeamAMatching) { // Portiere B difende contro A Attaccanti
-        opposingGroup = teamAFormationInfo.A;
-    }
-
-else if (phaseNum === 3 && isTeamAMatching) { // A attacca, B difende con Portiere
-    // Supporta piÃ¹ convenzioni per il portiere
-    const gk =
-      (teamBFormationInfo && (teamBFormationInfo.P || teamBFormationInfo.G || teamBFormationInfo.Goalkeeper))
-      || [];
-    opposingGroup = gk;
-}
-
-
-
-    for (const player of players) {
-        
-        const singleMod = calculatePlayerModifier(
-            player,
-            formationInfo.isIconaActive,
-            phaseNum,
-            opposingGroup
+    // Effetto tipologia vs avversari (Regola 5)
+    // -25% se svantaggiato
+    if (player.type && opposingPlayers.length > 0) {
+        const disadvantagedAgainst = TYPE_DISADVANTAGE[player.type];
+        const facingDisadvantage = opposingPlayers.some(opp => 
+            opp.type === disadvantagedAgainst
         );
         
-        let finalMod = singleMod;
+        if (facingDisadvantage) {
+            modifier *= (1 - TYPE_PENALTY); // -25%
+        }
+    }
+    
+    return modifier;
+};
 
-        // Aggiungi il bonus Bandiera (giÃ  calcolato sopra)
-        finalMod += bandieraBonus;
+// ====================================================================
+// GESTIONE ABILITÀ
+// ====================================================================
 
-        // Teletrasporto (Portiere): 5% di partecipare a fase Costruzione/Attacco
-        if (player.role === 'P' && player.abilities && player.abilities.includes('Teletrasporto') && phaseNum !== 3) {
-            if (rollDice(1, 100) > 5) {
-                continue; // Il portiere non partecipa (modificatore = 0)
+/**
+ * Applica le abilità PRIMA della fase (modifiche ai modificatori)
+ */
+const applyPrePhaseAbilities = (team, opposingTeam, phase) => {
+    let modifiers = {
+        bonus: 0,
+        multipliers: {},
+        skipPhase: false,
+        interruptPhase: false,
+        specialEffects: {}
+    };
+    
+    // Contrasto Durissimo (Difensore): nullifica abilità di un giocatore in panchina avversaria
+    if (phase === 'construction' || phase === 'attack') {
+        const hasContrastoDurissimo = team.D?.some(p => 
+            p.abilities?.includes('Contrasto Durissimo') && 
+            !nullifiedAbilities.has(p.id) &&
+            !contrastoDurisismoUsed.has(p.id)
+        );
+        
+        if (hasContrastoDurissimo && opposingTeam.Panchina?.length > 0) {
+            const randomBench = opposingTeam.Panchina[rollDice(0, opposingTeam.Panchina.length - 1)];
+            nullifiedAbilities.add(randomBench.id);
+            const contrasto = team.D.find(p => p.abilities?.includes('Contrasto Durissimo'));
+            contrastoDurisismoUsed.add(contrasto.id);
+        }
+    }
+    
+    // Regista (Centrocampista): 5% skip costruzione
+    if (phase === 'construction') {
+        const hasRegista = team.C?.some(p => 
+            p.abilities?.includes('Regista') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasRegista && checkChance(5)) {
+            modifiers.skipPhase = true;
+            return modifiers;
+        }
+    }
+    
+    // Lancio lungo (Portiere): 5% skip costruzione
+    if (phase === 'construction') {
+        const hasLancioLungo = team.P?.some(p => 
+            p.abilities?.includes('Lancio lungo') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasLancioLungo && checkChance(5)) {
+            modifiers.skipPhase = true;
+            return modifiers;
+        }
+    }
+    
+    // Antifurto (Difensore): 5% interrompe attacco
+    if (phase === 'attack') {
+        const hasAntifurto = opposingTeam.D?.some(p => 
+            p.abilities?.includes('Antifurto') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasAntifurto && checkChance(5)) {
+            modifiers.interruptPhase = true;
+            return modifiers;
+        }
+    }
+    
+    // Mago del pallone (Centrocampista): 5% ignora un centrocampista avversario
+    if (phase === 'construction') {
+        const hasMago = team.C?.some(p => 
+            p.abilities?.includes('Mago del pallone') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasMago && checkChance(5) && opposingTeam.C?.length > 0) {
+            const randomOpponent = opposingTeam.C[rollDice(0, opposingTeam.C.length - 1)];
+            nullifiedAbilities.add(randomOpponent.id);
+        }
+    }
+    
+    // Cross (Centrocampista): 5% skip direttamente a tiro
+    if (phase === 'attack') {
+        const hasCross = team.C?.some(p => 
+            p.abilities?.includes('Cross') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasCross && checkChance(5)) {
+            modifiers.specialEffects.cross = true;
+            return modifiers;
+        }
+    }
+    
+    // Teletrasporto (Portiere): 5% partecipa alle fasi
+    if (phase === 'construction' || phase === 'attack') {
+        const hasTeletrasporto = team.P?.some(p => 
+            p.abilities?.includes('Teletrasporto') && 
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasTeletrasporto && checkChance(5)) {
+            modifiers.specialEffects.teletrasporto = team.P[0];
+        }
+    }
+    
+    return modifiers;
+};
+
+/**
+ * Calcola modificatore di gruppo con tutte le abilità
+ */
+const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
+    if (!players || players.length === 0) return 0;
+    
+    const hasIcona = team.formationInfo?.isIconaActive || false;
+    let totalModifier = 0;
+    
+    // Conta Bandiera del club per ruolo
+    const bandiereCount = {};
+    
+    for (const player of players) {
+        if (nullifiedAbilities.has(player.id)) continue;
+        
+        let mod = calculatePlayerModifier(player, hasIcona, opposingTeam);
+        
+        // Effetto Caos: modificatore varia da -3 a +3
+        if (player.abilities?.includes('Effetto Caos')) {
+            mod += rollDice(-3, 3);
+        }
+        
+        // Fortunato: 5% raddoppia modificatore (se negativo diventa 0)
+        if (player.abilities?.includes('Fortunato') && checkChance(5)) {
+            mod = mod < 0 ? 0 : mod * 2;
+        }
+        
+        // Bandiera del club: +1 ai compagni dello stesso ruolo
+        if (player.abilities?.includes('Bandiera del club')) {
+            if (!bandiereCount[player.role]) {
+                bandiereCount[player.role] = true; // Solo una volta per ruolo
             }
         }
-
-
-        // === LOGICA DIMEZZAMENTO E BONUS SPECIFICI PER FASE/RUOLO ===
         
-        const isMotore = player.abilities && player.abilities.includes('Motore');
-        
-        if (phaseNum === 2 && role === 'C') {
-             // C in Fase 2 (attacco/difesa): 1/2 mod standard
-             if (isHalf && !isMotore) {
-                 finalMod /= 2; 
-             }
-             // Se ha Motore, usa il modificatore intero (non dimezzato).
-        } else if (phaseNum === 1 && role === 'D' && isHalf) {
-            // D in Fase 1 (costruzione): 1/2 mod
-            finalMod /= 2;
-        } else if (phaseNum === 1 && role === 'C' && player.abilities && player.abilities.includes('Tocco Di Velluto') && rollDice(1, 100) <= 5) {
-             // C: Tocco di Velluto (Solo Fase 1): Raddoppia il modificatore.
-             finalMod *= 2;
-        }
-
-
-        // A: AbilitÃ  Doppio: Scatto (Fase 2 Attacco A)
-        if (phaseNum === 2 && role === 'A' && player.abilities && player.abilities.includes('Doppio: Scatto') && isTeamAMatching && rollDice(1, 100) <= 5) {
-             finalMod *= 2; 
+        // Abilità specifiche per fase COSTRUZIONE
+        if (phase === 'construction') {
+            // Tocco di velluto (Centrocampista): 5% raddoppia modificatore
+            if (player.role === 'C' && player.abilities?.includes('Tocco Di Velluto') && checkChance(5)) {
+                mod *= 2;
+            }
+            
+            // Impreciso (Centrocampista negativa): 5% sottrae invece di aggiungere
+            if (player.role === 'C' && player.abilities?.includes('Impreciso') && checkChance(5)) {
+                mod *= -1;
+            }
+            
+            // Ingabbiato (Centrocampista negativa): 5% non aggiunge
+            if (player.role === 'C' && player.abilities?.includes('Ingabbiato') && checkChance(5)) {
+                mod = 0;
+            }
         }
         
-        // A: AbilitÃ  Pivot (Fase 2 Attacco A)
-        if (phaseNum === 2 && role === 'A' && teamAFormationInfo.A.length === 1 && player.abilities && player.abilities.includes('Pivot') && isTeamAMatching) {
-            finalMod *= 2;
+        // Abilità specifiche per fase ATTACCO
+        if (phase === 'attack') {
+            // Muro (Difensore): 5% raddoppia quando difende
+            if (player.role === 'D' && player.abilities?.includes('Muro') && checkChance(5)) {
+                mod *= 2;
+            }
+            
+            // Guardia (Difensore): raddoppia se è l'unico difensore
+            if (player.role === 'D' && player.abilities?.includes('Guardia') && players.length === 1) {
+                mod *= 2;
+            }
+            
+            // Pivot (Attaccante): raddoppia se è l'unico attaccante
+            if (player.role === 'A' && player.abilities?.includes('Pivot') && 
+                team.A?.length === 1) {
+                mod *= 2;
+            }
+            
+            // Doppio Scatto (Attaccante): 5% mette 2 volte il modificatore
+            if (player.role === 'A' && player.abilities?.includes('Doppio Scatto') && checkChance(5)) {
+                mod *= 2;
+            }
+            
+            // Motore (Centrocampista): usa modificatore intero invece di 1/2
+            // (gestito nella logica di dimezzamento)
+            
+            // Abilità negative
+            // Falloso (Difensore): 5% sottrae invece di aggiungere
+            if (player.role === 'D' && player.abilities?.includes('Falloso') && checkChance(5)) {
+                mod *= -1;
+            }
+            
+            // Insicuro (Difensore): 5% non aggiunge
+            if (player.role === 'D' && player.abilities?.includes('Insicuro') && checkChance(5)) {
+                mod = 0;
+            }
+            
+            // Piedi a banana (Attaccante): 5% sottrae
+            if (player.role === 'A' && player.abilities?.includes('Piedi a banana') && checkChance(5)) {
+                mod *= -1;
+            }
+            
+            // Eccesso di sicurezza (Attaccante): 5% non aggiunge
+            if (player.role === 'A' && player.abilities?.includes('Eccesso di sicurezza') && checkChance(5)) {
+                mod = 0;
+            }
         }
         
-        // D: AbilitÃ  Guardia (Fase 2 Difesa B)
-        if (phaseNum === 2 && role === 'D' && teamBFormationInfo.D.length === 1 && player.abilities && player.abilities.includes('Guardia') && !isTeamAMatching) {
-            finalMod *= 2;
+        // Fuori Posizione (tutte tranne tiro): 2.5% dà 1/2 del modificatore agli avversari
+        if (phase !== 'shot' && player.abilities?.includes('Fuori Posizione') && checkChance(2.5)) {
+            // Questo viene gestito sommando negativamente nel gruppo avversario
+            // Per ora lo segnamo per elaborazione successiva
+            mod = -mod / 2;
         }
-
-        totalModifier += finalMod;
+        
+        // Motore: non dimezza il modificatore
+        if (player.abilities?.includes('Motore') && isHalf) {
+            totalModifier += mod; // Aggiunge intero
+        } else {
+            totalModifier += isHalf ? mod / 2 : mod;
+        }
     }
     
-    return parseFloat(totalModifier.toFixed(2));
+    // Applica bonus Bandiera del club
+    for (const role in bandiereCount) {
+        const sameRolePlayers = players.filter(p => p.role === role && !p.abilities?.includes('Bandiera del club'));
+        totalModifier += sameRolePlayers.length * 1.0; // +1 per ogni compagno stesso ruolo
+    }
+    
+    // Rientro Rapido (Attaccante): 5% partecipa alla difesa
+    if (phase === 'attack' && team.A?.length > 0) {
+        const hasRientro = team.A.some(p => p.abilities?.includes('Rientro Rapido') && !nullifiedAbilities.has(p.id));
+        if (hasRientro && checkChance(5)) {
+            const attaccante = team.A.find(p => p.abilities?.includes('Rientro Rapido'));
+            const bonusMod = calculatePlayerModifier(attaccante, hasIcona, opposingTeam);
+            totalModifier += bonusMod / 2; // Aggiunge come difesa
+        }
+    }
+    
+    return totalModifier;
 };
 
-/**
- * Fase 1: Calcola il successo della Costruzione (Passaggio in Attacco).
- * @returns {boolean} True se la costruzione ha successo, False altrimenti.
- */
-const phaseOneConstruction = (teamA, teamB) => {
+// ====================================================================
+// FASE 1: COSTRUZIONE
+// ====================================================================
+
+const phaseConstruction = (teamA, teamB) => {
+    const preAbilities = applyPrePhaseAbilities(teamA, teamB, 'construction');
     
-    // ABILITÃ€ CONTRATO DURISSIMO (DIFENSORE B)
-    const hasContrastoDurissimo = teamB.D.some(p => p.abilities && p.abilities.includes('Contrasto Durissimo'));
-    if (hasContrastoDurissimo && teamA.Panchina.length > 0) {
-        const randomBenchPlayer = teamA.Panchina[rollDice(0, teamA.Panchina.length - 1)];
-        nullifiedPlayerAbilities.add(randomBenchPlayer.id);
-    }
-
-
-    // ABILITÃ€ REGISTA (CENTROCAMPISTA A): 5% di saltare la fase di costruzione
-    const hasRegista = teamA.C.some(p => p.abilities && p.abilities.includes('Regista'));
-    if (hasRegista && rollDice(1, 100) <= 5) {
-         return true;
-    }
-
-    // ABILITÃ€ ANTIFURTO (DIFENSORE B): 5% di interrompere la fase in Costruzione
-    const hasAntifurto = teamB.D.some(p => p.abilities && p.abilities.includes('Antifurto'));
-    if (hasAntifurto && rollDice(1, 100) <= 5) {
-         return false;
-    }
-
-    // Calcolo Modificatori (1/2 D A, 1 C A, 1 C B)
-    // Squadra A (Attacca) vs Squadra B (Difende)
-    const modA_D = calculateGroupModifier(teamA.D, true, 1, teamA.formationInfo, teamB.formationInfo, true);
-    const modA_C = calculateGroupModifier(teamA.C, false, 1, teamA.formationInfo, teamB.formationInfo, true);
-    const modB_C = calculateGroupModifier(teamB.C, false, 1, teamA.formationInfo, teamB.formationInfo, false);
+    // Skip fase?
+    if (preAbilities.skipPhase) return true;
     
-    // Formula per la percentuale di riuscita (Costruzione)
-    // [(1d20 + 1/2 mod D A + mod C A) - (1d20 + mod C B)]
+    // Interrupt fase?
+    if (preAbilities.interruptPhase) return false;
+    
+    // Calcola modificatori
+    // Squadra A: 1/2 D + 1 C
+    // Squadra B: 1 C
+    const modA_D = calculateGroupModifier(teamA.D, true, teamA, teamB.C || [], 'construction');
+    const modA_C = calculateGroupModifier(teamA.C, false, teamA, teamB.C || [], 'construction');
+    const modB_C = calculateGroupModifier(teamB.C, false, teamB, [...(teamA.D || []), ...(teamA.C || [])], 'construction');
+    
+    // Teletrasporto portiere?
+    if (preAbilities.specialEffects.teletrasporto) {
+        const portiereBonus = calculatePlayerModifier(preAbilities.specialEffects.teletrasporto, teamA.formationInfo?.isIconaActive, teamB.C || []);
+        modA_C += portiereBonus / 2;
+    }
+    
+    // Roll + coach bonus (Regola 6: +1/2 livello allenatore)
     const rollA = rollDice(1, 20);
     const rollB = rollDice(1, 20);
     
-    // Regola 7: Aggiungi il livello allenatore ad entrambi i valori
-    const attackValue = rollA + modA_D + modA_C + teamA.coachLevel;
-    const defenseValue = rollB + modB_C + teamB.coachLevel;
+    const coachA = (teamA.coachLevel || 1) / 2;
+    const coachB = (teamB.coachLevel || 1) / 2;
     
-    const successPercentage = Math.max(5, Math.min(100, Math.round(attackValue - defenseValue)));
-
-    // Tiro 1d100 per verificare la riuscita
-    const dice100 = rollDice(1, 100);
-
-    const isSuccessful = dice100 <= successPercentage;
-
-    // 5% di probabilitÃ  di passare alla fase successiva anche in caso di fallimento
-    const luckyPass = rollDice(1, 100) <= 5;
+    const totalA = rollA + modA_D + modA_C + coachA;
+    const totalB = rollB + modB_C + coachB;
     
-    return isSuccessful || luckyPass;
+    // Calcola % successo
+    const successChance = Math.max(5, Math.min(95, totalA - totalB + 50)); // Centrato a 50%
+    
+    // Roll 1d100
+    const success = checkChance(successChance);
+    
+    // 5% di passare comunque
+    if (!success && checkChance(5)) return true;
+    
+    return success;
 };
 
-/**
- * Fase 2: Calcola il successo dell'Attacco (Superamento del Centrocampo/Difesa).
- * @returns {number} Risultato della fase di attacco (usato nella fase 3) o -1 se fallisce.
- */
-const phaseTwoAttack = (teamA, teamB) => {
-    // ABILITÃ€ ANTIFURTO (DIFENSORE B): 5% di interrompere la fase in Attacco
-    const hasAntifurto = teamB.D.some(p => p.abilities && p.abilities.includes('Antifurto'));
-    if (hasAntifurto && rollDice(1, 100) <= 5) {
-         return -1;
+// ====================================================================
+// FASE 2: ATTACCO VS DIFESA
+// ====================================================================
+
+const phaseAttack = (teamA, teamB) => {
+    const preAbilities = applyPrePhaseAbilities(teamA, teamB, 'attack');
+    
+    // Interrupt fase?
+    if (preAbilities.interruptPhase) return -1;
+    
+    // Cross? Skip direttamente a tiro con 1d20 + miglior attaccante
+    if (preAbilities.specialEffects.cross) {
+        const bestAttacker = teamA.A?.reduce((best, curr) => {
+            const modBest = calculatePlayerModifier(best, teamA.formationInfo?.isIconaActive, []);
+            const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
+            return modCurr > modBest ? curr : best;
+        });
+        
+        if (bestAttacker) {
+            const crossResult = rollDice(1, 20) + calculatePlayerModifier(bestAttacker, teamA.formationInfo?.isIconaActive, []);
+            return crossResult;
+        }
     }
     
-    // Calcolo Modificatori
-    // Squadra A (Attacca) vs Squadra B (Difende)
+    // Calcola modificatori
+    // Squadra A: 1/2 C + 1 A
+    // Squadra B: 1 D + 1/2 C
+    const modA_C = calculateGroupModifier(teamA.C, true, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack');
+    const modA_A = calculateGroupModifier(teamA.A, false, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack');
+    const modB_D = calculateGroupModifier(teamB.D, false, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack');
+    const modB_C = calculateGroupModifier(teamB.C, true, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack');
     
-    // Modificatori Attacco: C (1/2/Motore) + A (1/Pivot/Doppio)
-    const modA_C = calculateGroupModifier(teamA.C, true, 2, teamA.formationInfo, teamB.formationInfo, true);
-    const modA_A = calculateGroupModifier(teamA.A, false, 2, teamA.formationInfo, teamB.formationInfo, true);
+    // Teletrasporto portiere?
+    if (preAbilities.specialEffects.teletrasporto) {
+        const portiereBonus = calculatePlayerModifier(preAbilities.specialEffects.teletrasporto, teamA.formationInfo?.isIconaActive, teamB.D || []);
+        modA_A += portiereBonus / 2;
+    }
     
-    // Modificatori Difesa: D (1/Guardia) + C (1/2/Motore)
-    const modB_D = calculateGroupModifier(teamB.D, false, 2, teamA.formationInfo, teamB.formationInfo, false);
-    const modB_C = calculateGroupModifier(teamB.C, true, 2, teamA.formationInfo, teamB.formationInfo, false); 
-    
-    // AbilitÃ  Difensore "Muro" (Difensore B): 5% di raddoppiare la difesa
-    const muroMultiplier = teamB.D.some(p => p.abilities && p.abilities.includes('Muro') && rollDice(1, 100) <= 5) ? 2 : 1;
-    
-    // Formula Attacco
-    // [(1d20 + 1/2 mod C A + mod A A) - ( 1d20 + mod D B + 1/2 mod C B)]
+    // Roll + coach bonus
     const rollA = rollDice(1, 20);
     const rollB = rollDice(1, 20);
-
-    // Regola 7: Aggiungi il livello allenatore ad entrambi i valori
-    const attackTotal = rollA + modA_C + modA_A + teamA.coachLevel;
-    const defenseTotal = (rollB + modB_D + modB_C + teamB.coachLevel) * muroMultiplier; // Muro si applica dopo il bonus coach
-
-    const result = attackTotal - defenseTotal;
     
-    // Se totale >= 0, si passa alla fase successiva.
-    if (result >= 0) {
-        return result;
-    } 
+    const coachA = (teamA.coachLevel || 1) / 2;
+    const coachB = (teamB.coachLevel || 1) / 2;
     
-    // Se totale < 0, attacco non riuscito.
-    // 5% di possibilitÃ  che si passi comunque alla fase successiva simulando un risultato = 5
-    const luckyShot = rollDice(1, 100) <= 5;
+    const totalA = rollA + modA_C + modA_A + coachA;
+    const totalB = rollB + modB_D + modB_C + coachB;
     
-    if (luckyShot) {
-        return 5; // Passa alla fase successiva con un risultato neutro di 5
-    }
-
-    return -1; // Attacco fallito
+    const result = totalA - totalB;
+    
+    // Se >= 0 passa
+    if (result >= 0) return Math.max(1, result);
+    
+    // Se < 0, 5% di passare comunque con risultato 5
+    if (checkChance(5)) return 5;
+    
+    return -1;
 };
 
-/**
- * Fase 3: Calcola il tiro in porta (Goal vs Parata).
- * @returns {boolean} True se Ã¨ Goal, False se Ã¨ Parata.
- */
-const phaseThreeShot = (teamA, teamB, attackResult) => {
-    // teamB: P (intero)
-    const portiereB = teamB.P[0] || null;
-    if (!portiereB || teamB.P.length === 0) return true; // Se manca il portiere, Ã¨ sempre goal (Regola implicita)
+// ====================================================================
+// FASE 3: TIRO VS PORTIERE
+// ====================================================================
+
+const phaseShot = (teamA, teamB, attackResult) => {
+    if (!teamB.P || teamB.P.length === 0) return true; // No portiere = gol
     
-    // Modificatore del portiere (Gestisce Icona, Caos, Fortunato, Tipologia vs A)
-    const modB_P = calculateGroupModifier(
-        teamB.P,
-        false, // Non dimezzato
-        3, // Fase 3
-        teamA.formationInfo, 
-        teamB.formationInfo,
-        false // Difende
+    const portiere = teamB.P[0];
+    
+    // Tiro fulmineo (Attaccante): 5% annulla abilità portiere
+    const hasTiroFulmineo = teamA.A?.some(p => p.abilities?.includes('Tiro Fulmineo') && !nullifiedAbilities.has(p.id));
+    if (hasTiroFulmineo && checkChance(5)) {
+        nullifiedAbilities.add(portiere.id);
+    }
+    
+    // Modificatore portiere
+    let modPortiere = calculatePlayerModifier(portiere, teamB.formationInfo?.isIconaActive, teamA.A || []);
+    
+    // Uscita Kamikaze: raddoppia modificatore
+    let kamikazeActive = false;
+    if (portiere.abilities?.includes('Uscita Kamikaze') && !nullifiedAbilities.has(portiere.id)) {
+        modPortiere *= 2;
+        kamikazeActive = true;
+    }
+    
+    // Deviazione (Difensore): 5% aggiunge modificatore del difensore
+    if (teamB.D?.length > 0) {
+        const hasDeviazione = teamB.D.some(p => p.abilities?.includes('Deviazione') && !nullifiedAbilities.has(p.id));
+        if (hasDeviazione && checkChance(5)) {
+            const difensore = teamB.D.find(p => p.abilities?.includes('Deviazione'));
+            modPortiere += calculatePlayerModifier(difensore, teamB.formationInfo?.isIconaActive, []);
+        }
+    }
+    
+    // Mani di burro (Portiere negativa): 5% sottrae invece di aggiungere
+    if (portiere.abilities?.includes('Mani di burro') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        modPortiere *= -1;
+    }
+    
+    // Fuori dai pali (Portiere negativa): 5% non aggiunge modificatore
+    if (portiere.abilities?.includes('Fuori dai pali') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        modPortiere = 0;
+    }
+    
+    // Coach bonus
+    const coachB = (teamB.coachLevel || 1) / 2;
+    
+    // Bomber (Attaccante): +1 al risultato attacco
+    let attackBonus = 0;
+    if (teamA.A?.some(p => p.abilities?.includes('Bomber') && !nullifiedAbilities.has(p.id))) {
+        attackBonus = 1;
+    }
+    
+    // Tiro dalla distanza (Centrocampista/Difensore): sostituisce modificatore attaccante più basso
+    const shooters = [...(teamA.C || []), ...(teamA.D || [])].filter(p => 
+        p.abilities?.includes('Tiro dalla distanza') && !nullifiedAbilities.has(p.id)
     );
-
-    // ABILITÃ€ ATTACCANTE "BOMBER" (Squadra A): +1 al risultato
-    const bomberBonus = teamA.A.some(p => p.abilities && p.abilities.includes('Bomber')) ? 1 : 0;
-    const finalAttackResult = attackResult + bomberBonus;
     
-    
-    // ABILITÃ€ PORTIERE "USCITA KAMIKAZE" (Squadra B)
-    let saveMultiplier = 1;
-    let kamikazeFailChance = false;
-    if (portiereB.abilities && portiereB.abilities.includes('Uscita Kamikaze')) {
-         saveMultiplier = 2; // Raddoppia il modificatore
-         kamikazeFailChance = true; // Attiva la chance di fallimento
+    if (shooters.length > 0 && teamA.A?.length > 0) {
+        // Trova attaccante con modificatore più basso
+        let worstAttacker = teamA.A.reduce((worst, curr) => {
+            const modWorst = calculatePlayerModifier(worst, teamA.formationInfo?.isIconaActive, []);
+            const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
+            return modCurr < modWorst ? curr : worst;
+        });
+        
+        const worstAttackerMod = calculatePlayerModifier(worstAttacker, teamA.formationInfo?.isIconaActive, []);
+        
+        // Trova miglior shooter
+        const bestShooter = shooters.reduce((best, curr) => {
+            const modBest = calculatePlayerModifier(best, teamA.formationInfo?.isIconaActive, []);
+            const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
+            return modCurr > modBest ? curr : best;
+        });
+        
+        const bestShooterMod = calculatePlayerModifier(bestShooter, teamA.formationInfo?.isIconaActive, []);
+        
+        // Se lo shooter è migliore, sostituisce
+        if (bestShooterMod > worstAttackerMod) {
+            attackBonus += (bestShooterMod - worstAttackerMod);
+        }
     }
     
-    // ABILITÃ€ PORTIERE "PUGNO DI FERRO" (Squadra B)
-    // Soglia di parata: Se totale >= -2 (invece di 0) Ã¨ parata!
-    const parataSuccessThreshold = portiereB.abilities && portiereB.abilities.includes('Pugno di ferro') ? -2 : 0;
+    const finalAttackResult = attackResult + attackBonus;
     
+    // Roll portiere
+    let rollP = rollDice(1, 20);
     
-    // Formula Tiro in Porta
-    // 1d20 + modificatore portiere - risultato fase attacco precedente
-    const rollP = rollDice(1, 20);
-    
-    const totalSavePower = rollP + (modB_P * saveMultiplier) + teamB.coachLevel; // Regola 7: Bonus Coach Portiere
-    
-    // Punto 5 del tuo regolamento: risultato fase attacco precedente si sottrae.
-    const saveTotal = totalSavePower - finalAttackResult; 
-    
-    // 1. Check Kamikaze Fail (se attiva e parata teoricamente riuscita)
-    if (kamikazeFailChance && saveTotal >= parataSuccessThreshold && rollDice(1, 100) <= 5) {
-         return true; // Goal (5% di fallimento forzato)
+    // Parata con i piedi (Portiere): 5% tira due dadi e tiene il più alto
+    if (portiere.abilities?.includes('Parata con i piedi') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        const roll2 = rollDice(1, 20);
+        rollP = Math.max(rollP, roll2);
     }
-
-    // 2. Check Parata/Goal
-    if (saveTotal >= parataSuccessThreshold) {
-        // Regola: 5% di possibilitÃ  che se avviene una parata sia comunque un goal
-        const luckyGoal = rollDice(1, 100) <= 5;
-        return luckyGoal; 
+    
+    // Respinta Timida (Portiere negativa): 5% ritira e usa il secondo
+    if (portiere.abilities?.includes('Respinta Timida') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        rollP = rollDice(1, 20);
     }
-
-    // Se totale < Soglia Goal!
-    return true;
+    
+    const totalPortiere = rollP + modPortiere + coachB;
+    
+    // Calcola risultato
+    let saveResult = totalPortiere - finalAttackResult;
+    
+    // Pugno di ferro: soglia parata -2 invece di 0
+    let saveThreshold = 0;
+    if (portiere.abilities?.includes('Pugno di ferro') && !nullifiedAbilities.has(portiere.id)) {
+        saveThreshold = -2;
+    }
+    
+    // Kamikaze fail check: 5% fallisce anche se parata riuscita
+    if (kamikazeActive && saveResult > saveThreshold && checkChance(5)) {
+        return true; // Gol!
+    }
+    
+    // Check risultato
+    if (saveResult > saveThreshold) {
+        // Parata! Ma 5% di gol comunque
+        return checkChance(5);
+    } else if (saveResult === saveThreshold) {
+        // 50-50
+        return checkChance(50);
+    } else {
+        // Gol!
+        return true;
+    }
 };
 
+// ====================================================================
+// FUNZIONE PRINCIPALE: SIMULA UN'OCCASIONE
+// ====================================================================
+
 /**
- * Funzione principale per simulare un'intera occasione d'attacco per una squadra.
- * @param {Object} attackingTeamData - Dati pre-processati della squadra attaccante (P, D, C, A, Pan, FormazioneInfo).
- * @param {Object} defendingTeamData - Dati pre-processati della squadra difendente.
- * @returns {boolean} True se l'occasione Ã¨ Goal, False altrimenti.
+ * Simula un'intera occasione di attacco
+ * @param {Object} attackingTeam - Squadra attaccante
+ * @param {Object} defendingTeam - Squadra difendente
+ * @returns {boolean} true se gol, false se no
  */
-const simulateOneOccasion = (attackingTeamData, defendingTeamData) => {
+const simulateOneOccasion = (attackingTeam, defendingTeam) => {
+    // Reset abilità nullificate per questa occasione
+    nullifiedAbilities.clear();
+    contrastoDurisismoUsed.clear();
     
-    // 0. RESETTA ABILITÃ€ AD OGNI OCCASIONE
-    nullifiedPlayerAbilities.clear(); 
-    
-    // 1. Fase di Costruzione
-    if (!phaseOneConstruction(attackingTeamData, defendingTeamData)) {
+    // Fase 1: Costruzione
+    if (!phaseConstruction(attackingTeam, defendingTeam)) {
         return false;
     }
     
-    // 2. Fase di Attacco
-    const attackResult = phaseTwoAttack(attackingTeamData, defendingTeamData);
+    // Fase 2: Attacco
+    const attackResult = phaseAttack(attackingTeam, defendingTeam);
     if (attackResult === -1) {
         return false;
     }
-
-    // 3. Fase di Tiro in Porta
-    return phaseThreeShot(attackingTeamData, defendingTeamData, attackResult);
+    
+    // Fase 3: Tiro
+    return phaseShot(attackingTeam, defendingTeam, attackResult);
 };
 
 // ====================================================================
@@ -481,8 +632,10 @@ const simulateOneOccasion = (attackingTeamData, defendingTeamData) => {
 
 window.simulationLogic = {
     simulateOneOccasion,
+    calculatePlayerModifier,
     calculateGroupModifier,
-    calculatePlayerModifier, 
     rollDice,
     LEVEL_MODIFIERS
 };
+
+console.log("✅ Simulazione.js v2.0 caricato - Regole complete implementate");

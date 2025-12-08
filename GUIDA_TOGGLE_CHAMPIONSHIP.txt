@@ -1,0 +1,95 @@
+======================================================================
+GUIDA: AGGIUNGERE TOGGLE PARTECIPAZIONE CAMPIONATO
+======================================================================
+
+📍 DOVE: Nel file index.html, dopo la riga 158
+
+🔧 COSA FARE: Sostituire le righe 159-161 con il nuovo codice
+
+======================================================================
+STEP 1: TROVA QUESTO CODICE (righe 159-161)
+======================================================================
+
+            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+                <p class="text-white font-semibold">Sei in Area Utente standard. ID Firestore: <span id="team-firestore-id">N/A</span></p>
+            </div>
+
+======================================================================
+STEP 2: SOSTITUISCI CON QUESTO CODICE
+======================================================================
+
+            <!-- NUOVO: Toggle Partecipazione Campionato -->
+            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
+                <div class="flex items-center justify-center space-x-4 mb-3">
+                    <input type="checkbox" id="championship-participation-toggle" 
+                           class="form-checkbox h-6 w-6 rounded transition duration-150 ease-in-out bg-gray-600 border-purple-500">
+                    <label for="championship-participation-toggle" class="text-white font-bold text-lg cursor-pointer">
+                        🏆 Partecipa al Campionato
+                    </label>
+                </div>
+                <p id="championship-participation-status" class="text-sm text-gray-400">
+                    Caricamento stato...
+                </p>
+            </div>
+
+            <div class="mt-4 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+                <p class="text-white font-semibold">Sei in Area Utente standard. ID Firestore: <span id="team-firestore-id">N/A</span></p>
+            </div>
+
+======================================================================
+STEP 3: AGGIUNGI INIZIALIZZAZIONE IN interfaccia.js
+======================================================================
+
+📍 DOVE: Nel file interfaccia.js, dopo la riga 177 (dopo setupTeamListeners)
+
+🔧 CODICE DA AGGIUNGERE:
+
+        // Inizializza toggle partecipazione campionato
+        window.InterfacciaDashboard.initializeChampionshipParticipationToggle();
+
+======================================================================
+RISULTATO FINALE
+======================================================================
+
+Dopo la modifica, nella dashboard utente vedrai:
+
+┌─────────────────────────────────────────────┐
+│  🏆 Partecipa al Campionato                 │
+│  ☐ (checkbox)                               │
+│                                             │
+│  ❌ Non stai partecipando al campionato     │
+└─────────────────────────────────────────────┘
+
+Quando attivi il toggle:
+
+┌─────────────────────────────────────────────┐
+│  🏆 Partecipa al Campionato                 │
+│  ☑ (checkbox verde)                         │
+│                                             │
+│  ✅ Stai partecipando al campionato         │
+└─────────────────────────────────────────────┘
+
+======================================================================
+FILE NECESSARI
+======================================================================
+
+✅ HTML_FRAGMENT_championship_toggle.html (codice HTML)
+✅ interfaccia-dashboard.js (già pronto)
+✅ PATCH_interfaccia_toggle.js (riga per interfaccia.js)
+
+======================================================================
+VERIFICA
+======================================================================
+
+1. Apri index.html
+2. Cerca riga 159
+3. Sostituisci il div verde con il nuovo codice (toggle viola + div verde)
+4. Apri interfaccia.js
+5. Cerca riga 177 (dopo setupTeamListeners)
+6. Aggiungi: window.InterfacciaDashboard.initializeChampionshipParticipationToggle();
+7. Salva tutto
+8. Ricarica la pagina (Ctrl+Shift+R)
+9. Accedi come utente
+10. Dovresti vedere il toggle nella dashboard!
+
+======================================================================

@@ -74,8 +74,9 @@ window.ChampionshipMain = {
             // 3. Simula partita
             const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
                 
-                // REPLAY: Mostra replay della partita
-                if (window.MatchReplaySimple) {
+                // REPLAY: Mostra replay SOLO se non è admin
+                const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
+                if (window.MatchReplaySimple && !isAdmin) {
                     await window.MatchReplaySimple.playFromResult(
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },
@@ -214,8 +215,9 @@ window.ChampionshipMain = {
 
                 const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
                 
-                // REPLAY: Mostra replay della partita
-                if (window.MatchReplaySimple) {
+                // REPLAY: Mostra replay SOLO se non è admin
+                const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
+                if (window.MatchReplaySimple && !isAdmin) {
                     await window.MatchReplaySimple.playFromResult(
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },

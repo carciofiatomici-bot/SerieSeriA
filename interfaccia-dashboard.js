@@ -15,7 +15,7 @@ window.InterfacciaDashboard = {
         
         elements.teamDashboardTitle.textContent = `Dashboard di ${teamName}`;
         elements.teamWelcomeMessage.textContent = isNew 
-            ? `Benvenuto/a, Manager! La tua squadra '${teamName}' Ã¨ stata appena creata. Inizia il calciomercato!`
+            ? `Benvenuto/a, Manager! La tua squadra '${teamName}' è stata appena creata. Inizia il calciomercato!`
             : `Bentornato/a, Manager di ${teamName}! Sei pronto per la prossima giornata?`;
         elements.teamFirestoreId.textContent = teamDocId;
         
@@ -38,11 +38,116 @@ window.InterfacciaDashboard = {
         elements.statCoachName.textContent = coach.name;
         elements.statCoachLevel.textContent = coach.level;
 
+        // NUOVO: Aggiorna il toggle partecipazione campionato
+        this.updateChampionshipParticipationUI();
+
         // Carica la prossima partita
         this.loadNextMatch(elements);
         
         // Mostra la dashboard
         window.showScreen(elements.appContent);
+    },
+    
+    /**
+     * NUOVO: Aggiorna l'UI del toggle partecipazione campionato
+     */
+    updateChampionshipParticipationUI() {
+        const toggle = document.getElementById('championship-participation-toggle');
+        const statusText = document.getElementById('championship-participation-status');
+        
+        if (!toggle || !statusText) return;
+        
+        const currentTeamData = window.InterfacciaCore.currentTeamData;
+        const isParticipating = currentTeamData?.isParticipating || false;
+        
+        toggle.checked = isParticipating;
+        
+        if (isParticipating) {
+            toggle.classList.remove('bg-gray-600', 'border-purple-500');
+            toggle.classList.add('bg-green-500', 'border-green-500');
+            statusText.textContent = '✅ Stai partecipando al campionato';
+            statusText.classList.remove('text-gray-400', 'text-red-400');
+            statusText.classList.add('text-green-400');
+        } else {
+            toggle.classList.remove('bg-green-500', 'border-green-500');
+            toggle.classList.add('bg-gray-600', 'border-purple-500');
+            statusText.textContent = '❌ Non stai partecipando al campionato';
+            statusText.classList.remove('text-green-400', 'text-red-400');
+            statusText.classList.add('text-gray-400');
+        }
+    },
+
+    /**
+     * NUOVO: Gestisce il cambio del toggle partecipazione campionato
+     */
+    async handleChampionshipParticipationToggle(isChecked) {
+        const toggle = document.getElementById('championship-participation-toggle');
+        const statusText = document.getElementById('championship-participation-status');
+        
+        if (!toggle || !statusText) return;
+        
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+        if (!currentTeamId) return;
+        
+        const { doc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+        
+        // Disabilita il toggle durante il salvataggio
+        toggle.disabled = true;
+        statusText.textContent = '⏳ Salvataggio in corso...';
+        statusText.classList.remove('text-green-400', 'text-gray-400', 'text-red-400');
+        statusText.classList.add('text-yellow-400');
+        
+        try {
+            const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
+            
+            await updateDoc(teamDocRef, {
+                isParticipating: isChecked
+            });
+            
+            // Aggiorna i dati locali
+            window.InterfacciaCore.currentTeamData.isParticipating = isChecked;
+            
+            // Aggiorna l'UI
+            if (isChecked) {
+                toggle.classList.remove('bg-gray-600', 'border-purple-500');
+                toggle.classList.add('bg-green-500', 'border-green-500');
+                statusText.textContent = '✅ Stai partecipando al campionato';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-green-400');
+            } else {
+                toggle.classList.remove('bg-green-500', 'border-green-500');
+                toggle.classList.add('bg-gray-600', 'border-purple-500');
+                statusText.textContent = '❌ Non stai partecipando al campionato';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-gray-400');
+            }
+            
+        } catch (error) {
+            console.error('Errore nel salvataggio stato partecipazione:', error);
+            
+            // Ripristina lo stato precedente in caso di errore
+            toggle.checked = !isChecked;
+            statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
+            statusText.classList.remove('text-yellow-400');
+            statusText.classList.add('text-red-400');
+        } finally {
+            toggle.disabled = false;
+        }
+    },
+
+    /**
+     * NUOVO: Inizializza il listener per il toggle partecipazione campionato
+     */
+    initializeChampionshipParticipationToggle() {
+        const toggle = document.getElementById('championship-participation-toggle');
+        
+        if (!toggle) return;
+        
+        toggle.addEventListener('change', (e) => {
+            this.handleChampionshipParticipationToggle(e.target.checked);
+        });
     },
     
     /**
@@ -149,183 +254,51 @@ window.InterfacciaDashboard = {
     },
 
     /**
-     * Carica e visualizza la classifica completa.
+     * Renderizza la sezione statistiche della dashboard.
      */
-    async loadLeaderboard() {
-        const { doc, getDoc } = window.firestoreTools;
-        const appId = window.firestoreTools.appId;
-        const LEADERBOARD_COLLECTION_PATH = window.InterfacciaConstants.getLeaderboardCollectionPath(appId);
-        const LEADERBOARD_DOC_ID = window.InterfacciaConstants.LEADERBOARD_DOC_ID;
+    renderStatisticsSection(statsData) {
+        if (!statsData) return;
         
-        const leaderboardDocRef = doc(window.db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
-
-        const leaderboardDisplayContainer = document.getElementById('leaderboard-content') 
-            ? document.getElementById('leaderboard-content').querySelector('.football-box > div:not([id])') 
-            : null;
-        if (!leaderboardDisplayContainer) return;
-
-        leaderboardDisplayContainer.innerHTML = `
-            <p class="text-white font-semibold text-center">Caricamento Classifica...</p>
-            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-blue-500 text-center shadow-lg">
-                 <p class="text-gray-400">Recupero dati da Firestore.</p>
+        const { gamesPlayed, wins, draws, losses, goalsFor, goalsAgainst, points } = statsData;
+        const goalDifference = goalsFor - goalsAgainst;
+        
+        return `
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div class="p-4 bg-gray-700 rounded-lg border border-blue-500 text-center">
+                    <p class="text-blue-400 font-bold text-sm">Partite</p>
+                    <p class="text-white text-2xl font-extrabold">${gamesPlayed}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-green-500 text-center">
+                    <p class="text-green-400 font-bold text-sm">Vittorie</p>
+                    <p class="text-white text-2xl font-extrabold">${wins}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500 text-center">
+                    <p class="text-yellow-400 font-bold text-sm">Pareggi</p>
+                    <p class="text-white text-2xl font-extrabold">${draws}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-red-500 text-center">
+                    <p class="text-red-400 font-bold text-sm">Sconfitte</p>
+                    <p class="text-white text-2xl font-extrabold">${losses}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-purple-500 text-center">
+                    <p class="text-purple-400 font-bold text-sm">Gol Fatti</p>
+                    <p class="text-white text-2xl font-extrabold">${goalsFor}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-orange-500 text-center">
+                    <p class="text-orange-400 font-bold text-sm">Gol Subiti</p>
+                    <p class="text-white text-2xl font-extrabold">${goalsAgainst}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-teal-500 text-center">
+                    <p class="text-teal-400 font-bold text-sm">Diff. Reti</p>
+                    <p class="text-white text-2xl font-extrabold ${goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}">${goalDifference >= 0 ? '+' : ''}${goalDifference}</p>
+                </div>
+                <div class="p-4 bg-gray-700 rounded-lg border border-yellow-400 text-center">
+                    <p class="text-yellow-400 font-bold text-sm">Punti</p>
+                    <p class="text-white text-2xl font-extrabold">${points}</p>
+                </div>
             </div>
         `;
-
-        try {
-            await window.fetchAllTeamLogos();
-
-            const leaderboardDoc = await getDoc(leaderboardDocRef);
-            
-            if (!leaderboardDoc.exists() || !leaderboardDoc.data().standings || leaderboardDoc.data().standings.length === 0) {
-                leaderboardDisplayContainer.innerHTML = `
-                    <p class="text-white font-semibold text-center mb-4">Classifica non disponibile.</p>
-                    <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center shadow-lg">
-                        <p class="text-red-400 font-semibold">Simula la prima giornata per generare la classifica.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const standings = leaderboardDoc.data().standings;
-            let leaderboardHtml = `
-                <h3 class="text-2xl font-extrabold text-blue-400 mb-4 text-center">Classifica Generale</h3>
-                <div class="bg-gray-800 rounded-lg overflow-x-auto shadow-xl">
-                    <table class="min-w-full divide-y divide-gray-700">
-                        <thead class="bg-blue-600 text-white">
-                            <tr>
-                                <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">#</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Squadra</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">Pti</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">G</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">V</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">N</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">P</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">GF</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">GS</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">DG</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-700 text-white">
-                            ${standings.map((team, index) => `
-                                <tr class="${index % 2 === 0 ? 'bg-gray-700' : 'bg-gray-600'} hover:bg-gray-500 transition duration-150">
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">${index + 1}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold flex items-center">
-                                        ${window.getLogoHtml(team.teamId)} <span class="ml-2">${team.teamName}</span>
-                                    </td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center font-extrabold text-yellow-300">${team.points}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center">${team.played}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center text-green-400">${team.wins}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center text-gray-300">${team.draws}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center text-red-400">${team.losses}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center">${team.goalsFor}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center">${team.goalsAgainst}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-center font-bold">${team.goalsFor - team.goalsAgainst}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            leaderboardDisplayContainer.innerHTML = leaderboardHtml;
-
-        } catch (error) {
-            console.error("Errore nel caricamento della classifica:", error);
-            leaderboardDisplayContainer.innerHTML = `
-                <p class="text-white font-semibold text-center mb-4">Errore di Connessione</p>
-                <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center shadow-lg">
-                    <p class="text-red-400">Impossibile caricare la classifica. Controlla la tua connessione.</p>
-                </div>
-            `;
-        }
-    },
-
-    /**
-     * Carica e visualizza il calendario completo delle partite.
-     */
-    async loadSchedule() {
-        const { doc, getDoc } = window.firestoreTools;
-        const appId = window.firestoreTools.appId;
-        const SCHEDULE_COLLECTION_PATH = window.InterfacciaConstants.getScheduleCollectionPath(appId);
-        const SCHEDULE_DOC_ID = window.InterfacciaConstants.SCHEDULE_DOC_ID;
-        
-        const scheduleDocRef = doc(window.db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
-
-        const scheduleDisplayContainer = document.getElementById('schedule-content') 
-            ? document.getElementById('schedule-content').querySelector('.football-box > div:not([id])') 
-            : null;
-        if (!scheduleDisplayContainer) return;
-
-        scheduleDisplayContainer.innerHTML = `
-            <p class="text-white font-semibold">Caricamento Calendario...</p>
-            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-teal-500 text-center shadow-lg">
-                 <p class="text-gray-400">Recupero dati da Firestore.</p>
-            </div>
-        `;
-
-        try {
-            await window.fetchAllTeamLogos();
-
-            const scheduleDoc = await getDoc(scheduleDocRef);
-            
-            if (!scheduleDoc.exists() || !scheduleDoc.data().matches || scheduleDoc.data().matches.length === 0) {
-                scheduleDisplayContainer.innerHTML = `
-                    <p class="text-white font-semibold text-center mb-4">Nessun Calendario Disponibile.</p>
-                    <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center shadow-lg">
-                        <p class="text-red-400 font-semibold">Il calendario deve essere generato dall'Admin nell'area Impostazioni Campionato.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const scheduleData = scheduleDoc.data().matches;
-            const totalRounds = scheduleData.length > 0 ? scheduleData[scheduleData.length - 1].round : 0;
-
-            let scheduleHtml = `<p class="text-white font-semibold text-xl mb-4">Calendario Completo: ${totalRounds} Giornate</p>`;
-
-            scheduleData.forEach(roundData => {
-                const roundNum = roundData.round;
-                const roundType = roundData.matches[0].type;
-                const roundBg = roundType === 'Ritorno' ? 'bg-teal-700' : 'bg-gray-700';
-
-                scheduleHtml += `
-                    <div class="mb-6 p-4 rounded-lg ${roundBg} border border-teal-500 shadow-md">
-                        <h4 class="font-bold text-lg text-yellow-300 border-b border-gray-600 pb-1">
-                            GIORNATA ${roundNum} (${roundType})
-                        </h4>
-                        <ul class="mt-2 space-y-1 text-white">
-                            ${roundData.matches.map(match => `
-                                <li class="text-sm p-1 rounded hover:bg-gray-600 transition flex items-center justify-between">
-                                    <span class="flex items-center">
-                                        ${window.getLogoHtml(match.homeId)} <span class="ml-2">${match.homeName}</span>
-                                    </span> 
-                                    ${match.result ? `<span class="font-bold text-red-300">${match.result}</span>` : '<span class="text-gray-400">vs</span>'} 
-                                    <span class="flex items-center text-right">
-                                        <span class="mr-2">${match.awayName}</span> ${window.getLogoHtml(match.awayId)}
-                                    </span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `;
-            });
-
-            scheduleDisplayContainer.innerHTML = scheduleHtml;
-
-        } catch (error) {
-            console.error("Errore nel caricamento del calendario:", error);
-            scheduleDisplayContainer.innerHTML = `
-                <p class="text-white font-semibold text-center mb-4">Errore di Connessione</p>
-                <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center shadow-lg">
-                    <p class="text-red-400">Impossibile caricare il calendario. Controlla la tua connessione.</p>
-                </div>
-            `;
-        }
     }
 };
 
-// Esponi le funzioni globalmente per compatibilitÃ  con admin.js
-window.loadSchedule = () => window.InterfacciaDashboard.loadSchedule();
-window.loadLeaderboard = () => window.InterfacciaDashboard.loadLeaderboard();
-
-console.log("âœ… Modulo interfaccia-dashboard.js caricato.");
+console.log("✅ Modulo interfaccia-dashboard.js caricato.");

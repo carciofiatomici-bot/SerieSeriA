@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.InterfacciaCore.db = window.db;
     
     // Assicura che firestoreTools sia disponibile e contenga tutte le funzioni necessarie
-    // Le funzioni sono giÃ  state esposte in index.html durante l'inizializzazione di Firebase
+    // Le funzioni sono giÃƒÂ  state esposte in index.html durante l'inizializzazione di Firebase
     if (!window.firestoreTools) {
-        console.error('firestoreTools non Ã¨ stato inizializzato correttamente');
+        console.error('firestoreTools non ÃƒÂ¨ stato inizializzato correttamente');
         return;
     }
     
@@ -177,6 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Team (Logo, Eliminazione)
     window.InterfacciaTeam.initializeTeamListeners(elements);
     
+    // Championship Participation Toggle
+    window.InterfacciaDashboard.initializeChampionshipParticipationToggle();
+    
     // Gestisce l'evento personalizzato per l'aggiornamento della dashboard
     document.addEventListener('dashboardNeedsUpdate', () => {
         window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(elements);
@@ -199,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Espone gli elementi globalmente per uso futuro (es. ripristino navigazione)
     window.elements = elements;
 
-    console.log("✅ Interfaccia principale inizializzata.");
+    console.log("âœ… Interfaccia principale inizializzata.");
     }; // Fine initializeApplication
     
     // Avvia il processo di inizializzazione
