@@ -79,7 +79,7 @@ window.ChampionshipUI = {
                         Simula Tutta la Giornata ${currentRoundNumber}
                     </button>
                     <button id="btn-back-to-dashboard" class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition">
-                        â† Torna alla Dashboard Campionato
+                        ← Torna alla Dashboard Campionato
                     </button>
                 </div>
             </div>

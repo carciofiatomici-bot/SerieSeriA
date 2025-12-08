@@ -68,15 +68,15 @@ window.ChampionshipRewards = {
         standings.forEach((team, index) => {
             let reward;
             
-            // Prime 3 squadre â†’ 150 CS
+            // Prime 3 squadre Ã¢â€ â€™ 150 CS
             if (index < 3) { 
                 reward = 150;
             } 
-            // Ultime 3 squadre â†’ 200 CS
+            // Ultime 3 squadre Ã¢â€ â€™ 200 CS
             else if (index >= numTeams - 3) { 
                 reward = 200;
             }
-            // Tutte le altre squadre partecipanti â†’ 100 CS
+            // Tutte le altre squadre partecipanti Ã¢â€ â€™ 100 CS
             else {
                 reward = 100;
             }
@@ -117,7 +117,7 @@ window.ChampionshipRewards = {
             
             let coachLevel = currentCoach.level;
 
-            // 20% di possibilitÃ  di salire di livello (solo se l'allenatore è >= 1)
+            // 20% di possibilitÃƒÂ  di salire di livello (solo se l'allenatore Ã¨ >= 1)
             if (coachLevel >= 1 && getRandomInt(1, 100) <= 20) {
                 
                 // NUOVO: Impedisce il superamento del livello massimo (Livello 10)
