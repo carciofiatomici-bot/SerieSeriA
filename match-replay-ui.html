@@ -1,0 +1,115 @@
+<!-- ============================================ -->
+<!-- MATCH REPLAY OVERLAY -->
+<!-- ============================================ -->
+
+<div id="match-replay-overlay" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden overflow-y-auto">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header con controlli -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white">🎬 Replay Partita</h2>
+            
+            <div class="flex gap-3">
+                <!-- Velocità -->
+                <button id="replay-speed-btn" 
+                        onclick="window.MatchReplay.changeSpeed()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Velocità: 1x
+                </button>
+                
+                <!-- Chiudi (solo se non in riproduzione) -->
+                <button id="replay-skip-btn" 
+                        onclick="window.MatchReplay.hide()"
+                        class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    Salta ⏭️
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenuto dinamico replay -->
+        <div id="replay-content" class="min-h-[500px] flex items-center justify-center">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mx-auto mb-4"></div>
+                <p class="text-white text-lg">Caricamento replay...</p>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ANIMAZIONI CSS PER REPLAY -->
+<!-- ============================================ -->
+
+<style>
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Slide In */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.4s ease-out;
+}
+
+/* Bounce (già in Tailwind ma ridefinito per sicurezza) */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-bounce {
+    animation: bounce 0.6s infinite;
+}
+
+/* Pulse (già in Tailwind ma ridefinito) */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Rolling Number (per i dadi) */
+@keyframes roll {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(720deg); }
+}
+
+.rolling-number {
+    display: inline-block;
+    animation: roll 0.5s ease-out;
+}
+</style>
