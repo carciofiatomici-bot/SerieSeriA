@@ -1,6 +1,6 @@
 //
 // ====================================================================
-// ABILITIES-ENCYCLOPEDIA-UI.JS - Interfaccia Enciclopedia AbilitÃ 
+// ABILITIES-ENCYCLOPEDIA-UI.JS - Interfaccia Enciclopedia Abilità
 // ====================================================================
 //
 
@@ -57,12 +57,12 @@ window.AbilitiesUI = {
                 <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-t-lg p-6 border-b-4 border-yellow-500">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h1 class="text-4xl font-bold text-white mb-2">ðŸ“– Enciclopedia AbilitÃ </h1>
-                            <p class="text-gray-300">Guida completa a tutte le ${stats.total} abilitÃ  speciali</p>
+                            <h1 class="text-4xl font-bold text-white mb-2">📔 Enciclopedia Abilità</h1>
+                            <p class="text-gray-300">Guida completa a tutte le ${stats.total} Abilità speciali</p>
                         </div>
                         <button onclick="window.AbilitiesUI.close()" 
                                 class="text-white hover:text-red-400 text-4xl font-bold">
-                            Ã—
+                            X
                         </button>
                     </div>
                     
@@ -70,7 +70,7 @@ window.AbilitiesUI = {
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                         <div class="bg-black bg-opacity-30 rounded p-3 text-center">
                             <p class="text-2xl font-bold text-yellow-400">${stats.total}</p>
-                            <p class="text-xs text-gray-300">AbilitÃ  Totali</p>
+                            <p class="text-xs text-gray-300">Abilità Totali</p>
                         </div>
                         <div class="bg-black bg-opacity-30 rounded p-3 text-center">
                             <p class="text-2xl font-bold text-red-400">${stats.byRarity.Leggendaria}</p>
@@ -94,7 +94,7 @@ window.AbilitiesUI = {
                     <div class="mb-4">
                         <input type="text" 
                                id="ability-search" 
-                               placeholder="ðŸ” Cerca abilitÃ ..."
+                               placeholder="🔎 Cerca Abilità..."
                                onkeyup="window.AbilitiesUI.handleSearch(this.value)"
                                class="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border-2 border-gray-600 focus:border-purple-500 focus:outline-none text-lg">
                     </div>
@@ -134,8 +134,8 @@ window.AbilitiesUI = {
                         ${this.renderAbilitiesByType(abilities)}
                     ` : `
                         <div class="text-center py-12">
-                            <p class="text-4xl mb-4">ðŸ˜¢</p>
-                            <p class="text-xl text-gray-400">Nessuna abilitÃ  trovata</p>
+                            <p class="text-4xl mb-4">😢</p>
+                            <p class="text-xl text-gray-400">Nessuna Abilità trovata</p>
                             <p class="text-sm text-gray-500 mt-2">Prova con un'altra ricerca o filtro</p>
                         </div>
                     `}
@@ -143,12 +143,12 @@ window.AbilitiesUI = {
                 
                 <!-- Footer Tips -->
                 <div class="bg-gray-800 p-4 mt-4 rounded-lg border-2 border-gray-700">
-                    <h3 class="text-lg font-bold text-yellow-400 mb-2">ðŸ’¡ Suggerimenti</h3>
+                    <h3 class="text-lg font-bold text-yellow-400 mb-2">💡 Suggerimenti</h3>
                     <ul class="text-sm text-gray-300 space-y-1">
-                        <li>â€¢ Clicca su una card per vedere i dettagli completi</li>
-                        <li>â€¢ Le abilitÃ  <span class="text-red-400">Leggendarie</span> sono le piÃ¹ rare e potenti</li>
-                        <li>â€¢ Combina abilitÃ  con <span class="text-purple-400">sinergia</span> per strategie devastanti</li>
-                        <li>â€¢ L'abilitÃ  <span class="text-yellow-400">Icona</span> Ã¨ unica e la piÃ¹ potente del gioco</li>
+                        <li>• Clicca su una card per vedere i dettagli completi</li>
+                        <li>• Le Abilità <span class="text-red-400">Leggendarie</span> sono le più¹ rare e potenti</li>
+                        <li>• Combina Abilità con <span class="text-purple-400">sinergia</span> per strategie devastanti</li>
+                        <li>• L'Abilità <span class="text-yellow-400">Icona</span> è¨ unica e la più¹ potente del gioco</li>
                     </ul>
                 </div>
                 
@@ -157,7 +157,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Render singola card abilitÃ 
+     * Render singola card Abilità
      */
     renderAbilityCard(ability) {
         const rarityColor = {
@@ -184,7 +184,7 @@ window.AbilitiesUI = {
                         <span class="text-4xl">${ability.icon}</span>
                         <div>
                             <h3 class="text-lg font-bold ${ability.color}">${ability.name}</h3>
-                            <p class="text-xs text-gray-400">${this.getRoleLabel(ability.role)} â€¢ ${ability.phase || 'Multi-fase'}</p>
+                            <p class="text-xs text-gray-400">${this.getRoleLabel(ability.role)} • ${ability.phase || 'Multi-fase'}</p>
                         </div>
                     </div>
                     <span class="text-xs ${rarityBg[ability.rarity]} px-2 py-1 rounded font-bold">
@@ -197,7 +197,7 @@ window.AbilitiesUI = {
                 
                 <!-- Effect Badge -->
                 <div class="bg-black bg-opacity-40 rounded p-2 mb-3">
-                    <p class="text-xs text-yellow-400 font-bold mb-1">âš¡ EFFETTO</p>
+                    <p class="text-xs text-yellow-400 font-bold mb-1">⚡ EFFETTO</p>
                     <p class="text-sm text-white">${ability.effect}</p>
                 </div>
                 
@@ -208,7 +208,7 @@ window.AbilitiesUI = {
                     </span>
                     ${ability.warning ? `
                         <span class="bg-red-900 text-red-300 px-2 py-1 rounded font-bold">
-                            âš ï¸ Rischio
+                            ⚠️ Rischio
                         </span>
                     ` : ''}
                     ${ability.impact ? `
@@ -219,14 +219,14 @@ window.AbilitiesUI = {
                 </div>
                 
                 <div class="mt-3 text-center">
-                    <p class="text-xs text-purple-400">Clicca per dettagli â†’</p>
+                    <p class="text-xs text-purple-400">Clicca per dettagli 📔</p>
                 </div>
             </div>
         `;
     },
     
     /**
-     * Mostra dettagli completi abilitÃ 
+     * Mostra dettagli completi Abilità
      */
     showDetails(abilityName) {
         const ability = window.AbilitiesEncyclopedia.abilities[abilityName];
@@ -262,7 +262,7 @@ window.AbilitiesUI = {
                         </div>
                         <button onclick="this.closest('.fixed').remove()" 
                                 class="text-white hover:text-red-400 text-4xl font-bold">
-                            Ã—
+                            è€”
                         </button>
                     </div>
                 </div>
@@ -272,36 +272,36 @@ window.AbilitiesUI = {
                     
                     <!-- Description -->
                     <div class="bg-gray-900 rounded-lg p-4">
-                        <h3 class="text-xl font-bold text-yellow-400 mb-2">ðŸ“ Descrizione</h3>
+                        <h3 class="text-xl font-bold text-yellow-400 mb-2">→ Descrizione</h3>
                         <p class="text-lg text-white">${ability.description}</p>
                     </div>
                     
                     <!-- Effect -->
                     <div class="bg-purple-900 bg-opacity-30 rounded-lg p-4 border-2 border-purple-500">
-                        <h3 class="text-xl font-bold text-purple-400 mb-2">âš¡ Effetto</h3>
+                        <h3 class="text-xl font-bold text-purple-400 mb-2">⚡ Effetto</h3>
                         <p class="text-lg text-white font-bold">${ability.effect}</p>
                     </div>
                     
                     <!-- Mechanics -->
                     <div class="bg-gray-900 rounded-lg p-4">
-                        <h3 class="text-xl font-bold text-blue-400 mb-2">âš™ï¸ Come Funziona</h3>
+                        <h3 class="text-xl font-bold text-blue-400 mb-2">⚙️ Come Funziona</h3>
                         <p class="text-white">${ability.mechanics}</p>
                     </div>
                     
                     <!-- Example -->
                     <div class="bg-green-900 bg-opacity-30 rounded-lg p-4 border-2 border-green-500">
-                        <h3 class="text-xl font-bold text-green-400 mb-2">ðŸ’¡ Esempio</h3>
+                        <h3 class="text-xl font-bold text-green-400 mb-2">→ Esempio</h3>
                         <p class="text-white font-mono text-sm">${ability.example}</p>
                     </div>
                     
                     <!-- Activation & Phase -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-gray-900 rounded-lg p-4">
-                            <h3 class="text-lg font-bold text-yellow-400 mb-2">ðŸŽ² Attivazione</h3>
+                            <h3 class="text-lg font-bold text-yellow-400 mb-2">→ Attivazione</h3>
                             <p class="text-white text-2xl font-bold">${ability.activation}</p>
                         </div>
                         <div class="bg-gray-900 rounded-lg p-4">
-                            <h3 class="text-lg font-bold text-orange-400 mb-2">â±ï¸ Fase</h3>
+                            <h3 class="text-lg font-bold text-orange-400 mb-2">🎯 Fase</h3>
                             <p class="text-white text-xl font-bold">${ability.phase || 'Tutte'}</p>
                         </div>
                     </div>
@@ -309,7 +309,7 @@ window.AbilitiesUI = {
                     <!-- Warning (if any) -->
                     ${ability.warning ? `
                         <div class="bg-red-900 bg-opacity-30 rounded-lg p-4 border-2 border-red-500">
-                            <h3 class="text-xl font-bold text-red-400 mb-2">âš ï¸ Attenzione</h3>
+                            <h3 class="text-xl font-bold text-red-400 mb-2">⚠️ Attenzione</h3>
                             <p class="text-white">${ability.warning}</p>
                         </div>
                     ` : ''}
@@ -317,10 +317,10 @@ window.AbilitiesUI = {
                     <!-- Synergy -->
                     ${ability.synergy ? `
                         <div class="bg-purple-900 bg-opacity-30 rounded-lg p-4 border-2 border-purple-500">
-                            <h3 class="text-xl font-bold text-purple-400 mb-2">ðŸ”— Sinergie</h3>
+                            <h3 class="text-xl font-bold text-purple-400 mb-2">→ Sinergie</h3>
                             <ul class="space-y-2">
                                 ${ability.synergy.map(s => `
-                                    <li class="text-white">âœ“ ${s}</li>
+                                    <li class="text-white">💡 ${s}</li>
                                 `).join('')}
                             </ul>
                         </div>
@@ -329,7 +329,7 @@ window.AbilitiesUI = {
                     <!-- Impact (if any) -->
                     ${ability.impact ? `
                         <div class="bg-yellow-900 bg-opacity-30 rounded-lg p-4 border-2 border-yellow-500 text-center">
-                            <h3 class="text-xl font-bold text-yellow-400 mb-2">ðŸŒŸ Impatto</h3>
+                            <h3 class="text-xl font-bold text-yellow-400 mb-2">→ Impatto</h3>
                             <p class="text-3xl font-bold text-white">${ability.impact}</p>
                         </div>
                     ` : ''}
@@ -351,7 +351,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Filtra abilitÃ  per ruolo
+     * Filtra Abilità per ruolo
      */
     filter(role) {
         this.currentFilter = role;
@@ -367,7 +367,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Ottieni abilitÃ  filtrate
+     * Ottieni Abilità filtrate
      */
     getFilteredAbilities() {
         let abilities = [];
@@ -395,7 +395,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Renderizza abilità separate per tipo (positive/negative)
+     * Renderizza Abilità  separate per tipo (positive/negative)
      */
     renderAbilitiesByType(abilities) {
         const positive = abilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
@@ -403,13 +403,13 @@ window.AbilitiesUI = {
         
         let html = '';
         
-        // Sezione Abilità Positive
+        // Sezione Abilità  Positive
         if (positive.length > 0) {
             html += `
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-green-500">
                         <span class="text-3xl">✅</span>
-                        <h3 class="text-2xl font-bold text-green-400">Abilità Positive (${positive.length})</h3>
+                        <h3 class="text-2xl font-bold text-green-400">Abilità  Positive (${positive.length})</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${positive.map(ability => this.renderAbilityCard(ability)).join('')}
@@ -418,17 +418,17 @@ window.AbilitiesUI = {
             `;
         }
         
-        // Sezione Abilità Negative
+        // Sezione Abilità  Negative
         if (negative.length > 0) {
             html += `
                 <div>
                     <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-red-500">
                         <span class="text-3xl">❌</span>
-                        <h3 class="text-2xl font-bold text-red-400">Abilità Negative (${negative.length})</h3>
+                        <h3 class="text-2xl font-bold text-red-400">Abilità  Negative (${negative.length})</h3>
                     </div>
                     <div class="bg-red-900 bg-opacity-20 rounded-lg p-4 mb-4 border-2 border-red-700">
                         <p class="text-yellow-300 font-bold">⚠️ Attenzione!</p>
-                        <p class="text-gray-300 text-sm mt-1">Le abilità negative hanno effetti dannosi. Ogni giocatore può avere MAX 1 abilità negativa.</p>
+                        <p class="text-gray-300 text-sm mt-1">Le Abilità  negative hanno effetti dannosi. Ogni giocatore può² avere MAX 1 Abilità  negativa.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${negative.map(ability => this.renderAbilityCard(ability)).join('')}
@@ -456,4 +456,4 @@ window.AbilitiesUI = {
     }
 };
 
-console.log("âœ… Abilities Encyclopedia UI caricato.");
+console.log("Ã¢Å“â€¦ Abilities Encyclopedia UI caricato.");

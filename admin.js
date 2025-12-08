@@ -1,3 +1,4 @@
+
 //
 // ====================================================================
 // ADMIN.JS - Versione Modularizzata (Usa i moduli esterni)
@@ -132,6 +133,68 @@ document.addEventListener('DOMContentLoaded', () => {
              displayMessage("Sincronizzazione dati in corso... (Mock)", 'info', 'toggle-status-message');
              setTimeout(() => displayMessage("Dati sincronizzati.", 'success', 'toggle-status-message'), 1500);
         });
+
+        // Toggle Crediti Super Seri
+        const btnToggleCSS = document.getElementById('btn-toggle-css');
+        if (btnToggleCSS) {
+            btnToggleCSS.addEventListener('click', handleToggleCSS);
+        }
+    };
+
+    /**
+     * Gestisce il toggle del sistema Crediti Super Seri
+     */
+    const handleToggleCSS = async (event) => {
+        const target = event.target;
+        const currentlyEnabled = target.dataset.enabled === 'true';
+        const newState = !currentlyEnabled;
+
+        target.textContent = 'Aggiornamento...';
+        target.disabled = true;
+
+        try {
+            if (window.CreditiSuperSeri) {
+                const success = await window.CreditiSuperSeri.setEnabled(newState);
+
+                if (success) {
+                    // Aggiorna UI
+                    target.dataset.enabled = newState;
+                    target.textContent = newState ? 'DISABILITA' : 'ABILITA';
+
+                    const statusText = document.getElementById('css-status-text');
+                    const section = document.getElementById('css-admin-section');
+
+                    if (statusText) {
+                        statusText.textContent = newState ? 'ATTIVO' : 'DISATTIVO';
+                        statusText.classList.remove('text-green-400', 'text-red-400');
+                        statusText.classList.add(newState ? 'text-green-400' : 'text-red-400');
+                    }
+
+                    if (section) {
+                        section.classList.remove('border-green-500', 'border-amber-500');
+                        section.classList.add(newState ? 'border-green-500' : 'border-amber-500');
+                    }
+
+                    target.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+                    target.classList.add(newState ? 'bg-red-600' : 'bg-green-600');
+                    target.classList.add(newState ? 'hover:bg-red-700' : 'hover:bg-green-700');
+
+                    displayMessage(`Sistema Crediti Super Seri ${newState ? 'ATTIVATO' : 'DISATTIVATO'}`, 'success', 'toggle-status-message');
+                } else {
+                    displayMessage('Errore durante il toggle CSS', 'error', 'toggle-status-message');
+                    target.textContent = currentlyEnabled ? 'DISABILITA' : 'ABILITA';
+                }
+            } else {
+                displayMessage('Modulo CreditiSuperSeri non caricato', 'error', 'toggle-status-message');
+                target.textContent = currentlyEnabled ? 'DISABILITA' : 'ABILITA';
+            }
+        } catch (error) {
+            console.error('Errore toggle CSS:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+            target.textContent = currentlyEnabled ? 'DISABILITA' : 'ABILITA';
+        } finally {
+            target.disabled = false;
+        }
     };
 
     /**

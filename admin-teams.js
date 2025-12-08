@@ -12,7 +12,7 @@ window.AdminTeams = {
     currentEditingTeamData: null,
     reloadCallback: null,
 
-    // MAPPA COMPLETA ABILITÀ (46 abilità!)
+    // MAPPA COMPLETA ABILITÃ€ (46 abilitÃ !)
     ROLE_ABILITIES_MAP: {
         'P': {
             positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo'],
@@ -321,7 +321,7 @@ window.AdminTeams = {
 
         return this.currentEditingPlayers.map((player, index) => {
             const abilitiesDisplay = player.abilities && player.abilities.length > 0 
-                ? `<p class="text-xs text-purple-400 mt-1">🌟 Abilità: ${player.abilities.join(', ')}</p>` 
+                ? `<p class="text-xs text-purple-400 mt-1">🌟 AbilitÃ : ${player.abilities.join(', ')}</p>` 
                 : '';
             
             return `
@@ -332,7 +332,7 @@ window.AdminTeams = {
                             <p class="text-sm text-gray-400">
                                 Ruolo: <span class="text-yellow-400">${player.role}</span> | 
                                 Tipo: <span class="text-cyan-400">${player.type}</span> | 
-                                Età: <span class="text-gray-300">${player.age}</span> |
+                                EtÃ : <span class="text-gray-300">${player.age}</span> |
                                 Livello: <span class="text-green-400">${player.levelMin}-${player.levelMax}</span>
                             </p>
                             ${abilitiesDisplay}
@@ -393,7 +393,16 @@ window.AdminTeams = {
             levelMin: 1,
             levelMax: 10,
             abilities: []
-        } : JSON.parse(JSON.stringify(this.currentEditingPlayers[index])); // Deep copy
+        } : (function() {
+            const p = JSON.parse(JSON.stringify(this.currentEditingPlayers[index]));
+            if (p.level !== undefined) {
+                p.singleLevel = p.level;
+            }
+            return p;
+        }.bind(this))();
+
+        const hasFixedLevel = !isNew && (this.currentEditingPlayers[index].level !== undefined);
+        const levelValue = hasFixedLevel ? player.level : (player.levelMin || 1);
 
         const modalHtml = `
             <div id="player-edit-modal" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4 z-[60]">
@@ -435,18 +444,28 @@ window.AdminTeams = {
                             </div>
                         </div>
 
+                        ${hasFixedLevel ? `
+                        <div>
+                            <label class="text-gray-300 block mb-1 font-bold">Livello *</label>
+                            <input type="number" id="player-level-single" value="${levelValue}" min="1" max="30"
+                                   class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
+                            <p class="text-xs text-green-400 mt-1">✓ Livello fisso del giocatore in squadra</p>
+                        </div>
+                        ` : `
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-gray-300 block mb-1 font-bold">Livello Min *</label>
-                                <input type="number" id="player-levelmin-input" value="${player.levelMin}" min="1" max="30"
+                                <input type="number" id="player-levelmin-input" value="${player.levelMin || 1}" min="1" max="30"
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="text-gray-300 block mb-1 font-bold">Livello Max *</label>
-                                <input type="number" id="player-levelmax-input" value="${player.levelMax}" min="1" max="30"
+                                <input type="number" id="player-levelmax-input" value="${player.levelMax || 10}" min="1" max="30"
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
                         </div>
+                        <p class="text-xs text-yellow-400 -mt-2">⚠ Range per giocatori da assegnare</p>
+                        `}
 
                         <div>
                             <label class="text-gray-300 block mb-2 font-bold">Abilità</label>
@@ -475,13 +494,13 @@ window.AdminTeams = {
     },
 
     /**
-     * Renderizza selezione abilità
+     * Renderizza selezione abilitÃ 
      */
     renderAbilitiesSelection(role, currentAbilities) {
         const roleAbilities = this.ROLE_ABILITIES_MAP[role];
-        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilità disponibile</p>';
+        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilitÃ  disponibile</p>';
 
-        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✅ Abilità Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
+        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✅ AbilitÃ  Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.positive.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
@@ -496,8 +515,8 @@ window.AdminTeams = {
         
         html += '</div></div>';
         
-        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">❌ Abilità Negative (Max 1)</h5>';
-        html += '<p class="text-xs text-yellow-300 mb-2">⚠️ Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
+        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ AbilitÃ  Negative (Max 1)</h5>';
+        html += '<p class="text-xs text-yellow-300 mb-2">âš ï¸ Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.negative.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
@@ -516,7 +535,7 @@ window.AdminTeams = {
     },
 
     /**
-     * Aggiorna abilità quando cambia ruolo
+     * Aggiorna abilitÃ  quando cambia ruolo
      */
     updateAbilitiesForRole() {
         const role = document.getElementById('player-role-input').value;
@@ -524,7 +543,7 @@ window.AdminTeams = {
     },
 
     /**
-     * Valida selezione abilità (max 3 positive, max 1 negativa)
+     * Valida selezione abilitÃ  (max 3 positive, max 1 negativa)
      */
     validateAbilitySelection() {
         const positiveChecks = document.querySelectorAll('.ability-positive-check:checked');
@@ -533,14 +552,14 @@ window.AdminTeams = {
         // Limita positive a 3
         if (positiveChecks.length > 3) {
             event.target.checked = false;
-            alert('❌ Massimo 3 abilità positive!');
+            alert('âŒ Massimo 3 abilitÃ  positive!');
             return false;
         }
         
         // Limita negative a 1
         if (negativeChecks.length > 1) {
             event.target.checked = false;
-            alert('❌ Massimo 1 abilità negativa!');
+            alert('âŒ Massimo 1 abilitÃ  negativa!');
             return false;
         }
         
@@ -555,26 +574,46 @@ window.AdminTeams = {
         const age = parseInt(document.getElementById('player-age-input').value);
         const role = document.getElementById('player-role-input').value;
         const type = document.getElementById('player-type-input').value;
-        const levelMin = parseInt(document.getElementById('player-levelmin-input').value);
-        const levelMax = parseInt(document.getElementById('player-levelmax-input').value);
         
-        // Raccogli abilità
+        const levelSingleInput = document.getElementById('player-level-single');
+        const hasFixedLevel = levelSingleInput !== null;
+        
+        let level, levelMin, levelMax;
+        
+        if (hasFixedLevel) {
+            level = parseInt(levelSingleInput.value);
+            levelMin = level;
+            levelMax = level;
+        } else {
+            levelMin = parseInt(document.getElementById('player-levelmin-input').value);
+            levelMax = parseInt(document.getElementById('player-levelmax-input').value);
+            level = null;
+        }
+        
         const positiveAbilities = Array.from(document.querySelectorAll('.ability-positive-check:checked')).map(el => el.value);
         const negativeAbilities = Array.from(document.querySelectorAll('.ability-negative-check:checked')).map(el => el.value);
         const abilities = [...positiveAbilities, ...negativeAbilities];
         
-        // Validazione
         if (!name) {
             alert('❌ Inserisci un nome!');
             return;
         }
-        if (levelMin > levelMax) {
+        
+        if (!hasFixedLevel && levelMin > levelMax) {
             alert('❌ Livello Min non può essere maggiore di Livello Max!');
             return;
         }
-        if (levelMin < 1 || levelMax > 30) {
-            alert('❌ I livelli devono essere tra 1 e 30!');
-            return;
+        
+        if (hasFixedLevel) {
+            if (level < 1 || level > 30) {
+                alert('❌ Il livello deve essere tra 1 e 30!');
+                return;
+            }
+        } else {
+            if (levelMin < 1 || levelMax > 30) {
+                alert('❌ I livelli devono essere tra 1 e 30!');
+                return;
+            }
         }
         
         const playerData = {
@@ -582,17 +621,26 @@ window.AdminTeams = {
             age,
             role,
             type,
-            levelMin,
-            levelMax,
             abilities,
             id: index === -1 ? `player_${Date.now()}` : (this.currentEditingPlayers[index].id || `player_${Date.now()}`)
         };
         
+        if (hasFixedLevel) {
+            playerData.level = level;
+        } else {
+            playerData.levelMin = levelMin;
+            playerData.levelMax = levelMax;
+        }
+        
         if (index === -1) {
-            // Nuovo giocatore
             this.currentEditingPlayers.push(playerData);
         } else {
-            // Modifica esistente
+            const originalPlayer = this.currentEditingPlayers[index];
+            if (originalPlayer.level !== undefined) {
+                playerData.level = level;
+                delete playerData.levelMin;
+                delete playerData.levelMax;
+            }
             this.currentEditingPlayers[index] = playerData;
         }
         
@@ -617,7 +665,7 @@ window.AdminTeams = {
         const budget = parseInt(document.getElementById('edit-budget').value);
         
         if (!teamName || teamName.length < 3) {
-            alert('❌ Il nome squadra deve avere almeno 3 caratteri!');
+            alert('âŒ Il nome squadra deve avere almeno 3 caratteri!');
             return;
         }
         
@@ -626,7 +674,7 @@ window.AdminTeams = {
         const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
         
         const msgElement = document.getElementById('edit-message');
-        msgElement.textContent = '⏳ Salvataggio in corso...';
+        msgElement.textContent = 'â³ Salvataggio in corso...';
         msgElement.className = 'text-center text-sm mb-4 text-yellow-400';
         
         try {
@@ -646,7 +694,7 @@ window.AdminTeams = {
             
         } catch (error) {
             console.error('Errore salvataggio:', error);
-            msgElement.textContent = `❌ Errore: ${error.message}`;
+            msgElement.textContent = `âŒ Errore: ${error.message}`;
             msgElement.className = 'text-center text-sm mb-4 text-red-400';
         }
     },

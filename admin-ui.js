@@ -12,12 +12,13 @@ window.AdminUI = {
     async renderAdminDashboard(adminDashboardContainer, configData, allTeams) {
         const draftOpen = configData.isDraftOpen || false;
         const marketOpen = configData.isMarketOpen || false;
+        const cssEnabled = configData.creditiSuperSeriEnabled || false;
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
         adminDashboardContainer.innerHTML = `
             <!-- Pulsanti Navigazione Principale -->
             <div class="mb-6 space-y-4">
-                <div class="grid grid-cols-3 gap-4"> 
+                <div class="grid grid-cols-3 gap-4">
                     <button id="btn-championship-settings"
                             class="bg-orange-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150 transform hover:scale-[1.01]">
                         <i class="fas fa-cog mr-2"></i> Impostazioni Campionato
@@ -57,9 +58,26 @@ window.AdminUI = {
                     <span class="font-bold text-lg text-white block">Mercato: <span class="font-extrabold" id="market-status-text-summary">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
                 </div>
             </div>
-            
-            <!-- UTILITÃ€ ADMIN -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">UtilitÃ  Admin</h3>
+
+            <!-- SEZIONE CREDITI SUPER SERI -->
+            <h3 class="text-2xl font-bold text-amber-400 mb-4 border-b border-gray-600 pb-2 pt-6">Crediti Super Seri</h3>
+            <div id="css-admin-section" class="p-4 bg-gray-800 rounded-lg border ${cssEnabled ? 'border-green-500' : 'border-amber-500'} mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-lg text-white">Sistema CSS: </span>
+                        <span id="css-status-text" class="font-extrabold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVO' : 'DISATTIVO'}</span>
+                    </div>
+                    <button id="btn-toggle-css"
+                            data-enabled="${cssEnabled}"
+                            class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${cssEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
+                        ${cssEnabled ? 'DISABILITA' : 'ABILITA'}
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">I Crediti Super Seri permettono di potenziare giocatori e assegnare abilita.</p>
+            </div>
+
+            <!-- UTILITA ADMIN -->
+            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilita Admin</h3>
             <div class="grid grid-cols-2 gap-4 mb-4">
                  <button id="btn-sync-data"
                         class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
@@ -77,14 +95,14 @@ window.AdminUI = {
      */
     renderPlayerManagementPanel(playerManagementToolsContainer, draftOpen, marketOpen) {
         const types = ['Potenza', 'Tecnica', 'Velocita'];
-        
+
         playerManagementToolsContainer.innerHTML = `
             <!-- CONTROLLO STATI -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2">Controllo Stato Mercato & Draft</h3>
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="p-4 rounded-lg border ${draftOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
                     <span class="font-bold text-lg text-white block mb-2">Stato Draft: <span id="draft-status-text" class="font-extrabold">${draftOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                    <button id="btn-toggle-draft" 
+                    <button id="btn-toggle-draft"
                             data-type="draft"
                             data-is-open="${draftOpen}"
                             class="w-full px-4 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${draftOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
@@ -94,7 +112,7 @@ window.AdminUI = {
 
                 <div class="p-4 rounded-lg border ${marketOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
                     <span class="font-bold text-lg text-white block mb-2">Stato Mercato: <span id="market-status-text" class="font-extrabold">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                    <button id="btn-toggle-market" 
+                    <button id="btn-toggle-market"
                             data-type="market"
                             data-is-open="${marketOpen}"
                             class="w-full px-4 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${marketOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
@@ -107,10 +125,10 @@ window.AdminUI = {
             <!-- CREAZIONE CALCIATORE -->
             <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-600 pb-2 pt-4">Crea Nuovo Calciatore</h3>
             <div class="p-6 bg-gray-700 rounded-lg space-y-4 mb-6">
-                
+
                  <div class="flex flex-col">
                      <label class="text-gray-300 mb-1 font-semibold" for="target-collection">Destinazione Giocatore</label>
-                     <select id="target-collection" 
+                     <select id="target-collection"
                              class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white focus:ring-yellow-400">
                          <option value="draft">Draft (Selezione a Turni)</option>
                          <option value="market">Mercato (Acquisto Libero)</option>
@@ -133,7 +151,7 @@ window.AdminUI = {
                             <option value="A">A (Attaccante)</option>
                         </select>
                     </div>
-                    
+
                     <div class="flex flex-col">
                         <label class="text-gray-300 mb-1" for="player-type">Tipologia</label>
                         <select id="player-type" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
@@ -141,9 +159,9 @@ window.AdminUI = {
                             ${types.map(t => `<option value="${t}">${t}</option>`).join('')}
                         </select>
                     </div>
-                    
+
                     <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-age">EtÃ  (15 - 50)</label>
+                        <label class="text-gray-300 mb-1" for="player-age">Eta (15 - 50)</label>
                         <input type="number" id="player-age" min="15" max="50" placeholder="25" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                     </div>
 
@@ -151,23 +169,23 @@ window.AdminUI = {
                         <label class="text-gray-300 mb-1" for="player-level-min">Liv Minimo (1 - 20)</label>
                         <input type="number" id="player-level-min" min="1" max="20" placeholder="10" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                     </div>
-                    
+
                     <div class="flex flex-col">
                         <label class="text-gray-300 mb-1" for="player-level-max">Liv Massimo (1 - 20)</label>
                         <input type="number" id="player-level-max" min="1" max="20" placeholder="18" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                     </div>
-                    
+
                     <div class="flex flex-col lg:col-span-2">
                         <label class="text-gray-300 mb-1" for="player-cost-display">Costo Calcolato (CS)</label>
                         <input type="text" id="player-cost-display" value="Costo: 100 CS" readonly disabled
                                class="p-2 rounded-lg bg-gray-500 border border-yellow-400 text-white font-extrabold text-center cursor-default">
                     </div>
                 </div>
-                
+
                 <div class="flex flex-col lg:col-span-4 border border-gray-600 p-4 rounded-lg bg-gray-800">
-                    <label class="text-gray-300 mb-2 font-semibold text-lg">AbilitÃ  (Max 3)</label>
+                    <label class="text-gray-300 mb-2 font-semibold text-lg">Abilita (Max 3)</label>
                     <div id="abilities-checklist" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilitÃ  disponibili.</p>
+                        <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilita disponibili.</p>
                     </div>
                 </div>
 
@@ -181,13 +199,13 @@ window.AdminUI = {
                         Aggiungi Calciatore
                     </button>
                 </div>
-                
+
                 <p id="player-creation-message" class="text-center mt-3 text-red-400"></p>
             </div>
-            
+
             <!-- LISTE GIOCATORI -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Elenco Giocatori (Draft & Mercato)</h3>
-            
+
             <div class="grid grid-cols-2 gap-6 mb-4">
                 <button data-action="clear-collection" data-target="draft"
                         class="bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition duration-150">
@@ -198,7 +216,7 @@ window.AdminUI = {
                     <i class="fas fa-trash-alt mr-2"></i> SVUOTA TUTTO IL MERCATO
                 </button>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500">
                     <h4 class="text-xl font-bold text-yellow-400 mb-3">Giocatori Draft</h4>
@@ -206,7 +224,7 @@ window.AdminUI = {
                          <p class="text-gray-500 text-center">Caricamento Draft...</p>
                     </div>
                 </div>
-                
+
                 <div class="p-4 bg-gray-700 rounded-lg border border-blue-500">
                     <h4 class="text-xl font-bold text-blue-400 mb-3">Giocatori Mercato</h4>
                     <div id="market-players-list" class="space-y-3 max-h-96 overflow-y-auto" data-collection="market">
@@ -224,13 +242,13 @@ window.AdminUI = {
         teamManagementToolsContainer.innerHTML = `
             <h3 class="text-2xl font-bold text-blue-400 mb-4 border-b border-gray-600 pb-2 pt-4">Elenco Squadre Registrate</h3>
             <p class="text-xs text-gray-400 mb-4">Modifica budget, password o livello allenatore delle squadre.</p>
-            
+
             <div class="grid grid-cols-2 gap-4 mb-4">
                  <button id="btn-mock-action"
                         class="w-full bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
                     Azione Mock
                 </button>
-                
+
                  <button id="btn-refresh-teams-management"
                         class="w-full bg-gray-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-400 transition duration-150">
                     Ricarica Lista Squadre
