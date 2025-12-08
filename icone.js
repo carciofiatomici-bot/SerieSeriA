@@ -45,7 +45,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
     { id: 'dappi', role: 'C', name: 'Dappino', levelRange: [12, 18], age: 24, cost: 0, isCaptain: true, level: 12, photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/dappino.png?raw=true', type: TYPE_TECNICA, abilities: ['Icona'] }, 
     
     // Blatta: Tipo VELOCITÀ/Velocita. Ruolo D.
-    { id: 'blatta', role: 'D', name: 'Bemolle', levelRange: [12, 18], age: 27, cost: 0, isCaptain: true, level: 12, photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/blatta.jpg?raw=true', type: TYPE_VELOCITA, abilities: ['Icona'] },
+    { id: 'bemolle', role: 'D', name: 'Bemolle', levelRange: [12, 18], age: 27, cost: 0, isCaptain: true, level: 12, photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/blatta.jpg?raw=true', type: TYPE_VELOCITA, abilities: ['Icona'] },
     
     // Antony: Tipo POTENTE/Potenza. Ruolo D.
     { id: 'antony', role: 'D', name: 'Antony', levelRange: [12, 18], age: 29, cost: 0, isCaptain: true, level: 12, photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/unnamed%20(4).jpg?raw=true', type: TYPE_POTENZA, abilities: ['Icona'] },
@@ -77,3 +77,4 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
 
 
 window.CAPTAIN_CANDIDATES_TEMPLATES = CAPTAIN_CANDIDATES_TEMPLATES;
+
