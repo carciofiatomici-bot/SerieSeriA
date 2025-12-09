@@ -11,6 +11,24 @@ window.RulesPanel = {
     encyclopediaLoaded: false,
 
     /**
+     * Ordina le abilità per rarità (Comune -> Rara -> Epica -> Leggendaria -> Unica)
+     * @param {Array} abilities - Array di abilità
+     * @returns {Array} - Array ordinato
+     */
+    sortByRarity(abilities) {
+        const rarityOrder = {
+            'Comune': 1,
+            'Rara': 2,
+            'Epica': 3,
+            'Leggendaria': 4,
+            'Unica': 5
+        };
+        return [...abilities].sort((a, b) => {
+            return (rarityOrder[a.rarity] || 0) - (rarityOrder[b.rarity] || 0);
+        });
+    },
+
+    /**
      * Apre il pannello regole
      */
     open() {
@@ -96,20 +114,24 @@ window.RulesPanel = {
         const singleRoleNegative = negative.filter(a => ['P', 'D', 'C', 'A'].includes(a.role));
         const multiRoleNegative = negative.filter(a => a.role === 'Multi' || a.role === 'Tutti' || a.role === 'Speciale');
 
-        // Raggruppa per ruolo specifico
+        // Raggruppa per ruolo specifico e ordina per rarità
         const byRolePositive = {
-            'P': singleRolePositive.filter(a => a.role === 'P'),
-            'D': singleRolePositive.filter(a => a.role === 'D'),
-            'C': singleRolePositive.filter(a => a.role === 'C'),
-            'A': singleRolePositive.filter(a => a.role === 'A')
+            'P': this.sortByRarity(singleRolePositive.filter(a => a.role === 'P')),
+            'D': this.sortByRarity(singleRolePositive.filter(a => a.role === 'D')),
+            'C': this.sortByRarity(singleRolePositive.filter(a => a.role === 'C')),
+            'A': this.sortByRarity(singleRolePositive.filter(a => a.role === 'A'))
         };
 
         const byRoleNegative = {
-            'P': singleRoleNegative.filter(a => a.role === 'P'),
-            'D': singleRoleNegative.filter(a => a.role === 'D'),
-            'C': singleRoleNegative.filter(a => a.role === 'C'),
-            'A': singleRoleNegative.filter(a => a.role === 'A')
+            'P': this.sortByRarity(singleRoleNegative.filter(a => a.role === 'P')),
+            'D': this.sortByRarity(singleRoleNegative.filter(a => a.role === 'D')),
+            'C': this.sortByRarity(singleRoleNegative.filter(a => a.role === 'C')),
+            'A': this.sortByRarity(singleRoleNegative.filter(a => a.role === 'A'))
         };
+
+        // Ordina anche le multi-ruolo per rarità
+        const sortedMultiRolePositive = this.sortByRarity(multiRolePositive);
+        const sortedMultiRoleNegative = this.sortByRarity(multiRoleNegative);
 
         const roleLabels = {
             'P': { name: 'Portiere', emoji: '🧤', color: 'text-blue-400', border: 'border-blue-500' },
@@ -168,16 +190,16 @@ window.RulesPanel = {
                 }).join('')}
 
                 <!-- Abilita multi-ruolo -->
-                ${multiRolePositive.length > 0 ? `
+                ${sortedMultiRolePositive.length > 0 ? `
                     <div class="mt-4 pt-4 border-t border-gray-700">
                         <h5 class="text-sm font-bold text-pink-400 mb-2 flex items-center gap-2">
-                            <span>🌟</span> Multi-Ruolo / Universali (${multiRolePositive.length})
+                            <span>🌟</span> Multi-Ruolo / Universali (${sortedMultiRolePositive.length})
                         </h5>
                         <div class="bg-pink-900 bg-opacity-20 rounded p-2 mb-2 border border-pink-700">
                             <p class="text-pink-300 text-xs">Queste abilita possono essere usate da piu ruoli</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            ${multiRolePositive.map(a => this.renderAbilityMini(a, true)).join('')}
+                            ${sortedMultiRolePositive.map(a => this.renderAbilityMini(a, true)).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -189,7 +211,7 @@ window.RulesPanel = {
                     ❌ Abilita Negative (${negative.length})
                 </h4>
                 <div class="bg-red-900 bg-opacity-20 rounded p-2 mb-3 border border-red-700">
-                    <p class="text-yellow-300 text-xs">⚠️ Le abilita negative hanno effetti dannosi. Max 1 per giocatore.</p>
+                    <p class="text-yellow-300 text-xs">⚠️ Le abilita negative hanno effetti dannosi. Max 2 per giocatore.</p>
                 </div>
 
                 <!-- Abilita negative per ruolo specifico -->
@@ -209,16 +231,16 @@ window.RulesPanel = {
                 }).join('')}
 
                 <!-- Abilita negative multi-ruolo -->
-                ${multiRoleNegative.length > 0 ? `
+                ${sortedMultiRoleNegative.length > 0 ? `
                     <div class="mt-4 pt-4 border-t border-gray-700">
                         <h5 class="text-sm font-bold text-pink-400 mb-2 flex items-center gap-2">
-                            <span>🌟</span> Multi-Ruolo (${multiRoleNegative.length})
+                            <span>🌟</span> Multi-Ruolo (${sortedMultiRoleNegative.length})
                         </h5>
                         <div class="bg-pink-900 bg-opacity-20 rounded p-2 mb-2 border border-pink-700">
                             <p class="text-pink-300 text-xs">Queste abilita negative possono colpire piu ruoli</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            ${multiRoleNegative.map(a => this.renderAbilityMini(a, true)).join('')}
+                            ${sortedMultiRoleNegative.map(a => this.renderAbilityMini(a, true)).join('')}
                         </div>
                     </div>
                 ` : ''}

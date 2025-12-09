@@ -280,7 +280,7 @@ window.DraftAdminPlayers = {
     selectRandomAbilities(role) {
         const { getRandomInt } = window.DraftUtils;
 
-        const roleAbilities = window.AdminTeams?.ROLE_ABILITIES_MAP?.[role];
+        const roleAbilities = window.DraftConstants.ROLE_ABILITIES_MAP?.[role];
         if (!roleAbilities) return;
 
         const positiveAbilities = roleAbilities.positive || [];

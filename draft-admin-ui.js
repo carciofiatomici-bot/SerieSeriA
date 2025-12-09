@@ -329,7 +329,7 @@ window.DraftAdminUI = {
             return;
         }
 
-        const roleAbilities = window.AdminTeams?.ROLE_ABILITIES_MAP?.[role];
+        const roleAbilities = window.DraftConstants.ROLE_ABILITIES_MAP?.[role];
         if (!roleAbilities) {
             container.innerHTML = '<p class="text-red-400 text-sm">Errore: abilità non trovate per questo ruolo</p>';
             return;

@@ -186,6 +186,15 @@ window.AdminUI = {
                         <label class="text-gray-300 mb-1" for="player-name">Nome</label>
                         <input type="text" id="player-name" placeholder="Es: Barella" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                     </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-gray-300 mb-1" for="player-nationality">Nazionalita</label>
+                        <select id="player-nationality" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                            <option value="">Seleziona Nazionalita</option>
+                            ${window.DraftConstants?.NATIONALITIES?.map(n => `<option value="${n.code}">${n.flag} ${n.name}</option>`).join('') || ''}
+                        </select>
+                    </div>
+
                     <div class="flex flex-col">
                         <label class="text-gray-300 mb-1" for="player-role">Ruolo</label>
                         <select id="player-role" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">

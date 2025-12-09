@@ -317,6 +317,17 @@ window.AdminTeams = {
                                 <p class="text-xs text-amber-400 mt-1">CSS - Valuta premium per potenziamenti</p>
                             </div>
                         </div>
+
+                        <!-- Sezione Ripara Squadra -->
+                        <div class="mt-6 p-4 bg-orange-900 rounded-lg border border-orange-500">
+                            <h4 class="text-lg font-bold text-orange-400 mb-2">🔧 Strumenti di Riparazione</h4>
+                            <p class="text-sm text-gray-300 mb-3">Corregge automaticamente livelli errati e rimuove dati obsoleti.</p>
+                            <button onclick="window.AdminTeams.repairTeam()"
+                                    class="w-full bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-500 transition">
+                                🔧 Ripara Squadra
+                            </button>
+                            <p id="repair-message" class="text-center text-sm mt-2"></p>
+                        </div>
                     </div>
 
                     <!-- Tab Content: Giocatori -->
@@ -395,7 +406,7 @@ window.AdminTeams = {
                                 Ruolo: <span class="text-yellow-400">${player.role}</span> | 
                                 Tipo: <span class="text-cyan-400">${player.type}</span> | 
                                 EtÃ : <span class="text-gray-300">${player.age}</span> |
-                                Livello: <span class="text-green-400">${player.level !== undefined ? player.level : ((player.levelMin || 1) + '-' + (player.levelMax || 1))}</span>
+                                Livello: <span class="text-green-400">${player.level !== undefined ? player.level : (player.levelRange && Array.isArray(player.levelRange) ? player.levelRange[0] : (player.levelMin || 1))}</span>
                             </p>
                             ${abilitiesDisplay}
                         </div>
@@ -463,8 +474,24 @@ window.AdminTeams = {
             return p;
         }.bind(this))();
 
-        const hasFixedLevel = !isNew && (this.currentEditingPlayers[index].level !== undefined);
-        const levelValue = hasFixedLevel ? player.level : (player.levelMin || 1);
+        // Determina se il giocatore ha un livello fisso (player.level o levelRange con stesso valore min/max)
+        const originalPlayer = !isNew ? this.currentEditingPlayers[index] : null;
+        const hasFixedLevel = !isNew && (
+            originalPlayer.level !== undefined ||
+            (originalPlayer.levelRange && Array.isArray(originalPlayer.levelRange))
+        );
+
+        // Calcola il valore del livello da mostrare
+        let levelValue = 1;
+        if (hasFixedLevel) {
+            if (originalPlayer.level !== undefined) {
+                levelValue = originalPlayer.level;
+            } else if (originalPlayer.levelRange && Array.isArray(originalPlayer.levelRange)) {
+                levelValue = originalPlayer.levelRange[0];
+            }
+        } else if (player.levelMin) {
+            levelValue = player.levelMin;
+        }
 
         const modalHtml = `
             <div id="player-edit-modal" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4 z-[60]">
@@ -698,10 +725,12 @@ window.AdminTeams = {
             this.currentEditingPlayers.push(playerData);
         } else {
             const originalPlayer = this.currentEditingPlayers[index];
-            if (originalPlayer.level !== undefined) {
+            // Se il giocatore aveva un livello fisso (level o levelRange), mantieni il formato corretto
+            if (originalPlayer.level !== undefined || (originalPlayer.levelRange && Array.isArray(originalPlayer.levelRange))) {
                 playerData.level = level;
                 delete playerData.levelMin;
                 delete playerData.levelMax;
+                delete playerData.levelRange;
             }
             this.currentEditingPlayers[index] = playerData;
         }
@@ -775,6 +804,107 @@ window.AdminTeams = {
         this.currentEditingPlayers = [];
         this.currentEditingTeamData = null;
         this.reloadCallback = null;
+    },
+
+    /**
+     * Ripara automaticamente i dati della squadra:
+     * - Icona: livello fissato a 12
+     * - Giocatori Base: livello fissato a 1
+     * - Rimuove levelRange, levelMin, levelMax obsoleti
+     * - Converte tutto in formato level singolo
+     */
+    repairTeam() {
+        const msgElement = document.getElementById('repair-message');
+        if (!msgElement) return;
+
+        if (!this.currentEditingPlayers || this.currentEditingPlayers.length === 0) {
+            msgElement.textContent = 'Nessun giocatore da riparare.';
+            msgElement.className = 'text-center text-sm mt-2 text-yellow-400';
+            return;
+        }
+
+        let repairs = [];
+
+        this.currentEditingPlayers = this.currentEditingPlayers.map(player => {
+            const isIcona = player.abilities && player.abilities.includes('Icona');
+            const isBasePlayer = player.name && (
+                player.name.includes('Base') ||
+                player.name === 'Portiere Base' ||
+                player.name === 'Difensore Base' ||
+                player.name.includes('Centrocampista Base') ||
+                player.name === 'Attaccante Base'
+            );
+
+            // Determina il livello corretto
+            let correctLevel;
+            if (isIcona) {
+                correctLevel = 12;
+            } else if (isBasePlayer) {
+                correctLevel = 1;
+            } else {
+                // Per altri giocatori, usa il livello esistente o estrai da levelRange
+                if (player.level !== undefined) {
+                    correctLevel = player.level;
+                } else if (player.levelRange && Array.isArray(player.levelRange)) {
+                    correctLevel = player.levelRange[0];
+                } else if (player.levelMin !== undefined) {
+                    correctLevel = player.levelMin;
+                } else {
+                    correctLevel = 1;
+                }
+            }
+
+            // Controlla se serve riparazione
+            const currentLevel = player.level !== undefined ? player.level :
+                                 (player.levelRange ? player.levelRange[0] : (player.levelMin || 1));
+
+            const needsLevelFix = currentLevel !== correctLevel;
+            const hasObsoleteFields = player.levelRange || player.levelMin !== undefined || player.levelMax !== undefined;
+
+            if (needsLevelFix || hasObsoleteFields) {
+                let repairNote = `${player.name}: `;
+                if (needsLevelFix) {
+                    repairNote += `Lv ${currentLevel} → ${correctLevel}`;
+                }
+                if (hasObsoleteFields) {
+                    repairNote += needsLevelFix ? ', rimossi campi obsoleti' : 'rimossi campi obsoleti';
+                }
+                repairs.push(repairNote);
+            }
+
+            // Crea oggetto giocatore pulito
+            const repairedPlayer = {
+                id: player.id,
+                name: player.name,
+                role: player.role,
+                type: player.type,
+                age: player.age,
+                cost: player.cost || 0,
+                level: correctLevel,
+                abilities: player.abilities || [],
+                isCaptain: player.isCaptain || false
+            };
+
+            // Mantieni photoUrl se presente (per Icone)
+            if (player.photoUrl) {
+                repairedPlayer.photoUrl = player.photoUrl;
+            }
+
+            return repairedPlayer;
+        });
+
+        // Aggiorna la lista visuale
+        document.getElementById('players-list-edit').innerHTML = this.renderPlayersList();
+        document.getElementById('tab-players').innerHTML = `⚽ Giocatori (${this.currentEditingPlayers.length})`;
+
+        // Mostra risultato
+        if (repairs.length > 0) {
+            msgElement.innerHTML = `<span class="text-green-400">✅ Riparati ${repairs.length} giocatori:</span><br><span class="text-xs text-gray-300">${repairs.join('<br>')}</span>`;
+            msgElement.className = 'text-center text-sm mt-2';
+        } else {
+            msgElement.textContent = '✅ Nessuna riparazione necessaria. Tutti i dati sono corretti.';
+            msgElement.className = 'text-center text-sm mt-2 text-green-400';
+        }
     }
 };
 

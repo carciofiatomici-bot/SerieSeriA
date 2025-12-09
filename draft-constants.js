@@ -81,8 +81,41 @@ window.DraftConstants = {
         { code: 'BF', name: 'Burkina Faso', flag: '🇧🇫' },
         { code: 'GN', name: 'Guinea', flag: '🇬🇳' },
         { code: 'CD', name: 'RD Congo', flag: '🇨🇩' },
-        { code: 'KE', name: 'Kenya', flag: '🇰🇪' }
+        { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+        // Sud America
+        { code: 'BR', name: 'Brasile', flag: '🇧🇷' },
+        { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
+        { code: 'UY', name: 'Uruguay', flag: '🇺🇾' },
+        { code: 'CO', name: 'Colombia', flag: '🇨🇴' },
+        { code: 'CL', name: 'Cile', flag: '🇨🇱' },
+        { code: 'PE', name: 'Peru', flag: '🇵🇪' },
+        { code: 'EC', name: 'Ecuador', flag: '🇪🇨' },
+        { code: 'PY', name: 'Paraguay', flag: '🇵🇾' },
+        { code: 'VE', name: 'Venezuela', flag: '🇻🇪' },
+        { code: 'BO', name: 'Bolivia', flag: '🇧🇴' }
     ],
+
+    // ====================================================================
+    // MAPPA ABILITA' PER RUOLO (solo abilità implementate nell'enciclopedia)
+    // ====================================================================
+    ROLE_ABILITIES_MAP: {
+        'P': {
+            positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico', 'Miracolo', 'Freddezza'],
+            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni']
+        },
+        'D': {
+            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile', 'Salvataggio sulla Linea', 'Freddezza'],
+            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni']
+        },
+        'C': {
+            positive: ['Tuttocampista', 'Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Lancio lungo', 'Cross', 'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Freddezza'],
+            negative: ['Egoista', 'Impreciso', 'Ingabbiato', 'Lento a carburare', 'Soggetto a infortuni']
+        },
+        'A': {
+            positive: ['Opportunista', 'Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Tiro a Giro', 'Immarcabile', 'Freddezza'],
+            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Egoista', 'Lento a carburare', 'Soggetto a infortuni']
+        }
+    },
 
     // ====================================================================
     // SISTEMA DRAFT A TURNI
