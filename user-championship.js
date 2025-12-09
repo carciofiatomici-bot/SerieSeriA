@@ -230,18 +230,38 @@ window.UserChampionship = {
                 `}
             </div>
             
+            <!-- Tab CoppaSeriA -->
+            <div id="cup-user-section" class="mt-6">
+                <h3 class="text-2xl font-bold text-purple-400 mb-4 border-b border-purple-600 pb-2">🏆 CoppaSeriA</h3>
+                <div id="cup-user-content" class="bg-gray-800 rounded-lg p-4 border border-purple-500">
+                    <p class="text-gray-400 text-center">Caricamento stato coppa...</p>
+                </div>
+            </div>
+
+            <!-- Tab Supercoppa -->
+            <div id="supercoppa-user-section" class="mt-6">
+                <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-yellow-600 pb-2">⭐ Supercoppa</h3>
+                <div id="supercoppa-user-content" class="bg-gray-800 rounded-lg p-4 border border-yellow-500">
+                    <p class="text-gray-400 text-center">Caricamento stato supercoppa...</p>
+                </div>
+            </div>
+
             <!-- Link rapidi -->
             <div class="grid grid-cols-2 gap-4 mt-6">
-                <button onclick="window.InterfacciaDashboard.loadLeaderboard()" 
+                <button onclick="window.InterfacciaDashboard.loadLeaderboard()"
                         class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">
                     📊 Vai alla Classifica
                 </button>
-                <button onclick="window.InterfacciaDashboard.loadSchedule()" 
+                <button onclick="window.InterfacciaDashboard.loadSchedule()"
                         class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-lg">
                     📅 Vai al Calendario
                 </button>
             </div>
         `;
+
+        // Carica sezioni coppa e supercoppa
+        this.loadCupSection(currentTeamId);
+        this.loadSupercoppSection(currentTeamId);
     },
     
     /**
@@ -288,7 +308,66 @@ window.UserChampionship = {
             console.error("Errore avvio replay:", error);
             alert(`Errore: ${error.message}`);
         }
+    },
+
+    /**
+     * Carica la sezione CoppaSeriA per l'utente
+     */
+    async loadCupSection(teamId) {
+        const container = document.getElementById('cup-user-content');
+        if (!container) return;
+
+        try {
+            const bracket = await window.CoppaSchedule.loadCupSchedule();
+
+            if (!bracket) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-400">La CoppaSeriA non e ancora iniziata.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Renderizza la vista utente della coppa
+            window.CoppaUI.renderUserCupView(bracket, teamId, container);
+
+        } catch (error) {
+            console.error('Errore caricamento sezione coppa:', error);
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-400">Errore caricamento dati coppa.</p>
+                </div>
+            `;
+        }
+    },
+
+    /**
+     * Carica la sezione Supercoppa per l'utente
+     */
+    async loadSupercoppSection(teamId) {
+        const container = document.getElementById('supercoppa-user-content');
+        if (!container) return;
+
+        try {
+            if (window.Supercoppa) {
+                await window.Supercoppa.renderUserUI(teamId, container);
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-400">Modulo Supercoppa non disponibile.</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Errore caricamento sezione supercoppa:', error);
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-400">Errore caricamento dati supercoppa.</p>
+                </div>
+            `;
+        }
     }
 };
 
-console.log("✅ User Championship (View Only) caricato.");
+console.log("User Championship (View Only) caricato.");

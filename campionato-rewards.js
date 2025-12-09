@@ -28,11 +28,11 @@ window.ChampionshipRewards = {
         let homeCreditsEarned = homeGoals; // 1 CS per gol
         let awayCreditsEarned = awayGoals; // 1 CS per gol
 
-        // Bonus vittoria: 15 CS
+        // Bonus vittoria: 25 CS
         if (homeGoals > awayGoals) {
-            homeCreditsEarned += 15;
+            homeCreditsEarned += 25;
         } else if (homeGoals < awayGoals) {
-            awayCreditsEarned += 15;
+            awayCreditsEarned += 25;
         }
 
         // Aggiorna il budget in Firestore
@@ -93,13 +93,16 @@ window.ChampionshipRewards = {
      * @returns {Promise<{totalTeams: number, levelUps: number}>}
      */
     async applySeasonEndRewards(standings) {
-        const { doc, updateDoc, collection, getDocs } = window.firestoreTools;
+        const { doc, updateDoc, getDoc, collection, getDocs } = window.firestoreTools;
         const db = window.db;
         const TEAMS_COLLECTION_PATH = `artifacts/${window.firestoreTools.appId}/public/data/teams`;
         const getRandomInt = window.getRandomInt;
 
         // Calcola i premi
         const rewardsMap = this.calculateSeasonEndRewards(standings);
+
+        // Identifica il vincitore del campionato (primo in classifica)
+        const championTeamId = standings.length > 0 ? standings[0].teamId : null;
 
         // Applica i premi a tutte le squadre
         const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
@@ -113,6 +116,7 @@ window.ChampionshipRewards = {
             
             const reward = rewardsMap.get(teamId) || 100; // Default 100 CS se non in classifica
             const currentBudget = teamData.budget || 0;
+            const currentCSS = teamData.creditiSuperSeri || 0;
             const currentCoach = teamData.coach || { name: 'Sconosciuto', level: 0, xp: 0 };
             
             let coachLevel = currentCoach.level;
@@ -129,8 +133,8 @@ window.ChampionshipRewards = {
                 }
             }
             
-            // Aggiorna la squadra su Firestore
-            await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamId), {
+            // Prepara l'aggiornamento
+            const updateData = {
                 budget: currentBudget + reward,
                 coach: {
                     ...currentCoach,
@@ -138,12 +142,22 @@ window.ChampionshipRewards = {
                 },
                 // Resetta il cooldown acquisto
                 lastAcquisitionTimestamp: 0,
-            });
+            };
+
+            // Premio speciale: 1 CSS al vincitore del campionato
+            if (teamId === championTeamId) {
+                updateData.creditiSuperSeri = currentCSS + 1;
+                console.log(`Premio campionato: 1 CSS assegnato al vincitore ${teamData.teamName || teamId}`);
+            }
+
+            // Aggiorna la squadra su Firestore
+            await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamId), updateData);
         }
 
         return {
             totalTeams: teamsSnapshot.size,
-            levelUps: successfulLevelUps
+            levelUps: successfulLevelUps,
+            championId: championTeamId
         };
     }
 };

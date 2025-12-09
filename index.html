@@ -156,18 +156,35 @@
                 </button>
             </div>
 
-            <!-- NUOVO: Toggle Partecipazione Campionato -->
-            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
-                <div class="flex items-center justify-center space-x-4 mb-3">
-                    <input type="checkbox" id="championship-participation-toggle" 
-                           class="form-checkbox h-6 w-6 rounded transition duration-150 ease-in-out bg-gray-600 border-purple-500">
-                    <label for="championship-participation-toggle" class="text-white font-bold text-lg cursor-pointer">
-                        🏆 Partecipa al Campionato
-                    </label>
+            <!-- Toggle Partecipazione Campionato e Coppa -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Toggle Campionato -->
+                <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+                    <div class="flex items-center justify-center space-x-3 mb-2">
+                        <input type="checkbox" id="championship-participation-toggle"
+                               class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out bg-gray-600 border-green-500">
+                        <label for="championship-participation-toggle" class="text-white font-bold cursor-pointer">
+                            🏆 Campionato
+                        </label>
+                    </div>
+                    <p id="championship-participation-status" class="text-xs text-gray-400">
+                        Caricamento stato...
+                    </p>
                 </div>
-                <p id="championship-participation-status" class="text-sm text-gray-400">
-                    Caricamento stato...
-                </p>
+
+                <!-- Toggle CoppaSeriA -->
+                <div class="p-4 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
+                    <div class="flex items-center justify-center space-x-3 mb-2">
+                        <input type="checkbox" id="cup-participation-toggle"
+                               class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out bg-gray-600 border-purple-500">
+                        <label for="cup-participation-toggle" class="text-white font-bold cursor-pointer">
+                            🏆 CoppaSeriA
+                        </label>
+                    </div>
+                    <p id="cup-participation-status" class="text-xs text-gray-400">
+                        Caricamento stato...
+                    </p>
+                </div>
             </div>
 
             <div class="mt-4 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
@@ -194,7 +211,7 @@
             
             <!-- Contenitore per i pulsanti principali e liste squadre -->
             <div id="admin-dashboard-container" class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl">
-                <!-- Il layout ÃƒÆ’Ã‚Â¨ generato da admin.js -->
+                <!-- Il layout è generato da admin.js -->
                 <p class="text-gray-400 text-center">Inizializzazione...</p>
             </div>
             
@@ -299,7 +316,7 @@
         <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Calciatori (Creazione e Liste)</h2>
              
-             <!-- Il contenuto ÃƒÆ’Ã‚Â¨ iniettato da admin.js -->
+             <!-- Il contenuto è iniettato da admin.js -->
              <div id="player-management-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento strumenti...</p>
              </div>
@@ -314,7 +331,7 @@
         <div id="team-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-blue-500 text-center mb-4 border-b-4 border-blue-700 pb-2">Gestione Squadre Registrate</h2>
              
-             <!-- Il contenuto ÃƒÆ’Ã‚Â¨ iniettato da admin.js -->
+             <!-- Il contenuto è iniettato da admin.js -->
              <div id="team-management-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento strumenti...</p>
              </div>
@@ -328,7 +345,7 @@
         <!-- 13. NUOVO CONTENUTO: SELEZIONE ALLENATORE -->
         <div id="coach-selection-box" class="football-box w-full max-w-xl transition duration-500 hidden-on-load">
             <h2 class="text-4xl font-extrabold text-red-500 text-center mb-4 border-b-4 border-red-700 pb-2">Un Manager per la Tua Squadra</h2>
-            <p class="text-center text-lg text-gray-300 mb-6">Inserisci il nome dell'allenatore che guiderÃƒÆ’Ã‚Â  la squadra. PartirÃƒÆ’Ã‚Â  da Livello 1 e potrÃƒÆ’Ã‚Â  crescere.</p>
+            <p class="text-center text-lg text-gray-300 mb-6">Inserisci il nome dell'allenatore che guiderà la squadra. Partirà da Livello 1 e Potrà crescere.</p>
             
             <input type="text" id="coach-name-input" placeholder="Nome Allenatore (es. Carlo Ancelotti)"
                    class="w-full p-3 border border-red-600 rounded-lg focus:ring-red-400 focus:border-red-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
@@ -344,7 +361,7 @@
         <!-- 14. NUOVO CONTENUTO: SELEZIONE CAPITANO -->
         <div id="captain-selection-box" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Seleziona la tua Icona!</h2>
-             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli il giocatore che guiderÃƒÆ’Ã‚Â  la tua squadra. SarÃƒÆ’Ã‚Â  il tuo sesto giocatore in rosa.</p>
+             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli il giocatore che guiderà la tua squadra. Sarà il tuo sesto giocatore in rosa.</p>
              
              <div id="captain-candidates-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <p class="text-center text-gray-400 col-span-4">Caricamento candidati...</p>
@@ -365,7 +382,7 @@
                 <h3 class="text-3xl font-bold text-red-400 mb-4 border-b border-red-600 pb-2 text-center">ELIMINA SQUADRA</h3>
                 <p class="text-lg text-gray-300 mb-4 text-center">Sei sicuro di voler eliminare definitivamente <span id="team-name-to-delete" class="font-extrabold text-yellow-400">[Nome Squadra]</span>?</p>
                 
-                <p class="text-red-400 font-bold mb-4 text-center">Questa azione ÃƒÆ’Ã‚Â¨ irreversibile.</p>
+                <p class="text-red-400 font-bold mb-4 text-center">Questa azione è irreversibile.</p>
 
                 <label for="delete-confirmation-input" class="block text-gray-300 font-semibold mb-2">Digita "ELIMINA" per confermare:</label>
                 <input type="text" id="delete-confirmation-input" 
@@ -388,7 +405,7 @@
 
     </main>
 
-    <!-- Logo che ScorrerÃƒÆ’Ã‚Â  con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
+    <!-- Logo che Scorrerà con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
     <img id="footer-logo" 
          src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/serie%20sera%20256.png?raw=true" 
          alt="Logo in fondo alla pagina">
@@ -428,7 +445,7 @@
         
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
-        // Questo ÃƒÆ’Ã‚Â¨ il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
+        // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
         window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, appId }; 
         
         // Funzione globale per cambiare schermata
@@ -497,11 +514,18 @@
 
     <!-- 3. MODULI CORE INTERFACCIA (Dipendono da Core) -->
     <script src="interfaccia-auth.js"></script>       
-    <script src="interfaccia-dashboard.js"></script>  
-    <script src="interfaccia-navigation.js"></script> 
-    <script src="interfaccia-onboarding.js"></script> 
-    <script src="interfaccia-team.js"></script>       
-    <script src="gestionesquadre.js"></script> <!-- Dipende da Core, ma anche da alcune funzioni globali -->
+    <script src="interfaccia-dashboard.js"></script>
+    <script src="interfaccia-navigation.js"></script>
+    <script src="interfaccia-onboarding.js"></script>
+    <script src="interfaccia-team.js"></script>
+
+    <!-- MODULI GESTIONE SQUADRE (in ordine di dipendenza) -->
+    <script src="gestionesquadre-constants.js"></script>
+    <script src="gestionesquadre-utils.js"></script>
+    <script src="gestionesquadre-rosa.js"></script>
+    <script src="gestionesquadre-formazione.js"></script>
+    <script src="gestionesquadre-icona.js"></script>
+    <script src="gestionesquadre.js"></script> <!-- Orchestratore -->
     
     <!-- 4. LOGICHE DI ACQUISTO (Dipendono da Core e possibilmente da Auth/Team) -->
     <script src="draft.js"></script> 
@@ -519,22 +543,37 @@
     <script src="campionato-schedule.js"></script>
     <script src="campionato-ui.js"></script>
     <script src="campionato-main.js"></script>
-    <script src="campionato.js"></script> 
-    
-    <!-- 7. ORCHESTRATORE FINALE (Avvia l'app) -->
-    <script src="interfaccia.js"></script>       
+    <script src="campionato.js"></script>
 
-    <!-- 8. MATCH REPLAY SYSTEM -->
+    <!-- 7. COPPASERIA (Dipendono da Campionato e Simulation) -->
+    <script src="coppa-constants.js"></script>
+    <script src="coppa-brackets.js"></script>
+    <script src="coppa-simulation.js"></script>
+    <script src="coppa-schedule.js"></script>
+    <script src="coppa-ui.js"></script>
+    <script src="coppa-main.js"></script>
+
+    <!-- 8. SUPERCOPPA (Dipende da Campionato e Coppa) -->
+    <script src="supercoppa.js"></script>
+
+    <!-- 9. ORCHESTRATORE FINALE (Avvia l'app) -->
+    <script src="interfaccia.js"></script>
+
+    <!-- 10. MATCH REPLAY SYSTEM -->
     <script src="match-replay-simple.js"></script>
-    
-    <!-- 9. PLAYER STATS SYSTEM -->
+
+    <!-- 11. PLAYER STATS SYSTEM -->
     <script src="player-stats.js"></script>
     <script src="player-stats-ui.js"></script>
-    
-    <!-- 10. ABILITIES ENCYCLOPEDIA -->
+
+    <!-- 12. ABILITIES ENCYCLOPEDIA -->
     <script src="abilities-encyclopedia.js"></script>
     <script src="abilities-encyclopedia-ui.js"></script>
     <script src="user-championship.js"></script>
+
+    <!-- 13. CREDITI SUPER SERI (Valuta Premium) -->
+    <script src="crediti-super-seri.js"></script>
+    <script src="crediti-super-seri-ui.js"></script>
 
 </body>
 </html><!-- ============================================ -->
@@ -549,11 +588,11 @@
             <h2 class="text-2xl font-bold text-white">🎬 Replay Partita</h2>
             
             <div class="flex gap-3">
-                <!-- VelocitÃƒÂ  -->
+                <!-- Velocità -->
                 <button id="replay-speed-btn" 
                         onclick="window.MatchReplay.changeSpeed()"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    VelocitÃƒÂ : 1x
+                    Velocità: 1x
                 </button>
                 
                 <!-- Chiudi (solo se non in riproduzione) -->
@@ -613,7 +652,7 @@
     animation: slideIn 0.4s ease-out;
 }
 
-/* Bounce (giÃƒÂ  in Tailwind ma ridefinito per sicurezza) */
+/* Bounce (già  in Tailwind ma ridefinito per sicurezza) */
 @keyframes bounce {
     0%, 100% {
         transform: translateY(0);
@@ -627,7 +666,7 @@
     animation: bounce 0.6s infinite;
 }
 
-/* Pulse (giÃƒÂ  in Tailwind ma ridefinito) */
+/* Pulse (già  in Tailwind ma ridefinito) */
 @keyframes pulse {
     0%, 100% {
         opacity: 1;

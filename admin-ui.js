@@ -76,6 +76,32 @@ window.AdminUI = {
                 <p class="text-xs text-gray-400 mt-2">I Crediti Super Seri permettono di potenziare giocatori e assegnare abilita.</p>
             </div>
 
+            <!-- SEZIONE COPPA SERIA -->
+            <h3 class="text-2xl font-bold text-purple-400 mb-4 border-b border-gray-600 pb-2 pt-6">CoppaSeriA</h3>
+            <div id="coppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-purple-500 mb-6">
+                <p class="text-gray-400 text-sm mb-3">Gestisci il torneo a eliminazione diretta</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-generate-cup-schedule"
+                            class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
+                        <i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa
+                    </button>
+                    <button id="btn-view-cup-bracket"
+                            class="bg-purple-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-700 transition duration-150">
+                        <i class="fas fa-sitemap mr-2"></i> Visualizza Tabellone
+                    </button>
+                </div>
+                <div id="coppa-status-container" class="mt-4">
+                    <p class="text-gray-400 text-center text-sm">Caricamento stato coppa...</p>
+                </div>
+            </div>
+
+            <!-- SEZIONE SUPERCOPPA -->
+            <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-600 pb-2 pt-6">Supercoppa</h3>
+            <div id="supercoppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-yellow-500 mb-6">
+                <p class="text-gray-400 text-sm mb-3">Campione vs Vincitore Coppa (o 2° classificato)</p>
+                <!-- Il contenuto viene renderizzato da Supercoppa.renderAdminUI() -->
+            </div>
+
             <!-- UTILITA ADMIN -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilita Admin</h3>
             <div class="grid grid-cols-2 gap-4 mb-4">

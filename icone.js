@@ -55,7 +55,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0, 
         isCaptain: true, 
         level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/shikanto.jpg?raw=true', 
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/real%20disagio.png?raw=true', 
         type: TYPE_TECNICA, 
         abilities: ['Icona'] 
     },
@@ -205,7 +205,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0, 
         isCaptain: true, 
         level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/meliodas.jpg?raw=true', 
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Mel.jpg?raw=true', 
         type: TYPE_TECNICA, 
         abilities: ['Icona'] 
     },
@@ -229,7 +229,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
     { 
         id: 'sandro', 
         role: 'C', 
-        name: 'Sandro Diaz', 
+        name: 'Sandro', 
         levelRange: [12, 18], 
         age: 29, 
         cost: 0, 
@@ -240,7 +240,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         abilities: ['Icona'] 
     },
 
-    // 15. Fosco: P, Tecnico (NUOVO)
+    // 15. Fosco: P, Tecnico
     { 
         id: 'fosco', 
         role: 'P', 
@@ -252,6 +252,21 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12, 
         photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Fosco.jpg?raw=true', 
         type: TYPE_TECNICA, 
+        abilities: ['Icona'] 
+    },
+
+    // 16. Cocco: C, Potente (NUOVO)
+    { 
+        id: 'cocco', 
+        role: 'C', 
+        name: 'Cocco', 
+        levelRange: [12, 18], 
+        age: 24, 
+        cost: 0, 
+        isCaptain: true, 
+        level: 12, 
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/cocco.jpg?raw=true', 
+        type: TYPE_POTENZA, 
         abilities: ['Icona'] 
     },
 ];

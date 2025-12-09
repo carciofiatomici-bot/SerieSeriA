@@ -12,7 +12,7 @@ window.AdminTeams = {
     currentEditingTeamData: null,
     reloadCallback: null,
 
-    // MAPPA COMPLETA ABILITÃ€ (46 abilitÃ !)
+    // MAPPA COMPLETA abilità€ (46 abilità !)
     ROLE_ABILITIES_MAP: {
         'P': {
             positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo'],
@@ -321,7 +321,7 @@ window.AdminTeams = {
 
         return this.currentEditingPlayers.map((player, index) => {
             const abilitiesDisplay = player.abilities && player.abilities.length > 0 
-                ? `<p class="text-xs text-purple-400 mt-1">🌟 AbilitÃ : ${player.abilities.join(', ')}</p>` 
+                ? `<p class="text-xs text-purple-400 mt-1">🌟 abilità : ${player.abilities.join(', ')}</p>` 
                 : '';
             
             return `
@@ -494,13 +494,13 @@ window.AdminTeams = {
     },
 
     /**
-     * Renderizza selezione abilitÃ 
+     * Renderizza selezione abilità 
      */
     renderAbilitiesSelection(role, currentAbilities) {
         const roleAbilities = this.ROLE_ABILITIES_MAP[role];
-        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilitÃ  disponibile</p>';
+        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilità  disponibile</p>';
 
-        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✅ AbilitÃ  Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
+        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✅ abilità  Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.positive.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
@@ -515,7 +515,7 @@ window.AdminTeams = {
         
         html += '</div></div>';
         
-        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ AbilitÃ  Negative (Max 1)</h5>';
+        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ abilità  Negative (Max 1)</h5>';
         html += '<p class="text-xs text-yellow-300 mb-2">âš ï¸ Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.negative.forEach(ability => {
@@ -535,7 +535,7 @@ window.AdminTeams = {
     },
 
     /**
-     * Aggiorna abilitÃ  quando cambia ruolo
+     * Aggiorna abilità  quando cambia ruolo
      */
     updateAbilitiesForRole() {
         const role = document.getElementById('player-role-input').value;
@@ -543,7 +543,7 @@ window.AdminTeams = {
     },
 
     /**
-     * Valida selezione abilitÃ  (max 3 positive, max 1 negativa)
+     * Valida selezione abilità  (max 3 positive, max 1 negativa)
      */
     validateAbilitySelection() {
         const positiveChecks = document.querySelectorAll('.ability-positive-check:checked');
@@ -552,14 +552,14 @@ window.AdminTeams = {
         // Limita positive a 3
         if (positiveChecks.length > 3) {
             event.target.checked = false;
-            alert('âŒ Massimo 3 abilitÃ  positive!');
+            alert('âŒ Massimo 3 abilità  positive!');
             return false;
         }
         
         // Limita negative a 1
         if (negativeChecks.length > 1) {
             event.target.checked = false;
-            alert('âŒ Massimo 1 abilitÃ  negativa!');
+            alert('âŒ Massimo 1 abilità  negativa!');
             return false;
         }
         

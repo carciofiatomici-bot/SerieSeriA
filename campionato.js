@@ -281,6 +281,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /**
+     * Calcola le statistiche della stagione corrente
+     */
+    const calculateSeasonStats = (schedule) => {
+        let playedMatches = 0;
+        let totalMatches = 0;
+        let totalGoals = 0;
+
+        schedule.forEach(round => {
+            round.matches.forEach(match => {
+                totalMatches++;
+                if (match.result) {
+                    playedMatches++;
+                    const [homeGoals, awayGoals] = match.result.split('-').map(Number);
+                    totalGoals += (homeGoals || 0) + (awayGoals || 0);
+                }
+            });
+        });
+
+        const avgGoals = playedMatches > 0 ? (totalGoals / playedMatches).toFixed(2) : '0.00';
+        const progressPercent = totalMatches > 0 ? Math.round((playedMatches / totalMatches) * 100) : 0;
+
+        return {
+            playedMatches,
+            totalMatches,
+            totalGoals,
+            avgGoals,
+            progressPercent
+        };
+    };
+
     const renderSchedulePreview = (schedule, numTeams) => {
         return window.ChampionshipUI.renderSchedulePreview(schedule, numTeams);
     };
@@ -377,6 +408,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const lastAutoDate = configData.lastAutoSimulatedDate || 0;
             const lastAutoDateString = lastAutoDate === 0 ? 'MAI' : new Date(lastAutoDate).toLocaleString('it-IT');
 
+            // Calcola statistiche stagione
+            const seasonStats = calculateSeasonStats(schedule);
+
             // HTML per Cron e Timer status
             const cronStatusHtml = `
                 <div id="cron-status-box" class="p-4 bg-gray-700 rounded-lg border border-teal-500 shadow-md">
@@ -385,82 +419,183 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-sm font-extrabold mt-2 text-yellow-300" id="cron-countdown-message">Caricamento stato timer...</p>
                 </div>
             `;
-            
+
+            // HTML per sezione Reward
+            const rewardsHtml = `
+                <div class="p-4 bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg border-2 border-yellow-500 shadow-md">
+                    <h4 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
+                        <span class="mr-2">💰</span> Tabella Premi
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Campionato -->
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                            <h5 class="text-green-400 font-bold mb-2 border-b border-green-600 pb-1">🏆 Campionato</h5>
+                            <ul class="text-sm space-y-1">
+                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Primi 3 posti:</span><span class="text-green-400">150 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Ultimi 3 posti:</span><span class="text-green-400">200 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Altre posizioni:</span><span class="text-green-400">100 CS</span></li>
+                            </ul>
+                        </div>
+                        <!-- CoppaSeriA -->
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                            <h5 class="text-purple-400 font-bold mb-2 border-b border-purple-600 pb-1">🏆 CoppaSeriA</h5>
+                            <ul class="text-sm space-y-1">
+                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">2°, 3°, 4° posto:</span><span class="text-green-400">100 CS</span></li>
+                            </ul>
+                        </div>
+                        <!-- Supercoppa -->
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                            <h5 class="text-orange-400 font-bold mb-2 border-b border-orange-600 pb-1">⭐ Supercoppa</h5>
+                            <ul class="text-sm space-y-1">
+                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                            </ul>
+                            <p class="text-xs text-gray-400 mt-2">1° Campionato vs Vincitore Coppa</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // HTML per statistiche stagione
+            const statsHtml = totalRounds > 0 ? `
+                <div class="p-4 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg border-2 border-blue-500 shadow-md">
+                    <h4 class="text-xl font-bold text-blue-400 mb-3 flex items-center">
+                        <span class="mr-2">📊</span> Statistiche Stagione
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3 text-center">
+                            <p class="text-3xl font-bold text-white">${seasonStats.playedMatches}</p>
+                            <p class="text-xs text-gray-400">Partite Giocate</p>
+                        </div>
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3 text-center">
+                            <p class="text-3xl font-bold text-gray-400">${seasonStats.totalMatches}</p>
+                            <p class="text-xs text-gray-400">Partite Totali</p>
+                        </div>
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3 text-center">
+                            <p class="text-3xl font-bold text-green-400">${seasonStats.totalGoals}</p>
+                            <p class="text-xs text-gray-400">Goal Totali</p>
+                        </div>
+                        <div class="bg-black bg-opacity-30 rounded-lg p-3 text-center">
+                            <p class="text-3xl font-bold text-yellow-400">${seasonStats.avgGoals}</p>
+                            <p class="text-xs text-gray-400">Media Goal/Partita</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-gray-800 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-green-500 to-blue-500 h-full transition-all duration-500"
+                             style="width: ${seasonStats.progressPercent}%"></div>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-1">Progresso stagione: ${seasonStats.progressPercent}%</p>
+                </div>
+            ` : '';
+
             championshipToolsContainer.innerHTML = `
                 <div class="p-6 bg-gray-800 rounded-lg border border-orange-600 shadow-inner-lg space-y-6">
-                    
-                    <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2">Stato Generale</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <p class="text-gray-300">Squadre partecipanti: <span class="font-bold text-yellow-400">${numTeamsParticipating}</span></p>
-                        <p class="text-gray-300">Draft Aperto: <span class="font-bold ${draftOpen ? 'text-green-500' : 'text-red-400'}">${draftOpen ? 'SI' : 'NO'}</span></p>
-                        <p class="text-gray-300">Mercato Aperto: <span class="font-bold ${marketOpen ? 'text-green-500' : 'text-red-400'}">${marketOpen ? 'SI' : 'NO'}</span></p>
-                        
-                        <div class="col-span-2 p-3 rounded-lg border-2 ${statusClass} text-center font-extrabold shadow-md">
-                            Stagione: ${statusText}
+
+                    <!-- SEZIONE: Stato Generale -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">⚙️</span> Stato Generale
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                                <p class="text-2xl font-bold text-yellow-400">${numTeamsParticipating}</p>
+                                <p class="text-xs text-gray-400">Squadre Iscritte</p>
+                            </div>
+                            <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                                <p class="text-2xl font-bold ${draftOpen ? 'text-green-400' : 'text-red-400'}">${draftOpen ? 'APERTO' : 'CHIUSO'}</p>
+                                <p class="text-xs text-gray-400">Draft</p>
+                            </div>
+                            <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                                <p class="text-2xl font-bold ${marketOpen ? 'text-green-400' : 'text-red-400'}">${marketOpen ? 'APERTO' : 'CHIUSO'}</p>
+                                <p class="text-xs text-gray-400">Mercato</p>
+                            </div>
+                            <div class="bg-gray-800 rounded-lg p-3 text-center border-2 ${statusClass}">
+                                <p class="text-lg font-bold">${statusText}</p>
+                                <p class="text-xs text-gray-400">Stagione</p>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Draft/Mercato -->
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <button id="btn-toggle-draft"
+                                    class="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold transition ${draftOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
+                                <span>${draftOpen ? '🔒 Chiudi Draft' : '🔓 Apri Draft'}</span>
+                            </button>
+                            <button id="btn-toggle-market"
+                                    class="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold transition ${marketOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
+                                <span>${marketOpen ? '🔒 Chiudi Mercato' : '🔓 Apri Mercato'}</span>
+                            </button>
                         </div>
                     </div>
-                    
+
+                    <!-- SEZIONE: Automazione -->
                     ${cronStatusHtml}
 
-                    <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 pt-4">Regole Generali</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="flex flex-col">
-                            <label class="text-gray-300 mb-1">Squadre nel Calendario</label>
-                            <input type="number" value="${numTeamsParticipating}" disabled class="p-2 rounded-lg bg-gray-700 border border-orange-600 text-white opacity-70">
-                            <p class="text-xs text-gray-400 mt-1">Modifica l'elenco nel pannello Admin principale.</p>
-                        </div>
-                        
-                        <div class="flex flex-col">
-                            <label class="text-gray-300 mb-1">Formato Competizione</label>
-                            <select class="w-full p-2 rounded-lg bg-gray-700 text-white border border-orange-600">
-                                <option value="all-vs-all" selected>Tutti contro Tutti (Andata/Ritorno)</option>
-                            </select>
+                    <!-- SEZIONE: Statistiche Stagione -->
+                    ${statsHtml}
+
+                    <!-- SEZIONE: Tabella Premi -->
+                    ${rewardsHtml}
+
+                    <!-- SEZIONE: Generazione & Calendario -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">📅</span> Generazione & Calendario
+                        </h3>
+
+                        <div class="space-y-3">
+                            <button id="btn-generate-schedule"
+                                    class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    ${canGenerate ? '' : 'disabled'}>
+                                🚀 Genera Nuovo Calendario (Avvia nuova stagione)
+                            </button>
+                            ${!canGenerate
+                                ? `<p class="text-red-400 text-center text-sm font-semibold">${!isSeasonOver ? '⚠️ Termina il campionato attuale prima' : (numTeamsParticipating < 2 ? '⚠️ Iscrivi almeno 2 squadre' : '')}</p>`
+                                : `<p class="text-green-400 text-center text-sm font-semibold">✅ Stagione conclusa. Pronto per generare il nuovo calendario.</p>`
+                            }
+
+                            ${totalRounds > 0 && !isSeasonOver ?
+                                `<button id="btn-show-full-schedule" class="w-full bg-teal-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-teal-500 transition">
+                                    📋 Vai al Calendario Completo (${schedule.length} Giornate)
+                                </button>` : ''
+                            }
                         </div>
                     </div>
-                    
-                    <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 pt-4">Generazione & Simulazione Calendario</h3>
-                    
-                    <button id="btn-generate-schedule"
-                            class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition"
-                            ${canGenerate ? '' : 'disabled'}>
-                        Genera Nuovo Calendario (Avvia nuova stagione)
-                    </button>
-                    ${!canGenerate 
-                        ? `<p class="text-red-400 text-center text-sm font-semibold">${!isSeasonOver ? 'Termina il campionato attuale' : (numTeamsParticipating < 2 ? 'Flagga almeno 2 squadre' : '')}</p>` 
-                        : `<p class="text-green-400 text-center text-sm font-semibold">Stagione conclusa. Pronto per generare il nuovo calendario.</p>`
-                    }
 
-                    ${totalRounds > 0 && !isSeasonOver ? 
-                        `<button id="btn-show-full-schedule" class="w-full bg-teal-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-teal-500 transition">
-                            Vai al Calendario Completo (${schedule.length} Giornate)
-                        </button>` : ''
-                    }
+                    <!-- SEZIONE: Fine Stagione -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-red-700">
+                        <h3 class="text-xl font-bold text-red-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">🏁</span> Azioni Fine Stagione
+                        </h3>
+                        <div class="space-y-3">
+                            <button data-action="end-season"
+                                    class="w-full bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-md hover:bg-red-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    ${!isReadyForEnd ? 'disabled' : ''}>
+                                🏆 TERMINA CAMPIONATO (Assegna Premi & Livelli)
+                            </button>
 
-                    <div class="mt-4 p-4 bg-gray-700 rounded-lg border border-red-500 space-y-3">
-                         <p class="text-white font-semibold">Azioni di Fine Stagione:</p>
-                        
-                        <button data-action="end-season"
-                                class="w-full bg-red-800 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-red-900 transition"
-                                ${!isReadyForEnd ? 'disabled' : ''}>
-                            TERMINA CAMPIONATO (Assegna Premi & Livelli)
-                        </button>
+                            <button data-action="test-reset"
+                                    class="w-full bg-orange-600 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    ${isFinished || schedule.length === 0 || isSeasonOver ? '' : 'disabled'}>
+                                🔄 TERMINA SENZA PREMI (Solo Test/Reset)
+                            </button>
 
-                        <button data-action="test-reset"
-                                class="w-full bg-orange-500 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-orange-600 transition"
-                                ${isFinished || schedule.length === 0 || isSeasonOver ? '' : 'disabled'}> 
-                            TERMINA SENZA PREMI (Solo Test)
-                        </button>
+                            ${isReadyForEnd ? '<p class="text-green-400 text-center text-sm">✅ Tutte le partite completate. Pronto per terminare.</p>' :
+                              (totalRounds > 0 && !isSeasonOver ? '<p class="text-yellow-400 text-center text-sm">⏳ Completa tutte le giornate per terminare la stagione.</p>' : '')}
+                        </div>
                     </div>
 
+                    <!-- Anteprima Calendario -->
                     <div id="schedule-display-container" class="mt-4">
                         ${renderSchedulePreview(schedule, numTeamsParticipating)}
                     </div>
 
-                    <p id="championship-message" class="text-center mt-3 text-red-400"></p>
-                    
-                    <button id="btn-save-settings" class="w-full bg-orange-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-orange-400 transition">
-                        Salva Impostazioni Campionato (Mock)
-                    </button>
+                    <p id="championship-message" class="text-center mt-3 text-red-400 font-bold"></p>
                 </div>
             `;
             
@@ -497,10 +632,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            document.getElementById('btn-save-settings').addEventListener('click', () => {
-                displayConfigMessage("Impostazioni Campionato salvate. (Da implementare su Firestore)", 'success');
-            });
-            
+            // Toggle Draft
+            const btnToggleDraft = document.getElementById('btn-toggle-draft');
+            if (btnToggleDraft) {
+                btnToggleDraft.addEventListener('click', async () => {
+                    try {
+                        btnToggleDraft.disabled = true;
+                        btnToggleDraft.innerHTML = '<span class="animate-pulse">Aggiornamento...</span>';
+
+                        const { setDoc } = firestoreTools;
+                        await setDoc(configDocRef, { isDraftOpen: !draftOpen }, { merge: true });
+
+                        displayConfigMessage(`Draft ${!draftOpen ? 'aperto' : 'chiuso'} con successo!`, 'success');
+                        renderChampionshipPanel(); // Ricarica il pannello
+                    } catch (error) {
+                        console.error('Errore toggle draft:', error);
+                        displayConfigMessage('Errore nel toggle draft', 'error');
+                        btnToggleDraft.disabled = false;
+                    }
+                });
+            }
+
+            // Toggle Mercato
+            const btnToggleMarket = document.getElementById('btn-toggle-market');
+            if (btnToggleMarket) {
+                btnToggleMarket.addEventListener('click', async () => {
+                    try {
+                        btnToggleMarket.disabled = true;
+                        btnToggleMarket.innerHTML = '<span class="animate-pulse">Aggiornamento...</span>';
+
+                        const { setDoc } = firestoreTools;
+                        await setDoc(configDocRef, { isMarketOpen: !marketOpen }, { merge: true });
+
+                        displayConfigMessage(`Mercato ${!marketOpen ? 'aperto' : 'chiuso'} con successo!`, 'success');
+                        renderChampionshipPanel(); // Ricarica il pannello
+                    } catch (error) {
+                        console.error('Errore toggle mercato:', error);
+                        displayConfigMessage('Errore nel toggle mercato', 'error');
+                        btnToggleMarket.disabled = false;
+                    }
+                });
+            }
+
             if (canGenerate) {
                  document.getElementById('btn-generate-schedule').addEventListener('click', () => generateSchedule(participatingTeams));
             }

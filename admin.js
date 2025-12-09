@@ -139,6 +139,107 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnToggleCSS) {
             btnToggleCSS.addEventListener('click', handleToggleCSS);
         }
+
+        // Bottoni CoppaSeriA
+        const btnGenerateCupSchedule = document.getElementById('btn-generate-cup-schedule');
+        if (btnGenerateCupSchedule) {
+            btnGenerateCupSchedule.addEventListener('click', handleGenerateCupSchedule);
+        }
+
+        const btnViewCupBracket = document.getElementById('btn-view-cup-bracket');
+        if (btnViewCupBracket) {
+            btnViewCupBracket.addEventListener('click', handleViewCupBracket);
+        }
+
+        // Carica stato coppa e supercoppa
+        loadCupStatus();
+        loadSupercoppPanel();
+    };
+
+    /**
+     * Gestisce la generazione del calendario coppa
+     */
+    const handleGenerateCupSchedule = async () => {
+        const btn = document.getElementById('btn-generate-cup-schedule');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generazione...';
+
+        try {
+            const bracket = await window.CoppaMain.generateCupSchedule();
+            displayMessage(`Calendario CoppaSeriA generato con ${bracket.totalTeams} squadre!`, 'success', 'toggle-status-message');
+            loadCupStatus();
+        } catch (error) {
+            console.error('Errore generazione calendario coppa:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa';
+        }
+    };
+
+    /**
+     * Mostra il pannello di simulazione completo della coppa
+     */
+    const handleViewCupBracket = async () => {
+        const bracket = await window.CoppaSchedule.loadCupSchedule();
+        const container = document.getElementById('coppa-status-container');
+
+        if (!bracket) {
+            container.innerHTML = '<p class="text-yellow-400 text-center">Nessun tabellone generato.</p>';
+            return;
+        }
+
+        // Usa il nuovo pannello di simulazione completo
+        await window.CoppaUI.renderSimulationPanel(bracket, container);
+    };
+
+    /**
+     * Carica lo stato della coppa
+     */
+    const loadCupStatus = async () => {
+        const container = document.getElementById('coppa-status-container');
+        if (!container) return;
+
+        try {
+            const bracket = await window.CoppaSchedule.loadCupSchedule();
+
+            if (!bracket) {
+                // Conta le squadre iscritte alla coppa
+                const participants = await window.CoppaSchedule.getCupParticipants();
+                container.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-gray-400">Nessun tabellone generato.</p>
+                        <p class="text-purple-400 font-bold mt-2">Squadre iscritte: ${participants.length}</p>
+                        ${participants.length < 2 ? '<p class="text-red-400 text-xs">Servono almeno 2 squadre iscritte.</p>' : ''}
+                    </div>
+                `;
+            } else {
+                const statusText = bracket.status === 'completed' ? 'COMPLETATA' : 'IN CORSO';
+                const statusColor = bracket.status === 'completed' ? 'text-green-400' : 'text-yellow-400';
+                const nextMatch = window.CoppaSchedule.findNextMatch(bracket);
+
+                container.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-gray-400">Stato: <span class="font-bold ${statusColor}">${statusText}</span></p>
+                        <p class="text-purple-400">Squadre: ${bracket.totalTeams} | Bye: ${bracket.numByes}</p>
+                        ${bracket.winner ? `<p class="text-yellow-400 font-bold mt-2">Vincitore: ${bracket.winner.teamName}</p>` : ''}
+                        ${nextMatch ? `<p class="text-gray-300 mt-2">Prossima: ${nextMatch.match.homeTeam?.teamName || 'TBD'} vs ${nextMatch.match.awayTeam?.teamName || 'TBD'}</p>` : ''}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            container.innerHTML = `<p class="text-red-400 text-center">Errore caricamento stato coppa.</p>`;
+        }
+    };
+
+    /**
+     * Carica il pannello Supercoppa
+     */
+    const loadSupercoppPanel = () => {
+        const container = document.getElementById('supercoppa-admin-section');
+        if (container && window.Supercoppa) {
+            window.Supercoppa.renderAdminUI(container);
+        }
     };
 
     /**

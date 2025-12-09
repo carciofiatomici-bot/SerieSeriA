@@ -41,9 +41,15 @@ window.InterfacciaDashboard = {
         // NUOVO: Aggiorna il toggle partecipazione campionato
         this.updateChampionshipParticipationUI();
 
+        // NUOVO: Aggiorna il toggle partecipazione coppa
+        this.updateCupParticipationUI();
+
         // Carica la prossima partita
         this.loadNextMatch(elements);
-        
+
+        // Inizializza il widget Crediti Super Seri
+        this.initCreditiSuperSeriWidget();
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
     },
@@ -142,11 +148,105 @@ window.InterfacciaDashboard = {
      */
     initializeChampionshipParticipationToggle() {
         const toggle = document.getElementById('championship-participation-toggle');
-        
+
         if (!toggle) return;
-        
+
         toggle.addEventListener('change', (e) => {
             this.handleChampionshipParticipationToggle(e.target.checked);
+        });
+    },
+
+    /**
+     * NUOVO: Aggiorna l'UI del toggle partecipazione CoppaSeriA
+     */
+    updateCupParticipationUI() {
+        const toggle = document.getElementById('cup-participation-toggle');
+        const statusText = document.getElementById('cup-participation-status');
+
+        if (!toggle || !statusText) return;
+
+        const currentTeamData = window.InterfacciaCore.currentTeamData;
+        const isCupParticipating = currentTeamData?.isCupParticipating || false;
+
+        toggle.checked = isCupParticipating;
+
+        if (isCupParticipating) {
+            toggle.classList.remove('bg-gray-600', 'border-purple-500');
+            toggle.classList.add('bg-purple-500', 'border-purple-500');
+            statusText.textContent = '✅ Iscritto alla CoppaSeriA';
+            statusText.classList.remove('text-gray-400', 'text-red-400');
+            statusText.classList.add('text-purple-400');
+        } else {
+            toggle.classList.remove('bg-purple-500', 'border-purple-500');
+            toggle.classList.add('bg-gray-600', 'border-gray-500');
+            statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
+            statusText.classList.remove('text-purple-400', 'text-red-400');
+            statusText.classList.add('text-gray-400');
+        }
+    },
+
+    /**
+     * NUOVO: Gestisce il cambio del toggle partecipazione CoppaSeriA
+     */
+    async handleCupParticipationToggle(isChecked) {
+        const toggle = document.getElementById('cup-participation-toggle');
+        const statusText = document.getElementById('cup-participation-status');
+
+        if (!toggle || !statusText) return;
+
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+        if (!currentTeamId) return;
+
+        // Disabilita il toggle durante il salvataggio
+        toggle.disabled = true;
+        statusText.textContent = '⏳ Salvataggio in corso...';
+        statusText.classList.remove('text-purple-400', 'text-gray-400', 'text-red-400');
+        statusText.classList.add('text-yellow-400');
+
+        try {
+            await window.CoppaMain.toggleCupParticipation(currentTeamId, isChecked);
+
+            // Aggiorna i dati locali
+            window.InterfacciaCore.currentTeamData.isCupParticipating = isChecked;
+
+            // Aggiorna l'UI
+            if (isChecked) {
+                toggle.classList.remove('bg-gray-600', 'border-gray-500');
+                toggle.classList.add('bg-purple-500', 'border-purple-500');
+                statusText.textContent = '✅ Iscritto alla CoppaSeriA';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-purple-400');
+            } else {
+                toggle.classList.remove('bg-purple-500', 'border-purple-500');
+                toggle.classList.add('bg-gray-600', 'border-gray-500');
+                statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-gray-400');
+            }
+
+        } catch (error) {
+            console.error('Errore nel salvataggio stato partecipazione coppa:', error);
+
+            // Ripristina lo stato precedente in caso di errore
+            toggle.checked = !isChecked;
+            statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
+            statusText.classList.remove('text-yellow-400');
+            statusText.classList.add('text-red-400');
+        } finally {
+            toggle.disabled = false;
+        }
+    },
+
+    /**
+     * NUOVO: Inizializza il listener per il toggle partecipazione CoppaSeriA
+     */
+    initializeCupParticipationToggle() {
+        const toggle = document.getElementById('cup-participation-toggle');
+
+        if (!toggle) return;
+
+        toggle.addEventListener('change', (e) => {
+            this.handleCupParticipationToggle(e.target.checked);
         });
     },
     
@@ -298,6 +398,15 @@ window.InterfacciaDashboard = {
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Inizializza il widget Crediti Super Seri nella dashboard
+     */
+    async initCreditiSuperSeriWidget() {
+        if (window.CreditiSuperSeriUI) {
+            await window.CreditiSuperSeriUI.initDashboardWidget();
+        }
     }
 };
 
