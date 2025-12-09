@@ -19,6 +19,13 @@ window.DraftUtils = {
     },
 
     /**
+     * Stub per compatibilità - il cooldown è stato rimosso
+     */
+    clearCooldownInterval() {
+        // Non fa nulla - cooldown rimosso nel nuovo sistema a turni
+    },
+
+    /**
      * Helper per visualizzare i messaggi di stato.
      * @param {string} message - Il testo del messaggio.
      * @param {string} type - 'success', 'error', o 'info'.

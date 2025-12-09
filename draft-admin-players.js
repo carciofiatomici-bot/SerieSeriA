@@ -38,11 +38,21 @@ window.DraftAdminPlayers = {
                 const statusText = isDrafted ? `Venduto a: ${teamName}` : 'Disponibile';
                 const playerType = player.type || 'N/A';
 
+                // Trova la bandiera per la nazionalità
+                const nationality = window.DraftConstants.NATIONALITIES.find(n => n.code === player.nationality);
+                const flag = nationality ? nationality.flag : '';
+
+                // Formatta le abilità
+                const abilities = player.abilities || [];
+                const abilitiesHtml = abilities.length > 0
+                    ? `<span class="text-purple-400 text-xs ml-2">[${abilities.join(', ')}]</span>`
+                    : '';
+
                 playersHtml += `
                     <div class="player-item flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-gray-600 hover:border-yellow-500 transition duration-150">
                         <!-- Dati Giocatore -->
                         <div class="w-full sm:w-auto mb-2 sm:mb-0">
-                            <p class="text-lg font-bold text-white">${player.name} <span class="text-yellow-400">(${player.role} - ${playerType})</span></p>
+                            <p class="text-lg font-bold text-white">${flag} ${player.name} <span class="text-yellow-400">(${player.role} - ${playerType})</span>${abilitiesHtml}</p>
                             <p class="text-sm text-gray-400">Età: ${player.age} | Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${player.cost} CS</p>
                         </div>
 
@@ -136,24 +146,14 @@ window.DraftAdminPlayers = {
 
             displayMessage(`Stato Draft aggiornato: ${newState ? 'APERTO' : 'CHIUSO'}`, 'success', 'draft-toggle-message');
 
-            // Aggiorna l'UI del pulsante
-            target.dataset.isOpen = newState;
-            target.textContent = newState ? 'CHIUDI Draft' : 'APRI Draft';
-
-            const statusBox = target.closest('div');
-            const statusText = document.getElementById('draft-status-text');
-
-            statusText.textContent = newState ? 'DRAFT APERTO' : 'DRAFT CHIUSO';
-            statusBox.classList.remove(newState ? 'border-red-500' : 'border-green-500', newState ? 'bg-red-900' : 'bg-green-900');
-            statusBox.classList.add(newState ? 'border-green-500' : 'border-red-500', newState ? 'bg-green-900' : 'bg-red-900');
-            target.classList.remove(newState ? 'bg-green-600' : 'bg-red-600', newState ? 'hover:bg-green-700' : 'hover:bg-red-700');
-            target.classList.add(newState ? 'bg-red-600' : 'bg-green-600', newState ? 'hover:bg-red-700' : 'hover:bg-green-700');
+            // Re-renderizza l'intero pannello per mostrare/nascondere la sezione Draft a Turni
+            await window.DraftAdminUI.render(context);
 
         } catch (error) {
             console.error("Errore nell'aggiornamento dello stato Draft:", error);
             displayMessage(`Errore durante l'aggiornamento: ${error.message}`, 'error', 'draft-toggle-message');
-        } finally {
             target.disabled = false;
+            target.textContent = currentlyOpen ? 'CHIUDI Draft' : 'APRI Draft';
         }
     },
 
@@ -169,6 +169,7 @@ window.DraftAdminPlayers = {
 
         // 1. Raccogli i valori
         const name = document.getElementById('player-name').value.trim();
+        const nationality = document.getElementById('player-nationality').value;
         const role = document.getElementById('player-role').value;
         const type = document.getElementById('player-type').value;
         const age = parseInt(document.getElementById('player-age').value);
@@ -176,22 +177,27 @@ window.DraftAdminPlayers = {
         const levelMax = parseInt(document.getElementById('player-level-max').value);
         const cost = parseInt(document.getElementById('player-cost').value);
 
+        // Raccogli le abilità selezionate
+        const abilities = window.DraftAdminUI.getSelectedAbilities();
+
         // Validazione
-        if (!name || !role || !type || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) || isNaN(cost) ||
+        if (!name || !role || !type || !nationality || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) || isNaN(cost) ||
             age < 15 || age > 50 || levelMin < 1 || levelMin > 20 || levelMax < 1 || levelMax > 20 ||
             levelMin > levelMax || cost < 1) {
-            displayMessage("Errore: controlla che tutti i campi (incluso Tipologia) siano compilati e validi (Età 15-50, Livello 1-20, LivMin <= LivMax, Costo >= 1).", 'error', 'player-creation-message');
+            displayMessage("Errore: controlla che tutti i campi (incluso Nazionalità e Tipologia) siano compilati e validi (Età 15-50, Livello 1-20, LivMin <= LivMax, Costo >= 1).", 'error', 'player-creation-message');
             return;
         }
 
         // 2. Crea l'oggetto calciatore
         const newPlayer = {
             name,
+            nationality,
             role,
             type,
             age,
             levelRange: [levelMin, levelMax],
             cost,
+            abilities: abilities,
             isDrafted: false,
             teamId: null,
             creationDate: new Date().toISOString()
@@ -215,12 +221,16 @@ window.DraftAdminPlayers = {
 
         // Pulisci i campi
         document.getElementById('player-name').value = '';
+        document.getElementById('player-nationality').value = '';
         document.getElementById('player-role').value = '';
         document.getElementById('player-type').value = '';
         document.getElementById('player-age').value = '';
         document.getElementById('player-level-min').value = '';
         document.getElementById('player-level-max').value = '';
         document.getElementById('player-cost').value = '';
+
+        // Pulisci le abilità
+        window.DraftAdminUI.updateAbilitiesForRole('');
     },
 
     /**
@@ -228,13 +238,14 @@ window.DraftAdminPlayers = {
      */
     handleRandomPlayer() {
         const { displayMessage, getRandomInt } = window.DraftUtils;
-        const { ROLES, TYPES } = window.DraftConstants;
+        const { ROLES, TYPES, NATIONALITIES } = window.DraftConstants;
 
         displayMessage("", 'success', 'player-creation-message');
 
         // 1. Genera valori casuali
         const randomRole = ROLES[getRandomInt(0, ROLES.length - 1)];
         const randomType = TYPES[getRandomInt(0, TYPES.length - 1)];
+        const randomNationality = NATIONALITIES[getRandomInt(0, NATIONALITIES.length - 1)];
         const randomAge = getRandomInt(18, 35);
 
         const randomLevelMax = getRandomInt(10, 20);
@@ -243,6 +254,7 @@ window.DraftAdminPlayers = {
         const randomCost = getRandomInt(20, 150);
 
         // 2. Inserisci i valori nei campi
+        document.getElementById('player-nationality').value = randomNationality.code;
         document.getElementById('player-role').value = randomRole;
         document.getElementById('player-type').value = randomType;
         document.getElementById('player-age').value = randomAge;
@@ -250,7 +262,66 @@ window.DraftAdminPlayers = {
         document.getElementById('player-level-max').value = randomLevelMax;
         document.getElementById('player-cost').value = randomCost;
 
+        // 3. Genera abilità casuali per il ruolo selezionato
+        window.DraftAdminUI.updateAbilitiesForRole(randomRole);
+
+        // Aspetta che le checkbox siano renderizzate, poi seleziona casualmente
+        setTimeout(() => {
+            this.selectRandomAbilities(randomRole);
+        }, 50);
+
         displayMessage("Campi riempiti con valori casuali. Inserisci il Nome e aggiungi al Draft.", 'info', 'player-creation-message');
+    },
+
+    /**
+     * Seleziona abilità casuali per il ruolo dato (max 3 positive + 2 negative)
+     * @param {string} role - Il ruolo del giocatore
+     */
+    selectRandomAbilities(role) {
+        const { getRandomInt } = window.DraftUtils;
+
+        const roleAbilities = window.AdminTeams?.ROLE_ABILITIES_MAP?.[role];
+        if (!roleAbilities) return;
+
+        const positiveAbilities = roleAbilities.positive || [];
+        const negativeAbilities = roleAbilities.negative || [];
+
+        // Quante abilità positive selezionare (0-3)
+        const numPositive = getRandomInt(0, Math.min(3, positiveAbilities.length));
+        // Quante abilità negative selezionare (0-2)
+        const numNegative = getRandomInt(0, Math.min(2, negativeAbilities.length));
+
+        // Seleziona casualmente le abilità positive
+        const shuffledPositive = [...positiveAbilities].sort(() => Math.random() - 0.5);
+        const selectedPositive = shuffledPositive.slice(0, numPositive);
+
+        // Seleziona casualmente le abilità negative
+        const shuffledNegative = [...negativeAbilities].sort(() => Math.random() - 0.5);
+        const selectedNegative = shuffledNegative.slice(0, numNegative);
+
+        // Deseleziona tutte le checkbox
+        document.querySelectorAll('.ability-positive-check').forEach(cb => {
+            cb.checked = false;
+            cb.disabled = false;
+        });
+        document.querySelectorAll('.ability-negative-check').forEach(cb => {
+            cb.checked = false;
+            cb.disabled = false;
+        });
+
+        // Seleziona le checkbox corrispondenti
+        selectedPositive.forEach(ability => {
+            const checkbox = document.querySelector(`.ability-positive-check[value="${ability}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+
+        selectedNegative.forEach(ability => {
+            const checkbox = document.querySelector(`.ability-negative-check[value="${ability}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+
+        // Valida la selezione per disabilitare eventuali eccessi
+        window.DraftAdminUI.validateAbilitySelection();
     }
 };
 

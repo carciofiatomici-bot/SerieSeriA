@@ -14,9 +14,13 @@ window.DraftUserUI = {
      * @param {Object} context - Contesto con riferimenti DOM e funzioni
      */
     async render(context) {
+        console.log("DraftUserUI.render() chiamato con context:", context);
+
         const { draftToolsContainer, draftBackButton, appContent, db, firestoreTools, paths, currentTeamId } = context;
         const { MAX_ROSA_PLAYERS, CONFIG_DOC_ID, DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
         const { displayMessage } = window.DraftUtils;
+
+        console.log("DraftUserUI - currentTeamId:", currentTeamId, "paths:", paths);
 
         // Pulisce il timer precedente
         this.clearTurnTimer();
@@ -28,6 +32,13 @@ window.DraftUserUI = {
         };
 
         draftToolsContainer.innerHTML = `<p class="text-center text-gray-400">Verifica stato mercato...</p>`;
+
+        // Verifica che currentTeamId sia valido
+        if (!currentTeamId) {
+            draftToolsContainer.innerHTML = `<p class="text-center text-red-400">Errore: ID squadra non trovato. Riprova ad accedere dalla dashboard.</p>`;
+            console.error("currentTeamId non definito nel contesto Draft utente");
+            return;
+        }
 
         const { doc, getDoc, collection, getDocs, query, where } = firestoreTools;
         const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
@@ -54,8 +65,13 @@ window.DraftUserUI = {
 
             // Se il draft a turni e' attivo, controlla se e' il turno dell'utente
             let turnInfo = null;
-            if (isDraftTurnsActive) {
-                turnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
+            if (isDraftTurnsActive && window.DraftTurns && window.DraftTurns.checkTeamTurn) {
+                try {
+                    turnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
+                } catch (turnError) {
+                    console.error("Errore nel controllo turno:", turnError);
+                    turnInfo = null;
+                }
             }
 
             // Determina lo stato da mostrare

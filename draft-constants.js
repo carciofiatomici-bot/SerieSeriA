@@ -18,6 +18,72 @@ window.DraftConstants = {
     // Ruoli disponibili
     ROLES: ['P', 'D', 'C', 'A'],
 
+    // Nazionalità disponibili con bandiere emoji
+    NATIONALITIES: [
+        // Europa Occidentale
+        { code: 'IT', name: 'Italia', flag: '🇮🇹' },
+        { code: 'ES', name: 'Spagna', flag: '🇪🇸' },
+        { code: 'FR', name: 'Francia', flag: '🇫🇷' },
+        { code: 'DE', name: 'Germania', flag: '🇩🇪' },
+        { code: 'GB', name: 'Inghilterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+        { code: 'PT', name: 'Portogallo', flag: '🇵🇹' },
+        { code: 'NL', name: 'Olanda', flag: '🇳🇱' },
+        { code: 'BE', name: 'Belgio', flag: '🇧🇪' },
+        { code: 'AT', name: 'Austria', flag: '🇦🇹' },
+        { code: 'CH', name: 'Svizzera', flag: '🇨🇭' },
+        // Europa Settentrionale
+        { code: 'SE', name: 'Svezia', flag: '🇸🇪' },
+        { code: 'NO', name: 'Norvegia', flag: '🇳🇴' },
+        { code: 'DK', name: 'Danimarca', flag: '🇩🇰' },
+        { code: 'FI', name: 'Finlandia', flag: '🇫🇮' },
+        { code: 'IS', name: 'Islanda', flag: '🇮🇸' },
+        { code: 'IE', name: 'Irlanda', flag: '🇮🇪' },
+        { code: 'SC', name: 'Scozia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+        { code: 'WA', name: 'Galles', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+        // Europa Orientale
+        { code: 'PL', name: 'Polonia', flag: '🇵🇱' },
+        { code: 'CZ', name: 'Repubblica Ceca', flag: '🇨🇿' },
+        { code: 'SK', name: 'Slovacchia', flag: '🇸🇰' },
+        { code: 'HU', name: 'Ungheria', flag: '🇭🇺' },
+        { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+        { code: 'BG', name: 'Bulgaria', flag: '🇧🇬' },
+        { code: 'UA', name: 'Ucraina', flag: '🇺🇦' },
+        { code: 'RU', name: 'Russia', flag: '🇷🇺' },
+        // Europa Meridionale/Balcani
+        { code: 'HR', name: 'Croazia', flag: '🇭🇷' },
+        { code: 'RS', name: 'Serbia', flag: '🇷🇸' },
+        { code: 'SI', name: 'Slovenia', flag: '🇸🇮' },
+        { code: 'BA', name: 'Bosnia', flag: '🇧🇦' },
+        { code: 'ME', name: 'Montenegro', flag: '🇲🇪' },
+        { code: 'MK', name: 'Macedonia del Nord', flag: '🇲🇰' },
+        { code: 'AL', name: 'Albania', flag: '🇦🇱' },
+        { code: 'GR', name: 'Grecia', flag: '🇬🇷' },
+        { code: 'TR', name: 'Turchia', flag: '🇹🇷' },
+        { code: 'CY', name: 'Cipro', flag: '🇨🇾' },
+        // Altri Europa
+        { code: 'LU', name: 'Lussemburgo', flag: '🇱🇺' },
+        { code: 'MT', name: 'Malta', flag: '🇲🇹' },
+        { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
+        { code: 'LV', name: 'Lettonia', flag: '🇱🇻' },
+        { code: 'LT', name: 'Lituania', flag: '🇱🇹' },
+        // Africa
+        { code: 'NG', name: 'Nigeria', flag: '🇳🇬' },
+        { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
+        { code: 'SN', name: 'Senegal', flag: '🇸🇳' },
+        { code: 'CI', name: 'Costa d\'Avorio', flag: '🇨🇮' },
+        { code: 'CM', name: 'Camerun', flag: '🇨🇲' },
+        { code: 'EG', name: 'Egitto', flag: '🇪🇬' },
+        { code: 'MA', name: 'Marocco', flag: '🇲🇦' },
+        { code: 'DZ', name: 'Algeria', flag: '🇩🇿' },
+        { code: 'TN', name: 'Tunisia', flag: '🇹🇳' },
+        { code: 'ZA', name: 'Sudafrica', flag: '🇿🇦' },
+        { code: 'ML', name: 'Mali', flag: '🇲🇱' },
+        { code: 'BF', name: 'Burkina Faso', flag: '🇧🇫' },
+        { code: 'GN', name: 'Guinea', flag: '🇬🇳' },
+        { code: 'CD', name: 'RD Congo', flag: '🇨🇩' },
+        { code: 'KE', name: 'Kenya', flag: '🇰🇪' }
+    ],
+
     // ====================================================================
     // SISTEMA DRAFT A TURNI
     // ====================================================================

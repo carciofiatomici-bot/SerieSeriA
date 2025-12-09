@@ -114,11 +114,22 @@ window.DraftAdminUI = {
                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400">
                     </div>
 
+                    <!-- Nazionalità -->
+                    <div class="flex flex-col">
+                        <label class="text-gray-300 mb-1" for="player-nationality">Nazionalità</label>
+                        <select id="player-nationality"
+                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400">
+                            <option value="">Seleziona Nazionalità</option>
+                            ${window.DraftConstants.NATIONALITIES.map(n => `<option value="${n.code}">${n.flag} ${n.name}</option>`).join('')}
+                        </select>
+                    </div>
+
                     <!-- Ruolo -->
                     <div class="flex flex-col">
                         <label class="text-gray-300 mb-1" for="player-role">Ruolo</label>
                         <select id="player-role"
-                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400">
+                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400"
+                                onchange="window.DraftAdminUI.updateAbilitiesForRole(this.value)">
                             <option value="">Seleziona Ruolo</option>
                             <option value="P">P (Portiere)</option>
                             <option value="D">D (Difensore)</option>
@@ -163,6 +174,14 @@ window.DraftAdminUI = {
                         <label class="text-gray-300 mb-1" for="player-cost">Costo (Crediti Seri)</label>
                         <input type="number" id="player-cost" min="1" placeholder="50"
                                class="p-2 rounded-lg bg-gray-700 border border-yellow-600 text-white focus:ring-yellow-400">
+                    </div>
+                </div>
+
+                <!-- Sezione Abilità -->
+                <div class="mt-4 p-4 bg-gray-700 rounded-lg border border-purple-500">
+                    <h4 class="text-lg font-bold text-purple-400 mb-3">Abilità (Max 3 positive + 2 negative)</h4>
+                    <div id="abilities-selection-container">
+                        <p class="text-gray-400 text-sm">Seleziona un ruolo per vedere le abilità disponibili</p>
                     </div>
                 </div>
 
@@ -295,6 +314,114 @@ window.DraftAdminUI = {
             btn.disabled = false;
             btn.textContent = 'Ferma Draft a Turni';
         }
+    },
+
+    /**
+     * Aggiorna le abilità disponibili in base al ruolo selezionato
+     * @param {string} role - Ruolo selezionato
+     */
+    updateAbilitiesForRole(role) {
+        const container = document.getElementById('abilities-selection-container');
+        if (!container) return;
+
+        if (!role) {
+            container.innerHTML = '<p class="text-gray-400 text-sm">Seleziona un ruolo per vedere le abilità disponibili</p>';
+            return;
+        }
+
+        const roleAbilities = window.AdminTeams?.ROLE_ABILITIES_MAP?.[role];
+        if (!roleAbilities) {
+            container.innerHTML = '<p class="text-red-400 text-sm">Errore: abilità non trovate per questo ruolo</p>';
+            return;
+        }
+
+        const positiveAbilities = roleAbilities.positive || [];
+        const negativeAbilities = roleAbilities.negative || [];
+
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Abilità Positive -->
+                <div>
+                    <p class="text-green-400 font-bold mb-2">Positive (Max 3)</p>
+                    <div class="space-y-1 max-h-48 overflow-y-auto">
+                        ${positiveAbilities.map(ability => {
+                            const abilityData = window.AbilitiesEncyclopedia?.getAbility(ability);
+                            const icon = abilityData?.icon || '⚡';
+                            const rarity = abilityData?.rarity || 'Comune';
+                            const rarityColor = rarity === 'Leggendaria' ? 'text-yellow-400' : rarity === 'Epica' ? 'text-purple-400' : rarity === 'Rara' ? 'text-blue-400' : 'text-gray-400';
+                            return `
+                                <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-600 p-1 rounded">
+                                    <input type="checkbox" class="ability-positive-check" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
+                                    <span>${icon}</span>
+                                    <span class="text-white">${ability}</span>
+                                    <span class="${rarityColor} text-xs">(${rarity})</span>
+                                </label>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                <!-- Abilità Negative -->
+                <div>
+                    <p class="text-red-400 font-bold mb-2">Negative (Max 2)</p>
+                    <div class="space-y-1 max-h-48 overflow-y-auto">
+                        ${negativeAbilities.map(ability => {
+                            const abilityData = window.AbilitiesEncyclopedia?.getAbility(ability);
+                            const icon = abilityData?.icon || '💀';
+                            const rarity = abilityData?.rarity || 'Comune';
+                            const rarityColor = rarity === 'Epica' ? 'text-purple-400' : rarity === 'Rara' ? 'text-blue-400' : 'text-gray-400';
+                            return `
+                                <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-600 p-1 rounded">
+                                    <input type="checkbox" class="ability-negative-check" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
+                                    <span>${icon}</span>
+                                    <span class="text-white">${ability}</span>
+                                    <span class="${rarityColor} text-xs">(${rarity})</span>
+                                </label>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Valida la selezione delle abilità (max 3 positive, max 2 negative)
+     */
+    validateAbilitySelection() {
+        const positiveChecks = document.querySelectorAll('.ability-positive-check:checked');
+        const negativeChecks = document.querySelectorAll('.ability-negative-check:checked');
+
+        // Disabilita le altre positive se già 3 selezionate
+        const allPositive = document.querySelectorAll('.ability-positive-check');
+        allPositive.forEach(cb => {
+            if (!cb.checked) {
+                cb.disabled = positiveChecks.length >= 3;
+            }
+        });
+
+        // Disabilita le altre negative se già 2 selezionate
+        const allNegative = document.querySelectorAll('.ability-negative-check');
+        allNegative.forEach(cb => {
+            if (!cb.checked) {
+                cb.disabled = negativeChecks.length >= 2;
+            }
+        });
+
+        return true;
+    },
+
+    /**
+     * Ottiene le abilità selezionate
+     */
+    getSelectedAbilities() {
+        const positiveChecks = document.querySelectorAll('.ability-positive-check:checked');
+        const negativeChecks = document.querySelectorAll('.ability-negative-check:checked');
+
+        const abilities = [];
+        positiveChecks.forEach(cb => abilities.push(cb.value));
+        negativeChecks.forEach(cb => abilities.push(cb.value));
+
+        return abilities;
     }
 };
 
