@@ -12,23 +12,23 @@ window.AdminTeams = {
     currentEditingTeamData: null,
     reloadCallback: null,
 
-    // MAPPA COMPLETA abilità€ (46 abilità !)
+    // MAPPA COMPLETA abilità€ (60 abilità !)
     ROLE_ABILITIES_MAP: {
         'P': {
-            positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo'],
-            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali']
+            positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico', 'Miracolo', 'Freddezza'],
+            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni']
         },
         'D': {
-            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione'],
-            negative: ['Falloso', 'Insicuro', 'Fuori Posizione']
+            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile', 'Salvataggio sulla Linea', 'Freddezza'],
+            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni']
         },
         'C': {
-            positive: ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone'],
-            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione']
+            positive: ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Tuttocampista', 'Freddezza'],
+            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni']
         },
         'A': {
-            positive: ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo'],
-            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione']
+            positive: ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Opportunista', 'Tiro a Giro', 'Immarcabile', 'Freddezza'],
+            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni']
         }
     },
 
@@ -395,7 +395,7 @@ window.AdminTeams = {
                                 Ruolo: <span class="text-yellow-400">${player.role}</span> | 
                                 Tipo: <span class="text-cyan-400">${player.type}</span> | 
                                 EtÃ : <span class="text-gray-300">${player.age}</span> |
-                                Livello: <span class="text-green-400">${player.levelMin}-${player.levelMax}</span>
+                                Livello: <span class="text-green-400">${player.level !== undefined ? player.level : ((player.levelMin || 1) + '-' + (player.levelMax || 1))}</span>
                             </p>
                             ${abilitiesDisplay}
                         </div>
@@ -509,29 +509,29 @@ window.AdminTeams = {
                         ${hasFixedLevel ? `
                         <div>
                             <label class="text-gray-300 block mb-1 font-bold">Livello *</label>
-                            <input type="number" id="player-level-single" value="${levelValue}" min="1" max="30"
+                            <input type="number" id="player-level-single" value="${levelValue}" min="1" max="20"
                                    class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
-                            <p class="text-xs text-green-400 mt-1">✓ Livello fisso del giocatore in squadra</p>
+                            <p class="text-xs text-green-400 mt-1">Livello fisso del giocatore in squadra (1-20)</p>
                         </div>
                         ` : `
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-gray-300 block mb-1 font-bold">Livello Min *</label>
-                                <input type="number" id="player-levelmin-input" value="${player.levelMin || 1}" min="1" max="30"
+                                <input type="number" id="player-levelmin-input" value="${player.levelMin || 1}" min="1" max="20"
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="text-gray-300 block mb-1 font-bold">Livello Max *</label>
-                                <input type="number" id="player-levelmax-input" value="${player.levelMax || 10}" min="1" max="30"
+                                <input type="number" id="player-levelmax-input" value="${player.levelMax || 10}" min="1" max="20"
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
                         </div>
-                        <p class="text-xs text-yellow-400 -mt-2">⚠ Range per giocatori da assegnare</p>
+                        <p class="text-xs text-yellow-400 -mt-2">Range per giocatori da assegnare (1-20)</p>
                         `}
 
                         <div>
                             <label class="text-gray-300 block mb-2 font-bold">Abilità</label>
-                            <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 1 negativa</p>
+                            <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
                             <div id="abilities-selection" class="space-y-3">
                                 ${this.renderAbilitiesSelection(player.role, player.abilities || [])}
                             </div>
@@ -577,7 +577,7 @@ window.AdminTeams = {
         
         html += '</div></div>';
         
-        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ abilità  Negative (Max 1)</h5>';
+        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ abilità  Negative (Max 2)</h5>';
         html += '<p class="text-xs text-yellow-300 mb-2">âš ï¸ Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.negative.forEach(ability => {
@@ -618,10 +618,10 @@ window.AdminTeams = {
             return false;
         }
         
-        // Limita negative a 1
-        if (negativeChecks.length > 1) {
+        // Limita negative a 2
+        if (negativeChecks.length > 2) {
             event.target.checked = false;
-            alert('âŒ Massimo 1 abilità  negativa!');
+            alert('âŒ Massimo 2 abilità  negative!');
             return false;
         }
         
@@ -667,13 +667,13 @@ window.AdminTeams = {
         }
         
         if (hasFixedLevel) {
-            if (level < 1 || level > 30) {
-                alert('❌ Il livello deve essere tra 1 e 30!');
+            if (level < 1 || level > 20) {
+                alert('Il livello deve essere tra 1 e 20!');
                 return;
             }
         } else {
-            if (levelMin < 1 || levelMax > 30) {
-                alert('❌ I livelli devono essere tra 1 e 30!');
+            if (levelMin < 1 || levelMax > 20) {
+                alert('I livelli devono essere tra 1 e 20!');
                 return;
             }
         }

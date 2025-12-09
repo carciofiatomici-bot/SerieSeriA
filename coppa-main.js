@@ -244,15 +244,20 @@ window.CoppaMain = {
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
 
-        // Vincitore: 1 CSS
+        // Vincitore: 1 CSS (solo se sistema CSS abilitato)
         if (bracket.winner) {
-            const winnerRef = doc(db, `artifacts/${appId}/public/data/teams`, bracket.winner.teamId);
-            const winnerDoc = await getDoc(winnerRef);
-            if (winnerDoc.exists()) {
-                await updateDoc(winnerRef, {
-                    creditiSuperSeri: (winnerDoc.data().creditiSuperSeri || 0) + REWARDS.WINNER_CSS
-                });
-                console.log(`Premio CSS vincitore assegnato a ${bracket.winner.teamName}`);
+            const cssEnabled = window.CreditiSuperSeri ? await window.CreditiSuperSeri.isEnabled() : false;
+            if (cssEnabled) {
+                const winnerRef = doc(db, `artifacts/${appId}/public/data/teams`, bracket.winner.teamId);
+                const winnerDoc = await getDoc(winnerRef);
+                if (winnerDoc.exists()) {
+                    await updateDoc(winnerRef, {
+                        creditiSuperSeri: (winnerDoc.data().creditiSuperSeri || 0) + REWARDS.WINNER_CSS
+                    });
+                    console.log(`Premio CSS vincitore assegnato a ${bracket.winner.teamName}`);
+                }
+            } else {
+                console.log(`Sistema CSS disabilitato - premio CSS non assegnato a ${bracket.winner.teamName}`);
             }
         }
 

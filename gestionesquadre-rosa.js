@@ -285,31 +285,38 @@ window.GestioneSquadreRosa = {
                     ...formStatusUpdate
                 });
 
-                const finalLevelRange = playerInRosa.levelRange && Array.isArray(playerInRosa.levelRange) ? playerInRosa.levelRange : [playerInRosa.level || 1, playerInRosa.level || 1];
-                const finalCost = playerInRosa.cost !== undefined && playerInRosa.cost !== null ? playerInRosa.cost : 0;
-                const finalAge = playerInRosa.age !== undefined && playerInRosa.age !== null ? playerInRosa.age : 25;
-                const finalRole = playerInRosa.role || 'C';
-                const finalName = playerInRosa.name || 'Sconosciuto';
-                const finalType = playerInRosa.type || window.getRandomType();
-                const finalAbilities = playerInRosa.abilities || [];
+                // Il giocatore in rosa ha un level fisso (non range)
+                const finalLevel = playerInRosa.level || 1;
 
-                const playerDocumentData = {
-                    name: finalName,
-                    role: finalRole,
-                    type: finalType,
-                    age: finalAge,
-                    cost: finalCost,
-                    levelRange: finalLevelRange,
-                    abilities: finalAbilities,
-                    isDrafted: false,
-                    teamId: null,
-                    creationDate: new Date().toISOString()
-                };
+                // I giocatori di livello 1 (starter gratuiti) non vanno nel mercato
+                if (finalLevel > 1) {
+                    // Il costo nel mercato e' 2/3 del costo originale di acquisto
+                    const originalCost = playerInRosa.cost !== undefined && playerInRosa.cost !== null ? playerInRosa.cost : 0;
+                    const marketCost = Math.floor(originalCost * 2 / 3);
+                    const finalAge = playerInRosa.age !== undefined && playerInRosa.age !== null ? playerInRosa.age : 25;
+                    const finalRole = playerInRosa.role || 'C';
+                    const finalName = playerInRosa.name || 'Sconosciuto';
+                    const finalType = playerInRosa.type || window.getRandomType();
+                    const finalAbilities = playerInRosa.abilities || [];
 
-                if (docExistsInMarket) {
-                    await setDoc(marketDocRef, playerDocumentData, { merge: true });
-                } else {
-                    await setDoc(marketDocRef, playerDocumentData);
+                    const playerDocumentData = {
+                        name: finalName,
+                        role: finalRole,
+                        type: finalType,
+                        age: finalAge,
+                        cost: marketCost,
+                        level: finalLevel,
+                        abilities: finalAbilities,
+                        isDrafted: false,
+                        teamId: null,
+                        creationDate: new Date().toISOString()
+                    };
+
+                    if (docExistsInMarket) {
+                        await setDoc(marketDocRef, playerDocumentData, { merge: true });
+                    } else {
+                        await setDoc(marketDocRef, playerDocumentData);
+                    }
                 }
 
                 if (wasInDraft) {
@@ -320,7 +327,8 @@ window.GestioneSquadreRosa = {
                 if (window.loadDraftPlayersAdmin) window.loadDraftPlayersAdmin();
                 if (window.loadMarketPlayersAdmin) window.loadMarketPlayersAdmin();
 
-                displayMessage(msgContainerId, `Giocatore ${playerName} licenziato! Rimborsati ${refundCost} CS. Tornato nel Mercato.`, 'success');
+                const marketMessage = finalLevel > 1 ? ' Tornato nel Mercato.' : '';
+                displayMessage(msgContainerId, `Giocatore ${playerName} licenziato! Rimborsati ${refundCost} CS.${marketMessage}`, 'success');
                 loadTeamDataFromFirestore(currentTeamId, 'rosa');
                 document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 

@@ -13,14 +13,14 @@ window.DraftUserActions = {
      */
     async handleUserDraftAction(event, context) {
         const { db, firestoreTools, paths, currentTeamId } = context;
-        const { ACQUISITION_COOLDOWN_MS, DRAFT_COOLDOWN_KEY, MAX_ROSA_PLAYERS } = window.DraftConstants;
+        const { MAX_ROSA_PLAYERS } = window.DraftConstants;
         const { displayMessage, getRandomInt } = window.DraftUtils;
         const getPlayerCountExcludingIcona = window.getPlayerCountExcludingIcona;
+        const calculatePlayerCost = window.calculatePlayerCost;
         const target = event.target;
 
         if (target.dataset.action === 'buy') {
             const playerId = target.dataset.playerId;
-            const playerCost = parseInt(target.dataset.playerCost);
             const levelMin = parseInt(target.dataset.playerLevelMin);
             const levelMax = parseInt(target.dataset.playerLevelMax);
 
@@ -38,22 +38,30 @@ window.DraftUserActions = {
                 const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, currentTeamId);
                 const playerDraftDocRef = doc(db, paths.DRAFT_PLAYERS_COLLECTION_PATH, playerId);
 
-                // 1. Ottieni i dati attuali della squadra
-                const teamDoc = await getDoc(teamDocRef);
+                // 1. Ottieni i dati attuali della squadra e del giocatore draft
+                const [teamDoc, playerDraftDoc] = await Promise.all([
+                    getDoc(teamDocRef),
+                    getDoc(playerDraftDocRef)
+                ]);
+
                 if (!teamDoc.exists()) throw new Error("Squadra non trovata.");
+                if (!playerDraftDoc.exists()) throw new Error("Giocatore non trovato nel draft.");
 
                 const teamData = teamDoc.data();
+                const playerDraftData = playerDraftDoc.data();
                 const currentBudget = teamData.budget || 0;
                 const currentPlayers = teamData.players || [];
 
-                // Controllo cooldown
-                const lastAcquisitionTimestamp = teamData[DRAFT_COOLDOWN_KEY] || 0;
-                const currentTime = new Date().getTime();
-                const timeElapsed = currentTime - lastAcquisitionTimestamp;
+                // Recupera le abilita del giocatore dal draft
+                const playerAbilities = playerDraftData.abilities || [];
 
-                if (lastAcquisitionTimestamp !== 0 && timeElapsed < ACQUISITION_COOLDOWN_MS) {
-                    const minutes = Math.ceil((ACQUISITION_COOLDOWN_MS - timeElapsed) / (60 * 1000));
-                    throw new Error(`Devi aspettare ${minutes} minuti prima del prossimo acquisto.`);
+                // Verifica che sia il turno dell'utente (se il draft a turni e' attivo)
+                const turnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
+                if (turnInfo.draftActive && !turnInfo.isMyTurn) {
+                    throw new Error("Non e' il tuo turno! Attendi il tuo turno per draftare.");
+                }
+                if (turnInfo.draftActive && turnInfo.hasDraftedThisRound) {
+                    throw new Error("Hai gia' draftato in questo round!");
                 }
 
                 // Controllo limite rosa
@@ -62,46 +70,54 @@ window.DraftUserActions = {
                     throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto (esclusa Icona).`);
                 }
 
-                // 2. Verifica Budget
-                if (currentBudget < playerCost) {
-                    throw new Error("Crediti Seri insufficienti.");
-                }
-
-                // 3. Assegna Livello Casuale
+                // 2. Assegna Livello Casuale
                 const finalLevel = getRandomInt(levelMin, levelMax);
 
-                // 4. Prepara il Giocatore per la Rosa della Squadra
+                // 3. Calcola il costo dinamico in base al livello generato e alle abilita
+                const finalCost = calculatePlayerCost(finalLevel, playerAbilities);
+
+                // 4. Verifica Budget con il costo calcolato
+                if (currentBudget < finalCost) {
+                    throw new Error(`Crediti Seri insufficienti. Costo calcolato: ${finalCost} CS (Livello: ${finalLevel}).`);
+                }
+
+                // 5. Prepara il Giocatore per la Rosa della Squadra
                 const playerForSquad = {
                     id: playerId,
                     name: playerName,
                     role: playerRole,
                     age: playerAge,
-                    cost: playerCost,
+                    cost: finalCost,
                     level: finalLevel,
                     type: playerType,
+                    abilities: playerAbilities,
                     isCaptain: false
                 };
 
-                // 5. Aggiorna Firestore
-                const acquisitionTime = new Date().getTime();
-
-                // Transazione 1: Aggiorna il documento della squadra
+                // 6. Aggiorna Firestore - Squadra
                 await updateDoc(teamDocRef, {
-                    budget: currentBudget - playerCost,
-                    players: [...currentPlayers, playerForSquad],
-                    [DRAFT_COOLDOWN_KEY]: acquisitionTime,
+                    budget: currentBudget - finalCost,
+                    players: [...currentPlayers, playerForSquad]
                 });
 
-                // Transazione 2: Aggiorna il documento del giocatore Draft
+                // 7. Aggiorna Firestore - Giocatore Draft
                 await updateDoc(playerDraftDocRef, {
                     isDrafted: true,
                     teamId: currentTeamId,
                 });
 
-                displayMessage(`Acquisto Riuscito! ${playerName} (${finalLevel}) è nella tua rosa. Budget: ${currentBudget - playerCost} CS.`, 'success', 'user-draft-message');
+                displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa. Costo: ${finalCost} CS. Budget: ${currentBudget - finalCost} CS.`, 'success', 'user-draft-message');
+
+                // 8. Se il draft a turni e' attivo, passa al turno successivo
+                if (turnInfo.draftActive) {
+                    await window.DraftTurns.advanceToNextTurn(context, true);
+                }
 
                 // Ricarica la lista
-                window.DraftUserUI.render(context);
+                setTimeout(() => {
+                    window.DraftUserUI.render(context);
+                }, 1500);
+
                 document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 
             } catch (error) {

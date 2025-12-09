@@ -1,8 +1,8 @@
 //
 // ====================================================================
-// ABILITIES-ENCYCLOPEDIA.JS - Enciclopedia Abilità Completa V2.0
+// ABILITIES-ENCYCLOPEDIA.JS - Enciclopedia Abilità Completa V3.0
 // ====================================================================
-// Aggiornato con tutte le 46 abilità del nuovo motore di simulazione
+// Aggiornato con tutte le 60 abilità del nuovo motore di simulazione
 //
 
 window.AbilitiesEncyclopedia = {
@@ -201,7 +201,109 @@ window.AbilitiesEncyclopedia = {
             synergy: ['Nessuna (abilità negativa)'],
             warning: '⚠️ ABILITÀ NEGATIVA - Azzera il modificatore!'
         },
-        
+
+        'Presa Sicura': {
+            name: 'Presa Sicura',
+            icon: '🧤',
+            role: 'P',
+            color: 'text-green-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Se la parata supera di 5 punti, la squadra salta la costruzione',
+            effect: 'Se Totale Portiere - Totale Tiro > 5, prossima azione parte da Fase 2',
+            mechanics: 'Se il portiere effettua una parata con differenza > 5, la squadra riparte automaticamente dalla Fase 2',
+            activation: '100% (condizionale)',
+            example: 'Portiere 22 vs Tiro 15 → Differenza +7 → Prossima azione skip costruzione!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Pugno di Ferro', 'Uscita Kamikaze']
+        },
+
+        'Muro Psicologico': {
+            name: 'Muro Psicologico',
+            icon: '🧠',
+            role: 'P',
+            color: 'text-purple-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di costringere l\'attacco a tirare 1d10 invece di 1d20',
+            effect: '5% l\'attaccante tira 1d10 invece di 1d20 in Fase 3',
+            mechanics: 'In fase tiro, 5% di probabilità che l\'attacco usi un d10 invece del d20',
+            activation: '5%',
+            example: 'Fase 3 → 5% Muro Psicologico → Attacco tira 1d10+mod invece di 1d20+mod!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Pugno di Ferro', 'Parata con i piedi']
+        },
+
+        'Miracolo': {
+            name: 'Miracolo',
+            icon: '✨',
+            role: 'P',
+            color: 'text-yellow-400',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '5% di trasformare un goal in parata se differenza < 3',
+            effect: '5% se Goal con differenza < 3, diventa Parata',
+            mechanics: 'Se il tiro batte il portiere con differenza < 3 punti, 5% di salvare comunque',
+            activation: '5% (solo se Goal con differenza < 3)',
+            example: 'Tiro 18 vs Portiere 16 → Differenza -2 → 5% → Miracolo! Parata!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Pugno di Ferro', 'Uscita Kamikaze'],
+            warning: 'Funziona solo se la differenza è < 3 punti'
+        },
+
+        'Freddezza': {
+            name: 'Freddezza',
+            icon: '❄️',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-blue-400',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Non subisce mai malus alla forma',
+            effect: 'Se il modificatore forma sarebbe negativo, viene considerato 0',
+            mechanics: 'Il giocatore ignora i malus alla forma fisica. La forma non può mai essere negativa',
+            activation: '100% (passiva)',
+            example: 'Giocatore con forma -2 → Con Freddezza diventa forma 0',
+            phase: 'Tutte le fasi',
+            synergy: ['Icona', 'Fortunato']
+        },
+
+        'Lento a carburare': {
+            name: 'Lento a carburare',
+            icon: '🐢',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-orange-700',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Modificatore dimezzato nelle prime 5 occasioni',
+            effect: 'Nelle prime 5 occasioni (su 30), il modificatore è dimezzato',
+            mechanics: 'Durante le prime 5 occasioni della partita, il giocatore contribuisce con metà modificatore',
+            activation: '100% (prime 5 occasioni)',
+            example: 'Occasione 1-5: Mod +8 → Diventa +4 | Occasione 6+: Mod +8 normale',
+            phase: 'Tutte le fasi (prime 5 occasioni)',
+            synergy: ['Nessuna (abilità negativa)'],
+            warning: '⚠️ ABILITÀ NEGATIVA - Penalizza l\'inizio partita!'
+        },
+
+        'Soggetto a infortuni': {
+            name: 'Soggetto a infortuni',
+            icon: '🤕',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-red-800',
+            rarity: 'Epica',
+            type: 'Negativa',
+            description: '2.5% per fase di infortunarsi e azzerare il modificatore',
+            effect: '2.5% ad ogni fase che il modificatore scenda a 0 per il resto della partita',
+            mechanics: 'Ad ogni fase a cui partecipa, 2.5% di infortunarsi. Se succede, mod = 0 per tutta la simulazione',
+            activation: '2.5% per fase',
+            example: 'Fase 3 → 2.5% infortunio → Mod = 0 per TUTTE le occasioni rimanenti!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (abilità negativa)'],
+            warning: '⚠️ ABILITÀ NEGATIVA - Può disabilitare il giocatore!'
+        },
+
         // ========================================
         // DIFENSORE (12 Abilità)
         // ========================================
@@ -308,6 +410,55 @@ window.AbilitiesEncyclopedia = {
             example: 'Attaccante avversario mod +10 → 5% → Difensore guadagna +10!',
             phase: 'Fase 2 (Attacco vs Difesa)',
             synergy: ['Muro', 'Antifurto', 'Guardia']
+        },
+
+        'Spazzata': {
+            name: 'Spazzata',
+            icon: '🧹',
+            role: 'D',
+            color: 'text-green-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: '5% di aggiungere +1 al proprio modificatore in Fase 2',
+            effect: '5% bonus +1 al modificatore durante Fase 2',
+            mechanics: 'In Fase Attacco vs Difesa, 5% di ottenere +1 al proprio modificatore',
+            activation: '5%',
+            example: 'Difensore mod +6 → 5% Spazzata → Diventa +7!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Muro', 'Guardia']
+        },
+
+        'Adattabile': {
+            name: 'Adattabile',
+            icon: '🔄',
+            role: 'D',
+            color: 'text-teal-600',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Ignora il malus del -25% dovuto alla tipologia avversaria',
+            effect: 'Non subisce penalità -25% da sasso-carta-forbice',
+            mechanics: 'Il difensore ignora il sistema di tipologie (Potenza/Tecnica/Velocità) e non subisce mai il malus del -25%',
+            activation: '100% (passiva)',
+            example: 'Difensore Potenza vs Attaccante Velocità → Normalmente -25%, con Adattabile nessun malus!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Muro', 'Guardia', 'Antifurto']
+        },
+
+        'Salvataggio sulla Linea': {
+            name: 'Salvataggio sulla Linea',
+            icon: '🦸',
+            role: 'D',
+            color: 'text-gold-500',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '5% di salvare un goal già segnato',
+            effect: 'Se portiere battuto, 5% di intervenire con 1d20+mod vs totale attacco',
+            mechanics: 'Dopo un Goal, 5% di tirare 1d20+mod difensore. Se batte il totale attacco, il goal è annullato',
+            activation: '5% (solo dopo Goal)',
+            example: 'Goal! → 5% Salvataggio → 1d20(15)+mod(+8)=23 vs Attacco(20) → Salvato!',
+            phase: 'Fase 3 (dopo Goal)',
+            synergy: ['Deviazione', 'Muro'],
+            warning: 'Si attiva solo DOPO che il portiere è stato battuto'
         },
 
         'Falloso': {
@@ -449,7 +600,74 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 1 (Costruzione)',
             synergy: ['Tocco Di Velluto', 'Regista']
         },
-        
+
+        'Passaggio Corto': {
+            name: 'Passaggio Corto',
+            icon: '➡️',
+            role: 'C',
+            color: 'text-green-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: '+1 al risultato della squadra in Fase 1',
+            effect: '+1 permanente al risultato totale in Fase Costruzione',
+            mechanics: 'In Fase 1 (Costruzione), la squadra riceve +1 al risultato finale',
+            activation: '100%',
+            example: 'Risultato costruzione 18 → Con Passaggio Corto diventa 19!',
+            phase: 'Fase 1 (Costruzione)',
+            synergy: ['Tocco Di Velluto', 'Regista']
+        },
+
+        'Visione di Gioco': {
+            name: 'Visione di Gioco',
+            icon: '👁️',
+            role: 'C',
+            color: 'text-indigo-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di sostituire il mod di un alleato con il proprio se maggiore',
+            effect: '5% in Fase 1 sostituisce mod alleato con il proprio (se maggiore)',
+            mechanics: 'In Fase 1, 5% di sostituire il modificatore di un altro giocatore alleato con il proprio, se è maggiore',
+            activation: '5%',
+            example: 'Centrocampista A (mod +9) → 5% → Alleato con mod +5 diventa +9!',
+            phase: 'Fase 1 (Costruzione)',
+            synergy: ['Passaggio Corto', 'Tocco Di Velluto']
+        },
+
+        'Tuttocampista': {
+            name: 'Tuttocampista',
+            icon: '🌟',
+            role: 'C',
+            color: 'text-gold-500',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Conta come tutte e tre le tipologie contemporaneamente',
+            effect: 'Impone sempre il malus -25% agli avversari diretti',
+            mechanics: 'Il giocatore conta come Potenza, Tecnica e Velocità. Impone sempre il malus tipologia agli avversari',
+            activation: '100% (passiva)',
+            example: 'Avversario Potenza, Tecnica o Velocità → Subisce sempre -25% contro Tuttocampista!',
+            phase: 'Tutte le fasi',
+            synergy: ['Motore', 'Regista'],
+            warning: 'Estremamente potente nel sistema sasso-carta-forbice!'
+        },
+
+        'Egoista': {
+            name: 'Egoista',
+            icon: '🤳',
+            role: 'Multi',
+            roles: ['C', 'A'],
+            color: 'text-pink-700',
+            rarity: 'Rara',
+            type: 'Negativa',
+            description: '5% di sottrarre il modificatore di un compagno di reparto',
+            effect: '5% sottrae mod compagno invece di sommarlo',
+            mechanics: 'Il giocatore vuole fare tutto da solo. 5% di sottrarre il mod di un compagno dello stesso ruolo',
+            activation: '5%',
+            example: 'Centrocampista A (Egoista) → 5% → Centrocampista B mod +6 diventa -6!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (abilità negativa)'],
+            warning: '⚠️ ABILITÀ NEGATIVA - Può danneggiare i compagni!'
+        },
+
         'Impreciso': {
             name: 'Impreciso',
             icon: '❌',
@@ -572,7 +790,55 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 3 (Tiro)',
             synergy: ['Bomber', 'Cross']
         },
-        
+
+        'Opportunista': {
+            name: 'Opportunista',
+            icon: '🎰',
+            role: 'A',
+            color: 'text-green-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Se risultato Fase 3 è 0, probabilità goal diventa 75%',
+            effect: 'Pareggio in Fase 3 diventa 75% goal invece di 50%',
+            mechanics: 'Se il risultato Tiro vs Portiere è esattamente 0 (50/50), la probabilità di goal diventa 75%',
+            activation: '100% (condizionale)',
+            example: 'Tiro 15 vs Portiere 15 → Differenza 0 → Normalmente 50%, con Opportunista 75% goal!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Bomber', 'Tiro Fulmineo']
+        },
+
+        'Tiro a Giro': {
+            name: 'Tiro a Giro',
+            icon: '🌀',
+            role: 'A',
+            color: 'text-purple-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di ignorare un difensore avversario in Fase 2',
+            effect: '5% ignora il mod di un difensore avversario',
+            mechanics: 'In Fase 2, 5% di annullare il contributo di un difensore avversario, facilitando l\'arrivo alla Fase 3',
+            activation: '5%',
+            example: 'Fase 2 → 5% Tiro a Giro → Difensore avversario mod +8 diventa 0!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Doppio Scatto', 'Pivot']
+        },
+
+        'Immarcabile': {
+            name: 'Immarcabile',
+            icon: '💨',
+            role: 'A',
+            color: 'text-gold-500',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '5% di tirare 2d20 in Fase 2 e scegliere il migliore',
+            effect: '5% tira 2d20 in attacco e tiene il risultato migliore',
+            mechanics: 'In Fase 2, 5% di lanciare 2d20 e scegliere il risultato più alto',
+            activation: '5%',
+            example: 'Fase 2 → 5% Immarcabile → Tiro 1: 8, Tiro 2: 17 → Usa 17!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Doppio Scatto', 'Pivot', 'Bomber']
+        },
+
         'Piedi a banana': {
             name: 'Piedi a banana',
             icon: '🍌',
@@ -729,4 +995,4 @@ window.AbilitiesEncyclopedia = {
     }
 };
 
-console.log('✅ Enciclopedia Abilità V2.0 caricata - 46 abilità complete!');
+console.log('✅ Enciclopedia Abilità V3.0 caricata - 60 abilità complete!');

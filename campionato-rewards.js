@@ -144,10 +144,15 @@ window.ChampionshipRewards = {
                 lastAcquisitionTimestamp: 0,
             };
 
-            // Premio speciale: 1 CSS al vincitore del campionato
+            // Premio speciale: 1 CSS al vincitore del campionato (solo se sistema CSS abilitato)
             if (teamId === championTeamId) {
-                updateData.creditiSuperSeri = currentCSS + 1;
-                console.log(`Premio campionato: 1 CSS assegnato al vincitore ${teamData.teamName || teamId}`);
+                const cssEnabled = window.CreditiSuperSeri ? await window.CreditiSuperSeri.isEnabled() : false;
+                if (cssEnabled) {
+                    updateData.creditiSuperSeri = currentCSS + 1;
+                    console.log(`Premio campionato: 1 CSS assegnato al vincitore ${teamData.teamName || teamId}`);
+                } else {
+                    console.log(`Sistema CSS disabilitato - premio CSS non assegnato a ${teamData.teamName || teamId}`);
+                }
             }
 
             // Aggiorna la squadra su Firestore

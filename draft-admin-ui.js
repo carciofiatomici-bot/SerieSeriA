@@ -22,7 +22,48 @@ window.DraftAdminUI = {
         const { doc, getDoc } = firestoreTools;
         const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, window.DraftConstants.CONFIG_DOC_ID);
         const configDoc = await getDoc(configDocRef);
-        let draftOpen = configDoc.exists() ? (configDoc.data().isDraftOpen || false) : false;
+        const configData = configDoc.exists() ? configDoc.data() : {};
+        let draftOpen = configData.isDraftOpen || false;
+        const draftTurns = configData.draftTurns || null;
+        const isDraftTurnsActive = draftTurns && draftTurns.isActive;
+
+        // Genera HTML per lo stato del draft a turni
+        let draftTurnsStatusHtml = '';
+        if (isDraftTurnsActive) {
+            const currentRound = draftTurns.currentRound;
+            const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+            const currentOrder = draftTurns[orderKey] || [];
+            const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
+            const remainingTeams = currentOrder.filter(t => !t.hasDrafted).length;
+
+            draftTurnsStatusHtml = `
+                <div class="mt-4 p-4 bg-blue-900 border border-blue-500 rounded-lg">
+                    <h4 class="text-lg font-bold text-blue-300 mb-2">Draft a Turni ATTIVO</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">Round:</span>
+                            <span class="text-white font-bold">${currentRound} / ${draftTurns.totalRounds}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Squadre rimanenti:</span>
+                            <span class="text-white font-bold">${remainingTeams}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-gray-400">Turno corrente:</span>
+                            <span class="text-yellow-400 font-bold">${currentTeam ? currentTeam.teamName : 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p class="text-xs text-gray-400 mb-2">Ordine Round ${currentRound}:</p>
+                        <div class="flex flex-wrap gap-1">
+                            ${currentOrder.map((t, i) => `
+                                <span class="text-xs px-2 py-1 rounded ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white')}">${i+1}. ${t.teamName}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
         // Interfaccia Creazione Calciatore con il pulsante Toggle
         draftToolsContainer.innerHTML = `
@@ -38,6 +79,27 @@ window.DraftAdminUI = {
                         ${draftOpen ? 'CHIUDI Draft' : 'APRI Draft'}
                     </button>
                 </div>
+
+                <!-- SEZIONE DRAFT A TURNI -->
+                ${draftOpen ? `
+                <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500">
+                    <h4 class="text-lg font-bold text-yellow-300 mb-3">Gestione Draft a Turni</h4>
+                    ${!isDraftTurnsActive ? `
+                    <p class="text-sm text-gray-300 mb-3">Genera la lista del draft per permettere alle squadre di draftare a turno. L'ordine viene calcolato in base alla classifica (o media rosa se non c'e' classifica).</p>
+                    <button id="btn-generate-draft-list"
+                            class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
+                        Genera Lista Draft
+                    </button>
+                    ` : `
+                    <button id="btn-stop-draft-turns"
+                            class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition">
+                        Ferma Draft a Turni
+                    </button>
+                    `}
+                    ${draftTurnsStatusHtml}
+                </div>
+                ` : ''}
+
                 <p id="draft-toggle-message" class="text-center mt-3 text-red-400"></p>
 
 
@@ -148,6 +210,91 @@ window.DraftAdminUI = {
         document.getElementById('btn-random-player').addEventListener('click', () => {
             window.DraftAdminPlayers.handleRandomPlayer();
         });
+
+        // Event listener per Draft a Turni
+        const btnGenerateDraftList = document.getElementById('btn-generate-draft-list');
+        if (btnGenerateDraftList) {
+            btnGenerateDraftList.addEventListener('click', () => {
+                this.handleGenerateDraftList(context);
+            });
+        }
+
+        const btnStopDraftTurns = document.getElementById('btn-stop-draft-turns');
+        if (btnStopDraftTurns) {
+            btnStopDraftTurns.addEventListener('click', () => {
+                this.handleStopDraftTurns(context);
+            });
+        }
+    },
+
+    /**
+     * Gestisce la generazione della lista draft
+     * @param {Object} context - Contesto
+     */
+    async handleGenerateDraftList(context) {
+        const { displayMessage } = window.DraftUtils;
+        const btn = document.getElementById('btn-generate-draft-list');
+
+        if (!confirm('Vuoi generare la lista del draft? Le squadre potranno draftare a turno.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Generazione in corso...';
+        displayMessage('Generazione lista draft in corso...', 'info', 'draft-toggle-message');
+
+        try {
+            const result = await window.DraftTurns.startDraftTurns(context);
+
+            if (result.success) {
+                displayMessage('Lista draft generata! Il draft a turni e\' iniziato.', 'success', 'draft-toggle-message');
+                // Ricarica il pannello per mostrare lo stato aggiornato
+                this.render(context);
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error("Errore nella generazione lista draft:", error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'draft-toggle-message');
+            btn.disabled = false;
+            btn.textContent = 'Genera Lista Draft';
+        }
+    },
+
+    /**
+     * Gestisce la fermata del draft a turni
+     * @param {Object} context - Contesto
+     */
+    async handleStopDraftTurns(context) {
+        const { displayMessage } = window.DraftUtils;
+        const btn = document.getElementById('btn-stop-draft-turns');
+
+        if (!confirm('Vuoi fermare il draft a turni? Questa azione interrompera\' il draft in corso.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Fermando...';
+        displayMessage('Fermando draft a turni...', 'info', 'draft-toggle-message');
+
+        try {
+            const result = await window.DraftTurns.stopDraftTurns(context);
+
+            if (result.success) {
+                displayMessage('Draft a turni fermato.', 'success', 'draft-toggle-message');
+                // Ricarica il pannello
+                this.render(context);
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error("Errore nel fermare il draft:", error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'draft-toggle-message');
+            btn.disabled = false;
+            btn.textContent = 'Ferma Draft a Turni';
+        }
     }
 };
 

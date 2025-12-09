@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const mercatoContent = document.getElementById('mercato-content');
     const mercatoToolsContainer = document.getElementById('mercato-tools-container');
     const mercatoBackButton = document.getElementById('mercato-back-button');
-    const appContent = document.getElementById('app-content'); 
-    
+    const appContent = document.getElementById('app-content');
+
     // Variabile per il timer di cooldown
-    let cooldownInterval = null; 
-    
+    let cooldownInterval = null;
+
     // Assicurati che il contenitore tools esista
     if (mercatoContent && !mercatoContent.querySelector('#mercato-tools-container')) {
         mercatoContent.innerHTML += `<div id="mercato-tools-container" class="mt-6"></div>`;
@@ -21,30 +21,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variabili globali
     let db;
     let firestoreTools;
-    let currentTeamId = null; 
-    
+    let currentTeamId = null;
+
     // Costanti per le collezioni
-    const CONFIG_DOC_ID = 'settings'; 
+    const CONFIG_DOC_ID = 'settings';
     let MARKET_PLAYERS_COLLECTION_PATH; // Collezione specifica per il Mercato
     let CHAMPIONSHIP_CONFIG_PATH;
     let TEAMS_COLLECTION_PATH;
-    
+
     // COSTANTE COOLDOWN: 15 minuti in millisecondi
-    const ACQUISITION_COOLDOWN_MS = window.InterfacciaConstants?.ACQUISITION_COOLDOWN_MS || (15 * 60 * 1000); 
+    const ACQUISITION_COOLDOWN_MS = window.InterfacciaConstants?.ACQUISITION_COOLDOWN_MS || (15 * 60 * 1000);
     const MARKET_COOLDOWN_KEY = window.InterfacciaConstants?.COOLDOWN_MARKET_KEY || 'lastMarketAcquisitionTimestamp';
 
-    
+
     const getRandomInt = window.getRandomInt;
     const getPlayerCountExcludingIcona = window.getPlayerCountExcludingIcona;
     const MAX_ROSA_PLAYERS = window.InterfacciaConstants?.MAX_ROSA_PLAYERS || 12; // 12 slot normali
 
-    
+
     const displayMessage = (message, type, elementId = 'user-mercato-message') => {
         const msgElement = document.getElementById(elementId);
         if (!msgElement) return;
         msgElement.textContent = message;
         msgElement.classList.remove('text-red-400', 'text-green-500', 'text-yellow-400', 'text-gray-400');
-        
+
         if (type === 'error') {
             msgElement.classList.add('text-red-400');
         } else if (type === 'success') {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
              msgElement.classList.add('text-gray-400');
         }
     };
-    
+
     /**
      * Avvia il cronometro per visualizzare il tempo rimanente al cooldown di acquisizione.
      * @param {number} lastAcquisitionTimestamp - Timestamp dell'ultima acquisizione.
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startAcquisitionCountdown = (lastAcquisitionTimestamp) => {
         const timerElement = document.getElementById('mercato-cooldown-timer');
         if (!timerElement) return;
-        
+
         if (cooldownInterval) {
             clearInterval(cooldownInterval);
         }
@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 timerElement.classList.remove('text-yellow-300');
                 timerElement.classList.add('text-green-400');
                 timerElement.innerHTML = `COOLDOWN TERMINATO! Ricarica il Mercato per acquistare.`;
-                
+
                 // Forza il ricaricamento del pannello per aggiornare lo stato e i bottoni
-                setTimeout(renderUserMercatoPanel, 1500); 
+                setTimeout(renderUserMercatoPanel, 1500);
                 return;
             }
 
@@ -102,24 +102,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const initializeMercatoPanel = (event) => {
         // Pulisce l'intervallo precedente se esiste
         if (cooldownInterval) clearInterval(cooldownInterval);
-        
+
         if (!event.detail || !event.detail.teamId) {
             console.error("ID Squadra non fornito per il Mercato.");
             return;
         }
-        
+
         db = window.db;
         firestoreTools = window.firestoreTools;
         const { appId } = firestoreTools;
-        
+
         // COLLEZIONE MARKET DIVERSA DAL DRAFT
         MARKET_PLAYERS_COLLECTION_PATH = `artifacts/${appId}/public/data/marketPlayers`;
         CHAMPIONSHIP_CONFIG_PATH = `artifacts/${appId}/public/data/config`;
         TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
 
         currentTeamId = event.detail.teamId;
-        
-        // Cabla il bottone di ritorno (se non Ã¨ giÃ  cablato)
+
+        // Cabla il bottone di ritorno
         if (mercatoBackButton) {
             mercatoBackButton.onclick = () => {
                 // Pulisce il timer quando si esce
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
         }
-        
+
         renderUserMercatoPanel();
     };
 
@@ -139,12 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * Renderizza l'interfaccia di acquisto per l'utente dal Mercato.
      */
     const renderUserMercatoPanel = async () => {
-        
+
         const { doc, getDoc, collection, getDocs, query, where } = firestoreTools;
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
         const mercatoToolsContainer = document.getElementById('mercato-tools-container');
-        
+
         // Pulisce il timer all'inizio del rendering
         if (cooldownInterval) clearInterval(cooldownInterval);
 
@@ -162,32 +162,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // VERIFICA STATO isMarketOpen
             const isMarketOpen = configDoc.exists() ? (configDoc.data().isMarketOpen || false) : false;
-            
+
             if (!teamDoc.exists()) throw new Error("Dati squadra non trovati.");
             const teamData = teamDoc.data();
             const budgetRimanente = teamData.budget || 0;
             const currentPlayers = teamData.players || [];
-            
+
             // --- CONTROLLO LIMITE ROSA ---
             const currentRosaCount = getPlayerCountExcludingIcona(currentPlayers);
             const isRosaFull = currentRosaCount >= MAX_ROSA_PLAYERS;
-            
+
             // --- CONTROLLO COOLDOWN (Usa il timestamp del MERCATO) ---
-            const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0; 
+            const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0;
             const currentTime = new Date().getTime();
             const timeElapsed = currentTime - lastAcquisitionTimestamp;
             const cooldownRemaining = ACQUISITION_COOLDOWN_MS - timeElapsed;
             const isCooldownActive = cooldownRemaining > 0 && lastAcquisitionTimestamp !== 0;
-            
-            
+
+
             // --- MESSAGGIO LIMITE ROSA / COOLDOWN ---
             let mainMessage = '';
             let secondaryMessageHtml = '';
             let disableAcquisition = false;
-            
+
             if (!isMarketOpen) {
                  mainMessage = 'MERCATO CHIUSO.';
-                 secondaryMessageHtml = '<p class="text-center text-lg text-gray-300 mt-2">Non Ã¨ possibile acquistare giocatori dal Mercato al momento. Attendi che l\'Admin apra il Mercato.</p>';
+                 secondaryMessageHtml = '<p class="text-center text-lg text-gray-300 mt-2">Non e\' possibile acquistare giocatori dal Mercato al momento. Attendi che l\'Admin apra il Mercato.</p>';
                  disableAcquisition = true;
             } else if (isCooldownActive) {
                 mainMessage = 'COOLDOWN ATTIVO.';
@@ -216,44 +216,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-gray-500 text-center">Caricamento giocatori...</p>
                 </div>
             `;
-            
+
             const statusBox = document.getElementById('mercato-status-box');
             const playersListContainer = document.getElementById('available-market-players-list');
-            
+
             if (!isMarketOpen || isCooldownActive || isRosaFull) {
-                 
+
                  statusBox.textContent = mainMessage;
                  statusBox.classList.add('border-red-500', 'bg-red-900', 'text-red-400');
                  playersListContainer.innerHTML = secondaryMessageHtml;
-                 
+
                  if (isCooldownActive) {
                      // Avvia il cronometro
                      startAcquisitionCountdown(lastAcquisitionTimestamp);
                  }
                  return;
             }
-            
+
             statusBox.textContent = 'MERCATO APERTO!';
             statusBox.classList.add('border-green-500', 'bg-green-900', 'text-green-400');
 
 
             // 3. Carica i giocatori disponibili dal Mercato
             const playersCollectionRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
-            // FIX: Uso query + where, ora che query e where sono esposti globalmente in interfaccia.js
             const q = query(playersCollectionRef, where('isDrafted', '==', false));
             const playersSnapshot = await getDocs(q);
-            
+
             const availablePlayers = playersSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(player => !player.isDrafted); // isDrafted significa 'giÃ  acquistato'
+                .filter(player => !player.isDrafted);
 
-            
+
             // 4. Renderizza la lista dei giocatori
             if (availablePlayers.length > 0) {
                  playersListContainer.innerHTML = availablePlayers.map(player => {
+                    // Nel mercato i giocatori hanno level fisso (non range)
+                    const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
                     const isAffordable = budgetRimanente >= player.cost;
-                    const canBuy = isAffordable && !disableAcquisition; 
-                    
+                    const canBuy = isAffordable && !disableAcquisition;
+
                     const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
                     let buttonText;
 
@@ -263,16 +264,21 @@ document.addEventListener('DOMContentLoaded', () => {
                          buttonText = `Acquista (${player.cost} CS)`;
                     }
 
+                    // Mostra abilita se presenti
+                    const abilitiesText = player.abilities && player.abilities.length > 0
+                        ? `<p class="text-xs text-purple-300 mt-1">Abilita: ${player.abilities.join(', ')}</p>`
+                        : '';
+
                     return `
                         <div class="flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-blue-500">
                             <div>
                                 <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="text-red-300">(${player.type || 'N/A'})</span></p>
-                                <p class="text-sm text-blue-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]}</p>
+                                <p class="text-sm text-blue-300">Livello: ${playerLevel}</p>
+                                ${abilitiesText}
                             </div>
-                            <button data-player-id="${player.id}" 
+                            <button data-player-id="${player.id}"
                                     data-player-cost="${player.cost}"
-                                    data-player-level-min="${player.levelRange[0]}"
-                                    data-player-level-max="${player.levelRange[1]}"
+                                    data-player-level="${playerLevel}"
                                     data-player-name="${player.name}"
                                     data-player-role="${player.role}"
                                     data-player-age="${player.age}"
@@ -285,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                  }).join('');
-                 
+
                  playersListContainer.addEventListener('click', handleUserMercatoAction);
             } else {
                  playersListContainer.innerHTML = '<p class="text-center text-red-400 font-semibold">Nessun calciatore Mercato disponibile al momento.</p>';
@@ -296,23 +302,23 @@ document.addEventListener('DOMContentLoaded', () => {
             mercatoToolsContainer.innerHTML = `<p class="text-center text-red-400">Errore: ${error.message}</p>`;
         }
     };
-    
+
     /**
      * Gestisce l'azione di acquisto di un giocatore (Utente) per il Mercato.
+     * Nel mercato i giocatori hanno gia un level fisso (non range) e un costo gia calcolato.
      */
     const handleUserMercatoAction = async (event) => {
         const target = event.target;
-        
+
         if (target.dataset.action === 'buy-market' && !target.disabled) {
             const playerId = target.dataset.playerId;
             const playerCost = parseInt(target.dataset.playerCost);
-            const levelMin = parseInt(target.dataset.playerLevelMin);
-            const levelMax = parseInt(target.dataset.playerLevelMax);
+            const playerLevel = parseInt(target.dataset.playerLevel);
 
             const playerName = target.dataset.playerName;
             const playerRole = target.dataset.playerRole;
             const playerAge = parseInt(target.dataset.playerAge);
-            const playerType = target.dataset.playerType; // NUOVO: Tipo
+            const playerType = target.dataset.playerType;
 
             displayMessage(`Acquisto di ${playerName} in corso dal Mercato...`, 'info');
             target.disabled = true;
@@ -320,19 +326,34 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const { doc, getDoc, updateDoc } = firestoreTools;
                 const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+                const marketDocRef = doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId);
 
-                const teamDoc = await getDoc(teamDocRef);
+                // Ottieni i dati della squadra e del giocatore in parallelo
+                const [teamDoc, playerDoc] = await Promise.all([
+                    getDoc(teamDocRef),
+                    getDoc(marketDocRef)
+                ]);
+
                 if (!teamDoc.exists()) throw new Error("Squadra non trovata.");
 
+                // Verifica che il giocatore non sia gia stato acquistato
+                if (!playerDoc.exists() || playerDoc.data().isDrafted) {
+                     throw new Error("Il giocatore non e' disponibile (gia acquistato). Riprova a ricaricare.");
+                }
+
                 const teamData = teamDoc.data();
+                const playerMarketData = playerDoc.data();
                 const currentBudget = teamData.budget || 0;
                 const currentPlayers = teamData.players || [];
-                
+
+                // Recupera le abilita del giocatore dal mercato
+                const playerAbilities = playerMarketData.abilities || [];
+
                 // *** CONTROLLO COOLDOWN MERCATO ***
-                const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0; 
+                const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0;
                 const currentTime = new Date().getTime();
                 const timeElapsed = currentTime - lastAcquisitionTimestamp;
-                
+
                 if (lastAcquisitionTimestamp !== 0 && timeElapsed < ACQUISITION_COOLDOWN_MS) {
                      const minutes = Math.ceil((ACQUISITION_COOLDOWN_MS - timeElapsed) / (60 * 1000));
                      throw new Error(`Devi aspettare ${minutes} minuti prima del prossimo acquisto.`);
@@ -344,28 +365,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentRosaCount >= MAX_ROSA_PLAYERS) {
                      throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto (esclusa Icona).`);
                 }
-                
+
                 if (currentBudget < playerCost) {
                     throw new Error("Crediti Seri insufficienti.");
                 }
 
-                const playerDoc = await getDoc(doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId));
-                // Verifica anche che non sia giÃ  stato acquistato (isDrafted = true)
-                if (!playerDoc.exists() || playerDoc.data().isDrafted) {
-                     throw new Error("Il giocatore non Ã¨ disponibile (giÃ  acquistato). Riprova a ricaricare.");
-                }
-                
-                // Genera Livello Casuale
-                const finalLevel = getRandomInt(levelMin, levelMax);
-                
+                // Nel mercato il level e' gia fisso, non serve generarlo
+                const finalLevel = playerLevel;
+
                 const playerForSquad = {
-                    id: playerId, 
+                    id: playerId,
                     name: playerName,
                     role: playerRole,
                     age: playerAge,
                     cost: playerCost,
                     level: finalLevel,
-                    type: playerType, // NUOVO: Tipo
+                    type: playerType,
+                    abilities: playerAbilities,
                     isCaptain: false
                 };
 
@@ -375,36 +391,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 await updateDoc(teamDocRef, {
                     budget: currentBudget - playerCost,
                     players: [...currentPlayers, playerForSquad],
-                    [MARKET_COOLDOWN_KEY]: acquisitionTime, // AGGIORNAMENTO CHIAVE MERCATO
+                    [MARKET_COOLDOWN_KEY]: acquisitionTime,
                 });
 
                 // Aggiorna Firestore: Giocatore Mercato (segnandolo come venduto)
-                await updateDoc(doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId), {
-                    isDrafted: true, 
+                await updateDoc(marketDocRef, {
+                    isDrafted: true,
                     teamId: currentTeamId,
                 });
 
-                displayMessage(`Acquisto Riuscito! ${playerName} (${finalLevel}) Ã¨ nella tua rosa dal Mercato. Budget: ${currentBudget - playerCost} CS.`, 'success');
-                
-                // Ricarica la lista per mostrare che il giocatore non Ã¨ piÃ¹ disponibile
+                displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa dal Mercato. Budget: ${currentBudget - playerCost} CS.`, 'success');
+
+                // Ricarica la lista per mostrare che il giocatore non e' piu disponibile
                 renderUserMercatoPanel();
                 document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 
             } catch (error) {
                 console.error("Errore durante l'acquisto dal Mercato:", error);
                 displayMessage(`Acquisto Fallito dal Mercato: ${error.message}`, 'error');
-                target.disabled = false; 
+                target.disabled = false;
             }
         }
     };
 
 
     // GESTIONE NAVIGAZIONE
-    // Il bottone di ritorno Ã¨ gestito in initializeMercatoPanel
-    
+    // Il bottone di ritorno e' gestito in initializeMercatoPanel
+
 
 
     // Ascolta l'evento lanciato da interfaccia.js
     document.addEventListener('mercatoPanelLoaded', initializeMercatoPanel);
-    
+
 });

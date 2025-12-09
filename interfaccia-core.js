@@ -191,4 +191,47 @@ const generateCaptainCandidates = () => {
 };
 window.generateCaptainCandidates = generateCaptainCandidates;
 
-console.log("âœ… Modulo interfaccia-core.js caricato.");
+/**
+ * Mappa rarità abilità → livello per calcolo costo
+ * Comune=1, Rara=2, Epica=3, Leggendaria=4, Unica=5
+ */
+const ABILITY_RARITY_LEVELS = {
+    'Comune': 1,
+    'Rara': 2,
+    'Epica': 3,
+    'Leggendaria': 4,
+    'Unica': 5
+};
+window.ABILITY_RARITY_LEVELS = ABILITY_RARITY_LEVELS;
+
+/**
+ * Calcola il costo di un giocatore in base al livello e alle abilità.
+ * Formula: 100 + (level * 10) + (levelAbilità * 50)
+ *
+ * @param {number} level - Livello del giocatore (1-20)
+ * @param {Array<string>} abilities - Array dei nomi delle abilità del giocatore
+ * @returns {number} - Costo in CS
+ */
+const calculatePlayerCost = (level, abilities = []) => {
+    // Costo base + bonus livello
+    let cost = 100 + (level * 10);
+
+    // Aggiungi costo abilità
+    if (abilities && abilities.length > 0 && window.AbilitiesEncyclopedia) {
+        abilities.forEach(abilityName => {
+            // Salta l'abilità "Icona" per il calcolo costo
+            if (abilityName === 'Icona') return;
+
+            const abilityData = window.AbilitiesEncyclopedia.getAbility(abilityName);
+            if (abilityData && abilityData.rarity) {
+                const rarityLevel = ABILITY_RARITY_LEVELS[abilityData.rarity] || 1;
+                cost += rarityLevel * 50;
+            }
+        });
+    }
+
+    return cost;
+};
+window.calculatePlayerCost = calculatePlayerCost;
+
+console.log("✅ Modulo interfaccia-core.js caricato.");

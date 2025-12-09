@@ -409,10 +409,32 @@ window.AbilitiesUI = {
     /**
      * Renderizza Abilità  separate per tipo (positive/negative)
      */
+    /**
+     * Ordina abilità per rarità: Comune, Rara, Epica, Leggendaria, Unica
+     */
+    sortByRarity(abilities) {
+        const rarityOrder = {
+            'Comune': 1,
+            'Rara': 2,
+            'Epica': 3,
+            'Leggendaria': 4,
+            'Unica': 5
+        };
+        return [...abilities].sort((a, b) => {
+            const orderA = rarityOrder[a.rarity] || 0;
+            const orderB = rarityOrder[b.rarity] || 0;
+            return orderA - orderB;
+        });
+    },
+
     renderAbilitiesByType(abilities) {
         const positive = abilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
         const negative = abilities.filter(a => a.type === 'Negativa');
-        
+
+        // Ordina per rarità
+        const sortedPositive = this.sortByRarity(positive);
+        const sortedNegative = this.sortByRarity(negative);
+
         let html = '';
         
         // Sezione Abilità  Positive
@@ -424,7 +446,7 @@ window.AbilitiesUI = {
                         <h3 class="text-2xl font-bold text-green-400">Abilità  Positive (${positive.length})</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${positive.map(ability => this.renderAbilityCard(ability)).join('')}
+                        ${sortedPositive.map(ability => this.renderAbilityCard(ability)).join('')}
                     </div>
                 </div>
             `;
@@ -440,10 +462,10 @@ window.AbilitiesUI = {
                     </div>
                     <div class="bg-red-900 bg-opacity-20 rounded-lg p-4 mb-4 border-2 border-red-700">
                         <p class="text-yellow-300 font-bold">⚠️ Attenzione!</p>
-                        <p class="text-gray-300 text-sm mt-1">Le Abilità  negative hanno effetti dannosi. Ogni giocatore può² avere MAX 1 Abilità  negativa.</p>
+                        <p class="text-gray-300 text-sm mt-1">Le Abilità  negative hanno effetti dannosi. Ogni giocatore può² avere MAX 2 Abilità  negativa.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${negative.map(ability => this.renderAbilityCard(ability)).join('')}
+                        ${sortedNegative.map(ability => this.renderAbilityCard(ability)).join('')}
                     </div>
                 </div>
             `;
