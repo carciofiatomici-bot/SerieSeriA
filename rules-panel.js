@@ -89,12 +89,12 @@ window.RulesPanel = {
         const positive = abilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
         const negative = abilities.filter(a => a.type === 'Negativa');
 
-        // Separa abilita specifiche per ruolo da quelle universali
+        // Separa abilita specifiche per un solo ruolo da quelle multi-ruolo/universali
         const singleRolePositive = positive.filter(a => ['P', 'D', 'C', 'A'].includes(a.role));
-        const universalPositive = positive.filter(a => a.role === 'Tutti' || a.role === 'Speciale');
+        const multiRolePositive = positive.filter(a => a.role === 'Multi' || a.role === 'Tutti' || a.role === 'Speciale');
 
         const singleRoleNegative = negative.filter(a => ['P', 'D', 'C', 'A'].includes(a.role));
-        const universalNegative = negative.filter(a => a.role === 'Tutti' || a.role === 'Speciale');
+        const multiRoleNegative = negative.filter(a => a.role === 'Multi' || a.role === 'Tutti' || a.role === 'Speciale');
 
         // Raggruppa per ruolo specifico
         const byRolePositive = {
@@ -167,17 +167,17 @@ window.RulesPanel = {
                     `;
                 }).join('')}
 
-                <!-- Abilita universali -->
-                ${universalPositive.length > 0 ? `
+                <!-- Abilita multi-ruolo -->
+                ${multiRolePositive.length > 0 ? `
                     <div class="mt-4 pt-4 border-t border-gray-700">
                         <h5 class="text-sm font-bold text-pink-400 mb-2 flex items-center gap-2">
-                            <span>🌟</span> Universali / Multi-Ruolo (${universalPositive.length})
+                            <span>🌟</span> Multi-Ruolo / Universali (${multiRolePositive.length})
                         </h5>
                         <div class="bg-pink-900 bg-opacity-20 rounded p-2 mb-2 border border-pink-700">
-                            <p class="text-pink-300 text-xs">Queste abilita possono essere usate da qualsiasi ruolo</p>
+                            <p class="text-pink-300 text-xs">Queste abilita possono essere usate da piu ruoli</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            ${universalPositive.map(a => this.renderAbilityMini(a, true)).join('')}
+                            ${multiRolePositive.map(a => this.renderAbilityMini(a, true)).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -208,14 +208,17 @@ window.RulesPanel = {
                     `;
                 }).join('')}
 
-                <!-- Abilita negative universali -->
-                ${universalNegative.length > 0 ? `
+                <!-- Abilita negative multi-ruolo -->
+                ${multiRoleNegative.length > 0 ? `
                     <div class="mt-4 pt-4 border-t border-gray-700">
                         <h5 class="text-sm font-bold text-pink-400 mb-2 flex items-center gap-2">
-                            <span>🌟</span> Universali / Multi-Ruolo (${universalNegative.length})
+                            <span>🌟</span> Multi-Ruolo (${multiRoleNegative.length})
                         </h5>
+                        <div class="bg-pink-900 bg-opacity-20 rounded p-2 mb-2 border border-pink-700">
+                            <p class="text-pink-300 text-xs">Queste abilita negative possono colpire piu ruoli</p>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            ${universalNegative.map(a => this.renderAbilityMini(a, true)).join('')}
+                            ${multiRoleNegative.map(a => this.renderAbilityMini(a, true)).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -228,13 +231,14 @@ window.RulesPanel = {
     /**
      * Renderizza una card abilita in formato mini
      * @param {Object} ability - Dati dell'abilita
-     * @param {boolean} isUniversal - Se true, mostra emoji universale
+     * @param {boolean} isMultiRole - Se true, mostra i ruoli disponibili
      */
-    renderAbilityMini(ability, isUniversal = false) {
+    renderAbilityMini(ability, isMultiRole = false) {
         const rarityBorder = {
             'Comune': 'border-gray-600',
             'Rara': 'border-purple-500',
             'Leggendaria': 'border-red-500',
+            'Epica': 'border-orange-500',
             'Unica': 'border-yellow-500'
         };
 
@@ -244,20 +248,28 @@ window.RulesPanel = {
             'C': '⚙️',
             'A': '⚡',
             'Tutti': '🌟',
-            'Speciale': '✨'
+            'Speciale': '✨',
+            'Multi': '🌟'
         };
 
-        // Per le abilita universali, usa emoji diversa
-        const roleEmoji = isUniversal ? '🌟' : (roleLabel[ability.role] || '');
+        // Per le abilita multi-ruolo, mostra i ruoli disponibili
+        let roleDisplay = '';
+        if (isMultiRole && ability.roles && ability.roles.length > 0) {
+            roleDisplay = ability.roles.map(r => roleLabel[r] || r).join(' ');
+        } else if (ability.role === 'Tutti') {
+            roleDisplay = '🌟 Tutti';
+        } else {
+            roleDisplay = roleLabel[ability.role] || ability.role;
+        }
 
         return `
-            <div class="bg-gray-800 rounded p-2 border ${rarityBorder[ability.rarity]} hover:bg-gray-700 cursor-pointer transition"
+            <div class="bg-gray-800 rounded p-2 border ${rarityBorder[ability.rarity] || 'border-gray-600'} hover:bg-gray-700 cursor-pointer transition"
                  onclick="window.AbilitiesUI.showDetails('${ability.name}')">
                 <div class="flex items-center gap-2">
                     <span class="text-lg">${ability.icon}</span>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold ${ability.color} text-sm truncate">${ability.name}</p>
-                        <p class="text-xs text-gray-400">${roleEmoji} ${ability.rarity}</p>
+                        <p class="text-xs text-gray-400">${roleDisplay} | ${ability.rarity}</p>
                     </div>
                 </div>
             </div>

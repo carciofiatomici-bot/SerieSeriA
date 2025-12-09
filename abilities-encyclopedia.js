@@ -68,7 +68,8 @@ window.AbilitiesEncyclopedia = {
         'Effetto Caos': {
             name: 'Effetto Caos',
             icon: '🎲',
-            role: 'P',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
             color: 'text-yellow-500',
             rarity: 'Epica',
             type: 'Positiva',
@@ -76,16 +77,17 @@ window.AbilitiesEncyclopedia = {
             effect: 'Modificatore varia da -3 a +3 ogni fase',
             mechanics: 'Ad ogni fase, roll casuale da -3 a +3 si aggiunge al modificatore base',
             activation: '100% (ogni fase)',
-            example: 'Portiere lv10 (mod 5.5) → Fase 1: 5.5+2 = 7.5, Fase 2: 5.5-1 = 4.5, Fase 3: 5.5+3 = 8.5',
+            example: 'Giocatore lv10 (mod 5.5) → Fase 1: 5.5+2, Fase 2: 5.5-1, Fase 3: 5.5+3',
             phase: 'Tutte le fasi',
             synergy: ['Fortunato (stabilizza)', 'Icona'],
             warning: '⚠️ Può anche peggiorare il modificatore!'
         },
-        
+
         'Fortunato': {
             name: 'Fortunato',
             icon: '🍀',
-            role: 'P',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
             color: 'text-green-500',
             rarity: 'Rara',
             type: 'Positiva',
@@ -97,19 +99,20 @@ window.AbilitiesEncyclopedia = {
             phase: 'Tutte le fasi',
             synergy: ['Effetto Caos (protegge da negativi)', 'Uscita Kamikaze']
         },
-        
+
         'Bandiera del club': {
             name: 'Bandiera del club',
             icon: '🚩',
-            role: 'P',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
             color: 'text-blue-500',
             rarity: 'Epica',
             type: 'Positiva',
-            description: 'Dà +1 ai compagni portieri',
-            effect: '+1 modificatore a tutti gli altri portieri dello stesso ruolo',
-            mechanics: 'Ogni altro portiere in squadra riceve +1 al modificatore',
+            description: 'Dà +1 ai compagni dello stesso ruolo',
+            effect: '+1 modificatore a tutti gli altri giocatori dello stesso ruolo',
+            mechanics: 'Ogni altro giocatore del suo ruolo in squadra riceve +1 al modificatore',
             activation: '100% (passiva)',
-            example: 'Portiere A (Bandiera) + Portiere B → Portiere B riceve +1',
+            example: 'Difensore A (Bandiera) + Difensore B → Difensore B riceve +1',
             phase: 'Tutte le fasi',
             synergy: ['Icona (stack +2 totale)'],
             warning: 'Non cumulabile con altre Bandiere dello stesso ruolo'
@@ -269,72 +272,12 @@ window.AbilitiesEncyclopedia = {
             synergy: ['Muro (x2 → x4!)', 'Bandiera del club']
         },
         
-        'Effetto Caos': {
-            name: 'Effetto Caos',
-            icon: '🎲',
-            role: 'D',
-            color: 'text-yellow-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: 'Il modificatore varia casualmente ogni fase',
-            effect: 'Modificatore varia da -3 a +3 ogni fase',
-            mechanics: 'Ad ogni fase, roll da -3 a +3 si aggiunge al modificatore',
-            activation: '100% (ogni fase)',
-            example: 'Difensore lv12 (mod 6.5) → Fase 1: 6.5+2, Fase 2: 6.5-1',
-            phase: 'Tutte le fasi',
-            synergy: ['Fortunato', 'Icona'],
-            warning: '⚠️ Può anche peggiorare!'
-        },
-        
-        'Fortunato': {
-            name: 'Fortunato',
-            icon: '🍀',
-            role: 'D',
-            color: 'text-green-500',
-            rarity: 'Rara',
-            type: 'Positiva',
-            description: '5% di raddoppiare modificatore (negativo → 0)',
-            effect: '5% raddoppia, se negativo diventa 0',
-            mechanics: 'Ogni fase, 5% di raddoppiare. Se negativo, diventa 0',
-            activation: '5%',
-            example: 'Mod +6 → 5% → +12 | Mod -2 → 5% → 0',
-            phase: 'Tutte le fasi',
-            synergy: ['Effetto Caos', 'Muro']
-        },
-        
-        'Bandiera del club': {
-            name: 'Bandiera del club',
-            icon: '🚩',
-            role: 'D',
-            color: 'text-blue-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: 'Dà +1 ai compagni difensori',
-            effect: '+1 a tutti gli altri difensori',
-            mechanics: 'Ogni altro difensore riceve +1 al modificatore',
-            activation: '100%',
-            example: 'Difensore A (Bandiera) + Difensore B + C → B e C ricevono +1',
-            phase: 'Tutte le fasi',
-            synergy: ['Icona', 'Guardia'],
-            warning: 'Non cumulabile con altre Bandiere'
-        },
-        
-        'Tiro dalla distanza': {
-            name: 'Tiro dalla distanza',
-            icon: '⚽',
-            role: 'D',
-            color: 'text-purple-600',
-            rarity: 'Rara',
-            type: 'Positiva',
-            description: 'Sostituisce attaccante debole in fase tiro',
-            effect: 'Se il suo mod è più alto dell\'attaccante più debole, lo sostituisce',
-            mechanics: 'In Fase 3, confronta con attaccante più debole. Se superiore, sostituisce il bonus',
-            activation: '100% (se condizione soddisfatta)',
-            example: 'Difensore mod +7, Attaccante debole mod +5 → +2 bonus al tiro!',
-            phase: 'Fase 3 (Tiro vs Portiere)',
-            synergy: ['Bomber', 'Cross']
-        },
-        
+        // Nota: Effetto Caos, Fortunato, Bandiera del club sono definiti come Multi-Ruolo
+        // nella sezione generale sopra
+
+        // Nota: Tiro dalla distanza è definito come Multi-Ruolo (D,C)
+        // nella sezione generale sopra
+
         'Deviazione': {
             name: 'Deviazione',
             icon: '🤚',
@@ -350,7 +293,23 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 3 (Tiro vs Portiere)',
             synergy: ['Pugno di Ferro', 'Uscita Kamikaze']
         },
-        
+
+        'Svaligiatore': {
+            name: 'Svaligiatore',
+            icon: '🦹',
+            role: 'D',
+            color: 'text-emerald-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '5% di rubare il modificatore di un attaccante avversario',
+            effect: '5% ruba mod attaccante avversario e lo aggiunge al proprio',
+            mechanics: 'In Fase 2, 5% di prendere il modificatore di un attaccante avversario e aggiungerlo al proprio',
+            activation: '5%',
+            example: 'Attaccante avversario mod +10 → 5% → Difensore guadagna +10!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Muro', 'Antifurto', 'Guardia']
+        },
+
         'Falloso': {
             name: 'Falloso',
             icon: '🟨',
@@ -388,7 +347,8 @@ window.AbilitiesEncyclopedia = {
         'Fuori Posizione': {
             name: 'Fuori Posizione',
             icon: '📍',
-            role: 'D',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
             color: 'text-red-700',
             rarity: 'Comune',
             type: 'Negativa',
@@ -396,7 +356,7 @@ window.AbilitiesEncyclopedia = {
             effect: '2.5% dà 1/2 mod alla squadra avversaria (non in fase 3)',
             mechanics: 'Ogni fase (tranne tiro), 2.5% di dare metà modificatore agli avversari',
             activation: '2.5%',
-            example: 'Difensore mod +8 → 2.5% → Avversario riceve +4!',
+            example: 'Giocatore mod +8 → 2.5% → Avversario riceve +4!',
             phase: 'Fase 1 e 2',
             synergy: ['Nessuna (negativa)'],
             warning: '⚠️ NEGATIVA! Aiuta gli avversari!'
@@ -454,72 +414,10 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 1 (Costruzione)',
             synergy: ['Regista', 'Mago del pallone']
         },
-        
-        'Effetto Caos': {
-            name: 'Effetto Caos',
-            icon: '🎲',
-            role: 'C',
-            color: 'text-yellow-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: 'Modificatore varia -3 a +3 ogni fase',
-            effect: 'Modificatore varia casualmente',
-            mechanics: 'Ogni fase, +/-3 random al mod',
-            activation: '100%',
-            example: 'Centrocampista lv15 (mod 8) → Fase 1: 8+3, Fase 2: 8-2',
-            phase: 'Tutte',
-            synergy: ['Fortunato', 'Icona']
-        },
-        
-        'Fortunato': {
-            name: 'Fortunato',
-            icon: '🍀',
-            role: 'C',
-            color: 'text-green-500',
-            rarity: 'Rara',
-            type: 'Positiva',
-            description: '5% raddoppia (negativo → 0)',
-            effect: '5% raddoppia, se negativo = 0',
-            mechanics: '5% chance ogni fase',
-            activation: '5%',
-            example: 'Mod +7 → 5% → +14',
-            phase: 'Tutte',
-            synergy: ['Effetto Caos', 'Motore']
-        },
-        
-        'Bandiera del club': {
-            name: 'Bandiera del club',
-            icon: '🚩',
-            role: 'C',
-            color: 'text-blue-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: '+1 ai compagni centrocampisti',
-            effect: '+1 a tutti gli altri centrocampisti',
-            mechanics: 'Bonus passivo',
-            activation: '100%',
-            example: 'Centrocampista A (Bandiera) + B + C → B e C +1',
-            phase: 'Tutte',
-            synergy: ['Icona', 'Motore'],
-            warning: 'Non cumulabile'
-        },
-        
-        'Tiro dalla distanza': {
-            name: 'Tiro dalla distanza',
-            icon: '⚽',
-            role: 'C',
-            color: 'text-purple-600',
-            rarity: 'Rara',
-            type: 'Positiva',
-            description: 'Sostituisce attaccante debole',
-            effect: 'Se mod > attaccante debole, sostituisce',
-            mechanics: 'In Fase 3, confronta e sostituisce se superiore',
-            activation: '100% (se condizione ok)',
-            example: 'Centrocampista mod +9, Attaccante mod +6 → +3 bonus!',
-            phase: 'Fase 3',
-            synergy: ['Bomber', 'Cross']
-        },
-        
+
+        // Nota: Effetto Caos, Fortunato, Bandiera del club, Tiro dalla distanza
+        // sono definiti come Multi-Ruolo nella sezione PORTIERE/DIFENSORE
+
         'Cross': {
             name: 'Cross',
             icon: '🎯',
@@ -585,24 +483,9 @@ window.AbilitiesEncyclopedia = {
             synergy: ['Nessuna'],
             warning: '⚠️ NEGATIVA!'
         },
-        
-        'Fuori Posizione': {
-            name: 'Fuori Posizione',
-            icon: '📍',
-            role: 'C',
-            color: 'text-red-700',
-            rarity: 'Comune',
-            type: 'Negativa',
-            description: '2.5% dà 1/2 mod agli avversari',
-            effect: '2.5% aiuta avversario',
-            mechanics: 'Fase 1-2, 2.5% dà metà mod agli avversari',
-            activation: '2.5%',
-            example: 'Mod +8 → 2.5% → Avversario +4',
-            phase: 'Fase 1-2',
-            synergy: ['Nessuna'],
-            warning: '⚠️ NEGATIVA!'
-        },
-        
+
+        // Nota: Fuori Posizione è definita come Multi-Ruolo (D, C, A) nella sezione DIFENSORE
+
         // ========================================
         // ATTACCANTE (11 Abilità)
         // ========================================
@@ -654,56 +537,10 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 2 (Attacco)',
             synergy: ['Doppio Scatto (x4!)', 'Bomber']
         },
-        
-        'Effetto Caos': {
-            name: 'Effetto Caos',
-            icon: '🎲',
-            role: 'A',
-            color: 'text-yellow-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: 'Mod varia -3 a +3 ogni fase',
-            effect: 'Random ogni fase',
-            mechanics: 'Ogni fase +/-3',
-            activation: '100%',
-            example: 'Lv20 (mod 11) → Fase 1: 11+3, Fase 2: 11-1',
-            phase: 'Tutte',
-            synergy: ['Fortunato']
-        },
-        
-        'Fortunato': {
-            name: 'Fortunato',
-            icon: '🍀',
-            role: 'A',
-            color: 'text-green-500',
-            rarity: 'Rara',
-            type: 'Positiva',
-            description: '5% raddoppia (negativo → 0)',
-            effect: '5% x2, se < 0 → 0',
-            mechanics: '5% ogni fase',
-            activation: '5%',
-            example: 'Mod +10 → 5% → +20',
-            phase: 'Tutte',
-            synergy: ['Doppio Scatto', 'Pivot']
-        },
-        
-        'Bandiera del club': {
-            name: 'Bandiera del club',
-            icon: '🚩',
-            role: 'A',
-            color: 'text-blue-500',
-            rarity: 'Epica',
-            type: 'Positiva',
-            description: '+1 ai compagni attaccanti',
-            effect: '+1 a tutti gli altri attaccanti',
-            mechanics: 'Bonus passivo',
-            activation: '100%',
-            example: 'Attaccante A (Bandiera) + B + C → B e C +1',
-            phase: 'Tutte',
-            synergy: ['Icona'],
-            warning: 'Non cumulabile'
-        },
-        
+
+        // Nota: Effetto Caos, Fortunato, Bandiera del club sono definiti come Multi-Ruolo
+        // nella sezione PORTIERE/DIFENSORE
+
         'Rientro Rapido': {
             name: 'Rientro Rapido',
             icon: '🔙',
@@ -769,24 +606,9 @@ window.AbilitiesEncyclopedia = {
             synergy: ['Nessuna'],
             warning: '⚠️ NEGATIVA!'
         },
-        
-        'Fuori Posizione': {
-            name: 'Fuori Posizione',
-            icon: '📍',
-            role: 'A',
-            color: 'text-red-700',
-            rarity: 'Comune',
-            type: 'Negativa',
-            description: '2.5% dà 1/2 mod agli avversari',
-            effect: '2.5% aiuta avversario',
-            mechanics: 'Fase 1-2, 2.5% dà metà mod',
-            activation: '2.5%',
-            example: 'Mod +10 → 2.5% → Avversario +5',
-            phase: 'Fase 1-2',
-            synergy: ['Nessuna'],
-            warning: '⚠️ NEGATIVA!'
-        },
-        
+
+        // Nota: Fuori Posizione è definita come Multi-Ruolo (D, C, A) nella sezione DIFENSORE
+
         // ========================================
         // ABILITÀ SPECIALE - ICONA (1)
         // ========================================
@@ -811,47 +633,82 @@ window.AbilitiesEncyclopedia = {
     },
     
     /**
-     * Ottiene lista abilità per ruolo
+     * Ottiene lista abilità per ruolo (include Multi-Ruolo)
      */
     getAbilitiesByRole(role) {
-        return Object.values(this.abilities).filter(a => a.role === role || a.role === 'Tutti');
+        return Object.values(this.abilities).filter(a => {
+            if (a.role === role || a.role === 'Tutti') return true;
+            if (a.role === 'Multi' && a.roles && a.roles.includes(role)) return true;
+            return false;
+        });
     },
-    
+
+    /**
+     * Verifica se un'abilità è multi-ruolo
+     */
+    isMultiRole(ability) {
+        return ability.role === 'Multi' && ability.roles && ability.roles.length > 1;
+    },
+
+    /**
+     * Ottiene le abilità multi-ruolo
+     */
+    getMultiRoleAbilities() {
+        return Object.values(this.abilities).filter(a => this.isMultiRole(a));
+    },
+
+    /**
+     * Ottiene le abilità specifiche per un solo ruolo
+     */
+    getSingleRoleAbilities(role) {
+        return Object.values(this.abilities).filter(a => a.role === role);
+    },
+
     /**
      * Ottiene abilità per nome
      */
     getAbility(name) {
         return this.abilities[name] || null;
     },
-    
+
     /**
      * Ottiene tutte le abilità positive
      */
     getPositiveAbilities() {
-        return Object.values(this.abilities).filter(a => a.type === 'Positiva' || a.type === 'Leggendaria');
+        return Object.values(this.abilities).filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
     },
-    
+
     /**
      * Ottiene tutte le abilità negative
      */
     getNegativeAbilities() {
         return Object.values(this.abilities).filter(a => a.type === 'Negativa');
     },
-    
+
     /**
      * Ottiene statistiche abilità (per UI)
      */
     getAbilityStats() {
         const all = Object.values(this.abilities);
-        
+
+        // Conta abilità per ruolo considerando Multi-Ruolo
+        const countByRole = (role) => {
+            return all.filter(a => {
+                if (a.role === role) return true;
+                if (a.role === 'Multi' && a.roles && a.roles.includes(role)) return true;
+                return false;
+            }).length;
+        };
+
         const stats = {
             total: all.length,
             byRole: {
-                P: all.filter(a => a.role === 'P').length,
-                D: all.filter(a => a.role === 'D').length,
-                C: all.filter(a => a.role === 'C').length,
-                A: all.filter(a => a.role === 'A').length,
-                Tutti: all.filter(a => a.role === 'Tutti').length
+                P: countByRole('P'),
+                D: countByRole('D'),
+                C: countByRole('C'),
+                A: countByRole('A'),
+                Tutti: all.filter(a => a.role === 'Tutti').length,
+                Multi: all.filter(a => a.role === 'Multi').length
             },
             byRarity: {
                 Comune: all.filter(a => a.rarity === 'Comune').length,
@@ -863,10 +720,11 @@ window.AbilitiesEncyclopedia = {
             byType: {
                 Positiva: all.filter(a => a.type === 'Positiva').length,
                 Negativa: all.filter(a => a.type === 'Negativa').length,
-                Leggendaria: all.filter(a => a.type === 'Leggendaria').length
+                Leggendaria: all.filter(a => a.type === 'Leggendaria').length,
+                Epica: all.filter(a => a.type === 'Epica').length
             }
         };
-        
+
         return stats;
     }
 };
