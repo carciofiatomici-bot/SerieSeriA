@@ -432,8 +432,6 @@ window.InterfacciaAuth = {
         if (elements.statRosaLevel) elements.statRosaLevel.textContent = 'N/A';
         if (elements.statFormazioneLevel) elements.statFormazioneLevel.textContent = 'N/A';
         if (elements.statRosaCount) elements.statRosaCount.textContent = `(${0} giocatori)`;
-        if (elements.statCoachName) elements.statCoachName.textContent = 'N/A';
-        if (elements.statCoachLevel) elements.statCoachLevel.textContent = '1';
     },
 
     /**
@@ -471,9 +469,83 @@ window.InterfacciaAuth = {
         if (elements.userLogoutButton) {
             elements.userLogoutButton.addEventListener('click', () => self.handleLogout(elements));
         }
-        
+
         // Esponi handleLogout globalmente
         window.handleLogout = () => self.handleLogout(elements);
+
+        // Lista Icone listener
+        const btnListaIcone = document.getElementById('btn-lista-icone');
+        const listaIconeModal = document.getElementById('lista-icone-modal');
+        const btnCloseListaIcone = document.getElementById('btn-close-lista-icone');
+
+        if (btnListaIcone && listaIconeModal) {
+            btnListaIcone.addEventListener('click', () => self.showListaIcone());
+        }
+        if (btnCloseListaIcone && listaIconeModal) {
+            btnCloseListaIcone.addEventListener('click', () => self.hideListaIcone());
+        }
+        // Bottone "Torna al Login"
+        const btnBackToLogin = document.getElementById('btn-back-to-login');
+        if (btnBackToLogin) {
+            btnBackToLogin.addEventListener('click', () => self.hideListaIcone());
+        }
+        // Chiudi cliccando fuori dal modal
+        if (listaIconeModal) {
+            listaIconeModal.addEventListener('click', (e) => {
+                if (e.target === listaIconeModal) {
+                    self.hideListaIcone();
+                }
+            });
+        }
+    },
+
+    /**
+     * Mostra il modal con la lista delle Icone disponibili
+     */
+    showListaIcone() {
+        const modal = document.getElementById('lista-icone-modal');
+        const container = document.getElementById('lista-icone-container');
+
+        if (!modal || !container) return;
+
+        // Ottieni le icone dal template
+        const icone = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+
+        // Ordina le icone per ruolo (P, D, C, A)
+        const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+        const iconeOrdinate = [...icone].sort((a, b) => {
+            const orderA = ROLE_ORDER[a.role] !== undefined ? ROLE_ORDER[a.role] : 99;
+            const orderB = ROLE_ORDER[b.role] !== undefined ? ROLE_ORDER[b.role] : 99;
+            return orderA - orderB;
+        });
+
+        // Popola il container
+        container.innerHTML = iconeOrdinate.map(icona => `
+            <div class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 text-center shadow-lg">
+                <img src="${icona.photoUrl}"
+                     alt="${icona.name}"
+                     class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400">
+                <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
+                <p class="text-sm text-yellow-400">${icona.role} - ${icona.type}</p>
+                <p class="text-xs text-gray-400">Livello: ${icona.level}</p>
+                <p class="text-xs text-green-400 mt-1">Abilità: ICONA</p>
+            </div>
+        `).join('');
+
+        // Mostra il modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    },
+
+    /**
+     * Nasconde il modal della lista Icone
+     */
+    hideListaIcone() {
+        const modal = document.getElementById('lista-icone-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
     }
 };
 

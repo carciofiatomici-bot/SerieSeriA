@@ -57,23 +57,33 @@ window.AdminTeams = {
                 const teamData = doc.data();
                 const teamId = doc.id;
                 const isParticipating = teamData.isParticipating || false;
-                
+                const isCupParticipating = teamData.isCupParticipating || false;
+
                 const date = teamData.creationDate ? new Date(teamData.creationDate).toLocaleDateString('it-IT') : 'N/A';
                 const checkboxColorClasses = isParticipating ? 'bg-green-500 border-green-500' : 'bg-gray-700 border-gray-500';
+                const cupCheckboxColorClasses = isCupParticipating ? 'bg-purple-500 border-purple-500' : 'bg-gray-700 border-gray-500';
 
                 teamsHtml += `
                     <div class="team-item flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-500 transition duration-150">
-                        <div class="flex items-center space-x-4 mb-2 sm:mb-0">
-                            <input type="checkbox" id="participating-${teamId}" data-team-id="${teamId}" data-action="toggle-participation"
-                                   class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out ${checkboxColorClasses}"
-                                   ${isParticipating ? 'checked' : ''}>
-                            <label for="participating-${teamId}" class="text-gray-300 font-bold">Partecipa al Campionato</label>
+                        <div class="flex flex-col space-y-2 mb-2 sm:mb-0">
+                            <div class="flex items-center space-x-4">
+                                <input type="checkbox" id="participating-${teamId}" data-team-id="${teamId}" data-action="toggle-participation"
+                                       class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out ${checkboxColorClasses}"
+                                       ${isParticipating ? 'checked' : ''}>
+                                <label for="participating-${teamId}" class="text-gray-300 font-bold">🏆 SerieSeriA</label>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <input type="checkbox" id="cup-participating-${teamId}" data-team-id="${teamId}" data-action="toggle-cup-participation"
+                                       class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out ${cupCheckboxColorClasses}"
+                                       ${isCupParticipating ? 'checked' : ''}>
+                                <label for="cup-participating-${teamId}" class="text-gray-300 font-bold">🏆 CoppaSeriA</label>
+                            </div>
                         </div>
 
                         <div class="w-full sm:w-auto mb-2 sm:mb-0">
                             <p class="text-lg font-bold text-white">${teamData.teamName}</p>
                             <p class="text-xs text-gray-400">ID: ${teamId}</p>
-                            <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
+                            <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
                             <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
                         </div>
                         
@@ -111,6 +121,11 @@ window.AdminTeams = {
 
         if (action === 'toggle-participation') {
             this.handleToggleParticipation(teamId, target.checked, target, TEAMS_COLLECTION_PATH);
+            return;
+        }
+
+        if (action === 'toggle-cup-participation') {
+            this.handleToggleCupParticipation(teamId, target.checked, target, TEAMS_COLLECTION_PATH);
             return;
         }
         
@@ -177,10 +192,47 @@ window.AdminTeams = {
                 checkboxElement.classList.add('bg-gray-700', 'border-gray-500');
             }
             
-            label.textContent = 'Partecipa al Campionato';
+            label.textContent = '🏆 SerieSeriA';
 
         } catch (error) {
             console.error(`Errore nell'aggiornamento partecipazione per ${teamId}:`, error);
+            checkboxElement.checked = !isChecked;
+            label.textContent = 'Errore di salvataggio!';
+        } finally {
+            checkboxElement.disabled = false;
+        }
+    },
+
+    /**
+     * Aggiorna lo stato di partecipazione alla Coppa
+     */
+    async handleToggleCupParticipation(teamId, isChecked, checkboxElement, TEAMS_COLLECTION_PATH) {
+        const { doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+        const label = checkboxElement.closest('.team-item').querySelector(`label[for="cup-participating-${teamId}"]`);
+
+        checkboxElement.disabled = true;
+        label.textContent = 'Salvando...';
+
+        try {
+            await updateDoc(teamDocRef, {
+                isCupParticipating: isChecked
+            });
+
+            if (isChecked) {
+                checkboxElement.classList.remove('bg-gray-700', 'border-gray-500');
+                checkboxElement.classList.add('bg-purple-500', 'border-purple-500');
+            } else {
+                checkboxElement.classList.remove('bg-purple-500', 'border-purple-500');
+                checkboxElement.classList.add('bg-gray-700', 'border-gray-500');
+            }
+
+            label.textContent = '🏆 CoppaSeriA';
+
+        } catch (error) {
+            console.error(`Errore nell'aggiornamento partecipazione coppa per ${teamId}:`, error);
             checkboxElement.checked = !isChecked;
             label.textContent = 'Errore di salvataggio!';
         } finally {
@@ -250,10 +302,20 @@ window.AdminTeams = {
                                 class="p-3 rounded-lg bg-gray-700 border border-blue-600 text-white focus:ring-blue-400">
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="text-gray-300 mb-1 font-bold" for="edit-budget">Budget (Crediti Seri)</label>
-                            <input type="number" id="edit-budget" value="${teamData.budget}" min="0"
-                                class="p-3 rounded-lg bg-gray-700 border border-blue-600 text-white focus:ring-blue-400">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <label class="text-gray-300 mb-1 font-bold" for="edit-budget">Budget (Crediti Seri)</label>
+                                <input type="number" id="edit-budget" value="${teamData.budget}" min="0"
+                                    class="p-3 rounded-lg bg-gray-700 border border-blue-600 text-white focus:ring-blue-400">
+                                <p class="text-xs text-gray-400 mt-1">CS - Valuta standard per acquisti</p>
+                            </div>
+
+                            <div class="flex flex-col">
+                                <label class="text-amber-400 mb-1 font-bold" for="edit-css">Crediti Super Seri (CSS)</label>
+                                <input type="number" id="edit-css" value="${teamData.creditiSuperSeri || 0}" min="0"
+                                    class="p-3 rounded-lg bg-gray-700 border border-amber-500 text-white focus:ring-amber-400">
+                                <p class="text-xs text-amber-400 mt-1">CSS - Valuta premium per potenziamenti</p>
+                            </div>
                         </div>
                     </div>
 
@@ -663,7 +725,8 @@ window.AdminTeams = {
     async saveTeamEdit(teamId, TEAMS_COLLECTION_PATH) {
         const teamName = document.getElementById('edit-team-name').value.trim();
         const budget = parseInt(document.getElementById('edit-budget').value);
-        
+        const creditiSuperSeri = parseInt(document.getElementById('edit-css').value) || 0;
+
         if (!teamName || teamName.length < 3) {
             alert('âŒ Il nome squadra deve avere almeno 3 caratteri!');
             return;
@@ -681,6 +744,7 @@ window.AdminTeams = {
             await updateDoc(teamDocRef, {
                 teamName,
                 budget,
+                creditiSuperSeri,
                 players: this.currentEditingPlayers
             });
             

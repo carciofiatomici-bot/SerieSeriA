@@ -1,0 +1,82 @@
+Abilità: ogni giocatore può avere un max di 3 abilità positive e un max di 1 abilità negativa
+
+Portiere
+
+Abilità Positive:
+-Pugno di ferro: (aumenta il successo della parata se il risultato parte da -2 invece che 0);
+-Uscita Kamikaze: (raddoppia il suo modificatore durante la fase "tiro vs portiere", ma ha un 5% di possibilità di fallire la parata anche se ha un successo);
+-Teletrasporto: (5% di possibilità di partecipare alle fasi di costruzione, attacco [sia in attacco che in difesa])
+-Effetto Caos: (ad ogni fase il suo modificatore può variare in un range che va da -3 a +3);
+-Fortunato: (5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa, in caso di modificatore negativo il modificatore diventa = 0);
+-Bandiera del club: (il giocatore da +1 ai modificatori dei compagni di squadra del suo stesso ruolo [non cumulabile con altre abilità con lo stesso nome]);
+-Parata con i piedi: (5% di probabilità di lanciare un secondo d20 quando para e tenere il più alto);
+-Lancio lungo: (5% di probabilità di saltare la fase "costruzione" e di passare direttamente alla fase "attacco vs difesa");
+
+Abilità Negative:
+-Mani di burro: (5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo nella fase di "tiro vs portiere");
+-Respinta Timida (5% di probabilità di dover tirare di nuovo il d20 in fase di "tiro vs portiere" e di usare obbligatoriamente il secondo tiro);
+-Fuori dai pali: (5% di probabilità di non aggiungere il suo modificatore durante la fase "tiro vs portiere");
+
+
+Difensore
+
+Abilità Positive:
+-Muro: (5% di probabilità di raddoppiare il proprio modificatore quando si difende nella fase "attacco vs difesa");
+-Contrasto Durissimo (Ad ogni fase, rende nulla l'abilità di un giocatore nella panchina avversaria);
+-Antifurto: (5% di interrompere direttamente la fase "attacco vs difesa" della squadra avversaria [non cumulabile con altre abilità con lo stesso nome]);
+-Guardia: (se è l'unico difensore nella formazione della squadra, raddoppia il suo modificatore quando difende la fase "attacco vs difesa" della squadra avversaria);
+-Effetto Caos: (ad ogni fase il suo modificatore può variare in un range che va da -3 a +3);
+-Fortunato: (5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa, in caso di modificatore negativo il modificatore diventa = 0);
+-Bandiera del club: (il giocatore da +1 ai modificatori dei compagni di squadra del suo stesso ruolo [non cumulabile con altre abilità con lo stesso nome]);
+-Tiro dalla distanza: (Il giocatore sostiuisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase "tiro vs portiere" [se il suo modificatore è più alto di quello dell'attaccante]);
+-Deviazione: (5% di probabilità di aggiungere il suo modificatore a quello del portiere nella fase "tiro vs portiere");
+-Svaligiatore: (5% di probabilità di rubare il modificatore di un attaccante avversario e aggiungerlo al proprio);
+
+Abilità Negative:
+-Falloso: (5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo in fase "attacco vs difesa" quando partecipa come difensore);
+-Insicuro: (5% di probabilità di non aggiungere il suo modificatore nella fase "attacco vs difesa" quando partecipa come difensore);
+-Fuori Posizione: (2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase [ad eccezione di fase "tiro vs portiere"])
+
+Centrocampista
+
+Abilità Positive:
+-Regista (5% di probabilità che si salti la fase "costruzione" e si passi direttamente alla fase "attacco vs difesa" [non cumulabile con altre abilità con lo stesso nome]);
+-Motore (Utilizza il suo modificatore intero, invece che 1/2, sia quando attacca che quando difende nella fase "attacco vs difesa");
+-Tocco Di Velluto (5% di probabilità di raddoppiare il suo modificatore durante la fase di costruzione);
+-Effetto Caos: (ad ogni fase il suo modificatore può variare in un range che va da -3 a +3),
+-Fortunato: (5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa, in caso di modificatore negativo il modificatore diventa = 0);
+-Bandiera del club: (il giocatore da +1 ai modificatori dei compagni di squadra del suo stesso ruolo [non cumulabile con altre abilità con lo stesso nome]);
+-Tiro dalla distanza: (Il giocatore sostiuisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase di tiro contro il portiere [se il suo modificatore è più alto di quello dell'attaccante]);
+-Cross: (5% di probabilità di passare direttamente alla fase di tiro contro il portiere usando 1d+20 + modificatore dell'attaccante con il modificatore più alto);
+-Mago del pallone: (5% di probabilità di ignorare il modificatore di uno dei centrocampisti avversari durante la fase "costruzione");
+
+Abilità Negative:
+-Impreciso: (5% di possibilità di sottrarre il suo modificatore invece che aggingerlo in fase "costruzione");
+-Ingabbiato: (5% di possibilità di non aggiungere il suo modificatore nella fase "costruzione");
+-Fuori Posizione: (2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase [ad eccezione di fase "tiro vs portiere"])
+
+
+Attaccante
+
+Abilità Positive:
+-Bomber: (+1 al risultato se nella fase del "tiro vs portiere");
+-Doppio: Scatto (5% di probabilità di mettere 2 volte il proprio modificatore nella fase "attacco vs difesa");
+-Pivot: (se è l'unico attaccante nella formazione della sua squadra raddoppia il suo modificatore nella fase di "attacco vs difesa" dalla parte dell'attacco);
+-Effetto Caos: (ad ogni fase il suo modificatore può variare in un range che va da -3 a +3)
+-Fortunato: (5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa, in caso di modificatore negativo il modificatore diventa = 0);
+-Bandiera del club: (il giocatore da +1 ai modificatori dei compagni di squadra del suo stesso ruolo [non cumulabile con altre abilità con lo stesso nome]);
+-Rientro Rapido: (il giocatore ha il 5% di probabilità di partecipare alla difesa durante la fase "attacco vs difesa");
+-Tiro Fulmineo: (5% di probabilità di annullare tutte le abilità del portiere in fase "tiro vs portiere");
+
+Abilità Negative: 
+-Piedi a banana: (5% di possibilità di sottrarre il suo modificatore durante fase "attacco vs difesa" quando partecipa come attaaccante);
+-Eccesso di sicurezza: (5% di possibilità di non aggiungere il suo modificatore durante la fase "attacco vs difesa" quando partecipa come attaccante);
+-Fuori Posizione: (2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase [ad eccezione di fase "tiro vs portiere"])
+
+
+
+Abilità Particolari: solo icone (ce l'hanno solo le icone (sono chiamati capitani) che vengono scelti a creazione delle squadre)
+-Icona: (da +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni, inoltre la sua forma non può mai essere in negativo);
+
+N.B. alcune abilità non si cumulano tra di loro
+

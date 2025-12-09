@@ -151,9 +151,95 @@ document.addEventListener('DOMContentLoaded', () => {
             btnViewCupBracket.addEventListener('click', handleViewCupBracket);
         }
 
-        // Carica stato coppa e supercoppa
+        // Bottone genera calendario SerieSeriA
+        const btnGenerateChampionshipSchedule = document.getElementById('btn-generate-championship-schedule');
+        if (btnGenerateChampionshipSchedule) {
+            btnGenerateChampionshipSchedule.addEventListener('click', () => {
+                // Apri il pannello impostazioni campionato per generare il calendario
+                if (window.showScreen) {
+                    window.showScreen(championshipContent);
+                    document.dispatchEvent(new CustomEvent('championshipPanelLoaded'));
+                }
+            });
+        }
+
+        // Carica stato campionato, coppa, supercoppa e automazione
+        loadSerieSeriaStatus();
         loadCupStatus();
         loadSupercoppPanel();
+        loadAutomationPanel();
+    };
+
+    /**
+     * Carica lo stato del campionato SerieSeriA
+     */
+    const loadSerieSeriaStatus = async () => {
+        const container = document.getElementById('serieseria-status-container');
+        if (!container) return;
+
+        try {
+            const { doc, getDoc, collection, getDocs } = firestoreTools;
+            const appId = firestoreTools.appId;
+            const SCHEDULE_COLLECTION_PATH = `artifacts/${appId}/public/data/schedule`;
+            const SCHEDULE_DOC_ID = 'full_schedule';
+
+            // Carica il calendario
+            const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
+            const scheduleDoc = await getDoc(scheduleDocRef);
+
+            // Carica config per stato stagione
+            const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+            const isSeasonOver = configDoc.exists() ? (configDoc.data().isSeasonOver || false) : false;
+
+            // Conta squadre partecipanti
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            const participatingTeams = teamsSnapshot.docs.filter(doc => doc.data().isParticipating).length;
+
+            if (!scheduleDoc.exists() || !scheduleDoc.data().matches || scheduleDoc.data().matches.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-gray-400">Nessun calendario generato.</p>
+                        <p class="text-green-400 font-bold mt-2">Squadre iscritte: ${participatingTeams}</p>
+                        ${participatingTeams < 2 ? '<p class="text-red-400 text-xs">Servono almeno 2 squadre iscritte.</p>' : ''}
+                        ${isSeasonOver ? '<p class="text-yellow-400 text-xs mt-1">Stagione terminata. Pronto per nuova generazione.</p>' : ''}
+                    </div>
+                `;
+            } else {
+                const schedule = scheduleDoc.data().matches;
+                const totalRounds = schedule.length;
+
+                // Calcola partite giocate
+                let playedMatches = 0;
+                let totalMatches = 0;
+                schedule.forEach(round => {
+                    round.matches.forEach(match => {
+                        totalMatches++;
+                        if (match.result) playedMatches++;
+                    });
+                });
+
+                const nextRound = schedule.find(round =>
+                    round.matches.some(match => match.result === null)
+                );
+                const isFinished = !nextRound && totalRounds > 0;
+
+                const statusText = isSeasonOver ? 'TERMINATO' : (isFinished ? 'COMPLETATO' : 'IN CORSO');
+                const statusColor = isSeasonOver ? 'text-red-400' : (isFinished ? 'text-yellow-400' : 'text-green-400');
+
+                container.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-gray-400">Stato: <span class="font-bold ${statusColor}">${statusText}</span></p>
+                        <p class="text-green-400">Giornate: ${totalRounds} | Partite: ${playedMatches}/${totalMatches}</p>
+                        ${nextRound ? `<p class="text-gray-300 mt-2">Prossima giornata: ${nextRound.round}</p>` : ''}
+                        ${isFinished && !isSeasonOver ? '<p class="text-yellow-400 text-xs mt-1">Tutte le partite completate. Termina la stagione.</p>' : ''}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Errore caricamento stato SerieSeriA:', error);
+            container.innerHTML = `<p class="text-red-400 text-center">Errore caricamento stato campionato.</p>`;
+        }
     };
 
     /**
@@ -240,6 +326,140 @@ document.addEventListener('DOMContentLoaded', () => {
         if (container && window.Supercoppa) {
             window.Supercoppa.renderAdminUI(container);
         }
+    };
+
+    /**
+     * Carica il pannello Automazione Simulazioni
+     */
+    const loadAutomationPanel = async () => {
+        const container = document.getElementById('automation-status-container');
+        if (!container || !window.AutomazioneSimulazioni) {
+            if (container) {
+                container.innerHTML = '<p class="text-red-400 text-center text-sm">Modulo automazione non disponibile</p>';
+            }
+            return;
+        }
+
+        try {
+            const info = await window.AutomazioneSimulazioni.getAutomationInfo();
+
+            const statusColor = info.isEnabled ? 'text-green-400' : 'text-red-400';
+            const statusText = info.isEnabled ? 'ATTIVA' : 'DISATTIVA';
+            const buttonColor = info.isEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700';
+            const buttonText = info.isEnabled ? 'DISATTIVA' : 'ATTIVA';
+
+            const nextTypeLabels = {
+                'coppa_andata': 'Coppa (Andata)',
+                'coppa_ritorno': 'Coppa (Ritorno)',
+                'campionato': 'Campionato'
+            };
+            const nextTypeLabel = nextTypeLabels[info.nextSimulationType] || info.nextSimulationType;
+
+            // Verifica se ci sono partite da giocare
+            const canEnable = info.hasMatchesToPlay;
+
+            let statusHtml = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-lg text-white">Stato: </span>
+                            <span class="font-extrabold ${statusColor}">${statusText}</span>
+                        </div>
+                        <button id="btn-toggle-automation"
+                                class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${buttonColor} text-white ${!canEnable && !info.isEnabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${!canEnable && !info.isEnabled ? 'disabled' : ''}>
+                            ${buttonText}
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-900 p-3 rounded-lg">
+                            <p class="text-xs text-gray-400">Prossima simulazione</p>
+                            <p class="text-lg font-bold text-teal-400">${info.isEnabled ? info.timeUntilNextSimulation.formatted : '--:--:--'}</p>
+                        </div>
+                        <div class="bg-gray-900 p-3 rounded-lg">
+                            <p class="text-xs text-gray-400">Prossimo turno</p>
+                            <p class="text-lg font-bold text-white">${nextTypeLabel}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-900 p-3 rounded-lg flex items-center">
+                            <span class="text-2xl mr-2">${info.hasChampionshipMatches ? '🏆' : '✅'}</span>
+                            <div>
+                                <p class="text-xs text-gray-400">SerieSeriA</p>
+                                <p class="text-sm font-bold ${info.hasChampionshipMatches ? 'text-green-400' : 'text-gray-500'}">${info.hasChampionshipMatches ? 'Partite disponibili' : 'Completato'}</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-900 p-3 rounded-lg flex items-center">
+                            <span class="text-2xl mr-2">${info.hasCupMatches ? '🏆' : '✅'}</span>
+                            <div>
+                                <p class="text-xs text-gray-400">CoppaSeriA</p>
+                                <p class="text-sm font-bold ${info.hasCupMatches ? 'text-purple-400' : 'text-gray-500'}">${info.hasCupMatches ? 'Partite disponibili' : 'Completata'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${info.simulatedToday ? '<p class="text-center text-sm text-yellow-400">Simulazione di oggi gia effettuata</p>' : ''}
+
+                    ${info.lastSimulationDate ? `<p class="text-xs text-gray-500 text-center">Ultima simulazione: ${new Date(info.lastSimulationDate).toLocaleString('it-IT')}</p>` : ''}
+
+                    ${!canEnable ? '<p class="text-center text-sm text-orange-400">Genera i calendari di Campionato e/o Coppa per abilitare l\'automazione</p>' : ''}
+                </div>
+            `;
+
+            container.innerHTML = statusHtml;
+
+            // Aggiungi listener al pulsante
+            const btnToggle = document.getElementById('btn-toggle-automation');
+            if (btnToggle) {
+                btnToggle.addEventListener('click', async () => {
+                    btnToggle.disabled = true;
+                    btnToggle.textContent = 'Aggiornamento...';
+
+                    try {
+                        if (info.isEnabled) {
+                            await window.AutomazioneSimulazioni.disableAutomation();
+                        } else {
+                            await window.AutomazioneSimulazioni.enableAutomation();
+                        }
+                        // Ricarica il pannello
+                        loadAutomationPanel();
+                    } catch (error) {
+                        console.error('Errore toggle automazione:', error);
+                        btnToggle.textContent = 'ERRORE';
+                        setTimeout(() => loadAutomationPanel(), 2000);
+                    }
+                });
+            }
+
+            // Aggiorna il countdown ogni secondo se l'automazione e' attiva
+            if (info.isEnabled) {
+                startAutomationCountdown();
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento pannello automazione:', error);
+            container.innerHTML = '<p class="text-red-400 text-center text-sm">Errore nel caricamento</p>';
+        }
+    };
+
+    let automationCountdownInterval = null;
+
+    const startAutomationCountdown = () => {
+        if (automationCountdownInterval) {
+            clearInterval(automationCountdownInterval);
+        }
+
+        automationCountdownInterval = setInterval(() => {
+            if (window.AutomazioneSimulazioni) {
+                const time = window.AutomazioneSimulazioni.getTimeUntilNextSimulation();
+                const countdownEl = document.querySelector('#automation-status-container .text-teal-400');
+                if (countdownEl) {
+                    countdownEl.textContent = time.formatted;
+                }
+            }
+        }, 1000);
     };
 
     /**

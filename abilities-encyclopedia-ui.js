@@ -39,6 +39,18 @@ window.AbilitiesUI = {
             overlay.classList.add('hidden');
         }
     },
+
+    /**
+     * Toggle apri/chiudi l'enciclopedia
+     */
+    toggle() {
+        const overlay = document.getElementById('abilities-encyclopedia-overlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            this.close();
+        } else {
+            this.open();
+        }
+    },
     
     /**
      * Render principale

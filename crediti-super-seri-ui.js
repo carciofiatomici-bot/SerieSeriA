@@ -480,41 +480,32 @@ window.CreditiSuperSeriUI = {
         const enabled = await CSS.isEnabled();
         const teamId = window.InterfacciaCore?.currentTeamId;
 
+        // Trova il container del widget (sempre presente nell'HTML)
+        const widgetContainer = document.getElementById('css-dashboard-widget');
+        if (!widgetContainer) return;
+
         if (!enabled || !teamId) {
-            // Rimuovi widget se esiste
-            const existingWidget = document.getElementById('css-dashboard-widget');
-            if (existingWidget) existingWidget.remove();
+            // Nascondi widget se CSS non abilitato
+            widgetContainer.innerHTML = '';
+            widgetContainer.classList.add('hidden');
             return;
         }
 
+        // Mostra il container
+        widgetContainer.classList.remove('hidden');
+
         const saldo = await CSS.getSaldo(teamId);
+        this.renderSaldoWidget(widgetContainer, saldo, enabled);
 
-        // Trova o crea il container del widget
-        let widgetContainer = document.getElementById('css-dashboard-widget');
-        if (!widgetContainer) {
-            // Inserisci dopo le statistiche squadra
-            const statsGrid = document.querySelector('#app-content .grid.grid-cols-2.gap-4.my-6');
-            if (statsGrid) {
-                widgetContainer = document.createElement('div');
-                widgetContainer.id = 'css-dashboard-widget';
-                widgetContainer.className = 'my-4';
-                statsGrid.insertAdjacentElement('afterend', widgetContainer);
-            }
-        }
-
-        if (widgetContainer) {
-            this.renderSaldoWidget(widgetContainer, saldo, enabled);
-
-            // Collega evento apertura pannello
-            const btnOpen = document.getElementById('btn-open-css-shop');
-            if (btnOpen) {
-                btnOpen.addEventListener('click', async () => {
-                    const teamData = window.InterfacciaCore?.currentTeamData;
-                    const rosa = teamData?.rosa || [];
-                    const currentSaldo = await CSS.getSaldo(teamId);
-                    this.openPotenziamentoPanel(rosa, currentSaldo);
-                });
-            }
+        // Collega evento apertura pannello
+        const btnOpen = document.getElementById('btn-open-css-shop');
+        if (btnOpen) {
+            btnOpen.addEventListener('click', async () => {
+                const teamData = window.InterfacciaCore?.currentTeamData;
+                const rosa = teamData?.rosa || [];
+                const currentSaldo = await CSS.getSaldo(teamId);
+                this.openPotenziamentoPanel(rosa, currentSaldo);
+            });
         }
     }
 };

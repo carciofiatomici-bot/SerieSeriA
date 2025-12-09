@@ -788,7 +788,7 @@ window.AbilitiesEncyclopedia = {
         },
         
         // ========================================
-        // ABILITÀ SPECIALE - ICONA/CAPITANO (1)
+        // ABILITÀ SPECIALE - ICONA (1)
         // ========================================
         
         'Icona': {
@@ -798,14 +798,14 @@ window.AbilitiesEncyclopedia = {
             color: 'text-gold-500',
             rarity: 'Unica',
             type: 'Leggendaria',
-            description: 'Il Capitano della squadra - Bonus speciali',
+            description: 'L\'Icona della squadra - Bonus speciali',
             effect: '+1 a TUTTI i compagni, +1 a sé stesso, forma mai negativa',
             mechanics: 'Tutti i giocatori ricevono +1 mod. L\'Icona riceve +1 aggiuntivo (totale +2). La forma dell\'Icona non può mai essere < 0',
             activation: '100% (passiva)',
             example: 'Squadra con Icona: Tutti +1! Icona stessa +2! Icona con forma -2 → diventa 0',
             phase: 'Tutte le fasi',
             synergy: ['TUTTE (potenzia l\'intera squadra)'],
-            warning: '⚠️ Solo 1 Icona per squadra (il Capitano)!',
+            warning: '⚠️ Solo 1 Icona per squadra!',
             special: 'Questa è l\'abilità più potente del gioco!'
         }
     },

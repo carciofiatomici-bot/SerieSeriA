@@ -1,0 +1,70 @@
+Regole simulazioni
+1) Decretare le formazioni che scendono in campo (compresa la panchina)
+
+2) Calcolare modificatore giocatori in base al livello:
+Livello 1 = 1,0
+Livello 2 = 1,5
+Livello 3 = 2,0
+Livello 4 = 2,5
+Livello 5 = 3,0
+Livello 6 = 3,5
+Livello 7 = 4,0
+Livello 8 = 4,5
+Livello 9 = 5,0
+Livello 10 = 5,5
+Livello 11 = 6,0
+Livello 12 = 6,5
+Livello 13 = 7,0
+Livello 14 = 7,5
+Livello 15 = 8,0
+Livello 16 = 8,5
+Livello 17 = 9,0
+Livello 18 = 9,5
+Livello 19 = 10,0
+Livello 20 = 11,0
+Livello 21 = 11,5
+Livello 22 = 12,0
+Livello 23 = 12,5
+Livello 24 = 13,5
+Livello 24 = 14,0
+Livello 25 = 14,5
+Livello 26 = 15,0
+Livello 27 = 15,5
+Livello 28 = 16,0
+Livello 29 = 17,0
+Livello 30 = 18,0
+
+3)Prima di accedere alle fasi, assegnare ai giocatori il loro bonus/malus alla forma al loro modificatore.
+
+4)Prima di procedere con le fasi si considerano le abilità dei giocatori in campo da inserire per modificare le formule presentate nel punto 4 (le abilità contano anche per i giocatori in panchina)
+N.B. alcune abilità non si cumulano tra di loro
+
+5)Prima di accedere alle fasi considerare nella formula i giocatori partecipanti e aggiungere alla formula i modificatori aggiornati in base alla tipologia dei giocatori che partecipano alle fasi
+Giocatori Potenza -> -25% modificatore giocatori Tecnica;
+Giocatori Tecnica -> -25% modificatore giocatori Velocità;
+Giocatori Velocita -> -25% modificatore giocatori Potenza;
+
+6)Nelle fasi aggiungere sempre 1/2 Livello Allenatore della squadra come bonus aggiuntivo in tutte le fasi
+
+7) La simulazione da 30 occasioni a squadra divise per fasi: 
+
+(Esempio Squadra A vs Squadra B) [Il capitano della squadra ha sempre i suoi modificatori aumentati di +1]
+
+-Fase 1: costruzione - squadra A (Difensori e centrocampisti squadra A vs centrocampisti squadra B)
+
+[(1d20 + 1/2 modificatore difensori squadra A + modificatore centrocampisti squadra A) vs (1d20 + modificatore centrocampisti squadra B)] = % di riuscita del passaggio in attacco (si tira 1d100 per verificare la riuscita) (5% di probabilità di passare alla fase successiva anche in caso di fallimento del tiro di 1d100)
+
+-Fase 2: attacco vs difesa - (per ogni fase di costruzione riuscita) (partecipano Attaccanti e centrocampisti squadra A vs difensori e centrocampisti squadra B)
+
+[(1d20 + 1/2 modificatore centrocampisti squadra A + modificatore attaccanti squadra A) vs ( 1d20 + modificatore difensori squadra B + 1/2 modificatore centrocampisti squadra B)] -> si fa il totale.
+
+Se il risultato della squadra A > Squadra B, allora si passa alla fase successiva (mantenendo il risultato come valore per la prosisma fase)
+Se il risultato della squadra B > Squadra A, allora l'attacco non è riuscito e la fase si interrompe (se si verifica questo c'è un 5% di possibilità che si passi comunque alla fase successiva simulando un risultato = 5)
+
+-Fase 3: tiro vs portiere - (per ogni fase di attacco riuscita) (partecipano il portiere della squadra B vs il risultato della fase di attacco vs difesa)
+
+1d20 + modificatore portiere vs risultato fase attacco precedente e si fa il totale (totale portiere - risultato fase attacco vs difesa)
+Se il risultato del portiere - il valore del tiro > 0, allora è una parata (c'è un 5% di possibilità che se avviene una parata sia comunque un goal per la squadra A)
+Se il risultato del portiere - il valore del tiro = 0, allora 50% di possibilità di goal e 50% di possibilità di parata
+Se il risultato del portiere - il valore del tiro < 0, allora è un goal
+

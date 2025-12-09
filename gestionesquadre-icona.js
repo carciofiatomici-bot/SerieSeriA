@@ -27,9 +27,14 @@ window.GestioneSquadreIcona = {
             }
         }
 
-        // Verifica budget
-        if (teamData.budget < ICONA_REPLACEMENT_COST) {
-            displayMessage(msgContainerId, `ERRORE: Budget insufficiente. La sostituzione costa ${ICONA_REPLACEMENT_COST} CS. Budget attuale: ${teamData.budget} CS.`, 'error');
+        // Verifica saldo CSS (Crediti Super Seri)
+        const CSS = window.CreditiSuperSeri;
+        let saldoCSS = 0;
+        if (CSS) {
+            saldoCSS = await CSS.getSaldo(currentTeamId);
+        }
+        if (saldoCSS < ICONA_REPLACEMENT_COST) {
+            displayMessage(msgContainerId, `ERRORE: CSS insufficienti. La sostituzione costa ${ICONA_REPLACEMENT_COST} CSS. Saldo attuale: ${saldoCSS} CSS.`, 'error');
             return;
         }
 
@@ -40,7 +45,7 @@ window.GestioneSquadreIcona = {
         squadraToolsContainer.innerHTML = `
             <div class="p-6 bg-gray-800 rounded-lg border border-orange-500 shadow-inner-lg space-y-6">
                 <h3 class="text-2xl font-bold text-orange-400 mb-4 border-b border-gray-600 pb-2">
-                    Sostituzione Icona (Costo: ${ICONA_REPLACEMENT_COST} CS)
+                    Sostituzione Icona (Costo: ${ICONA_REPLACEMENT_COST} CSS)
                 </h3>
                 <p class="text-gray-300">Icona Attuale: <span class="text-yellow-400 font-extrabold">${currentIcona.name} (${currentIcona.role})</span>. Scegli una nuova Icona qui sotto.
                 </p>
@@ -100,7 +105,7 @@ window.GestioneSquadreIcona = {
 
             btnConfirmReplace.disabled = false;
             btnConfirmReplace.classList.remove('opacity-50', 'cursor-not-allowed');
-            btnConfirmReplace.textContent = `CONFERMA SCAMBIO CON ${selectedIconData.name} (${ICONA_REPLACEMENT_COST} CS)`;
+            btnConfirmReplace.textContent = `CONFERMA SCAMBIO CON ${selectedIconData.name} (${ICONA_REPLACEMENT_COST} CSS)`;
             displayMessage('icona-replacement-message', `Hai selezionato ${selectedIconData.name}. Pronto per confermare.`, 'info');
         });
 
@@ -135,6 +140,17 @@ window.GestioneSquadreIcona = {
         document.getElementById('btn-confirm-replace-icona').disabled = true;
 
         try {
+            // Sottrai CSS invece del budget normale
+            const CSS = window.CreditiSuperSeri;
+            if (CSS) {
+                const risultato = await CSS.sottraiCrediti(currentTeamId, cost, 'Sostituzione Icona');
+                if (!risultato.success) {
+                    displayMessage(msgId, `Errore: ${risultato.error}`, 'error');
+                    document.getElementById('btn-confirm-replace-icona').disabled = false;
+                    return;
+                }
+            }
+
             const updatedPlayers = teamData.players.map(p => {
                 if (p.id === currentIcona.id) {
                     return {
@@ -149,13 +165,12 @@ window.GestioneSquadreIcona = {
             });
 
             await updateDoc(teamDocRef, {
-                budget: teamData.budget - cost,
                 players: updatedPlayers,
                 iconaId: currentIcona.id,
                 lastAcquisitionTimestamp: new Date().getTime(),
             });
 
-            displayMessage(msgId, `Icona scambiata! ${newIcona.name} e la nuova Icona. Ti sono stati scalati ${cost} CS.`, 'success');
+            displayMessage(msgId, `Icona scambiata! ${newIcona.name} e la nuova Icona. Ti sono stati scalati ${cost} CSS.`, 'success');
 
             setTimeout(() => {
                 loadTeamDataFromFirestore(currentTeamId, 'rosa');

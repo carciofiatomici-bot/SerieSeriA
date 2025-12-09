@@ -12,31 +12,90 @@ window.InterfacciaDashboard = {
     updateTeamUI(teamName, teamDocId, logoUrl, isNew, elements) {
         const { DEFAULT_LOGO_URL } = window.InterfacciaConstants;
         const currentTeamData = window.InterfacciaCore.currentTeamData;
-        
-        elements.teamDashboardTitle.textContent = `Dashboard di ${teamName}`;
-        elements.teamWelcomeMessage.textContent = isNew 
-            ? `Benvenuto/a, Manager! La tua squadra '${teamName}' è stata appena creata. Inizia il calciomercato!`
-            : `Bentornato/a, Manager di ${teamName}! Sei pronto per la prossima giornata?`;
+
+        // Nome squadra in maiuscolo
+        elements.teamDashboardTitle.textContent = teamName.toUpperCase();
         elements.teamFirestoreId.textContent = teamDocId;
-        
+
+        // Aggiorna il box budget
+        const budgetElement = document.getElementById('team-budget-value');
+        if (budgetElement) {
+            const budget = currentTeamData.budget || 0;
+            budgetElement.textContent = `${budget} CS`;
+        }
+
         window.InterfacciaCore.currentTeamId = teamDocId;
         elements.teamLogoElement.src = logoUrl || DEFAULT_LOGO_URL;
-        
+
+        // Aggiorna l'avatar dell'Icona
+        const iconaAvatarElement = document.getElementById('team-icona-avatar');
+        if (iconaAvatarElement) {
+            const players = currentTeamData.players || [];
+            // Cerca l'Icona: prima per abilities, poi per isCaptain, poi per iconaId
+            let iconaPlayer = players.find(p => p.abilities && p.abilities.includes('Icona'));
+            if (!iconaPlayer) {
+                iconaPlayer = players.find(p => p.isCaptain === true);
+            }
+            if (!iconaPlayer && currentTeamData.iconaId) {
+                iconaPlayer = players.find(p => p.id === currentTeamData.iconaId);
+            }
+
+            // Se troviamo l'Icona ma non ha photoUrl, cerca nel template CAPTAIN_CANDIDATES_TEMPLATES
+            if (iconaPlayer) {
+                let photoUrl = iconaPlayer.photoUrl;
+                let playerType = iconaPlayer.type;
+                if (!photoUrl && window.CAPTAIN_CANDIDATES_TEMPLATES) {
+                    const template = window.CAPTAIN_CANDIDATES_TEMPLATES.find(t => t.name === iconaPlayer.name || t.id === iconaPlayer.id);
+                    if (template) {
+                        photoUrl = template.photoUrl;
+                        if (!playerType) playerType = template.type;
+                    }
+                }
+                // Popola il tooltip personalizzato
+                const iconaName = iconaPlayer.name || 'Icona';
+                const iconaLevel = iconaPlayer.level || 1;
+                const iconaRole = iconaPlayer.role || '?';
+                const iconaType = playerType || 'N/A';
+
+                if (photoUrl) {
+                    iconaAvatarElement.src = photoUrl;
+                } else {
+                    iconaAvatarElement.src = 'https://placehold.co/96x96/facc15/000?text=?';
+                }
+
+                // Aggiorna elementi tooltip
+                const tooltipName = document.getElementById('icona-tooltip-name');
+                const tooltipLevel = document.getElementById('icona-tooltip-level');
+                const tooltipRole = document.getElementById('icona-tooltip-role');
+                const tooltipType = document.getElementById('icona-tooltip-type');
+                if (tooltipName) tooltipName.textContent = iconaName + ' 👑';
+                if (tooltipLevel) tooltipLevel.textContent = `Livello: ${iconaLevel}`;
+                if (tooltipRole) tooltipRole.textContent = `Ruolo: ${iconaRole}`;
+                if (tooltipType) tooltipType.textContent = `Tipo: ${iconaType}`;
+            } else {
+                iconaAvatarElement.src = 'https://placehold.co/96x96/facc15/000?text=?';
+                const tooltipName = document.getElementById('icona-tooltip-name');
+                if (tooltipName) tooltipName.textContent = 'Nessuna Icona';
+            }
+        }
+
+        // Applica il colore primario salvato
+        const primaryColor = currentTeamData.primaryColor || '#22c55e';
+        this.applyPrimaryColor(primaryColor);
+
+        // Inizializza il color picker
+        this.initColorPicker();
+
         // Calcolo e aggiornamento statistiche
         const allPlayers = currentTeamData.players || [];
         const formationPlayers = window.getFormationPlayers(currentTeamData);
-        
+
         const rosaLevel = window.calculateAverageLevel(allPlayers);
         const formationLevel = window.calculateAverageLevel(formationPlayers.map(p => ({ level: p.level })));
-        
+
         elements.statRosaLevel.textContent = rosaLevel.toFixed(1);
         elements.statRosaCount.textContent = `(${allPlayers.length} giocatori)`;
         elements.statFormazioneLevel.textContent = formationLevel.toFixed(1);
-        
-        // Aggiorna i dati dell'allenatore
-        const coach = currentTeamData.coach || { name: 'Allenatore Sconosciuto', level: 0 };
-        elements.statCoachName.textContent = coach.name;
-        elements.statCoachLevel.textContent = coach.level;
 
         // NUOVO: Aggiorna il toggle partecipazione campionato
         this.updateChampionshipParticipationUI();
@@ -44,14 +103,200 @@ window.InterfacciaDashboard = {
         // NUOVO: Aggiorna il toggle partecipazione coppa
         this.updateCupParticipationUI();
 
-        // Carica la prossima partita
-        this.loadNextMatch(elements);
-
         // Inizializza il widget Crediti Super Seri
         this.initCreditiSuperSeriWidget();
 
+        // Inizializza il countdown per la prossima partita
+        this.initNextMatchCountdown();
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
+    },
+
+    /**
+     * Variabile per l'intervallo del countdown
+     */
+    _countdownInterval: null,
+
+    /**
+     * Inizializza il countdown per la prossima simulazione
+     */
+    async initNextMatchCountdown() {
+        const countdownEl = document.getElementById('countdown-timer');
+        const countdownBox = document.getElementById('next-match-countdown');
+        const labelTop = document.getElementById('countdown-label-top');
+        const labelBottom = document.getElementById('countdown-label-bottom');
+        if (!countdownEl) return;
+
+        // Pulisce eventuali intervalli precedenti
+        if (this._countdownInterval) {
+            clearInterval(this._countdownInterval);
+        }
+
+        const self = this;
+
+        const setActiveState = () => {
+            countdownEl.classList.remove('text-gray-500');
+            countdownEl.classList.add('text-teal-400');
+            if (labelTop) {
+                labelTop.textContent = 'Prossima';
+                labelTop.classList.remove('text-gray-500');
+                labelTop.classList.add('text-teal-300');
+            }
+            if (labelBottom) {
+                labelBottom.textContent = 'Partita';
+            }
+            if (countdownBox) {
+                countdownBox.classList.remove('border-gray-600');
+                countdownBox.classList.add('border-teal-500');
+            }
+        };
+
+        const setInactiveState = () => {
+            countdownEl.textContent = 'In attesa';
+            countdownEl.classList.remove('text-teal-400');
+            countdownEl.classList.add('text-gray-500');
+            if (labelTop) {
+                labelTop.textContent = '';
+                labelTop.classList.remove('text-teal-300');
+                labelTop.classList.add('text-gray-500');
+            }
+            if (labelBottom) {
+                labelBottom.textContent = 'di partite';
+            }
+            if (countdownBox) {
+                countdownBox.classList.remove('border-teal-500');
+                countdownBox.classList.add('border-gray-600');
+            }
+        };
+
+        const updateCountdown = async () => {
+            if (window.AutomazioneSimulazioni) {
+                try {
+                    const state = await window.AutomazioneSimulazioni.loadAutomationState();
+                    if (state && state.isEnabled) {
+                        // Automazione attiva - mostra countdown
+                        const time = window.AutomazioneSimulazioni.getTimeUntilNextSimulation();
+                        countdownEl.textContent = time.formatted;
+                        setActiveState();
+                    } else {
+                        // Automazione disattivata - mostra messaggio
+                        setInactiveState();
+                    }
+                } catch (error) {
+                    countdownEl.textContent = '--:--:--';
+                }
+            } else {
+                countdownEl.textContent = '--:--:--';
+            }
+        };
+
+        // Aggiorna subito
+        await updateCountdown();
+
+        // Aggiorna ogni secondo (solo il tempo, non lo stato)
+        this._countdownInterval = setInterval(async () => {
+            if (window.AutomazioneSimulazioni) {
+                try {
+                    // Controlla lo stato solo ogni 30 secondi per non sovraccaricare
+                    const now = Date.now();
+                    if (!self._lastStateCheck || now - self._lastStateCheck > 30000) {
+                        self._lastStateCheck = now;
+                        const state = await window.AutomazioneSimulazioni.loadAutomationState();
+                        self._automationEnabled = state && state.isEnabled;
+                    }
+
+                    if (self._automationEnabled) {
+                        const time = window.AutomazioneSimulazioni.getTimeUntilNextSimulation();
+                        countdownEl.textContent = time.formatted;
+                        setActiveState();
+                    } else {
+                        setInactiveState();
+                    }
+                } catch (error) {
+                    countdownEl.textContent = '--:--:--';
+                }
+            }
+        }, 1000);
+    },
+
+    /**
+     * Applica il colore primario alla dashboard
+     */
+    applyPrimaryColor(color) {
+        // Titolo squadra
+        const title = document.getElementById('team-dashboard-title');
+        if (title) {
+            title.style.color = color;
+        }
+
+        // Bordo logo
+        const logo = document.getElementById('team-logo');
+        if (logo) {
+            logo.style.borderColor = color;
+        }
+
+        // Bordo dashboard (football-box)
+        const dashboard = document.getElementById('app-content');
+        if (dashboard) {
+            dashboard.style.borderColor = color;
+        }
+
+        // Aggiorna il color picker
+        const colorPicker = document.getElementById('team-color-picker');
+        if (colorPicker) {
+            colorPicker.value = color;
+        }
+    },
+
+    /**
+     * Inizializza il color picker
+     */
+    initColorPicker() {
+        const colorPicker = document.getElementById('team-color-picker');
+        if (!colorPicker) return;
+
+        // Rimuovi listener precedenti
+        const newColorPicker = colorPicker.cloneNode(true);
+        colorPicker.parentNode.replaceChild(newColorPicker, colorPicker);
+
+        // Aggiungi nuovo listener
+        newColorPicker.addEventListener('input', (e) => {
+            this.applyPrimaryColor(e.target.value);
+        });
+
+        newColorPicker.addEventListener('change', async (e) => {
+            const newColor = e.target.value;
+            await this.savePrimaryColor(newColor);
+        });
+    },
+
+    /**
+     * Salva il colore primario nel database
+     */
+    async savePrimaryColor(color) {
+        const teamDocId = window.InterfacciaCore.currentTeamId;
+        if (!teamDocId) return;
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const { appId } = window.firestoreTools;
+            const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, teamDocId);
+
+            await updateDoc(teamDocRef, {
+                primaryColor: color
+            });
+
+            // Aggiorna anche i dati locali
+            if (window.InterfacciaCore.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.primaryColor = color;
+            }
+
+            console.log('Colore primario salvato:', color);
+        } catch (error) {
+            console.error('Errore nel salvataggio del colore primario:', error);
+        }
     },
     
     /**

@@ -13,18 +13,116 @@
 </head>
 <body>
 
-    <!-- Bottone Enciclopedia Globale (sempre visibile) -->
-    <button id="encyclopedia-global-btn" 
-            onclick="window.AbilitiesUI.open()"
-            style="position: fixed; bottom: 20px; right: 20px; z-index: 100; 
-                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                   color: white; font-weight: bold; padding: 12px 20px; 
-                   border-radius: 50px; border: none; cursor: pointer; 
+    <!-- Bottone Regole Globale (sempre visibile) -->
+    <button id="rules-global-btn"
+            onclick="window.RulesPanel.toggle()"
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 100;
+                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                   color: white; font-weight: bold; padding: 12px 20px;
+                   border-radius: 50px; border: none; cursor: pointer;
                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
                    font-size: 16px; display: flex; align-items: center; gap: 8px;
                    transition: all 0.3s ease;">
         <span style="font-size: 20px;">📖</span> Regole
     </button>
+
+    <!-- Pannello Regole (nascosto inizialmente) -->
+    <div id="rules-panel" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-t-lg p-6 border-b-4 border-yellow-500">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-4xl font-bold text-white mb-2">📖 Regole del Gioco</h1>
+                        <p class="text-gray-300">Serie SeriA - Fantacalcio Serio</p>
+                    </div>
+                    <button onclick="window.RulesPanel.close()"
+                            class="text-white hover:text-red-400 text-4xl font-bold">
+                        X
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenuto Regole -->
+            <div class="bg-gray-800 p-6 space-y-6">
+
+                <!-- Sezione Squadra -->
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">⚽ La Squadra</h3>
+                    <ul class="text-gray-300 space-y-2 text-sm">
+                        <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
+                        <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
+                        <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
+                        <li>• Ogni giocatore ha un livello (1-20) che influenza le statistiche</li>
+                    </ul>
+                </div>
+
+                <!-- Sezione Partita -->
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-green-400 mb-3">🎮 La Partita</h3>
+                    <ul class="text-gray-300 space-y-2 text-sm">
+                        <li>• Ogni partita ha 3 fasi: <strong class="text-white">Costruzione</strong>, <strong class="text-white">Attacco</strong>, <strong class="text-white">Tiro</strong></li>
+                        <li>• Nella fase Costruzione si contende il possesso palla</li>
+                        <li>• Nella fase Attacco si cerca di superare la difesa</li>
+                        <li>• Nella fase Tiro si cerca di segnare contro il portiere</li>
+                        <li>• Le abilita si attivano in specifiche fasi</li>
+                    </ul>
+                </div>
+
+                <!-- Sezione Valute -->
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-amber-400 mb-3">💰 Valute</h3>
+                    <ul class="text-gray-300 space-y-2 text-sm">
+                        <li>• <strong class="text-white">CS (Crediti Seri)</strong>: Valuta standard per acquistare giocatori</li>
+                        <li>• <strong class="text-amber-400">CSS (Crediti Super Seri)</strong>: Valuta premium per potenziamenti e abilita</li>
+                        <li>• Si guadagnano CS vincendo partite e completando la stagione</li>
+                        <li>• Si guadagnano CSS vincendo trofei (Campionato, Coppa, Supercoppa)</li>
+                    </ul>
+                </div>
+
+                <!-- Sezione Competizioni -->
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-purple-400 mb-3">🏆 Competizioni</h3>
+                    <ul class="text-gray-300 space-y-2 text-sm">
+                        <li>• <strong class="text-green-400">SerieSeriA</strong>: Campionato a girone unico, tutti contro tutti</li>
+                        <li>• <strong class="text-purple-400">CoppaSeriA</strong>: Eliminazione diretta con andata e ritorno</li>
+                        <li>• <strong class="text-yellow-400">Supercoppa</strong>: Partita secca tra Campione e Vincitore Coppa</li>
+                    </ul>
+                </div>
+
+                <!-- Sezione Enciclopedia Abilita (Collassabile) -->
+                <div class="bg-gray-900 rounded-lg border border-purple-500">
+                    <button id="btn-toggle-encyclopedia"
+                            onclick="window.RulesPanel.toggleEncyclopedia()"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">📔</span>
+                            <div>
+                                <h3 class="text-xl font-bold text-purple-400">Enciclopedia Abilita</h3>
+                                <p class="text-gray-400 text-sm">Clicca per espandere la lista completa delle abilita</p>
+                            </div>
+                        </div>
+                        <span id="encyclopedia-arrow" class="text-purple-400 text-2xl transition-transform">▼</span>
+                    </button>
+                    <div id="encyclopedia-content" class="hidden p-4 border-t border-purple-700">
+                        <div id="encyclopedia-container">
+                            <!-- Contenuto enciclopedia caricato dinamicamente -->
+                            <p class="text-gray-400 text-center">Caricamento abilita...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-900 p-4 rounded-b-lg">
+                <button onclick="window.RulesPanel.close()"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
+                    Chiudi Regole
+                </button>
+            </div>
+        </div>
+    </div>
 
     <main class="min-h-screen p-4 flex flex-col items-center justify-center">
 
@@ -60,7 +158,7 @@
             </button>
             
             <!-- BOTTONI PUBBLICI (RIMASTI QUI PER L'ACCESSO PRE-LOGIN) -->
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-2 gap-2 mb-2">
                 <button id="btn-leaderboard"
                         class="w-full bg-blue-500 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-400 transition duration-150 transform hover:scale-[1.02]">
                     Classifica
@@ -70,26 +168,60 @@
                     Calendario Partite
                 </button>
             </div>
+
+            <!-- BOTTONE LISTA ICONE -->
+            <button id="btn-lista-icone"
+                    class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
+                👑 Lista Icone
+            </button>
             
             <p id="login-message" class="text-center mt-3 text-red-400"></p>
         </div>
 
         <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra -->
-        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
-            
-            <!-- LOGO MODIFICABILE -->
-            <div id="team-logo-container" class="flex justify-center mb-6">
-                <img id="team-logo" 
-                     src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true" 
-                     alt="Logo Squadra Modificabile" 
-                     class="w-24 h-24 rounded-full border-4 border-green-500 cursor-pointer hover:border-yellow-400 transition duration-150 shadow-lg"
-                     title="Clicca per cambiare il logo (Inserisci URL)">
+        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative">
+
+            <!-- SELETTORE COLORE PRIMARIO -->
+            <div id="team-color-picker-container" class="absolute top-2 right-2">
+                <input type="color" id="team-color-picker"
+                       class="w-8 h-8 rounded cursor-pointer border-2 border-gray-600 hover:border-white transition"
+                       title="Scegli il colore primario della squadra"
+                       value="#22c55e">
             </div>
-            
-            <h2 id="team-dashboard-title" class="text-4xl font-extrabold text-green-400 text-center mb-4">Area Tecnica (Dashboard)</h2>
-            <p id="team-welcome-message" class="text-center text-lg text-gray-300">Caricamento dati squadra...</p>
-            
-            <!-- NUOVO: RIEPILOGO STATISTICHE SQUADRA -->
+
+            <!-- NOME SQUADRA -->
+            <h2 id="team-dashboard-title" class="text-4xl font-extrabold text-center mb-4 uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+
+            <!-- COUNTDOWN, LOGO E AVATAR ICONA -->
+            <div id="team-logo-container" class="flex justify-center items-center gap-5 mb-6">
+                <!-- BOX COUNTDOWN PROSSIMA PARTITA -->
+                <div id="next-match-countdown" class="p-4 bg-gray-800 rounded-lg border-2 border-teal-500 text-center shadow-lg w-32 h-32 flex flex-col justify-center">
+                    <p id="countdown-label-top" class="text-sm text-teal-300 font-semibold">Prossima</p>
+                    <p id="countdown-timer" class="text-xl font-extrabold text-teal-400">--:--</p>
+                    <p id="countdown-label-bottom" class="text-sm text-gray-500">Partita</p>
+                </div>
+                <img id="team-logo"
+                     src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true"
+                     alt="Logo Squadra Modificabile"
+                     class="w-32 h-32 rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg"
+                     style="border-color: #22c55e;"
+                     title="Clicca per cambiare il logo (Inserisci URL)">
+                <div class="relative group">
+                    <img id="team-icona-avatar"
+                         src="https://placehold.co/128x128/facc15/000?text=?"
+                         alt="Avatar Icona"
+                         class="w-32 h-32 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                    <!-- Tooltip personalizzato -->
+                    <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
+                        <p id="icona-tooltip-level">Livello: --</p>
+                        <p id="icona-tooltip-role">Ruolo: --</p>
+                        <p id="icona-tooltip-type">Tipo: --</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIEPILOGO STATISTICHE SQUADRA -->
             <div class="grid grid-cols-2 gap-4 my-6">
                 <!-- Statistica 1: Livello Medio Rosa -->
                 <div class="p-4 bg-gray-800 rounded-lg border-2 border-green-500 text-center shadow-lg">
@@ -104,39 +236,9 @@
                     <p class="text-xs text-gray-500">Livello Base: 5</p>
                 </div>
             </div>
-            
-            <!-- AGGIUNTO: Allenatore -->
-            <div class="p-3 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-4">
-                 <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
-                 <p id="stat-coach-name" class="text-xl font-extrabold text-orange-400 mt-1">N/A</p>
-                 <p class="text-xs text-gray-500">Livello: <span id="stat-coach-level">1</span></p>
-            </div>
-            
-            <!-- NUOVO: PREVIEW PROSSIMA PARTITA -->
-            <div id="next-match-preview" class="p-3 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-4">
-                <p class="text-gray-400 font-semibold">Caricamento prossima sfida...</p>
-            </div>
 
-
-            <!-- PULSANTI PUBBLICI (Accesso Diretto) -->
-            <div class="mt-8 grid grid-cols-3 gap-4">
-                 <button id="btn-dashboard-leaderboard"
-                        class="w-full bg-blue-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-400 transition duration-150 transform hover:scale-[1.01]">
-                    📊 Classifica
-                </button>
-                <button id="btn-dashboard-schedule"
-                        class="w-full bg-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-teal-400 transition duration-150 transform hover:scale-[1.01]">
-                    📅 Calendario
-                </button>
-                <button id="btn-dashboard-championship"
-                        class="w-full bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150 transform hover:scale-[1.01]">
-                    🏆 Campionato
-                </button>
-            </div>
-
-
-            <!-- Pulsanti di Navigazione Squadra (Gestione interna) -->
-            <div class="mt-4 grid grid-cols-4 gap-4"> <!-- Modificato a grid-cols-4 -->
+            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE -->
+            <div class="mt-8 grid grid-cols-2 gap-4">
                 <button id="btn-gestione-rosa"
                         class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150 transform hover:scale-[1.01]">
                     Gestione Rosa
@@ -145,15 +247,49 @@
                         class="bg-indigo-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.01]">
                     Gestione Formazione
                 </button>
-                <button id="btn-draft-utente"
-                        class="bg-yellow-600 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.01]">
-                    Draft
+            </div>
+
+            <!-- PULSANTI COMPETIZIONI (SerieSeriA, CoppaSeriA, Super CoppaSeriA) -->
+            <div class="mt-4 space-y-3">
+                <button id="btn-user-campionato"
+                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
+                    <span class="text-2xl">🏆</span>
+                    <span class="text-xl">SerieSeriA</span>
                 </button>
-                <!-- NUOVO BOTTONE MERCATO -->
-                 <button id="btn-mercato-utente"
-                        class="bg-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150 transform hover:scale-[1.01]">
-                    Mercato
+                <button id="btn-user-coppa"
+                        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
+                    <span class="text-2xl">🏆</span>
+                    <span class="text-xl">CoppaSeriA</span>
                 </button>
+                <button id="btn-user-supercoppa"
+                        class="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-yellow-500 hover:to-orange-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
+                    <span class="text-2xl">⭐</span>
+                    <span class="text-xl">Super CoppaSeriA</span>
+                </button>
+            </div>
+
+            <!-- PULSANTI DRAFT E MERCATO CON BUDGET SU HOVER -->
+            <div id="draft-mercato-container" class="mt-4 relative group">
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-draft-utente"
+                            class="bg-yellow-600 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.01]">
+                        Draft
+                    </button>
+                    <button id="btn-mercato-utente"
+                            class="bg-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150 transform hover:scale-[1.01]">
+                        Mercato
+                    </button>
+                </div>
+                <!-- BOX BUDGET (nascosto, visibile su hover) -->
+                <div id="team-budget-box" class="hidden group-hover:block p-3 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border-2 border-yellow-500 text-center shadow-lg mt-3 transition-all duration-300">
+                    <p class="text-sm text-yellow-200 font-semibold">Budget Disponibile</p>
+                    <p id="team-budget-value" class="text-3xl font-extrabold text-yellow-400 mt-1">-- CS</p>
+                </div>
+            </div>
+
+            <!-- CONTAINER CREDITI SUPER SERI -->
+            <div id="css-dashboard-widget" class="mt-4">
+                <!-- Il widget CSS viene renderizzato qui dinamicamente -->
             </div>
 
             <!-- Toggle Partecipazione Campionato e Coppa -->
@@ -187,10 +323,8 @@
                 </div>
             </div>
 
-            <div class="mt-4 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
-                <p class="text-white font-semibold">Sei in Area Utente standard. ID Firestore: <span id="team-firestore-id">N/A</span></p>
-            </div>
-            
+            <span id="team-firestore-id" class="hidden">N/A</span>
+
             <div class="grid grid-cols-2 gap-4 mt-6">
                 <button id="user-logout-button"
                         class="w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
@@ -259,7 +393,46 @@
             </button>
         </div>
         
-        <!-- 7B. CONTENUTO AREA CAMPIONATO UTENTE - NASCOSTO -->
+        <!-- 7B. CONTENUTO AREA CAMPIONATO UTENTE (NUOVA) -->
+        <div id="user-campionato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">🏆 SerieSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Prossima partita, classifica e calendario</p>
+             <div id="user-campionato-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati campionato...</p>
+             </div>
+             <button id="user-campionato-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7C. CONTENUTO AREA COPPA UTENTE (NUOVA) -->
+        <div id="user-coppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 CoppaSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Prossima partita e tabellone</p>
+             <div id="user-coppa-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati coppa...</p>
+             </div>
+             <button id="user-coppa-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7D. CONTENUTO AREA SUPERCOPPA UTENTE (NUOVA) -->
+        <div id="user-supercoppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">⭐ Super CoppaSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Stato e risultato della Super CoppaSeriA</p>
+             <div id="user-supercoppa-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati supercoppa...</p>
+             </div>
+             <button id="user-supercoppa-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7E. CONTENUTO AREA CAMPIONATO UTENTE (VECCHIO - DA RIMUOVERE) -->
         <div id="user-championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 Gestione Campionato</h2>
              <p class="text-center text-lg text-gray-300 mb-6">Simula le partite della tua lega e segui l'andamento</p>
@@ -352,16 +525,16 @@
             
             <button id="btn-confirm-coach"
                     class="w-full bg-red-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-400 transition duration-150 transform hover:scale-[1.02]">
-                Conferma e Scegli il Capitano
+                Conferma e Scegli l'Icona
             </button>
             
             <p id="coach-selection-message" class="text-center mt-3 text-red-400"></p>
         </div>
         
-        <!-- 14. NUOVO CONTENUTO: SELEZIONE CAPITANO -->
+        <!-- 14. CONTENUTO: SELEZIONE ICONA -->
         <div id="captain-selection-box" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Seleziona la tua Icona!</h2>
-             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli il giocatore che guiderà la tua squadra. Sarà il tuo sesto giocatore in rosa.</p>
+             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli l'Icona che guiderà la tua squadra. Sarà il tuo giocatore speciale in rosa.</p>
              
              <div id="captain-candidates-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <p class="text-center text-gray-400 col-span-4">Caricamento candidati...</p>
@@ -402,6 +575,23 @@
             </div>
         </div>
 
+        <!-- 16. MODALE LISTA ICONE -->
+        <div id="lista-icone-modal" class="fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto my-8">
+                <div class="flex justify-between items-center mb-4 border-b border-yellow-600 pb-2">
+                    <h3 class="text-3xl font-bold text-yellow-400">👑 Lista Icone Disponibili</h3>
+                    <button id="btn-close-lista-icone" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+                <p class="text-gray-300 mb-6 text-center">Queste sono le Icone che potrai scegliere quando crei una nuova squadra. Ogni Icona ha l'abilità speciale "Icona" che potenzia tutta la squadra!</p>
+                <div id="lista-icone-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Le icone vengono caricate dinamicamente -->
+                </div>
+                <button id="btn-back-to-login"
+                        class="mt-6 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.01]">
+                    Torna al Login
+                </button>
+            </div>
+        </div>
 
     </main>
 
@@ -465,7 +655,10 @@
                 document.getElementById('team-management-content'), // Gestione Squadre Admin
                 document.getElementById('coach-selection-box'), // Selezione Allenatore (NUOVO)
                 document.getElementById('captain-selection-box'), // Selezione Capitano
-                document.getElementById('user-championship-content') // Campionato Utente
+                document.getElementById('user-championship-content'), // Campionato Utente (vecchio)
+                document.getElementById('user-campionato-content'), // SerieSeriA Utente
+                document.getElementById('user-coppa-content'), // CoppaSeriA Utente
+                document.getElementById('user-supercoppa-content') // Super CoppaSeriA Utente
             ];
             boxes.forEach(box => {
                 if (box) {
@@ -528,7 +721,14 @@
     <script src="gestionesquadre.js"></script> <!-- Orchestratore -->
     
     <!-- 4. LOGICHE DI ACQUISTO (Dipendono da Core e possibilmente da Auth/Team) -->
-    <script src="draft.js"></script> 
+    <!-- MODULI DRAFT (in ordine di dipendenza) -->
+    <script src="draft-constants.js"></script>
+    <script src="draft-utils.js"></script>
+    <script src="draft-admin-ui.js"></script>
+    <script src="draft-admin-players.js"></script>
+    <script src="draft-user-ui.js"></script>
+    <script src="draft-user-actions.js"></script>
+    <script src="draft.js"></script> <!-- Orchestratore Draft -->
     <script src="mercato.js"></script> 
 
     <!-- 5. LOGICHE ADMIN (Dipendono da Core, Admin-UI/Players/Teams) -->
@@ -544,6 +744,7 @@
     <script src="campionato-ui.js"></script>
     <script src="campionato-main.js"></script>
     <script src="campionato.js"></script>
+    <script src="automazione-simulazioni.js"></script>
 
     <!-- 7. COPPASERIA (Dipendono da Campionato e Simulation) -->
     <script src="coppa-constants.js"></script>
@@ -569,7 +770,9 @@
     <!-- 12. ABILITIES ENCYCLOPEDIA -->
     <script src="abilities-encyclopedia.js"></script>
     <script src="abilities-encyclopedia-ui.js"></script>
+    <script src="rules-panel.js"></script>
     <script src="user-championship.js"></script>
+    <script src="user-competitions.js"></script>
 
     <!-- 13. CREDITI SUPER SERI (Valuta Premium) -->
     <script src="crediti-super-seri.js"></script>

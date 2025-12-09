@@ -31,8 +31,8 @@ window.GestioneSquadreConstants = {
     // URL dell'immagine legenda tipologie
     TYPE_LEGEND_URL: "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Logica%20Tipologie.png?raw=true",
 
-    // Costo sostituzione Icona
-    ICONA_REPLACEMENT_COST: 500
+    // Costo sostituzione Icona (in CSS - Crediti Super Seri)
+    ICONA_REPLACEMENT_COST: 1
 };
 
 console.log("Modulo GestioneSquadre-Constants caricato.");

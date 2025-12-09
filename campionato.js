@@ -16,15 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let TEAMS_COLLECTION_PATH;
     let SCHEDULE_COLLECTION_PATH; 
     let LEADERBOARD_COLLECTION_PATH; 
-    let countdownInterval = null; // Variabile per tenere traccia del timer
 
     const CONFIG_DOC_ID = 'settings';
     const SCHEDULE_DOC_ID = 'full_schedule';
-    const LEADERBOARD_DOC_ID = 'standings'; 
+    const LEADERBOARD_DOC_ID = 'standings';
     const DEFAULT_LOGO_URL = "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true";
-    
-    // Costante Cron (48 ore)
-    const AUTO_SIMULATION_COOLDOWN_MS = window.InterfacciaConstants?.AUTO_SIMULATION_COOLDOWN_MS || (48 * 60 * 60 * 1000); 
 
     const getLogoHtml = (teamId) => {
         if (window.getLogoHtml) return window.getLogoHtml(teamId);
@@ -41,116 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (type === 'info') msgElement.classList.add('text-yellow-400');
     };
     
-    // ====================================================================
-    // LOGICA CRONOMETRO E AUTOMAZIONE
-    // ====================================================================
-
-    /**
-     * Avvia il cronometro per visualizzare il tempo rimanente alla simulazione automatica.
-     */
-    const startCountdown = (lastAutoSimulatedDate) => {
-        const timerElement = document.getElementById('cron-countdown-message');
-        if (!timerElement) return;
-
-        // Pulisce il timer precedente se esiste
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-        }
-
-        const updateTimer = () => {
-            const currentTime = new Date().getTime();
-            const nextSimTime = lastAutoSimulatedDate + AUTO_SIMULATION_COOLDOWN_MS;
-            const remainingTime = nextSimTime - currentTime;
-
-            if (remainingTime <= 0) {
-                clearInterval(countdownInterval);
-                timerElement.classList.remove('text-yellow-300');
-                timerElement.classList.add('text-red-400');
-                timerElement.innerHTML = `COOLDOWN SCADUTO. Ricarica la pagina per avviare la simulazione automatica.`;
-                
-                // Ricarica il pannello dopo un breve ritardo per lanciare la simulazione
-                setTimeout(renderChampionshipPanel, 1000); 
-                return;
-            }
-
-            const totalSeconds = Math.floor(remainingTime / 1000);
-            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-            const seconds = String(totalSeconds % 60).padStart(2, '0');
-
-            timerElement.innerHTML = `PROSSIMA SIMULAZIONE AUTOMATICA TRA: 
-                                      <span class="text-white bg-indigo-700 px-2 py-1 rounded-md ml-2">${hours}:${minutes}:${seconds}</span>`;
-            timerElement.classList.remove('text-red-400');
-            timerElement.classList.add('text-yellow-300');
-        };
-
-        // Aggiorna immediatamente e poi ogni secondo
-        updateTimer();
-        countdownInterval = setInterval(updateTimer, 1000);
-    };
-
-    /**
-     * Controlla la data dell'ultima simulazione automatica e la esegue se il cooldown è scaduto.
-     */
-    const checkAndRunAutoSimulation = async (configData, schedule) => {
-        if (!schedule || schedule.length === 0) {
-            return { executed: false, date: 0, message: "Calendario non generato." };
-        }
-        
-        const nextRound = schedule.find(round => 
-            round.matches.some(match => match.result === null)
-        );
-        
-        // Non simula se la stagione è finita o non c'è una prossima giornata
-        if (configData.isSeasonOver || !nextRound) {
-            // Se la stagione è finita, fermiamo il timer se è attivo
-            if (countdownInterval) clearInterval(countdownInterval);
-            return { executed: false, date: configData.lastAutoSimulatedDate, message: "Stagione terminata o nessuna giornata rimanente." };
-        }
-        
-        const lastDate = configData.lastAutoSimulatedDate || 0; 
-        const currentTime = new Date().getTime();
-        const timeElapsed = currentTime - lastDate;
-        
-        if (timeElapsed >= AUTO_SIMULATION_COOLDOWN_MS) {
-            
-            const roundIndex = schedule.indexOf(nextRound);
-            const roundNum = nextRound.round;
-            
-            displayConfigMessage(`COOLDOWN CRON SCADUTO. Simulazione automatica Giornata ${roundNum} in corso...`, 'info');
-            
-            // Fetch di tutte le squadre necessarie per la simulazione
-            const { collection, getDocs } = firestoreTools;
-            const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
-            const teamsSnapshot = await getDocs(teamsCollectionRef);
-            const allTeams = teamsSnapshot.docs.map(doc => ({ 
-                id: doc.id, 
-                name: doc.data().teamName, 
-                isParticipating: doc.data().isParticipating || false 
-            }));
-
-            try {
-                // Esegue la simulazione
-                await window.ChampionshipMain.simulateCurrentRound(
-                    roundIndex, schedule, allTeams, null // Nessun pulsante da disabilitare
-                );
-                
-                // Resetta il timer (timestamp corrente)
-                const newTime = new Date().getTime();
-                await window.ChampionshipMain.updateLastAutoSimulatedDate(newTime);
-                
-                return { executed: true, date: newTime, message: `Simulazione automatica Giornata ${roundNum} completata con successo.` };
-            } catch (error) {
-                console.error("Errore simulazione automatica:", error);
-                // Non aggiornare il timestamp se fallisce, riprova al prossimo accesso
-                return { executed: false, date: lastDate, message: `Errore durante la simulazione automatica: ${error.message}` };
-            }
-        }
-        
-        return { executed: false, date: lastDate, message: null };
-    };
-
-
     // ====================================================================
     // FUNZIONI CHE USANO I MODULI
     // ====================================================================
@@ -192,8 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
         const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
         
-        // Pulisce l'intervallo del timer alla fine della stagione
-        if (countdownInterval) clearInterval(countdownInterval);
 
         try {
             const leaderboardDoc = await getDoc(leaderboardDocRef);
@@ -233,8 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
         
-        if (countdownInterval) clearInterval(countdownInterval);
-
         try {
             await deleteDoc(scheduleDocRef);
             // Resetta lastAutoSimulatedDate a 0
@@ -317,9 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderFullScheduleSimulation = (schedule, allTeams) => {
-        // Pulisce il timer quando si entra nel pannello di simulazione manuale
-        if (countdownInterval) clearInterval(countdownInterval);
-
         window.ChampionshipUI.renderFullScheduleSimulation(schedule, allTeams, {
             onSimulateSingle: simulateSingleMatch,
             onSimulateRound: (roundIndex, schedule, allTeams, button) => {
@@ -345,10 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         LEADERBOARD_COLLECTION_PATH = `artifacts/${appId}/public/data/leaderboard`;
         
         championshipToolsContainer.innerHTML = `<p class="text-center text-gray-400">Caricamento configurazione e squadre...</p>`;
-        
-        // Pulisce l'intervallo precedente per evitare duplicazioni
-        if (countdownInterval) clearInterval(countdownInterval);
-
 
         try {
             const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
@@ -374,23 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let scheduleDoc = await getDoc(scheduleDocRef);
             let schedule = scheduleDoc.exists() ? scheduleDoc.data().matches : [];
             
-            // --- LOGICA CRON AUTOMATICA QUI ---
-            const autoSimResult = await checkAndRunAutoSimulation(configData, schedule);
-            
-            // Se la simulazione automatica è stata eseguita, dobbiamo ricaricare i dati di config e schedule
-            if (autoSimResult.executed) {
-                // Ricarica i dati dopo l'esecuzione della simulazione
-                configDoc = await getDoc(configDocRef);
-                configData = configDoc.exists() ? configDoc.data() : {};
-                
-                scheduleDoc = await getDoc(scheduleDocRef);
-                schedule = scheduleDoc.exists() ? scheduleDoc.data().matches : [];
-                
-                // Mostra il messaggio di successo della simulazione
-                displayConfigMessage(autoSimResult.message, 'success');
-            }
-            // --- FINE LOGICA CRON ---
-            
             const nextRound = schedule.find(round => 
                 round.matches.some(match => match.result === null)
             );
@@ -404,21 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const statusText = isSeasonOver ? 'TERMINATO (Pausa)' : (totalRounds > 0 ? 'IN CORSO' : 'INIZIALIZZAZIONE');
             const statusClass = isSeasonOver ? 'bg-red-900 border-red-500 text-red-400' : 'bg-green-900 border-green-500 text-green-400';
-            
-            const lastAutoDate = configData.lastAutoSimulatedDate || 0;
-            const lastAutoDateString = lastAutoDate === 0 ? 'MAI' : new Date(lastAutoDate).toLocaleString('it-IT');
 
             // Calcola statistiche stagione
             const seasonStats = calculateSeasonStats(schedule);
-
-            // HTML per Cron e Timer status
-            const cronStatusHtml = `
-                <div id="cron-status-box" class="p-4 bg-gray-700 rounded-lg border border-teal-500 shadow-md">
-                    <h4 class="text-xl font-bold text-teal-400 mb-2">Automazione Giornate (Cron)</h4>
-                    <p class="text-sm text-gray-300">Ultima esecuzione automatica: <span id="last-auto-date">${lastAutoDateString}</span></p>
-                    <p class="text-sm font-extrabold mt-2 text-yellow-300" id="cron-countdown-message">Caricamento stato timer...</p>
-                </div>
-            `;
 
             // HTML per sezione Reward
             const rewardsHtml = `
@@ -533,9 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- SEZIONE: Automazione -->
-                    ${cronStatusHtml}
-
                     <!-- SEZIONE: Statistiche Stagione -->
                     ${statsHtml}
 
@@ -567,12 +410,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- SEZIONE: Fine Stagione -->
+                    <!-- SEZIONE: Fine Stagione Campionato -->
                     <div class="bg-gray-900 rounded-lg p-4 border border-red-700">
                         <h3 class="text-xl font-bold text-red-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
-                            <span class="mr-2">🏁</span> Azioni Fine Stagione
+                            <span class="mr-2">🏁</span> Fine Stagione - Campionato
                         </h3>
-                        <div class="space-y-3">
+                        <div class="space-y-3" id="championship-end-actions">
                             <button data-action="end-season"
                                     class="w-full bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-md hover:bg-red-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     ${!isReadyForEnd ? 'disabled' : ''}>
@@ -590,6 +433,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
+                    <!-- SEZIONE: Fine Coppa -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-purple-700">
+                        <h3 class="text-xl font-bold text-purple-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">🏆</span> Fine Stagione - CoppaSeriA
+                        </h3>
+                        <div class="space-y-3" id="cup-end-actions">
+                            <div id="cup-end-status" class="text-center text-gray-400 text-sm">Caricamento stato coppa...</div>
+                        </div>
+                    </div>
+
+                    <!-- SEZIONE: Fine Supercoppa -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-yellow-700">
+                        <h3 class="text-xl font-bold text-yellow-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">⭐</span> Fine Stagione - Supercoppa
+                        </h3>
+                        <div class="space-y-3" id="supercoppa-end-actions">
+                            <div id="supercoppa-end-status" class="text-center text-gray-400 text-sm">Caricamento stato supercoppa...</div>
+                        </div>
+                    </div>
+
                     <!-- Anteprima Calendario -->
                     <div id="schedule-display-container" class="mt-4">
                         ${renderSchedulePreview(schedule, numTeamsParticipating)}
@@ -598,30 +461,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p id="championship-message" class="text-center mt-3 text-red-400 font-bold"></p>
                 </div>
             `;
-            
-            // Avvia il cronometro se necessario dopo aver renderizzato l'HTML
-            if (totalRounds > 0 && !isFinished) {
-                // Utilizziamo autoSimResult.date che è l'ultima data di simulazione (sia manuale che automatica)
-                startCountdown(autoSimResult.date);
-            } else {
-                 const timerElement = document.getElementById('cron-countdown-message');
-                 if (timerElement) {
-                     timerElement.classList.remove('text-yellow-300');
-                     timerElement.classList.add('text-gray-400');
-                     timerElement.textContent = "FunzionalitÃ  cron non attiva (Stagione non iniziata o conclusa).";
-                 }
-            }
-
-
-            const seasonEndContainer = championshipToolsContainer.querySelector('.space-y-3');
-            if (seasonEndContainer) {
-                seasonEndContainer.addEventListener('click', (e) => {
+            const championshipEndContainer = document.getElementById('championship-end-actions');
+            if (championshipEndContainer) {
+                championshipEndContainer.addEventListener('click', (e) => {
                     const target = e.target;
                     const action = target.dataset.action;
                     if (action === 'end-season' && !target.disabled) confirmSeasonEnd(false);
                     else if (action === 'test-reset' && !target.disabled) confirmSeasonEnd(true);
                 });
             }
+
+            // Carica stato e UI per Coppa
+            loadCupEndSection();
+
+            // Carica stato e UI per Supercoppa
+            loadSupercoppEndSection();
 
             const btnShowFullSchedule = document.getElementById('btn-show-full-schedule');
             if (btnShowFullSchedule) {
@@ -684,6 +538,165 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /**
+     * Carica la sezione Fine Stagione per la CoppaSeriA
+     */
+    const loadCupEndSection = async () => {
+        const container = document.getElementById('cup-end-actions');
+        if (!container) return;
+
+        try {
+            const bracket = await window.CoppaSchedule.loadCupSchedule();
+            const { doc, getDoc } = firestoreTools;
+            const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+            const isCupOver = configDoc.exists() ? (configDoc.data().isCupOver !== false) : true;
+
+            if (!bracket) {
+                container.innerHTML = `
+                    <p class="text-gray-400 text-center">Nessuna CoppaSeriA in corso.</p>
+                    ${isCupOver ? '<p class="text-green-400 text-center text-sm">✅ Coppa terminata o non ancora generata.</p>' : ''}
+                `;
+                return;
+            }
+
+            const isCompleted = bracket.status === 'completed';
+            const winner = bracket.winner;
+
+            if (isCompleted && !isCupOver) {
+                container.innerHTML = `
+                    <p class="text-green-400 text-center mb-3">✅ CoppaSeriA completata! Vincitore: <strong>${winner?.teamName || 'N/A'}</strong></p>
+                    <button id="btn-end-cup-rewards"
+                            class="w-full bg-purple-700 text-white font-extrabold py-3 rounded-lg shadow-md hover:bg-purple-800 transition">
+                        🏆 TERMINA COPPA (Assegna Premi)
+                    </button>
+                    <button id="btn-end-cup-no-rewards"
+                            class="w-full bg-orange-600 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-orange-700 transition mt-2">
+                        🔄 TERMINA SENZA PREMI (Solo Reset)
+                    </button>
+                    <p class="text-purple-300 text-center text-sm mt-2">Premi: 1 CSS al vincitore, 150 CS a 2, 3, 4 posto</p>
+                `;
+
+                document.getElementById('btn-end-cup-rewards').addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    const confirmation = prompt('CONFERMA CHIUSURA COPPA\n\nAssegnerai i premi ufficiali.\n\nDigita "SI" per confermare:');
+                    if (confirmation && confirmation.toUpperCase() === 'SI') {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-pulse">Assegnazione premi...</span>';
+                        try {
+                            const result = await window.CoppaMain.applyCupRewards();
+                            alert('CoppaSeriA terminata! Premi assegnati con successo.');
+                            loadCupEndSection();
+                        } catch (error) {
+                            alert('Errore: ' + error.message);
+                            btn.disabled = false;
+                            btn.textContent = '🏆 TERMINA COPPA (Assegna Premi)';
+                        }
+                    }
+                });
+
+                document.getElementById('btn-end-cup-no-rewards').addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    const confirmation = prompt('ATTENZIONE: Terminerai la coppa SENZA assegnare premi.\n\nDigita "SI" per confermare:');
+                    if (confirmation && confirmation.toUpperCase() === 'SI') {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-pulse">Reset in corso...</span>';
+                        try {
+                            await window.CoppaMain.terminateCupWithoutRewards();
+                            alert('CoppaSeriA terminata senza premi.');
+                            loadCupEndSection();
+                        } catch (error) {
+                            alert('Errore: ' + error.message);
+                            btn.disabled = false;
+                            btn.textContent = '🔄 TERMINA SENZA PREMI (Solo Reset)';
+                        }
+                    }
+                });
+
+            } else if (isCupOver) {
+                container.innerHTML = `
+                    <p class="text-green-400 text-center">✅ CoppaSeriA gia terminata.</p>
+                    <p class="text-gray-400 text-center text-sm">Pronta per nuova generazione.</p>
+                `;
+            } else {
+                const nextMatch = window.CoppaSchedule.findNextMatch(bracket);
+                const roundInfo = nextMatch ? 'Turno corrente: ' + nextMatch.round.roundName : 'Completa tutte le partite';
+                container.innerHTML = `
+                    <p class="text-yellow-400 text-center">⏳ CoppaSeriA in corso</p>
+                    <p class="text-gray-400 text-center text-sm">${roundInfo}</p>
+                    <p class="text-gray-500 text-center text-xs mt-2">Completa tutte le partite per terminare la coppa.</p>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento sezione fine coppa:', error);
+            container.innerHTML = '<p class="text-red-400 text-center">Errore caricamento stato coppa.</p>';
+        }
+    };
+
+    /**
+     * Carica la sezione Fine Stagione per la Supercoppa
+     */
+    const loadSupercoppEndSection = async () => {
+        const container = document.getElementById('supercoppa-end-actions');
+        if (!container) return;
+
+        try {
+            const bracket = await window.Supercoppa.loadSupercoppa();
+
+            if (!bracket) {
+                const canCreate = await window.Supercoppa.canCreateSupercoppa();
+                container.innerHTML = `
+                    <p class="text-gray-400 text-center">Nessuna Supercoppa in corso.</p>
+                    ${canCreate.canCreate
+                        ? '<p class="text-green-400 text-center text-sm">✅ Pronta per essere creata dal pannello Supercoppa.</p>'
+                        : '<p class="text-yellow-400 text-center text-sm">⚠️ ' + canCreate.reason + '</p>'
+                    }
+                `;
+                return;
+            }
+
+            if (bracket.isCompleted) {
+                container.innerHTML = `
+                    <p class="text-green-400 text-center mb-3">✅ Supercoppa completata! Vincitore: <strong>${bracket.winner?.teamName || 'N/A'}</strong></p>
+                    <p class="text-gray-400 text-center text-sm mb-3">Il premio (1 CSS) e gia stato assegnato automaticamente.</p>
+                    <button id="btn-delete-supercoppa-end"
+                            class="w-full bg-red-600 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-red-700 transition">
+                        🗑️ ELIMINA SUPERCOPPA (Prepara nuova stagione)
+                    </button>
+                `;
+
+                document.getElementById('btn-delete-supercoppa-end').addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    if (confirm('Eliminare la Supercoppa?\n\nI premi sono gia stati assegnati.')) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-pulse">Eliminazione...</span>';
+                        try {
+                            await window.Supercoppa.deleteSupercoppa();
+                            alert('Supercoppa eliminata. Pronto per nuova stagione.');
+                            loadSupercoppEndSection();
+                        } catch (error) {
+                            alert('Errore: ' + error.message);
+                            btn.disabled = false;
+                            btn.textContent = '🗑️ ELIMINA SUPERCOPPA (Prepara nuova stagione)';
+                        }
+                    }
+                });
+
+            } else {
+                container.innerHTML = `
+                    <p class="text-yellow-400 text-center">⏳ Supercoppa in programma</p>
+                    <p class="text-gray-400 text-center text-sm">${bracket.homeTeam?.teamName} vs ${bracket.awayTeam?.teamName}</p>
+                    <p class="text-gray-500 text-center text-xs mt-2">Simula la partita dal pannello Supercoppa.</p>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento sezione fine supercoppa:', error);
+            container.innerHTML = '<p class="text-red-400 text-center">Errore caricamento stato supercoppa.</p>';
+        }
+    };
+
     const confirmSeasonEnd = (isTestMode) => {
         const message = isTestMode
             ? "ATTENZIONE: Stai per terminare il campionato SENZA assegnare crediti o livellare gli allenatori. Il calendario verrÃ  eliminato. Continuare?"
@@ -701,8 +714,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     championshipBackButton.addEventListener('click', () => {
-        // Pulisce il timer quando si esce dal pannello
-        if (countdownInterval) clearInterval(countdownInterval);
         if (window.showScreen && adminContent) window.showScreen(adminContent);
     });
 

@@ -106,19 +106,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Dashboard Utente
         teamDashboardTitle: document.getElementById('team-dashboard-title'),
-        teamWelcomeMessage: document.getElementById('team-welcome-message'),
         teamFirestoreId: document.getElementById('team-firestore-id'),
         userLogoutButton: document.getElementById('user-logout-button'),
         btnDeleteTeam: document.getElementById('btn-delete-team'),
         teamLogoElement: document.getElementById('team-logo'),
-        nextMatchPreview: document.getElementById('next-match-preview'),
-        
+
         // Statistiche
         statRosaLevel: document.getElementById('stat-rosa-level'),
         statFormazioneLevel: document.getElementById('stat-formazione-level'),
         statRosaCount: document.getElementById('stat-rosa-count'),
-        statCoachName: document.getElementById('stat-coach-name'),
-        statCoachLevel: document.getElementById('stat-coach-level'),
 
         // Pulsanti navigazione squadra
         btnGestioneRosa: document.getElementById('btn-gestione-rosa'),
@@ -179,7 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Championship Participation Toggle
     window.InterfacciaDashboard.initializeChampionshipParticipationToggle();
-    
+
+    // Cup Participation Toggle
+    window.InterfacciaDashboard.initializeCupParticipationToggle();
+
+    // User Competitions Navigation (Campionato, Coppa, Supercoppa)
+    if (window.UserCompetitions) {
+        window.UserCompetitions.initializeNavigationListeners();
+    }
+
     // Gestisce l'evento personalizzato per l'aggiornamento della dashboard
     document.addEventListener('dashboardNeedsUpdate', () => {
         window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(elements);
@@ -187,12 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INIZIALIZZAZIONE APP ---
     const initApp = async () => {
-        if (elements.gateBox) {
-            const sessionRestored = await window.InterfacciaAuth.restoreSession(elements);
-            
-            if (!sessionRestored) {
-                elements.gateBox.classList.remove('hidden-on-load');
-                window.showScreen(elements.gateBox);
+        // Tenta di ripristinare la sessione salvata
+        const sessionRestored = await window.InterfacciaAuth.restoreSession(elements);
+
+        if (!sessionRestored) {
+            // Nessuna sessione salvata - mostra direttamente il login (gate rimosso)
+            if (elements.loginBox) {
+                elements.loginBox.classList.remove('hidden-on-load');
+                window.showScreen(elements.loginBox);
             }
         }
     };

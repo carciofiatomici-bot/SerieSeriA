@@ -16,6 +16,15 @@ window.AdminUI = {
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
         adminDashboardContainer.innerHTML = `
+            <!-- SEZIONE AUTOMAZIONE SIMULAZIONI -->
+            <h3 class="text-2xl font-bold text-teal-400 mb-4 border-b border-gray-600 pb-2">Automazione Simulazioni</h3>
+            <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500 mb-6">
+                <p class="text-gray-400 text-sm mb-3">Simula automaticamente partite di Campionato e Coppa alle 20:30 in alternanza</p>
+                <div id="automation-status-container">
+                    <p class="text-gray-400 text-center text-sm">Caricamento stato automazione...</p>
+                </div>
+            </div>
+
             <!-- Pulsanti Navigazione Principale -->
             <div class="mb-6 space-y-4">
                 <div class="grid grid-cols-3 gap-4">
@@ -34,46 +43,27 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- SEZIONE VISTE PUBBLICHE -->
-            <h3 class="text-2xl font-bold text-teal-400 mb-4 border-b border-gray-600 pb-2">Viste Pubbliche</h3>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <button id="btn-admin-leaderboard"
-                        class="bg-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-teal-400 transition duration-150 transform hover:scale-[1.01]">
-                    <i class="fas fa-chart-bar mr-2"></i> Visualizza Classifica
-                </button>
-                <button id="btn-admin-schedule"
-                        class="bg-indigo-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-400 transition duration-150 transform hover:scale-[1.01]">
-                    <i class="fas fa-calendar-alt mr-2"></i> Visualizza Calendario
-                </button>
-            </div>
-
-            <!-- SEZIONE STATI APERTO/CHIUSO -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Riepilogo Stato Mercato & Draft</h3>
-            <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
-            <div class="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
-                <div class="p-3 rounded-lg border ${draftOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block">Draft: <span class="font-extrabold" id="draft-status-text-summary">${draftOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                </div>
-                <div class="p-3 rounded-lg border ${marketOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block">Mercato: <span class="font-extrabold" id="market-status-text-summary">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                </div>
-            </div>
-
-            <!-- SEZIONE CREDITI SUPER SERI -->
-            <h3 class="text-2xl font-bold text-amber-400 mb-4 border-b border-gray-600 pb-2 pt-6">Crediti Super Seri</h3>
-            <div id="css-admin-section" class="p-4 bg-gray-800 rounded-lg border ${cssEnabled ? 'border-green-500' : 'border-amber-500'} mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="font-bold text-lg text-white">Sistema CSS: </span>
-                        <span id="css-status-text" class="font-extrabold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVO' : 'DISATTIVO'}</span>
-                    </div>
-                    <button id="btn-toggle-css"
-                            data-enabled="${cssEnabled}"
-                            class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${cssEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                        ${cssEnabled ? 'DISABILITA' : 'ABILITA'}
+            <!-- SEZIONE SERIESERIA -->
+            <h3 class="text-2xl font-bold text-green-400 mb-4 border-b border-gray-600 pb-2 pt-6">🏆 SerieSeriA</h3>
+            <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500 mb-6">
+                <p class="text-gray-400 text-sm mb-3">Gestisci il campionato principale</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <button id="btn-admin-leaderboard"
+                            class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150">
+                        <i class="fas fa-chart-bar mr-2"></i> Classifica
+                    </button>
+                    <button id="btn-admin-schedule"
+                            class="bg-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
+                        <i class="fas fa-calendar-alt mr-2"></i> Calendario
+                    </button>
+                    <button id="btn-generate-championship-schedule"
+                            class="bg-green-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-700 transition duration-150">
+                        <i class="fas fa-plus-circle mr-2"></i> Genera Calendario
                     </button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">I Crediti Super Seri permettono di potenziare giocatori e assegnare abilita.</p>
+                <div id="serieseria-status-container" class="mt-4">
+                    <p class="text-gray-400 text-center text-sm">Caricamento stato campionato...</p>
+                </div>
             </div>
 
             <!-- SEZIONE COPPA SERIA -->
@@ -104,7 +94,7 @@ window.AdminUI = {
 
             <!-- UTILITA ADMIN -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilita Admin</h3>
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-2 gap-4 mb-6">
                  <button id="btn-sync-data"
                         class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
                     Sincronizza Dati Calciatori (Mock)
@@ -112,6 +102,35 @@ window.AdminUI = {
                 <div class="text-gray-400 text-sm flex items-center justify-center">
                     Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
                 </div>
+            </div>
+
+            <!-- SEZIONE STATI APERTO/CHIUSO -->
+            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Riepilogo Stato Mercato & Draft</h3>
+            <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
+            <div class="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
+                <div class="p-3 rounded-lg border ${draftOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
+                    <span class="font-bold text-lg text-white block">Draft: <span class="font-extrabold" id="draft-status-text-summary">${draftOpen ? 'APERTO' : 'CHIUSO'}</span></span>
+                </div>
+                <div class="p-3 rounded-lg border ${marketOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
+                    <span class="font-bold text-lg text-white block">Mercato: <span class="font-extrabold" id="market-status-text-summary">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
+                </div>
+            </div>
+
+            <!-- SEZIONE CREDITI SUPER SERI -->
+            <h3 class="text-2xl font-bold text-amber-400 mb-4 border-b border-gray-600 pb-2 pt-6">Crediti Super Seri</h3>
+            <div id="css-admin-section" class="p-4 bg-gray-800 rounded-lg border ${cssEnabled ? 'border-green-500' : 'border-amber-500'} mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-lg text-white">Sistema CSS: </span>
+                        <span id="css-status-text" class="font-extrabold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVO' : 'DISATTIVO'}</span>
+                    </div>
+                    <button id="btn-toggle-css"
+                            data-enabled="${cssEnabled}"
+                            class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${cssEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
+                        ${cssEnabled ? 'DISABILITA' : 'ABILITA'}
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">I Crediti Super Seri permettono di potenziare giocatori e assegnare abilita.</p>
             </div>
         `;
     },

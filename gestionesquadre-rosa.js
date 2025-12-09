@@ -21,14 +21,26 @@ window.GestioneSquadreRosa = {
 
         const sortedPlayers = sortPlayersByRole(teamData.players);
 
+        // Dati allenatore
+        const coach = teamData.coach || { name: 'N/A', level: 1 };
+        const coachName = coach.name || 'N/A';
+        const coachLevel = coach.level || 1;
+
         squadraToolsContainer.innerHTML = `
+            <!-- BOX ALLENATORE -->
+            <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-6">
+                <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
+                <p class="text-xl font-extrabold text-orange-400 mt-1">${coachName}</p>
+                <p class="text-xs text-gray-500">Livello: ${coachLevel}</p>
+            </div>
+
             <div class="bg-gray-700 p-6 rounded-lg border border-green-500">
                 <h3 class="text-2xl font-bold text-green-400 mb-4">I Tuoi Calciatori (Ordinati per Icona, Ruolo e Livello)</h3>
                 <div id="player-list-message" class="text-center mb-4 text-green-500"></div>
 
                 <button id="btn-replace-icona"
                         class="w-full bg-orange-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150 transform hover:scale-[1.01] mb-4">
-                    Sostituisci Icona (Costo: 500 CS)
+                    Sostituisci Icona (Costo: 1 CSS)
                 </button>
 
                 <div id="player-list" class="space-y-3">
@@ -49,22 +61,15 @@ window.GestioneSquadreRosa = {
     renderPlayerCard(player, teamData, TYPE_ICONS) {
         const refundCost = player.cost > 0 ? Math.floor(player.cost / 2) : 0;
         const isCaptain = player.isCaptain;
-        const isIcona = player.abilities && player.abilities.includes('Icona');
+        // Verifica se è Icona: tramite abilities OPPURE tramite iconaId nel teamData
+        const isIcona = (player.abilities && player.abilities.includes('Icona')) ||
+                        (teamData.iconaId && player.id === teamData.iconaId);
         const captainMarker = isCaptain ? ' (CAPITANO)' : '';
 
-        // Avatar Icona
-        let iconaAvatarHtml = '';
+        // Marker Icona
         let iconaMarker = '';
 
         if (isIcona) {
-            const iconaData = teamData.players.find(p => p.abilities && p.abilities.includes('Icona') && p.id === player.id) || {};
-            const avatarUrl = iconaData.photoUrl && iconaData.photoUrl.includes('http')
-                            ? iconaData.photoUrl
-                            : 'https://placehold.co/40x40/facc15/000?text=I';
-
-            iconaAvatarHtml = `
-                <img src="${avatarUrl}" alt="Avatar Icona" class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-3 object-cover">
-            `;
             iconaMarker = ' <span class="bg-yellow-800 text-yellow-300 px-2 py-0.5 rounded-full text-xs font-extrabold">ICONA</span>';
         }
 
@@ -109,9 +114,8 @@ window.GestioneSquadreRosa = {
         return `
             <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-green-700">
                 <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
-                    ${iconaAvatarHtml}
                     <div>
-                        <span class="${isCaptainClass}">${player.name}${captainMarker}</span>
+                        <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}
                         <span class="text-yellow-400">(${player.role})</span>
                         ${typeIconHtml}
@@ -191,13 +195,10 @@ window.GestioneSquadreRosa = {
             window.InterfacciaCore.currentTeamData.players = updatedPlayers;
             currentTeamData.players = updatedPlayers;
 
-            displayMessage(msgContainerId, `${newCaptainName} e il nuovo Capitano!`, 'success');
+            displayMessage(msgContainerId, `${newCaptainName} è il nuovo Capitano!`, 'success');
 
+            // Ricarica solo la pagina Gestione Rosa senza tornare alla dashboard
             loadTeamDataFromFirestore(currentTeamId, 'rosa');
-
-            if (window.InterfacciaDashboard && window.InterfacciaCore.currentTeamId) {
-                window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(window.elements);
-            }
 
         } catch (error) {
             console.error("Errore nell'assegnazione del Capitano:", error);
