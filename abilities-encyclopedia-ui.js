@@ -1,6 +1,6 @@
 //
 // ====================================================================
-// ABILITIES-ENCYCLOPEDIA-UI.JS - Interfaccia Enciclopedia Abilità
+// ABILITIES-ENCYCLOPEDIA-UI.JS - Interfaccia Enciclopedia Abilita
 // ====================================================================
 //
 
@@ -69,8 +69,8 @@ window.AbilitiesUI = {
                 <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-t-lg p-6 border-b-4 border-yellow-500">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h1 class="text-4xl font-bold text-white mb-2">📔 Enciclopedia Abilità</h1>
-                            <p class="text-gray-300">Guida completa a tutte le ${stats.total} Abilità speciali</p>
+                            <h1 class="text-4xl font-bold text-white mb-2">📔 Enciclopedia Abilita</h1>
+                            <p class="text-gray-300">Guida completa a tutte le ${stats.total} Abilita speciali</p>
                         </div>
                         <button onclick="window.AbilitiesUI.close()" 
                                 class="text-white hover:text-red-400 text-4xl font-bold">
@@ -82,7 +82,7 @@ window.AbilitiesUI = {
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                         <div class="bg-black bg-opacity-30 rounded p-3 text-center">
                             <p class="text-2xl font-bold text-yellow-400">${stats.total}</p>
-                            <p class="text-xs text-gray-300">Abilità Totali</p>
+                            <p class="text-xs text-gray-300">Abilita Totali</p>
                         </div>
                         <div class="bg-black bg-opacity-30 rounded p-3 text-center">
                             <p class="text-2xl font-bold text-red-400">${stats.byRarity.Leggendaria}</p>
@@ -106,7 +106,7 @@ window.AbilitiesUI = {
                     <div class="mb-4">
                         <input type="text" 
                                id="ability-search" 
-                               placeholder="🔎 Cerca Abilità..."
+                               placeholder="🔎 Cerca Abilita..."
                                onkeyup="window.AbilitiesUI.handleSearch(this.value)"
                                class="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border-2 border-gray-600 focus:border-purple-500 focus:outline-none text-lg">
                     </div>
@@ -147,7 +147,7 @@ window.AbilitiesUI = {
                     ` : `
                         <div class="text-center py-12">
                             <p class="text-4xl mb-4">😢</p>
-                            <p class="text-xl text-gray-400">Nessuna Abilità trovata</p>
+                            <p class="text-xl text-gray-400">Nessuna Abilita trovata</p>
                             <p class="text-sm text-gray-500 mt-2">Prova con un'altra ricerca o filtro</p>
                         </div>
                     `}
@@ -158,9 +158,9 @@ window.AbilitiesUI = {
                     <h3 class="text-lg font-bold text-yellow-400 mb-2">💡 Suggerimenti</h3>
                     <ul class="text-sm text-gray-300 space-y-1">
                         <li>• Clicca su una card per vedere i dettagli completi</li>
-                        <li>• Le Abilità <span class="text-red-400">Leggendarie</span> sono le più¹ rare e potenti</li>
-                        <li>• Combina Abilità con <span class="text-purple-400">sinergia</span> per strategie devastanti</li>
-                        <li>• L'Abilità <span class="text-yellow-400">Icona</span> è¨ unica e la più¹ potente del gioco</li>
+                        <li>• Le Abilita <span class="text-red-400">Leggendarie</span> sono le piu rare e potenti</li>
+                        <li>• Combina Abilita con <span class="text-purple-400">sinergia</span> per strategie devastanti</li>
+                        <li>• L'Abilita <span class="text-yellow-400">Icona</span> e unica e la piu potente del gioco</li>
                     </ul>
                 </div>
                 
@@ -169,7 +169,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Render singola card Abilità
+     * Render singola card Abilita
      */
     renderAbilityCard(ability) {
         const rarityColor = {
@@ -238,7 +238,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Mostra dettagli completi Abilità
+     * Mostra dettagli completi Abilita
      */
     showDetails(abilityName) {
         const ability = window.AbilitiesEncyclopedia.abilities[abilityName];
@@ -272,9 +272,9 @@ window.AbilitiesUI = {
                                 <span class="${rarityColor[ability.rarity]} font-bold text-lg">${ability.rarity}</span>
                             </div>
                         </div>
-                        <button onclick="this.closest('.fixed').remove()" 
+                        <button onclick="this.closest('.fixed').remove()"
                                 class="text-white hover:text-red-400 text-4xl font-bold">
-                            è€”
+                            X
                         </button>
                     </div>
                 </div>
@@ -363,7 +363,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Filtra Abilità per ruolo
+     * Filtra Abilita per ruolo
      */
     filter(role) {
         this.currentFilter = role;
@@ -379,7 +379,7 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Ottieni Abilità filtrate
+     * Ottieni Abilita filtrate
      */
     getFilteredAbilities() {
         let abilities = [];
@@ -407,10 +407,10 @@ window.AbilitiesUI = {
     },
     
     /**
-     * Renderizza Abilità  separate per tipo (positive/negative)
+     * Renderizza Abilita  separate per tipo (positive/negative)
      */
     /**
-     * Ordina abilità per rarità: Comune, Rara, Epica, Leggendaria, Unica
+     * Ordina abilita per rarità: Comune, Rara, Epica, Leggendaria, Unica
      */
     sortByRarity(abilities) {
         const rarityOrder = {
@@ -437,13 +437,13 @@ window.AbilitiesUI = {
 
         let html = '';
         
-        // Sezione Abilità  Positive
+        // Sezione Abilita  Positive
         if (positive.length > 0) {
             html += `
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-green-500">
                         <span class="text-3xl">✅</span>
-                        <h3 class="text-2xl font-bold text-green-400">Abilità  Positive (${positive.length})</h3>
+                        <h3 class="text-2xl font-bold text-green-400">Abilita  Positive (${positive.length})</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${sortedPositive.map(ability => this.renderAbilityCard(ability)).join('')}
@@ -452,17 +452,17 @@ window.AbilitiesUI = {
             `;
         }
         
-        // Sezione Abilità  Negative
+        // Sezione Abilita  Negative
         if (negative.length > 0) {
             html += `
                 <div>
                     <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-red-500">
                         <span class="text-3xl">❌</span>
-                        <h3 class="text-2xl font-bold text-red-400">Abilità  Negative (${negative.length})</h3>
+                        <h3 class="text-2xl font-bold text-red-400">Abilita  Negative (${negative.length})</h3>
                     </div>
                     <div class="bg-red-900 bg-opacity-20 rounded-lg p-4 mb-4 border-2 border-red-700">
                         <p class="text-yellow-300 font-bold">⚠️ Attenzione!</p>
-                        <p class="text-gray-300 text-sm mt-1">Le Abilità  negative hanno effetti dannosi. Ogni giocatore può² avere MAX 2 Abilità  negativa.</p>
+                        <p class="text-gray-300 text-sm mt-1">Le Abilita  negative hanno effetti dannosi. Ogni giocatore puo avere MAX 2 Abilita  negativa.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${sortedNegative.map(ability => this.renderAbilityCard(ability)).join('')}
