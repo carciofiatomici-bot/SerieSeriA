@@ -185,6 +185,72 @@ body {
         border-radius: 50% !important;
     }
 
+    /* Box sponsor e media - 100px come logo e icona */
+    #sponsor-box,
+    #media-box {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+        max-width: 100px !important;
+        max-height: 100px !important;
+        flex-shrink: 0;
+    }
+
+    #sponsor-image,
+    #media-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 8px !important;
+    }
+
+    /* Layout mobile: sponsor+media, countdown, logo+icona, divisa */
+    #team-logo-container {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+
+    #sponsor-box {
+        order: 0;
+        width: 100px !important;
+        flex: 0 0 100px !important;
+    }
+
+    #media-box {
+        order: 1;
+        width: 100px !important;
+        flex: 0 0 100px !important;
+    }
+
+    /* Countdown su riga singola */
+    #next-match-countdown {
+        order: 2;
+        width: 100% !important;
+        max-width: 200px !important;
+        flex: 0 0 100% !important;
+        margin: 8px 0 !important;
+    }
+
+    #team-logo-wrapper {
+        order: 3;
+        flex: 0 0 100px !important;
+    }
+
+    #team-logo-container .relative.group {
+        order: 4;
+        flex: 0 0 100px !important;
+    }
+
+    /* Divisa su riga singola */
+    #team-uniform-box {
+        order: 5;
+        width: 100% !important;
+        max-width: 100px !important;
+        flex: 0 0 100% !important;
+        margin-top: 8px !important;
+    }
+
     #countdown-timer {
         font-size: 0.875rem !important;
     }

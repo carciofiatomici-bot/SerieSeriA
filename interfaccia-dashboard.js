@@ -265,6 +265,18 @@ window.InterfacciaDashboard = {
             uniformBox.style.borderColor = color;
         }
 
+        // Bordo box sponsor
+        const sponsorImage = document.getElementById('sponsor-image');
+        if (sponsorImage) {
+            sponsorImage.style.borderColor = color;
+        }
+
+        // Bordo box media
+        const mediaImage = document.getElementById('media-image');
+        if (mediaImage) {
+            mediaImage.style.borderColor = color;
+        }
+
         // Bordo box statistiche - Livello Medio Rosa
         const statRosaBox = document.getElementById('stat-rosa-level')?.closest('.border-2');
         if (statRosaBox) {
