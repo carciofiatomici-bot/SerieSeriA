@@ -699,8 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const confirmSeasonEnd = (isTestMode) => {
         const message = isTestMode
-            ? "ATTENZIONE: Stai per terminare il campionato SENZA assegnare crediti o livellare gli allenatori. Il calendario verrÃ  eliminato. Continuare?"
-            : "AZIONE CRITICA: Stai per terminare la stagione UFFICIALE. Premi, crediti e progressione allenatori verranno assegnati. Il calendario verrÃ  eliminato. Continuare?";
+            ? "ATTENZIONE: Stai per terminare il campionato SENZA assegnare crediti o livellare gli allenatori. Il calendario verra eliminato. Continuare?"
+            : "AZIONE CRITICA: Stai per terminare la stagione UFFICIALE. Premi, crediti e progressione allenatori verranno assegnati. Il calendario verra eliminato. Continuare?";
         
         const title = isTestMode ? "Conferma Reset Campionato (TEST)" : "Conferma Chiusura Stagione Ufficiale";
         const confirmation = prompt(`${title}\n\n${message}\n\nDigita 'SI' per confermare:`);

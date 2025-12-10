@@ -5,8 +5,8 @@
 //
 
 window.AdminPlayers = {
-    
-    // Usa la mappa da DraftConstants (solo abilità implementate nell'enciclopedia)
+
+    // Usa la mappa da DraftConstants (solo abilita implementate nell'enciclopedia)
     get ROLE_ABILITIES_SEPARATED() {
         return window.DraftConstants?.ROLE_ABILITIES_MAP || {
             'P': {
@@ -28,7 +28,7 @@ window.AdminPlayers = {
         };
     },
 
-    // Getter per ROLE_ABILITIES_MAP (compatibilità)
+    // Getter per ROLE_ABILITIES_MAP (compatibilita)
     get ROLE_ABILITIES_MAP() {
         const separated = this.ROLE_ABILITIES_SEPARATED;
         const map = {};
@@ -43,8 +43,8 @@ window.AdminPlayers = {
     },
 
     /**
-     * Ottiene la bandiera emoji dalla nazionalità
-     * @param {string} nationalityCode - Codice nazionalità (es. 'IT')
+     * Ottiene la bandiera emoji dalla nazionalita
+     * @param {string} nationalityCode - Codice nazionalita (es. 'IT')
      * @returns {string} - Bandiera emoji o stringa vuota
      */
     getFlag(nationalityCode) {
@@ -63,7 +63,7 @@ window.AdminPlayers = {
         costDisplayInput.value = `Costo: ${newCost} CS`;
         costDisplayInput.dataset.calculatedCost = newCost;
     },
-    
+
     updateAbilitiesChecklist() {
         const roleSelect = document.getElementById('player-role');
         const checklistContainer = document.getElementById('abilities-checklist');
@@ -72,23 +72,23 @@ window.AdminPlayers = {
         if (!checklistContainer) return;
 
         if (!selectedRole || !this.ROLE_ABILITIES_SEPARATED[selectedRole]) {
-            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilità disponibili.</p>';
+            checklistContainer.innerHTML = '<p class="text-yellow-400 col-span-4">Seleziona un ruolo per visualizzare le abilita disponibili.</p>';
             return;
         }
 
         const roleAbilities = this.ROLE_ABILITIES_SEPARATED[selectedRole];
-        
+
         let checklistHtml = '<div class="space-y-4">';
-        
+
         checklistHtml += '<div class="bg-gray-900 p-3 rounded-lg border border-green-500">';
-        checklistHtml += '<h4 class="text-green-400 font-bold mb-2">✅ Abilità Positive (Max 3)</h4>';
+        checklistHtml += '<h4 class="text-green-400 font-bold mb-2">Abilita Positive (Max 3)</h4>';
         checklistHtml += '<div class="grid grid-cols-2 gap-2">';
-        
+
         roleAbilities.positive.forEach(ability => {
             checklistHtml += `
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}" 
-                           name="player-ability" value="${ability}" 
+                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}"
+                           name="player-ability" value="${ability}"
                            class="form-checkbox h-4 w-4 text-green-500 bg-gray-600 border-gray-500 rounded focus:ring-green-400 ability-positive">
                     <label for="ability-${ability.replace(/\s/g, '-')}" class="text-gray-300 text-sm">
                         ${ability}
@@ -96,19 +96,19 @@ window.AdminPlayers = {
                 </div>
             `;
         });
-        
+
         checklistHtml += '</div></div>';
-        
+
         checklistHtml += '<div class="bg-gray-900 p-3 rounded-lg border border-red-500 mt-3">';
-        checklistHtml += '<h4 class="text-red-400 font-bold mb-2">❌ Abilità Negative (Max 2)</h4>';
-        checklistHtml += '<p class="text-xs text-yellow-300 mb-2">⚠️ Attenzione: effetti dannosi!</p>';
+        checklistHtml += '<h4 class="text-red-400 font-bold mb-2">Abilita Negative (Max 2)</h4>';
+        checklistHtml += '<p class="text-xs text-yellow-300 mb-2">Attenzione: effetti dannosi!</p>';
         checklistHtml += '<div class="grid grid-cols-2 gap-2">';
-        
+
         roleAbilities.negative.forEach(ability => {
             checklistHtml += `
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}" 
-                           name="player-ability" value="${ability}" 
+                    <input type="checkbox" id="ability-${ability.replace(/\s/g, '-')}"
+                           name="player-ability" value="${ability}"
                            class="form-checkbox h-4 w-4 text-red-500 bg-gray-600 border-gray-500 rounded focus:ring-red-400 ability-negative">
                     <label for="ability-${ability.replace(/\s/g, '-')}" class="text-gray-300 text-sm">
                         ${ability}
@@ -116,45 +116,46 @@ window.AdminPlayers = {
                 </div>
             `;
         });
-        
+
         checklistHtml += '</div></div></div>';
 
         checklistContainer.innerHTML = checklistHtml;
-        
+
         checklistContainer.removeEventListener('change', this.handleAbilitiesLimit);
         checklistContainer.addEventListener('change', this.handleAbilitiesLimit.bind(this));
-    
+
         this.updateCostDisplay();
     },
 
     handleAbilitiesLimit(event) {
         const positiveChecked = document.querySelectorAll('#abilities-checklist .ability-positive:checked');
         const negativeChecked = document.querySelectorAll('#abilities-checklist .ability-negative:checked');
-        
+
         if (event.target.classList.contains('ability-positive') && positiveChecked.length > 3) {
             event.target.checked = false;
             const msgElement = document.getElementById('player-creation-message');
             if (msgElement) {
-                msgElement.textContent = '❌ Massimo 3 abilità positive!';
+                msgElement.textContent = 'Massimo 3 abilita positive!';
                 msgElement.classList.add('text-red-400');
                 setTimeout(() => { msgElement.textContent = ''; }, 2000);
             }
             return;
         }
-        
+
         if (event.target.classList.contains('ability-negative') && negativeChecked.length > 2) {
             event.target.checked = false;
             const msgElement = document.getElementById('player-creation-message');
             if (msgElement) {
-                msgElement.textContent = '❌ Massimo 2 abilità negative!';
+                msgElement.textContent = 'Massimo 2 abilita negative!';
                 msgElement.classList.add('text-red-400');
                 setTimeout(() => { msgElement.textContent = ''; }, 2000);
             }
             return;
         }
-        
+
         this.updateCostDisplay();
     },
+
     handleRandomPlayer() {
         const getRandomInt = window.getRandomInt;
 
@@ -175,7 +176,7 @@ window.AdminPlayers = {
         const randomLevelMax = getRandomInt(10, 20);
         const randomLevelMin = getRandomInt(1, randomLevelMax);
 
-        // Genera abilità casuali (max 3 positive + 2 negative)
+        // Genera abilita casuali (max 3 positive + 2 negative)
         const roleAbilities = this.ROLE_ABILITIES_SEPARATED[randomRole] || { positive: [], negative: [] };
         const numPositive = getRandomInt(0, Math.min(3, roleAbilities.positive.length));
         const numNegative = getRandomInt(0, Math.min(2, roleAbilities.negative.length));
@@ -205,16 +206,16 @@ window.AdminPlayers = {
             costDisplayInput.dataset.calculatedCost = calculatedCost;
         }
 
-        // Aggiorna le checkbox delle abilità
+        // Aggiorna le checkbox delle abilita
         this.updateAbilitiesChecklist();
 
-        // Seleziona le abilità positive
+        // Seleziona le abilita positive
         selectedPositive.forEach(ability => {
             const checkbox = document.getElementById(`ability-${ability.replace(/\s/g, '-')}`);
             if (checkbox) checkbox.checked = true;
         });
 
-        // Seleziona le abilità negative
+        // Seleziona le abilita negative
         selectedNegative.forEach(ability => {
             const checkbox = document.getElementById(`ability-${ability.replace(/\s/g, '-')}`);
             if (checkbox) checkbox.checked = true;
@@ -234,7 +235,7 @@ window.AdminPlayers = {
         const msgId = 'player-creation-message';
         const msgElement = document.getElementById(msgId);
         if (msgElement) msgElement.textContent = '';
-        
+
         const targetCollection = document.getElementById('target-collection').value;
         const name = document.getElementById('player-name').value.trim();
         const nationality = document.getElementById('player-nationality')?.value || '';
@@ -243,7 +244,7 @@ window.AdminPlayers = {
         const age = parseInt(document.getElementById('player-age').value);
         const levelMin = parseInt(document.getElementById('player-level-min').value);
         const levelMax = parseInt(document.getElementById('player-level-max').value);
-        
+
         const costDisplayInput = document.getElementById('player-cost-display');
         const selectedAbilities = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked')).map(cb => cb.value);
         const abilitiesCount = selectedAbilities.length;
@@ -263,15 +264,15 @@ window.AdminPlayers = {
         const invalidAbilities = selectedAbilities.filter(ability => !allowedAbilities.includes(ability));
         if (invalidAbilities.length > 0) {
             if (msgElement) {
-                msgElement.textContent = `Errore: L'abilitÃƒÂ /le abilitÃƒÂ  ${invalidAbilities.join(', ')} non Ã¨/sono valide per il ruolo di ${role}.`;
+                msgElement.textContent = `Errore: L'abilita ${invalidAbilities.join(', ')} non e valida per il ruolo di ${role}.`;
                 msgElement.classList.add('text-red-400');
             }
             return;
         }
-        
-        if (selectedAbilities.length > 3) {
+
+        if (selectedAbilities.length > 5) {
              if (msgElement) {
-                 msgElement.textContent = 'Errore: non puoi selezionare piÃ¹ di 3 abilitÃƒÂ .';
+                 msgElement.textContent = 'Errore: non puoi selezionare piu di 5 abilita totali.';
                  msgElement.classList.add('text-red-400');
              }
              return;
@@ -282,20 +283,20 @@ window.AdminPlayers = {
             abilities: selectedAbilities,
             isDrafted: false, teamId: null, creationDate: new Date().toISOString()
         };
-        
+
         try {
             const { collection, addDoc } = window.firestoreTools;
             const db = window.db;
             const collectionPath = targetCollection === 'draft' ? DRAFT_PLAYERS_COLLECTION_PATH : MARKET_PLAYERS_COLLECTION_PATH;
             const playersCollectionRef = collection(db, collectionPath);
             await addDoc(playersCollectionRef, newPlayer);
-            
+
             if (msgElement) {
                 msgElement.textContent = `Calciatore ${name} aggiunto al ${targetCollection.toUpperCase()} con successo!`;
                 msgElement.classList.remove('text-red-400');
                 msgElement.classList.add('text-green-500');
             }
-            
+
             if (targetCollection === 'draft' && reloadCallbacks.draft) {
                  reloadCallbacks.draft();
             } else if (reloadCallbacks.market) {
@@ -311,7 +312,7 @@ window.AdminPlayers = {
         }
 
         document.getElementById('player-name').value = '';
-        document.getElementById('player-role').value = ''; 
+        document.getElementById('player-role').value = '';
         this.updateAbilitiesChecklist();
     },
 
@@ -319,10 +320,8 @@ window.AdminPlayers = {
      * Carica i giocatori disponibili del Draft
      */
     async loadDraftPlayers(DRAFT_PLAYERS_COLLECTION_PATH) {
-        // Uso le funzioni esposte globalmente
-        // FIX: Destrutturazione difensiva e controllo esplicito delle funzioni Firebase.
         const firestoreTools = window.firestoreTools || {};
-        const { collection, getDocs, query, where } = firestoreTools; 
+        const { collection, getDocs, query, where } = firestoreTools;
         const db = window.db;
         const playersListContainer = document.getElementById('draft-players-list');
         if (!playersListContainer) return;
@@ -330,34 +329,27 @@ window.AdminPlayers = {
         playersListContainer.innerHTML = '<p class="text-center text-yellow-400">Caricamento Draft...</p>';
 
         try {
-            // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerÃƒÂ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
-            
+
             const playersCollectionRef = collection(db, DRAFT_PLAYERS_COLLECTION_PATH);
-            
-            // FILTRARE: Mostra SOLO i giocatori NON acquistati (isDrafted: false)
-            // Uso query(collectionRef, where)
             const q = query(playersCollectionRef, where('isDrafted', '==', false));
-            
             const querySnapshot = await getDocs(q);
-            
+
             const playersHtml = querySnapshot.docs.map(doc => {
                 const player = doc.data();
                 const playerId = doc.id;
-                // Questi giocatori dovrebbero essere sempre disponibili per la visualizzazione Admin
-                const status = `<span class="text-green-400">Disponibile</span>`; 
+                const status = `<span class="text-green-400">Disponibile</span>`;
                 const playerType = player.type || 'N/A';
                 const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
-                
+
                 return `
                     <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
                         <div>
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -367,16 +359,15 @@ window.AdminPlayers = {
                     </div>
                 `;
             }).join('');
-            
+
             playersListContainer.innerHTML = playersHtml || '<p class="text-center text-gray-400">Nessun giocatore Draft disponibile.</p>';
 
         } catch (error) {
             console.error("Errore nel caricamento Draft (tentativo con where fallito):", error);
-            // Se la query con where fallisce (indice mancante, o 'where is not a function' per fallback)
             this.loadDraftPlayersFallback(DRAFT_PLAYERS_COLLECTION_PATH, playersListContainer);
         }
     },
-    
+
     /**
      * Caricamento fallback/completo del Draft (inclusi i venduti)
      */
@@ -385,20 +376,20 @@ window.AdminPlayers = {
          const db = window.db;
          const playersCollectionRef = collection(db, DRAFT_PLAYERS_COLLECTION_PATH);
          const querySnapshot = await getDocs(playersCollectionRef);
-         
+
          const playersHtml = querySnapshot.docs.map(doc => {
              const player = doc.data();
              const playerId = doc.id;
-             const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`; 
+             const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`;
              const playerType = player.type || 'N/A';
              const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
-             
+
              return `
                  <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
                      <div>
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"
@@ -408,7 +399,7 @@ window.AdminPlayers = {
                  </div>
              `;
          }).join('');
-         
+
          playersListContainer.innerHTML = playersHtml || '<p class="text-center text-red-400">Errore: Indice mancante o collezione vuota. Controlla la console.</p>';
     },
 
@@ -417,10 +408,8 @@ window.AdminPlayers = {
      * Carica i giocatori disponibili del Mercato
      */
     async loadMarketPlayers(MARKET_PLAYERS_COLLECTION_PATH) {
-        // Uso le funzioni esposte globalmente
-        // FIX: Destrutturazione difensiva e controllo esplicito delle funzioni Firebase.
         const firestoreTools = window.firestoreTools || {};
-        const { collection, getDocs, query, where } = firestoreTools; 
+        const { collection, getDocs, query, where } = firestoreTools;
         const db = window.db;
         const playersListContainer = document.getElementById('market-players-list');
         if (!playersListContainer) return;
@@ -428,33 +417,27 @@ window.AdminPlayers = {
         playersListContainer.innerHTML = '<p class="text-center text-blue-400">Caricamento Mercato...</p>';
 
         try {
-            // VERIFICA CRITICA: Controlla se le funzioni essenziali esistono
             if (typeof query !== 'function' || typeof where !== 'function') {
-                 // Questo errore forzerÃƒÂ  l'esecuzione del fallback.
                  throw new Error("Funzioni Firestore 'query' o 'where' non caricate correttamente.");
             }
-            
+
             const playersCollectionRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
-            
-            // FILTRARE: Mostra SOLO i giocatori NON acquistati (isDrafted: false)
-            // Uso query(collectionRef, where)
             const q = query(playersCollectionRef, where('isDrafted', '==', false));
-            
             const querySnapshot = await getDocs(q);
 
             const playersHtml = querySnapshot.docs.map(doc => {
                 const player = doc.data();
                 const playerId = doc.id;
-                const status = `<span class="text-green-400">Disponibile</span>`; 
+                const status = `<span class="text-green-400">Disponibile</span>`;
                 const playerType = player.type || 'N/A';
                 const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
-                
+
                 return `
                     <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
                         <div>
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
                             <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                            <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
+                            <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
                         <button data-player-id="${playerId}" data-action="delete"
@@ -464,12 +447,11 @@ window.AdminPlayers = {
                     </div>
                 `;
             }).join('');
-            
+
             playersListContainer.innerHTML = playersHtml || '<p class="text-center text-gray-400">Nessun giocatore Mercato disponibile.</p>';
 
         } catch (error) {
             console.error("Errore nel caricamento Mercato (tentativo con where fallito):", error);
-            // Se la query con where fallisce, mostra tutti come fallback
             this.loadMarketPlayersFallback(MARKET_PLAYERS_COLLECTION_PATH, playersListContainer);
         }
     },
@@ -482,20 +464,20 @@ window.AdminPlayers = {
          const db = window.db;
          const playersCollectionRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
          const querySnapshot = await getDocs(playersCollectionRef);
-         
+
          const playersHtml = querySnapshot.docs.map(doc => {
              const player = doc.data();
              const playerId = doc.id;
-             const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`; 
+             const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`;
              const playerType = player.type || 'N/A';
              const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
-             
+
              return `
                  <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
                      <div>
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
                          <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
-                         <p class="text-xs text-yellow-300">AbilitÃƒÂ : ${abilitiesList}</p>
+                         <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
                      <button data-player-id="${playerId}" data-action="delete"
@@ -505,9 +487,9 @@ window.AdminPlayers = {
                  </div>
              `;
          }).join('');
-         
+
          playersListContainer.innerHTML = playersHtml || '<p class="text-center text-red-400">Errore: Indice mancante o collezione vuota. Controlla la console.</p>';
     }
 };
-// Auto init listeners for live cost display
-setTimeout(() => { try { window.AdminPlayers.initCostListeners(); } catch(e){} }, 0);
+
+console.log("Modulo Admin-Players caricato.");

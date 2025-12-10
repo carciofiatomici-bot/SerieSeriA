@@ -31,244 +31,246 @@ window.CAPTAIN_PLACEHOLDER_URL = CAPTAIN_PLACEHOLDER_URL;
  */
 const CAPTAIN_CANDIDATES_TEMPLATES = [
     // 1. Croccante: D, Tecnico
-    { 
-        id: 'croc', 
-        role: 'D', 
-        name: 'Croccante', 
-        levelRange: [12, 18], 
-        age: 28, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Croccante.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'croc',
+        role: 'D',
+        name: 'Croccante',
+        levelRange: [12, 18],
+        age: 28,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Croccante.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     }, 
     
     // 2. Shikanto: C, Tecnico
-    { 
-        id: 'shik', 
-        role: 'C', 
-        name: 'Shikanto', 
-        levelRange: [12, 18], 
-        age: 26, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/real%20disagio.png?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'shik',
+        role: 'C',
+        name: 'Shikanto',
+        levelRange: [12, 18],
+        age: 26,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/shikanto.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
     
     // 3. Il Cap: C, Tecnico
-    { 
-        id: 'ilcap', 
-        role: 'C', 
-        name: 'Il Cap', 
-        levelRange: [12, 18], 
-        age: 30, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/cap.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'ilcap',
+        role: 'C',
+        name: 'Il Cap',
+        levelRange: [12, 18],
+        age: 30,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/cap.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
     
-    // 4. Simone: P, Velocità
-    { 
-        id: 'simo', 
-        role: 'P', 
-        name: 'Simone', 
-        levelRange: [12, 18], 
-        age: 25, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/simone.jpg?raw=true', 
-        type: TYPE_VELOCITA, 
-        abilities: ['Icona'] 
+    // 4. Simone: P, Velocita
+    {
+        id: 'simo',
+        role: 'P',
+        name: 'Simone',
+        levelRange: [12, 18],
+        age: 25,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/simone.jpg?raw=true',
+        type: TYPE_VELOCITA,
+        abilities: ['Icona']
     },
     
     // 5. Dappino: C, Tecnico
-    { 
-        id: 'dappi', 
-        role: 'C', 
-        name: 'Dappino', 
-        levelRange: [12, 18], 
-        age: 24, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/dappino.png?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'dappi',
+        role: 'C',
+        name: 'Dappino',
+        levelRange: [12, 18],
+        age: 24,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/dappino.png?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     }, 
     
-    // 6. Blatta: D, Velocità
-    { 
-        id: 'blatta', 
-        role: 'D', 
-        name: 'Blatta', 
-        levelRange: [12, 18], 
-        age: 27, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/blatta.jpg?raw=true', 
-        type: TYPE_VELOCITA, 
-        abilities: ['Icona'] 
+    // 6. Blatta: D, Velocita
+    {
+        id: 'blatta',
+        role: 'D',
+        name: 'Blatta',
+        levelRange: [12, 18],
+        age: 27,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/blatta.jpg?raw=true',
+        type: TYPE_VELOCITA,
+        abilities: ['Icona']
     },
     
     // 7. Antony: D, Potente
-    { 
-        id: 'antony', 
-        role: 'D', 
-        name: 'Antony', 
-        levelRange: [12, 18], 
-        age: 29, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/antony.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    {
+        id: 'antony',
+        role: 'D',
+        name: 'Antony',
+        levelRange: [12, 18],
+        age: 29,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/antony.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
     
     // 8. Gladio: D, Potente
-    { 
-        id: 'gladio', 
-        role: 'D', 
-        name: 'Gladio', 
-        levelRange: [12, 18], 
-        age: 23, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/gladio.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    {
+        id: 'gladio',
+        role: 'D',
+        name: 'Gladio',
+        levelRange: [12, 18],
+        age: 23,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/gladio.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
     
     // 9. Amedemo: A, Potente
-    { 
-        id: 'amedemo', 
-        role: 'A', 
-        name: 'Amedemo', 
-        levelRange: [12, 18], 
-        age: 25, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/amedemo.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    {
+        id: 'amedemo',
+        role: 'A',
+        name: 'Amedemo',
+        levelRange: [12, 18],
+        age: 25,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/amedemo.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
     
     // 10. Flavio El Ficario: D, Tecnico
-    { 
-        id: 'flavio', 
-        role: 'D', 
-        name: 'Flavio El Ficario', 
-        levelRange: [12, 18], 
-        age: 31, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/elficario.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'flavio',
+        role: 'D',
+        name: 'Flavio El Ficario',
+        levelRange: [12, 18],
+        age: 31,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/elficario.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
     
     // 11. Luka Alpakashenka: D, Potente
-    { 
-        id: 'luka', 
-        role: 'D', 
-        name: 'Luka Alpakashenka', 
-        levelRange: [12, 18], 
-        age: 28, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/luca.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    {
+        id: 'luka',
+        role: 'D',
+        name: 'Luka Alpakashenka',
+        levelRange: [12, 18],
+        age: 28,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/luca.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
 
     // 12. Meliodas: C, Tecnico
-    { 
-        id: 'melio', 
-        role: 'C', 
-        name: 'Meliodas', 
-        levelRange: [12, 18], 
-        age: 25, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Mel.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'melio',
+        role: 'C',
+        name: 'Meliodas',
+        levelRange: [12, 18],
+        age: 25,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mel.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
     
     // 13. Mark Falco: P, Potente
-    { 
-        id: 'markf', 
-        role: 'P', 
-        name: 'Mark Falco', 
-        levelRange: [12, 18], 
-        age: 27, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Mark%20Falco.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    {
+        id: 'markf',
+        role: 'P',
+        name: 'Mark Falco',
+        levelRange: [12, 18],
+        age: 27,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mark%20Falco.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
     
     // 14. Sandro: C, Tecnico
-    { 
-        id: 'sandro', 
-        role: 'C', 
-        name: 'Sandro', 
-        levelRange: [12, 18], 
-        age: 29, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/sandro.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'sandro',
+        role: 'C',
+        name: 'Sandro',
+        levelRange: [12, 18],
+        age: 29,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/sandro.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
 
     // 15. Fosco: P, Tecnico
-    { 
-        id: 'fosco', 
-        role: 'P', 
-        name: 'Fosco', 
-        levelRange: [12, 18], 
-        age: 26, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Fosco.jpg?raw=true', 
-        type: TYPE_TECNICA, 
-        abilities: ['Icona'] 
+    {
+        id: 'fosco',
+        role: 'P',
+        name: 'Fosco',
+        levelRange: [12, 18],
+        age: 26,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Fosco.jpg?raw=true',
+        type: TYPE_TECNICA,
+        abilities: ['Icona']
     },
 
-    // 16. Cocco: C, Potente (NUOVO)
-    { 
-        id: 'cocco', 
-        role: 'C', 
-        name: 'Cocco', 
-        levelRange: [12, 18], 
-        age: 24, 
-        cost: 0, 
-        isCaptain: true, 
-        level: 12, 
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/cocco.jpg?raw=true', 
-        type: TYPE_POTENZA, 
-        abilities: ['Icona'] 
+    // 16. Cocco: C, Potente
+    {
+        id: 'cocco',
+        role: 'C',
+        name: 'Cocco',
+        levelRange: [12, 18],
+        age: 24,
+        cost: 0,
+        isCaptain: true,
+        level: 12,
+        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/cocco.jpg?raw=true',
+        type: TYPE_POTENZA,
+        abilities: ['Icona']
     },
 ];
 
 window.CAPTAIN_CANDIDATES_TEMPLATES = CAPTAIN_CANDIDATES_TEMPLATES;
+// Alias piu semplice per uso globale
+window.ICONE = CAPTAIN_CANDIDATES_TEMPLATES;

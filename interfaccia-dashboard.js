@@ -86,6 +86,11 @@ window.InterfacciaDashboard = {
         // Inizializza il color picker
         this.initColorPicker();
 
+        // Carica e visualizza la divisa della squadra
+        if (window.UniformEditor) {
+            window.UniformEditor.loadTeamUniform();
+        }
+
         // Calcolo e aggiornamento statistiche
         const allPlayers = currentTeamData.players || [];
         const formationPlayers = window.getFormationPlayers(currentTeamData);
@@ -236,10 +241,52 @@ window.InterfacciaDashboard = {
             logo.style.borderColor = color;
         }
 
+        // Bordo icona
+        const icona = document.getElementById('team-icona-avatar');
+        if (icona) {
+            icona.style.borderColor = color;
+        }
+
         // Bordo dashboard (football-box)
         const dashboard = document.getElementById('app-content');
         if (dashboard) {
             dashboard.style.borderColor = color;
+        }
+
+        // Bordo box countdown
+        const countdown = document.getElementById('next-match-countdown');
+        if (countdown) {
+            countdown.style.borderColor = color;
+        }
+
+        // Bordo box divisa
+        const uniformBox = document.getElementById('team-uniform-box');
+        if (uniformBox) {
+            uniformBox.style.borderColor = color;
+        }
+
+        // Bordo box statistiche - Livello Medio Rosa
+        const statRosaBox = document.getElementById('stat-rosa-level')?.closest('.border-2');
+        if (statRosaBox) {
+            statRosaBox.style.borderColor = color;
+        }
+
+        // Bordo box statistiche - Livello Tattico Titolari
+        const statFormazioneBox = document.getElementById('stat-formazione-level')?.closest('.border-2');
+        if (statFormazioneBox) {
+            statFormazioneBox.style.borderColor = color;
+        }
+
+        // Bordo box toggle Campionato
+        const championshipBox = document.getElementById('championship-participation-toggle')?.closest('.border-2');
+        if (championshipBox) {
+            championshipBox.style.borderColor = color;
+        }
+
+        // Bordo box toggle CoppaSeriA
+        const cupBox = document.getElementById('cup-participation-toggle')?.closest('.border-2');
+        if (cupBox) {
+            cupBox.style.borderColor = color;
         }
 
         // Aggiorna il color picker

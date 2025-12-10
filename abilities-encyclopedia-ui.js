@@ -490,4 +490,4 @@ window.AbilitiesUI = {
     }
 };
 
-console.log("Ã¢Å“â€¦ Abilities Encyclopedia UI caricato.");
+console.log("Modulo Abilities Encyclopedia UI caricato.");

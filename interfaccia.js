@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.InterfacciaCore.db = window.db;
     
     // Assicura che firestoreTools sia disponibile e contenga tutte le funzioni necessarie
-    // Le funzioni sono giÃƒÂ  state esposte in index.html durante l'inizializzazione di Firebase
+    // Le funzioni sono gia state esposte in index.html durante l'inizializzazione di Firebase
     if (!window.firestoreTools) {
-        console.error('firestoreTools non ÃƒÂ¨ stato inizializzato correttamente');
+        console.error('firestoreTools non e stato inizializzato correttamente');
         return;
     }
     
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Dashboard Utente
         teamDashboardTitle: document.getElementById('team-dashboard-title'),
         teamFirestoreId: document.getElementById('team-firestore-id'),
-        userLogoutButton: document.getElementById('user-logout-button'),
+        userBackToLoginButton: document.getElementById('user-back-to-login-button'),
         btnDeleteTeam: document.getElementById('btn-delete-team'),
         teamLogoElement: document.getElementById('team-logo'),
 
@@ -154,6 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
         loginPasswordInput: document.getElementById('login-password'),
         loginButton: document.getElementById('login-button'),
         loginMessage: document.getElementById('login-message'),
+
+        // Sessione Ricordata
+        rememberedSessionBox: document.getElementById('remembered-session-box'),
+        rememberedTeamLogo: document.getElementById('remembered-team-logo'),
+        rememberedTeamName: document.getElementById('remembered-team-name'),
+        btnReenterDashboard: document.getElementById('btn-reenter-dashboard'),
+        btnFullLogout: document.getElementById('btn-full-logout'),
+        loginFormSection: document.getElementById('login-form-section'),
         
         // Gate Box
         gatePasswordInput: document.getElementById('gate-password'),

@@ -121,7 +121,7 @@ window.ChampionshipRewards = {
             
             let coachLevel = currentCoach.level;
 
-            // 20% di possibilitÃ  di salire di livello (solo se l'allenatore è >= 1)
+            // 20% di possibilita di salire di livello (solo se l'allenatore è >= 1)
             if (coachLevel >= 1 && getRandomInt(1, 100) <= 20) {
                 
                 // NUOVO: Impedisce il superamento del livello massimo (Livello 10)

@@ -81,7 +81,6 @@ window.DraftAdminUI = {
                 </div>
 
                 <!-- SEZIONE DRAFT A TURNI -->
-                ${draftOpen ? `
                 <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500">
                     <h4 class="text-lg font-bold text-yellow-300 mb-3">Gestione Draft a Turni</h4>
                     ${!isDraftTurnsActive ? `
@@ -98,7 +97,6 @@ window.DraftAdminUI = {
                     `}
                     ${draftTurnsStatusHtml}
                 </div>
-                ` : ''}
 
                 <p id="draft-toggle-message" class="text-center mt-3 text-red-400"></p>
 

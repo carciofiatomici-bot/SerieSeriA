@@ -122,7 +122,7 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 [ ABILITÀ PARTICOLARI (SOLO ICONE) ]
 (Riservate ai capitani scelti alla creazione delle squadre)
 
-- Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni, inoltre la sua forma non può mai essere in negativo.
+- Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
 """
 
 file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'

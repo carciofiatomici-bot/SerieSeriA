@@ -1,4 +1,4 @@
-//
+﻿//
 // ====================================================================
 // MODULO ADMIN-TEAMS.JS V2.0 - UI Migliorata per Editing Giocatori
 // ====================================================================
@@ -12,24 +12,42 @@ window.AdminTeams = {
     currentEditingTeamData: null,
     reloadCallback: null,
 
-    // MAPPA COMPLETA abilità€ (60 abilità !)
+    // MAPPA COMPLETA abilita (60 abilita!)
     ROLE_ABILITIES_MAP: {
         'P': {
             positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico', 'Miracolo', 'Freddezza'],
-            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni']
+            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni'],
+            unique: ['Icona']
         },
         'D': {
             positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile', 'Salvataggio sulla Linea', 'Freddezza'],
-            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni']
+            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni'],
+            unique: ['Icona']
         },
         'C': {
             positive: ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Tuttocampista', 'Freddezza'],
-            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni']
+            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni'],
+            unique: ['Icona']
         },
         'A': {
             positive: ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Opportunista', 'Tiro a Giro', 'Immarcabile', 'Freddezza'],
-            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni']
+            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni'],
+            unique: ['Icona']
         }
+    },
+
+    /**
+     * Verifica se un giocatore e' un'Icona (ha abilita Icona o e' nella lista ICONE)
+     * NOTA: Questo e' diverso dal "Capitano nominato" (isCaptain) che da solo +1
+     */
+    isPlayerIcona(player) {
+        if (!player) return false;
+        // Ha gia l'abilita Icona?
+        if (player.abilities && player.abilities.includes('Icona')) return true;
+        // E' nella lista delle Icone predefinite?
+        const icone = window.ICONE || window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+        const iconeIds = new Set(icone.map(i => i.id));
+        return iconeIds.has(player.id);
     },
 
     /**
@@ -63,6 +81,8 @@ window.AdminTeams = {
                 const checkboxColorClasses = isParticipating ? 'bg-green-500 border-green-500' : 'bg-gray-700 border-gray-500';
                 const cupCheckboxColorClasses = isCupParticipating ? 'bg-purple-500 border-purple-500' : 'bg-gray-700 border-gray-500';
 
+                const logoUrl = teamData.logoUrl || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+
                 teamsHtml += `
                     <div class="team-item flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-500 transition duration-150">
                         <div class="flex flex-col space-y-2 mb-2 sm:mb-0">
@@ -80,14 +100,30 @@ window.AdminTeams = {
                             </div>
                         </div>
 
-                        <div class="w-full sm:w-auto mb-2 sm:mb-0">
-                            <p class="text-lg font-bold text-white">${teamData.teamName}</p>
-                            <p class="text-xs text-gray-400">ID: ${teamId}</p>
-                            <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
-                            <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
+                        <div class="flex items-center w-full sm:w-auto mb-2 sm:mb-0">
+                            <img src="${logoUrl}"
+                                 alt="Logo ${teamData.teamName}"
+                                 data-team-id="${teamId}"
+                                 data-action="change-logo"
+                                 class="w-16 h-16 rounded-full border-2 border-yellow-500 mr-4 cursor-pointer hover:border-yellow-300 hover:scale-110 transition object-cover"
+                                 title="Clicca per cambiare il logo">
+                            <div>
+                                <p class="text-lg font-bold text-white">${teamData.teamName}</p>
+                                <p class="text-xs text-gray-400">ID: ${teamId}</p>
+                                <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
+                                <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
+                            </div>
                         </div>
                         
-                        <div class="flex space-x-2 mt-2 sm:mt-0">
+                        <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                            <button data-team-id="${teamId}" data-action="view-dashboard"
+                                    class="bg-green-600 text-white font-semibold px-3 py-1 rounded-lg shadow-md hover:bg-green-700 transition duration-150 transform hover:scale-105">
+                                Dashboard
+                            </button>
+                            <button data-team-id="${teamId}" data-action="change-icon"
+                                    class="bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow-md hover:bg-yellow-700 transition duration-150 transform hover:scale-105">
+                                👑 Icona
+                            </button>
                             <button data-team-id="${teamId}" data-action="edit"
                                     class="bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow-md hover:bg-blue-700 transition duration-150 transform hover:scale-105">
                                 Modifica
@@ -128,7 +164,22 @@ window.AdminTeams = {
             this.handleToggleCupParticipation(teamId, target.checked, target, TEAMS_COLLECTION_PATH);
             return;
         }
-        
+
+        if (action === 'view-dashboard') {
+            this.viewTeamDashboard(teamId, TEAMS_COLLECTION_PATH);
+            return;
+        }
+
+        if (action === 'change-icon') {
+            this.openChangeIconModal(teamId, TEAMS_COLLECTION_PATH, reloadCallback);
+            return;
+        }
+
+        if (action === 'change-logo') {
+            this.handleChangeLogo(teamId, target, TEAMS_COLLECTION_PATH);
+            return;
+        }
+
         if (action === 'delete') {
             target.textContent = 'CONFERMA? (Click di nuovo)';
             target.classList.remove('bg-red-600');
@@ -241,6 +292,274 @@ window.AdminTeams = {
     },
 
     /**
+     * Visualizza la dashboard di una squadra selezionata (come Admin)
+     */
+    async viewTeamDashboard(teamId, TEAMS_COLLECTION_PATH) {
+        const { doc, getDoc } = window.firestoreTools;
+        const db = window.db;
+        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+        try {
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) {
+                alert('Squadra non trovata!');
+                return;
+            }
+
+            const teamData = teamDoc.data();
+
+            // Imposta i dati della squadra nel core
+            window.InterfacciaCore.currentTeamData = teamData;
+            window.InterfacciaCore.currentTeamId = teamId;
+
+            // Salva la sessione come admin che sta visualizzando una squadra
+            localStorage.setItem('fanta_admin_viewing_team', teamId);
+
+            // Carica i loghi delle squadre
+            if (window.fetchAllTeamLogos) {
+                await window.fetchAllTeamLogos();
+            }
+
+            // Aggiorna la UI della dashboard
+            const elements = window.elements;
+            if (window.InterfacciaDashboard && elements) {
+                window.InterfacciaDashboard.updateTeamUI(
+                    teamData.teamName,
+                    teamId,
+                    teamData.logoUrl,
+                    false,
+                    elements
+                );
+            }
+
+            // Mostra la dashboard utente
+            const appContent = document.getElementById('app-content');
+            if (appContent && window.showScreen) {
+                window.showScreen(appContent);
+            }
+
+        } catch (error) {
+            console.error('Errore nel caricamento della dashboard:', error);
+            alert('Errore nel caricamento della dashboard: ' + error.message);
+        }
+    },
+
+    /**
+     * Apre la modale per cambiare l'icona della squadra
+     */
+    async openChangeIconModal(teamId, TEAMS_COLLECTION_PATH, reloadCallback) {
+        const { doc, getDoc } = window.firestoreTools;
+        const db = window.db;
+        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+        try {
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) {
+                alert('Squadra non trovata!');
+                return;
+            }
+
+            const teamData = teamDoc.data();
+            const currentIconaId = teamData.iconaId;
+            const icone = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+
+            // Ordina le icone per ruolo
+            const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            const iconeOrdinate = [...icone].sort((a, b) => {
+                const orderA = ROLE_ORDER[a.role] !== undefined ? ROLE_ORDER[a.role] : 99;
+                const orderB = ROLE_ORDER[b.role] !== undefined ? ROLE_ORDER[b.role] : 99;
+                return orderA - orderB;
+            });
+
+            // Crea il modal
+            const modalHtml = `
+                <div id="change-icon-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 overflow-y-auto">
+                    <div class="football-box w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+                        <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-yellow-600 pb-2">👑 Cambia Icona - ${teamData.teamName}</h3>
+                        <p class="text-gray-300 mb-4">Icona attuale: <span class="text-yellow-400 font-bold">${currentIconaId ? icone.find(i => i.id === currentIconaId)?.name || currentIconaId : 'Nessuna'}</span></p>
+                        <p id="change-icon-message" class="text-center text-sm mb-4"></p>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+                            ${iconeOrdinate.map(icona => `
+                                <div class="p-3 bg-gray-700 rounded-lg border-2 ${icona.id === currentIconaId ? 'border-green-500 bg-green-900' : 'border-gray-600 hover:border-yellow-500'} text-center cursor-pointer transition"
+                                     onclick="window.AdminTeams.selectIcon('${icona.id}', '${teamId}', '${TEAMS_COLLECTION_PATH}')">
+                                    <img src="${icona.photoUrl}"
+                                         alt="${icona.name}"
+                                         class="w-16 h-16 rounded-full mx-auto mb-2 object-cover border-2 ${icona.id === currentIconaId ? 'border-green-400' : 'border-yellow-400'}">
+                                    <p class="text-sm font-bold text-white">${icona.name}</p>
+                                    <p class="text-xs text-yellow-400">${icona.role} - ${icona.type}</p>
+                                    ${icona.id === currentIconaId ? '<p class="text-xs text-green-400 mt-1">ATTUALE</p>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex justify-end space-x-4 pt-4 border-t border-gray-700">
+                            <button onclick="window.AdminTeams.closeChangeIconModal()"
+                                    class="bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-400 transition">
+                                Chiudi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Rimuovi eventuali modal esistenti
+            const existingModal = document.getElementById('change-icon-modal');
+            if (existingModal) existingModal.remove();
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            this.changeIconReloadCallback = reloadCallback;
+
+        } catch (error) {
+            console.error('Errore nel caricamento delle icone:', error);
+            alert('Errore: ' + error.message);
+        }
+    },
+
+    /**
+     * Seleziona e salva una nuova icona per la squadra
+     */
+    async selectIcon(iconaId, teamId, TEAMS_COLLECTION_PATH) {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+        const msgElement = document.getElementById('change-icon-message');
+        if (msgElement) {
+            msgElement.textContent = 'Salvataggio in corso...';
+            msgElement.className = 'text-center text-sm mb-4 text-yellow-400';
+        }
+
+        try {
+            // Trova i dati dell'icona selezionata
+            const icone = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+            const selectedIcona = icone.find(i => i.id === iconaId);
+            if (!selectedIcona) throw new Error('Icona non trovata!');
+
+            // Carica i dati attuali della squadra
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) throw new Error('Squadra non trovata!');
+            const teamData = teamDoc.data();
+
+            // Rimuovi la vecchia icona dalla rosa (se presente)
+            let updatedPlayers = teamData.players.filter(p => !p.abilities || !p.abilities.includes('Icona'));
+
+            // Crea il nuovo giocatore icona
+            const newIconaPlayer = {
+                id: selectedIcona.id,
+                name: selectedIcona.name,
+                role: selectedIcona.role,
+                type: selectedIcona.type,
+                age: selectedIcona.age,
+                level: selectedIcona.level || 12,
+                cost: 0,
+                abilities: ['Icona'],
+                isCaptain: true,
+                photoUrl: selectedIcona.photoUrl
+            };
+
+            // Aggiungi la nuova icona alla rosa
+            updatedPlayers.push(newIconaPlayer);
+
+            // Aggiorna anche la formazione se necessario
+            let updatedFormation = teamData.formation || { modulo: '1-1-2-1', titolari: [], panchina: [] };
+
+            // Rimuovi la vecchia icona dalla formazione
+            updatedFormation.titolari = updatedFormation.titolari.filter(p => !p.abilities || !p.abilities.includes('Icona'));
+            updatedFormation.panchina = updatedFormation.panchina.filter(p => !p.abilities || !p.abilities.includes('Icona'));
+
+            // Aggiungi la nuova icona ai titolari
+            updatedFormation.titolari.push(newIconaPlayer);
+
+            // Salva su Firestore
+            await updateDoc(teamDocRef, {
+                iconaId: iconaId,
+                players: updatedPlayers,
+                formation: updatedFormation
+            });
+
+            if (msgElement) {
+                msgElement.textContent = `Icona cambiata in ${selectedIcona.name}!`;
+                msgElement.className = 'text-center text-sm mb-4 text-green-400';
+            }
+
+            // Chiudi il modal dopo 1 secondo e ricarica
+            setTimeout(() => {
+                this.closeChangeIconModal();
+                if (this.changeIconReloadCallback) this.changeIconReloadCallback();
+            }, 1000);
+
+        } catch (error) {
+            console.error('Errore nel cambio icona:', error);
+            if (msgElement) {
+                msgElement.textContent = `Errore: ${error.message}`;
+                msgElement.className = 'text-center text-sm mb-4 text-red-400';
+            }
+        }
+    },
+
+    /**
+     * Chiude il modal di cambio icona
+     */
+    closeChangeIconModal() {
+        const modal = document.getElementById('change-icon-modal');
+        if (modal) modal.remove();
+        this.changeIconReloadCallback = null;
+    },
+
+    /**
+     * Gestisce il cambio del logo della squadra
+     */
+    async handleChangeLogo(teamId, imgElement, TEAMS_COLLECTION_PATH) {
+        const DEFAULT_LOGO_URL = 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+        const currentUrl = imgElement.src;
+
+        const newLogoUrl = prompt("Inserisci il link (URL) del nuovo logo della squadra:", currentUrl);
+
+        if (newLogoUrl === null) {
+            return; // Utente ha annullato
+        }
+
+        const trimmedUrl = newLogoUrl.trim();
+
+        // Se vuoto o non valido, usa il placeholder
+        let finalUrl = trimmedUrl;
+        if (trimmedUrl === "" || !trimmedUrl.startsWith('http')) {
+            if (trimmedUrl !== "" && !trimmedUrl.startsWith('http')) {
+                alert('URL non valido. Deve iniziare con http:// o https://. Verra usato il placeholder.');
+            }
+            finalUrl = DEFAULT_LOGO_URL;
+        }
+
+        // Aggiorna l'immagine immediatamente
+        imgElement.src = finalUrl;
+
+        // Salva su Firestore
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+            await updateDoc(teamDocRef, {
+                logoUrl: finalUrl
+            });
+
+            // Aggiorna anche la mappa globale dei loghi
+            if (window.InterfacciaCore && window.InterfacciaCore.teamLogosMap) {
+                window.InterfacciaCore.teamLogosMap[teamId] = finalUrl;
+            }
+
+            console.log(`Logo squadra ${teamId} aggiornato con successo.`);
+
+        } catch (error) {
+            console.error('Errore nel salvataggio del logo:', error);
+            alert('Errore nel salvataggio del logo: ' + error.message);
+            // Ripristina l'immagine precedente in caso di errore
+            imgElement.src = currentUrl;
+        }
+    },
+
+    /**
      * Apre la modale per modificare la squadra (NUOVA UI!)
      */
     async openEditTeamModal(teamId, TEAMS_COLLECTION_PATH, reloadCallback) {
@@ -279,7 +598,7 @@ window.AdminTeams = {
         const modalHtml = `
             <div id="edit-team-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 overflow-y-auto">
                 <div class="football-box w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-                    <h3 class="text-3xl font-bold text-blue-400 mb-4 border-b border-blue-600 pb-2">✏️ Modifica Squadra: ${teamData.teamName}</h3>
+                    <h3 class="text-3xl font-bold text-blue-400 mb-4 border-b border-blue-600 pb-2">✏️ Modifica Squadra: ${teamData.teamName}</h3>
                     <p id="edit-message" class="text-center text-sm mb-4"></p>
 
                     <!-- Tabs -->
@@ -394,7 +713,7 @@ window.AdminTeams = {
 
         return this.currentEditingPlayers.map((player, index) => {
             const abilitiesDisplay = player.abilities && player.abilities.length > 0 
-                ? `<p class="text-xs text-purple-400 mt-1">🌟 abilità : ${player.abilities.join(', ')}</p>` 
+                ? `<p class="text-xs text-purple-400 mt-1">🌟 abilita : ${player.abilities.join(', ')}</p>` 
                 : '';
             
             return `
@@ -405,7 +724,7 @@ window.AdminTeams = {
                             <p class="text-sm text-gray-400">
                                 Ruolo: <span class="text-yellow-400">${player.role}</span> | 
                                 Tipo: <span class="text-cyan-400">${player.type}</span> | 
-                                EtÃ : <span class="text-gray-300">${player.age}</span> |
+                                Eta: <span class="text-gray-300">${player.age}</span> |
                                 Livello: <span class="text-green-400">${player.level !== undefined ? player.level : (player.levelRange && Array.isArray(player.levelRange) ? player.levelRange[0] : (player.levelMin || 1))}</span>
                             </p>
                             ${abilitiesDisplay}
@@ -413,7 +732,7 @@ window.AdminTeams = {
                         <div class="flex space-x-2">
                             <button onclick="window.AdminTeams.editPlayer(${index})" 
                                     class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition text-sm">
-                                ✏️
+                                ✏️
                             </button>
                             <button onclick="window.AdminTeams.deletePlayer(${index})" 
                                     class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition text-sm">
@@ -496,7 +815,7 @@ window.AdminTeams = {
         const modalHtml = `
             <div id="player-edit-modal" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4 z-[60]">
                 <div class="bg-gray-800 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 border-2 border-blue-500">
-                    <h4 class="text-2xl font-bold text-yellow-400 mb-4">${isNew ? '➕ Nuovo Giocatore' : '✏️ Modifica Giocatore'}</h4>
+                    <h4 class="text-2xl font-bold text-yellow-400 mb-4">${isNew ? '➕ Nuovo Giocatore' : '✏️ Modifica Giocatore'}</h4>
                     
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
@@ -506,7 +825,7 @@ window.AdminTeams = {
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
                             <div>
-                                <label class="text-gray-300 block mb-1 font-bold">Età</label>
+                                <label class="text-gray-300 block mb-1 font-bold">Eta </label>
                                 <input type="number" id="player-age-input" value="${player.age}" min="18" max="40"
                                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                             </div>
@@ -518,8 +837,8 @@ window.AdminTeams = {
                                 <select id="player-role-input" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500"
                                         onchange="window.AdminTeams.updateAbilitiesForRole()">
                                     <option value="P" ${player.role === 'P' ? 'selected' : ''}>🧤 Portiere</option>
-                                    <option value="D" ${player.role === 'D' ? 'selected' : ''}>🛡️ Difensore</option>
-                                    <option value="C" ${player.role === 'C' ? 'selected' : ''}>⚙️ Centrocampista</option>
+                                    <option value="D" ${player.role === 'D' ? 'selected' : ''}>🛡 Difensore</option>
+                                    <option value="C" ${player.role === 'C' ? 'selected' : ''}>⚙ Centrocampista</option>
                                     <option value="A" ${player.role === 'A' ? 'selected' : ''}>⚡ Attaccante</option>
                                 </select>
                             </div>
@@ -528,7 +847,7 @@ window.AdminTeams = {
                                 <select id="player-type-input" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                                     <option value="Potenza" ${player.type === 'Potenza' ? 'selected' : ''}>💪 Potenza</option>
                                     <option value="Tecnica" ${player.type === 'Tecnica' ? 'selected' : ''}>🎯 Tecnica</option>
-                                    <option value="Velocita" ${player.type === 'Velocita' ? 'selected' : ''}>⚡ Velocità</option>
+                                    <option value="Velocita" ${player.type === 'Velocita' ? 'selected' : ''}>⚡ VelocitÃ </option>
                                 </select>
                             </div>
                         </div>
@@ -557,10 +876,10 @@ window.AdminTeams = {
                         `}
 
                         <div>
-                            <label class="text-gray-300 block mb-2 font-bold">Abilità</label>
+                            <label class="text-gray-300 block mb-2 font-bold">AbilitÃ </label>
                             <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
                             <div id="abilities-selection" class="space-y-3">
-                                ${this.renderAbilitiesSelection(player.role, player.abilities || [])}
+                                ${this.renderAbilitiesSelection(player.role, player.abilities || [], this.isPlayerIcona(player))}
                             </div>
                         </div>
                     </div>
@@ -583,13 +902,12 @@ window.AdminTeams = {
     },
 
     /**
-     * Renderizza selezione abilità 
-     */
-    renderAbilitiesSelection(role, currentAbilities) {
+     * Renderizza selezione abilita */
+    renderAbilitiesSelection(role, currentAbilities, isIcona = false) {
         const roleAbilities = this.ROLE_ABILITIES_MAP[role];
-        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilità  disponibile</p>';
+        if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilita disponibile</p>';
 
-        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✅ abilità  Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
+        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✏️… abilita Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.positive.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
@@ -604,8 +922,8 @@ window.AdminTeams = {
         
         html += '</div></div>';
         
-        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">âŒ abilità  Negative (Max 2)</h5>';
-        html += '<p class="text-xs text-yellow-300 mb-2">âš ï¸ Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
+        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">Ã¢ÂÅ’ abilita Negative (Max 2)</h5>';
+        html += '<p class="text-xs text-yellow-300 mb-2">Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.negative.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
@@ -617,14 +935,40 @@ window.AdminTeams = {
                 </label>
             `;
         });
-        
+
         html += '</div></div>';
-        
+
+        // Abilita Uniche (solo per Admin)
+        if (roleAbilities.unique && roleAbilities.unique.length > 0) {
+            html += '<div class="bg-gray-900 p-3 rounded border border-yellow-500 mt-3"><h5 class="text-yellow-400 font-bold mb-2">👑 Abilita Uniche (Solo Admin)</h5>';
+            html += '<p class="text-xs text-yellow-300 mb-2">Abilita speciali riservate alle Icone</p><div class="grid grid-cols-2 gap-2">';
+
+            roleAbilities.unique.forEach(ability => {
+                // Per le Icone (giocatori speciali), l'abilita "Icona" e sempre checked e bloccata
+                const isIconaAbility = ability === 'Icona';
+                const isLocked = isIcona && isIconaAbility;
+                const checked = isLocked || currentAbilities.includes(ability) ? 'checked' : '';
+                const disabled = isLocked ? 'disabled' : '';
+                const lockedStyle = isLocked ? 'opacity-75 cursor-not-allowed' : '';
+                const lockedNote = isLocked ? ' (Fissa)' : '';
+
+                html += `
+                    <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-800 p-1 rounded ${lockedStyle}">
+                        <input type="checkbox" value="${ability}" ${checked} ${disabled} class="ability-unique-check form-checkbox h-4 w-4 text-yellow-500"
+                               onchange="window.AdminTeams.validateAbilitySelection()">
+                        <span class="text-yellow-300 font-bold">${ability}${lockedNote}</span>
+                    </label>
+                `;
+            });
+
+            html += '</div></div>';
+        }
+
         return html;
     },
 
     /**
-     * Aggiorna abilità  quando cambia ruolo
+     * Aggiorna abilita quando cambia ruolo
      */
     updateAbilitiesForRole() {
         const role = document.getElementById('player-role-input').value;
@@ -632,7 +976,7 @@ window.AdminTeams = {
     },
 
     /**
-     * Valida selezione abilità  (max 3 positive, max 1 negativa)
+     * Valida selezione abilita (max 3 positive, max 1 negativa)
      */
     validateAbilitySelection() {
         const positiveChecks = document.querySelectorAll('.ability-positive-check:checked');
@@ -641,14 +985,14 @@ window.AdminTeams = {
         // Limita positive a 3
         if (positiveChecks.length > 3) {
             event.target.checked = false;
-            alert('âŒ Massimo 3 abilità  positive!');
+            alert('Ã¢ÂÅ’ Massimo 3 abilita positive!');
             return false;
         }
         
         // Limita negative a 2
         if (negativeChecks.length > 2) {
             event.target.checked = false;
-            alert('âŒ Massimo 2 abilità  negative!');
+            alert('Ã¢ÂÅ’ Massimo 2 abilita negative!');
             return false;
         }
         
@@ -663,78 +1007,99 @@ window.AdminTeams = {
         const age = parseInt(document.getElementById('player-age-input').value);
         const role = document.getElementById('player-role-input').value;
         const type = document.getElementById('player-type-input').value;
-        
+
         const levelSingleInput = document.getElementById('player-level-single');
-        const hasFixedLevel = levelSingleInput !== null;
-        
-        let level, levelMin, levelMax;
-        
-        if (hasFixedLevel) {
+        const hasFixedLevelInput = levelSingleInput !== null;
+
+        let level;
+
+        if (hasFixedLevelInput) {
             level = parseInt(levelSingleInput.value);
-            levelMin = level;
-            levelMax = level;
         } else {
-            levelMin = parseInt(document.getElementById('player-levelmin-input').value);
-            levelMax = parseInt(document.getElementById('player-levelmax-input').value);
-            level = null;
-        }
-        
-        const positiveAbilities = Array.from(document.querySelectorAll('.ability-positive-check:checked')).map(el => el.value);
-        const negativeAbilities = Array.from(document.querySelectorAll('.ability-negative-check:checked')).map(el => el.value);
-        const abilities = [...positiveAbilities, ...negativeAbilities];
-        
-        if (!name) {
-            alert('❌ Inserisci un nome!');
-            return;
-        }
-        
-        if (!hasFixedLevel && levelMin > levelMax) {
-            alert('❌ Livello Min non può essere maggiore di Livello Max!');
-            return;
-        }
-        
-        if (hasFixedLevel) {
-            if (level < 1 || level > 20) {
-                alert('Il livello deve essere tra 1 e 20!');
+            // Per nuovi giocatori con range, usa levelMin come livello iniziale
+            const levelMin = parseInt(document.getElementById('player-levelmin-input').value);
+            const levelMax = parseInt(document.getElementById('player-levelmax-input').value);
+
+            if (levelMin > levelMax) {
+                alert('Livello Min non puo essere maggiore di Livello Max!');
                 return;
             }
-        } else {
             if (levelMin < 1 || levelMax > 20) {
                 alert('I livelli devono essere tra 1 e 20!');
                 return;
             }
+
+            level = levelMin; // Usa il livello minimo come valore iniziale
         }
-        
+
+        // Cerca le checkbox solo all'interno del modal player-edit-modal
+        const modal = document.getElementById('player-edit-modal');
+        if (!modal) {
+            console.error('Modal player-edit-modal non trovato!');
+            return;
+        }
+
+        const positiveAbilities = Array.from(modal.querySelectorAll('.ability-positive-check:checked')).map(el => el.value);
+        const negativeAbilities = Array.from(modal.querySelectorAll('.ability-negative-check:checked')).map(el => el.value);
+        // Includi anche le checkbox disabled (per Icona bloccata sulle Icone)
+        const uniqueAbilities = Array.from(modal.querySelectorAll('.ability-unique-check:checked, .ability-unique-check:disabled:checked')).map(el => el.value);
+        let abilities = [...positiveAbilities, ...negativeAbilities, ...uniqueAbilities];
+
+        // Per le Icone (giocatori speciali), assicurati che "Icona" sia sempre presente
+        // NOTA: isCaptain e' il "capitano nominato" (bonus +1), diverso dall'Icona
+        const originalPlayer = index !== -1 ? this.currentEditingPlayers[index] : {};
+        if (this.isPlayerIcona(originalPlayer) && !abilities.includes('Icona')) {
+            abilities.push('Icona');
+        }
+
+        // Debug: mostra tutte le checkbox unique trovate
+        const allUniqueCheckboxes = modal.querySelectorAll('.ability-unique-check');
+        console.log('Tutte checkbox unique trovate:', allUniqueCheckboxes.length);
+        allUniqueCheckboxes.forEach(cb => {
+            console.log(`  - ${cb.value}: checked=${cb.checked}`);
+        });
+
+        console.log('Abilita positive:', positiveAbilities);
+        console.log('Abilita negative:', negativeAbilities);
+        console.log('Abilita unique:', uniqueAbilities);
+        console.log('Abilita totali salvate:', abilities);
+
+        if (!name) {
+            alert('Inserisci un nome!');
+            return;
+        }
+
+        if (level < 1 || level > 20) {
+            alert('Il livello deve essere tra 1 e 20!');
+            return;
+        }
+
         const playerData = {
+            id: index === -1 ? `player_${Date.now()}` : (originalPlayer.id || `player_${Date.now()}`),
             name,
             age,
             role,
             type,
+            level, // Sempre usa level singolo
             abilities,
-            id: index === -1 ? `player_${Date.now()}` : (this.currentEditingPlayers[index].id || `player_${Date.now()}`)
+            cost: originalPlayer.cost || 0,
+            isCaptain: originalPlayer.isCaptain || false
         };
-        
-        if (hasFixedLevel) {
-            playerData.level = level;
-        } else {
-            playerData.levelMin = levelMin;
-            playerData.levelMax = levelMax;
+
+        // Mantieni photoUrl se presente (per Icone)
+        if (originalPlayer.photoUrl) {
+            playerData.photoUrl = originalPlayer.photoUrl;
         }
-        
+
         if (index === -1) {
             this.currentEditingPlayers.push(playerData);
         } else {
-            const originalPlayer = this.currentEditingPlayers[index];
-            // Se il giocatore aveva un livello fisso (level o levelRange), mantieni il formato corretto
-            if (originalPlayer.level !== undefined || (originalPlayer.levelRange && Array.isArray(originalPlayer.levelRange))) {
-                playerData.level = level;
-                delete playerData.levelMin;
-                delete playerData.levelMax;
-                delete playerData.levelRange;
-            }
             this.currentEditingPlayers[index] = playerData;
         }
-        
+
+        console.log('PlayerData salvato:', JSON.stringify(playerData, null, 2));
+        console.log('Abilities nel playerData:', playerData.abilities);
+
         this.closePlayerEditModal();
         document.getElementById('players-list-edit').innerHTML = this.renderPlayersList();
         document.getElementById('tab-players').innerHTML = `⚽ Giocatori (${this.currentEditingPlayers.length})`;
@@ -757,7 +1122,7 @@ window.AdminTeams = {
         const creditiSuperSeri = parseInt(document.getElementById('edit-css').value) || 0;
 
         if (!teamName || teamName.length < 3) {
-            alert('âŒ Il nome squadra deve avere almeno 3 caratteri!');
+            alert('Ã¢ÂÅ’ Il nome squadra deve avere almeno 3 caratteri!');
             return;
         }
         
@@ -766,18 +1131,32 @@ window.AdminTeams = {
         const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
         
         const msgElement = document.getElementById('edit-message');
-        msgElement.textContent = 'â³ Salvataggio in corso...';
+        msgElement.textContent = 'Ã¢ÂÂ³ Salvataggio in corso...';
         msgElement.className = 'text-center text-sm mb-4 text-yellow-400';
         
         try {
+            // Sincronizza la formazione con i giocatori modificati
+            const updatedFormation = this.syncFormationWithPlayers(
+                this.currentEditingTeamData.formation,
+                this.currentEditingPlayers
+            );
+
+            // Sincronizza playersFormStatus con i nuovi livelli dei giocatori
+            const updatedFormStatus = this.syncFormStatusWithPlayers(
+                this.currentEditingTeamData.playersFormStatus,
+                this.currentEditingPlayers
+            );
+
             await updateDoc(teamDocRef, {
                 teamName,
                 budget,
                 creditiSuperSeri,
-                players: this.currentEditingPlayers
+                players: this.currentEditingPlayers,
+                formation: updatedFormation,
+                playersFormStatus: updatedFormStatus
             });
             
-            msgElement.textContent = '✅ Modifiche salvate con successo!';
+            msgElement.textContent = '✏️… Modifiche salvate con successo!';
             msgElement.className = 'text-center text-sm mb-4 text-green-400';
             
             setTimeout(() => {
@@ -787,9 +1166,103 @@ window.AdminTeams = {
             
         } catch (error) {
             console.error('Errore salvataggio:', error);
-            msgElement.textContent = `âŒ Errore: ${error.message}`;
+            msgElement.textContent = `Ã¢ÂÅ’ Errore: ${error.message}`;
             msgElement.className = 'text-center text-sm mb-4 text-red-400';
         }
+    },
+
+    /**
+     * Sincronizza playersFormStatus con i nuovi livelli dei giocatori.
+     * Aggiorna il campo 'level' in playersFormStatus per riflettere le modifiche admin.
+     * Ricalcola il livello basandosi sul nuovo livello base + modificatore forma esistente.
+     */
+    syncFormStatusWithPlayers(formStatus, players) {
+        if (!formStatus) {
+            return {};
+        }
+
+        const updatedFormStatus = { ...formStatus };
+
+        // Crea una mappa dei giocatori per ID
+        const playersMap = new Map();
+        players.forEach(p => playersMap.set(p.id, p));
+
+        // Aggiorna ogni entry in formStatus
+        for (const playerId in updatedFormStatus) {
+            const player = playersMap.get(playerId);
+            if (player) {
+                const existingForm = updatedFormStatus[playerId];
+                const formMod = existingForm.mod || 0;
+                // Ricalcola il livello: nuovo livello base + modificatore forma esistente
+                const newLevel = Math.min(30, Math.max(1, (player.level || 1) + formMod));
+
+                updatedFormStatus[playerId] = {
+                    ...existingForm,
+                    level: newLevel
+                };
+            } else {
+                // Rimuovi formStatus per giocatori eliminati
+                delete updatedFormStatus[playerId];
+            }
+        }
+
+        return updatedFormStatus;
+    },
+
+    /**
+     * Sincronizza la formazione con i giocatori modificati.
+     * Aggiorna i dati dei giocatori in titolari/panchina con quelli dalla rosa.
+     * Rimuove dalla formazione i giocatori eliminati dalla rosa.
+     */
+    syncFormationWithPlayers(formation, players) {
+        if (!formation) {
+            return { modulo: '1-1-2-1', titolari: [], panchina: [] };
+        }
+
+        // Crea una mappa dei giocatori per ID per lookup veloce
+        const playersMap = new Map();
+        players.forEach(p => playersMap.set(p.id, p));
+
+        // Aggiorna titolari: mantieni solo quelli ancora nella rosa e aggiorna i loro dati
+        const updatedTitolari = (formation.titolari || [])
+            .filter(t => playersMap.has(t.id)) // Rimuovi giocatori eliminati
+            .map(t => {
+                const updatedPlayer = playersMap.get(t.id);
+                // Aggiorna i dati del giocatore mantenendo eventuali proprieta specifiche della formazione
+                return {
+                    ...t,
+                    name: updatedPlayer.name,
+                    role: updatedPlayer.role,
+                    type: updatedPlayer.type,
+                    age: updatedPlayer.age,
+                    level: updatedPlayer.level,
+                    abilities: updatedPlayer.abilities || [],
+                    cost: updatedPlayer.cost || 0
+                };
+            });
+
+        // Aggiorna panchina: mantieni solo quelli ancora nella rosa e aggiorna i loro dati
+        const updatedPanchina = (formation.panchina || [])
+            .filter(p => playersMap.has(p.id)) // Rimuovi giocatori eliminati
+            .map(p => {
+                const updatedPlayer = playersMap.get(p.id);
+                return {
+                    ...p,
+                    name: updatedPlayer.name,
+                    role: updatedPlayer.role,
+                    type: updatedPlayer.type,
+                    age: updatedPlayer.age,
+                    level: updatedPlayer.level,
+                    abilities: updatedPlayer.abilities || [],
+                    cost: updatedPlayer.cost || 0
+                };
+            });
+
+        return {
+            modulo: formation.modulo || '1-1-2-1',
+            titolari: updatedTitolari,
+            panchina: updatedPanchina
+        };
     },
 
     /**
@@ -864,7 +1337,7 @@ window.AdminTeams = {
             if (needsLevelFix || hasObsoleteFields) {
                 let repairNote = `${player.name}: `;
                 if (needsLevelFix) {
-                    repairNote += `Lv ${currentLevel} → ${correctLevel}`;
+                    repairNote += `Lv ${currentLevel} â†’ ${correctLevel}`;
                 }
                 if (hasObsoleteFields) {
                     repairNote += needsLevelFix ? ', rimossi campi obsoleti' : 'rimossi campi obsoleti';
@@ -882,7 +1355,7 @@ window.AdminTeams = {
                 cost: player.cost || 0,
                 level: correctLevel,
                 abilities: player.abilities || [],
-                isCaptain: player.isCaptain || false
+                isCaptain: this.isPlayerIcona(player)
             };
 
             // Mantieni photoUrl se presente (per Icone)
@@ -899,13 +1372,15 @@ window.AdminTeams = {
 
         // Mostra risultato
         if (repairs.length > 0) {
-            msgElement.innerHTML = `<span class="text-green-400">✅ Riparati ${repairs.length} giocatori:</span><br><span class="text-xs text-gray-300">${repairs.join('<br>')}</span>`;
+            msgElement.innerHTML = `<span class="text-green-400">✏️… Riparati ${repairs.length} giocatori:</span><br><span class="text-xs text-gray-300">${repairs.join('<br>')}</span>`;
             msgElement.className = 'text-center text-sm mt-2';
         } else {
-            msgElement.textContent = '✅ Nessuna riparazione necessaria. Tutti i dati sono corretti.';
+            msgElement.textContent = '✏️… Nessuna riparazione necessaria. Tutti i dati sono corretti.';
             msgElement.className = 'text-center text-sm mt-2 text-green-400';
         }
     }
 };
 
-console.log('✅ AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
+console.log('✏️… AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
+
+

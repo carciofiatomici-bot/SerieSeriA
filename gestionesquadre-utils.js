@@ -86,7 +86,7 @@ window.GestioneSquadreUtils = {
             icon = 'text-gray-400 fas fa-minus-circle';
         }
 
-        const currentLevel = Math.max(1, (player.level || player.currentLevel || 1) + mod);
+        const currentLevel = Math.min(30, Math.max(1, (player.level || player.currentLevel || 1) + mod));
 
         const formState = {
             ...player,

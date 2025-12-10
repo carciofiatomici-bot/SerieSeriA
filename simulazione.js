@@ -78,6 +78,19 @@ let currentOccasionNumber = 0;
 // Flag per "Presa Sicura" - skip prossima costruzione
 let skipNextConstruction = false;
 
+/**
+ * Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente
+ */
+const sortPlayersByRoleAndLevel = (players) => {
+    const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+    return [...players].sort((a, b) => {
+        const roleA = roleOrder[a.role] ?? 4;
+        const roleB = roleOrder[b.role] ?? 4;
+        if (roleA !== roleB) return roleA - roleB;
+        return (b.currentLevel || b.level || 0) - (a.currentLevel || a.level || 0);
+    });
+};
+
 // ====================================================================
 // CALCOLO MODIFICATORI BASE
 // ====================================================================
@@ -105,13 +118,14 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         return 0;
     }
 
-    // Livello base
-    const baseLevel = player.level || 1;
+    // Livello base (limitato a 1-30)
+    const baseLevel = Math.min(30, Math.max(1, player.level || 1));
     let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
 
-    // Forma (currentLevel ha già il livello modificato dalla forma)
+    // Forma (currentLevel ha già il livello modificato dalla forma, limitato a 1-30)
     if (player.currentLevel !== undefined) {
-        modifier = LEVEL_MODIFIERS[player.currentLevel] || modifier;
+        const clampedLevel = Math.min(30, Math.max(1, player.currentLevel));
+        modifier = LEVEL_MODIFIERS[clampedLevel] || modifier;
     }
 
     // Freddezza: la forma non può mai essere negativa
@@ -128,8 +142,13 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         modifier += 1.0;
     }
 
-    // Capitano/Icona: +1 aggiuntivo
+    // Icona: +1 aggiuntivo per il giocatore Icona stesso
     if (player.abilities?.includes('Icona')) {
+        modifier += 1.0;
+    }
+
+    // Capitano nominato: +1 aggiuntivo (diverso dall'Icona)
+    if (player.isCaptain === true) {
         modifier += 1.0;
     }
 
@@ -868,11 +887,380 @@ const resetSimulationState = () => {
 };
 
 // ====================================================================
+// VERSIONE CON LOG DETTAGLIATO PER DEBUG
+// ====================================================================
+
+/**
+ * Simula un'occasione con log dettagliato di ogni fase
+ */
+/**
+ * Calcola il modificatore con log dettagliato per debug
+ */
+const calculatePlayerModifierWithLog = (player, hasIcona, opposingPlayers = []) => {
+    const details = [];
+    const abilityBonuses = []; // Traccia bonus/malus abilita
+
+    if (nullifiedAbilities.has(player.id)) {
+        return { mod: 0, details: ['NULLIFICATO'], abilityBonuses: [] };
+    }
+    if (injuredPlayers.has(player.id)) {
+        return { mod: 0, details: ['INFORTUNATO'], abilityBonuses: [] };
+    }
+
+    // Livello base
+    const baseLevel = Math.min(30, Math.max(1, player.level || 1));
+    let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
+    details.push(`base Lv.${baseLevel}=${modifier.toFixed(1)}`);
+
+    // Forma (currentLevel)
+    if (player.currentLevel !== undefined && player.currentLevel !== baseLevel) {
+        const clampedLevel = Math.min(30, Math.max(1, player.currentLevel));
+        const formaMod = LEVEL_MODIFIERS[clampedLevel] || modifier;
+
+        // Freddezza: la forma non puo mai essere negativa
+        if (player.abilities?.includes('Freddezza')) {
+            const formaDiff = player.currentLevel - baseLevel;
+            if (formaDiff < 0) {
+                // Ignora malus forma
+                details.push(`forma Lv.${clampedLevel} ignorata`);
+                abilityBonuses.push({ ability: 'Freddezza', effect: 'forma negativa ignorata' });
+            } else {
+                details.push(`forma Lv.${clampedLevel}=${formaMod.toFixed(1)}`);
+                modifier = formaMod;
+            }
+        } else {
+            details.push(`forma Lv.${clampedLevel}=${formaMod.toFixed(1)}`);
+            modifier = formaMod;
+        }
+    }
+
+    // Icona bonus
+    if (hasIcona && !player.abilities?.includes('Icona')) {
+        modifier += 1.0;
+        details.push(`icona+1`);
+        abilityBonuses.push({ ability: 'Icona (squadra)', effect: '+1' });
+    }
+    if (player.abilities?.includes('Icona')) {
+        modifier += 1.0;
+        details.push(`ICONA+1`);
+        abilityBonuses.push({ ability: 'Icona', effect: '+1' });
+    }
+
+    // Capitano nominato: +1 aggiuntivo
+    if (player.isCaptain === true) {
+        modifier += 1.0;
+        details.push(`CAP+1`);
+        abilityBonuses.push({ ability: 'Capitano', effect: '+1' });
+    }
+
+    // Lento a carburare: modificatore dimezzato nelle prime 5 occasioni
+    if (player.abilities?.includes('Lento a carburare') && currentOccasionNumber <= 5) {
+        const oldMod = modifier;
+        modifier /= 2;
+        details.push(`Lento(occ.${currentOccasionNumber}): ${oldMod.toFixed(1)}/2=${modifier.toFixed(1)}`);
+        abilityBonuses.push({ ability: 'Lento a carburare', effect: `/2 (occ.${currentOccasionNumber}/5)` });
+    }
+
+    // Adattabile: ignora il malus tipologia
+    if (player.abilities?.includes('Adattabile')) {
+        abilityBonuses.push({ ability: 'Adattabile', effect: 'ignora malus tipo' });
+    }
+
+    // Tipologia
+    if (player.type && opposingPlayers.length > 0 && !player.abilities?.includes('Adattabile')) {
+        const disadvantagedAgainst = TYPE_DISADVANTAGE[player.type];
+        const facingDisadvantage = opposingPlayers.some(opp => opp.type === disadvantagedAgainst);
+        if (facingDisadvantage) {
+            const oldMod = modifier;
+            modifier *= (1 - TYPE_PENALTY);
+            details.push(`${player.type} vs ${disadvantagedAgainst} -25%: ${oldMod.toFixed(1)}=>${modifier.toFixed(1)}`);
+        }
+    }
+
+    return { mod: modifier, details, abilityBonuses };
+};
+
+const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber = 1) => {
+    const log = [];
+
+    // Reset abilità nullificate
+    nullifiedAbilities.clear();
+    contrastoDurisismoUsed.clear();
+    currentOccasionNumber = occasionNumber;
+
+    const hasIconaA = attackingTeam.formationInfo?.isIconaActive || false;
+    const hasIconaB = defendingTeam.formationInfo?.isIconaActive || false;
+
+    log.push(`\n--- OCCASIONE ${occasionNumber} ---`);
+    log.push(`  [Icona ATT: ${hasIconaA ? 'SI' : 'NO'} | Icona DIF: ${hasIconaB ? 'SI' : 'NO'}]`);
+
+    // ===== FASE 1: COSTRUZIONE =====
+    log.push(`\n[FASE 1: COSTRUZIONE]`);
+
+    // Controllo skip fase
+    const preAbilitiesC = applyPrePhaseAbilities(attackingTeam, defendingTeam, 'construction');
+    if (preAbilitiesC.skipPhase) {
+        log.push(`  SKIP! (Regista/Lancio lungo attivato)`);
+        log.push(`  => Passa direttamente a Fase 2`);
+    } else {
+        // Calcola modificatori - ordina per livello decrescente
+        const playersA_D = sortPlayersByRoleAndLevel(attackingTeam.D || []);
+        const playersA_C = sortPlayersByRoleAndLevel(attackingTeam.C || []);
+        const playersB_C = sortPlayersByRoleAndLevel(defendingTeam.C || []);
+
+        // Mostra tipologie avversarie
+        const oppTypesB = playersB_C.map(p => p.type || 'N/A').join(', ');
+        const oppTypesA = [...playersA_D, ...playersA_C].map(p => p.type || 'N/A').join(', ');
+
+        let modA_D = 0;
+        log.push(`  ATT Difensori (1/2 mod) vs [${oppTypesB}]:`);
+        playersA_D.forEach(p => {
+            if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+                const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaA, playersB_C);
+                modA_D += mod / 2;
+                const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+                const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+                log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${(mod/2).toFixed(1)}${bonusStr}`);
+            }
+        });
+
+        let modA_C = 0;
+        log.push(`  ATT Centrocampisti (1x mod) vs [${oppTypesB}]:`);
+        playersA_C.forEach(p => {
+            if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+                const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaA, playersB_C);
+                modA_C += mod;
+                const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+                const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+                log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${mod.toFixed(1)}${bonusStr}`);
+            }
+        });
+
+        let modB_C = 0;
+        log.push(`  DIF Centrocampisti (1x mod) vs [${oppTypesA}]:`);
+        playersB_C.forEach(p => {
+            if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+                const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaB, [...playersA_D, ...playersA_C]);
+                modB_C += mod;
+                const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+                const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+                log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${mod.toFixed(1)}${bonusStr}`);
+            }
+        });
+
+        const rollA = rollDice(1, 20);
+        const rollB = rollDice(1, 20);
+        const coachA = (attackingTeam.coachLevel || 1) / 2;
+        const coachB = (defendingTeam.coachLevel || 1) / 2;
+
+        const totalA = rollA + modA_D + modA_C + coachA;
+        const totalB = rollB + modB_C + coachB;
+
+        log.push(`  ---`);
+        log.push(`  ATT: dado=${rollA} + difMod=${modA_D.toFixed(1)} + cenMod=${modA_C.toFixed(1)} + coach=${coachA.toFixed(1)} = ${totalA.toFixed(1)}`);
+        log.push(`  DIF: dado=${rollB} + cenMod=${modB_C.toFixed(1)} + coach=${coachB.toFixed(1)} = ${totalB.toFixed(1)}`);
+
+        const successChance = Math.max(5, Math.min(95, totalA - totalB + 50));
+        const roll100 = rollPercentage();
+        const success = roll100 <= successChance;
+
+        log.push(`  Differenza: ${(totalA - totalB).toFixed(1)} => ${successChance}% successo`);
+        log.push(`  Roll d100: ${roll100} ${success ? '<=' : '>'} ${successChance}`);
+
+        if (!success) {
+            const luckyRoll = rollPercentage();
+            if (luckyRoll <= 5) {
+                log.push(`  FALLITO ma 5% fortuna attivato (roll: ${luckyRoll})`);
+            } else {
+                log.push(`  => FASE 1 FALLITA - Occasione persa`);
+                return { goal: false, log };
+            }
+        } else {
+            log.push(`  => FASE 1 SUPERATA`);
+        }
+    }
+
+    // ===== FASE 2: ATTACCO =====
+    log.push(`\n[FASE 2: ATTACCO vs DIFESA]`);
+
+    const preAbilitiesA = applyPrePhaseAbilities(attackingTeam, defendingTeam, 'attack');
+    if (preAbilitiesA.interruptPhase) {
+        log.push(`  INTERROTTO! (Antifurto attivato)`);
+        log.push(`  => Occasione persa`);
+        return { goal: false, log };
+    }
+
+    const playersA_C2 = sortPlayersByRoleAndLevel(attackingTeam.C || []);
+    const playersA_A = sortPlayersByRoleAndLevel(attackingTeam.A || []);
+    const playersB_D = sortPlayersByRoleAndLevel(defendingTeam.D || []);
+    const playersB_C2 = sortPlayersByRoleAndLevel(defendingTeam.C || []);
+
+    const oppTypesB2 = [...playersB_D, ...playersB_C2].map(p => p.type || 'N/A').join(', ');
+    const oppTypesA2 = [...playersA_C2, ...playersA_A].map(p => p.type || 'N/A').join(', ');
+
+    let modA_C2 = 0;
+    log.push(`  ATT Centrocampisti (1/2 mod) vs [${oppTypesB2}]:`);
+    playersA_C2.forEach(p => {
+        if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+            const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaA, [...playersB_D, ...playersB_C2]);
+            modA_C2 += mod / 2;
+            const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+            const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+            log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${(mod/2).toFixed(1)}${bonusStr}`);
+        }
+    });
+
+    let modA_A = 0;
+    log.push(`  ATT Attaccanti (1x mod) vs [${oppTypesB2}]:`);
+    playersA_A.forEach(p => {
+        if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+            const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaA, [...playersB_D, ...playersB_C2]);
+            modA_A += mod;
+            const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+            const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+            log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${mod.toFixed(1)}${bonusStr}`);
+        }
+    });
+
+    let modB_D = 0;
+    log.push(`  DIF Difensori (1x mod) vs [${oppTypesA2}]:`);
+    playersB_D.forEach(p => {
+        if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+            const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaB, [...playersA_C2, ...playersA_A]);
+            modB_D += mod;
+            const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+            const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+            log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${mod.toFixed(1)}${bonusStr}`);
+        }
+    });
+
+    let modB_C2 = 0;
+    log.push(`  DIF Centrocampisti (1/2 mod) vs [${oppTypesA2}]:`);
+    playersB_C2.forEach(p => {
+        if (!nullifiedAbilities.has(p.id) && !injuredPlayers.has(p.id)) {
+            const { mod, details, abilityBonuses } = calculatePlayerModifierWithLog(p, hasIconaB, [...playersA_C2, ...playersA_A]);
+            modB_C2 += mod / 2;
+            const abilitiesStr = p.abilities?.length > 0 ? ` [${p.abilities.join(', ')}]` : '';
+            const bonusStr = abilityBonuses?.length > 0 ? ` << ${abilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+            log.push(`    - ${p.name} [${p.type || 'N/A'}] Lv.${p.level}->Lv.${p.currentLevel}${abilitiesStr}: ${details.join(' | ')} = ${mod.toFixed(1)} => +${(mod/2).toFixed(1)}${bonusStr}`);
+        }
+    });
+
+    const rollA2 = rollDice(1, 20);
+    const rollB2 = rollDice(1, 20);
+    const coachA2 = (attackingTeam.coachLevel || 1) / 2;
+    const coachB2 = (defendingTeam.coachLevel || 1) / 2;
+
+    const totalA2 = rollA2 + modA_C2 + modA_A + coachA2;
+    const totalB2 = rollB2 + modB_D + modB_C2 + coachB2;
+    const attackResult = totalA2 - totalB2;
+
+    log.push(`  ---`);
+    log.push(`  ATT: dado=${rollA2} + cenMod=${modA_C2.toFixed(1)} + attMod=${modA_A.toFixed(1)} + coach=${coachA2.toFixed(1)} = ${totalA2.toFixed(1)}`);
+    log.push(`  DIF: dado=${rollB2} + difMod=${modB_D.toFixed(1)} + cenMod=${modB_C2.toFixed(1)} + coach=${coachB2.toFixed(1)} = ${totalB2.toFixed(1)}`);
+    log.push(`  Risultato attacco: ${attackResult.toFixed(1)}`);
+
+    if (attackResult < 0) {
+        const luckyRoll = rollPercentage();
+        if (luckyRoll <= 5) {
+            log.push(`  FALLITO ma 5% fortuna attivato (roll: ${luckyRoll}) => risultato forzato a 5`);
+        } else {
+            log.push(`  => FASE 2 FALLITA - Occasione persa`);
+            return { goal: false, log };
+        }
+    } else {
+        log.push(`  => FASE 2 SUPERATA (risultato: ${Math.max(1, attackResult).toFixed(1)})`);
+    }
+
+    const finalAttackResult = attackResult < 0 ? 5 : Math.max(1, attackResult);
+
+    // ===== FASE 3: TIRO =====
+    log.push(`\n[FASE 3: TIRO vs PORTIERE]`);
+
+    const portiere = defendingTeam.P?.[0];
+    if (!portiere) {
+        log.push(`  Nessun portiere! => GOL AUTOMATICO`);
+        return { goal: true, log };
+    }
+
+    const { mod: modPortiereBase, details: portiereDetails, abilityBonuses: portiereAbilityBonuses } = calculatePlayerModifierWithLog(portiere, hasIconaB, playersA_A);
+    let modPortiere = modPortiereBase;
+    const portiereAbilitiesStr = portiere.abilities?.length > 0 ? ` [${portiere.abilities.join(', ')}]` : '';
+    const portiereBonusStr = portiereAbilityBonuses?.length > 0 ? ` << ${portiereAbilityBonuses.map(b => `${b.ability}: ${b.effect}`).join(', ')}` : '';
+    log.push(`  Portiere: ${portiere.name} [${portiere.type || 'N/A'}] Lv.${portiere.level}->Lv.${portiere.currentLevel}${portiereAbilitiesStr}`);
+    log.push(`    calcolo: ${portiereDetails.join(' | ')} = ${modPortiere.toFixed(1)}${portiereBonusStr}`);
+
+    // Abilita' portiere
+    let kamikazeActive = false;
+    if (portiere.abilities?.includes('Uscita Kamikaze') && !nullifiedAbilities.has(portiere.id)) {
+        modPortiere *= 2;
+        kamikazeActive = true;
+        log.push(`    Uscita Kamikaze: mod x2 => ${modPortiere.toFixed(1)}`);
+    }
+    if (portiere.abilities?.includes('Pugno di ferro') && !nullifiedAbilities.has(portiere.id)) {
+        log.push(`    Pugno di ferro: soglia parata -2`);
+    }
+
+    const rollP = rollDice(1, 20);
+    const coachP = (defendingTeam.coachLevel || 1) / 2;
+    const totalPortiere = rollP + modPortiere + coachP;
+
+    // Bomber bonus
+    let attackBonus = 0;
+    if (attackingTeam.A?.some(p => p.abilities?.includes('Bomber') && !nullifiedAbilities.has(p.id))) {
+        attackBonus = 1;
+        log.push(`  Bomber attivo: +1 al tiro`);
+    }
+
+    const effectiveAttack = finalAttackResult + attackBonus;
+    const saveResult = totalPortiere - effectiveAttack;
+    const saveThreshold = portiere.abilities?.includes('Pugno di ferro') ? -2 : 0;
+
+    log.push(`  ---`);
+    log.push(`  TIRO: risultato attacco=${finalAttackResult.toFixed(1)} + bonus=${attackBonus} = ${effectiveAttack.toFixed(1)}`);
+    log.push(`  PARATA: dado=${rollP} + mod=${modPortiere.toFixed(1)} + coach=${coachP.toFixed(1)} = ${totalPortiere.toFixed(1)}`);
+    log.push(`  Differenza parata: ${saveResult.toFixed(1)} (soglia: ${saveThreshold})`);
+
+    let goal = false;
+    if (saveResult > saveThreshold) {
+        log.push(`  => PARATA! (${saveResult.toFixed(1)} > ${saveThreshold})`);
+        const luckyGoal = rollPercentage();
+        if (luckyGoal <= 5) {
+            log.push(`  Ma 5% gol fortunato attivato (roll: ${luckyGoal}) => GOL!`);
+            goal = true;
+        }
+    } else if (saveResult === saveThreshold) {
+        const fiftyFifty = rollPercentage();
+        const hasOpportunista = attackingTeam.A?.some(p => p.abilities?.includes('Opportunista'));
+        const goalChance = hasOpportunista ? 75 : 50;
+        log.push(`  => 50/50! Roll: ${fiftyFifty} ${fiftyFifty <= goalChance ? '<=' : '>'} ${goalChance}%`);
+        goal = fiftyFifty <= goalChance;
+    } else {
+        log.push(`  => GOL! (${saveResult.toFixed(1)} < ${saveThreshold})`);
+        goal = true;
+
+        // Miracolo check
+        if (portiere.abilities?.includes('Miracolo') && Math.abs(saveResult) < 3) {
+            const miracoloRoll = rollPercentage();
+            if (miracoloRoll <= 5) {
+                log.push(`  MIRACOLO! (roll: ${miracoloRoll}) => PARATA!`);
+                goal = false;
+            }
+        }
+    }
+
+    log.push(`\n  *** RISULTATO: ${goal ? 'GOL!' : 'PARATO/FALLITO'} ***`);
+
+    return { goal, log };
+};
+
+// ====================================================================
 // ESPOSIZIONE GLOBALE
 // ====================================================================
 
 window.simulationLogic = {
     simulateOneOccasion,
+    simulateOneOccasionWithLog,
     resetSimulationState,
     calculatePlayerModifier,
     calculateGroupModifier,
@@ -880,4 +1268,4 @@ window.simulationLogic = {
     LEVEL_MODIFIERS
 };
 
-console.log("✅ Simulazione.js v3.0 caricato - 60 abilità implementate");
+console.log("Simulazione.js v3.1 caricato - 60 abilita + log dettagliato");

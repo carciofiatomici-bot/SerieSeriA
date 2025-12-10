@@ -94,27 +94,81 @@ window.AdminUI = {
 
             <!-- UTILITA ADMIN -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilita Admin</h3>
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
                  <button id="btn-sync-data"
                         class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
                     Sincronizza Dati Calciatori (Mock)
                 </button>
-                <div class="text-gray-400 text-sm flex items-center justify-center">
-                    Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
+                <button id="btn-test-simulation"
+                        class="bg-blue-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
+                    🧪 Test Simulazione Partita
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button id="btn-fix-icone-ability"
+                        class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
+                    👑 Fix Abilita Icone
+                </button>
+                <div id="fix-icone-result" class="flex items-center justify-center text-sm text-gray-400">
+                    Assegna abilita "Icona" a tutte le Icone
+                </div>
+            </div>
+            <div class="text-gray-400 text-sm mb-6">
+                Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
+            </div>
+
+            <!-- MODAL TEST SIMULAZIONE -->
+            <div id="test-simulation-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-blue-500">
+                    <h3 class="text-xl font-bold text-blue-400 mb-4">🧪 Test Simulazione Partita</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">Squadra Casa</label>
+                            <select id="test-home-team" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                                <option value="">Seleziona squadra...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2">Squadra Trasferta</label>
+                            <select id="test-away-team" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                                <option value="">Seleziona squadra...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-4">
+                        <button id="btn-run-test-simulation" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg">
+                            Simula Partita
+                        </button>
+                        <button id="btn-close-test-simulation" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg">
+                            Chiudi
+                        </button>
+                    </div>
+                    <div id="test-simulation-result" class="bg-gray-800 rounded-lg p-4 hidden">
+                        <h4 class="text-lg font-bold text-white mb-2">Risultato</h4>
+                        <div id="test-simulation-score" class="text-center text-3xl font-extrabold text-yellow-400 mb-4"></div>
+                        <div id="test-simulation-details" class="text-sm text-gray-300 max-h-64 overflow-y-auto"></div>
+                        <div class="flex gap-2 mt-4">
+                            <button id="btn-toggle-simple-log" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-lg">
+                                Log Ristretto
+                            </button>
+                            <button id="btn-toggle-detailed-log" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">
+                                Log Dettagliato
+                            </button>
+                        </div>
+                        <div id="test-simulation-simple-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
+                            <h5 class="text-sm font-bold text-blue-400 mb-2">Log Ristretto</h5>
+                            <pre id="test-simulation-simple-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                        <div id="test-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
+                            <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
+                            <pre id="test-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- SEZIONE STATI APERTO/CHIUSO -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Riepilogo Stato Mercato & Draft</h3>
-            <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
-            <div class="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
-                <div class="p-3 rounded-lg border ${draftOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block">Draft: <span class="font-extrabold" id="draft-status-text-summary">${draftOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                </div>
-                <div class="p-3 rounded-lg border ${marketOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block">Mercato: <span class="font-extrabold" id="market-status-text-summary">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                </div>
-            </div>
+            <!-- Messaggio di stato (usato per feedback) -->
+            <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400 hidden"></p>
 
             <!-- SEZIONE CREDITI SUPER SERI -->
             <h3 class="text-2xl font-bold text-amber-400 mb-4 border-b border-gray-600 pb-2 pt-6">Crediti Super Seri</h3>
@@ -142,6 +196,14 @@ window.AdminUI = {
         const types = ['Potenza', 'Tecnica', 'Velocita'];
 
         playerManagementToolsContainer.innerHTML = `
+            <!-- GESTIONE ICONE -->
+            <div class="mb-6">
+                <button id="btn-manage-icons"
+                        class="w-full bg-yellow-500 text-gray-900 font-extrabold py-4 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.01]">
+                    <i class="fas fa-crown mr-2"></i> 👑 Gestione Icone (Capitani)
+                </button>
+            </div>
+
             <!-- CONTROLLO STATI -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2">Controllo Stato Mercato & Draft</h3>
             <div class="grid grid-cols-2 gap-4 mb-6">
@@ -166,6 +228,21 @@ window.AdminUI = {
                 </div>
             </div>
             <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
+
+            <!-- GESTIONE DRAFT A TURNI -->
+            <div class="p-4 bg-gray-700 rounded-lg border border-purple-500 mb-6">
+                <h4 class="text-lg font-bold text-purple-300 mb-3">Draft a Turni</h4>
+                <p class="text-sm text-gray-300 mb-3">Genera la lista del draft per permettere alle squadre di draftare a turno. L'ordine viene calcolato in base alla classifica (o media rosa se non c'e' classifica).</p>
+                <div id="draft-turns-status-container" class="mb-3"></div>
+                <button id="btn-generate-draft-list"
+                        class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
+                    Genera Lista Draft
+                </button>
+                <button id="btn-stop-draft-turns"
+                        class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition mt-2 hidden">
+                    Ferma Draft a Turni
+                </button>
+            </div>
 
             <!-- CREAZIONE CALCIATORE -->
             <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-600 pb-2 pt-4">Crea Nuovo Calciatore</h3>

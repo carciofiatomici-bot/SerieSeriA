@@ -41,6 +41,7 @@ A. Tipologia Giocatori (Sasso-Carta-Forbice):
    - Giocatori Potenza  vs Tecnica  -> -25% al modificatore Tecnica
    - Giocatori Tecnica  vs Velocità -> -25% al modificatore Velocità
    - Giocatori Velocità vs Potenza  -> -25% al modificatore Potenza
+	(potenza > tecnica > velocità > potenza)
 
 B. Bonus Allenatore:
    Aggiungere sempre in tutte le fasi: + (1/2 Livello Allenatore).

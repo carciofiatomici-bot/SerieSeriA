@@ -6,13 +6,19 @@
 
 window.InterfacciaAuth = {
     
+    // Costante per la durata della sessione ricordata (1 giorno in millisecondi)
+    SESSION_EXPIRY_MS: 24 * 60 * 60 * 1000,
+
     /**
      * Salva i dati della sessione in localStorage.
      */
-    saveSession(teamId, userType) {
+    saveSession(teamId, userType, teamName = null, logoUrl = null) {
         try {
             localStorage.setItem('fanta_session_id', teamId);
             localStorage.setItem('fanta_session_type', userType);
+            localStorage.setItem('fanta_session_timestamp', Date.now().toString());
+            if (teamName) localStorage.setItem('fanta_session_team_name', teamName);
+            if (logoUrl) localStorage.setItem('fanta_session_logo_url', logoUrl);
         } catch (e) {
             console.error("Impossibile salvare la sessione in localStorage.", e);
         }
@@ -25,15 +31,51 @@ window.InterfacciaAuth = {
         try {
             localStorage.removeItem('fanta_session_id');
             localStorage.removeItem('fanta_session_type');
+            localStorage.removeItem('fanta_session_timestamp');
+            localStorage.removeItem('fanta_session_team_name');
+            localStorage.removeItem('fanta_session_logo_url');
             localStorage.removeItem('fanta_coach_name');
             localStorage.removeItem('fanta_needs_coach');
             localStorage.removeItem('fanta_needs_icona');
-            // Aggiunto: Cancella anche l'ultima schermata salvata al logout
-            localStorage.removeItem('fanta_last_screen'); 
-            localStorage.removeItem('fanta_squadra_mode'); // Pulizia aggiuntiva
+            localStorage.removeItem('fanta_last_screen');
+            localStorage.removeItem('fanta_squadra_mode');
         } catch (e) {
             console.error("Impossibile pulire la sessione da localStorage.", e);
         }
+    },
+
+    /**
+     * Verifica se la sessione ricordata e' ancora valida (non scaduta).
+     */
+    isSessionValid() {
+        const timestamp = localStorage.getItem('fanta_session_timestamp');
+        if (!timestamp) return false;
+
+        const elapsed = Date.now() - parseInt(timestamp);
+        return elapsed < this.SESSION_EXPIRY_MS;
+    },
+
+    /**
+     * Ottiene i dati della sessione ricordata.
+     */
+    getRememberedSession() {
+        const teamId = localStorage.getItem('fanta_session_id');
+        const userType = localStorage.getItem('fanta_session_type');
+        const teamName = localStorage.getItem('fanta_session_team_name');
+        const logoUrl = localStorage.getItem('fanta_session_logo_url');
+
+        if (!teamId || !userType) return null;
+
+        // Non ricordare l'admin
+        if (userType === 'admin') return null;
+
+        // Verifica scadenza
+        if (!this.isSessionValid()) {
+            this.clearSession();
+            return null;
+        }
+
+        return { teamId, userType, teamName, logoUrl };
     },
     
     /**
@@ -64,7 +106,7 @@ window.InterfacciaAuth = {
         if (userType === 'admin' && teamId === ADMIN_USERNAME_LOWER) {
             window.InterfacciaCore.currentTeamId = teamId;
             
-            // Definisce gli ID dei pannelli Admin validi (con controlli di nullitÃ )
+            // Definisce gli ID dei pannelli Admin validi (con controlli di nullita)
             const adminScreens = [
         elements.adminContent?.id,
         elements.championshipContent?.id,
@@ -93,7 +135,7 @@ window.InterfacciaAuth = {
 
             document.dispatchEvent(new CustomEvent('adminLoggedIn'));
             
-            // Se la destinazione Ã¨ un pannello specifico, forzo il ricaricamento del contenuto
+            // Se la destinazione e un pannello specifico, forzo il ricaricamento del contenuto
             if (targetScreenId === elements.championshipContent.id) {
                 document.dispatchEvent(new CustomEvent('championshipPanelLoaded'));
             } else if (elements.playerManagementContent && targetScreenId === elements.playerManagementContent.id) {
@@ -121,7 +163,7 @@ window.InterfacciaAuth = {
                     window.InterfacciaCore.currentTeamId = teamId;
                     await window.fetchAllTeamLogos();
                     
-                    // PrioritÃ  1: Onboarding
+                    // Priorita 1: Onboarding
                     if (requiresCoachSelection && !teamData.coach) {
                         window.showScreen(elements.coachSelectionBox);
                         if (window.InterfacciaOnboarding) {
@@ -138,7 +180,7 @@ window.InterfacciaAuth = {
                         return true;
                     }
 
-                    // PrioritÃ  2: Ripristino Schermata salvata
+                    // Priorita 2: Ripristino Schermata salvata
                     const savedScreenElement = document.getElementById(lastScreenId);
                     if (lastScreenId && savedScreenElement && lastScreenId !== elements.adminContent.id) {
                         targetScreenId = lastScreenId;
@@ -160,9 +202,9 @@ window.InterfacciaAuth = {
                     const targetElement = document.getElementById(targetScreenId);
                     window.showScreen(targetElement || elements.appContent);
                     
-                    // Se la destinazione Ã¨ un pannello utente, lanciamo l'evento di caricamento
+                    // Se la destinazione e un pannello utente, lanciamo l'evento di caricamento
                     if (targetScreenId === elements.squadraContent.id) {
-                        // Ripristina la sotto-modalitÃ  (Rosa o Formazione)
+                        // Ripristina la sotto-modalita (Rosa o Formazione)
                         const mode = localStorage.getItem('fanta_squadra_mode') || 'rosa';
                          document.dispatchEvent(new CustomEvent('squadraPanelLoaded', { 
                             detail: { mode: mode, teamId: teamId } 
@@ -241,7 +283,7 @@ window.InterfacciaAuth = {
         
         const inputTeamName = elements.loginUsernameInput.value.trim();
         const password = elements.loginPasswordInput.value.trim();
-        // FIX: Controllo di nullitÃ  per window.auth.currentUser
+        // FIX: Controllo di nullita per window.auth.currentUser
         const userId = window.auth.currentUser?.uid || 'anon_user';
         
         elements.loginMessage.textContent = "Accesso in corso...";
@@ -259,7 +301,7 @@ window.InterfacciaAuth = {
         const teamDocId = cleanedTeamName.toLowerCase();
 
         if (inputTeamName.includes(' ') || inputTeamName !== cleanedTeamName) {
-            elements.loginMessage.textContent = "Errore: Il Nome Squadra non puÃ² contenere spazi bianchi. Riprova.";
+            elements.loginMessage.textContent = "Errore: Il Nome Squadra non puo contenere spazi bianchi. Riprova.";
             elements.loginMessage.classList.remove('text-green-500');
             elements.loginMessage.classList.add('text-red-400');
             return;
@@ -309,7 +351,7 @@ window.InterfacciaAuth = {
                 await window.fetchAllTeamLogos();
 
                 if (!teamData.coach) {
-                    this.saveSession(teamDocId, 'user');
+                    this.saveSession(teamDocId, 'user', teamData.teamName, teamData.logoUrl);
                     localStorage.setItem('fanta_needs_coach', 'true');
                     localStorage.removeItem('fanta_last_screen'); // Resetta lo schermo durante l'onboarding
                     
@@ -324,7 +366,7 @@ window.InterfacciaAuth = {
                 }
                 
                 if (!teamData.iconaId) {
-                    this.saveSession(teamDocId, 'user');
+                    this.saveSession(teamDocId, 'user', teamData.teamName, teamData.logoUrl);
                     localStorage.setItem('fanta_needs_icona', 'true');
                     localStorage.removeItem('fanta_last_screen'); // Resetta lo schermo durante l'onboarding
                     
@@ -365,8 +407,8 @@ window.InterfacciaAuth = {
                 };
 
                 await setDoc(teamDocRef, teamData);
-                
-                this.saveSession(teamDocId, 'user');
+
+                this.saveSession(teamDocId, 'user', teamNameForDisplay, null);
                 localStorage.setItem('fanta_needs_coach', 'true');
                 
                 window.InterfacciaCore.currentTeamId = teamDocRef.id;
@@ -384,18 +426,18 @@ window.InterfacciaAuth = {
                 return;
             }
 
-            this.saveSession(teamDocId, 'user');
+            this.saveSession(teamDocId, 'user', teamNameForDisplay, teamData.logoUrl);
             localStorage.removeItem('fanta_needs_coach');
             localStorage.removeItem('fanta_needs_icona');
             localStorage.setItem('fanta_last_screen', elements.appContent.id); // Salva Dashboard come default
-            
+
             setTimeout(() => {
                 if (window.InterfacciaDashboard) {
                     window.InterfacciaDashboard.updateTeamUI(
-                        teamNameForDisplay, 
-                        teamDocRef.id, 
-                        teamData.logoUrl, 
-                        isNewTeam, 
+                        teamNameForDisplay,
+                        teamDocRef.id,
+                        teamData.logoUrl,
+                        isNewTeam,
                         elements
                     );
                 }
@@ -412,26 +454,183 @@ window.InterfacciaAuth = {
     },
 
     /**
-     * Gestisce il logout utente.
+     * Gestisce il "Torna al Login" per gli utenti (mantiene la sessione ricordata).
      */
-    handleLogout(elements) {
+    handleBackToLogin(elements) {
+        const { DEFAULT_LOGO_URL, ADMIN_USERNAME_LOWER } = window.InterfacciaConstants;
+
+        // Controlla se l'admin stava visualizzando una squadra
+        const adminViewingTeam = localStorage.getItem('fanta_admin_viewing_team');
+        const sessionType = localStorage.getItem('fanta_session_type');
+
+        if (adminViewingTeam && sessionType === 'admin') {
+            // Admin stava visualizzando una squadra - torna all'admin panel
+            console.log("Admin torna al pannello amministrativo.");
+            localStorage.removeItem('fanta_admin_viewing_team');
+
+            // Ripristina lo stato admin
+            window.InterfacciaCore.currentTeamId = ADMIN_USERNAME_LOWER;
+            window.InterfacciaCore.currentTeamData = null;
+
+            // Torna al pannello admin
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent && window.showScreen) {
+                window.showScreen(adminContent);
+            }
+            return;
+        }
+
+        console.log("Utente torna alla schermata di login (sessione mantenuta).");
+
+        // NON cancellare la sessione - mantienila per il "Rientra in Dashboard"
+        localStorage.removeItem('fanta_admin_viewing_team');
+
+        // Mostra la pagina di login con la sessione ricordata
+        this.showLoginWithRememberedSession(elements);
+
+        if (elements.teamLogoElement) elements.teamLogoElement.src = DEFAULT_LOGO_URL;
+    },
+
+    /**
+     * Gestisce il logout completo (cancella tutto).
+     */
+    handleFullLogout(elements) {
         const { DEFAULT_LOGO_URL } = window.InterfacciaConstants;
-        
-        console.log("Logout Utente effettuato. Torno alla schermata di login.");
-        
+
+        console.log("Logout completo effettuato.");
+
         this.clearSession();
-        
+        localStorage.removeItem('fanta_admin_viewing_team');
+
+        // Nascondi sessione ricordata e mostra login normale
+        const rememberedBox = document.getElementById('remembered-session-box');
+        const normalLoginBox = document.getElementById('normal-login-box');
+        if (rememberedBox) rememberedBox.classList.add('hidden');
+        if (normalLoginBox) normalLoginBox.classList.remove('hidden');
+
         elements.loginPasswordInput.value = '';
+        elements.loginUsernameInput.value = '';
         window.showScreen(elements.loginBox);
         window.InterfacciaCore.currentTeamId = null;
         window.InterfacciaCore.currentTeamData = null;
-        
+
         if (elements.teamLogoElement) elements.teamLogoElement.src = DEFAULT_LOGO_URL;
-        
+
         // Resetta le statistiche nella dashboard
         if (elements.statRosaLevel) elements.statRosaLevel.textContent = 'N/A';
         if (elements.statFormazioneLevel) elements.statFormazioneLevel.textContent = 'N/A';
         if (elements.statRosaCount) elements.statRosaCount.textContent = `(${0} giocatori)`;
+    },
+
+    /**
+     * Mostra la pagina di login con la sessione ricordata (se valida).
+     */
+    showLoginWithRememberedSession(elements) {
+        const rememberedSession = this.getRememberedSession();
+        const rememberedBox = document.getElementById('remembered-session-box');
+        const normalLoginBox = document.getElementById('normal-login-box');
+        const { DEFAULT_LOGO_URL } = window.InterfacciaConstants;
+
+        if (rememberedSession && rememberedBox && normalLoginBox) {
+            // Mostra la sessione ricordata
+            const logoImg = document.getElementById('remembered-team-logo');
+            const teamNameEl = document.getElementById('remembered-team-name');
+
+            if (logoImg) logoImg.src = rememberedSession.logoUrl || DEFAULT_LOGO_URL;
+            if (teamNameEl) teamNameEl.textContent = rememberedSession.teamName || rememberedSession.teamId;
+
+            rememberedBox.classList.remove('hidden');
+            normalLoginBox.classList.add('hidden');
+        } else {
+            // Nessuna sessione valida, mostra login normale
+            if (rememberedBox) rememberedBox.classList.add('hidden');
+            if (normalLoginBox) normalLoginBox.classList.remove('hidden');
+        }
+
+        window.showScreen(elements.loginBox);
+    },
+
+    /**
+     * Gestisce il rientro rapido in dashboard dalla sessione ricordata.
+     */
+    async handleReenterDashboard(elements) {
+        const rememberedSession = this.getRememberedSession();
+
+        if (!rememberedSession) {
+            console.log("Sessione scaduta o non valida.");
+            this.handleFullLogout(elements);
+            return;
+        }
+
+        const { doc, getDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+        try {
+            // Carica i dati della squadra da Firestore
+            const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, rememberedSession.teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                console.log("Squadra non trovata. Logout forzato.");
+                this.handleFullLogout(elements);
+                return;
+            }
+
+            const teamData = teamDoc.data();
+
+            // Imposta i dati nel core
+            window.InterfacciaCore.currentTeamId = rememberedSession.teamId;
+            window.InterfacciaCore.currentTeamData = teamData;
+
+            // Carica i loghi delle squadre
+            if (window.fetchAllTeamLogos) {
+                await window.fetchAllTeamLogos();
+            }
+
+            // Aggiorna la UI della dashboard
+            if (window.InterfacciaDashboard) {
+                window.InterfacciaDashboard.updateTeamUI(
+                    teamData.teamName,
+                    rememberedSession.teamId,
+                    teamData.logoUrl,
+                    false,
+                    elements
+                );
+            }
+
+            // Aggiorna timestamp sessione
+            this.saveSession(
+                rememberedSession.teamId,
+                'user',
+                teamData.teamName,
+                teamData.logoUrl
+            );
+
+            // Mostra la dashboard
+            window.showScreen(elements.appContent);
+
+            console.log("Rientro in dashboard completato per:", teamData.teamName);
+
+        } catch (error) {
+            console.error("Errore nel rientro dashboard:", error);
+            this.handleFullLogout(elements);
+        }
+    },
+
+    /**
+     * Gestisce il logout utente (per compatibilita - ora chiama handleBackToLogin per utenti).
+     */
+    handleLogout(elements) {
+        const sessionType = localStorage.getItem('fanta_session_type');
+
+        // Per l'admin, fai logout completo
+        if (sessionType === 'admin') {
+            this.handleFullLogout(elements);
+        } else {
+            // Per gli utenti, torna al login mantenendo la sessione
+            this.handleBackToLogin(elements);
+        }
     },
 
     /**
@@ -465,13 +664,27 @@ window.InterfacciaAuth = {
             });
         }
         
-        // Logout listener
-        if (elements.userLogoutButton) {
-            elements.userLogoutButton.addEventListener('click', () => self.handleLogout(elements));
+        // Bottone "Torna al Login" nella dashboard utente
+        const btnBackToLoginDashboard = document.getElementById('user-back-to-login-button');
+        if (btnBackToLoginDashboard) {
+            btnBackToLoginDashboard.addEventListener('click', () => self.handleBackToLogin(elements));
         }
 
-        // Esponi handleLogout globalmente
+        // Bottone "Rientra in Dashboard" dalla sessione ricordata
+        const btnReenterDashboard = document.getElementById('btn-reenter-dashboard');
+        if (btnReenterDashboard) {
+            btnReenterDashboard.addEventListener('click', () => self.handleReenterDashboard(elements));
+        }
+
+        // Bottone "Logout Completo" dalla sessione ricordata
+        const btnFullLogout = document.getElementById('btn-full-logout');
+        if (btnFullLogout) {
+            btnFullLogout.addEventListener('click', () => self.handleFullLogout(elements));
+        }
+
+        // Esponi handleLogout globalmente (per compatibilita)
         window.handleLogout = () => self.handleLogout(elements);
+        window.handleFullLogout = () => self.handleFullLogout(elements);
 
         // Lista Icone listener
         const btnListaIcone = document.getElementById('btn-lista-icone');

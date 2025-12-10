@@ -3,80 +3,80 @@ Personaggi icone
 Nome: Croccante	
 Ruolo: D
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Croccante.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Croccante.jpg?raw=true
 
 Nome: Shikanto
 Ruolo: C
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/real%20disagio.png?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/shikanto.jpg?raw=true
 
 Nome: Il Cap
 Ruolo: C
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/cap.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/cap.jpg?raw=true
 
 Nome: Simone
 Ruolo: P
 Tipologia: Velocità
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/simone.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/simone.jpg?raw=true
 
 Nome: Dappino
 Ruolo: C
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/dappino.png?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/dappino.png?raw=true
 
 Nome: Blatta
 Ruolo: D
 Tipologia: Velocità
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/blatta.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/blatta.jpg?raw=true
 
 Nome: Antony
 Ruolo: D
 Tipologia: Potente
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/antony.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/antony.jpg?raw=true
 
 Nome: Gladio
 Ruolo: D
 Tipologia: Potente
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/gladio.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/gladio.jpg?raw=true
 
 Nome: Amedemo
 Ruolo: A
 Tipologia: Potente
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/amedemo.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/amedemo.jpg?raw=true
 
 Nome: Flavio El Ficario
 Ruolo: D
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/elficario.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/elficario.jpg?raw=true
 
 Nome: Luka Alpakashenka
 Ruolo: D
 Tipologia: Potente
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/luca.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/luca.jpg?raw=true
 
 Nome: Meliodas
 Ruolo: C
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Mel.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mel.jpg?raw=true
 
 Nome: Mark Falco
 Ruolo: P
 Tiplogia: Potente
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Mark%20Falco.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mark%20Falco.jpg?raw=true
 
 Nome: Sandro
 Ruolo: Centrocampista
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/sandro.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/sandro.jpg?raw=true
 
 Nome: Fosco
 Ruolo: P
 Tipologia: Tecnico
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Fosco.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Fosco.jpg?raw=true
 
 Nome: Cocco
 Ruolo: C
 Tipologia: Potenza
-Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/cocco.jpg?raw=true
+Avatar: https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/cocco.jpg?raw=true
 

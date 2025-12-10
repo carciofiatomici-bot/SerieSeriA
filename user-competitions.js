@@ -60,8 +60,28 @@ window.UserCompetitions = {
                 }
             }
 
+            // Carica i dati delle squadre per la prossima partita (livelli medi)
+            let teamsData = {};
+            if (nextMatch) {
+                const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+                // Carica dati squadra casa
+                const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.homeId);
+                const homeTeamSnap = await getDoc(homeTeamRef);
+                if (homeTeamSnap.exists()) {
+                    teamsData[nextMatch.homeId] = homeTeamSnap.data();
+                }
+
+                // Carica dati squadra trasferta
+                const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.awayId);
+                const awayTeamSnap = await getDoc(awayTeamRef);
+                if (awayTeamSnap.exists()) {
+                    teamsData[nextMatch.awayId] = awayTeamSnap.data();
+                }
+            }
+
             // Renderizza
-            this.renderCampionatoScreen(container, nextMatch, standings, scheduleData, currentTeamId);
+            this.renderCampionatoScreen(container, nextMatch, standings, scheduleData, currentTeamId, teamsData);
 
         } catch (error) {
             console.error('Errore caricamento campionato:', error);
@@ -72,7 +92,7 @@ window.UserCompetitions = {
     /**
      * Renderizza la schermata Campionato
      */
-    renderCampionatoScreen(container, nextMatch, standings, scheduleData, currentTeamId) {
+    renderCampionatoScreen(container, nextMatch, standings, scheduleData, currentTeamId, teamsData = {}) {
         let html = '';
 
         // SEZIONE 1: Prossima Partita
@@ -88,23 +108,43 @@ window.UserCompetitions = {
             const statusText = isHome ? '🏠 IN CASA' : '✈️ TRASFERTA';
             const statusColor = isHome ? 'text-green-400' : 'text-blue-400';
 
+            // Funzione per ottenere logo grande
+            const getLargeLogoHtml = (teamId) => {
+                const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+                return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
+            };
+
+            // Calcola livello medio formazione per ogni squadra
+            const getFormationLevel = (teamId) => {
+                const teamData = teamsData[teamId];
+                if (!teamData) return '?';
+                const formationPlayers = window.getFormationPlayers(teamData);
+                if (formationPlayers.length === 0) return '?';
+                return window.calculateAverageLevel(formationPlayers).toFixed(1);
+            };
+
+            const homeLvl = getFormationLevel(nextMatch.homeId);
+            const awayLvl = getFormationLevel(nextMatch.awayId);
+
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4">
-                    <p class="text-gray-400 text-sm mb-2">Giornata ${nextMatch.round}</p>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 flex-1">
-                            ${window.getLogoHtml ? window.getLogoHtml(nextMatch.homeId) : ''}
-                            <span class="text-white font-bold text-lg ${nextMatch.homeId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.homeName}</span>
+                <div class="bg-black bg-opacity-30 rounded-lg p-6">
+                    <p class="text-gray-400 text-sm mb-4 text-center">Giornata ${nextMatch.round}</p>
+                    <div class="flex items-center justify-center gap-6">
+                        <div class="flex flex-col items-center gap-2">
+                            ${getLargeLogoHtml(nextMatch.homeId)}
+                            <span class="text-white font-bold text-lg text-center ${nextMatch.homeId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.homeName}</span>
+                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
                         </div>
                         <div class="text-center px-4">
-                            <span class="text-2xl font-bold text-gray-400">VS</span>
+                            <span class="text-3xl font-bold text-gray-400">VS</span>
                         </div>
-                        <div class="flex items-center gap-3 flex-1 justify-end">
-                            <span class="text-white font-bold text-lg ${nextMatch.awayId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.awayName}</span>
-                            ${window.getLogoHtml ? window.getLogoHtml(nextMatch.awayId) : ''}
+                        <div class="flex flex-col items-center gap-2">
+                            ${getLargeLogoHtml(nextMatch.awayId)}
+                            <span class="text-white font-bold text-lg text-center ${nextMatch.awayId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.awayName}</span>
+                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
                         </div>
                     </div>
-                    <p class="text-center mt-3 ${statusColor} font-bold">${statusText}</p>
+                    <p class="text-center mt-4 ${statusColor} font-bold text-lg">${statusText}</p>
                 </div>
             `;
         } else {
@@ -259,8 +299,42 @@ window.UserCompetitions = {
         `;
 
         try {
+            const { doc, getDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
             const bracket = await window.CoppaSchedule.loadCupSchedule();
-            this.renderCoppaScreen(container, bracket, currentTeamId);
+
+            // Carica i dati delle squadre per la prossima partita (livelli medi)
+            let teamsData = {};
+            if (bracket) {
+                const teamMatches = window.CoppaSchedule.getTeamMatches(bracket, currentTeamId);
+                const nextCupMatch = teamMatches.find(m => !m.winner);
+
+                if (nextCupMatch && nextCupMatch.homeTeam && nextCupMatch.awayTeam) {
+                    const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+                    // Carica dati squadra casa
+                    if (nextCupMatch.homeTeam.teamId) {
+                        const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextCupMatch.homeTeam.teamId);
+                        const homeTeamSnap = await getDoc(homeTeamRef);
+                        if (homeTeamSnap.exists()) {
+                            teamsData[nextCupMatch.homeTeam.teamId] = homeTeamSnap.data();
+                        }
+                    }
+
+                    // Carica dati squadra trasferta
+                    if (nextCupMatch.awayTeam.teamId) {
+                        const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextCupMatch.awayTeam.teamId);
+                        const awayTeamSnap = await getDoc(awayTeamRef);
+                        if (awayTeamSnap.exists()) {
+                            teamsData[nextCupMatch.awayTeam.teamId] = awayTeamSnap.data();
+                        }
+                    }
+                }
+            }
+
+            this.renderCoppaScreen(container, bracket, currentTeamId, teamsData);
         } catch (error) {
             console.error('Errore caricamento coppa:', error);
             container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
@@ -270,25 +344,28 @@ window.UserCompetitions = {
     /**
      * Renderizza la schermata Coppa
      */
-    renderCoppaScreen(container, bracket, currentTeamId) {
+    renderCoppaScreen(container, bracket, currentTeamId, teamsData = {}) {
         let html = '';
 
-        if (!bracket) {
-            html = `
-                <div class="bg-gradient-to-r from-purple-900 to-purple-800 rounded-lg p-6 border-2 border-purple-500 text-center">
-                    <p class="text-purple-400 text-xl font-bold mb-2">🏆 CoppaSeriA</p>
-                    <p class="text-gray-400">La coppa non e ancora iniziata.</p>
-                    <p class="text-gray-500 text-sm mt-2">Attendi che l'admin generi il tabellone.</p>
-                </div>
-            `;
-            container.innerHTML = html;
-            return;
-        }
-
-        // Verifica se l'utente partecipa
-        const teamMatches = window.CoppaSchedule.getTeamMatches(bracket, currentTeamId);
-        const hasBye = window.CoppaSchedule.teamHasBye(bracket, currentTeamId);
+        // Verifica se l'utente partecipa (solo se bracket esiste)
+        const teamMatches = bracket ? window.CoppaSchedule.getTeamMatches(bracket, currentTeamId) : [];
+        const hasBye = bracket ? window.CoppaSchedule.teamHasBye(bracket, currentTeamId) : false;
         const isParticipating = teamMatches.length > 0 || hasBye;
+
+        // Funzione per ottenere logo grande
+        const getLargeLogoHtml = (teamId) => {
+            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+            return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
+        };
+
+        // Calcola livello medio formazione per ogni squadra
+        const getFormationLevel = (teamId) => {
+            const teamData = teamsData[teamId];
+            if (!teamData) return '?';
+            const formationPlayers = window.getFormationPlayers(teamData);
+            if (formationPlayers.length === 0) return '?';
+            return window.calculateAverageLevel(formationPlayers).toFixed(1);
+        };
 
         // SEZIONE 1: Prossima Partita Coppa
         html += `
@@ -298,7 +375,15 @@ window.UserCompetitions = {
                 </h3>
         `;
 
-        if (!isParticipating) {
+        if (!bracket) {
+            // Coppa non ancora iniziata
+            html += `
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                    <p class="text-gray-400">La coppa non e ancora iniziata.</p>
+                    <p class="text-gray-500 text-sm mt-2">Attendi che l'admin generi il tabellone.</p>
+                </div>
+            `;
+        } else if (!isParticipating) {
             html += `
                 <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
                     <p class="text-gray-400">Non sei iscritto alla CoppaSeriA.</p>
@@ -317,18 +402,33 @@ window.UserCompetitions = {
 
             if (nextCupMatch) {
                 const isHome = nextCupMatch.homeTeam?.teamId === currentTeamId;
-                const opponent = isHome ? nextCupMatch.awayTeam : nextCupMatch.homeTeam;
                 const statusText = isHome ? '🏠 IN CASA' : '✈️ TRASFERTA';
+                const statusColor = isHome ? 'text-green-400' : 'text-blue-400';
+
+                const homeTeamId = nextCupMatch.homeTeam?.teamId;
+                const awayTeamId = nextCupMatch.awayTeam?.teamId;
+                const homeLvl = getFormationLevel(homeTeamId);
+                const awayLvl = getFormationLevel(awayTeamId);
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg p-4">
-                        <p class="text-gray-400 text-sm mb-2">${nextCupMatch.roundName} ${nextCupMatch.isSingleMatch ? '(Partita Secca)' : '(Andata/Ritorno)'}</p>
-                        <div class="flex items-center justify-center gap-4">
-                            <span class="text-yellow-400 font-bold text-lg">Tu</span>
-                            <span class="text-gray-400 text-xl">VS</span>
-                            <span class="text-white font-bold text-lg">${opponent?.teamName || 'TBD'}</span>
+                    <div class="bg-black bg-opacity-30 rounded-lg p-6">
+                        <p class="text-gray-400 text-sm mb-4 text-center">${nextCupMatch.roundName} ${nextCupMatch.isSingleMatch ? '(Partita Secca)' : '(Andata/Ritorno)'}</p>
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="flex flex-col items-center gap-2">
+                                ${getLargeLogoHtml(homeTeamId)}
+                                <span class="text-white font-bold text-lg text-center ${homeTeamId === currentTeamId ? 'text-yellow-400' : ''}">${nextCupMatch.homeTeam?.teamName || 'TBD'}</span>
+                                <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
+                            </div>
+                            <div class="text-center px-4">
+                                <span class="text-3xl font-bold text-gray-400">VS</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                ${getLargeLogoHtml(awayTeamId)}
+                                <span class="text-white font-bold text-lg text-center ${awayTeamId === currentTeamId ? 'text-yellow-400' : ''}">${nextCupMatch.awayTeam?.teamName || 'TBD'}</span>
+                                <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
+                            </div>
                         </div>
-                        <p class="text-center mt-2 text-purple-300">${statusText}</p>
+                        <p class="text-center mt-4 ${statusColor} font-bold text-lg">${statusText}</p>
                         ${!nextCupMatch.isSingleMatch && nextCupMatch.leg1Result ? `
                             <p class="text-center mt-2 text-gray-400 text-sm">Andata: ${nextCupMatch.leg1Result}</p>
                         ` : ''}
@@ -364,26 +464,91 @@ window.UserCompetitions = {
         }
         html += `</div>`;
 
-        // SEZIONE 2: Tabellone Compatto
+        // SEZIONE 2: Tabellone Completo (stile calendario campionato)
         html += `
             <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
                 <h3 class="text-xl font-bold text-indigo-400 mb-3 flex items-center gap-2">
-                    <span>📋</span> Tabellone
+                    <span>📋</span> Tabellone Completo
                 </h3>
         `;
 
-        // Usa il tabellone compatto esistente
-        html += window.CoppaUI.renderCompactBracket(bracket);
-
-        // Vincitore se presente
-        if (bracket.winner) {
+        // Vincitore se presente (in alto)
+        if (bracket && bracket.winner) {
             html += `
-                <div class="mt-4 p-3 bg-yellow-900 bg-opacity-50 rounded-lg text-center">
-                    <p class="text-yellow-400 font-bold">🏆 Vincitore: ${bracket.winner.teamName}</p>
+                <div class="mb-4 p-3 bg-yellow-900 bg-opacity-50 rounded-lg text-center">
+                    <p class="text-yellow-400 font-bold text-lg">🏆 Vincitore: ${bracket.winner.teamName}</p>
                 </div>
             `;
         }
 
+        // Renderizza ogni round con le partite dettagliate
+        html += `<div class="max-h-96 overflow-y-auto space-y-3">`;
+
+        if (bracket && bracket.rounds && bracket.rounds.length > 0) {
+            bracket.rounds.forEach(round => {
+                // Verifica se il round è completato
+                const roundComplete = round.matches.every(m => m.winner !== null && m.winner !== undefined);
+                const statusIcon = roundComplete ? '✅' : '⏳';
+
+                html += `
+                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                        <p class="text-indigo-300 font-bold mb-2">${statusIcon} ${round.roundName}</p>
+                        <div class="space-y-2">
+                `;
+
+                round.matches.forEach(match => {
+                    const homeName = match.homeTeam?.teamName || 'BYE';
+                    const awayName = match.awayTeam?.teamName || 'BYE';
+                    const homeId = match.homeTeam?.teamId;
+                    const awayId = match.awayTeam?.teamId;
+                    const isMyMatch = homeId === currentTeamId || awayId === currentTeamId;
+                    const matchBg = isMyMatch ? 'bg-purple-900 bg-opacity-50' : 'bg-gray-800 bg-opacity-50';
+
+                    // Determina il vincitore per evidenziazione
+                    const homeIsWinner = match.winner && match.winner.teamId === homeId;
+                    const awayIsWinner = match.winner && match.winner.teamId === awayId;
+                    const homeClass = homeIsWinner ? 'text-green-400 font-bold' : (awayIsWinner ? 'text-red-400' : 'text-white');
+                    const awayClass = awayIsWinner ? 'text-green-400 font-bold' : (homeIsWinner ? 'text-red-400' : 'text-white');
+
+                    // Risultato
+                    let resultDisplay = 'vs';
+                    if (match.leg1Result && match.leg2Result) {
+                        resultDisplay = `<span class="text-gray-400 text-xs">${match.leg1Result}</span> / <span class="text-white font-bold">${match.leg2Result}</span>`;
+                    } else if (match.leg1Result) {
+                        resultDisplay = `<span class="text-white font-bold">${match.leg1Result}</span>`;
+                    } else if (match.result) {
+                        resultDisplay = `<span class="text-white font-bold">${match.result}</span>`;
+                    }
+
+                    // Icona per la mia squadra
+                    const homeIcon = homeId === currentTeamId ? '⭐ ' : '';
+                    const awayIcon = awayId === currentTeamId ? ' ⭐' : '';
+
+                    html += `
+                        <div class="flex justify-between items-center text-sm p-2 rounded ${matchBg}">
+                            <span class="${homeClass} flex-1 ${homeId === currentTeamId ? 'text-yellow-400' : ''}">${homeIcon}${homeName}</span>
+                            <span class="text-gray-400 mx-3 text-center min-w-16">
+                                ${resultDisplay}
+                            </span>
+                            <span class="${awayClass} flex-1 text-right ${awayId === currentTeamId ? 'text-yellow-400' : ''}">${awayName}${awayIcon}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += `
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                    <p class="text-gray-400">Tabellone non ancora disponibile.</p>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
         html += `</div>`;
 
         container.innerHTML = html;
@@ -410,8 +575,37 @@ window.UserCompetitions = {
         `;
 
         try {
+            const { doc, getDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
             const bracket = await window.Supercoppa.loadSupercoppa();
-            this.renderSupercoppScreen(container, bracket, currentTeamId);
+
+            // Carica i dati delle squadre per la partita (livelli medi)
+            let teamsData = {};
+            if (bracket && bracket.homeTeam && bracket.awayTeam) {
+                const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+                // Carica dati squadra casa
+                if (bracket.homeTeam.teamId) {
+                    const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, bracket.homeTeam.teamId);
+                    const homeTeamSnap = await getDoc(homeTeamRef);
+                    if (homeTeamSnap.exists()) {
+                        teamsData[bracket.homeTeam.teamId] = homeTeamSnap.data();
+                    }
+                }
+
+                // Carica dati squadra trasferta
+                if (bracket.awayTeam.teamId) {
+                    const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, bracket.awayTeam.teamId);
+                    const awayTeamSnap = await getDoc(awayTeamRef);
+                    if (awayTeamSnap.exists()) {
+                        teamsData[bracket.awayTeam.teamId] = awayTeamSnap.data();
+                    }
+                }
+            }
+
+            this.renderSupercoppScreen(container, bracket, currentTeamId, teamsData);
         } catch (error) {
             console.error('Errore caricamento supercoppa:', error);
             container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
@@ -421,69 +615,126 @@ window.UserCompetitions = {
     /**
      * Renderizza la schermata Supercoppa
      */
-    renderSupercoppScreen(container, bracket, currentTeamId) {
+    renderSupercoppScreen(container, bracket, currentTeamId, teamsData = {}) {
         let html = '';
 
+        // Funzione per ottenere logo grande
+        const getLargeLogoHtml = (teamId) => {
+            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+            return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover mx-auto">`;
+        };
+
+        // Calcola livello medio formazione per ogni squadra
+        const getFormationLevel = (teamId) => {
+            const teamData = teamsData[teamId];
+            if (!teamData) return '?';
+            const formationPlayers = window.getFormationPlayers(teamData);
+            if (formationPlayers.length === 0) return '?';
+            return window.calculateAverageLevel(formationPlayers).toFixed(1);
+        };
+
+        const isParticipant = bracket ? (bracket.homeTeam?.teamId === currentTeamId || bracket.awayTeam?.teamId === currentTeamId) : false;
+        const isCompleted = bracket?.isCompleted || false;
+        const isWinner = bracket?.winner?.teamId === currentTeamId;
+
+        const homeTeamId = bracket?.homeTeam?.teamId;
+        const awayTeamId = bracket?.awayTeam?.teamId;
+        const homeLvl = getFormationLevel(homeTeamId);
+        const awayLvl = getFormationLevel(awayTeamId);
+
+        // SEZIONE 1: La Tua Situazione
+        html += `
+            <div class="bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg p-4 border-2 border-yellow-500 shadow-lg">
+                <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
+                    <span>⭐</span> La Tua Situazione in Supercoppa
+                </h3>
+        `;
+
         if (!bracket) {
-            html = `
-                <div class="bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg p-6 border-2 border-yellow-500 text-center">
-                    <p class="text-yellow-400 text-xl font-bold mb-2">⭐ Super CoppaSeriA</p>
+            html += `
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
                     <p class="text-gray-400">La Supercoppa non e ancora in programma.</p>
                     <p class="text-gray-500 text-sm mt-2">Verra creata dopo il termine del campionato e della coppa.</p>
                 </div>
             `;
-            container.innerHTML = html;
-            return;
-        }
-
-        const isParticipant = bracket.homeTeam?.teamId === currentTeamId || bracket.awayTeam?.teamId === currentTeamId;
-        const isCompleted = bracket.isCompleted;
-        const isWinner = bracket.winner?.teamId === currentTeamId;
-
-        html = `
-            <div class="bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg p-6 border-2 border-yellow-500 shadow-lg">
-                <h3 class="text-2xl font-bold text-yellow-400 mb-4 text-center">⭐ Super CoppaSeriA</h3>
-        `;
-
-        // Stato partita
-        if (isParticipant) {
+        } else if (!isParticipant) {
             html += `
-                <div class="mb-4 p-3 ${isWinner ? 'bg-green-900' : 'bg-yellow-800'} bg-opacity-50 rounded-lg text-center">
-                    <p class="${isWinner ? 'text-green-400' : 'text-yellow-300'} font-bold">
-                        ${isWinner ? '🏆 HAI VINTO LA SUPERCOPPA!' : isCompleted ? '😔 Hai perso la finale' : '⭐ Partecipi alla Supercoppa!'}
-                    </p>
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                    <p class="text-gray-400">Non partecipi alla Supercoppa.</p>
+                    <p class="text-gray-500 text-sm mt-2">Solo il Campione e il Vincitore della Coppa si sfidano.</p>
+                </div>
+            `;
+        } else if (isWinner) {
+            html += `
+                <div class="bg-green-900 bg-opacity-50 rounded-lg p-4 text-center">
+                    <p class="text-green-400 font-bold text-xl">🏆 HAI VINTO LA SUPERCOPPA!</p>
+                </div>
+            `;
+        } else if (isCompleted) {
+            html += `
+                <div class="bg-red-900 bg-opacity-50 rounded-lg p-4 text-center">
+                    <p class="text-red-400 font-bold">😔 Hai perso la finale</p>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="bg-yellow-800 bg-opacity-50 rounded-lg p-4 text-center">
+                    <p class="text-yellow-300 font-bold">⭐ Partecipi alla Supercoppa!</p>
+                    <p class="text-gray-300 text-sm mt-1">Partita secca contro ${isParticipant && homeTeamId === currentTeamId ? bracket.awayTeam?.teamName : bracket.homeTeam?.teamName}</p>
                 </div>
             `;
         }
 
-        // Card partita
-        html += `
-            <div class="bg-black bg-opacity-40 rounded-lg p-6">
-                <div class="grid grid-cols-3 gap-4 items-center">
-                    <!-- Home Team -->
-                    <div class="text-center">
-                        <p class="text-xs text-yellow-300 mb-1">${bracket.homeTeam?.qualification || ''}</p>
-                        <p class="text-xl font-bold ${bracket.homeTeam?.teamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
-                            ${bracket.homeTeam?.teamName || 'TBD'}
-                        </p>
-                    </div>
+        html += `</div>`;
 
-                    <!-- Risultato / VS -->
-                    <div class="text-center">
-                        ${bracket.result ?
+        // SEZIONE 2: La Partita
+        html += `
+            <div class="bg-gradient-to-r from-orange-900 to-amber-900 rounded-lg p-4 border-2 border-orange-500 shadow-lg">
+                <h3 class="text-xl font-bold text-orange-400 mb-3 flex items-center gap-2">
+                    <span>⚽</span> La Partita
+                </h3>
+        `;
+
+        if (!bracket) {
+            html += `
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                    <p class="text-gray-400">Partita non ancora programmata.</p>
+                </div>
+            `;
+        } else {
+            // Card partita con loghi grandi e livelli
+            html += `
+                <div class="bg-black bg-opacity-40 rounded-lg p-6">
+                    <p class="text-gray-400 text-sm mb-4 text-center">Partita Secca</p>
+                    <div class="flex items-center justify-center gap-6">
+                        <!-- Home Team -->
+                        <div class="flex flex-col items-center gap-2">
+                            ${getLargeLogoHtml(homeTeamId)}
+                            <p class="text-xs text-yellow-300">${bracket.homeTeam?.qualification || ''}</p>
+                            <p class="text-lg font-bold text-center ${homeTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
+                                ${bracket.homeTeam?.teamName || 'TBD'}
+                            </p>
+                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
+                        </div>
+
+                        <!-- Risultato / VS -->
+                        <div class="text-center px-4">
+                            ${bracket.result ?
                             `<p class="text-3xl font-extrabold text-yellow-400">${bracket.result}</p>
                              ${bracket.penalties ? `<p class="text-xs text-gray-400">(d.c.r.)</p>` : ''}` :
-                            `<p class="text-2xl text-gray-400 font-bold">VS</p>
-                             <p class="text-xs text-gray-500">Partita Secca</p>`
+                            `<p class="text-3xl text-gray-400 font-bold">VS</p>
+                             <p class="text-xs text-gray-500 mt-1">Partita Secca</p>`
                         }
                     </div>
 
                     <!-- Away Team -->
-                    <div class="text-center">
-                        <p class="text-xs text-yellow-300 mb-1">${bracket.awayTeam?.qualification || ''}</p>
-                        <p class="text-xl font-bold ${bracket.awayTeam?.teamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
+                    <div class="flex flex-col items-center gap-2">
+                        ${getLargeLogoHtml(awayTeamId)}
+                        <p class="text-xs text-yellow-300">${bracket.awayTeam?.qualification || ''}</p>
+                        <p class="text-lg font-bold text-center ${awayTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
                             ${bracket.awayTeam?.teamName || 'TBD'}
                         </p>
+                        <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
                     </div>
                 </div>
 
@@ -500,7 +751,8 @@ window.UserCompetitions = {
                     </div>
                 `}
             </div>
-        `;
+            `;
+        }
 
         html += `</div>`;
 

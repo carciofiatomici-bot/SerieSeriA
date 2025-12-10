@@ -81,16 +81,16 @@ window.ChampionshipSimulation = {
             // Usa la forma persistente se disponibile
             if (persistedForm && persistedForm.mod !== undefined && persistedForm.level !== undefined) {
                 formModifier = persistedForm.mod;
-                currentLevel = persistedForm.level;
+                currentLevel = Math.min(30, Math.max(1, persistedForm.level));
             } else {
-                // In simulazione, se la forma non è stata salvata, usiamo Livello Base (Livello 1) 
+                // In simulazione, se la forma non è stata salvata, usiamo Livello Base (Livello 1)
                 // e mod 0 per prevenire simulazioni errate con forme casuali non salvate.
                 // L'utente DEVE aprire il pannello Formazione prima di simulare.
                 formModifier = 0;
-                currentLevel = p.level || 1;
+                currentLevel = Math.min(30, Math.max(1, p.level || 1));
                 console.warn(`Forma mancante per ${p.name}. Usato Livello Base ${currentLevel} in simulazione.`);
             }
-            
+
             return {
                 ...p,
                 currentLevel: currentLevel,
@@ -102,22 +102,33 @@ window.ChampionshipSimulation = {
         const iconaPlayer = playersWithForm.find(p => p.abilities.includes('Icona'));
         const isIconaActive = iconaPlayer ? iconaPlayer.abilities.includes('Icona') : false;
 
-        const groupedPlayers = {
-            P: playersWithForm.filter(p => p.role === 'P'),
-            D: playersWithForm.filter(p => p.role === 'D'),
-            C: playersWithForm.filter(p => p.role === 'C'),
-            A: playersWithForm.filter(p => p.role === 'A'),
-            Panchina: panchina.map(p => ({...p, abilities: Array.isArray(p.abilities) ? p.abilities : (p.abilities ? [p.abilities] : [])})) 
+        // Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente
+        const sortByRoleAndLevel = (players) => {
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            return [...players].sort((a, b) => {
+                const roleA = roleOrder[a.role] ?? 4;
+                const roleB = roleOrder[b.role] ?? 4;
+                if (roleA !== roleB) return roleA - roleB;
+                return (b.currentLevel || b.level || 0) - (a.currentLevel || a.level || 0);
+            });
         };
-        
+
+        const groupedPlayers = {
+            P: sortByRoleAndLevel(playersWithForm.filter(p => p.role === 'P')),
+            D: sortByRoleAndLevel(playersWithForm.filter(p => p.role === 'D')),
+            C: sortByRoleAndLevel(playersWithForm.filter(p => p.role === 'C')),
+            A: sortByRoleAndLevel(playersWithForm.filter(p => p.role === 'A')),
+            Panchina: panchina.map(p => ({...p, abilities: Array.isArray(p.abilities) ? p.abilities : (p.abilities ? [p.abilities] : [])}))
+        };
+
         groupedPlayers.formationInfo = {
             P: groupedPlayers.P,
             D: groupedPlayers.D,
             C: groupedPlayers.C,
             A: groupedPlayers.A,
-            allPlayers: playersWithForm,
+            allPlayers: sortByRoleAndLevel(playersWithForm),
             isIconaActive: isIconaActive,
-            Panchina: groupedPlayers.Panchina 
+            Panchina: groupedPlayers.Panchina
         };
         
         groupedPlayers.coachLevel = coachLevel;
@@ -130,13 +141,12 @@ window.ChampionshipSimulation = {
      */
     runSimulation(homeTeamData, awayTeamData) {
         const { simulateOneOccasion } = window.simulationLogic || {};
-        // ... [il resto della funzione runSimulation è invariato]
-        
+
         if (!simulateOneOccasion) {
             console.error("ERRORE CRITICO: Modulo simulazione.js non caricato correttamente.");
             return { homeGoals: 0, awayGoals: 0 };
         }
-        
+
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
@@ -157,6 +167,198 @@ window.ChampionshipSimulation = {
         }
 
         return { homeGoals, awayGoals };
+    },
+
+    /**
+     * Simula una singola partita con log dettagliato per debug.
+     */
+    runSimulationWithLog(homeTeamData, awayTeamData) {
+        const { simulateOneOccasionWithLog, resetSimulationState } = window.simulationLogic || {};
+
+        if (!simulateOneOccasionWithLog) {
+            console.error("ERRORE CRITICO: Modulo simulazione.js non caricato correttamente.");
+            return { homeGoals: 0, awayGoals: 0, log: ['ERRORE: Modulo simulazione non caricato'] };
+        }
+
+        // Reset stato simulazione
+        if (resetSimulationState) resetSimulationState();
+
+        const teamA = this.prepareTeamForSimulation(homeTeamData);
+        const teamB = this.prepareTeamForSimulation(awayTeamData);
+
+        let homeGoals = 0;
+        let awayGoals = 0;
+        const totalOccasions = 30;
+        const log = [];
+
+        // Log informazioni squadre
+        log.push('='.repeat(70));
+        log.push(`SIMULAZIONE: ${homeTeamData.teamName} vs ${awayTeamData.teamName}`);
+        log.push('='.repeat(70));
+        log.push('');
+
+        // Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente
+        const sortPlayers = (players) => {
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            return [...players].sort((a, b) => {
+                const roleA = roleOrder[a.role] ?? 4;
+                const roleB = roleOrder[b.role] ?? 4;
+                if (roleA !== roleB) return roleA - roleB;
+                // A parita di ruolo, ordina per livello decrescente
+                return (b.currentLevel || b.level || 0) - (a.currentLevel || a.level || 0);
+            });
+        };
+
+        // Log giocatori squadra casa
+        log.push(`*** ${homeTeamData.teamName} (CASA) ***`);
+        log.push(`Coach Level: ${teamA.coachLevel}`);
+        log.push(`Modulo: ${homeTeamData.formation?.modulo || '?'}`);
+        const allPlayersA = sortPlayers(teamA.formationInfo?.allPlayers || []);
+        allPlayersA.forEach(p => {
+            const abilities = p.abilities?.length > 0 ? p.abilities.join(', ') : '-';
+            log.push(`  ${p.role} | ${p.name.padEnd(20)} | Lv.${String(p.currentLevel).padStart(2)} (base:${String(p.level || '?').padStart(2)}, forma:${p.formModifier >= 0 ? '+' : ''}${p.formModifier}) | ${(p.type || 'N/A').padEnd(8)} | ${abilities}`);
+        });
+        log.push('');
+
+        // Log giocatori squadra trasferta
+        log.push(`*** ${awayTeamData.teamName} (TRASFERTA) ***`);
+        log.push(`Coach Level: ${teamB.coachLevel}`);
+        log.push(`Modulo: ${awayTeamData.formation?.modulo || '?'}`);
+        const allPlayersB = sortPlayers(teamB.formationInfo?.allPlayers || []);
+        allPlayersB.forEach(p => {
+            const abilities = p.abilities?.length > 0 ? p.abilities.join(', ') : '-';
+            log.push(`  ${p.role} | ${p.name.padEnd(20)} | Lv.${String(p.currentLevel).padStart(2)} (base:${String(p.level || '?').padStart(2)}, forma:${p.formModifier >= 0 ? '+' : ''}${p.formModifier}) | ${(p.type || 'N/A').padEnd(8)} | ${abilities}`);
+        });
+        log.push('');
+
+        // ==================== OCCASIONI SQUADRA CASA ====================
+        log.push('');
+        log.push('#'.repeat(70));
+        log.push(`# ATTACCO ${homeTeamData.teamName} (30 occasioni)`);
+        log.push('#'.repeat(70));
+
+        for (let i = 0; i < totalOccasions; i++) {
+            const result = simulateOneOccasionWithLog(teamA, teamB, i + 1);
+            if (result.goal) {
+                homeGoals++;
+            }
+            // Aggiungi il log dettagliato di questa occasione
+            log.push(...result.log);
+            log.push(`  >> Parziale ${homeTeamData.teamName}: ${homeGoals} gol su ${i + 1} occasioni`);
+        }
+
+        // ==================== OCCASIONI SQUADRA TRASFERTA ====================
+        log.push('');
+        log.push('#'.repeat(70));
+        log.push(`# ATTACCO ${awayTeamData.teamName} (30 occasioni)`);
+        log.push('#'.repeat(70));
+
+        for (let i = 0; i < totalOccasions; i++) {
+            const result = simulateOneOccasionWithLog(teamB, teamA, i + 1);
+            if (result.goal) {
+                awayGoals++;
+            }
+            // Aggiungi il log dettagliato di questa occasione
+            log.push(...result.log);
+            log.push(`  >> Parziale ${awayTeamData.teamName}: ${awayGoals} gol su ${i + 1} occasioni`);
+        }
+
+        // ==================== RISULTATO FINALE ====================
+        log.push('');
+        log.push('='.repeat(70));
+        log.push(`RISULTATO FINALE: ${homeTeamData.teamName} ${homeGoals} - ${awayGoals} ${awayTeamData.teamName}`);
+        if (homeGoals > awayGoals) {
+            log.push(`VINCITORE: ${homeTeamData.teamName}`);
+        } else if (awayGoals > homeGoals) {
+            log.push(`VINCITORE: ${awayTeamData.teamName}`);
+        } else {
+            log.push(`PAREGGIO!`);
+        }
+        log.push('='.repeat(70));
+
+        // Genera anche un log ristretto (solo risultati per occasione)
+        const simpleLog = this.generateSimpleLog(homeTeamData, awayTeamData, teamA, teamB, homeGoals, awayGoals);
+
+        return { homeGoals, awayGoals, log, simpleLog };
+    },
+
+    /**
+     * Genera un log ristretto della simulazione
+     */
+    generateSimpleLog(homeTeamData, awayTeamData, teamA, teamB, homeGoals, awayGoals) {
+        const { simulateOneOccasion, resetSimulationState } = window.simulationLogic || {};
+        const log = [];
+
+        log.push('='.repeat(60));
+        log.push(`SIMULAZIONE: ${homeTeamData.teamName} vs ${awayTeamData.teamName}`);
+        log.push('='.repeat(60));
+        log.push('');
+
+        // Helper per ordinare giocatori
+        const sortPlayers = (players) => {
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            return [...players].sort((a, b) => {
+                const roleA = roleOrder[a.role] ?? 4;
+                const roleB = roleOrder[b.role] ?? 4;
+                if (roleA !== roleB) return roleA - roleB;
+                return (b.currentLevel || b.level || 0) - (a.currentLevel || a.level || 0);
+            });
+        };
+
+        // Info squadre compatte
+        log.push(`${homeTeamData.teamName} (CASA)`);
+        log.push(`  Coach Lv.${teamA.coachLevel} | Modulo: ${homeTeamData.formation?.modulo || '?'}`);
+        const playersA = sortPlayers(teamA.formationInfo?.allPlayers || []);
+        log.push(`  Titolari: ${playersA.map(p => `${p.role}:${p.name}(${p.currentLevel})`).join(', ')}`);
+        log.push('');
+
+        log.push(`${awayTeamData.teamName} (TRASFERTA)`);
+        log.push(`  Coach Lv.${teamB.coachLevel} | Modulo: ${awayTeamData.formation?.modulo || '?'}`);
+        const playersB = sortPlayers(teamB.formationInfo?.allPlayers || []);
+        log.push(`  Titolari: ${playersB.map(p => `${p.role}:${p.name}(${p.currentLevel})`).join(', ')}`);
+        log.push('');
+
+        log.push('-'.repeat(60));
+        log.push(`ATTACCO ${homeTeamData.teamName}`);
+        log.push('-'.repeat(60));
+
+        // Simula le occasioni per il log ristretto (usa i risultati gia calcolati)
+        // Qui ri-simuliamo per avere i dettagli semplificati
+        if (resetSimulationState) resetSimulationState();
+
+        let homeG = 0;
+        for (let i = 0; i < 30; i++) {
+            const goal = simulateOneOccasion(teamA, teamB, i + 1);
+            if (goal) {
+                homeG++;
+                log.push(`  [${String(i+1).padStart(2)}] GOL!     | Totale: ${homeG}`);
+            } else {
+                log.push(`  [${String(i+1).padStart(2)}] Fallito  | Totale: ${homeG}`);
+            }
+        }
+
+        log.push('');
+        log.push('-'.repeat(60));
+        log.push(`ATTACCO ${awayTeamData.teamName}`);
+        log.push('-'.repeat(60));
+
+        let awayG = 0;
+        for (let i = 0; i < 30; i++) {
+            const goal = simulateOneOccasion(teamB, teamA, i + 1);
+            if (goal) {
+                awayG++;
+                log.push(`  [${String(i+1).padStart(2)}] GOL!     | Totale: ${awayG}`);
+            } else {
+                log.push(`  [${String(i+1).padStart(2)}] Fallito  | Totale: ${awayG}`);
+            }
+        }
+
+        log.push('');
+        log.push('='.repeat(60));
+        log.push(`RISULTATO: ${homeTeamData.teamName} ${homeGoals} - ${awayGoals} ${awayTeamData.teamName}`);
+        log.push('='.repeat(60));
+
+        return log;
     },
 
     /**

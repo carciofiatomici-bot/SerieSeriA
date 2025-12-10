@@ -14,7 +14,7 @@ window.InterfacciaNavigation = {
         if (screenId && screenId !== 'login-box' && screenId !== 'gate-box' && screenId !== 'coach-selection-box' && screenId !== 'captain-selection-box') {
             localStorage.setItem('fanta_last_screen', screenId);
         } else if (screenId === 'app-content') {
-            // La Dashboard Ã¨ il punto di partenza, lo salviamo
+            // La Dashboard e il punto di partenza, lo salviamo
             localStorage.setItem('fanta_last_screen', screenId);
         }
     },

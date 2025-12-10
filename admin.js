@@ -134,6 +134,15 @@ document.addEventListener('DOMContentLoaded', () => {
              setTimeout(() => displayMessage("Dati sincronizzati.", 'success', 'toggle-status-message'), 1500);
         });
 
+        // Test Simulazione Partita
+        setupTestSimulationListeners();
+
+        // Fix Abilita Icone
+        const btnFixIcone = document.getElementById('btn-fix-icone-ability');
+        if (btnFixIcone) {
+            btnFixIcone.addEventListener('click', handleFixIconeAbility);
+        }
+
         // Toggle Crediti Super Seri
         const btnToggleCSS = document.getElementById('btn-toggle-css');
         if (btnToggleCSS) {
@@ -168,6 +177,360 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCupStatus();
         loadSupercoppPanel();
         loadAutomationPanel();
+    };
+
+    /**
+     * Fix abilita "Icona" per tutte le Icone in tutte le squadre
+     */
+    const handleFixIconeAbility = async () => {
+        const resultDiv = document.getElementById('fix-icone-result');
+        const btn = document.getElementById('btn-fix-icone-ability');
+
+        if (!resultDiv || !btn) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Fixing...';
+        resultDiv.textContent = 'Analisi squadre in corso...';
+        resultDiv.className = 'flex items-center justify-center text-sm text-yellow-400';
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+
+            // Carica tutte le squadre
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            const teams = teamsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // Carica la lista delle Icone disponibili
+            const icone = window.ICONE || [];
+            const iconeIds = new Set(icone.map(i => i.id));
+
+            let teamsFixed = 0;
+            let playersFixed = 0;
+
+            for (const team of teams) {
+                if (!team.players || !Array.isArray(team.players)) continue;
+
+                let needsUpdate = false;
+                const updatedPlayers = team.players.map(player => {
+                    // Verifica se il giocatore e' un'Icona (per ID o iconaId della squadra)
+                    // NOTA: isCaptain e' il "capitano nominato" (bonus +1), NON l'Icona
+                    const isIcona = iconeIds.has(player.id) || player.id === team.iconaId;
+
+                    if (isIcona) {
+                        const abilities = Array.isArray(player.abilities) ? [...player.abilities] : [];
+
+                        // Aggiungi "Icona" se non presente
+                        if (!abilities.includes('Icona')) {
+                            abilities.push('Icona');
+                            needsUpdate = true;
+                            playersFixed++;
+                            console.log(`Fix: ${player.name} in ${team.teamName} - aggiunta abilita Icona`);
+                        }
+
+                        return { ...player, abilities };
+                    }
+
+                    return player;
+                });
+
+                if (needsUpdate) {
+                    // Aggiorna anche la formazione
+                    let updatedFormation = team.formation;
+                    if (updatedFormation) {
+                        const playersMap = new Map(updatedPlayers.map(p => [p.id, p]));
+
+                        if (updatedFormation.titolari) {
+                            updatedFormation.titolari = updatedFormation.titolari.map(t => {
+                                const updated = playersMap.get(t.id);
+                                return updated ? { ...t, abilities: updated.abilities } : t;
+                            });
+                        }
+                        if (updatedFormation.panchina) {
+                            updatedFormation.panchina = updatedFormation.panchina.map(p => {
+                                const updated = playersMap.get(p.id);
+                                return updated ? { ...p, abilities: updated.abilities } : p;
+                            });
+                        }
+                    }
+
+                    // Salva su Firestore
+                    const teamRef = doc(db, TEAMS_COLLECTION_PATH, team.id);
+                    await updateDoc(teamRef, {
+                        players: updatedPlayers,
+                        formation: updatedFormation
+                    });
+
+                    teamsFixed++;
+                }
+            }
+
+            if (playersFixed > 0) {
+                resultDiv.textContent = `Fixate ${playersFixed} Icone in ${teamsFixed} squadre!`;
+                resultDiv.className = 'flex items-center justify-center text-sm text-green-400 font-bold';
+            } else {
+                resultDiv.textContent = 'Tutte le Icone hanno gia l\'abilita "Icona"';
+                resultDiv.className = 'flex items-center justify-center text-sm text-green-400';
+            }
+
+            console.log(`Fix completato: ${playersFixed} icone fixate in ${teamsFixed} squadre`);
+
+        } catch (error) {
+            console.error('Errore fix icone:', error);
+            resultDiv.textContent = `Errore: ${error.message}`;
+            resultDiv.className = 'flex items-center justify-center text-sm text-red-400';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '👑 Fix Abilita Icone';
+        }
+    };
+
+    /**
+     * Setup listeners per il test di simulazione partita
+     */
+    const setupTestSimulationListeners = () => {
+        const btnTestSimulation = document.getElementById('btn-test-simulation');
+        const modal = document.getElementById('test-simulation-modal');
+        const btnClose = document.getElementById('btn-close-test-simulation');
+        const btnRun = document.getElementById('btn-run-test-simulation');
+        const homeSelect = document.getElementById('test-home-team');
+        const awaySelect = document.getElementById('test-away-team');
+        const resultContainer = document.getElementById('test-simulation-result');
+        const scoreDiv = document.getElementById('test-simulation-score');
+        const detailsDiv = document.getElementById('test-simulation-details');
+
+        if (!btnTestSimulation || !modal) return;
+
+        // Apri modal e carica squadre
+        btnTestSimulation.addEventListener('click', async () => {
+            modal.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            // Carica le squadre registrate
+            try {
+                const { collection, getDocs } = firestoreTools;
+                const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+                const teams = teamsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })).filter(t => t.teamName); // Solo squadre con nome
+
+                // Popola i dropdown
+                const defaultOption = '<option value="">Seleziona squadra...</option>';
+                const teamOptions = teams.map(t =>
+                    `<option value="${t.id}">${t.teamName}</option>`
+                ).join('');
+
+                homeSelect.innerHTML = defaultOption + teamOptions;
+                awaySelect.innerHTML = defaultOption + teamOptions;
+
+            } catch (error) {
+                console.error('Errore caricamento squadre per test:', error);
+                displayMessage('Errore nel caricamento delle squadre', 'error', 'toggle-status-message');
+            }
+        });
+
+        // Chiudi modal
+        btnClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Click fuori dal modal per chiuderlo
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Esegui simulazione
+        btnRun.addEventListener('click', async () => {
+            const homeTeamId = homeSelect.value;
+            const awayTeamId = awaySelect.value;
+
+            if (!homeTeamId || !awayTeamId) {
+                displayMessage('Seleziona entrambe le squadre', 'error', 'toggle-status-message');
+                return;
+            }
+
+            if (homeTeamId === awayTeamId) {
+                displayMessage('Seleziona due squadre diverse', 'error', 'toggle-status-message');
+                return;
+            }
+
+            btnRun.disabled = true;
+            btnRun.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Simulazione...';
+
+            try {
+                // Carica i dati completi delle squadre
+                const { doc, getDoc } = firestoreTools;
+                const [homeDocSnap, awayDocSnap] = await Promise.all([
+                    getDoc(doc(db, TEAMS_COLLECTION_PATH, homeTeamId)),
+                    getDoc(doc(db, TEAMS_COLLECTION_PATH, awayTeamId))
+                ]);
+
+                if (!homeDocSnap.exists() || !awayDocSnap.exists()) {
+                    throw new Error('Una delle squadre non esiste');
+                }
+
+                const homeTeamData = { id: homeDocSnap.id, ...homeDocSnap.data() };
+                const awayTeamData = { id: awayDocSnap.id, ...awayDocSnap.data() };
+
+                // Verifica che le squadre abbiano formazioni
+                if (!homeTeamData.formation?.titolari?.length) {
+                    throw new Error(`${homeTeamData.teamName} non ha una formazione impostata`);
+                }
+                if (!awayTeamData.formation?.titolari?.length) {
+                    throw new Error(`${awayTeamData.teamName} non ha una formazione impostata`);
+                }
+
+                // Esegui la simulazione usando ChampionshipSimulation con log
+                const result = window.ChampionshipSimulation.runSimulationWithLog(homeTeamData, awayTeamData);
+
+                // Mostra risultato
+                resultContainer.classList.remove('hidden');
+                scoreDiv.textContent = `${homeTeamData.teamName} ${result.homeGoals} - ${result.awayGoals} ${awayTeamData.teamName}`;
+
+                // Popola i log
+                const simpleLogContent = document.getElementById('test-simulation-simple-log-content');
+                const simpleLogContainer = document.getElementById('test-simulation-simple-log');
+                const detailedLogContent = document.getElementById('test-simulation-detailed-log-content');
+                const detailedLogContainer = document.getElementById('test-simulation-detailed-log');
+                const btnSimpleLog = document.getElementById('btn-toggle-simple-log');
+                const btnDetailedLog = document.getElementById('btn-toggle-detailed-log');
+
+                if (simpleLogContent && result.simpleLog) {
+                    simpleLogContent.textContent = result.simpleLog.join('\n');
+                }
+                if (detailedLogContent && result.log) {
+                    detailedLogContent.textContent = result.log.join('\n');
+                }
+
+                // Reset stato log
+                if (simpleLogContainer) simpleLogContainer.classList.add('hidden');
+                if (detailedLogContainer) detailedLogContainer.classList.add('hidden');
+
+                // Handler bottone log ristretto
+                if (btnSimpleLog) {
+                    btnSimpleLog.onclick = () => {
+                        const isHidden = simpleLogContainer.classList.contains('hidden');
+                        // Chiudi l'altro log se aperto
+                        if (isHidden && detailedLogContainer) {
+                            detailedLogContainer.classList.add('hidden');
+                        }
+                        simpleLogContainer.classList.toggle('hidden');
+                    };
+                }
+
+                // Handler bottone log dettagliato
+                if (btnDetailedLog) {
+                    btnDetailedLog.onclick = () => {
+                        const isHidden = detailedLogContainer.classList.contains('hidden');
+                        // Chiudi l'altro log se aperto
+                        if (isHidden && simpleLogContainer) {
+                            simpleLogContainer.classList.add('hidden');
+                        }
+                        detailedLogContainer.classList.toggle('hidden');
+                    };
+                }
+
+                // Calcola statistiche formazione
+                const getFormationStats = (teamData) => {
+                    const titolari = teamData.formation?.titolari || [];
+                    const playersFormStatus = teamData.playersFormStatus || {};
+
+                    let totalLevel = 0;
+                    const playerDetails = titolari.map(p => {
+                        const form = playersFormStatus[p.id];
+                        const currentLevel = form?.level || p.level || 1;
+                        totalLevel += currentLevel;
+                        return {
+                            name: p.name,
+                            role: p.role,
+                            baseLevel: p.level || 1,
+                            currentLevel: currentLevel,
+                            formMod: form?.mod || 0
+                        };
+                    });
+
+                    // Ordina per ruolo (P, D, C, A) e poi per livello decrescente
+                    const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+                    playerDetails.sort((a, b) => {
+                        const roleA = roleOrder[a.role] ?? 4;
+                        const roleB = roleOrder[b.role] ?? 4;
+                        if (roleA !== roleB) return roleA - roleB;
+                        return b.currentLevel - a.currentLevel;
+                    });
+
+                    return {
+                        avgLevel: titolari.length > 0 ? (totalLevel / titolari.length).toFixed(1) : '?',
+                        players: playerDetails
+                    };
+                };
+
+                const homeStats = getFormationStats(homeTeamData);
+                const awayStats = getFormationStats(awayTeamData);
+
+                // Determina vincitore
+                let winnerText = '';
+                if (result.homeGoals > result.awayGoals) {
+                    winnerText = `<span class="text-green-400 font-bold">Vince ${homeTeamData.teamName}!</span>`;
+                } else if (result.awayGoals > result.homeGoals) {
+                    winnerText = `<span class="text-green-400 font-bold">Vince ${awayTeamData.teamName}!</span>`;
+                } else {
+                    winnerText = '<span class="text-yellow-400 font-bold">Pareggio!</span>';
+                }
+
+                detailsDiv.innerHTML = `
+                    <div class="text-center mb-4">${winnerText}</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-3 rounded">
+                            <p class="font-bold text-blue-400 mb-2">${homeTeamData.teamName}</p>
+                            <p class="text-xs">Livello medio: <span class="text-yellow-400 font-bold">${homeStats.avgLevel}</span></p>
+                            <p class="text-xs text-gray-400 mt-1">Titolari:</p>
+                            <ul class="text-xs mt-1 space-y-1">
+                                ${homeStats.players.map(p => `
+                                    <li class="flex justify-between">
+                                        <span>${p.role} - ${p.name}</span>
+                                        <span class="${p.formMod > 0 ? 'text-green-400' : p.formMod < 0 ? 'text-red-400' : 'text-gray-400'}">
+                                            Lv.${p.currentLevel} ${p.formMod !== 0 ? `(${p.formMod > 0 ? '+' : ''}${p.formMod})` : ''}
+                                        </span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded">
+                            <p class="font-bold text-red-400 mb-2">${awayTeamData.teamName}</p>
+                            <p class="text-xs">Livello medio: <span class="text-yellow-400 font-bold">${awayStats.avgLevel}</span></p>
+                            <p class="text-xs text-gray-400 mt-1">Titolari:</p>
+                            <ul class="text-xs mt-1 space-y-1">
+                                ${awayStats.players.map(p => `
+                                    <li class="flex justify-between">
+                                        <span>${p.role} - ${p.name}</span>
+                                        <span class="${p.formMod > 0 ? 'text-green-400' : p.formMod < 0 ? 'text-red-400' : 'text-gray-400'}">
+                                            Lv.${p.currentLevel} ${p.formMod !== 0 ? `(${p.formMod > 0 ? '+' : ''}${p.formMod})` : ''}
+                                        </span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 text-center mt-3">Simulazione basata su 30 occasioni per squadra</p>
+                `;
+
+                console.log('Test simulazione completato:', {
+                    home: homeTeamData.teamName,
+                    away: awayTeamData.teamName,
+                    result: result
+                });
+
+            } catch (error) {
+                console.error('Errore nella simulazione test:', error);
+                displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+                resultContainer.classList.add('hidden');
+            } finally {
+                btnRun.disabled = false;
+                btnRun.innerHTML = 'Simula Partita';
+            }
+        });
     };
 
     /**
@@ -571,9 +934,23 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const btnToggleDraft = document.getElementById('btn-toggle-draft');
         if (btnToggleDraft) btnToggleDraft.addEventListener('click', handleToggleState);
-        
+
         const btnToggleMarket = document.getElementById('btn-toggle-market');
         if (btnToggleMarket) btnToggleMarket.addEventListener('click', handleToggleState);
+
+        // Listener per Draft a Turni
+        const btnGenerateDraftList = document.getElementById('btn-generate-draft-list');
+        if (btnGenerateDraftList) {
+            btnGenerateDraftList.addEventListener('click', handleGenerateDraftList);
+        }
+
+        const btnStopDraftTurns = document.getElementById('btn-stop-draft-turns');
+        if (btnStopDraftTurns) {
+            btnStopDraftTurns.addEventListener('click', handleStopDraftTurns);
+        }
+
+        // Carica lo stato corrente del draft a turni
+        loadDraftTurnsStatus();
         
         const btnRandomPlayer = document.getElementById('btn-random-player');
         if (btnRandomPlayer) btnRandomPlayer.addEventListener('click', () => window.AdminPlayers.handleRandomPlayer());
@@ -620,6 +997,148 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         window.AdminPlayers.updateAbilitiesChecklist(); 
+    };
+
+    /**
+     * Carica lo stato corrente del draft a turni
+     */
+    const loadDraftTurnsStatus = async () => {
+        const { doc, getDoc } = firestoreTools;
+        const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+
+        try {
+            const configDoc = await getDoc(configDocRef);
+            const configData = configDoc.exists() ? configDoc.data() : {};
+            const draftTurns = configData.draftTurns;
+            const isDraftTurnsActive = draftTurns && draftTurns.isActive;
+
+            const btnGenerate = document.getElementById('btn-generate-draft-list');
+            const btnStop = document.getElementById('btn-stop-draft-turns');
+            const statusContainer = document.getElementById('draft-turns-status-container');
+
+            if (isDraftTurnsActive) {
+                // Draft a turni attivo
+                if (btnGenerate) btnGenerate.classList.add('hidden');
+                if (btnStop) btnStop.classList.remove('hidden');
+
+                // Mostra stato corrente
+                const currentRound = draftTurns.currentRound;
+                const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+                const currentOrder = draftTurns[orderKey] || [];
+                const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
+                const remainingTeams = currentOrder.filter(t => !t.hasDrafted).length;
+
+                if (statusContainer) {
+                    statusContainer.innerHTML = `
+                        <div class="p-3 bg-purple-900 border border-purple-500 rounded-lg">
+                            <p class="text-purple-300 font-bold mb-2">Draft a Turni ATTIVO</p>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-gray-400">Round:</span> <span class="text-white font-bold">${currentRound} / ${draftTurns.totalRounds}</span></div>
+                                <div><span class="text-gray-400">Rimanenti:</span> <span class="text-white font-bold">${remainingTeams}</span></div>
+                            </div>
+                            <p class="text-sm mt-2"><span class="text-gray-400">Turno:</span> <span class="text-yellow-400 font-bold">${currentTeam ? currentTeam.teamName : 'N/A'}</span></p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                ${currentOrder.map((t, i) => `
+                                    <span class="text-xs px-2 py-1 rounded ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white')}">${i+1}. ${t.teamName}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Draft a turni non attivo
+                if (btnGenerate) btnGenerate.classList.remove('hidden');
+                if (btnStop) btnStop.classList.add('hidden');
+                if (statusContainer) statusContainer.innerHTML = '';
+            }
+
+        } catch (error) {
+            console.error('Errore nel caricamento stato draft a turni:', error);
+        }
+    };
+
+    /**
+     * Gestisce la generazione della lista draft
+     */
+    const handleGenerateDraftList = async () => {
+        const btn = document.getElementById('btn-generate-draft-list');
+
+        if (!confirm('Vuoi generare la lista del draft? Le squadre potranno draftare a turno.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Generazione in corso...';
+        displayMessage('Generazione lista draft in corso...', 'info', 'toggle-status-message');
+
+        try {
+            // Prepara il contesto per DraftTurns
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    TEAMS_COLLECTION_PATH,
+                    CHAMPIONSHIP_CONFIG_PATH,
+                    LEADERBOARD_COLLECTION_PATH: `artifacts/${firestoreTools.appId}/public/data/leaderboard`
+                }
+            };
+
+            const result = await window.DraftTurns.startDraftTurns(context);
+
+            if (result.success) {
+                displayMessage('Lista draft generata! Il draft a turni e iniziato.', 'success', 'toggle-status-message');
+                // Aggiorna lo stato
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error('Errore nella generazione lista draft:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+            btn.disabled = false;
+            btn.textContent = 'Genera Lista Draft';
+        }
+    };
+
+    /**
+     * Gestisce la fermata del draft a turni
+     */
+    const handleStopDraftTurns = async () => {
+        const btn = document.getElementById('btn-stop-draft-turns');
+
+        if (!confirm('Vuoi fermare il draft a turni? Questa azione interrompera il draft in corso.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Fermando...';
+        displayMessage('Fermando draft a turni...', 'info', 'toggle-status-message');
+
+        try {
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+
+            const result = await window.DraftTurns.stopDraftTurns(context);
+
+            if (result.success) {
+                displayMessage('Draft a turni fermato.', 'success', 'toggle-status-message');
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error) {
+            console.error('Errore nel fermare il draft:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+            btn.disabled = false;
+            btn.textContent = 'Ferma Draft a Turni';
+        }
     };
 
     /**
@@ -747,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await getDocs(q);
             
             if (snapshot.empty) {
-                displayMessage(`Collezione ${collectionName} giÃ  vuota.`, 'success', msgId);
+                displayMessage(`Collezione ${collectionName} gia vuota.`, 'success', msgId);
                 return;
             }
 

@@ -52,7 +52,7 @@
                     <ul class="text-gray-300 space-y-2 text-sm">
                         <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
                         <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
-                        <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
+                        <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
                         <li>• Ogni giocatore ha un livello (1-20) che influenza le statistiche</li>
                     </ul>
                 </div>
@@ -145,17 +145,37 @@
         <!-- 2. BOX LOGIN (Nome Squadra / Password) -->
         <div id="login-box" class="football-box w-full max-w-sm transition duration-500 hidden-on-load">
             <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b-2 border-yellow-600 pb-2">Seleziona la Tua Squadra</h2>
-            
-            <input type="text" id="login-username" placeholder="Nome Squadra / Email Admin"
-                   class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
 
-            <input type="password" id="login-password" placeholder="Password (Qualsiasi per la creazione)"
-                   class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-6 shadow-inner-dark">
-            
-            <button id="login-button"
-                    class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02] mb-4">
-                Accedi
-            </button>
+            <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
+            <div id="remembered-session-box" class="hidden mb-6">
+                <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center">
+                    <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-yellow-400 object-cover">
+                    <p class="text-lg font-bold text-white mb-1" id="remembered-team-name">Nome Squadra</p>
+                    <p class="text-xs text-gray-400 mb-4">Sessione attiva</p>
+                    <button id="btn-reenter-dashboard"
+                            class="w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02] mb-2">
+                        Rientra in Dashboard
+                    </button>
+                    <button id="btn-full-logout"
+                            class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150">
+                        Logout Completo
+                    </button>
+                </div>
+            </div>
+
+            <!-- SEZIONE LOGIN NORMALE -->
+            <div id="normal-login-box">
+                <input type="text" id="login-username" placeholder="Nome Squadra"
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
+
+                <input type="password" id="login-password" placeholder="Password"
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-6 shadow-inner-dark">
+
+                <button id="login-button"
+                        class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02] mb-4">
+                    Accedi
+                </button>
+            </div>
             
             <!-- BOTTONI PUBBLICI (RIMASTI QUI PER L'ACCESSO PRE-LOGIN) -->
             <div class="grid grid-cols-2 gap-2 mb-2">
@@ -192,25 +212,25 @@
             <!-- NOME SQUADRA -->
             <h2 id="team-dashboard-title" class="text-4xl font-extrabold text-center mb-4 uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
 
-            <!-- COUNTDOWN, LOGO E AVATAR ICONA -->
-            <div id="team-logo-container" class="flex justify-center items-center gap-5 mb-6">
+            <!-- COUNTDOWN, LOGO, ICONA E DIVISA -->
+            <div id="team-logo-container" class="flex justify-center items-center gap-4 mb-6">
                 <!-- BOX COUNTDOWN PROSSIMA PARTITA -->
-                <div id="next-match-countdown" class="p-4 bg-gray-800 rounded-lg border-2 border-teal-500 text-center shadow-lg w-32 h-32 flex flex-col justify-center">
-                    <p id="countdown-label-top" class="text-sm text-teal-300 font-semibold">Prossima</p>
-                    <p id="countdown-timer" class="text-xl font-extrabold text-teal-400">--:--</p>
-                    <p id="countdown-label-bottom" class="text-sm text-gray-500">Partita</p>
+                <div id="next-match-countdown" class="p-2 bg-gray-800 rounded-full border-4 border-teal-500 text-center shadow-lg w-28 h-28 flex flex-col justify-center items-center">
+                    <p id="countdown-label-top" class="text-xs text-teal-300 font-semibold">Prossima</p>
+                    <p id="countdown-timer" class="text-lg font-extrabold text-teal-400">--:--</p>
+                    <p id="countdown-label-bottom" class="text-xs text-gray-500">Partita</p>
                 </div>
                 <img id="team-logo"
                      src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true"
                      alt="Logo Squadra Modificabile"
-                     class="w-32 h-32 rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg"
+                     class="w-28 h-28 rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg"
                      style="border-color: #22c55e;"
                      title="Clicca per cambiare il logo (Inserisci URL)">
                 <div class="relative group">
                     <img id="team-icona-avatar"
                          src="https://placehold.co/128x128/facc15/000?text=?"
                          alt="Avatar Icona"
-                         class="w-32 h-32 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                         class="w-28 h-28 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
                     <!-- Tooltip personalizzato -->
                     <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
@@ -218,6 +238,28 @@
                         <p id="icona-tooltip-role">Ruolo: --</p>
                         <p id="icona-tooltip-type">Tipo: --</p>
                     </div>
+                </div>
+                <!-- BOX DIVISA SQUADRA -->
+                <div id="team-uniform-box" class="p-2 bg-gray-800 rounded-full border-4 border-purple-500 text-center shadow-lg w-28 h-28 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
+                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-20 h-20">
+                        <defs></defs>
+                        <!-- Maglia stile jersey.xml -->
+                        <g id="shirt-preview" transform="translate(0, 5)">
+                            <!-- Corpo maglia con maniche integrate -->
+                            <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                            <!-- Colletto -->
+                            <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                            <!-- Polsino sinistro -->
+                            <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                            <!-- Polsino destro -->
+                            <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                        </g>
+                    </svg>
+                    <p class="text-xs text-purple-300 mt-0">Divisa</p>
                 </div>
             </div>
 
@@ -326,9 +368,9 @@
             <span id="team-firestore-id" class="hidden">N/A</span>
 
             <div class="grid grid-cols-2 gap-4 mt-6">
-                <button id="user-logout-button"
+                <button id="user-back-to-login-button"
                         class="w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
-                    Logout
+                    Torna al Login
                 </button>
                 <!-- NUOVO PULSANTE ELIMINA SQUADRA -->
                 <button id="btn-delete-team"
@@ -593,6 +635,130 @@
             </div>
         </div>
 
+        <!-- 17. MODALE EDITOR DIVISA -->
+        <div id="uniform-editor-modal" class="fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto my-8">
+                <div class="flex justify-between items-center mb-4 border-b border-purple-600 pb-2">
+                    <h3 class="text-3xl font-bold text-purple-400">👕 Editor Divisa</h3>
+                    <button id="btn-close-uniform-editor" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- ANTEPRIMA DIVISA COMPLETA -->
+                    <div class="bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <h4 class="text-lg font-bold text-white mb-4 text-center">Anteprima Divisa</h4>
+                        <svg id="uniform-full-preview" viewBox="0 0 200 260" class="w-full max-w-xs mx-auto">
+                            <!-- Definizioni pattern -->
+                            <defs id="uniform-patterns-defs"></defs>
+
+                            <!-- MAGLIA (stile jersey.xml) -->
+                            <g id="editor-shirt-preview" transform="translate(0, 10)">
+                                <!-- Corpo maglia con maniche integrate -->
+                                <path id="editor-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Colletto -->
+                                <path id="editor-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                                <!-- Polsino sinistro -->
+                                <path id="editor-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                                <!-- Polsino destro -->
+                                <path id="editor-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                            </g>
+
+                            <!-- PANTALONCINI (stile jersey.xml) -->
+                            <g id="editor-shorts-preview" transform="translate(0, 170)">
+                                <!-- Corpo pantaloncini -->
+                                <path id="editor-shorts-body" d="M 65,0 L 135,0 L 145,70 L 105,70 L 100,40 L 95,70 L 55,70 L 65,0 Z"
+                                    fill="#1a1a2e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Striscia laterale sinistra -->
+                                <path id="editor-shorts-stripe-left" d="M 65,0 L 55,70 L 60,70 L 70,0 Z"
+                                    fill="#ffffff" stroke="none"/>
+                                <!-- Striscia laterale destra -->
+                                <path id="editor-shorts-stripe-right" d="M 135,0 L 145,70 L 140,70 L 130,0 Z"
+                                    fill="#ffffff" stroke="none"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- CONTROLLI EDITOR -->
+                    <div class="space-y-4">
+                        <!-- MAGLIA -->
+                        <div class="bg-gray-800 rounded-lg p-4 border-2 border-green-600">
+                            <h4 class="text-lg font-bold text-green-400 mb-3">👕 Maglia</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Primario</label>
+                                    <input type="color" id="shirt-color-primary" value="#22c55e" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Secondario</label>
+                                    <input type="color" id="shirt-color-secondary" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Colletto</label>
+                                    <input type="color" id="shirt-color-collar" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm text-gray-300 mb-1">Pattern</label>
+                                <select id="shirt-pattern" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+                                    <option value="solid">Tinta Unita</option>
+                                    <option value="half-vertical">Meta Verticale</option>
+                                    <option value="vertical-stripes">Strisce Verticali</option>
+                                    <option value="horizontal-stripes">Strisce Orizzontali</option>
+                                    <option value="diagonal-stripes">Strisce Diagonali</option>
+                                    <option value="center-band-v">Banda Centrale Verticale</option>
+                                    <option value="center-band-h">Banda Centrale Orizzontale</option>
+                                    <option value="shoulders">Spalle Colorate</option>
+                                    <option value="sleeves">Maniche Colorate</option>
+                                    <option value="checkered">Scacchi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- PANTALONCINI -->
+                        <div class="bg-gray-800 rounded-lg p-4 border-2 border-blue-600">
+                            <h4 class="text-lg font-bold text-blue-400 mb-3">🩳 Pantaloncini</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Primario</label>
+                                    <input type="color" id="shorts-color-primary" value="#1a1a2e" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Secondario</label>
+                                    <input type="color" id="shorts-color-secondary" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm text-gray-300 mb-1">Pattern</label>
+                                <select id="shorts-pattern" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+                                    <option value="solid">Tinta Unita</option>
+                                    <option value="side-stripe">Strisce Laterali</option>
+                                    <option value="half-vertical">Meta Verticale</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- PULSANTI AZIONI -->
+                <div class="mt-6 flex gap-4">
+                    <button id="btn-cancel-uniform"
+                            class="flex-1 bg-gray-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-gray-500 transition duration-150">
+                        Annulla
+                    </button>
+                    <button id="btn-save-uniform"
+                            class="flex-1 bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
+                        Salva Divisa
+                    </button>
+                </div>
+                <p id="uniform-editor-message" class="text-center mt-3"></p>
+            </div>
+        </div>
+
     </main>
 
     <!-- Logo che Scorrerà con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
@@ -736,6 +902,7 @@
     <script src="admin-ui.js"></script>
     <script src="admin-players.js"></script>
     <script src="admin-teams.js"></script>
+    <script src="admin-icons.js"></script>
     <script src="admin.js"></script> 
     
     <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
@@ -778,6 +945,9 @@
     <!-- 13. CREDITI SUPER SERI (Valuta Premium) -->
     <script src="crediti-super-seri.js"></script>
     <script src="crediti-super-seri-ui.js"></script>
+
+    <!-- 14. UNIFORM EDITOR (Editor Divisa Squadra) -->
+    <script src="uniform-editor.js"></script>
 
 </body>
 </html><!-- ============================================ -->

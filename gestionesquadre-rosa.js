@@ -80,10 +80,10 @@ window.GestioneSquadreRosa = {
         const typeData = TYPE_ICONS[playerType] || TYPE_ICONS['N/A'];
         const typeIconHtml = `<i class="${typeData.icon} ${typeData.color} text-lg ml-2" title="Tipo: ${playerType}"></i>`;
 
-        // Abilita
-        const playerAbilities = (player.abilities || []).filter(a => a !== 'Icona');
+        // Abilita (mostra tutte, inclusa Icona)
+        const playerAbilities = player.abilities || [];
         const abilitiesHtml = playerAbilities.length > 0
-            ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.join(', ')}</p>`
+            ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => a === 'Icona' ? '<span class="text-yellow-400 font-bold">Icona</span>' : a).join(', ')}</p>`
             : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
 
         // Pulsante Capitano
