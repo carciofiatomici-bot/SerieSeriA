@@ -316,15 +316,55 @@ window.MatchReplaySimple = {
                 </div>
                 
                 ${winner ? `<p class="text-2xl font-bold text-yellow-400 mb-4">🏆 Vince ${winner}!</p>` : '<p class="text-2xl font-bold text-gray-400 mb-4">Pareggio</p>'}
-                
-                <button id="replay-close" class="mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
-                    Continua ✓
-                </button>
+
+                <div class="flex gap-4 justify-center mt-6 flex-wrap">
+                    ${window.FeatureFlags?.isEnabled('matchAnimations') ? `
+                        <button id="replay-animation-full" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center gap-2">
+                            <span>🎬</span> Animazione Completa
+                        </button>
+                    ` : ''}
+                    ${window.FeatureFlags?.isEnabled('matchHighlights') ? `
+                        <button id="replay-animation-highlights" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center gap-2">
+                            <span>⭐</span> Solo Highlights
+                        </button>
+                    ` : ''}
+                    <button id="replay-close" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                        Continua ✓
+                    </button>
+                </div>
             </div>
         `;
-        
+
         this.updateContent(content);
-        
+
+        // Bottone animazione 2D completa
+        document.getElementById('replay-animation-full')?.addEventListener('click', () => {
+            this.hide();
+            if (window.MatchAnimations) {
+                window.MatchAnimations.open({
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    result: `${score.home}-${score.away}`,
+                    score: `${score.home}-${score.away}`,
+                    highlightsOnly: false
+                });
+            }
+        });
+
+        // Bottone solo highlights
+        document.getElementById('replay-animation-highlights')?.addEventListener('click', () => {
+            this.hide();
+            if (window.MatchAnimations) {
+                window.MatchAnimations.open({
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    result: `${score.home}-${score.away}`,
+                    score: `${score.home}-${score.away}`,
+                    highlightsOnly: true
+                });
+            }
+        });
+
         document.getElementById('replay-close')?.addEventListener('click', () => {
             this.hide();
         });

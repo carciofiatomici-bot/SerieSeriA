@@ -41,16 +41,18 @@ window.UserChampionship = {
             const scheduleSnap = await getDoc(scheduleRef);
             const scheduleData = scheduleSnap.exists() ? scheduleSnap.data().matches : [];
             
-            // Carica squadre per i loghi
+            // Carica squadre per i loghi e le uniformi
             const teamsPath = `artifacts/${appId}/public/data/teams`;
             const teamsRef = collection(db, teamsPath);
             const teamsSnap = await getDocs(teamsRef);
             const allTeams = {};
             teamsSnap.docs.forEach(doc => {
+                const data = doc.data();
                 allTeams[doc.id] = {
                     id: doc.id,
-                    name: doc.data().teamName,
-                    logo: doc.data().logoUrl
+                    name: data.teamName,
+                    logo: data.logoUrl,
+                    uniform: data.uniform || null
                 };
             });
             
@@ -157,15 +159,19 @@ window.UserChampionship = {
                     <div class="bg-black bg-opacity-30 rounded-lg p-4">
                         <p class="text-gray-300 text-sm mb-2">Giornata ${nextMatch.round} (${nextMatch.type})</p>
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3 flex-1">
+                            <div class="flex items-center gap-2 flex-1">
                                 ${window.getLogoHtml ? window.getLogoHtml(nextMatch.homeId) : ''}
+                                ${window.UniformEditor && allTeams[nextMatch.homeId]?.uniform ?
+                                    window.UniformEditor.generateShirtSvg(allTeams[nextMatch.homeId].uniform, 36) : ''}
                                 <span class="text-white font-bold text-lg">${nextMatch.homeName}</span>
                             </div>
                             <div class="text-center px-4">
                                 <span class="text-2xl font-bold text-gray-400">VS</span>
                             </div>
-                            <div class="flex items-center gap-3 flex-1 justify-end">
+                            <div class="flex items-center gap-2 flex-1 justify-end">
                                 <span class="text-white font-bold text-lg">${nextMatch.awayName}</span>
+                                ${window.UniformEditor && allTeams[nextMatch.awayId]?.uniform ?
+                                    window.UniformEditor.generateShirtSvg(allTeams[nextMatch.awayId].uniform, 36) : ''}
                                 ${window.getLogoHtml ? window.getLogoHtml(nextMatch.awayId) : ''}
                             </div>
                         </div>

@@ -528,6 +528,76 @@ window.UniformEditor = {
         } else {
             this.updateDashboardPreview(this.defaultUniform);
         }
+    },
+
+    /**
+     * Genera un SVG inline della maglia per uso generico (es. preview partite)
+     * @param {Object} uniform - Oggetto divisa con shirt, shorts, socks
+     * @param {number} size - Dimensione in pixel (default 40)
+     * @returns {string} - HTML string con SVG inline
+     */
+    generateShirtSvg(uniform, size = 40) {
+        // Usa default se uniform non valido
+        let u = uniform;
+        if (!u || !u.shirt || !u.shirt.primaryColor) {
+            u = this.defaultUniform;
+        }
+
+        const shirt = {
+            primaryColor: u.shirt?.primaryColor || this.defaultUniform.shirt.primaryColor,
+            secondaryColor: u.shirt?.secondaryColor || this.defaultUniform.shirt.secondaryColor,
+            collarColor: u.shirt?.collarColor || u.shirt?.secondaryColor || this.defaultUniform.shirt.collarColor,
+            pattern: u.shirt?.pattern || 'solid'
+        };
+
+        // Genera pattern inline se necessario
+        const patternId = `shirt-pattern-${Math.random().toString(36).substr(2, 9)}`;
+        let patternDef = '';
+        let fillValue = shirt.primaryColor;
+
+        if (shirt.pattern !== 'solid' && shirt.pattern !== 'shoulders' && shirt.pattern !== 'sleeves') {
+            patternDef = this.createPatternDef(patternId.replace('pattern-', ''), shirt).replace(
+                new RegExp(`pattern-[^"]+`, 'g'),
+                patternId
+            );
+            if (patternDef) {
+                fillValue = `url(#${patternId})`;
+            }
+        }
+
+        return `
+            <svg viewBox="15 0 170 165" width="${size}" height="${size}" style="display: inline-block; vertical-align: middle;">
+                <defs>${patternDef}</defs>
+                <!-- Corpo maglia con maniche -->
+                <path d="M35,35 L35,140 L165,140 L165,35 L145,35 L145,60 L130,60 L130,35 L70,35 L70,60 L55,60 L55,35 Z"
+                      fill="${fillValue}" stroke="#1a1a1a" stroke-width="2"/>
+                <!-- Colletto -->
+                <path d="M70,35 L100,45 L130,35 L120,30 L100,38 L80,30 Z"
+                      fill="${shirt.collarColor}" stroke="#1a1a1a" stroke-width="1"/>
+                <!-- Polsino sinistro -->
+                <rect x="35" y="55" width="20" height="8" fill="${shirt.collarColor}" stroke="#1a1a1a" stroke-width="1"/>
+                <!-- Polsino destro -->
+                <rect x="145" y="55" width="20" height="8" fill="${shirt.collarColor}" stroke="#1a1a1a" stroke-width="1"/>
+            </svg>
+        `;
+    },
+
+    /**
+     * Genera HTML della maglia per una squadra data (cerca nei dati cached o carica)
+     * @param {string} teamId - ID della squadra
+     * @param {number} size - Dimensione in pixel
+     * @returns {string} - HTML string con SVG della maglia
+     */
+    getTeamShirtHtml(teamId, size = 40) {
+        // Prima controlla se abbiamo i dati cached
+        if (window.InterfacciaAuth && window.InterfacciaAuth._teamsCache) {
+            const cachedTeam = window.InterfacciaAuth._teamsCache.find(t => t.id === teamId);
+            if (cachedTeam && cachedTeam.uniform) {
+                return this.generateShirtSvg(cachedTeam.uniform, size);
+            }
+        }
+        // Fallback alla divisa di default
+        return this.generateShirtSvg(this.defaultUniform, size);
     }
 };
 

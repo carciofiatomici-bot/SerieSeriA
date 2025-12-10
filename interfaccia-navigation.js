@@ -11,7 +11,18 @@ window.InterfacciaNavigation = {
      * @param {string} screenId - L'ID del container (es. 'app-content', 'squadra-content').
      */
     saveLastScreen(screenId) {
-        if (screenId && screenId !== 'login-box' && screenId !== 'gate-box' && screenId !== 'coach-selection-box' && screenId !== 'captain-selection-box') {
+        // Schermate che NON devono essere salvate per il ripristino
+        // (richiedono contesto specifico o sono temporanee)
+        const excludedScreens = [
+            'login-box',
+            'gate-box',
+            'coach-selection-box',
+            'captain-selection-box',
+            'draft-content',      // Richiede teamId e mode specifici
+            'mercato-content'     // Richiede teamId specifico
+        ];
+
+        if (screenId && !excludedScreens.includes(screenId)) {
             localStorage.setItem('fanta_last_screen', screenId);
         } else if (screenId === 'app-content') {
             // La Dashboard e il punto di partenza, lo salviamo
@@ -75,7 +86,18 @@ window.InterfacciaNavigation = {
                 }
             });
         }
-        
+
+        // Sfida un'altra squadra
+        if (elements.btnChallenge) {
+            elements.btnChallenge.addEventListener('click', () => {
+                if (window.Challenges) {
+                    window.Challenges.showChallengeModal();
+                } else {
+                    if (window.Toast) window.Toast.error("Sistema sfide non disponibile");
+                }
+            });
+        }
+
         // Classifica dalla Dashboard
         if (elements.btnDashboardLeaderboard) {
             elements.btnDashboardLeaderboard.addEventListener('click', () => {

@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnGestioneFormazione: document.getElementById('btn-gestione-formazione'),
         btnDraftUtente: document.getElementById('btn-draft-utente'),
         btnMercatoUtente: document.getElementById('btn-mercato-utente'),
+        btnChallenge: document.getElementById('btn-challenge'),
         btnDashboardLeaderboard: document.getElementById('btn-dashboard-leaderboard'),
         btnDashboardSchedule: document.getElementById('btn-dashboard-schedule'),
         btnDashboardChampionship: document.getElementById('btn-dashboard-championship'),

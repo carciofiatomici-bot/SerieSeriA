@@ -57,6 +57,12 @@ window.CreditiSuperSeri = {
      * @returns {Promise<boolean>}
      */
     async isEnabled() {
+        // Prima controlla il FeatureFlags se disponibile
+        if (window.FeatureFlags) {
+            return window.FeatureFlags.isEnabled('creditiSuperSeri');
+        }
+
+        // Fallback al vecchio sistema
         try {
             const { doc, getDoc } = window.firestoreTools;
             const db = window.db;
@@ -83,6 +89,18 @@ window.CreditiSuperSeri = {
      */
     async setEnabled(enabled) {
         try {
+            // Usa FeatureFlags se disponibile
+            if (window.FeatureFlags) {
+                if (enabled) {
+                    await window.FeatureFlags.enable('creditiSuperSeri');
+                } else {
+                    await window.FeatureFlags.disable('creditiSuperSeri');
+                }
+                console.log(`Sistema Crediti Super Seri ${enabled ? 'ABILITATO' : 'DISABILITATO'} (via FeatureFlags)`);
+                return true;
+            }
+
+            // Fallback al vecchio sistema
             const { doc, setDoc } = window.firestoreTools;
             const db = window.db;
             const appId = window.firestoreTools.appId;

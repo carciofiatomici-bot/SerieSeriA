@@ -27,7 +27,7 @@ window.AdminUI = {
 
             <!-- Pulsanti Navigazione Principale -->
             <div class="mb-6 space-y-4">
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-4 gap-4">
                     <button id="btn-championship-settings"
                             class="bg-orange-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150 transform hover:scale-[1.01]">
                         <i class="fas fa-cog mr-2"></i> Impostazioni Campionato
@@ -39,6 +39,10 @@ window.AdminUI = {
                     <button id="btn-team-management"
                             class="bg-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150 transform hover:scale-[1.01]">
                         <i class="fas fa-users mr-2"></i> Gestione Squadre
+                    </button>
+                    <button id="btn-feature-flags"
+                            class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150 transform hover:scale-[1.01]">
+                        <i class="fas fa-flag mr-2"></i> Flag
                     </button>
                 </div>
             </div>
@@ -169,23 +173,6 @@ window.AdminUI = {
 
             <!-- Messaggio di stato (usato per feedback) -->
             <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400 hidden"></p>
-
-            <!-- SEZIONE CREDITI SUPER SERI -->
-            <h3 class="text-2xl font-bold text-amber-400 mb-4 border-b border-gray-600 pb-2 pt-6">Crediti Super Seri</h3>
-            <div id="css-admin-section" class="p-4 bg-gray-800 rounded-lg border ${cssEnabled ? 'border-green-500' : 'border-amber-500'} mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="font-bold text-lg text-white">Sistema CSS: </span>
-                        <span id="css-status-text" class="font-extrabold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVO' : 'DISATTIVO'}</span>
-                    </div>
-                    <button id="btn-toggle-css"
-                            data-enabled="${cssEnabled}"
-                            class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${cssEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                        ${cssEnabled ? 'DISABILITA' : 'ABILITA'}
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">I Crediti Super Seri permettono di potenziare giocatori e assegnare abilita.</p>
-            </div>
         `;
     },
 

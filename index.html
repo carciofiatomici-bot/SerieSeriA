@@ -194,6 +194,14 @@
                             class="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-500 transition duration-150 transform hover:scale-[1.02]">
                         Calendario
                     </button>
+                    <button id="btn-coppa-home"
+                            class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
+                        🏆 CoppaSeriA
+                    </button>
+                    <button id="btn-supercoppa-home"
+                            class="w-full bg-amber-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-amber-500 transition duration-150 transform hover:scale-[1.02]">
+                        ⭐ SuperCoppa
+                    </button>
                     <button id="btn-lista-icone"
                             class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
                         👑 Icone
@@ -350,7 +358,7 @@
 
             <!-- PULSANTI DRAFT E MERCATO CON BUDGET SU HOVER -->
             <div id="draft-mercato-container" class="mt-4 relative group">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <button id="btn-draft-utente"
                             class="bg-yellow-600 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.01]">
                         Draft
@@ -358,6 +366,10 @@
                     <button id="btn-mercato-utente"
                             class="bg-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150 transform hover:scale-[1.01]">
                         Mercato
+                    </button>
+                    <button id="btn-challenge"
+                            class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                        <span>⚔️</span> Sfida
                     </button>
                 </div>
                 <!-- BOX BUDGET (nascosto, visibile su hover) -->
@@ -594,7 +606,24 @@
                 Torna alla Dashboard Admin
             </button>
         </div>
-        
+
+        <!-- 12b. NUOVO CONTENUTO: GESTIONE FEATURE FLAGS -->
+        <div id="feature-flags-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-purple-500 text-center mb-4 border-b-4 border-purple-700 pb-2">
+                <i class="fas fa-flag mr-2"></i> Gestione Feature Flags
+             </h2>
+
+             <!-- Il contenuto e' iniettato da admin-feature-flags.js -->
+             <div id="feature-flags-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento strumenti...</p>
+             </div>
+
+             <button id="feature-flags-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard Admin
+            </button>
+        </div>
+
         <!-- 13. NUOVO CONTENUTO: SELEZIONE ALLENATORE -->
         <div id="coach-selection-box" class="football-box w-full max-w-xl transition duration-500 hidden-on-load">
             <h2 class="text-4xl font-extrabold text-red-500 text-center mb-4 border-b-4 border-red-700 pb-2">Un Manager per la Tua Squadra</h2>
@@ -828,7 +857,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // *** IMPORTAZIONE CRITICA: Importa TUTTE le funzioni necessarie per l'oggetto firestoreTools ***
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Imposta il livello di log (utile per il debug)
@@ -859,7 +888,7 @@
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
         // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
-        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, appId }; 
+        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, appId }; 
         
         // Funzione globale per cambiare schermata
         window.showScreen = (elementToShow) => {
@@ -876,6 +905,7 @@
                 document.getElementById('mercato-content'),
                 document.getElementById('player-management-content'), // Gestione Giocatori Admin
                 document.getElementById('team-management-content'), // Gestione Squadre Admin
+                document.getElementById('feature-flags-content'), // Gestione Feature Flags Admin
                 document.getElementById('coach-selection-box'), // Selezione Allenatore (NUOVO)
                 document.getElementById('captain-selection-box'), // Selezione Capitano
                 document.getElementById('user-championship-content'), // Campionato Utente (vecchio)
@@ -922,9 +952,32 @@
     <!-- Collega gli script JavaScript esterni - DEVE ESSERE DOPO GLI SCRIPT FIREBASE -->
     
     <!-- 1. DEFINIZIONI BASE (Icone, Costanti, Variabili Globali) -->
-    <script src="icone.js"></script> 
-    <script src="interfaccia-core.js"></script> 
-    
+    <script src="icone.js"></script>
+    <script src="interfaccia-core.js"></script>
+
+    <!-- 1.5 UTILITY UI (Toast, Dialogs, Loading, Validazione) -->
+    <script src="toast.js"></script>
+    <script src="confirm-dialog.js"></script>
+    <script src="skeleton-loader.js"></script>
+    <script src="loading-manager.js"></script>
+    <script src="error-handler.js"></script>
+    <script src="form-validator.js"></script>
+    <script src="breadcrumb.js"></script>
+
+    <!-- 1.6 FEATURE FLAGS SYSTEM (Sistema toggle funzionalita') -->
+    <script src="feature-flags.js"></script>
+
+    <!-- 1.7 MODULI FEATURE OPZIONALI (Controllati da Feature Flags) -->
+    <script src="notifications.js"></script>
+    <script src="player-stats-advanced.js"></script>
+    <script src="chat.js"></script>
+    <script src="trades.js"></script>
+    <script src="achievements.js"></script>
+    <script src="training.js"></script>
+    <script src="match-animations.js"></script>
+    <script src="drag-drop.js"></script>
+    <script src="challenges.js"></script>
+
     <!-- 2. LOGICA DI SIMULAZIONE (Dipende solo dalle costanti) -->
     <script src="simulazione.js"></script> 
 
@@ -960,8 +1013,9 @@
     <script src="admin-players.js"></script>
     <script src="admin-teams.js"></script>
     <script src="admin-icons.js"></script>
-    <script src="admin.js"></script> 
-    
+    <script src="admin.js"></script>
+    <script src="admin-feature-flags.js"></script>
+
     <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
     <script src="campionato-rewards.js"></script>
     <script src="campionato-simulation.js"></script>

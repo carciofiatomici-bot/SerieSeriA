@@ -12,9 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const championshipContent = document.getElementById('championship-content');
     const playerManagementContent = document.getElementById('player-management-content'); 
     const playerManagementToolsContainer = document.getElementById('player-management-tools-container'); 
-    const teamManagementContent = document.getElementById('team-management-content'); 
-    const teamManagementToolsContainer = document.getElementById('team-management-tools-container'); 
-    
+    const teamManagementContent = document.getElementById('team-management-content');
+    const teamManagementToolsContainer = document.getElementById('team-management-tools-container');
+    const featureFlagsContent = document.getElementById('feature-flags-content');
+    const featureFlagsToolsContainer = document.getElementById('feature-flags-tools-container');
+
     const leaderboardContent = document.getElementById('leaderboard-content');
     const scheduleContent = document.getElementById('schedule-content');
 
@@ -68,6 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  window.showScreen(adminContent);
             });
         }
+        if (document.getElementById('feature-flags-back-button')) {
+            document.getElementById('feature-flags-back-button').addEventListener('click', () => {
+                window.showScreen(adminContent);
+            });
+        }
 
         renderAdminDashboardLayout();
         adminLogoutButton.addEventListener('click', handleAdminLogout);
@@ -109,7 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const btnTeamManagement = document.getElementById('btn-team-management');
         if (btnTeamManagement) btnTeamManagement.addEventListener('click', renderTeamManagementPanel);
-        
+
+        const btnFeatureFlags = document.getElementById('btn-feature-flags');
+        if (btnFeatureFlags) btnFeatureFlags.addEventListener('click', renderFeatureFlagsPanel);
+
         const btnAdminLeaderboard = document.getElementById('btn-admin-leaderboard');
         if (btnAdminLeaderboard) {
             btnAdminLeaderboard.addEventListener('click', () => {
@@ -1308,6 +1318,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
+    };
+
+    /**
+     * Renderizza pannello gestione Feature Flags
+     */
+    const renderFeatureFlagsPanel = () => {
+        window.showScreen(featureFlagsContent);
+
+        // Renderizza il contenuto tramite AdminFeatureFlags
+        if (window.AdminFeatureFlags) {
+            window.AdminFeatureFlags.render('feature-flags-tools-container');
+        } else {
+            featureFlagsToolsContainer.innerHTML = `
+                <p class="text-center text-red-400">Modulo AdminFeatureFlags non disponibile.</p>
+            `;
+        }
     };
 
     const handleAdminLogout = () => {

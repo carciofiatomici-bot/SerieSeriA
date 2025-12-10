@@ -89,9 +89,15 @@ window.InterfacciaAuth = {
         
         const teamId = localStorage.getItem('fanta_session_id');
         const userType = localStorage.getItem('fanta_session_type');
-        const lastScreenId = localStorage.getItem('fanta_last_screen');
+        let lastScreenId = localStorage.getItem('fanta_last_screen');
 
-        
+        // Pulisci schermate problematiche dal localStorage (richiedono contesto specifico)
+        const problematicScreens = ['draft-content', 'mercato-content'];
+        if (lastScreenId && problematicScreens.includes(lastScreenId)) {
+            localStorage.removeItem('fanta_last_screen');
+            lastScreenId = null;
+        }
+
         if (!teamId || !userType) {
             return false; // Nessuna sessione salvata
         }
@@ -181,8 +187,12 @@ window.InterfacciaAuth = {
                     }
 
                     // Priorita 2: Ripristino Schermata salvata
+                    // Escludiamo schermate che richiedono contesto specifico
+                    const excludedFromRestore = ['draft-content', 'mercato-content'];
                     const savedScreenElement = document.getElementById(lastScreenId);
-                    if (lastScreenId && savedScreenElement && lastScreenId !== elements.adminContent.id) {
+                    if (lastScreenId && savedScreenElement &&
+                        lastScreenId !== elements.adminContent.id &&
+                        !excludedFromRestore.includes(lastScreenId)) {
                         targetScreenId = lastScreenId;
                     } else {
                         targetScreenId = elements.appContent.id;
@@ -735,6 +745,18 @@ window.InterfacciaAuth = {
                 }
             });
         }
+
+        // CoppaSeriA listener (dalla homepage)
+        const btnCoppaHome = document.getElementById('btn-coppa-home');
+        if (btnCoppaHome) {
+            btnCoppaHome.addEventListener('click', () => self.showCoppaFromHome(elements));
+        }
+
+        // SuperCoppa listener (dalla homepage)
+        const btnSupercoppaHome = document.getElementById('btn-supercoppa-home');
+        if (btnSupercoppaHome) {
+            btnSupercoppaHome.addEventListener('click', () => self.showSupercoppaFromHome(elements));
+        }
     },
 
     /**
@@ -1024,7 +1046,240 @@ window.InterfacciaAuth = {
         if (modal) {
             modal.remove();
         }
+    },
+
+    /**
+     * Mostra il tabellone CoppaSeriA dalla homepage (senza login)
+     */
+    showCoppaFromHome(elements) {
+        const coppaContent = document.getElementById('user-coppa-content');
+        if (!coppaContent) {
+            console.error("Elemento user-coppa-content non trovato");
+            return;
+        }
+
+        // Cambia il bottone back per tornare al login
+        const backButton = coppaContent.querySelector('button');
+        if (backButton) {
+            backButton.textContent = '← Torna al Login';
+            backButton.onclick = () => {
+                if (window.showScreen && elements.loginBox) {
+                    window.showScreen(elements.loginBox);
+                }
+            };
+        }
+
+        // Mostra la schermata
+        if (window.showScreen) {
+            window.showScreen(coppaContent);
+        }
+
+        // Carica i dati della coppa (solo visualizzazione tabellone)
+        this.loadCoppaTabellone();
+    },
+
+    /**
+     * Carica il tabellone della CoppaSeriA per visualizzazione pubblica
+     */
+    async loadCoppaTabellone() {
+        const container = document.getElementById('user-coppa-container');
+        if (!container) return;
+
+        container.innerHTML = '<p class="text-center text-gray-400">Caricamento tabellone CoppaSeriA...</p>';
+
+        try {
+            // Verifica se i moduli necessari sono disponibili
+            if (!window.db || !window.firestoreTools) {
+                container.innerHTML = '<p class="text-center text-red-400">Servizi Firebase non disponibili. Ricarica la pagina.</p>';
+                return;
+            }
+
+            const { doc, getDoc, collection, getDocs } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+
+            if (!appId) {
+                container.innerHTML = '<p class="text-center text-red-400">AppId non disponibile.</p>';
+                return;
+            }
+
+            // Carica lo stato della coppa
+            const coppaConfigPath = `artifacts/${appId}/public/data/config`;
+            const coppaConfigRef = doc(window.db, coppaConfigPath, 'championship');
+            const coppaConfigDoc = await getDoc(coppaConfigRef);
+            const configData = coppaConfigDoc.exists() ? coppaConfigDoc.data() : {};
+            const coppaState = configData.coppaState || null;
+
+            if (!coppaState || !coppaState.isActive) {
+                container.innerHTML = `
+                    <div class="p-6 bg-gray-700 rounded-lg border-2 border-purple-500 text-center">
+                        <p class="text-2xl font-bold text-purple-400 mb-2">🏆 CoppaSeriA</p>
+                        <p class="text-gray-300">La CoppaSeriA non e' ancora iniziata.</p>
+                        <p class="text-sm text-gray-400 mt-2">Torna piu' tardi per vedere il tabellone!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Se CoppaBrackets e' disponibile, usa il suo render
+            if (window.CoppaBrackets && window.CoppaBrackets.renderBracket) {
+                container.innerHTML = '<div id="coppa-bracket-home" class="mt-4"></div>';
+                const bracketContainer = document.getElementById('coppa-bracket-home');
+                window.CoppaBrackets.renderBracket(bracketContainer, coppaState.bracket, coppaState.currentRound);
+            } else {
+                // Fallback: mostra info base
+                container.innerHTML = `
+                    <div class="p-6 bg-gray-700 rounded-lg border-2 border-purple-500">
+                        <p class="text-2xl font-bold text-purple-400 text-center mb-4">🏆 CoppaSeriA</p>
+                        <p class="text-center text-gray-300">Turno attuale: <span class="font-bold text-white">${coppaState.currentRound || 'N/A'}</span></p>
+                        <p class="text-center text-sm text-gray-400 mt-2">Tabellone dettagliato disponibile nella dashboard.</p>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error("Errore caricamento tabellone coppa:", error);
+            container.innerHTML = `
+                <div class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center">
+                    <p class="text-red-400 font-bold">Errore nel caricamento</p>
+                    <p class="text-sm text-gray-400 mt-2">${error.message}</p>
+                </div>
+            `;
+        }
+    },
+
+    /**
+     * Mostra il tabellone SuperCoppaSeriA dalla homepage (senza login)
+     */
+    showSupercoppaFromHome(elements) {
+        const supercoppaContent = document.getElementById('user-supercoppa-content');
+        if (!supercoppaContent) {
+            console.error("Elemento user-supercoppa-content non trovato");
+            return;
+        }
+
+        // Cambia il bottone back per tornare al login
+        const backButton = supercoppaContent.querySelector('button');
+        if (backButton) {
+            backButton.textContent = '← Torna al Login';
+            backButton.onclick = () => {
+                if (window.showScreen && elements.loginBox) {
+                    window.showScreen(elements.loginBox);
+                }
+            };
+        }
+
+        // Mostra la schermata
+        if (window.showScreen) {
+            window.showScreen(supercoppaContent);
+        }
+
+        // Carica i dati della supercoppa
+        this.loadSupercoppaTabellone();
+    },
+
+    /**
+     * Carica lo stato della SuperCoppaSeriA per visualizzazione pubblica
+     */
+    async loadSupercoppaTabellone() {
+        const container = document.getElementById('user-supercoppa-container');
+        if (!container) return;
+
+        container.innerHTML = '<p class="text-center text-gray-400">Caricamento SuperCoppaSeriA...</p>';
+
+        try {
+            // Verifica se i moduli necessari sono disponibili
+            if (!window.db || !window.firestoreTools) {
+                container.innerHTML = '<p class="text-center text-red-400">Servizi Firebase non disponibili. Ricarica la pagina.</p>';
+                return;
+            }
+
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+
+            if (!appId) {
+                container.innerHTML = '<p class="text-center text-red-400">AppId non disponibile.</p>';
+                return;
+            }
+
+            // Carica lo stato della supercoppa
+            const configPath = `artifacts/${appId}/public/data/config`;
+            const configRef = doc(window.db, configPath, 'championship');
+            const configDoc = await getDoc(configRef);
+            const configData = configDoc.exists() ? configDoc.data() : {};
+            const supercoppaState = configData.supercoppaState || null;
+
+            if (!supercoppaState) {
+                container.innerHTML = `
+                    <div class="p-6 bg-gray-700 rounded-lg border-2 border-yellow-500 text-center">
+                        <p class="text-2xl font-bold text-yellow-400 mb-2">⭐ Super CoppaSeriA</p>
+                        <p class="text-gray-300">La Super CoppaSeriA non e' ancora iniziata.</p>
+                        <p class="text-sm text-gray-400 mt-2">Si disputa tra il vincitore della SerieSeriA e il vincitore della CoppaSeriA!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostra lo stato della supercoppa
+            const team1Name = supercoppaState.team1Name || 'Vincitore Campionato';
+            const team2Name = supercoppaState.team2Name || 'Vincitore Coppa';
+            const isCompleted = supercoppaState.isCompleted || false;
+            const winner = supercoppaState.winner || null;
+            const score = supercoppaState.score || null;
+
+            let statusHtml = '';
+            if (isCompleted && winner) {
+                statusHtml = `
+                    <div class="p-4 bg-yellow-900/30 rounded-lg border-2 border-yellow-400 text-center">
+                        <p class="text-lg text-yellow-400 font-bold mb-2">🏆 VINCITORE 🏆</p>
+                        <p class="text-2xl font-extrabold text-white">${winner}</p>
+                        ${score ? `<p class="text-gray-300 mt-2">Risultato: ${score}</p>` : ''}
+                    </div>
+                `;
+            } else if (supercoppaState.isScheduled) {
+                statusHtml = `
+                    <div class="p-4 bg-gray-600 rounded-lg text-center">
+                        <p class="text-yellow-400 font-bold">Partita in programma</p>
+                        <p class="text-sm text-gray-300 mt-2">La Super CoppaSeriA sara' simulata a breve!</p>
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <div class="p-4 bg-gray-600 rounded-lg text-center">
+                        <p class="text-gray-300">In attesa dei finalisti...</p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="p-6 bg-gray-700 rounded-lg border-2 border-yellow-500">
+                    <p class="text-2xl font-bold text-yellow-400 text-center mb-6">⭐ Super CoppaSeriA ⭐</p>
+
+                    <div class="flex items-center justify-center gap-4 mb-6">
+                        <div class="text-center flex-1">
+                            <p class="text-xs text-gray-400 mb-1">Campione SerieSeriA</p>
+                            <p class="font-bold text-white text-lg">${team1Name}</p>
+                        </div>
+                        <div class="text-2xl font-bold text-yellow-400">VS</div>
+                        <div class="text-center flex-1">
+                            <p class="text-xs text-gray-400 mb-1">Vincitore CoppaSeriA</p>
+                            <p class="font-bold text-white text-lg">${team2Name}</p>
+                        </div>
+                    </div>
+
+                    ${statusHtml}
+                </div>
+            `;
+
+        } catch (error) {
+            console.error("Errore caricamento supercoppa:", error);
+            container.innerHTML = `
+                <div class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 text-center">
+                    <p class="text-red-400 font-bold">Errore nel caricamento</p>
+                    <p class="text-sm text-gray-400 mt-2">${error.message}</p>
+                </div>
+            `;
+        }
     }
 };
 
-console.log("âœ… Modulo interfaccia-auth.js caricato.");
+console.log("Modulo interfaccia-auth.js caricato.");
