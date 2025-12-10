@@ -641,10 +641,16 @@ window.AdminTeams = {
                         <div class="mt-6 p-4 bg-orange-900 rounded-lg border border-orange-500">
                             <h4 class="text-lg font-bold text-orange-400 mb-2">🔧 Strumenti di Riparazione</h4>
                             <p class="text-sm text-gray-300 mb-3">Corregge automaticamente livelli errati e rimuove dati obsoleti.</p>
-                            <button onclick="window.AdminTeams.repairTeam()"
-                                    class="w-full bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-500 transition">
-                                🔧 Ripara Squadra
-                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="window.AdminTeams.repairTeam()"
+                                        class="bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-500 transition">
+                                    🔧 Ripara Livelli
+                                </button>
+                                <button onclick="window.AdminTeams.fixDuplicateIcone()"
+                                        class="bg-yellow-600 text-white font-bold py-2 rounded-lg hover:bg-yellow-500 transition">
+                                    👑 Fix Icone Doppie
+                                </button>
+                            </div>
                             <p id="repair-message" class="text-center text-sm mt-2"></p>
                         </div>
                     </div>
@@ -878,8 +884,8 @@ window.AdminTeams = {
                         <div>
                             <label class="text-gray-300 block mb-2 font-bold">AbilitÃ </label>
                             <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
-                            <div id="abilities-selection" class="space-y-3">
-                                ${this.renderAbilitiesSelection(player.role, player.abilities || [], this.isPlayerIcona(player))}
+                            <div id="abilities-selection" class="space-y-3" data-editing-index="${index}">
+                                ${this.renderAbilitiesSelection(player.role, player.abilities || [], this.isPlayerIcona(player), index)}
                             </div>
                         </div>
                     </div>
@@ -902,10 +908,21 @@ window.AdminTeams = {
     },
 
     /**
-     * Renderizza selezione abilita */
-    renderAbilitiesSelection(role, currentAbilities, isIcona = false) {
+     * Renderizza selezione abilita
+     * @param {string} role - Ruolo del giocatore
+     * @param {Array} currentAbilities - Abilita attuali del giocatore
+     * @param {boolean} isIcona - Se il giocatore e' un'icona
+     * @param {number} editingIndex - Indice del giocatore in modifica (-1 per nuovo)
+     */
+    renderAbilitiesSelection(role, currentAbilities, isIcona = false, editingIndex = -1) {
         const roleAbilities = this.ROLE_ABILITIES_MAP[role];
         if (!roleAbilities) return '<p class="text-gray-400">Nessuna abilita disponibile</p>';
+
+        // Verifica se esiste gia un'icona nella rosa (escludendo il giocatore in modifica)
+        const existsOtherIcona = this.currentEditingPlayers && this.currentEditingPlayers.some((p, i) => {
+            if (i === editingIndex) return false; // Escludi giocatore corrente
+            return p.abilities && p.abilities.includes('Icona');
+        });
 
         let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✏️… abilita Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
         
@@ -947,10 +964,17 @@ window.AdminTeams = {
                 // Per le Icone (giocatori speciali), l'abilita "Icona" e sempre checked e bloccata
                 const isIconaAbility = ability === 'Icona';
                 const isLocked = isIcona && isIconaAbility;
+                // Blocca "Icona" se esiste gia un'altra icona nella rosa
+                const isBlockedByOtherIcona = isIconaAbility && existsOtherIcona && !isIcona;
                 const checked = isLocked || currentAbilities.includes(ability) ? 'checked' : '';
-                const disabled = isLocked ? 'disabled' : '';
-                const lockedStyle = isLocked ? 'opacity-75 cursor-not-allowed' : '';
-                const lockedNote = isLocked ? ' (Fissa)' : '';
+                const disabled = isLocked || isBlockedByOtherIcona ? 'disabled' : '';
+                const lockedStyle = (isLocked || isBlockedByOtherIcona) ? 'opacity-75 cursor-not-allowed' : '';
+                let lockedNote = '';
+                if (isLocked) {
+                    lockedNote = ' (Fissa)';
+                } else if (isBlockedByOtherIcona) {
+                    lockedNote = ' (Gia presente)';
+                }
 
                 html += `
                     <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-800 p-1 rounded ${lockedStyle}">
@@ -972,7 +996,9 @@ window.AdminTeams = {
      */
     updateAbilitiesForRole() {
         const role = document.getElementById('player-role-input').value;
-        document.getElementById('abilities-selection').innerHTML = this.renderAbilitiesSelection(role, []);
+        const abilitiesDiv = document.getElementById('abilities-selection');
+        const editingIndex = parseInt(abilitiesDiv.dataset.editingIndex) || -1;
+        abilitiesDiv.innerHTML = this.renderAbilitiesSelection(role, [], false, editingIndex);
     },
 
     /**
@@ -1063,6 +1089,21 @@ window.AdminTeams = {
         console.log('Abilita negative:', negativeAbilities);
         console.log('Abilita unique:', uniqueAbilities);
         console.log('Abilita totali salvate:', abilities);
+
+        // VALIDAZIONE: Impedisci di aggiungere "Icona" se esiste gia un'icona nella rosa
+        if (abilities.includes('Icona')) {
+            const existingIconaIndex = this.currentEditingPlayers.findIndex((p, i) => {
+                // Escludi il giocatore che stiamo modificando (index)
+                if (i === index) return false;
+                return p.abilities && p.abilities.includes('Icona');
+            });
+
+            if (existingIconaIndex !== -1) {
+                const existingIcona = this.currentEditingPlayers[existingIconaIndex];
+                alert(`Errore: Esiste gia un'Icona nella rosa (${existingIcona.name})!\n\nOgni squadra puo avere solo 1 Icona. Rimuovi prima l'abilita "Icona" dall'altro giocatore.`);
+                return;
+            }
+        }
 
         if (!name) {
             alert('Inserisci un nome!');
@@ -1377,6 +1418,60 @@ window.AdminTeams = {
         } else {
             msgElement.textContent = '✏️… Nessuna riparazione necessaria. Tutti i dati sono corretti.';
             msgElement.className = 'text-center text-sm mt-2 text-green-400';
+        }
+    },
+
+    /**
+     * Rimuove icone duplicate dalla rosa, mantenendo solo l'icona originale
+     * L'icona originale e' quella con photoUrl (dal template CAPTAIN_CANDIDATES)
+     */
+    fixDuplicateIcone() {
+        const msgElement = document.getElementById('repair-message');
+        if (!msgElement) return;
+
+        if (!this.currentEditingPlayers || this.currentEditingPlayers.length === 0) {
+            msgElement.textContent = 'Nessun giocatore nella rosa.';
+            msgElement.className = 'text-center text-sm mt-2 text-yellow-400';
+            return;
+        }
+
+        // Trova tutti i giocatori con abilita "Icona"
+        const icone = this.currentEditingPlayers.filter(p => p.abilities && p.abilities.includes('Icona'));
+
+        if (icone.length <= 1) {
+            msgElement.textContent = 'Nessuna icona duplicata trovata.';
+            msgElement.className = 'text-center text-sm mt-2 text-green-400';
+            return;
+        }
+
+        // L'icona "vera" e' quella con photoUrl (dal template)
+        const iconaVera = icone.find(p => p.photoUrl) || icone[0];
+        const iconeFalse = icone.filter(p => p !== iconaVera);
+
+        let fixes = [];
+
+        // Rimuovi l'abilita "Icona" dalle icone false
+        this.currentEditingPlayers = this.currentEditingPlayers.map(player => {
+            if (iconeFalse.includes(player)) {
+                const newAbilities = (player.abilities || []).filter(a => a !== 'Icona');
+                fixes.push(`Rimossa abilita "Icona" da ${player.name}`);
+                return {
+                    ...player,
+                    abilities: newAbilities,
+                    isCaptain: false
+                };
+            }
+            return player;
+        });
+
+        // Aggiorna la lista visuale
+        document.getElementById('players-list-edit').innerHTML = this.renderPlayersList();
+        document.getElementById('tab-players').innerHTML = `⚽ Giocatori (${this.currentEditingPlayers.length})`;
+
+        // Mostra risultato
+        if (fixes.length > 0) {
+            msgElement.innerHTML = `<span class="text-green-400">✅ Corrette ${fixes.length} icone duplicate:</span><br><span class="text-xs text-gray-300">${fixes.join('<br>')}</span><br><span class="text-yellow-400 text-xs mt-2">Icona mantenuta: ${iconaVera.name}</span>`;
+            msgElement.className = 'text-center text-sm mt-2';
         }
     }
 };

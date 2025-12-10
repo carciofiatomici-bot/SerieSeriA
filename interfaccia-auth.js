@@ -710,6 +710,31 @@ window.InterfacciaAuth = {
                 }
             });
         }
+
+        // Lista Squadre listener
+        const btnListaSquadre = document.getElementById('btn-lista-squadre');
+        const listaSquadreModal = document.getElementById('lista-squadre-modal');
+        const btnCloseListaSquadre = document.getElementById('btn-close-lista-squadre');
+
+        if (btnListaSquadre && listaSquadreModal) {
+            btnListaSquadre.addEventListener('click', () => self.showListaSquadre());
+        }
+        if (btnCloseListaSquadre && listaSquadreModal) {
+            btnCloseListaSquadre.addEventListener('click', () => self.hideListaSquadre());
+        }
+        // Bottone "Torna al Login" per squadre
+        const btnBackFromSquadre = document.getElementById('btn-back-from-squadre');
+        if (btnBackFromSquadre) {
+            btnBackFromSquadre.addEventListener('click', () => self.hideListaSquadre());
+        }
+        // Chiudi cliccando fuori dal modal squadre
+        if (listaSquadreModal) {
+            listaSquadreModal.addEventListener('click', (e) => {
+                if (e.target === listaSquadreModal) {
+                    self.hideListaSquadre();
+                }
+            });
+        }
     },
 
     /**
@@ -758,6 +783,246 @@ window.InterfacciaAuth = {
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+        }
+    },
+
+    /**
+     * Mostra il modal con la lista delle Squadre registrate
+     */
+    async showListaSquadre() {
+        const modal = document.getElementById('lista-squadre-modal');
+        const container = document.getElementById('lista-squadre-container');
+
+        if (!modal || !container) return;
+
+        // Mostra il modal subito con loading
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        container.innerHTML = '<p class="text-center text-gray-400 col-span-2">Caricamento squadre...</p>';
+
+        try {
+            // Verifica che Firestore sia disponibile
+            if (!window.db || !window.firestoreTools) {
+                throw new Error("Database non disponibile");
+            }
+
+            const { collection, getDocs } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
+
+            const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
+            const querySnapshot = await getDocs(teamsCollectionRef);
+
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p class="text-center text-gray-400 col-span-2">Nessuna squadra registrata.</p>';
+                return;
+            }
+
+            // Mappa le squadre
+            const squadre = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Ordina per nome squadra
+            squadre.sort((a, b) => (a.teamName || '').localeCompare(b.teamName || ''));
+
+            // Salva i dati delle squadre per la visualizzazione rosa
+            this._squadreCache = squadre;
+
+            // Popola il container
+            container.innerHTML = squadre.map((squadra, index) => {
+                const teamName = squadra.teamName || 'Squadra Sconosciuta';
+                const teamColor = squadra.primaryColor || '#22c55e';
+                const players = squadra.players || [];
+                const playersCount = players.length;
+                const logoUrl = squadra.logoUrl || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
+
+                // Trova l'icona (capitano)
+                const icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
+
+                // Cerca il photoUrl corretto: prima dal template ICONE, poi dal giocatore salvato
+                let iconaPhoto = 'https://placehold.co/40x40/374151/9ca3af?text=?';
+                if (icona) {
+                    // Cerca nel template delle icone per avere sempre il link aggiornato
+                    const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t =>
+                        t.id === icona.id || t.name === icona.name
+                    );
+                    if (iconaTemplate && iconaTemplate.photoUrl) {
+                        iconaPhoto = iconaTemplate.photoUrl;
+                    } else if (icona.photoUrl) {
+                        iconaPhoto = icona.photoUrl;
+                    }
+                }
+
+                return `
+                    <div class="p-4 bg-gray-700 rounded-lg border-2 shadow-lg" style="border-color: ${teamColor};">
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="${logoUrl}"
+                                 alt="${teamName}"
+                                 class="w-12 h-12 rounded-lg object-cover border-2"
+                                 style="border-color: ${teamColor};"
+                                 onerror="this.src='https://placehold.co/80x80/374151/9ca3af?text=Logo'">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-base font-extrabold truncate" style="color: ${teamColor};">${teamName}</p>
+                                <p class="text-xs text-gray-400">${playersCount} giocatori</p>
+                            </div>
+                            <img src="${iconaPhoto}"
+                                 alt="Icona"
+                                 class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400 flex-shrink-0"
+                                 onerror="this.src='https://placehold.co/40x40/374151/9ca3af?text=?'">
+                        </div>
+                        <button onclick="window.InterfacciaAuth.showRosaSquadra(${index})"
+                                class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
+                            📋 Rosa
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error("Errore nel caricamento squadre:", error);
+            container.innerHTML = `
+                <div class="col-span-2 text-center">
+                    <p class="text-red-400 font-bold">Errore nel caricamento</p>
+                    <p class="text-gray-400 text-sm">${error.message}</p>
+                    <button onclick="window.InterfacciaAuth.showListaSquadre()"
+                            class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500 transition">
+                        Riprova
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    /**
+     * Nasconde il modal della lista Squadre
+     */
+    hideListaSquadre() {
+        const modal = document.getElementById('lista-squadre-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    },
+
+    /**
+     * Mostra la rosa di una squadra (sola lettura)
+     * @param {number} squadraIndex - Indice della squadra nella cache
+     */
+    showRosaSquadra(squadraIndex) {
+        if (!this._squadreCache || !this._squadreCache[squadraIndex]) {
+            console.error("Squadra non trovata nella cache");
+            return;
+        }
+
+        const squadra = this._squadreCache[squadraIndex];
+        const teamName = squadra.teamName || 'Squadra Sconosciuta';
+        const teamColor = squadra.primaryColor || '#22c55e';
+        const players = squadra.players || [];
+
+        // Ordina i giocatori per ruolo (P, D, C, A) e poi per livello
+        const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+        const sortedPlayers = [...players].sort((a, b) => {
+            const orderA = ROLE_ORDER[a.role] !== undefined ? ROLE_ORDER[a.role] : 99;
+            const orderB = ROLE_ORDER[b.role] !== undefined ? ROLE_ORDER[b.role] : 99;
+            if (orderA !== orderB) return orderA - orderB;
+            return (b.level || 0) - (a.level || 0);
+        });
+
+        // Crea il contenuto della modale
+        const modalHtml = `
+            <div id="rosa-squadra-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-4 pt-8 z-[60] overflow-y-auto">
+                <div class="football-box w-full max-w-2xl mx-auto mb-8">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2" style="border-color: ${teamColor};">
+                        <h3 class="text-2xl font-bold" style="color: ${teamColor};">📋 Rosa ${teamName}</h3>
+                        <button onclick="window.InterfacciaAuth.hideRosaSquadra()" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4 text-center">${sortedPlayers.length} giocatori in rosa</p>
+                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+                        ${sortedPlayers.length === 0 ?
+                            '<p class="text-center text-gray-500">Nessun giocatore in rosa</p>' :
+                            sortedPlayers.map(player => {
+                                const isIcona = player.abilities && player.abilities.includes('Icona');
+                                const roleColors = {
+                                    'P': 'bg-yellow-600',
+                                    'D': 'bg-blue-600',
+                                    'C': 'bg-green-600',
+                                    'A': 'bg-red-600'
+                                };
+                                const roleColor = roleColors[player.role] || 'bg-gray-600';
+
+                                // Per le icone, cerca il photoUrl dal template per avere sempre il link aggiornato
+                                let photoUrl = player.photoUrl || 'https://placehold.co/40x40/374151/9ca3af?text=' + (player.name ? player.name.charAt(0) : '?');
+                                if (isIcona) {
+                                    const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t =>
+                                        t.id === player.id || t.name === player.name
+                                    );
+                                    if (iconaTemplate && iconaTemplate.photoUrl) {
+                                        photoUrl = iconaTemplate.photoUrl;
+                                    }
+                                }
+
+                                const abilitiesText = player.abilities && player.abilities.length > 0
+                                    ? player.abilities.filter(a => a !== 'Icona').join(', ')
+                                    : '';
+
+                                return `
+                                    <div class="flex items-center gap-3 p-3 bg-gray-700 rounded-lg ${isIcona ? 'border-2 border-yellow-400' : ''}">
+                                        <img src="${photoUrl}"
+                                             alt="${player.name}"
+                                             class="w-10 h-10 rounded-full object-cover ${isIcona ? 'border-2 border-yellow-400' : ''}"
+                                             onerror="this.src='https://placehold.co/40x40/374151/9ca3af?text=?'">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-white truncate">${player.name || 'Sconosciuto'}</span>
+                                                ${isIcona ? '<span class="text-yellow-400">👑</span>' : ''}
+                                            </div>
+                                            <p class="text-xs text-gray-400">${player.type || 'N/A'} | Liv. ${player.level || '?'}</p>
+                                            ${abilitiesText ? `<p class="text-xs text-green-400 truncate">${abilitiesText}</p>` : ''}
+                                        </div>
+                                        <span class="${roleColor} text-white text-xs font-bold px-2 py-1 rounded">${player.role || '?'}</span>
+                                    </div>
+                                `;
+                            }).join('')
+                        }
+                    </div>
+                    <button onclick="window.InterfacciaAuth.hideRosaSquadra()"
+                            class="mt-4 w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-500 transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Rimuovi modale esistente se presente
+        const existingModal = document.getElementById('rosa-squadra-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Aggiungi la modale al DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Chiudi cliccando fuori
+        const modal = document.getElementById('rosa-squadra-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideRosaSquadra();
+                }
+            });
+        }
+    },
+
+    /**
+     * Nasconde il modal della rosa squadra
+     */
+    hideRosaSquadra() {
+        const modal = document.getElementById('rosa-squadra-modal');
+        if (modal) {
+            modal.remove();
         }
     }
 };

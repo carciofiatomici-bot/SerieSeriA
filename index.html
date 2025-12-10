@@ -16,10 +16,10 @@
 </head>
 <body>
 
-    <!-- Bottone Regole Globale (sempre visibile) -->
+    <!-- Bottone Regole Globale (sempre visibile) - z-index alto per stare sopra tutto -->
     <button id="rules-global-btn"
             onclick="window.RulesPanel.toggle()"
-            style="position: fixed; bottom: 20px; right: 20px; z-index: 100;
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 9998;
                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                    color: white; font-weight: bold; padding: 12px 20px;
                    border-radius: 50px; border: none; cursor: pointer;
@@ -29,8 +29,8 @@
         <span style="font-size: 20px;">📖</span> Regole
     </button>
 
-    <!-- Pannello Regole (nascosto inizialmente) -->
-    <div id="rules-panel" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto">
+    <!-- Pannello Regole (nascosto inizialmente) - z-index molto alto per stare sempre in primo piano -->
+    <div id="rules-panel" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[9999] overflow-y-auto">
         <div class="container mx-auto px-4 py-8 max-w-4xl">
             <!-- Header -->
             <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-t-lg p-6 border-b-4 border-yellow-500">
@@ -147,10 +147,10 @@
 
         <!-- 2. BOX LOGIN (Nome Squadra / Password) -->
         <div id="login-box" class="football-box w-full max-w-sm transition duration-500 hidden-on-load">
-            <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b-2 border-yellow-600 pb-2">Seleziona la Tua Squadra</h2>
+            <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b-2 border-yellow-600 pb-2">Accedi alla tua Dashboard</h2>
 
             <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
-            <div id="remembered-session-box" class="hidden mb-6">
+            <div id="remembered-session-box" class="hidden mb-4">
                 <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center">
                     <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-yellow-400 object-cover">
                     <p class="text-lg font-bold text-white mb-1" id="remembered-team-name">Nome Squadra</p>
@@ -166,39 +166,54 @@
                 </div>
             </div>
 
-            <!-- SEZIONE LOGIN NORMALE -->
-            <div id="normal-login-box">
+            <!-- BOX 1: LOGIN -->
+            <div id="normal-login-box" class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 mb-4">
+                <h3 class="text-sm font-bold text-yellow-400 mb-3 text-center">Login Squadra</h3>
                 <input type="text" id="login-username" placeholder="Nome Squadra"
-                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
 
                 <input type="password" id="login-password" placeholder="Password"
-                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-700 text-white mb-6 shadow-inner-dark">
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
 
                 <button id="login-button"
-                        class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02] mb-4">
+                        class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02]">
                     Accedi
                 </button>
-            </div>
-            
-            <!-- BOTTONI PUBBLICI (RIMASTI QUI PER L'ACCESSO PRE-LOGIN) -->
-            <div class="grid grid-cols-2 gap-2 mb-2">
-                <button id="btn-leaderboard"
-                        class="w-full bg-blue-500 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-400 transition duration-150 transform hover:scale-[1.02]">
-                    Classifica
-                </button>
-                <button id="btn-schedule"
-                        class="w-full bg-teal-500 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-400 transition duration-150 transform hover:scale-[1.02]">
-                    Calendario Partite
-                </button>
+                <p id="login-message" class="text-center mt-2 text-red-400 text-sm"></p>
             </div>
 
-            <!-- BOTTONE LISTA ICONE -->
-            <button id="btn-lista-icone"
-                    class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
-                👑 Lista Icone
-            </button>
-            
-            <p id="login-message" class="text-center mt-3 text-red-400"></p>
+            <!-- BOX 2: ESPLORA LEGA -->
+            <div class="p-4 bg-gray-700 rounded-lg border-2 border-blue-500 mb-4">
+                <h3 class="text-sm font-bold text-blue-400 mb-3 text-center">Esplora la Lega</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-leaderboard"
+                            class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-500 transition duration-150 transform hover:scale-[1.02]">
+                        Classifica
+                    </button>
+                    <button id="btn-schedule"
+                            class="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-500 transition duration-150 transform hover:scale-[1.02]">
+                        Calendario
+                    </button>
+                    <button id="btn-lista-icone"
+                            class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
+                        👑 Icone
+                    </button>
+                    <button id="btn-lista-squadre"
+                            class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-green-500 transition duration-150 transform hover:scale-[1.02]">
+                        📋 Squadre
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOX 3: SUPPORTO -->
+            <div class="p-4 bg-gray-700 rounded-lg border-2 border-red-500">
+                <h3 class="text-sm font-bold text-red-400 mb-3 text-center">Supporto</h3>
+                <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
+                   target="_blank"
+                   class="block w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] text-center">
+                    🐛 Segnala Bug
+                </a>
+            </div>
         </div>
 
         <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra -->
@@ -428,7 +443,7 @@
              </div>
              <button id="draft-back-button"
                     class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
-                Torna al Pannello Admin
+                Indietro
             </button>
         </div>
         
@@ -641,19 +656,38 @@
         </div>
 
         <!-- 16. MODALE LISTA ICONE -->
-        <div id="lista-icone-modal" class="fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50 hidden overflow-y-auto">
-            <div class="football-box w-full max-w-4xl mx-auto my-8">
-                <div class="flex justify-between items-center mb-4 border-b border-yellow-600 pb-2">
-                    <h3 class="text-3xl font-bold text-yellow-400">👑 Lista Icone Disponibili</h3>
+        <div id="lista-icone-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-2 pt-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto mb-4 max-h-[95vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-yellow-600 pb-2 sticky top-0 bg-gray-800 pt-2 -mt-2 z-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-yellow-400">👑 Lista Icone</h3>
                     <button id="btn-close-lista-icone" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
                 </div>
-                <p class="text-gray-300 mb-6 text-center">Queste sono le Icone che potrai scegliere quando crei una nuova squadra. Ogni Icona ha l'abilità speciale "Icona" che potenzia tutta la squadra!</p>
-                <div id="lista-icone-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <p class="text-gray-300 mb-4 text-center text-sm">Scegli un'Icona quando crei la tua squadra!</p>
+                <div id="lista-icone-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <!-- Le icone vengono caricate dinamicamente -->
                 </div>
                 <button id="btn-back-to-login"
-                        class="mt-6 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.01]">
-                    Torna al Login
+                        class="mt-4 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+
+        <!-- 16B. MODALE LISTA SQUADRE -->
+        <div id="lista-squadre-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-2 pt-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto mb-4 max-h-[95vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-green-600 pb-2 sticky top-0 bg-gray-800 pt-2 -mt-2 z-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-green-400">📋 Squadre</h3>
+                    <button id="btn-close-lista-squadre" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+                <p class="text-gray-300 mb-4 text-center text-sm">Tutte le squadre della lega</p>
+                <div id="lista-squadre-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Le squadre vengono caricate dinamicamente -->
+                    <p class="text-center text-gray-400 col-span-2">Caricamento squadre...</p>
+                </div>
+                <button id="btn-back-from-squadre"
+                        class="mt-4 w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150">
+                    Chiudi
                 </button>
             </div>
         </div>

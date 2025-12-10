@@ -26,47 +26,206 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTeamId = null;
     let paths = {};
 
+    // FALLBACK: Imposta un listener di base sul bottone indietro
+    // Questo garantisce che l'utente possa sempre uscire dalla pagina
+    if (draftBackButton) {
+        // Aggiorna il testo del bottone in base al contesto
+        const updateBackButtonText = () => {
+            const hasActiveTeam = window.InterfacciaCore && window.InterfacciaCore.currentTeamId;
+            if (currentMode === 'utente' || hasActiveTeam) {
+                draftBackButton.textContent = 'Torna alla Dashboard';
+            } else {
+                draftBackButton.textContent = 'Torna al Pannello Admin';
+            }
+        };
+
+        draftBackButton.addEventListener('click', () => {
+            // Determina la destinazione in base a currentMode
+            // Se currentMode non e' stato ancora impostato, controlla se c'e' un teamId attivo
+            let destination;
+            if (currentMode === 'utente') {
+                destination = appContent;
+            } else if (currentMode === 'admin') {
+                // Verifica se l'utente ha effettivamente un teamId (quindi e' un utente normale)
+                const hasActiveTeam = window.InterfacciaCore && window.InterfacciaCore.currentTeamId;
+                destination = hasActiveTeam ? appContent : adminContent;
+            } else {
+                destination = appContent; // Default alla dashboard utente
+            }
+
+            if (window.showScreen && destination) {
+                window.showScreen(destination);
+            }
+        });
+
+        // Osserva quando il draft-content diventa visibile per aggiornare il testo
+        const observer = new MutationObserver(() => {
+            if (draftContent && !draftContent.classList.contains('hidden-on-load') &&
+                !draftContent.classList.contains('hidden')) {
+                updateBackButtonText();
+            }
+        });
+
+        if (draftContent) {
+            observer.observe(draftContent, { attributes: true, attributeFilter: ['class'] });
+        }
+    }
+
+    /**
+     * Mostra un messaggio di errore con opzioni per riprovare o tornare indietro.
+     * @param {string} errorMessage - Messaggio di errore da mostrare
+     * @param {Event} originalEvent - Evento originale per poter riprovare
+     */
+    const showDraftError = (errorMessage, originalEvent) => {
+        console.error("Errore Draft:", errorMessage);
+
+        const backDestination = currentMode === 'admin' ? adminContent : appContent;
+        const backLabel = currentMode === 'admin' ? 'Pannello Admin' : 'Dashboard';
+
+        draftToolsContainer.innerHTML = `
+            <div class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl space-y-4">
+                <p class="text-center text-2xl font-extrabold text-red-400">Errore nel caricamento del Draft</p>
+                <p class="text-center text-gray-300">Si e' verificato un problema durante il caricamento.</p>
+                <p class="text-center text-sm text-gray-400">Possibili cause: connessione instabile, sessione scaduta.</p>
+                <p class="text-center text-xs text-red-300 mt-2">${errorMessage}</p>
+                <div class="flex gap-4 mt-6">
+                    <button id="btn-draft-retry"
+                            class="flex-1 bg-yellow-600 text-white font-bold py-3 rounded-lg hover:bg-yellow-500 transition">
+                        Riprova
+                    </button>
+                    <button id="btn-draft-back-error"
+                            class="flex-1 bg-gray-600 text-white font-bold py-3 rounded-lg hover:bg-gray-500 transition">
+                        Torna a ${backLabel}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Event listener per riprovare
+        const btnRetry = document.getElementById('btn-draft-retry');
+        if (btnRetry) {
+            btnRetry.addEventListener('click', () => {
+                draftToolsContainer.innerHTML = '<p class="text-center text-gray-400">Riprovo il caricamento...</p>';
+                setTimeout(() => initializeDraftPanel(originalEvent), 500);
+            });
+        }
+
+        // Event listener per tornare indietro
+        const btnBack = document.getElementById('btn-draft-back-error');
+        if (btnBack) {
+            btnBack.addEventListener('click', () => {
+                if (window.showScreen && backDestination) {
+                    window.showScreen(backDestination);
+                }
+            });
+        }
+    };
+
     /**
      * Funzione principale per inizializzare il pannello Draft in base alla modalità.
      * @param {Event} event - Evento con dettagli sulla modalità
      */
-    const initializeDraftPanel = (event) => {
-        // Pulisce il timer precedente se esiste
-        window.DraftUtils.clearCooldownInterval();
+    const initializeDraftPanel = async (event) => {
+        // IMPORTANTE: Estrae mode e teamId SUBITO, PRIMA di qualsiasi controllo
+        // Cosi se un errore avviene, showDraftError mostrera il bottone corretto
+        currentMode = event && event.detail && event.detail.mode === 'utente' ? 'utente' : 'admin';
+        currentTeamId = event && event.detail ? event.detail.teamId : null;
 
-        // Inizializza servizi globali
-        db = window.db;
-        firestoreTools = window.firestoreTools;
-        const { appId } = firestoreTools;
+        console.log(`Inizializzazione pannello Draft, Modalita: ${currentMode}, TeamId: ${currentTeamId}`);
 
-        // Genera i path delle collezioni
-        paths = window.DraftConstants.getPaths(appId);
+        // Timeout di sicurezza (15 secondi)
+        const LOAD_TIMEOUT_MS = 15000;
+        let timeoutId = null;
 
-        // Imposta la modalità e l'ID della squadra
-        currentMode = event.detail && event.detail.mode === 'utente' ? 'utente' : 'admin';
-        currentTeamId = event.detail ? event.detail.teamId : null;
+        try {
+            // Pulisce il timer precedente se esiste
+            if (window.DraftUtils && window.DraftUtils.clearCooldownInterval) {
+                window.DraftUtils.clearCooldownInterval();
+            }
 
-        console.log(`Caricamento pannello Draft, Modalità: ${currentMode}`);
+            // Verifica che i servizi globali siano disponibili
+            if (!window.db) {
+                throw new Error("Database non inizializzato");
+            }
+            if (!window.firestoreTools) {
+                throw new Error("Firestore tools non disponibili");
+            }
+            if (!window.DraftConstants) {
+                throw new Error("DraftConstants non caricato");
+            }
 
-        // Prepara il contesto da passare ai sotto-moduli
-        const context = {
-            draftContent,
-            draftToolsContainer,
-            draftBackButton,
-            adminContent,
-            appContent,
-            db,
-            firestoreTools,
-            paths,
-            currentMode,
-            currentTeamId
-        };
+            // Inizializza servizi globali
+            db = window.db;
+            firestoreTools = window.firestoreTools;
+            const { appId } = firestoreTools;
 
-        // Renderizza il pannello appropriato
-        if (currentMode === 'admin') {
-            window.DraftAdminUI.render(context);
-        } else {
-            window.DraftUserUI.render(context);
+            if (!appId) {
+                throw new Error("AppId non disponibile");
+            }
+
+            // Genera i path delle collezioni
+            paths = window.DraftConstants.getPaths(appId);
+
+            console.log(`Caricamento pannello Draft, Modalita: ${currentMode}`);
+
+            // Prepara il contesto da passare ai sotto-moduli
+            const context = {
+                draftContent,
+                draftToolsContainer,
+                draftBackButton,
+                adminContent,
+                appContent,
+                db,
+                firestoreTools,
+                paths,
+                currentMode,
+                currentTeamId
+            };
+
+            // Crea una Promise con timeout
+            const renderPromise = new Promise(async (resolve, reject) => {
+                try {
+                    // Renderizza il pannello appropriato
+                    if (currentMode === 'admin') {
+                        if (!window.DraftAdminUI || !window.DraftAdminUI.render) {
+                            throw new Error("DraftAdminUI non disponibile");
+                        }
+                        await window.DraftAdminUI.render(context);
+                    } else {
+                        if (!window.DraftUserUI || !window.DraftUserUI.render) {
+                            throw new Error("DraftUserUI non disponibile");
+                        }
+                        await window.DraftUserUI.render(context);
+                    }
+                    resolve();
+                } catch (renderError) {
+                    reject(renderError);
+                }
+            });
+
+            // Timeout Promise
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error("Timeout: il caricamento ha impiegato troppo tempo"));
+                }, LOAD_TIMEOUT_MS);
+            });
+
+            // Aspetta il primo che completa (render o timeout)
+            await Promise.race([renderPromise, timeoutPromise]);
+
+            // Cancella il timeout se il render e' completato
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+        } catch (error) {
+            // Cancella il timeout in caso di errore
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Mostra l'errore all'utente con opzioni
+            showDraftError(error.message || "Errore sconosciuto", event);
         }
     };
 
