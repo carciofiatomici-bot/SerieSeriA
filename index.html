@@ -2,7 +2,10 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#1f2937">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Serie SeriA</title>
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -220,12 +223,14 @@
                     <p id="countdown-timer" class="text-lg font-extrabold text-teal-400">--:--</p>
                     <p id="countdown-label-bottom" class="text-xs text-gray-500">Partita</p>
                 </div>
-                <img id="team-logo"
-                     src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true"
-                     alt="Logo Squadra Modificabile"
-                     class="w-28 h-28 rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg"
-                     style="border-color: #22c55e;"
-                     title="Clicca per cambiare il logo (Inserisci URL)">
+                <div id="team-logo-wrapper" class="relative w-28 h-28">
+                    <img id="team-logo"
+                         src="https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true"
+                         alt="Logo Squadra Modificabile"
+                         class="w-full h-full rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
+                         style="border-color: #22c55e;"
+                         title="Clicca per cambiare il logo (Inserisci URL)">
+                </div>
                 <div class="relative group">
                     <img id="team-icona-avatar"
                          src="https://placehold.co/128x128/facc15/000?text=?"

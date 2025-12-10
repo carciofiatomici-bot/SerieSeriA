@@ -44,3 +44,1375 @@ body {
 .hidden-on-load {
     display: none;
 }
+
+/* ====================================================================
+   RESPONSIVE DESIGN - Mobile First
+   ==================================================================== */
+
+/* Breakpoints:
+   - Mobile: < 640px
+   - Tablet: 640px - 1024px
+   - Desktop: > 1024px
+*/
+
+/* ===================== MOBILE (< 640px) ===================== */
+@media (max-width: 639px) {
+    /* Body e Main */
+    body {
+        background-attachment: scroll; /* Migliore performance su mobile */
+    }
+
+    main {
+        padding: 8px !important;
+    }
+
+    /* Football Box - riduco padding su mobile */
+    .football-box {
+        padding: 16px;
+        margin: 8px;
+        border-radius: 8px;
+        max-width: 100% !important;
+        width: calc(100% - 16px) !important;
+    }
+
+    /* Titoli piu piccoli */
+    h2 {
+        font-size: 1.5rem !important;
+        line-height: 1.3;
+    }
+
+    h3 {
+        font-size: 1.25rem !important;
+    }
+
+    /* Bottone Regole globale - piu piccolo su mobile */
+    #rules-global-btn {
+        padding: 8px 14px !important;
+        font-size: 14px !important;
+        bottom: 12px !important;
+        right: 12px !important;
+    }
+
+    #rules-global-btn span {
+        font-size: 16px !important;
+    }
+
+    /* Footer logo piu piccolo */
+    #footer-logo {
+        max-width: 180px;
+        margin: 24px auto;
+    }
+
+    /* Grid a singola colonna su mobile */
+    .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Gap piu stretto */
+    .gap-4 {
+        gap: 0.75rem !important;
+    }
+
+    .gap-6 {
+        gap: 1rem !important;
+    }
+
+    /* Container logo/icona/countdown nella dashboard */
+    #team-logo-container {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+    }
+
+    /* Logo e icona sopra, countdown e divisa sotto */
+    #team-logo-wrapper,
+    #team-logo-container .relative.group {
+        order: 0;
+    }
+
+    #next-match-countdown {
+        order: 1;
+    }
+
+    #team-uniform-box {
+        order: 2;
+    }
+
+    /* Countdown e divisa */
+    #next-match-countdown,
+    #team-uniform-box {
+        width: 70px !important;
+        height: 70px !important;
+        flex-shrink: 0;
+    }
+
+    /* Container logo e icona - leggermente piu grandi */
+    #team-logo-wrapper,
+    #team-logo-container .relative.group {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+        max-width: 100px !important;
+        max-height: 100px !important;
+        flex-shrink: 0;
+        border-radius: 50% !important;
+        overflow: hidden;
+    }
+
+    /* Logo squadra - riempie il container */
+    #team-logo {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+    }
+
+    /* Icona giocatore - riempie il container */
+    #team-icona-avatar {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+    }
+
+    #countdown-timer {
+        font-size: 0.875rem !important;
+    }
+
+    /* Color picker container - in basso a destra su mobile */
+    #team-color-picker-container {
+        position: fixed !important;
+        top: auto !important;
+        right: 12px !important;
+        bottom: 70px !important;
+        z-index: 99;
+    }
+
+    /* Color picker nella dashboard - piu piccolo su mobile */
+    #team-color-picker {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+
+    #countdown-label-top,
+    #countdown-label-bottom {
+        font-size: 0.625rem !important;
+    }
+
+    /* Statistiche dashboard */
+    #stat-rosa-level,
+    #stat-formazione-level {
+        font-size: 1.75rem !important;
+    }
+
+    /* Bottoni piu compatti */
+    button {
+        padding-top: 0.625rem !important;
+        padding-bottom: 0.625rem !important;
+        font-size: 0.875rem !important;
+    }
+
+    .py-3 {
+        padding-top: 0.625rem !important;
+        padding-bottom: 0.625rem !important;
+    }
+
+    .py-4 {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    /* Text sizing */
+    .text-xl {
+        font-size: 1rem !important;
+    }
+
+    .text-2xl {
+        font-size: 1.25rem !important;
+    }
+
+    .text-3xl {
+        font-size: 1.5rem !important;
+    }
+
+    .text-4xl {
+        font-size: 1.5rem !important;
+    }
+
+    /* Modal padding */
+    .fixed.inset-0 > div {
+        padding: 12px !important;
+    }
+
+    /* Modale lista icone - grid 2 colonne */
+    #lista-icone-container,
+    #captain-candidates-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Input fields */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    select,
+    textarea {
+        font-size: 16px !important; /* Previene zoom automatico su iOS */
+    }
+
+    /* Pannello regole */
+    #rules-panel .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    #rules-panel h1 {
+        font-size: 1.5rem !important;
+    }
+
+    /* Uniform editor - colonna singola */
+    #uniform-editor-modal .grid.grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* SVG divisa piu piccola */
+    #uniform-full-preview {
+        max-width: 200px !important;
+    }
+
+    /* Color picker piu grande per touch */
+    input[type="color"] {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+
+    /* Max width override per mobile */
+    .max-w-sm,
+    .max-w-md,
+    .max-w-lg,
+    .max-w-xl,
+    .max-w-2xl,
+    .max-w-3xl,
+    .max-w-4xl,
+    .max-w-5xl {
+        max-width: 100% !important;
+    }
+}
+
+/* ===================== TABLET (640px - 1024px) ===================== */
+@media (min-width: 640px) and (max-width: 1023px) {
+    main {
+        padding: 16px !important;
+    }
+
+    .football-box {
+        padding: 24px;
+        max-width: 90% !important;
+    }
+
+    /* Grid a 2 colonne su tablet */
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Container logo/icona - dimensioni intermedie */
+    #team-logo-container > * {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    #team-logo-container img,
+    #next-match-countdown,
+    #team-uniform-box {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    /* Modale lista icone - 3 colonne su tablet */
+    #lista-icone-container,
+    #captain-candidates-container {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    /* Footer logo */
+    #footer-logo {
+        max-width: 220px;
+    }
+
+    /* Max width per tablet */
+    .max-w-4xl,
+    .max-w-5xl {
+        max-width: 95% !important;
+    }
+}
+
+/* ===================== TOUCH DEVICE IMPROVEMENTS ===================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Bottoni piu grandi per touch */
+    button {
+        min-height: 44px;
+    }
+
+    /* Checkbox piu grandi */
+    input[type="checkbox"] {
+        min-width: 24px !important;
+        min-height: 24px !important;
+    }
+
+    /* Links e elementi cliccabili */
+    a, .cursor-pointer {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Rimuovi hover effects su touch (evita sticky hover) */
+    .hover\\:scale-\\[1\\.01\\]:hover,
+    .hover\\:scale-\\[1\\.02\\]:hover {
+        transform: none !important;
+    }
+}
+
+/* ===================== UTILITY CLASSES RESPONSIVE ===================== */
+
+/* Stack verticale su mobile */
+.mobile-stack {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .mobile-stack {
+        flex-direction: row;
+    }
+}
+
+/* Nascondi su mobile */
+.hide-mobile {
+    display: none !important;
+}
+
+@media (min-width: 640px) {
+    .hide-mobile {
+        display: block !important;
+    }
+}
+
+/* Mostra solo su mobile */
+.show-mobile {
+    display: block !important;
+}
+
+@media (min-width: 640px) {
+    .show-mobile {
+        display: none !important;
+    }
+}
+
+/* Full width su mobile */
+.mobile-full-width {
+    width: 100% !important;
+}
+
+@media (min-width: 640px) {
+    .mobile-full-width {
+        width: auto !important;
+    }
+}
+
+/* Text center su mobile */
+.mobile-text-center {
+    text-align: center !important;
+}
+
+@media (min-width: 640px) {
+    .mobile-text-center {
+        text-align: left !important;
+    }
+}
+
+/* ===================== SCROLL IMPROVEMENTS ===================== */
+
+/* Scroll fluido */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar piu sottile su mobile */
+@media (max-width: 639px) {
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 2px;
+    }
+}
+
+/* ===================== TABELLE RESPONSIVE ===================== */
+
+/* Wrapper per tabelle scrollabili */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+@media (max-width: 639px) {
+    /* Tabelle con scroll orizzontale */
+    table {
+        min-width: 600px;
+    }
+
+    .table-responsive {
+        margin: 0 -16px;
+        padding: 0 16px;
+    }
+
+    /* Celle piu compatte */
+    td, th {
+        padding: 8px 6px !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ===================== FORM IMPROVEMENTS ===================== */
+
+@media (max-width: 639px) {
+    /* Label sopra gli input su mobile */
+    .form-group {
+        flex-direction: column !important;
+    }
+
+    .form-group label {
+        margin-bottom: 4px;
+    }
+
+    /* Select full width */
+    select {
+        width: 100% !important;
+    }
+}
+
+/* ===================== CARD RESPONSIVE ===================== */
+
+.card-responsive {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .card-responsive {
+        flex-direction: row;
+    }
+}
+
+/* ===================== SPECIFICI PER COMPONENTI ===================== */
+
+/* Campo di gioco responsive */
+@media (max-width: 639px) {
+    #field-area {
+        height: 450px !important;
+        min-height: 400px;
+    }
+
+    .jersey-container {
+        width: 64px !important;
+        height: 64px !important;
+        padding: 0.125rem !important;
+    }
+
+    .jersey-inner {
+        font-size: 0.55rem !important;
+    }
+
+    .jersey-name {
+        font-size: 0.5rem !important;
+    }
+
+    .jersey-role,
+    .jersey-base-level {
+        font-size: 0.45rem !important;
+    }
+
+    .level-text {
+        font-size: 1rem !important;
+    }
+
+    .mod-text {
+        font-size: 0.45rem !important;
+    }
+
+    /* Panchina */
+    #panchina-slots {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+
+    #bench-container {
+        height: auto !important;
+        min-height: 100px;
+    }
+
+    /* Lista rosa scrollabile */
+    #full-squad-list {
+        max-height: 200px !important;
+    }
+}
+
+/* Draft cards responsive */
+@media (max-width: 639px) {
+    .draft-player-card {
+        padding: 8px !important;
+    }
+
+    .draft-player-card img {
+        width: 48px !important;
+        height: 48px !important;
+    }
+}
+
+/* Mercato responsive */
+@media (max-width: 639px) {
+    #mercato-tools-container .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Admin dashboard responsive */
+@media (max-width: 639px) {
+    #admin-dashboard-container {
+        padding: 12px !important;
+    }
+
+    #admin-dashboard-container .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Player stats modal */
+@media (max-width: 639px) {
+    .player-stats-modal {
+        padding: 12px !important;
+    }
+
+    .player-stats-modal .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Match replay */
+@media (max-width: 639px) {
+    #match-replay-overlay .container {
+        padding: 8px !important;
+    }
+
+    #replay-content {
+        min-height: 300px !important;
+    }
+}
+
+/* Classifica e calendario */
+@media (max-width: 639px) {
+    #leaderboard-content .overflow-x-auto,
+    #schedule-content .overflow-x-auto {
+        margin: 0 -8px;
+        padding: 0 8px;
+    }
+}
+
+/* Competizioni utente */
+@media (max-width: 639px) {
+    #user-campionato-container,
+    #user-coppa-container,
+    #user-supercoppa-container {
+        padding: 8px !important;
+    }
+
+    /* Prossima partita card */
+    .next-match-card {
+        flex-direction: column !important;
+        text-align: center;
+    }
+
+    .next-match-card .team-info {
+        margin-bottom: 12px;
+    }
+}
+
+/* Editor divisa */
+@media (max-width: 639px) {
+    #uniform-editor-modal .grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    #uniform-editor-modal input[type="color"] {
+        height: 40px !important;
+    }
+}
+
+/* Pannello regole sezioni */
+@media (max-width: 639px) {
+    #rules-panel .bg-gray-900 {
+        padding: 12px !important;
+    }
+
+    #rules-panel ul {
+        padding-left: 8px !important;
+    }
+
+    #rules-panel li {
+        font-size: 0.8rem !important;
+        line-height: 1.4;
+    }
+}
+
+/* Icone candidati selezione */
+@media (max-width: 639px) {
+    #captain-candidates-container .candidate-card {
+        padding: 8px !important;
+    }
+
+    #captain-candidates-container img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    #captain-candidates-container .text-lg {
+        font-size: 0.875rem !important;
+    }
+}
+
+/* Budget box su hover - sempre visibile su mobile */
+@media (max-width: 639px) {
+    #team-budget-box {
+        display: block !important;
+    }
+}
+
+/* Crediti Super Seri widget */
+@media (max-width: 639px) {
+    #css-dashboard-widget {
+        padding: 8px !important;
+    }
+
+    #css-dashboard-widget .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Toggle partecipazione */
+@media (max-width: 639px) {
+    .grid.grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ===================== PANNELLO ADMIN RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    /* Admin container generale */
+    #admin-content {
+        padding: 12px !important;
+    }
+
+    /* Titoli sezioni admin */
+    #admin-content h3 {
+        font-size: 1.25rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Sezioni admin */
+    #automation-admin-section,
+    #serieseria-admin-section,
+    #coppa-admin-section,
+    #supercoppa-admin-section {
+        padding: 12px !important;
+    }
+
+    /* Grid bottoni admin - forza colonna singola */
+    #admin-dashboard-container .grid.grid-cols-3,
+    #admin-dashboard-container .grid.grid-cols-2,
+    #serieseria-admin-section .grid.grid-cols-3,
+    #coppa-admin-section .grid.grid-cols-2 {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Bottoni admin piu compatti */
+    #admin-dashboard-container button {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Icone font-awesome nei bottoni */
+    #admin-dashboard-container button i {
+        margin-right: 6px !important;
+    }
+
+    /* Modal test simulazione */
+    #test-simulation-modal > div {
+        margin: 8px !important;
+        padding: 12px !important;
+        max-height: 95vh !important;
+    }
+
+    #test-simulation-modal .grid.grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    #test-simulation-score {
+        font-size: 1.5rem !important;
+    }
+
+    /* Log simulazione */
+    #test-simulation-details {
+        font-size: 0.7rem !important;
+        max-height: 200px !important;
+    }
+
+    #test-simulation-simple-log-content,
+    #test-simulation-detailed-log-content {
+        font-size: 0.65rem !important;
+        max-height: 250px !important;
+    }
+
+    /* Player management */
+    #player-management-content {
+        padding: 12px !important;
+    }
+
+    #player-management-tools-container .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Team management */
+    #team-management-content {
+        padding: 12px !important;
+    }
+
+    #team-management-tools-container .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Team cards in admin */
+    .team-card-admin {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .team-card-admin > div {
+        margin-bottom: 8px !important;
+    }
+
+    .team-card-admin button {
+        width: 100% !important;
+        margin: 2px 0 !important;
+    }
+}
+
+/* Tablet admin */
+@media (min-width: 640px) and (max-width: 1023px) {
+    #admin-dashboard-container .grid.grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    #serieseria-admin-section .grid.grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ===================== DRAFT RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    #draft-content {
+        padding: 12px !important;
+    }
+
+    #draft-tools-container {
+        padding: 8px !important;
+    }
+
+    /* Draft player cards - 2 colonne su mobile */
+    #draft-tools-container .grid.grid-cols-3,
+    #draft-tools-container .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Draft player card interno */
+    .draft-player-card,
+    [class*="draft-player"] {
+        padding: 8px !important;
+        text-align: center;
+    }
+
+    .draft-player-card img,
+    [class*="draft-player"] img {
+        width: 50px !important;
+        height: 50px !important;
+        margin: 0 auto 4px !important;
+    }
+
+    /* Filtri draft */
+    #draft-tools-container select,
+    #draft-tools-container input {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Turni draft */
+    .draft-turn-indicator {
+        font-size: 0.8rem !important;
+        padding: 8px !important;
+    }
+}
+
+/* ===================== MERCATO RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    #mercato-content {
+        padding: 12px !important;
+    }
+
+    #mercato-tools-container {
+        padding: 8px !important;
+    }
+
+    /* Cards mercato - colonna singola */
+    #mercato-tools-container .grid.grid-cols-2,
+    #mercato-tools-container .grid.grid-cols-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Player card mercato */
+    .market-player-card {
+        flex-direction: column !important;
+        text-align: center;
+    }
+
+    .market-player-card img {
+        margin: 0 auto 8px !important;
+    }
+
+    .market-player-card button {
+        width: 100% !important;
+        margin-top: 8px !important;
+    }
+
+    /* Filtri mercato */
+    #mercato-tools-container .flex.gap-4 {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+}
+
+/* ===================== CHAMPIONSHIP/COPPA UI RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    #championship-content {
+        padding: 12px !important;
+    }
+
+    #championship-tools-container {
+        padding: 8px !important;
+    }
+
+    /* Calendario partite */
+    .match-row,
+    .fixture-row {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 8px !important;
+    }
+
+    .match-row .team-name,
+    .fixture-row .team-name {
+        margin-bottom: 4px !important;
+    }
+
+    .match-row .vs-separator {
+        margin: 4px 0 !important;
+    }
+
+    /* Giornata header */
+    .matchday-header {
+        font-size: 1rem !important;
+        padding: 8px !important;
+    }
+
+    /* Risultati */
+    .match-score {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ===================== COPPA BRACKET RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    .cup-bracket {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .cup-bracket-round {
+        min-width: 200px !important;
+    }
+
+    .cup-match-card {
+        padding: 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .cup-match-card .team-name {
+        max-width: 80px !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* ===================== MODALI GLOBALI RESPONSIVE ===================== */
+
+/* Tutti i modali */
+.fixed.inset-0[class*="modal"],
+#delete-team-modal,
+#lista-icone-modal,
+#uniform-editor-modal,
+#test-simulation-modal {
+    padding: 8px !important;
+}
+
+@media (max-width: 639px) {
+    /* Modali - contenuto interno */
+    .fixed.inset-0 .football-box,
+    .fixed.inset-0 > div > div {
+        margin: 4px !important;
+        padding: 12px !important;
+        max-height: 95vh !important;
+        overflow-y: auto !important;
+    }
+
+    /* Header modali */
+    .fixed.inset-0 h3 {
+        font-size: 1.25rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Bottone chiudi modali */
+    .fixed.inset-0 button[class*="close"],
+    .fixed.inset-0 [onclick*="close"] {
+        font-size: 1.5rem !important;
+        padding: 4px 8px !important;
+    }
+
+    /* Modal delete team */
+    #delete-team-modal .football-box {
+        max-width: 100% !important;
+    }
+
+    /* Modal lista icone */
+    #lista-icone-modal .football-box {
+        margin: 8px !important;
+        max-height: 90vh !important;
+    }
+
+    #lista-icone-container {
+        max-height: 60vh !important;
+        overflow-y: auto !important;
+    }
+
+    /* Modal uniform editor */
+    #uniform-editor-modal .football-box {
+        margin: 8px !important;
+    }
+}
+
+/* ===================== FORM E INPUT RESPONSIVE ===================== */
+
+@media (max-width: 639px) {
+    /* Input generali */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 16px !important; /* Previene zoom iOS */
+        border-radius: 8px !important;
+    }
+
+    /* Gruppi form inline -> stack */
+    .flex.gap-2,
+    .flex.gap-3,
+    .flex.gap-4 {
+        flex-wrap: wrap;
+    }
+
+    .flex.gap-2 > *,
+    .flex.gap-3 > *,
+    .flex.gap-4 > * {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    /* Eccezione per bottoni affiancati */
+    .flex.gap-2 > button,
+    .flex.gap-3 > button,
+    .flex.gap-4 > button {
+        flex: 1 1 auto;
+        min-width: auto;
+    }
+
+    /* Label */
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.875rem;
+    }
+
+    /* Checkbox e radio inline */
+    .flex.items-center input[type="checkbox"],
+    .flex.items-center input[type="radio"] {
+        margin-right: 8px;
+    }
+
+    /* Color picker */
+    input[type="color"] {
+        width: 100% !important;
+        height: 44px !important;
+        padding: 2px !important;
+        cursor: pointer;
+    }
+}
+
+/* ===================== TABELLE COMPLETE RESPONSIVE ===================== */
+
+/* Wrapper scrollabile per tabelle */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -12px;
+    padding: 0 12px;
+}
+
+@media (max-width: 639px) {
+    /* Tabelle base */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* Celle compatte */
+    table th,
+    table td {
+        padding: 6px 8px !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap;
+    }
+
+    /* Header tabella */
+    table th {
+        background-color: #374151;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.65rem !important;
+    }
+
+    /* Righe alternate */
+    table tbody tr:nth-child(even) {
+        background-color: rgba(55, 65, 81, 0.5);
+    }
+
+    /* Classifica specifica */
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 4px 6px !important;
+    }
+
+    /* Nascondi colonne meno importanti su mobile */
+    .hide-on-mobile {
+        display: none !important;
+    }
+
+    /* Colonna posizione/rank */
+    .rank-column {
+        width: 30px !important;
+        text-align: center;
+    }
+
+    /* Colonna punti */
+    .points-column {
+        font-weight: bold;
+        color: #fbbf24;
+    }
+}
+
+/* Tabelle su tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+    table th,
+    table td {
+        padding: 8px 10px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* ===================== SCROLL E OVERFLOW ===================== */
+
+/* Container scrollabili verticali */
+.scroll-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 639px) {
+    .scroll-container {
+        max-height: 50vh;
+    }
+
+    /* Scrollbar stilizzata per container scroll */
+    .scroll-container::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .scroll-container::-webkit-scrollbar-track {
+        background: #1f2937;
+        border-radius: 2px;
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 2px;
+    }
+}
+
+/* ===================== ANIMAZIONI RIDOTTE PER MOBILE ===================== */
+
+@media (max-width: 639px) {
+    /* Disabilita animazioni per performance */
+    .transition,
+    .transition-all,
+    .transition-colors,
+    .transition-opacity,
+    .transition-transform {
+        transition-duration: 0.15s !important;
+    }
+
+    /* Riduci trasformazioni */
+    .transform {
+        transform: none !important;
+    }
+
+    /* Mantieni solo hover base */
+    button:active {
+        opacity: 0.8;
+        transform: scale(0.98) !important;
+    }
+}
+
+/* ===================== ORIENTAMENTO LANDSCAPE MOBILE ===================== */
+
+@media (max-width: 896px) and (orientation: landscape) {
+    /* Riduci altezze per landscape */
+    .football-box {
+        padding: 12px !important;
+    }
+
+    #field-area {
+        height: 350px !important;
+    }
+
+    /* Modal piu compatti */
+    .fixed.inset-0 .football-box {
+        max-height: 85vh !important;
+    }
+
+    /* Logo footer nascosto in landscape */
+    #footer-logo {
+        display: none;
+    }
+}
+
+/* ===================== SAFE AREA (NOTCH) ===================== */
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    #rules-global-btn {
+        bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        right: max(12px, env(safe-area-inset-right)) !important;
+    }
+}
+
+/* ===================== PRINT STYLES (OPZIONALE) ===================== */
+
+@media print {
+    body {
+        background: white !important;
+    }
+
+    .football-box {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+
+    #rules-global-btn,
+    button,
+    .hide-print {
+        display: none !important;
+    }
+}
+
+/* ===================== UTILITY FINALI ===================== */
+
+/* Testo troncato con ellipsis */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Wrap forzato */
+.break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Centratura verticale e orizzontale */
+.center-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Gap responsive */
+@media (max-width: 639px) {
+    .gap-responsive {
+        gap: 8px !important;
+    }
+}
+
+@media (min-width: 640px) {
+    .gap-responsive {
+        gap: 16px !important;
+    }
+}
+
+/* Padding responsive */
+.p-responsive {
+    padding: 12px;
+}
+
+@media (min-width: 640px) {
+    .p-responsive {
+        padding: 24px;
+    }
+}
+
+/* Margin responsive */
+.m-responsive {
+    margin: 8px;
+}
+
+@media (min-width: 640px) {
+    .m-responsive {
+        margin: 16px;
+    }
+}
+
+/* Spazio extra per evitare che il bottone regole copra contenuto */
+@media (max-width: 639px) {
+    main {
+        padding-bottom: 80px !important;
+    }
+}
+
+/* Fix per iOS input zoom */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    select,
+    textarea,
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"] {
+        font-size: 16px !important;
+    }
+}
+
+/* Miglior contrasto per testo su mobile */
+@media (max-width: 639px) {
+    .text-gray-400 {
+        color: #9ca3af !important;
+    }
+
+    .text-gray-500 {
+        color: #9ca3af !important;
+    }
+}
+
+/* Focus states per accessibilita */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+/* Rimuovi outline su touch */
+@media (hover: none) {
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+    }
+}
+
+/* Fix per elementi troppo larghi che causano scroll orizzontale */
+img,
+video,
+iframe,
+svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Previeni selezione accidentale su elementi interattivi */
+button,
+.cursor-pointer {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Migliora tap su mobile */
+@media (hover: none) and (pointer: coarse) {
+    button,
+    a,
+    .cursor-pointer {
+        -webkit-tap-highlight-color: rgba(52, 211, 153, 0.2);
+    }
+}
