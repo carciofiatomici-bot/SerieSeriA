@@ -9,12 +9,64 @@ window.DraftUserUI = {
     // Timer per aggiornare il countdown
     turnTimerInterval: null,
 
+    // Listener real-time per lo stato del Draft
+    configUnsubscribe: null,
+
+    // Contesto salvato per il re-render
+    savedContext: null,
+
+    /**
+     * Ferma il listener real-time
+     */
+    stopConfigListener() {
+        if (this.configUnsubscribe) {
+            this.configUnsubscribe();
+            this.configUnsubscribe = null;
+            console.log("Draft: listener config fermato");
+        }
+    },
+
+    /**
+     * Avvia il listener real-time per lo stato del Draft
+     */
+    startConfigListener(context) {
+        const { db, firestoreTools, paths } = context;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+        const { doc, onSnapshot } = firestoreTools;
+
+        // Ferma listener precedente
+        this.stopConfigListener();
+
+        const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+
+        this.configUnsubscribe = onSnapshot(configDocRef, (snapshot) => {
+            if (!snapshot.exists()) return;
+
+            const configData = snapshot.data();
+            const isDraftOpen = configData.isDraftOpen || false;
+
+            console.log("Draft real-time update - isDraftOpen:", isDraftOpen);
+
+            // Se siamo ancora nella pagina Draft, aggiorna l'UI
+            const draftContent = document.getElementById('draft-content');
+            if (draftContent && !draftContent.classList.contains('hidden')) {
+                // Re-renderizza il pannello
+                this.render(this.savedContext || context);
+            }
+        }, (error) => {
+            console.error("Errore listener config Draft:", error);
+        });
+    },
+
     /**
      * Renderizza il pannello utente del Draft
      * @param {Object} context - Contesto con riferimenti DOM e funzioni
      */
     async render(context) {
         console.log("DraftUserUI.render() chiamato con context:", context);
+
+        // Salva il contesto per il re-render
+        this.savedContext = context;
 
         const { draftToolsContainer, draftBackButton, appContent, db, firestoreTools, paths, currentTeamId } = context;
         const { MAX_ROSA_PLAYERS, CONFIG_DOC_ID, DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
@@ -28,6 +80,7 @@ window.DraftUserUI = {
         draftBackButton.textContent = "Torna alla Dashboard";
         draftBackButton.onclick = () => {
             this.clearTurnTimer();
+            this.stopConfigListener();
             window.showScreen(appContent);
         };
 
@@ -38,6 +91,11 @@ window.DraftUserUI = {
             draftToolsContainer.innerHTML = `<p class="text-center text-red-400">Errore: ID squadra non trovato. Riprova ad accedere dalla dashboard.</p>`;
             console.error("currentTeamId non definito nel contesto Draft utente");
             return;
+        }
+
+        // Avvia il listener real-time (solo se non gia' attivo)
+        if (!this.configUnsubscribe) {
+            this.startConfigListener(context);
         }
 
         const { doc, getDoc, collection, getDocs, query, where } = firestoreTools;

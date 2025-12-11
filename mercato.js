@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variabile per il timer di cooldown
     let cooldownInterval = null;
 
+    // Listener real-time per lo stato del Mercato
+    let configUnsubscribe = null;
+
     // Assicurati che il contenitore tools esista
     if (mercatoContent && !mercatoContent.querySelector('#mercato-tools-container')) {
         mercatoContent.innerHTML += `<div id="mercato-tools-container" class="mt-6"></div>`;
@@ -28,6 +31,47 @@ document.addEventListener('DOMContentLoaded', () => {
     let MARKET_PLAYERS_COLLECTION_PATH; // Collezione specifica per il Mercato
     let CHAMPIONSHIP_CONFIG_PATH;
     let TEAMS_COLLECTION_PATH;
+
+    /**
+     * Ferma il listener real-time
+     */
+    const stopConfigListener = () => {
+        if (configUnsubscribe) {
+            configUnsubscribe();
+            configUnsubscribe = null;
+            console.log("Mercato: listener config fermato");
+        }
+    };
+
+    /**
+     * Avvia il listener real-time per lo stato del Mercato
+     */
+    const startConfigListener = () => {
+        // Ferma listener precedente
+        stopConfigListener();
+
+        if (!db || !firestoreTools || !CHAMPIONSHIP_CONFIG_PATH) return;
+
+        const { doc, onSnapshot } = firestoreTools;
+        const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+
+        configUnsubscribe = onSnapshot(configDocRef, (snapshot) => {
+            if (!snapshot.exists()) return;
+
+            const configData = snapshot.data();
+            const isMarketOpen = configData.isMarketOpen || false;
+
+            console.log("Mercato real-time update - isMarketOpen:", isMarketOpen);
+
+            // Se siamo ancora nella pagina Mercato, aggiorna l'UI
+            if (mercatoContent && !mercatoContent.classList.contains('hidden')) {
+                // Re-renderizza il pannello
+                renderUserMercatoPanel();
+            }
+        }, (error) => {
+            console.error("Errore listener config Mercato:", error);
+        });
+    };
 
     // COSTANTE COOLDOWN: 15 minuti in millisecondi
     const ACQUISITION_COOLDOWN_MS = window.InterfacciaConstants?.ACQUISITION_COOLDOWN_MS || (15 * 60 * 1000);
@@ -122,14 +166,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cabla il bottone di ritorno
         if (mercatoBackButton) {
             mercatoBackButton.onclick = () => {
-                // Pulisce il timer quando si esce
+                // Pulisce il timer e il listener quando si esce
                 if (cooldownInterval) clearInterval(cooldownInterval);
+                stopConfigListener();
                 if (window.showScreen && appContent) {
                     window.showScreen(appContent);
                     document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
                 }
             };
         }
+
+        // Avvia il listener real-time per lo stato del Mercato
+        startConfigListener();
 
         renderUserMercatoPanel();
     };
