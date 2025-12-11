@@ -478,6 +478,14 @@
                     <span>📖</span> Tutorial
                 </button>
             </div>
+
+            <!-- Pulsante Aggiorna App - Visibile solo quando installata come PWA -->
+            <div id="pwa-update-button-container" class="mt-4 flex justify-center hidden">
+                <button id="btn-check-pwa-update"
+                        class="bg-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-cyan-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔄</span> Controlla Aggiornamenti
+                </button>
+            </div>
         </div>
         
         <!-- 4. CONTENUTO AREA AMMINISTRATORE - Dashboard Principale -->
@@ -1290,6 +1298,76 @@
                 location.reload();
             });
         }
+
+        // Mostra bottone aggiornamento solo se installata come PWA
+        function setupPWAUpdateButton() {
+            const container = document.getElementById('pwa-update-button-container');
+            const btn = document.getElementById('btn-check-pwa-update');
+
+            if (!container || !btn) return;
+
+            // Controlla se l'app e' in modalita' standalone (installata come PWA)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true
+                || document.referrer.includes('android-app://');
+
+            if (isStandalone) {
+                // Mostra il bottone
+                container.classList.remove('hidden');
+                console.log('[PWA] App installata, bottone aggiornamento visibile');
+
+                // Gestisci click
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span>⏳</span> Controllo in corso...';
+
+                    try {
+                        // Forza controllo aggiornamenti
+                        if (window.PWAUpdater && window.PWAUpdater.registration) {
+                            await window.PWAUpdater.registration.update();
+
+                            // Aspetta un attimo per vedere se c'e' un nuovo worker
+                            setTimeout(() => {
+                                if (window.PWAUpdater.newWorker) {
+                                    // C'e' un aggiornamento
+                                    btn.innerHTML = '<span>✅</span> Aggiornamento trovato!';
+                                    btn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+                                    btn.classList.add('bg-green-600', 'hover:bg-green-500');
+                                    window.PWAUpdater.showUpdateBanner();
+                                } else {
+                                    // Nessun aggiornamento
+                                    btn.innerHTML = '<span>✅</span> Sei aggiornato!';
+                                    btn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+                                    btn.classList.add('bg-gray-600');
+                                    setTimeout(() => {
+                                        btn.innerHTML = '<span>🔄</span> Controlla Aggiornamenti';
+                                        btn.classList.remove('bg-gray-600');
+                                        btn.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
+                                        btn.disabled = false;
+                                    }, 3000);
+                                }
+                            }, 2000);
+                        } else {
+                            // Fallback: pulisci cache e ricarica
+                            window.PWAUpdater?.clearCache();
+                        }
+                    } catch (error) {
+                        console.error('[PWA] Errore controllo aggiornamenti:', error);
+                        btn.innerHTML = '<span>❌</span> Errore, riprova';
+                        btn.disabled = false;
+                        setTimeout(() => {
+                            btn.innerHTML = '<span>🔄</span> Controlla Aggiornamenti';
+                        }, 2000);
+                    }
+                });
+            } else {
+                // Non e' una PWA installata, nascondi il bottone
+                container.classList.add('hidden');
+            }
+        }
+
+        // Esegui quando il DOM e' pronto
+        document.addEventListener('DOMContentLoaded', setupPWAUpdateButton);
     </script>
 
 </body>
