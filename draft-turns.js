@@ -5,8 +5,10 @@
 //
 // Gestisce:
 // - Generazione ordine draft (basato su classifica o media rosa)
-// - Gestione turni e timeout
+// - Gestione turni e timeout con timer di 1 ora
 // - Passaggio automatico al prossimo utente
+// - Notifiche in-app e push quando tocca a un utente
+// - Sistema 3 strikes: dopo 3 scadenze, escluso dal round corrente
 //
 
 window.DraftTurns = {
@@ -16,6 +18,9 @@ window.DraftTurns = {
 
     // Lock per prevenire chiamate concorrenti a advanceToNextTurn
     _advanceTurnLock: false,
+
+    // Context salvato per il timer
+    _savedContext: null,
 
     /**
      * Genera l'ordine del draft basato sulla classifica o media rosa.
@@ -144,8 +149,9 @@ window.DraftTurns = {
      * Salva la lista e lo stato del draft in Firestore.
      *
      * @param {Object} context - Contesto con db e firestoreTools
+     * @param {boolean} timerEnabled - Se true, attiva il timer di 1 ora per turno
      */
-    async startDraftTurns(context) {
+    async startDraftTurns(context, timerEnabled = true) {
         const { db, firestoreTools, paths } = context;
         const { doc, setDoc } = firestoreTools;
         const { CONFIG_DOC_ID, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
@@ -163,18 +169,19 @@ window.DraftTurns = {
                 teamId: t.id,
                 teamName: t.name,
                 hasDrafted: false,
-                attempts: 0
+                timeoutStrikes: 0 // Contatore scadenze timer
             }));
 
             // Round 2: ordine inverso
             const round2Order = [...round1Order].reverse().map(t => ({
                 ...t,
                 hasDrafted: false,
-                attempts: 0
+                timeoutStrikes: 0
             }));
 
             const draftTurnsData = {
                 isActive: true,
+                timerEnabled: timerEnabled, // Flag per attivare/disattivare il timer
                 currentRound: 1,
                 totalRounds: DRAFT_TOTAL_ROUNDS,
                 currentTurnIndex: 0,
@@ -192,7 +199,17 @@ window.DraftTurns = {
                 draftTurns: draftTurnsData
             }, { merge: true });
 
-            console.log("Draft a turni avviato con successo!");
+            console.log("Draft a turni avviato con successo! Timer:", timerEnabled ? "ATTIVO" : "DISATTIVO");
+
+            // Salva il context e avvia il controllo timeout se timer abilitato
+            this._savedContext = context;
+            if (timerEnabled) {
+                this.startTurnCheck(context);
+            }
+
+            // Invia notifica al primo giocatore
+            this.sendTurnNotification(round1Order[0].teamId, round1Order[0].teamName);
+
             return { success: true, data: draftTurnsData };
 
         } catch (error) {
@@ -352,7 +369,7 @@ window.DraftTurns = {
 
         const { db, firestoreTools, paths } = context;
         const { doc, getDoc, setDoc } = firestoreTools;
-        const { CONFIG_DOC_ID, DRAFT_MAX_ATTEMPTS, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
+        const { CONFIG_DOC_ID, DRAFT_MAX_TIMEOUT_STRIKES, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
 
         try {
             const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
@@ -371,28 +388,39 @@ window.DraftTurns = {
             const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
             let currentIndex = draftTurns.currentTurnIndex;
 
+            const currentTeam = currentOrder[currentIndex];
+
             // Aggiorna lo stato del team corrente
             if (hasDrafted) {
                 // Guard: se il team corrente ha gia' draftato, qualcun altro ha gia' avanzato il turno
-                if (currentOrder[currentIndex].hasDrafted) {
-                    console.log(`Guard: Team ${currentOrder[currentIndex].teamName} ha gia' draftato in questo round, skip avanzamento.`);
+                if (currentTeam.hasDrafted) {
+                    console.log(`Guard: Team ${currentTeam.teamName} ha gia' draftato in questo round, skip avanzamento.`);
                     return;
                 }
-                currentOrder[currentIndex].hasDrafted = true;
+                currentTeam.hasDrafted = true;
+                // Reset strikes quando drafta con successo
+                currentTeam.timeoutStrikes = 0;
             } else {
-                // Timeout: incrementa tentativi
-                currentOrder[currentIndex].attempts++;
+                // Timeout: incrementa strikes
+                currentTeam.timeoutStrikes = (currentTeam.timeoutStrikes || 0) + 1;
+                console.log(`[TIMEOUT] Team ${currentTeam.teamName} - Strike ${currentTeam.timeoutStrikes}/${DRAFT_MAX_TIMEOUT_STRIKES}`);
 
-                if (currentOrder[currentIndex].attempts >= DRAFT_MAX_ATTEMPTS) {
-                    // Max tentativi raggiunti, salta questo utente
-                    currentOrder[currentIndex].hasDrafted = true; // Segna come "completato"
-                    console.log(`Team ${currentOrder[currentIndex].teamName} ha raggiunto il max tentativi.`);
+                if (currentTeam.timeoutStrikes >= DRAFT_MAX_TIMEOUT_STRIKES) {
+                    // 3 strikes: escluso dal round corrente, rientrera' nel prossimo
+                    currentTeam.hasDrafted = true; // Segna come "completato" per questo round
+                    currentTeam.excludedFromRound = true; // Flag per indicare esclusione
+                    console.log(`[ESCLUSO] Team ${currentTeam.teamName} ha raggiunto ${DRAFT_MAX_TIMEOUT_STRIKES} scadenze. Escluso dal round ${currentRound}.`);
+
+                    // Notifica l'utente dell'esclusione
+                    this.sendExclusionNotification(currentTeam.teamId, currentTeam.teamName, currentRound);
                 } else {
-                    // Sposta in fondo alla lista
+                    // Non ancora 3 strikes: sposta in fondo alla lista
                     const skippedTeam = currentOrder.splice(currentIndex, 1)[0];
                     currentOrder.push(skippedTeam);
                     // Non incrementare currentIndex perche' abbiamo rimosso l'elemento corrente
                     currentIndex--;
+
+                    console.log(`[SPOSTATO] Team ${skippedTeam.teamName} spostato in fondo alla lista (Strike ${skippedTeam.timeoutStrikes})`);
                 }
             }
 
@@ -409,12 +437,13 @@ window.DraftTurns = {
                     // Passa al round successivo
                     const nextRound = currentRound + 1;
                     const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                    const nextOrder = draftTurns[nextOrderKey];
+                    const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
 
-                    // Reset hasDrafted per il nuovo round
+                    // Reset hasDrafted e timeoutStrikes per il nuovo round
                     nextOrder.forEach(t => {
                         t.hasDrafted = false;
-                        t.attempts = 0;
+                        t.timeoutStrikes = 0;
+                        t.excludedFromRound = false;
                     });
 
                     await setDoc(configDocRef, {
@@ -431,6 +460,9 @@ window.DraftTurns = {
 
                     console.log(`Round ${currentRound} completato. Inizia Round ${nextRound}.`);
 
+                    // Notifica il primo giocatore del nuovo round
+                    this.sendTurnNotification(nextOrder[0].teamId, nextOrder[0].teamName);
+
                 } else {
                     // Draft completato
                     await this.stopDraftTurns(context);
@@ -439,17 +471,22 @@ window.DraftTurns = {
 
             } else {
                 // Continua con il prossimo team
+                const nextTeam = currentOrder[nextIndex];
+
                 await setDoc(configDocRef, {
                     draftTurns: {
                         ...draftTurns,
                         [orderKey]: currentOrder,
                         currentTurnIndex: nextIndex,
-                        currentTeamId: currentOrder[nextIndex].teamId,
+                        currentTeamId: nextTeam.teamId,
                         turnStartTime: Date.now()
                     }
                 }, { merge: true });
 
-                console.log(`Turno passato a: ${currentOrder[nextIndex].teamName}`);
+                console.log(`Turno passato a: ${nextTeam.teamName}`);
+
+                // Notifica il prossimo giocatore
+                this.sendTurnNotification(nextTeam.teamId, nextTeam.teamName);
             }
 
         } catch (error) {
@@ -478,7 +515,17 @@ window.DraftTurns = {
             const config = configDoc.data();
             const draftTurns = config.draftTurns;
 
-            if (!draftTurns || !draftTurns.isActive) return;
+            if (!draftTurns || !draftTurns.isActive) {
+                // Draft non attivo, ferma il timer
+                this.stopTurnCheck();
+                return;
+            }
+
+            // Skip se il timer e' esplicitamente disabilitato (default: attivo per retrocompatibilita)
+            if (draftTurns.timerEnabled === false) {
+                console.log("Timeout check: timer disabilitato, skip.");
+                return;
+            }
 
             // Skip se il draft e' in pausa
             if (draftTurns.isPaused) {
@@ -488,6 +535,15 @@ window.DraftTurns = {
 
             const turnStartTime = draftTurns.turnStartTime;
             const elapsed = Date.now() - turnStartTime;
+            const timeRemaining = DRAFT_TURN_TIMEOUT_MS - elapsed;
+
+            // Log ogni 5 minuti circa (ogni 10 check da 30 secondi)
+            if (Math.floor(elapsed / 300000) !== Math.floor((elapsed - 30000) / 300000)) {
+                const currentRound = draftTurns.currentRound;
+                const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+                const currentTeam = draftTurns[orderKey]?.[draftTurns.currentTurnIndex];
+                console.log(`[Timer] Turno di ${currentTeam?.teamName || 'N/A'} - Tempo rimanente: ${Math.floor(timeRemaining / 60000)} minuti`);
+            }
 
             if (elapsed >= DRAFT_TURN_TIMEOUT_MS) {
                 // Verifica che il team corrente non abbia gia' draftato (race condition check)
@@ -501,7 +557,7 @@ window.DraftTurns = {
                     return;
                 }
 
-                console.log("Tempo scaduto per il turno corrente!");
+                console.log(`[TIMEOUT] Tempo scaduto per ${currentOrder[currentIndex]?.teamName}!`);
                 await this.advanceToNextTurn(context, false); // false = non ha draftato
             }
 
@@ -515,11 +571,23 @@ window.DraftTurns = {
      * @param {Object} context - Contesto
      */
     startTurnCheck(context) {
-        // Controlla ogni minuto
+        const { DRAFT_TIMEOUT_CHECK_INTERVAL_MS } = window.DraftConstants;
+
+        // Ferma eventuali timer precedenti
         this.stopTurnCheck();
+
+        // Salva il context
+        this._savedContext = context;
+
+        console.log(`[Timer] Avvio controllo timeout ogni ${DRAFT_TIMEOUT_CHECK_INTERVAL_MS / 1000} secondi`);
+
+        // Controlla subito una volta
+        this.checkTurnTimeout(context);
+
+        // Poi controlla periodicamente
         this.turnCheckInterval = setInterval(() => {
             this.checkTurnTimeout(context);
-        }, 60 * 1000); // Ogni minuto
+        }, DRAFT_TIMEOUT_CHECK_INTERVAL_MS);
     },
 
     /**
@@ -529,6 +597,7 @@ window.DraftTurns = {
         if (this.turnCheckInterval) {
             clearInterval(this.turnCheckInterval);
             this.turnCheckInterval = null;
+            console.log("[Timer] Controllo timeout fermato");
         }
     },
 
@@ -795,8 +864,148 @@ window.DraftTurns = {
             totalTeams: currentOrder.filter(t => !t.hasDrafted).length,
             currentRound,
             totalRounds: draftState.totalRounds,
+            timerEnabled: draftState.timerEnabled !== false, // default true per retrocompatibilita
             currentTeamName: currentOrder.find(t => t.teamId === currentTeamId)?.teamName || 'Sconosciuto'
         };
+    },
+
+    // ====================================================================
+    // SISTEMA NOTIFICHE
+    // ====================================================================
+
+    /**
+     * Invia notifica quando tocca a un utente draftare.
+     * Usa sia notifiche in-app che push notification del browser.
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     */
+    sendTurnNotification(teamId, teamName) {
+        console.log(`[Notifica] Invio notifica turno a ${teamName} (${teamId})`);
+
+        // 1. Notifica in-app tramite sistema Notifications
+        if (window.Notifications && window.Notifications.notify) {
+            window.Notifications.notify.draftTurn(teamName);
+        }
+
+        // 2. Dispatch evento custom per aggiornare UI in tempo reale
+        document.dispatchEvent(new CustomEvent('draftTurnStarted', {
+            detail: { teamId, teamName }
+        }));
+
+        // 3. Push notification del browser (se l'utente e' quello corrente)
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId === teamId) {
+            this.sendBrowserPushNotification(
+                'E\' il tuo turno nel Draft!',
+                `Tocca a te scegliere un giocatore. Hai 1 ora di tempo.`,
+                'draft'
+            );
+        }
+    },
+
+    /**
+     * Invia notifica quando un utente viene escluso dal round per troppi timeout.
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     * @param {number} round - Numero del round
+     */
+    sendExclusionNotification(teamId, teamName, round) {
+        console.log(`[Notifica] ${teamName} escluso dal round ${round}`);
+
+        // Notifica in-app
+        if (window.Notifications && window.Notifications.add) {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: 'Escluso dal Draft',
+                message: `Hai fatto scadere il timer 3 volte. Sei stato escluso dal Round ${round}. Rientrerai nel prossimo round.`,
+                action: null
+            });
+        }
+
+        // Push notification se e' l'utente corrente
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId === teamId) {
+            this.sendBrowserPushNotification(
+                'Escluso dal Draft',
+                `Hai fatto scadere il timer 3 volte. Rientrerai nel prossimo round.`,
+                'warning'
+            );
+        }
+    },
+
+    /**
+     * Invia push notification del browser.
+     * Richiede il permesso all'utente se non ancora concesso.
+     * @param {string} title - Titolo della notifica
+     * @param {string} body - Corpo della notifica
+     * @param {string} tag - Tag per raggruppare notifiche simili
+     */
+    async sendBrowserPushNotification(title, body, tag = 'draft') {
+        // Verifica supporto
+        if (!('Notification' in window)) {
+            console.log("[Push] Browser non supporta le notifiche");
+            return;
+        }
+
+        // Verifica/richiedi permesso
+        let permission = Notification.permission;
+
+        if (permission === 'default') {
+            // Richiedi permesso
+            permission = await Notification.requestPermission();
+        }
+
+        if (permission !== 'granted') {
+            console.log("[Push] Permesso notifiche non concesso");
+            return;
+        }
+
+        // Invia la notifica
+        try {
+            const notification = new Notification(title, {
+                body: body,
+                icon: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png',
+                tag: tag,
+                requireInteraction: true, // Rimane visibile finche' l'utente non interagisce
+                vibrate: [200, 100, 200] // Vibrazione su mobile
+            });
+
+            // Click sulla notifica porta alla pagina draft
+            notification.onclick = () => {
+                window.focus();
+                const draftContent = document.getElementById('draft-content');
+                if (draftContent && window.showScreen) {
+                    window.showScreen(draftContent);
+                }
+                notification.close();
+            };
+
+            console.log("[Push] Notifica inviata:", title);
+
+        } catch (error) {
+            console.error("[Push] Errore invio notifica:", error);
+        }
+    },
+
+    /**
+     * Richiede il permesso per le push notification.
+     * Chiamare quando l'utente accede al draft per la prima volta.
+     */
+    async requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            return false;
+        }
+
+        if (Notification.permission === 'granted') {
+            return true;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            return permission === 'granted';
+        }
+
+        return false;
     }
 };
 

@@ -124,11 +124,15 @@ window.DraftConstants = {
     // Tempo massimo per draftare (1 ora in millisecondi)
     DRAFT_TURN_TIMEOUT_MS: 60 * 60 * 1000,
 
-    // Numero massimo di tentativi per utente (5 ore totali)
-    DRAFT_MAX_ATTEMPTS: 5,
+    // Numero massimo di tentativi (scadenze timer) prima di essere escluso dal round
+    // Dopo 3 scadenze l'utente viene escluso dal turno corrente e rientra nel prossimo
+    DRAFT_MAX_TIMEOUT_STRIKES: 3,
 
     // Numero di turni totali del draft
     DRAFT_TOTAL_ROUNDS: 2,
+
+    // Intervallo di controllo timeout (ogni 30 secondi)
+    DRAFT_TIMEOUT_CHECK_INTERVAL_MS: 30 * 1000,
 
     /**
      * Genera i path delle collezioni Firestore

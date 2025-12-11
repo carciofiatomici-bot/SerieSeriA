@@ -36,6 +36,13 @@ window.DraftAdminUI = {
             const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
             const remainingTeams = currentOrder.filter(t => !t.hasDrafted).length;
 
+            // Avvia il controllo timer se non gia' attivo (per draft esistenti prima dell'update)
+            const timerEnabled = draftTurns.timerEnabled !== false;
+            if (timerEnabled && window.DraftTurns && !window.DraftTurns.turnCheckInterval) {
+                console.log("[Admin] Avvio timer per draft esistente...");
+                window.DraftTurns.startTurnCheck(context);
+            }
+
             draftTurnsStatusHtml = `
                 <div class="mt-4 p-4 bg-blue-900 border border-blue-500 rounded-lg">
                     <h4 class="text-lg font-bold text-blue-300 mb-2">Draft a Turni ATTIVO</h4>
@@ -87,11 +94,33 @@ window.DraftAdminUI = {
                     <h4 class="text-lg font-bold text-yellow-300 mb-3">Gestione Draft a Turni</h4>
                     ${!isDraftTurnsActive ? `
                     <p class="text-sm text-gray-300 mb-3">Genera la lista del draft per permettere alle squadre di draftare a turno. L'ordine viene calcolato in base alla classifica (o media rosa se non c'e' classifica).</p>
+
+                    <!-- Opzione Timer -->
+                    <div class="mb-4 p-3 bg-gray-800 rounded-lg border border-cyan-600">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="draft-timer-enabled" checked
+                                   class="w-5 h-5 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500">
+                            <div>
+                                <span class="text-white font-bold">Timer 1 ora per turno</span>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    Se attivo, ogni squadra ha 1 ora per scegliere. Dopo 3 scadenze, viene esclusa dal round corrente.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+
                     <button id="btn-generate-draft-list"
                             class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
                         Genera Lista Draft
                     </button>
                     ` : `
+                    <!-- Stato Timer (default true per retrocompatibilita) -->
+                    <div class="mb-3 p-2 rounded-lg ${draftTurns.timerEnabled !== false ? 'bg-cyan-900 border border-cyan-500' : 'bg-gray-800 border border-gray-600'}">
+                        <span class="text-sm ${draftTurns.timerEnabled !== false ? 'text-cyan-300' : 'text-gray-400'}">
+                            Timer: <strong>${draftTurns.timerEnabled !== false ? 'ATTIVO (1 ora per turno)' : 'DISATTIVATO'}</strong>
+                        </span>
+                    </div>
+
                     <button id="btn-stop-draft-turns"
                             class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition">
                         Ferma Draft a Turni
@@ -291,8 +320,14 @@ window.DraftAdminUI = {
     async handleGenerateDraftList(context) {
         const { displayMessage } = window.DraftUtils;
         const btn = document.getElementById('btn-generate-draft-list');
+        const timerCheckbox = document.getElementById('draft-timer-enabled');
+        const timerEnabled = timerCheckbox ? timerCheckbox.checked : true;
 
-        if (!confirm('Vuoi generare la lista del draft? Le squadre potranno draftare a turno.')) {
+        const timerMessage = timerEnabled
+            ? 'Timer ATTIVO: ogni squadra avra\' 1 ora per scegliere.'
+            : 'Timer DISATTIVO: nessun limite di tempo per i turni.';
+
+        if (!confirm(`Vuoi generare la lista del draft?\n\n${timerMessage}\n\nLe squadre potranno draftare a turno.`)) {
             return;
         }
 
@@ -301,10 +336,11 @@ window.DraftAdminUI = {
         displayMessage('Generazione lista draft in corso...', 'info', 'draft-toggle-message');
 
         try {
-            const result = await window.DraftTurns.startDraftTurns(context);
+            const result = await window.DraftTurns.startDraftTurns(context, timerEnabled);
 
             if (result.success) {
-                displayMessage('Lista draft generata! Il draft a turni e\' iniziato.', 'success', 'draft-toggle-message');
+                const timerStatus = timerEnabled ? ' (Timer 1h attivo)' : ' (Timer disattivato)';
+                displayMessage(`Lista draft generata! Il draft a turni e\' iniziato${timerStatus}.`, 'success', 'draft-toggle-message');
                 // Ricarica il pannello per mostrare lo stato aggiornato
                 this.render(context);
             } else {

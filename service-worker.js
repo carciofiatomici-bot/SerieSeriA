@@ -2,12 +2,15 @@
 // ====================================================================
 // SERVICE WORKER - Serie SeriA PWA
 // ====================================================================
-// Gestisce caching e funzionalita offline
+// Gestisce caching, funzionalita offline e aggiornamenti automatici
+//
+// IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const CACHE_NAME = 'serie-seria-v1';
-const STATIC_CACHE = 'serie-seria-static-v1';
-const DYNAMIC_CACHE = 'serie-seria-dynamic-v1';
+const APP_VERSION = '1.0.5'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
+const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
+const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
 
 // File da cachare immediatamente (shell dell'app)
 const STATIC_ASSETS = [
@@ -57,28 +60,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Attiva il service worker e pulisce le vecchie cache
-self.addEventListener('activate', (event) => {
-    console.log('[Service Worker] Attivazione...');
-
-    event.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames
-                        .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-                        .map((name) => {
-                            console.log(`[Service Worker] Eliminazione vecchia cache: ${name}`);
-                            return caches.delete(name);
-                        })
-                );
-            })
-            .then(() => {
-                console.log('[Service Worker] Attivazione completata');
-                return self.clients.claim();
-            })
-    );
-});
+// NOTA: L'evento 'activate' è definito in fondo al file con logica avanzata
 
 // Strategia di fetch: Network First con fallback a Cache
 self.addEventListener('fetch', (event) => {
@@ -155,14 +137,56 @@ self.addEventListener('fetch', (event) => {
 // Gestione messaggi dal main thread
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.log('[Service Worker] Skip waiting richiesto, attivazione immediata...');
         self.skipWaiting();
     }
 
     if (event.data && event.data.type === 'CLEAR_CACHE') {
+        console.log('[Service Worker] Pulizia cache richiesta...');
         caches.keys().then((names) => {
             names.forEach((name) => caches.delete(name));
         });
     }
+
+    if (event.data && event.data.type === 'GET_VERSION') {
+        // Risponde con la versione corrente
+        event.source.postMessage({
+            type: 'VERSION',
+            version: APP_VERSION
+        });
+    }
 });
 
-console.log('[Service Worker] Script caricato');
+// Notifica tutti i client quando il SW si attiva
+self.addEventListener('activate', (event) => {
+    console.log('[Service Worker] Attivazione...');
+
+    event.waitUntil(
+        caches.keys()
+            .then((cacheNames) => {
+                return Promise.all(
+                    cacheNames
+                        .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+                        .map((name) => {
+                            console.log(`[Service Worker] Eliminazione vecchia cache: ${name}`);
+                            return caches.delete(name);
+                        })
+                );
+            })
+            .then(() => {
+                console.log('[Service Worker] Attivazione completata');
+                // Notifica i client dell'aggiornamento
+                return self.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: 'SW_ACTIVATED',
+                            version: APP_VERSION
+                        });
+                    });
+                });
+            })
+            .then(() => self.clients.claim())
+    );
+});
+
+console.log(`[Service Worker] Script caricato - Versione ${APP_VERSION}`);

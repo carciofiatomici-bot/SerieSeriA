@@ -1155,32 +1155,139 @@
     <!-- 14. UNIFORM EDITOR (Editor Divisa Squadra) -->
     <script src="uniform-editor.js"></script>
 
-    <!-- 15. PWA SERVICE WORKER REGISTRATION -->
+    <!-- 15. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->
     <script>
+        // Sistema di aggiornamento PWA
+        window.PWAUpdater = {
+            registration: null,
+            newWorker: null,
+
+            // Mostra banner di aggiornamento
+            showUpdateBanner: function() {
+                // Rimuovi banner esistente se presente
+                const existingBanner = document.getElementById('pwa-update-banner');
+                if (existingBanner) existingBanner.remove();
+
+                // Crea banner
+                const banner = document.createElement('div');
+                banner.id = 'pwa-update-banner';
+                banner.innerHTML = `
+                    <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                color: white; padding: 16px 24px; border-radius: 12px;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000;
+                                display: flex; align-items: center; gap: 16px; max-width: 90vw;">
+                        <div style="font-size: 28px;">🔄</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; font-size: 14px;">Nuova versione disponibile!</div>
+                            <div style="font-size: 12px; opacity: 0.9;">Aggiorna per le ultime novita</div>
+                        </div>
+                        <button id="pwa-update-btn" style="background: white; color: #059669; border: none;
+                                padding: 10px 20px; border-radius: 8px; font-weight: bold;
+                                cursor: pointer; font-size: 14px; transition: transform 0.2s;">
+                            Aggiorna Ora
+                        </button>
+                        <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: none;
+                                font-size: 20px; cursor: pointer; padding: 4px 8px; opacity: 0.7;">
+                            ✕
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(banner);
+
+                // Event listeners
+                document.getElementById('pwa-update-btn').addEventListener('click', () => {
+                    window.PWAUpdater.applyUpdate();
+                });
+                document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+                    banner.remove();
+                });
+            },
+
+            // Applica l'aggiornamento
+            applyUpdate: function() {
+                if (this.newWorker) {
+                    // Invia messaggio al nuovo SW per attivarsi subito
+                    this.newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+            },
+
+            // Forza pulizia cache (utile per debug)
+            clearCache: function() {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+                }
+                // Pulisci anche cache dal lato client
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                console.log('[PWA] Cache pulita. Ricarica la pagina.');
+                location.reload();
+            },
+
+            // Controlla manualmente se ci sono aggiornamenti
+            checkForUpdates: function() {
+                if (this.registration) {
+                    this.registration.update()
+                        .then(() => console.log('[PWA] Controllo aggiornamenti completato'))
+                        .catch(err => console.warn('[PWA] Errore controllo aggiornamenti:', err));
+                }
+            }
+        };
+
         // Registra il Service Worker per PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
                     .then((registration) => {
-                        console.log('Service Worker registrato con successo:', registration.scope);
+                        console.log('[PWA] Service Worker registrato:', registration.scope);
+                        window.PWAUpdater.registration = registration;
 
-                        // Controlla aggiornamenti
+                        // Controlla aggiornamenti ogni 60 minuti
+                        setInterval(() => {
+                            registration.update();
+                        }, 60 * 60 * 1000);
+
+                        // Gestione nuovo worker trovato
                         registration.addEventListener('updatefound', () => {
                             const newWorker = registration.installing;
+                            console.log('[PWA] Nuova versione in installazione...');
+
                             newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // Nuova versione disponibile
-                                    console.log('Nuova versione disponibile! Ricarica la pagina.');
-                                    if (window.Toast) {
-                                        window.Toast.info('Nuova versione disponibile! Ricarica la pagina.');
+                                if (newWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // C'e' gia' un SW attivo = e' un aggiornamento
+                                        console.log('[PWA] Nuova versione pronta!');
+                                        window.PWAUpdater.newWorker = newWorker;
+                                        window.PWAUpdater.showUpdateBanner();
+                                    } else {
+                                        // Prima installazione
+                                        console.log('[PWA] App installata e pronta per uso offline');
                                     }
                                 }
                             });
                         });
                     })
                     .catch((error) => {
-                        console.warn('Registrazione Service Worker fallita:', error);
+                        console.warn('[PWA] Registrazione Service Worker fallita:', error);
                     });
+            });
+
+            // Ascolta messaggi dal Service Worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SW_ACTIVATED') {
+                    console.log('[PWA] Service Worker aggiornato alla versione:', event.data.version);
+                    // Ricarica la pagina per usare la nuova versione
+                    location.reload();
+                }
+            });
+
+            // Gestione cambio controller (quando un nuovo SW prende il controllo)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('[PWA] Nuovo Service Worker attivato, ricarico...');
+                location.reload();
             });
         }
     </script>

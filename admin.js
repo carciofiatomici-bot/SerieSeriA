@@ -1253,6 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const draftTurns = configData.draftTurns;
             const isDraftTurnsActive = draftTurns && draftTurns.isActive;
             const isPaused = draftTurns && draftTurns.isPaused;
+            const timerEnabled = draftTurns ? draftTurns.timerEnabled !== false : true; // default true
 
             const btnGenerate = document.getElementById('btn-generate-draft-list');
             const btnStop = document.getElementById('btn-stop-draft-turns');
@@ -1260,9 +1261,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnPause = document.getElementById('btn-pause-draft');
             const btnResume = document.getElementById('btn-resume-draft');
             const statusContainer = document.getElementById('draft-turns-status-container');
+            const timerOption = document.getElementById('draft-timer-option');
 
             if (isDraftTurnsActive) {
-                // Draft a turni attivo
+                // Draft a turni attivo - nascondi opzione timer
+                if (timerOption) timerOption.classList.add('hidden');
                 if (btnGenerate) btnGenerate.classList.add('hidden');
                 if (btnStop) btnStop.classList.remove('hidden');
 
@@ -1286,9 +1289,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
                 const remainingTeams = currentOrder.filter(t => !t.hasDrafted).length;
 
+                // Calcola tempo rimanente per il timer
+                const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants || { DRAFT_TURN_TIMEOUT_MS: 3600000 };
+                const turnStartTime = draftTurns.turnStartTime || Date.now();
+                const elapsed = Date.now() - turnStartTime;
+                const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
+                const minutes = Math.floor(timeRemaining / 60000);
+                const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
                 const pauseStatusHtml = isPaused
                     ? '<p class="text-orange-400 font-bold text-lg mb-2 animate-pulse">⏸️ IN PAUSA</p>'
                     : '';
+
+                // Timer HTML
+                const timerHtml = timerEnabled && !isPaused
+                    ? `<div class="mt-2 p-2 bg-cyan-900 border border-cyan-500 rounded-lg">
+                           <p class="text-sm text-cyan-300">
+                               ⏱️ Timer: <span id="admin-draft-countdown" class="text-white font-bold text-lg">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>
+                               <span class="text-xs text-gray-400 ml-2">(1 ora per turno)</span>
+                           </p>
+                       </div>`
+                    : (timerEnabled && isPaused
+                        ? `<div class="mt-2 p-2 bg-gray-800 border border-gray-600 rounded-lg">
+                               <p class="text-sm text-gray-400">⏱️ Timer: <span class="text-white font-bold">IN PAUSA</span></p>
+                           </div>`
+                        : `<div class="mt-2 p-2 bg-gray-800 border border-gray-600 rounded-lg">
+                               <p class="text-sm text-gray-400">⏱️ Timer: <span class="text-gray-500">DISATTIVATO</span></p>
+                           </div>`);
 
                 if (statusContainer) {
                     statusContainer.innerHTML = `
@@ -1300,7 +1327,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div><span class="text-gray-400">Rimanenti:</span> <span class="text-white font-bold">${remainingTeams}</span></div>
                             </div>
                             <p class="text-sm mt-2"><span class="text-gray-400">Turno:</span> <span class="text-yellow-400 font-bold">${currentTeam ? currentTeam.teamName : 'N/A'}</span></p>
-                            <p class="text-xs text-cyan-400 mt-1">(clicca su una squadra per passare il turno)</p>
+                            ${timerHtml}
+                            <p class="text-xs text-cyan-400 mt-2">(clicca su una squadra per passare il turno)</p>
                             <div id="admin-draft-order-list" class="mt-2 flex flex-wrap gap-1">
                                 ${currentOrder.map((t, i) => `
                                     <button data-action="admin-jump-to-team" data-team-id="${t.teamId}" data-team-name="${t.teamName}"
@@ -1310,9 +1338,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     `;
+
+                    // Avvia countdown se timer attivo e non in pausa
+                    if (timerEnabled && !isPaused) {
+                        startAdminDraftCountdown(turnStartTime);
+                    }
                 }
             } else {
-                // Draft a turni non attivo
+                // Draft a turni non attivo - mostra opzione timer
+                if (timerOption) timerOption.classList.remove('hidden');
                 if (btnGenerate) btnGenerate.classList.remove('hidden');
                 if (btnStop) btnStop.classList.add('hidden');
                 if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
@@ -1326,13 +1360,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Timer per countdown admin
+    let adminCountdownInterval = null;
+
+    /**
+     * Avvia il countdown del timer nel pannello admin
+     */
+    const startAdminDraftCountdown = (turnStartTime) => {
+        // Pulisci timer precedente
+        if (adminCountdownInterval) {
+            clearInterval(adminCountdownInterval);
+        }
+
+        const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants || { DRAFT_TURN_TIMEOUT_MS: 3600000 };
+
+        const updateCountdown = () => {
+            const countdownEl = document.getElementById('admin-draft-countdown');
+            if (!countdownEl) {
+                clearInterval(adminCountdownInterval);
+                return;
+            }
+
+            const elapsed = Date.now() - turnStartTime;
+            const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
+            const minutes = Math.floor(timeRemaining / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
+            countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // Colore rosso se meno di 5 minuti
+            if (timeRemaining < 5 * 60 * 1000) {
+                countdownEl.classList.add('text-red-400');
+                countdownEl.classList.remove('text-white');
+            }
+
+            // Se scaduto, ricarica lo stato
+            if (timeRemaining <= 0) {
+                clearInterval(adminCountdownInterval);
+                setTimeout(() => loadDraftTurnsStatus(), 2000);
+            }
+        };
+
+        // Aggiorna subito e poi ogni secondo
+        updateCountdown();
+        adminCountdownInterval = setInterval(updateCountdown, 1000);
+    };
+
     /**
      * Gestisce la generazione della lista draft
      */
     const handleGenerateDraftList = async () => {
         const btn = document.getElementById('btn-generate-draft-list');
+        const timerCheckbox = document.getElementById('draft-timer-enabled');
+        const timerEnabled = timerCheckbox ? timerCheckbox.checked : true;
 
-        if (!confirm('Vuoi generare la lista del draft? Le squadre potranno draftare a turno.')) {
+        const timerMessage = timerEnabled
+            ? 'Timer ATTIVO: ogni squadra avra 1 ora per scegliere.'
+            : 'Timer DISATTIVO: nessun limite di tempo per i turni.';
+
+        if (!confirm(`Vuoi generare la lista del draft?\n\n${timerMessage}\n\nLe squadre potranno draftare a turno.`)) {
             return;
         }
 
@@ -1352,10 +1438,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            const result = await window.DraftTurns.startDraftTurns(context);
+            const result = await window.DraftTurns.startDraftTurns(context, timerEnabled);
 
             if (result.success) {
-                displayMessage('Lista draft generata! Il draft a turni e iniziato.', 'success', 'toggle-status-message');
+                const timerStatus = timerEnabled ? ' (Timer 1h attivo)' : ' (Timer disattivato)';
+                displayMessage(`Lista draft generata! Il draft a turni e iniziato${timerStatus}.`, 'success', 'toggle-status-message');
                 // Aggiorna lo stato
                 loadDraftTurnsStatus();
             } else {

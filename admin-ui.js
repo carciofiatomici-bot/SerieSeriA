@@ -381,6 +381,21 @@ window.AdminUI = {
             <div id="draft-turns-section" class="p-4 bg-gray-700 rounded-lg border border-purple-500 mb-6 ${draftOpen ? '' : 'hidden'}">
                 <h4 class="text-lg font-bold text-purple-300 mb-3">Draft a Turni</h4>
                 <p class="text-sm text-gray-300 mb-3">Genera la lista del draft per permettere alle squadre di draftare a turno. L'ordine viene calcolato in base alla classifica (o media rosa se non c'e' classifica).</p>
+
+                <!-- Opzione Timer (visibile solo prima di generare la lista) -->
+                <div id="draft-timer-option" class="mb-4 p-3 bg-gray-800 rounded-lg border border-cyan-600">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="draft-timer-enabled" checked
+                               class="w-5 h-5 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500">
+                        <div>
+                            <span class="text-white font-bold">Timer 1 ora per turno</span>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Se attivo, ogni squadra ha 1 ora per scegliere. Dopo 3 scadenze, viene esclusa dal round corrente.
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
                 <div id="draft-turns-status-container" class="mb-3"></div>
                 <div class="grid grid-cols-1 gap-2">
                     <button id="btn-generate-draft-list"

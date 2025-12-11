@@ -393,6 +393,14 @@ window.DraftUserUI = {
             if (isDraftTurnsActive && window.DraftTurns && window.DraftTurns.checkTeamTurn) {
                 try {
                     turnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
+
+                    // Avvia il controllo timer se attivo e non gia' in esecuzione
+                    // Questo garantisce che il timer funzioni anche per draft creati prima dell'update
+                    const timerEnabled = draftTurns.timerEnabled !== false; // default true
+                    if (timerEnabled && !draftTurns.isPaused && !window.DraftTurns.turnCheckInterval) {
+                        console.log("[DraftUserUI] Avvio controllo timer per draft esistente...");
+                        window.DraftTurns.startTurnCheck(context);
+                    }
                 } catch (turnError) {
                     console.error("Errore nel controllo turno:", turnError);
                     turnInfo = null;

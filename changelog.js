@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.95',
+    currentVersion: '0.9.96',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,22 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '0.9.96',
+            date: '2025-12-11',
+            time: '23:30',
+            title: 'Timer Draft + Notifiche',
+            changes: [
+                { text: 'Ripristinato timer 1 ora per i pick nel draft a turni', adminOnly: false },
+                { text: 'Notifiche push del browser quando tocca a te nel draft', adminOnly: false },
+                { text: 'Se fai scadere il timer, vai in fondo alla lista', adminOnly: false },
+                { text: 'Dopo 3 scadenze timer, sei escluso dal round corrente (rientri nel prossimo)', adminOnly: false },
+                { text: 'Aggiunta checkbox per attivare/disattivare il timer nel pannello admin', adminOnly: true },
+                { text: 'Il timer si avvia automaticamente quando si genera la lista draft', adminOnly: true },
+                { text: 'Notifiche in-app tramite centro notifiche per turno draft', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '0.9.95',
             date: '2025-12-11',
