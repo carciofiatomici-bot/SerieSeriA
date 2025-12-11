@@ -55,6 +55,11 @@ window.DraftUserActions = {
                 // Recupera le abilita del giocatore dal draft
                 const playerAbilities = playerDraftData.abilities || [];
 
+                // GUARD: Verifica che il giocatore non sia gia' stato draftato
+                if (playerDraftData.isDrafted) {
+                    throw new Error("Questo giocatore e' gia' stato draftato da un'altra squadra!");
+                }
+
                 // Verifica che sia il turno dell'utente (se il draft a turni e' attivo)
                 const turnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
                 if (turnInfo.draftActive && !turnInfo.isMyTurn) {
@@ -94,21 +99,42 @@ window.DraftUserActions = {
                     isCaptain: false
                 };
 
-                // 6. Aggiorna Firestore - Squadra
-                await updateDoc(teamDocRef, {
-                    budget: currentBudget - finalCost,
-                    players: [...currentPlayers, playerForSquad]
-                });
+                // 6. GUARD FINALE: Ricarica lo stato del giocatore draft per evitare race condition
+                const playerFreshDoc = await getDoc(playerDraftDocRef);
+                if (!playerFreshDoc.exists()) {
+                    throw new Error("Giocatore non piu' disponibile.");
+                }
+                const playerFreshData = playerFreshDoc.data();
+                if (playerFreshData.isDrafted) {
+                    throw new Error("Giocatore appena draftato da un'altra squadra! Riprova con un altro.");
+                }
 
-                // 7. Aggiorna Firestore - Giocatore Draft
+                // 7. GUARD FINALE: Ricarica lo stato del turno per evitare race condition
+                if (turnInfo.draftActive) {
+                    const freshTurnInfo = await window.DraftTurns.checkTeamTurn(context, currentTeamId);
+                    if (!freshTurnInfo.isMyTurn) {
+                        throw new Error("Il tuo turno e' appena terminato! Attendi il prossimo.");
+                    }
+                    if (freshTurnInfo.hasDraftedThisRound) {
+                        throw new Error("Hai gia' completato il tuo turno in questo round!");
+                    }
+                }
+
+                // 8. Aggiorna Firestore - Giocatore Draft PRIMA (per marcare come draftato)
                 await updateDoc(playerDraftDocRef, {
                     isDrafted: true,
                     teamId: currentTeamId,
                 });
 
+                // 9. Aggiorna Firestore - Squadra
+                await updateDoc(teamDocRef, {
+                    budget: currentBudget - finalCost,
+                    players: [...currentPlayers, playerForSquad]
+                });
+
                 displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa. Costo: ${finalCost} CS. Budget: ${currentBudget - finalCost} CS.`, 'success', 'user-draft-message');
 
-                // 8. Se il draft a turni e' attivo, passa al turno successivo
+                // 10. Se il draft a turni e' attivo, passa al turno successivo
                 if (turnInfo.draftActive) {
                     await window.DraftTurns.advanceToNextTurn(context, true);
                 }

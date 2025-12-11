@@ -230,6 +230,111 @@ window.DraftTurns = {
     },
 
     /**
+     * Mette in pausa il draft a turni.
+     * Blocca il countdown e impedisce il drafting.
+     * @param {Object} context - Contesto con db e firestoreTools
+     */
+    async pauseDraftTurns(context) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc } = firestoreTools;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                return { success: false, message: 'Configurazione non trovata.' };
+            }
+
+            const config = configDoc.data();
+            const draftTurns = config.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                return { success: false, message: 'Draft non attivo.' };
+            }
+
+            if (draftTurns.isPaused) {
+                return { success: false, message: 'Draft gia in pausa.' };
+            }
+
+            await setDoc(configDocRef, {
+                draftTurns: {
+                    ...draftTurns,
+                    isPaused: true,
+                    pausedAt: Date.now()
+                }
+            }, { merge: true });
+
+            // Ferma il timer di controllo timeout
+            this.stopTurnCheck();
+
+            console.log("Draft a turni messo in pausa.");
+            return { success: true, message: 'Draft messo in pausa.' };
+
+        } catch (error) {
+            console.error("Errore nel mettere in pausa il draft:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Riprende il draft a turni dalla pausa.
+     * Ricalcola il turnStartTime per preservare il tempo rimanente.
+     * @param {Object} context - Contesto con db e firestoreTools
+     */
+    async resumeDraftTurns(context) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc } = firestoreTools;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                return { success: false, message: 'Configurazione non trovata.' };
+            }
+
+            const config = configDoc.data();
+            const draftTurns = config.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                return { success: false, message: 'Draft non attivo.' };
+            }
+
+            if (!draftTurns.isPaused) {
+                return { success: false, message: 'Draft non in pausa.' };
+            }
+
+            // Calcola il nuovo turnStartTime
+            // Il tempo trascorso in pausa viene "aggiunto" al turnStartTime
+            // per preservare il tempo rimanente
+            const pauseDuration = Date.now() - draftTurns.pausedAt;
+            const newTurnStartTime = draftTurns.turnStartTime + pauseDuration;
+
+            await setDoc(configDocRef, {
+                draftTurns: {
+                    ...draftTurns,
+                    isPaused: false,
+                    pausedAt: null,
+                    turnStartTime: newTurnStartTime
+                }
+            }, { merge: true });
+
+            // Riavvia il timer di controllo timeout
+            this.startTurnCheck(context);
+
+            console.log("Draft a turni ripreso.");
+            return { success: true, message: 'Draft ripreso.' };
+
+        } catch (error) {
+            console.error("Errore nel riprendere il draft:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
      * Passa al prossimo turno dopo che un utente ha draftato o e' scaduto il tempo.
      * @param {Object} context - Contesto
      * @param {boolean} hasDrafted - Se l'utente ha draftato
@@ -361,6 +466,12 @@ window.DraftTurns = {
 
             if (!draftTurns || !draftTurns.isActive) return;
 
+            // Skip se il draft e' in pausa
+            if (draftTurns.isPaused) {
+                console.log("Timeout check: draft in pausa, skip.");
+                return;
+            }
+
             const turnStartTime = draftTurns.turnStartTime;
             const elapsed = Date.now() - turnStartTime;
 
@@ -433,6 +544,114 @@ window.DraftTurns = {
     },
 
     /**
+     * Forza l'avanzamento al turno successivo (solo admin).
+     * Salta il team corrente senza verifiche.
+     * @param {Object} context - Contesto con db e firestoreTools
+     * @returns {Promise<Object>} - { success, message }
+     */
+    async forceAdvanceTurn(context) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc } = firestoreTools;
+        const { CONFIG_DOC_ID, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                return { success: false, message: 'Configurazione non trovata.' };
+            }
+
+            const config = configDoc.data();
+            const draftTurns = config.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                return { success: false, message: 'Draft a turni non attivo.' };
+            }
+
+            const currentRound = draftTurns.currentRound;
+            const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+            const currentOrder = [...draftTurns[orderKey]];
+            const currentIndex = draftTurns.currentTurnIndex;
+            const currentTeamName = currentOrder[currentIndex]?.teamName || 'Sconosciuto';
+
+            // Marca il team corrente come "ha draftato" (skip forzato)
+            currentOrder[currentIndex].hasDrafted = true;
+
+            // Trova il prossimo team che non ha ancora draftato
+            let nextIndex = currentIndex + 1;
+            while (nextIndex < currentOrder.length && currentOrder[nextIndex].hasDrafted) {
+                nextIndex++;
+            }
+
+            // Controlla se il round corrente e' finito
+            if (nextIndex >= currentOrder.length || currentOrder.every(t => t.hasDrafted)) {
+                // Round completato
+                if (currentRound < DRAFT_TOTAL_ROUNDS) {
+                    // Passa al round successivo
+                    const nextRound = currentRound + 1;
+                    const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
+                    const nextOrder = [...draftTurns[nextOrderKey]];
+
+                    // Reset hasDrafted per il nuovo round
+                    nextOrder.forEach(t => {
+                        t.hasDrafted = false;
+                        t.attempts = 0;
+                    });
+
+                    await setDoc(configDocRef, {
+                        draftTurns: {
+                            ...draftTurns,
+                            [orderKey]: currentOrder,
+                            [nextOrderKey]: nextOrder,
+                            currentRound: nextRound,
+                            currentTurnIndex: 0,
+                            currentTeamId: nextOrder[0].teamId,
+                            turnStartTime: Date.now()
+                        }
+                    }, { merge: true });
+
+                    return {
+                        success: true,
+                        message: `Round ${currentRound} completato. Inizia Round ${nextRound}. Team ${currentTeamName} saltato.`
+                    };
+
+                } else {
+                    // Draft completato
+                    await this.stopDraftTurns(context);
+                    return {
+                        success: true,
+                        message: `Draft completato! Tutti i round sono stati eseguiti. Team ${currentTeamName} saltato.`
+                    };
+                }
+
+            } else {
+                // Continua con il prossimo team
+                const nextTeamName = currentOrder[nextIndex]?.teamName || 'Sconosciuto';
+
+                await setDoc(configDocRef, {
+                    draftTurns: {
+                        ...draftTurns,
+                        [orderKey]: currentOrder,
+                        currentTurnIndex: nextIndex,
+                        currentTeamId: currentOrder[nextIndex].teamId,
+                        turnStartTime: Date.now()
+                    }
+                }, { merge: true });
+
+                return {
+                    success: true,
+                    message: `Turno forzato: ${currentTeamName} saltato. Ora tocca a ${nextTeamName}.`
+                };
+            }
+
+        } catch (error) {
+            console.error("Errore nel forzare avanzamento turno:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
      * Verifica se e' il turno di una specifica squadra.
      * @param {Object} context - Contesto
      * @param {string} teamId - ID della squadra
@@ -443,6 +662,17 @@ window.DraftTurns = {
 
         if (!draftState || !draftState.isActive) {
             return { isMyTurn: false, draftActive: false };
+        }
+
+        // Se il draft e' in pausa, ritorna stato pausa
+        if (draftState.isPaused) {
+            return {
+                draftActive: true,
+                isPaused: true,
+                pausedAt: draftState.pausedAt,
+                currentRound: draftState.currentRound,
+                totalRounds: draftState.totalRounds
+            };
         }
 
         const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
@@ -474,6 +704,7 @@ window.DraftTurns = {
             isMyTurn,
             hasDraftedThisRound,
             timeRemaining,
+            turnStartTime,
             position,
             totalTeams: currentOrder.filter(t => !t.hasDrafted).length,
             currentRound,

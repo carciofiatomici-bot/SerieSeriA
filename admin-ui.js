@@ -16,6 +16,70 @@ window.AdminUI = {
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
         adminDashboardContainer.innerHTML = `
+            <!-- STATO GENERALE - In cima alla pagina -->
+            <div class="mb-6 bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                    <span class="mr-2">⚙️</span> Stato Generale
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                        <p class="text-2xl font-bold text-yellow-400">${participatingTeamsCount}</p>
+                        <p class="text-xs text-gray-400">Squadre Iscritte</p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                        <p class="text-2xl font-bold ${draftOpen ? 'text-green-400' : 'text-red-400'}">${draftOpen ? 'APERTO' : 'CHIUSO'}</p>
+                        <p class="text-xs text-gray-400">Draft</p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                        <p class="text-2xl font-bold ${marketOpen ? 'text-green-400' : 'text-red-400'}">${marketOpen ? 'APERTO' : 'CHIUSO'}</p>
+                        <p class="text-xs text-gray-400">Mercato</p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                        <p class="text-2xl font-bold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVI' : 'DISATTIVI'}</p>
+                        <p class="text-xs text-gray-400">Crediti Super Seri</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELLA PREMI - In cima alla pagina -->
+            <div class="mb-6 p-4 bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg border-2 border-yellow-500 shadow-md">
+                <h4 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
+                    <span class="mr-2">💰</span> Tabella Premi
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Campionato -->
+                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                        <h5 class="text-green-400 font-bold mb-2 border-b border-green-600 pb-1">🏆 Campionato</h5>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Primi 3 posti:</span><span class="text-green-400">150 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Ultimi 3 posti:</span><span class="text-green-400">200 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Altre posizioni:</span><span class="text-green-400">100 CS</span></li>
+                        </ul>
+                    </div>
+                    <!-- CoppaSeriA -->
+                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                        <h5 class="text-purple-400 font-bold mb-2 border-b border-purple-600 pb-1">🏆 CoppaSeriA</h5>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">2°, 3°, 4° posto:</span><span class="text-green-400">100 CS</span></li>
+                        </ul>
+                    </div>
+                    <!-- Supercoppa -->
+                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                        <h5 class="text-orange-400 font-bold mb-2 border-b border-orange-600 pb-1">⭐ Supercoppa</h5>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
+                        </ul>
+                        <p class="text-xs text-gray-400 mt-2">1° Campionato vs Vincitore Coppa</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Pulsanti Navigazione Principale -->
             <div class="mb-6 space-y-4">
                 <div class="grid grid-cols-4 gap-4">
@@ -162,6 +226,20 @@ window.AdminUI = {
                             Assegna abilita "Icona" a tutte le Icone
                         </div>
                     </div>
+                    <!-- Accesso rapido dashboard squadre -->
+                    <div class="border-t border-gray-600 pt-4 mt-2">
+                        <p class="text-gray-400 text-sm mb-3">Accesso rapido Dashboard:</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button id="btn-dashboard-mucche"
+                                    class="bg-green-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
+                                🐄 Mucche Mannare
+                            </button>
+                            <button id="btn-dashboard-schalke"
+                                    class="bg-blue-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
+                                ⚽ Schalke104
+                            </button>
+                        </div>
+                    </div>
                     <div class="text-gray-400 text-sm">
                         Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
                     </div>
@@ -246,9 +324,11 @@ window.AdminUI = {
                 </button>
             </div>
 
-            <!-- CONTROLLO STATI -->
+            <!-- CONTROLLO STATI MERCATO & DRAFT -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2">Controllo Stato Mercato & Draft</h3>
-            <div class="grid grid-cols-2 gap-4 mb-6">
+
+            <!-- Toggle Draft e Mercato -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
                 <!-- TOGGLE DRAFT -->
                 <div class="p-4 rounded-lg border-2 ${draftOpen ? 'border-green-500 bg-gray-800' : 'border-red-500 bg-gray-800'}">
                     <div class="flex items-center justify-between">
@@ -283,34 +363,47 @@ window.AdminUI = {
                     </div>
                 </div>
             </div>
-            <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
+            <p id="toggle-status-message" class="text-center mt-2 mb-4 text-red-400"></p>
 
-            <!-- VISUALIZZA LISTA GIOCATORI -->
-            <h3 class="text-2xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Visualizza Giocatori Creati</h3>
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- Bottoni Lista Giocatori Draft e Mercato -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
                 <button id="btn-view-draft-players"
-                        class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01]">
+                        class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01]">
                     📝 Lista Giocatori Draft
                 </button>
                 <button id="btn-view-market-players"
-                        class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01]">
+                        class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01]">
                     💰 Lista Giocatori Mercato
                 </button>
             </div>
 
-            <!-- GESTIONE DRAFT A TURNI -->
-            <div class="p-4 bg-gray-700 rounded-lg border border-purple-500 mb-6">
+            <!-- GESTIONE DRAFT A TURNI - Visibile solo se Draft aperto -->
+            <div id="draft-turns-section" class="p-4 bg-gray-700 rounded-lg border border-purple-500 mb-6 ${draftOpen ? '' : 'hidden'}">
                 <h4 class="text-lg font-bold text-purple-300 mb-3">Draft a Turni</h4>
                 <p class="text-sm text-gray-300 mb-3">Genera la lista del draft per permettere alle squadre di draftare a turno. L'ordine viene calcolato in base alla classifica (o media rosa se non c'e' classifica).</p>
                 <div id="draft-turns-status-container" class="mb-3"></div>
-                <button id="btn-generate-draft-list"
-                        class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
-                    Genera Lista Draft
-                </button>
-                <button id="btn-stop-draft-turns"
-                        class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition mt-2 hidden">
-                    Ferma Draft a Turni
-                </button>
+                <div class="grid grid-cols-1 gap-2">
+                    <button id="btn-generate-draft-list"
+                            class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
+                        Genera Lista Draft
+                    </button>
+                    <button id="btn-force-advance-turn"
+                            class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-500 transition hidden">
+                        ⏭️ Avanza Turno Manualmente
+                    </button>
+                    <button id="btn-pause-draft"
+                            class="w-full bg-yellow-600 text-white font-bold py-3 rounded-lg hover:bg-yellow-500 transition hidden">
+                        ⏸️ Metti in Pausa
+                    </button>
+                    <button id="btn-resume-draft"
+                            class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-500 transition hidden">
+                        ▶️ Riprendi Draft
+                    </button>
+                    <button id="btn-stop-draft-turns"
+                            class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition hidden">
+                        Ferma Draft a Turni
+                    </button>
+                </div>
             </div>
 
             <!-- CREAZIONE CALCIATORE -->
@@ -993,8 +1086,27 @@ window.AdminUI = {
                 </button>
             </div>
 
-            <div id="teams-list-container-management" class="space-y-3">
-                <p class="text-gray-400 text-center">Caricamento in corso...</p>
+            <!-- Box scrollabile per squadre (max 8 visibili) -->
+            <div class="bg-gray-900 rounded-lg border border-gray-600 p-4 mb-4">
+                <div id="teams-list-container-management" class="space-y-3 max-h-[640px] overflow-y-auto pr-2">
+                    <p class="text-gray-400 text-center">Caricamento in corso...</p>
+                </div>
+            </div>
+
+            <!-- Bottoni Assegna CS/CSS a tutte le squadre -->
+            <div class="bg-gray-800 rounded-lg border border-yellow-500 p-4">
+                <h4 class="text-lg font-bold text-yellow-400 mb-3">Assegnazione Crediti di Massa</h4>
+                <p id="mass-assign-message" class="text-center text-sm mb-3"></p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-assign-cs-all"
+                            class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150">
+                        💰 Assegna CS a Tutte
+                    </button>
+                    <button id="btn-assign-css-all"
+                            class="w-full bg-amber-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-amber-500 transition duration-150">
+                        ⭐ Assegna CSS a Tutte
+                    </button>
+                </div>
             </div>
         `;
     }

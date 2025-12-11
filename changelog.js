@@ -7,13 +7,57 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.91',
+    currentVersion: '0.9.94',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
 
     // Storico changelog (dal piu recente al piu vecchio)
     entries: [
+        {
+            version: '0.9.94',
+            date: '2025-12-11',
+            time: '21:00',
+            title: 'Miglioramenti Pannello Admin',
+            changes: [
+                'Aggiunto bottone "Assegna CS a Tutte" per dare crediti a tutte le squadre',
+                'Aggiunto bottone "Assegna CSS a Tutte" per dare crediti super seri a tutte',
+                'Lista squadre in box scrollabile (max 8 visibili, poi scroll)',
+                'Accesso rapido dashboard Mucche Mannare e Schalke104 in Utilita Admin',
+                'Rimosso testo superfluo dalla homepage admin'
+            ],
+            type: 'feature'
+        },
+        {
+            version: '0.9.93',
+            date: '2025-12-11',
+            time: '19:45',
+            title: 'Pausa/Riprendi Draft',
+            changes: [
+                'Aggiunto bottone "Metti in Pausa" per sospendere temporaneamente il draft',
+                'Aggiunto bottone "Riprendi Draft" per riprendere dalla pausa',
+                'Il countdown si ferma durante la pausa e riprende da dove era',
+                'Gli utenti vedono UI "Draft in Pausa" quando sospeso',
+                'Pannello admin mostra stato pausa con colore arancione'
+            ],
+            type: 'feature'
+        },
+        {
+            version: '0.9.92',
+            date: '2025-12-11',
+            time: '18:30',
+            title: 'Draft Debug & Admin Panel',
+            changes: [
+                'Riorganizzato pannello admin: Draft a Turni dentro "Controllo Stato"',
+                'Aggiunto bottone "Avanza Turno Manualmente" per admin',
+                'Box Draft a Turni nascosto quando draft e chiuso',
+                'Fix countdown desync: sincronizzazione con server ogni 10 secondi',
+                'Fix race condition: guard aggiuntivi prima degli update',
+                'Fix doppio draft: verifica isDrafted con dati freschi',
+                'Migliorata gestione turni con verifica stato real-time'
+            ],
+            type: 'bugfix'
+        },
         {
             version: '0.9.91',
             date: '2025-12-11',

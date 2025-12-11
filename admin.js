@@ -213,6 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
             btnFixIcone.addEventListener('click', handleFixIconeAbility);
         }
 
+        // Accesso rapido Dashboard squadre
+        const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
+        if (btnDashboardMucche) {
+            btnDashboardMucche.addEventListener('click', () => goToTeamDashboardByName('Mucche Mannare'));
+        }
+
+        const btnDashboardSchalke = document.getElementById('btn-dashboard-schalke');
+        if (btnDashboardSchalke) {
+            btnDashboardSchalke.addEventListener('click', () => goToTeamDashboardByName('Schalke104'));
+        }
+
         // Toggle Crediti Super Seri
         const btnToggleCSS = document.getElementById('btn-toggle-css');
         if (btnToggleCSS) {
@@ -247,6 +258,42 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCupStatus();
         loadSupercoppPanel();
         // loadAutomationPanel(); // Non caricare automaticamente, si carica al click sul menu
+    };
+
+    /**
+     * Vai alla dashboard di una squadra cercandola per nome
+     */
+    const goToTeamDashboardByName = async (teamName) => {
+        try {
+            const { collection, getDocs, query, where } = firestoreTools;
+
+            // Cerca la squadra per nome
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            let foundTeamId = null;
+
+            teamsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.teamName === teamName) {
+                    foundTeamId = doc.id;
+                }
+            });
+
+            if (!foundTeamId) {
+                alert(`Squadra "${teamName}" non trovata!`);
+                return;
+            }
+
+            // Usa la funzione viewTeamDashboard di AdminTeams
+            if (window.AdminTeams && window.AdminTeams.viewTeamDashboard) {
+                await window.AdminTeams.viewTeamDashboard(foundTeamId, TEAMS_COLLECTION_PATH);
+            } else {
+                alert('Modulo AdminTeams non disponibile');
+            }
+
+        } catch (error) {
+            console.error(`Errore nel caricamento dashboard ${teamName}:`, error);
+            alert(`Errore: ${error.message}`);
+        }
     };
 
     /**
@@ -1072,6 +1119,24 @@ document.addEventListener('DOMContentLoaded', () => {
             btnStopDraftTurns.addEventListener('click', handleStopDraftTurns);
         }
 
+        // Bottone forza avanzamento turno
+        const btnForceAdvanceTurn = document.getElementById('btn-force-advance-turn');
+        if (btnForceAdvanceTurn) {
+            btnForceAdvanceTurn.addEventListener('click', handleForceAdvanceTurn);
+        }
+
+        // Bottone pausa draft
+        const btnPauseDraft = document.getElementById('btn-pause-draft');
+        if (btnPauseDraft) {
+            btnPauseDraft.addEventListener('click', handlePauseDraft);
+        }
+
+        // Bottone riprendi draft
+        const btnResumeDraft = document.getElementById('btn-resume-draft');
+        if (btnResumeDraft) {
+            btnResumeDraft.addEventListener('click', handleResumeDraft);
+        }
+
         // Bottoni Visualizza Lista Giocatori - Aprono modal separati
         const btnViewDraftPlayers = document.getElementById('btn-view-draft-players');
         if (btnViewDraftPlayers) {
@@ -1177,15 +1242,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const configData = configDoc.exists() ? configDoc.data() : {};
             const draftTurns = configData.draftTurns;
             const isDraftTurnsActive = draftTurns && draftTurns.isActive;
+            const isPaused = draftTurns && draftTurns.isPaused;
 
             const btnGenerate = document.getElementById('btn-generate-draft-list');
             const btnStop = document.getElementById('btn-stop-draft-turns');
+            const btnForceAdvance = document.getElementById('btn-force-advance-turn');
+            const btnPause = document.getElementById('btn-pause-draft');
+            const btnResume = document.getElementById('btn-resume-draft');
             const statusContainer = document.getElementById('draft-turns-status-container');
 
             if (isDraftTurnsActive) {
                 // Draft a turni attivo
                 if (btnGenerate) btnGenerate.classList.add('hidden');
                 if (btnStop) btnStop.classList.remove('hidden');
+
+                // Gestione bottoni pausa/riprendi e avanza turno
+                if (isPaused) {
+                    // Draft in pausa
+                    if (btnPause) btnPause.classList.add('hidden');
+                    if (btnResume) btnResume.classList.remove('hidden');
+                    if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
+                } else {
+                    // Draft attivo (non in pausa)
+                    if (btnPause) btnPause.classList.remove('hidden');
+                    if (btnResume) btnResume.classList.add('hidden');
+                    if (btnForceAdvance) btnForceAdvance.classList.remove('hidden');
+                }
 
                 // Mostra stato corrente
                 const currentRound = draftTurns.currentRound;
@@ -1194,10 +1276,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
                 const remainingTeams = currentOrder.filter(t => !t.hasDrafted).length;
 
+                const pauseStatusHtml = isPaused
+                    ? '<p class="text-orange-400 font-bold text-lg mb-2 animate-pulse">⏸️ IN PAUSA</p>'
+                    : '';
+
                 if (statusContainer) {
                     statusContainer.innerHTML = `
-                        <div class="p-3 bg-purple-900 border border-purple-500 rounded-lg">
-                            <p class="text-purple-300 font-bold mb-2">Draft a Turni ATTIVO</p>
+                        <div class="p-3 ${isPaused ? 'bg-orange-900 border-orange-500' : 'bg-purple-900 border-purple-500'} border rounded-lg">
+                            ${pauseStatusHtml}
+                            <p class="${isPaused ? 'text-orange-300' : 'text-purple-300'} font-bold mb-2">Draft a Turni ${isPaused ? 'SOSPESO' : 'ATTIVO'}</p>
                             <div class="grid grid-cols-2 gap-2 text-sm">
                                 <div><span class="text-gray-400">Round:</span> <span class="text-white font-bold">${currentRound} / ${draftTurns.totalRounds}</span></div>
                                 <div><span class="text-gray-400">Rimanenti:</span> <span class="text-white font-bold">${remainingTeams}</span></div>
@@ -1215,6 +1302,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Draft a turni non attivo
                 if (btnGenerate) btnGenerate.classList.remove('hidden');
                 if (btnStop) btnStop.classList.add('hidden');
+                if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
+                if (btnPause) btnPause.classList.add('hidden');
+                if (btnResume) btnResume.classList.add('hidden');
                 if (statusContainer) statusContainer.innerHTML = '';
             }
 
@@ -1709,6 +1799,114 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Gestisce l'avanzamento forzato del turno (admin)
+     */
+    const handleForceAdvanceTurn = async () => {
+        const btn = document.getElementById('btn-force-advance-turn');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Avanzando...';
+
+        try {
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+
+            const result = await window.DraftTurns.forceAdvanceTurn(context);
+
+            if (result.success) {
+                displayMessage(result.message, 'success', 'toggle-status-message');
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error('Errore avanzamento forzato turno:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '⏭️ Avanza Turno Manualmente';
+        }
+    };
+
+    /**
+     * Gestisce la pausa del draft
+     */
+    const handlePauseDraft = async () => {
+        const btn = document.getElementById('btn-pause-draft');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Pausa...';
+
+        try {
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+
+            const result = await window.DraftTurns.pauseDraftTurns(context);
+
+            if (result.success) {
+                displayMessage(result.message, 'success', 'toggle-status-message');
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error('Errore pausa draft:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '⏸️ Metti in Pausa';
+        }
+    };
+
+    /**
+     * Gestisce la ripresa del draft dalla pausa
+     */
+    const handleResumeDraft = async () => {
+        const btn = document.getElementById('btn-resume-draft');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Riprendo...';
+
+        try {
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+
+            const result = await window.DraftTurns.resumeDraftTurns(context);
+
+            if (result.success) {
+                displayMessage(result.message, 'success', 'toggle-status-message');
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error('Errore ripresa draft:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '▶️ Riprendi Draft';
+        }
+    };
+
+    /**
      * Toggle draft/market state
      */
     const handleToggleState = async (event) => {
@@ -1748,6 +1946,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const summaryText = document.getElementById(`${stateType}-status-text-summary`);
             if (summaryText) summaryText.textContent = newState ? 'APERTO' : 'CHIUSO';
+
+            // Se e' il toggle draft, mostra/nascondi la sezione Draft a Turni
+            if (stateType === 'draft') {
+                const draftTurnsSection = document.getElementById('draft-turns-section');
+                if (draftTurnsSection) {
+                    if (newState) {
+                        draftTurnsSection.classList.remove('hidden');
+                        // Aggiorna lo stato dei bottoni
+                        loadDraftTurnsStatus();
+                    } else {
+                        draftTurnsSection.classList.add('hidden');
+                    }
+                }
+            }
 
         } catch (error) {
             console.error(`Errore nell'aggiornamento dello stato ${stateType}:`, error);
@@ -1858,18 +2070,104 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Assegna crediti (CS o CSS) a tutte le squadre
+     */
+    const handleAssignCreditsToAll = async (creditType) => {
+        const msgElement = document.getElementById('mass-assign-message');
+        const isCS = creditType === 'CS';
+        const fieldName = isCS ? 'budget' : 'creditiSuperSeri';
+        const displayName = isCS ? 'Crediti Seri (CS)' : 'Crediti Super Seri (CSS)';
+
+        const amountStr = prompt(`Inserisci la quantita di ${displayName} da AGGIUNGERE a tutte le squadre:`);
+
+        if (amountStr === null) {
+            return; // Annullato
+        }
+
+        const amount = parseInt(amountStr);
+
+        if (isNaN(amount) || amount <= 0) {
+            if (msgElement) {
+                msgElement.textContent = 'Quantita non valida. Inserisci un numero positivo.';
+                msgElement.className = 'text-center text-sm mb-3 text-red-400';
+            }
+            return;
+        }
+
+        if (!confirm(`Confermi di voler aggiungere ${amount} ${displayName} a TUTTE le squadre?`)) {
+            return;
+        }
+
+        if (msgElement) {
+            msgElement.textContent = `Assegnazione ${displayName} in corso...`;
+            msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+        }
+
+        try {
+            const { collection, getDocs, doc, updateDoc, getDoc } = firestoreTools;
+            const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
+            const querySnapshot = await getDocs(teamsCollectionRef);
+
+            if (querySnapshot.empty) {
+                if (msgElement) {
+                    msgElement.textContent = 'Nessuna squadra registrata.';
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+                return;
+            }
+
+            let updatedCount = 0;
+
+            for (const teamDoc of querySnapshot.docs) {
+                const teamData = teamDoc.data();
+                const currentValue = teamData[fieldName] || 0;
+                const newValue = currentValue + amount;
+
+                const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamDoc.id);
+                await updateDoc(teamDocRef, { [fieldName]: newValue });
+                updatedCount++;
+            }
+
+            if (msgElement) {
+                msgElement.textContent = `Assegnati ${amount} ${displayName} a ${updatedCount} squadre!`;
+                msgElement.className = 'text-center text-sm mb-3 text-green-400';
+            }
+
+            // Ricarica la lista squadre
+            window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
+
+        } catch (error) {
+            console.error(`Errore nell'assegnazione ${creditType}:`, error);
+            if (msgElement) {
+                msgElement.textContent = `Errore: ${error.message}`;
+                msgElement.className = 'text-center text-sm mb-3 text-red-400';
+            }
+        }
+    };
+
+    /**
      * Renderizza pannello gestione squadre
      */
     const renderTeamManagementPanel = async () => {
         window.showScreen(teamManagementContent);
         window.AdminUI.renderTeamManagementPanel(teamManagementToolsContainer);
-        
+
         window.AdminTeams.teamsListContainer = document.getElementById('teams-list-container-management');
-        
+
         document.getElementById('btn-refresh-teams-management').addEventListener('click', () => {
             window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
         });
-        
+
+        // Handler Assegna CS a tutte le squadre
+        document.getElementById('btn-assign-cs-all').addEventListener('click', () => {
+            handleAssignCreditsToAll('CS');
+        });
+
+        // Handler Assegna CSS a tutte le squadre
+        document.getElementById('btn-assign-css-all').addEventListener('click', () => {
+            handleAssignCreditsToAll('CSS');
+        });
+
         if (window.AdminTeams.teamsListContainer) {
             window.AdminTeams.teamsListContainer.addEventListener('click', (e) => {
                 window.AdminTeams.handleTeamAction(e, TEAMS_COLLECTION_PATH, () => {
@@ -1877,7 +2175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
-        
+
         window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
     };
 

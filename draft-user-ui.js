@@ -9,6 +9,12 @@ window.DraftUserUI = {
     // Timer per aggiornare il countdown
     turnTimerInterval: null,
 
+    // Timer per risincronizzare con il server
+    serverSyncInterval: null,
+
+    // turnStartTime dal server per calcolo countdown
+    serverTurnStartTime: null,
+
     // Listener real-time per lo stato del Draft
     configUnsubscribe: null,
 
@@ -437,6 +443,42 @@ window.DraftUserUI = {
         const { MAX_ROSA_PLAYERS, DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
         const { collection, getDocs, query, where } = firestoreTools;
 
+        // Se il draft e' in pausa, mostra UI di pausa
+        if (turnInfo.isPaused) {
+            draftToolsContainer.innerHTML = `
+                <div class="p-6 bg-gray-700 rounded-lg border-2 border-orange-500 shadow-xl space-y-4">
+                    <p class="text-center text-3xl font-extrabold text-orange-400 animate-pulse">⏸️ DRAFT IN PAUSA</p>
+                    <p class="text-center text-lg text-gray-300">
+                        Round ${turnInfo.currentRound} / ${turnInfo.totalRounds}
+                    </p>
+                    <p class="text-center text-lg font-bold text-gray-300">
+                         Rosa attuale: <span class="${isRosaFull ? 'text-red-400' : 'text-green-400'}">${currentRosaCount}</span> / ${MAX_ROSA_PLAYERS} giocatori (+ Icona)
+                    </p>
+                    <div class="mt-4 p-4 bg-orange-900 rounded-lg border border-orange-600">
+                        <p class="text-center text-orange-200">
+                            Il draft e' stato temporaneamente sospeso dall'admin.
+                        </p>
+                        <p class="text-center text-orange-300 text-sm mt-2">
+                            Attendi la ripresa per continuare a draftare.
+                        </p>
+                    </div>
+                    <button id="btn-refresh-draft" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-500 transition">
+                        Aggiorna Stato
+                    </button>
+                </div>
+            `;
+
+            // Ferma eventuali timer
+            this.clearTurnTimer();
+
+            // Event listener per il refresh
+            document.getElementById('btn-refresh-draft').addEventListener('click', () => {
+                this.render(context);
+            });
+
+            return;
+        }
+
         if (turnInfo.hasDraftedThisRound) {
             // L'utente ha gia' draftato in questo round
             draftToolsContainer.innerHTML = `
@@ -491,8 +533,8 @@ window.DraftUserUI = {
                 </div>
             `;
 
-            // Avvia il countdown
-            this.startTurnCountdown(context, turnInfo.timeRemaining);
+            // Avvia il countdown con turnStartTime dal server
+            this.startTurnCountdown(context, turnInfo.turnStartTime);
 
             // Event listener per il refresh
             document.getElementById('btn-refresh-draft').addEventListener('click', () => {
@@ -523,7 +565,7 @@ window.DraftUserUI = {
                     </div>
                 </div>
             `;
-            this.startTurnCountdown(context, turnInfo.timeRemaining);
+            this.startTurnCountdown(context, turnInfo.turnStartTime);
             return;
         }
 
@@ -630,8 +672,8 @@ window.DraftUserUI = {
             <p id="user-draft-message" class="text-center mt-3 text-red-400"></p>
         `;
 
-        // Avvia il countdown
-        this.startTurnCountdown(context, turnInfo.timeRemaining);
+        // Avvia il countdown con turnStartTime dal server
+        this.startTurnCountdown(context, turnInfo.turnStartTime);
 
         // Setup listeners per i filtri
         this.setupFilterListeners(context, budgetRimanente);
@@ -643,12 +685,16 @@ window.DraftUserUI = {
     },
 
     /**
-     * Avvia il countdown del turno
+     * Avvia il countdown del turno con sincronizzazione server
+     * @param {Object} context - Contesto
+     * @param {number} turnStartTime - Timestamp di inizio turno dal server
      */
-    startTurnCountdown(context, initialTimeRemaining) {
+    startTurnCountdown(context, turnStartTime) {
         this.clearTurnTimer();
 
-        let timeRemaining = initialTimeRemaining;
+        // Salva il turnStartTime dal server
+        this.serverTurnStartTime = turnStartTime;
+        const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
         const countdownElement = document.getElementById('draft-turn-countdown');
 
         const updateCountdown = () => {
@@ -657,7 +703,9 @@ window.DraftUserUI = {
                 return;
             }
 
-            timeRemaining -= 1000;
+            // Calcola tempo rimanente basandosi sul turnStartTime del server
+            const elapsed = Date.now() - this.serverTurnStartTime;
+            const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
 
             if (timeRemaining <= 0) {
                 countdownElement.textContent = '00:00';
@@ -675,6 +723,8 @@ window.DraftUserUI = {
             // Cambia colore quando mancano meno di 5 minuti
             if (timeRemaining < 5 * 60 * 1000) {
                 countdownElement.classList.add('text-red-400');
+            } else {
+                countdownElement.classList.remove('text-red-400');
             }
         };
 
@@ -683,16 +733,67 @@ window.DraftUserUI = {
 
         // Poi ogni secondo
         this.turnTimerInterval = setInterval(updateCountdown, 1000);
+
+        // Risincronizza con il server ogni 10 secondi
+        this.serverSyncInterval = setInterval(async () => {
+            await this.syncWithServer(context);
+        }, 10000);
     },
 
     /**
-     * Pulisce il timer del turno
+     * Risincronizza il countdown con il server
+     */
+    async syncWithServer(context) {
+        const { db, firestoreTools, paths, currentTeamId } = context;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+        const { doc, getDoc } = firestoreTools;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) return;
+
+            const configData = configDoc.data();
+            const draftTurns = configData.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                // Draft non piu' attivo, ricarica la pagina
+                console.log("Sync: Draft non piu' attivo, ricarico...");
+                this.render(context);
+                return;
+            }
+
+            // Verifica se il turno e' cambiato
+            if (draftTurns.turnStartTime !== this.serverTurnStartTime) {
+                console.log("Sync: turnStartTime cambiato, aggiorno...");
+                this.serverTurnStartTime = draftTurns.turnStartTime;
+
+                // Se non e' piu' il mio turno o lo stato e' cambiato, ricarica
+                if (draftTurns.currentTeamId !== currentTeamId) {
+                    console.log("Sync: Non e' piu' il mio turno, ricarico UI...");
+                    this.render(context);
+                }
+            }
+
+        } catch (error) {
+            console.error("Errore sync con server:", error);
+        }
+    },
+
+    /**
+     * Pulisce il timer del turno e il sync
      */
     clearTurnTimer() {
         if (this.turnTimerInterval) {
             clearInterval(this.turnTimerInterval);
             this.turnTimerInterval = null;
         }
+        if (this.serverSyncInterval) {
+            clearInterval(this.serverSyncInterval);
+            this.serverSyncInterval = null;
+        }
+        this.serverTurnStartTime = null;
     }
 };
 
