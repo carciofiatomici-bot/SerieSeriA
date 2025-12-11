@@ -53,7 +53,7 @@ C. Bonus Capitano:
 
 3. SVOLGIMENTO DELLA PARTITA
 --------------------------------------------------------------------------------
-La simulazione consiste in 30 occasioni per squadra da svolgere Occasione Squadra A -> Occasione Squadra B -> Occasione Squadra A -> Occasione Squadra B, ecc. Ogni occasione è divisa in 3 fasi sequenziali. Quando viene segnalato il lancio di un dado (d4,d6,d8,d10,d12,d20,d100). Appare un bottone che permette all'utente in questione di lanciare il dado (esegui una piccola animazione di lancio di dado visibile ad entrambi i giocatori in tempo reale), fai vedere il risultato ad entrambi i giocatori nella sfida in tempo reale.
+La simulazione consiste in 10 occasioni per squadra da svolgere Occasione Squadra A -> Occasione Squadra B -> Occasione Squadra A -> Occasione Squadra B, ecc. Ogni occasione è divisa in 3 fasi sequenziali. Quando viene segnalato il lancio di un dado (d4,d6,d8,d10,d12,d20,d100). Appare un bottone che permette all'utente in questione di lanciare il dado (esegui una piccola animazione di lancio di dado visibile ad entrambi i giocatori in tempo reale), fai vedere il risultato ad entrambi i giocatori nella sfida in tempo reale.
 
 Esempio: Squadra A (Attacco) vs Squadra B (Difesa)
 
@@ -88,7 +88,7 @@ Esito:
 Partecipanti: Portiere B vs Risultato Fase 2 (Valore Tiro).
 
 Formula:
-[1d20 + Mod. Portiere B] - [Valore Tiro Fase 2]
+[1d20 + Mod. Portiere B] - [1d10 + Valore Tiro Fase 2]
 
 Calcolo Finale (Totale Portiere - Valore Tiro):
 1. Risultato > 0 (Positivo): PARATA.

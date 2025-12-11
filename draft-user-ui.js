@@ -33,6 +33,216 @@ window.DraftUserUI = {
     // Giocatori disponibili (cache per filtri)
     availablePlayersCache: [],
 
+    // Cache dei pick recenti
+    recentPicksCache: [],
+
+    // Stato espanso/collassato della sezione pick recenti
+    recentPicksExpanded: false,
+
+    /**
+     * Carica i pick recenti dal draft
+     * @param {Object} context - Contesto con db e firestoreTools
+     * @param {number} limit - Numero massimo di pick da caricare
+     * @returns {Promise<Array>} - Array di pick recenti
+     */
+    async loadRecentPicks(context, limit = 10) {
+        const { db, firestoreTools, paths } = context;
+        const { collection, getDocs, query, where, orderBy, doc, getDoc } = firestoreTools;
+
+        try {
+            // Query per giocatori draftati, ordinati per data (piu recenti prima)
+            const playersCollectionRef = collection(db, paths.DRAFT_PLAYERS_COLLECTION_PATH);
+            const q = query(
+                playersCollectionRef,
+                where('isDrafted', '==', true)
+            );
+
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                return [];
+            }
+
+            // Mappa per i nomi delle squadre (cache)
+            const teamNamesCache = {};
+
+            // Converti in array e ordina per draftedAt
+            const picks = [];
+            for (const docSnap of snapshot.docs) {
+                const data = docSnap.data();
+                if (data.draftedAt && data.draftedBy) {
+                    // Ottieni il nome della squadra (con cache)
+                    let teamName = teamNamesCache[data.draftedBy];
+                    if (!teamName) {
+                        try {
+                            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, data.draftedBy);
+                            const teamDoc = await getDoc(teamDocRef);
+                            teamName = teamDoc.exists() ? teamDoc.data().teamName : data.draftedBy;
+                            teamNamesCache[data.draftedBy] = teamName;
+                        } catch (e) {
+                            teamName = data.draftedBy;
+                        }
+                    }
+
+                    picks.push({
+                        id: docSnap.id,
+                        name: data.name,
+                        role: data.role,
+                        type: data.type,
+                        level: data.level || data.levelRange?.[0] || '?',
+                        draftedBy: data.draftedBy,
+                        draftedByName: teamName,
+                        draftedAt: data.draftedAt,
+                        autoAssigned: data.autoAssigned || false
+                    });
+                }
+            }
+
+            // Ordina per data (piu recenti prima) e limita
+            picks.sort((a, b) => {
+                const dateA = new Date(a.draftedAt).getTime();
+                const dateB = new Date(b.draftedAt).getTime();
+                return dateB - dateA;
+            });
+
+            this.recentPicksCache = picks.slice(0, limit);
+            return this.recentPicksCache;
+
+        } catch (error) {
+            console.error('[RecentPicks] Errore caricamento:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Renderizza la sezione pick recenti
+     * @param {Array} picks - Array di pick recenti
+     * @param {string} currentTeamId - ID della squadra corrente
+     * @returns {string} - HTML della sezione
+     */
+    renderRecentPicksSection(picks, currentTeamId) {
+        if (!picks || picks.length === 0) {
+            return `
+                <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                            <span>📋</span> Pick Recenti
+                        </h4>
+                    </div>
+                    <p class="text-gray-500 text-sm mt-2 text-center">Nessun pick ancora effettuato</p>
+                </div>
+            `;
+        }
+
+        const isExpanded = this.recentPicksExpanded;
+        const visiblePicks = isExpanded ? picks : picks.slice(0, 3);
+
+        const picksHtml = visiblePicks.map((pick, index) => {
+            const isMyPick = pick.draftedBy === currentTeamId;
+            const typeColor = pick.type === 'Potenza' ? 'text-red-400' :
+                              pick.type === 'Tecnica' ? 'text-blue-400' :
+                              pick.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
+
+            const timeAgo = this.formatTimeAgo(pick.draftedAt);
+            const autoTag = pick.autoAssigned ? '<span class="text-orange-400 text-xs ml-1">(auto)</span>' : '';
+
+            return `
+                <div class="flex items-center justify-between py-2 ${index > 0 ? 'border-t border-gray-700' : ''} ${isMyPick ? 'bg-green-900/20 -mx-2 px-2 rounded' : ''}">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <span class="text-gray-500 text-xs w-5">#${index + 1}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-white text-sm font-medium truncate">
+                                ${pick.name} <span class="text-gray-400">(${pick.role})</span>
+                                <span class="${typeColor} text-xs">${pick.type || ''}</span>
+                                ${autoTag}
+                            </p>
+                            <p class="text-xs ${isMyPick ? 'text-green-400' : 'text-gray-500'} truncate">
+                                ${isMyPick ? '✓ Tu' : pick.draftedByName} - ${timeAgo}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const showMoreBtn = picks.length > 3 ? `
+            <button id="btn-toggle-recent-picks" class="w-full mt-2 text-xs text-cyan-400 hover:text-cyan-300 transition">
+                ${isExpanded ? '▲ Mostra meno' : `▼ Mostra tutti (${picks.length})`}
+            </button>
+        ` : '';
+
+        return `
+            <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                        <span>📋</span> Pick Recenti
+                    </h4>
+                    <button id="btn-refresh-recent-picks" class="text-xs text-gray-400 hover:text-white transition" title="Aggiorna">
+                        🔄
+                    </button>
+                </div>
+                <div id="recent-picks-list" class="space-y-0">
+                    ${picksHtml}
+                </div>
+                ${showMoreBtn}
+            </div>
+        `;
+    },
+
+    /**
+     * Formatta il tempo trascorso in modo leggibile
+     * @param {string} dateString - Data ISO string
+     * @returns {string} - Tempo formattato (es. "5 min fa", "2 ore fa")
+     */
+    formatTimeAgo(dateString) {
+        const now = Date.now();
+        const date = new Date(dateString).getTime();
+        const diffMs = now - date;
+
+        const minutes = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMs / 3600000);
+        const days = Math.floor(diffMs / 86400000);
+
+        if (minutes < 1) return 'adesso';
+        if (minutes < 60) return `${minutes} min fa`;
+        if (hours < 24) return `${hours} or${hours === 1 ? 'a' : 'e'} fa`;
+        return `${days} giorn${days === 1 ? 'o' : 'i'} fa`;
+    },
+
+    /**
+     * Setup event listeners per la sezione pick recenti
+     */
+    setupRecentPicksListeners(context) {
+        // Toggle espandi/comprimi
+        const toggleBtn = document.getElementById('btn-toggle-recent-picks');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                this.recentPicksExpanded = !this.recentPicksExpanded;
+                // Re-render solo la sezione pick recenti
+                const container = document.getElementById('recent-picks-container');
+                if (container) {
+                    container.innerHTML = this.renderRecentPicksSection(this.recentPicksCache, context.currentTeamId);
+                    this.setupRecentPicksListeners(context);
+                }
+            });
+        }
+
+        // Refresh pick recenti
+        const refreshBtn = document.getElementById('btn-refresh-recent-picks');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.textContent = '⏳';
+                await this.loadRecentPicks(context);
+                const container = document.getElementById('recent-picks-container');
+                if (container) {
+                    container.innerHTML = this.renderRecentPicksSection(this.recentPicksCache, context.currentTeamId);
+                    this.setupRecentPicksListeners(context);
+                }
+                refreshBtn.textContent = '🔄';
+            });
+        }
+    },
+
     /**
      * Resetta i filtri ai valori di default
      */
@@ -489,6 +699,9 @@ window.DraftUserUI = {
 
         if (turnInfo.hasDraftedThisRound) {
             // L'utente ha gia' draftato in questo round
+            // Carica i pick recenti
+            const recentPicks = await this.loadRecentPicks(context, 10);
+
             draftToolsContainer.innerHTML = `
                 <div class="p-6 bg-gray-700 rounded-lg border-2 border-green-500 shadow-xl space-y-4">
                     <p class="text-center text-2xl font-extrabold text-green-400">HAI GIA' DRAFTATO!</p>
@@ -502,8 +715,26 @@ window.DraftUserUI = {
                     <div class="mt-4 p-3 bg-gray-800 rounded-lg">
                         <p class="text-sm text-gray-400">Turno corrente: <span class="text-yellow-400 font-bold">${turnInfo.currentTeamName}</span></p>
                     </div>
+
+                    <!-- Sezione Pick Recenti -->
+                    <div id="recent-picks-container">
+                        ${this.renderRecentPicksSection(recentPicks, context.currentTeamId)}
+                    </div>
+
+                    <button id="btn-refresh-draft" class="w-full mt-2 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-500 transition">
+                        Aggiorna Stato
+                    </button>
                 </div>
             `;
+
+            // Setup listener per la sezione pick recenti
+            this.setupRecentPicksListeners(context);
+
+            // Event listener per il refresh
+            document.getElementById('btn-refresh-draft')?.addEventListener('click', () => {
+                this.render(context);
+            });
+
             return;
         }
 
@@ -521,6 +752,19 @@ window.DraftUserUI = {
             const isStolenTurn = turnInfo.isStolenTurn;
             const timeoutLabel = isStolenTurn ? '(Turno rubato - 10 min)' : '';
 
+            // Info pausa notturna
+            const isNightPause = turnInfo.isNightPause;
+            const nightPauseHtml = isNightPause ? `
+                <div class="mt-2 p-2 bg-indigo-900 rounded-lg border border-indigo-500 text-center">
+                    <p class="text-indigo-300 text-sm flex items-center justify-center gap-2">
+                        <span>🌙</span> Timer in pausa notturna (00:00 - 08:00)
+                    </p>
+                </div>
+            ` : '';
+
+            // Carica i pick recenti
+            const recentPicks = await this.loadRecentPicks(context, 10);
+
             draftToolsContainer.innerHTML = `
                 <div class="p-6 bg-gray-700 rounded-lg border-2 ${canSteal ? 'border-red-500' : 'border-yellow-500'} shadow-xl space-y-4">
                     <p class="text-center text-2xl font-extrabold ${canSteal ? 'text-red-400 animate-pulse' : 'text-yellow-400'}">
@@ -533,6 +777,8 @@ window.DraftUserUI = {
                          Rosa attuale: <span class="${isRosaFull ? 'text-red-400' : 'text-green-400'}">${currentRosaCount}</span> / ${MAX_ROSA_PLAYERS} giocatori (+ Icona)
                     </p>
 
+                    ${nightPauseHtml}
+
                     <div class="mt-4 p-4 bg-gray-800 rounded-lg border ${canSteal ? 'border-red-600' : 'border-yellow-600'}">
                         <p class="text-center text-gray-300">Turno corrente: ${timeoutLabel}</p>
                         <p class="text-center text-2xl font-bold ${canSteal ? 'text-red-400' : 'text-yellow-400'}">${turnInfo.currentTeamName}</p>
@@ -541,7 +787,8 @@ window.DraftUserUI = {
                             <p class="text-center text-sm text-gray-400">Strikes: ${turnInfo.currentTeamStealStrikes}/5</p>
                         ` : `
                             <p class="text-center text-sm text-gray-400 mt-2">
-                                Tempo rimanente: <span id="draft-turn-countdown" class="text-white font-bold">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>
+                                Tempo rimanente: <span id="draft-turn-countdown" class="text-white font-bold ${isNightPause ? 'text-indigo-400' : ''}">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>
+                                ${isNightPause ? '<span class="text-indigo-400 text-xs ml-1">(in pausa)</span>' : ''}
                             </p>
                         `}
                     </div>
@@ -559,6 +806,11 @@ window.DraftUserUI = {
                             <p class="text-sm text-gray-400">La tua posizione in coda: <span class="text-cyan-400 font-bold">${turnInfo.position + 1}</span> su ${turnInfo.totalTeams} squadre rimanenti</p>
                         </div>
                     `}
+
+                    <!-- Sezione Pick Recenti -->
+                    <div id="recent-picks-container">
+                        ${this.renderRecentPicksSection(recentPicks, context.currentTeamId)}
+                    </div>
 
                     <button id="btn-refresh-draft" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-500 transition">
                         Aggiorna Stato
@@ -597,6 +849,9 @@ window.DraftUserUI = {
                     }
                 });
             }
+
+            // Setup listener per la sezione pick recenti
+            this.setupRecentPicksListeners(context);
 
             return;
         }
@@ -801,11 +1056,13 @@ window.DraftUserUI = {
                 return;
             }
 
-            // Calcola tempo rimanente basandosi sul turnStartTime del server
-            const elapsed = Date.now() - this.serverTurnStartTime;
-            const timeRemaining = Math.max(0, currentTimeout - elapsed);
+            // Verifica se siamo in pausa notturna
+            const isNightPause = window.DraftConstants.isNightPauseActive();
 
-            if (timeRemaining <= 0) {
+            // Calcola tempo rimanente effettivo (escludendo pause notturne)
+            const timeRemaining = window.DraftConstants.getEffectiveTimeRemaining(this.serverTurnStartTime, currentTimeout);
+
+            if (timeRemaining <= 0 && !isNightPause) {
                 countdownElement.textContent = '00:00';
                 countdownElement.classList.add('text-red-500');
                 this.clearTurnTimer();
@@ -818,12 +1075,21 @@ window.DraftUserUI = {
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
             countdownElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // Cambia colore quando mancano meno di 5 minuti (o 2 minuti per turni rubati)
-            const warningThreshold = currentTimeout < DRAFT_TURN_TIMEOUT_MS ? 2 * 60 * 1000 : 5 * 60 * 1000;
-            if (timeRemaining < warningThreshold) {
-                countdownElement.classList.add('text-red-400');
+            // Mostra indicatore pausa notturna
+            if (isNightPause) {
+                countdownElement.classList.add('text-indigo-400');
+                countdownElement.classList.remove('text-red-400', 'text-white');
             } else {
-                countdownElement.classList.remove('text-red-400');
+                countdownElement.classList.remove('text-indigo-400');
+                // Cambia colore quando mancano meno di 5 minuti (o 2 minuti per turni rubati)
+                const warningThreshold = currentTimeout < DRAFT_TURN_TIMEOUT_MS ? 2 * 60 * 1000 : 5 * 60 * 1000;
+                if (timeRemaining < warningThreshold) {
+                    countdownElement.classList.add('text-red-400');
+                    countdownElement.classList.remove('text-white');
+                } else {
+                    countdownElement.classList.remove('text-red-400');
+                    countdownElement.classList.add('text-white');
+                }
             }
         };
 

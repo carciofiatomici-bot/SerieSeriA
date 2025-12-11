@@ -406,14 +406,24 @@ window.AdminUI = {
                             class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-500 transition hidden">
                         ⏭️ Avanza Turno Manualmente
                     </button>
-                    <button id="btn-pause-draft"
-                            class="w-full bg-yellow-600 text-white font-bold py-3 rounded-lg hover:bg-yellow-500 transition hidden">
-                        ⏸️ Metti in Pausa
-                    </button>
-                    <button id="btn-resume-draft"
-                            class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-500 transition hidden">
-                        ▶️ Riprendi Draft
-                    </button>
+
+                    <!-- Toggle Pausa Draft -->
+                    <div id="draft-pause-toggle-container" class="hidden p-3 bg-gray-800 rounded-lg border border-gray-600">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span id="draft-pause-icon" class="text-xl">▶️</span>
+                                <div>
+                                    <p id="draft-pause-label" class="text-white font-semibold">Draft Attivo</p>
+                                    <p id="draft-pause-sublabel" class="text-xs text-gray-400">Il timer sta scorrendo</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="draft-pause-toggle" class="sr-only peer">
+                                <div class="w-14 h-7 bg-green-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-yellow-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
                     <button id="btn-stop-draft-turns"
                             class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition hidden">
                         Ferma Draft a Turni

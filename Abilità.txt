@@ -24,9 +24,10 @@ MANUALE DELLE ABILITÀ
 - Parata con i piedi (2): 5% di probabilità di lanciare un secondo d20 quando para e tenere il più alto.
 - Lancio lungo (4): 5% di probabilità di saltare la fase "costruzione" e di passare direttamente alla fase "attacco vs difesa".
 -Presa Sicura (1): Se il portiere effettua una parata e il risultato della formula (Totale Portiere - Totale Tiro) è maggiore di 5, la squadra riparte automaticamente dalla Fase 2 nell'azione successiva (saltando la fase di costruzione).
--Muro Psicologico (3): 5% di probabilità di costringere l'attacco avversario a tirare 1d10 invece di 1d20 nella Fase 3 (Tiro vs Portiere).
+-Muro Psicologico (4): 5% di probabilità di dimezzare il valore del tiro durante la Fase 3 (Tiro vs Portiere).
 Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differenza tra Portiere e Tiro è < 0) in una "Parata" se la differenza è inferiore a 3 punti.
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
+-Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d6 invece che 1d10 nella fase 3 "tiro vs portiere".
 
 
 >>> Abilità Negative:

@@ -137,6 +137,123 @@ window.DraftConstants = {
     // Intervallo di controllo timeout (ogni 30 secondi)
     DRAFT_TIMEOUT_CHECK_INTERVAL_MS: 30 * 1000,
 
+    // ====================================================================
+    // PAUSA NOTTURNA DRAFT
+    // ====================================================================
+    // Il timer del draft si ferma durante le ore notturne (00:00 - 08:00)
+
+    // Ora inizio pausa notturna (00:00 = 0)
+    DRAFT_NIGHT_PAUSE_START_HOUR: 0,
+
+    // Ora fine pausa notturna (08:00 = 8)
+    DRAFT_NIGHT_PAUSE_END_HOUR: 8,
+
+    // Abilita/disabilita pausa notturna
+    DRAFT_NIGHT_PAUSE_ENABLED: true,
+
+    /**
+     * Verifica se siamo in orario di pausa notturna
+     * @param {Date} [date] - Data da verificare (default: now)
+     * @returns {boolean} - true se siamo in pausa notturna
+     */
+    isNightPauseActive(date = new Date()) {
+        if (!this.DRAFT_NIGHT_PAUSE_ENABLED) return false;
+
+        const hour = date.getHours() + date.getMinutes() / 60;
+
+        // Se la pausa attraversa la mezzanotte (es. 22:30 - 09:00)
+        if (this.DRAFT_NIGHT_PAUSE_START_HOUR > this.DRAFT_NIGHT_PAUSE_END_HOUR) {
+            return hour >= this.DRAFT_NIGHT_PAUSE_START_HOUR || hour < this.DRAFT_NIGHT_PAUSE_END_HOUR;
+        }
+        // Se la pausa e' nello stesso giorno (es. 00:00 - 08:00)
+        return hour >= this.DRAFT_NIGHT_PAUSE_START_HOUR && hour < this.DRAFT_NIGHT_PAUSE_END_HOUR;
+    },
+
+    /**
+     * Calcola i millisecondi di pausa notturna trascorsi da un timestamp
+     * @param {number} startTimestamp - Timestamp di inizio (ms)
+     * @param {number} [endTimestamp] - Timestamp di fine (default: now)
+     * @returns {number} - Millisecondi totali di pausa notturna nel periodo
+     */
+    getNightPauseMs(startTimestamp, endTimestamp = Date.now()) {
+        if (!this.DRAFT_NIGHT_PAUSE_ENABLED) return 0;
+
+        let pauseMs = 0;
+        const crossesMidnight = this.DRAFT_NIGHT_PAUSE_START_HOUR > this.DRAFT_NIGHT_PAUSE_END_HOUR;
+
+        // Itera giorno per giorno
+        let currentDay = new Date(startTimestamp);
+        currentDay.setHours(0, 0, 0, 0);
+
+        const endDatePlusOne = new Date(endTimestamp);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+
+        while (currentDay <= endDatePlusOne) {
+            let pauseStart, pauseEnd;
+
+            if (crossesMidnight) {
+                // Pausa attraversa mezzanotte (es. 22:30 - 09:00)
+                // La pausa inizia il giorno corrente e finisce il giorno dopo
+                pauseStart = new Date(currentDay);
+                pauseStart.setHours(Math.floor(this.DRAFT_NIGHT_PAUSE_START_HOUR));
+                pauseStart.setMinutes((this.DRAFT_NIGHT_PAUSE_START_HOUR % 1) * 60);
+                pauseStart.setSeconds(0, 0);
+
+                pauseEnd = new Date(currentDay);
+                pauseEnd.setDate(pauseEnd.getDate() + 1);
+                pauseEnd.setHours(Math.floor(this.DRAFT_NIGHT_PAUSE_END_HOUR));
+                pauseEnd.setMinutes((this.DRAFT_NIGHT_PAUSE_END_HOUR % 1) * 60);
+                pauseEnd.setSeconds(0, 0);
+            } else {
+                // Pausa nello stesso giorno (es. 00:00 - 08:00)
+                pauseStart = new Date(currentDay);
+                pauseStart.setHours(Math.floor(this.DRAFT_NIGHT_PAUSE_START_HOUR));
+                pauseStart.setMinutes((this.DRAFT_NIGHT_PAUSE_START_HOUR % 1) * 60);
+                pauseStart.setSeconds(0, 0);
+
+                pauseEnd = new Date(currentDay);
+                pauseEnd.setHours(Math.floor(this.DRAFT_NIGHT_PAUSE_END_HOUR));
+                pauseEnd.setMinutes((this.DRAFT_NIGHT_PAUSE_END_HOUR % 1) * 60);
+                pauseEnd.setSeconds(0, 0);
+            }
+
+            // Calcola sovrapposizione con il periodo richiesto
+            const overlapStart = Math.max(startTimestamp, pauseStart.getTime());
+            const overlapEnd = Math.min(endTimestamp, pauseEnd.getTime());
+
+            if (overlapEnd > overlapStart) {
+                pauseMs += overlapEnd - overlapStart;
+            }
+
+            // Passa al giorno successivo
+            currentDay.setDate(currentDay.getDate() + 1);
+        }
+
+        return pauseMs;
+    },
+
+    /**
+     * Calcola il tempo effettivo trascorso (escludendo le pause notturne)
+     * @param {number} startTimestamp - Timestamp di inizio turno
+     * @returns {number} - Millisecondi effettivi trascorsi
+     */
+    getEffectiveElapsedTime(startTimestamp) {
+        const totalElapsed = Date.now() - startTimestamp;
+        const pauseMs = this.getNightPauseMs(startTimestamp);
+        return Math.max(0, totalElapsed - pauseMs);
+    },
+
+    /**
+     * Calcola il tempo rimanente considerando la pausa notturna
+     * @param {number} startTimestamp - Timestamp di inizio turno
+     * @param {number} timeout - Timeout totale in ms
+     * @returns {number} - Millisecondi rimanenti
+     */
+    getEffectiveTimeRemaining(startTimestamp, timeout) {
+        const effectiveElapsed = this.getEffectiveElapsedTime(startTimestamp);
+        return Math.max(0, timeout - effectiveElapsed);
+    },
+
     /**
      * Genera i path delle collezioni Firestore
      * @param {string} appId - L'ID dell'applicazione

@@ -88,7 +88,7 @@ Esito:
 Partecipanti: Portiere B vs Risultato Fase 2 (Valore Tiro).
 
 Formula:
-[1d20 + Mod. Portiere B] - [Valore Tiro Fase 2]
+[1d20 + Mod. Portiere B] - [1d10 + Valore Tiro Fase 2]
 
 Calcolo Finale (Totale Portiere - Valore Tiro):
 1. Risultato > 0 (Positivo): PARATA.

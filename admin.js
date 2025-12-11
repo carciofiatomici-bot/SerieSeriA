@@ -1129,16 +1129,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btnForceAdvanceTurn.addEventListener('click', handleForceAdvanceTurn);
         }
 
-        // Bottone pausa draft
-        const btnPauseDraft = document.getElementById('btn-pause-draft');
-        if (btnPauseDraft) {
-            btnPauseDraft.addEventListener('click', handlePauseDraft);
-        }
-
-        // Bottone riprendi draft
-        const btnResumeDraft = document.getElementById('btn-resume-draft');
-        if (btnResumeDraft) {
-            btnResumeDraft.addEventListener('click', handleResumeDraft);
+        // Toggle pausa draft
+        const draftPauseToggle = document.getElementById('draft-pause-toggle');
+        if (draftPauseToggle) {
+            draftPauseToggle.addEventListener('change', handleDraftPauseToggle);
         }
 
         // Event delegation per Jump to Team nella lista ordine draft (admin)
@@ -1262,8 +1256,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnGenerate = document.getElementById('btn-generate-draft-list');
             const btnStop = document.getElementById('btn-stop-draft-turns');
             const btnForceAdvance = document.getElementById('btn-force-advance-turn');
-            const btnPause = document.getElementById('btn-pause-draft');
-            const btnResume = document.getElementById('btn-resume-draft');
+            const pauseToggleContainer = document.getElementById('draft-pause-toggle-container');
+            const pauseToggle = document.getElementById('draft-pause-toggle');
+            const pauseIcon = document.getElementById('draft-pause-icon');
+            const pauseLabel = document.getElementById('draft-pause-label');
+            const pauseSublabel = document.getElementById('draft-pause-sublabel');
             const statusContainer = document.getElementById('draft-turns-status-container');
             const timerOption = document.getElementById('draft-timer-option');
 
@@ -1273,16 +1270,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnGenerate) btnGenerate.classList.add('hidden');
                 if (btnStop) btnStop.classList.remove('hidden');
 
-                // Gestione bottoni pausa/riprendi e avanza turno
+                // Mostra toggle pausa
+                if (pauseToggleContainer) pauseToggleContainer.classList.remove('hidden');
+
+                // Aggiorna stato toggle pausa
+                if (pauseToggle) {
+                    pauseToggle.checked = isPaused;
+                }
+
+                // Aggiorna UI del toggle
                 if (isPaused) {
-                    // Draft in pausa
-                    if (btnPause) btnPause.classList.add('hidden');
-                    if (btnResume) btnResume.classList.remove('hidden');
+                    if (pauseIcon) pauseIcon.textContent = '⏸️';
+                    if (pauseLabel) pauseLabel.textContent = 'Draft in Pausa';
+                    if (pauseSublabel) pauseSublabel.textContent = 'Il timer e\' fermo';
                     if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
                 } else {
-                    // Draft attivo (non in pausa)
-                    if (btnPause) btnPause.classList.remove('hidden');
-                    if (btnResume) btnResume.classList.add('hidden');
+                    if (pauseIcon) pauseIcon.textContent = '▶️';
+                    if (pauseLabel) pauseLabel.textContent = 'Draft Attivo';
+                    if (pauseSublabel) pauseSublabel.textContent = 'Il timer sta scorrendo';
                     if (btnForceAdvance) btnForceAdvance.classList.remove('hidden');
                 }
 
@@ -1358,8 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnGenerate) btnGenerate.classList.remove('hidden');
                 if (btnStop) btnStop.classList.add('hidden');
                 if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
-                if (btnPause) btnPause.classList.add('hidden');
-                if (btnResume) btnResume.classList.add('hidden');
+                if (pauseToggleContainer) pauseToggleContainer.classList.add('hidden');
                 if (statusContainer) statusContainer.innerHTML = '';
             }
 
@@ -1395,21 +1399,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const elapsed = Date.now() - turnStartTime;
-            const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
+            // Usa getEffectiveTimeRemaining per considerare la pausa notturna
+            const timeRemaining = window.DraftConstants?.getEffectiveTimeRemaining
+                ? window.DraftConstants.getEffectiveTimeRemaining(turnStartTime, DRAFT_TURN_TIMEOUT_MS)
+                : Math.max(0, DRAFT_TURN_TIMEOUT_MS - (Date.now() - turnStartTime));
+
             const minutes = Math.floor(timeRemaining / 60000);
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
 
-            countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Controlla se siamo in pausa notturna
+            const isNightPause = window.DraftConstants?.isNightPauseActive?.() || false;
 
-            // Colore rosso se meno di 5 minuti
-            if (timeRemaining < 5 * 60 * 1000) {
-                countdownEl.classList.add('text-red-400');
-                countdownEl.classList.remove('text-white');
+            if (isNightPause) {
+                countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} 🌙`;
+                countdownEl.classList.remove('text-red-400');
+                countdownEl.classList.add('text-white');
+            } else {
+                countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                // Colore rosso se meno di 5 minuti
+                if (timeRemaining < 5 * 60 * 1000) {
+                    countdownEl.classList.add('text-red-400');
+                    countdownEl.classList.remove('text-white');
+                }
             }
 
-            // Se scaduto, ricarica lo stato
-            if (timeRemaining <= 0) {
+            // Se scaduto (e non in pausa notturna), ricarica lo stato
+            if (timeRemaining <= 0 && !isNightPause) {
                 clearInterval(adminCountdownInterval);
                 setTimeout(() => loadDraftTurnsStatus(), 2000);
             }
@@ -1992,49 +2008,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Gestisce la pausa del draft
+     * Gestisce il toggle pausa/riprendi del draft
      */
-    const handlePauseDraft = async () => {
-        const btn = document.getElementById('btn-pause-draft');
+    const handleDraftPauseToggle = async (event) => {
+        const toggle = event.target;
+        const shouldPause = toggle.checked;
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Pausa...';
+        // Disabilita temporaneamente il toggle
+        toggle.disabled = true;
 
-        try {
-            const context = {
-                db,
-                firestoreTools,
-                paths: {
-                    CHAMPIONSHIP_CONFIG_PATH
-                }
-            };
+        // Aggiorna UI subito per feedback
+        const pauseIcon = document.getElementById('draft-pause-icon');
+        const pauseLabel = document.getElementById('draft-pause-label');
+        const pauseSublabel = document.getElementById('draft-pause-sublabel');
 
-            const result = await window.DraftTurns.pauseDraftTurns(context);
-
-            if (result.success) {
-                displayMessage(result.message, 'success', 'toggle-status-message');
-                loadDraftTurnsStatus();
-            } else {
-                throw new Error(result.message);
-            }
-
-        } catch (error) {
-            console.error('Errore pausa draft:', error);
-            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '⏸️ Metti in Pausa';
+        if (shouldPause) {
+            if (pauseIcon) pauseIcon.textContent = '⏳';
+            if (pauseLabel) pauseLabel.textContent = 'Mettendo in pausa...';
+        } else {
+            if (pauseIcon) pauseIcon.textContent = '⏳';
+            if (pauseLabel) pauseLabel.textContent = 'Riprendendo...';
         }
-    };
-
-    /**
-     * Gestisce la ripresa del draft dalla pausa
-     */
-    const handleResumeDraft = async () => {
-        const btn = document.getElementById('btn-resume-draft');
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Riprendo...';
 
         try {
             const context = {
@@ -2045,7 +2039,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            const result = await window.DraftTurns.resumeDraftTurns(context);
+            let result;
+            if (shouldPause) {
+                result = await window.DraftTurns.pauseDraftTurns(context);
+            } else {
+                result = await window.DraftTurns.resumeDraftTurns(context);
+            }
 
             if (result.success) {
                 displayMessage(result.message, 'success', 'toggle-status-message');
@@ -2055,11 +2054,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (error) {
-            console.error('Errore ripresa draft:', error);
+            console.error('Errore toggle pausa draft:', error);
             displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+            // Ripristina lo stato precedente del toggle in caso di errore
+            toggle.checked = !shouldPause;
+            loadDraftTurnsStatus();
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '▶️ Riprendi Draft';
+            toggle.disabled = false;
         }
     };
 

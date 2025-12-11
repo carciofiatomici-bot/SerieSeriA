@@ -219,6 +219,27 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-yellow-400">Sfida i tuoi amici e dimostra chi e' il piu' forte!</p>`
         },
+        interactiveChallenges: {
+            id: 'interactiveChallenges',
+            name: 'Sfide Interattive Real-Time',
+            description: 'Partite sfida dove entrambi i giocatori lanciano i dadi in tempo reale',
+            icon: '🎲',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Partite interattive in tempo reale tra due giocatori</li>
+                    <li>60 occasioni totali (30 per squadra, alternate)</li>
+                    <li>3 fasi per occasione: Costruzione, Attacco, Tiro</li>
+                    <li>Entrambi i giocatori lanciano i dadi cliccando bottoni</li>
+                    <li>Animazione dado visibile a entrambi in tempo reale</li>
+                    <li>Sistema presenza: se ti disconnetti per piu di 15 secondi perdi!</li>
+                    <li>Sistema sasso-carta-forbice per tipi giocatori</li>
+                    <li>Forma fisica casuale (da -3 a +6 per Icone)</li>
+                </ul>
+                <p class="mt-2 text-red-400"><strong>ATTENZIONE:</strong> Richiede che entrambi i giocatori siano online!</p>
+                <p class="mt-2 text-yellow-400">Richiede che il flag "Sfide tra Squadre" sia abilitato.</p>`
+        },
         tutorial: {
             id: 'tutorial',
             name: 'Tutorial Interattivo',

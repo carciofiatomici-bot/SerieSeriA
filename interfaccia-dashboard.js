@@ -1014,6 +1014,7 @@ window.InterfacciaDashboard = {
      */
     startDraftAlertCountdown(turnStartTimeParam, isStolenTurn = false) {
         const countdownEl = document.getElementById('draft-alert-countdown');
+        const countdownMiniEl = document.getElementById('draft-alert-countdown-mini');
         if (!countdownEl) return;
 
         // Converti turnStartTime se e' un Timestamp Firestore
@@ -1031,27 +1032,52 @@ window.InterfacciaDashboard = {
         const timeout = isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
 
         const updateCountdown = () => {
-            const elapsed = Date.now() - turnStartTime;
-            const timeRemaining = Math.max(0, timeout - elapsed);
+            // Usa getEffectiveTimeRemaining per considerare la pausa notturna
+            const timeRemaining = window.DraftConstants?.getEffectiveTimeRemaining
+                ? window.DraftConstants.getEffectiveTimeRemaining(turnStartTime, timeout)
+                : Math.max(0, timeout - (Date.now() - turnStartTime));
+
             const minutes = Math.floor(timeRemaining / 60000);
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
 
-            countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Controlla se siamo in pausa notturna
+            const isNightPause = window.DraftConstants?.isNightPauseActive?.() || false;
+
+            let timeText;
+            if (isNightPause) {
+                timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} 🌙`;
+            } else {
+                timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+            countdownEl.textContent = timeText;
+
+            // Aggiorna anche la versione mini
+            if (countdownMiniEl) {
+                countdownMiniEl.textContent = isNightPause ? `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : timeText;
+            }
 
             // Soglia di avviso: 5 minuti per turno normale, 2 minuti per turno rubato
             const warningThreshold = isStolenTurn ? 2 * 60 * 1000 : 5 * 60 * 1000;
-            if (timeRemaining < warningThreshold) {
+            if (timeRemaining < warningThreshold && !isNightPause) {
                 countdownEl.classList.add('text-red-400');
                 countdownEl.classList.remove('text-white');
+                countdownMiniEl?.classList.add('text-red-400');
+                countdownMiniEl?.classList.remove('text-white');
             } else {
                 countdownEl.classList.remove('text-red-400');
                 countdownEl.classList.add('text-white');
+                countdownMiniEl?.classList.remove('text-red-400');
+                countdownMiniEl?.classList.add('text-white');
             }
 
-            // Se scaduto, ricarica lo stato per mostrare "Ruba Turno"
-            if (timeRemaining <= 0) {
+            // Se scaduto (e non in pausa notturna), ricarica lo stato per mostrare "Ruba Turno"
+            if (timeRemaining <= 0 && !isNightPause) {
                 countdownEl.textContent = 'SCADUTO';
                 countdownEl.classList.add('animate-pulse');
+                if (countdownMiniEl) {
+                    countdownMiniEl.textContent = '00:00';
+                    countdownMiniEl.classList.add('animate-pulse');
+                }
                 // Ricarica per aggiornare lo stato (mostrare opzione Ruba Turno)
                 setTimeout(() => this.initDraftAlert(), 2000);
             }
@@ -1070,6 +1096,91 @@ window.InterfacciaDashboard = {
             clearInterval(this._draftAlertInterval);
             this._draftAlertInterval = null;
         }
+    },
+
+    /**
+     * Stato minimizzato dell'alert (salvato in localStorage)
+     */
+    _draftAlertMinimized: false,
+
+    /**
+     * Toggle stato minimizzato dell'alert draft
+     * @param {boolean} minimized - true per minimizzare, false per espandere
+     */
+    toggleDraftAlertMinimized(minimized) {
+        this._draftAlertMinimized = minimized;
+
+        // Salva preferenza in localStorage
+        try {
+            localStorage.setItem('draft_alert_minimized', minimized ? 'true' : 'false');
+        } catch (e) { }
+
+        // Aggiorna UI
+        const expandedEl = document.getElementById('draft-alert-expanded');
+        const minimizedEl = document.getElementById('draft-alert-minimized');
+
+        if (minimized) {
+            expandedEl?.classList.add('hidden');
+            minimizedEl?.classList.remove('hidden');
+        } else {
+            expandedEl?.classList.remove('hidden');
+            minimizedEl?.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Ripristina stato minimizzato dal localStorage
+     */
+    restoreDraftAlertMinimizedState() {
+        try {
+            const saved = localStorage.getItem('draft_alert_minimized');
+            this._draftAlertMinimized = saved === 'true';
+
+            if (this._draftAlertMinimized) {
+                const expandedEl = document.getElementById('draft-alert-expanded');
+                const minimizedEl = document.getElementById('draft-alert-minimized');
+                expandedEl?.classList.add('hidden');
+                minimizedEl?.classList.remove('hidden');
+            }
+        } catch (e) { }
+    },
+
+    /**
+     * Naviga al draft correttamente (caricando il modulo se necessario)
+     */
+    goToDraft() {
+        const draftContent = document.getElementById('draft-content');
+        if (!draftContent) {
+            console.error('[DraftAlert] draft-content non trovato');
+            return;
+        }
+
+        // Usa showScreen
+        if (window.showScreen) {
+            window.showScreen(draftContent);
+        }
+
+        // Lancia l'evento per caricare il contenuto del draft
+        // (come fa il bottone nella dashboard)
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        document.dispatchEvent(new CustomEvent('draftPanelLoaded', {
+            detail: { mode: 'utente', teamId: currentTeamId }
+        }));
+    },
+
+    /**
+     * Inizializza il listener per il bottone "Vai al Draft" nell'alert
+     */
+    initDraftAlertButton() {
+        const goBtn = document.getElementById('draft-alert-go-btn');
+        if (goBtn) {
+            goBtn.addEventListener('click', () => {
+                this.goToDraft();
+            });
+        }
+
+        // Ripristina stato minimizzato
+        this.restoreDraftAlertMinimizedState();
     }
 };
 

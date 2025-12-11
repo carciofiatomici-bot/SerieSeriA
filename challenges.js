@@ -412,10 +412,55 @@ window.Challenges = {
                 console.warn("Errore listener sfide:", error);
             });
 
+            // NUOVO: Ascolta sfide che ho inviato quando diventano 'in_match'
+            // (per unirmi alla partita interattiva quando l'avversario accetta)
+            this.startListeningForMyAcceptedChallenges();
+
             console.log("Listener sfide attivo per:", myTeamId);
 
         } catch (error) {
             console.error("Errore setup listener sfide:", error);
+        }
+    },
+
+    /**
+     * Ascolta sfide inviate da me che vengono accettate (per partite interattive)
+     */
+    startListeningForMyAcceptedChallenges() {
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!myTeamId) return;
+
+        try {
+            const { collection, query, where, onSnapshot } = window.firestoreTools;
+            const challengesPath = this.getChallengesPath();
+
+            // Ascolta sfide dove sono il mittente e lo stato e' 'in_match'
+            const q = query(
+                collection(window.db, challengesPath),
+                where('fromTeamId', '==', myTeamId),
+                where('status', '==', 'in_match')
+            );
+
+            this.unsubscribeMyAcceptedChallenges = onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added' || change.type === 'modified') {
+                        const challenge = { id: change.doc.id, ...change.doc.data() };
+
+                        // Se c'e' un liveMatchId e non sono gia' in partita
+                        if (challenge.liveMatchId && window.ChallengeMatch && !window.ChallengeMatch.currentMatch) {
+                            if (window.Toast) window.Toast.info(`${challenge.toTeamName} ha accettato! Unisciti alla partita...`);
+
+                            // Unisciti alla partita interattiva
+                            window.ChallengeMatch.joinMatch(challenge.liveMatchId);
+                        }
+                    }
+                });
+            }, (error) => {
+                console.warn("Errore listener sfide accettate:", error);
+            });
+
+        } catch (error) {
+            console.error("Errore setup listener sfide accettate:", error);
         }
     },
 
@@ -607,6 +652,7 @@ window.Challenges = {
 
     /**
      * Esegue la partita della sfida
+     * NUOVO: Usa sistema interattivo in tempo reale se disponibile
      */
     async runChallengeMatch(challenge) {
         try {
@@ -632,7 +678,29 @@ window.Challenges = {
                 throw new Error("Una delle squadre non ha la formazione impostata");
             }
 
-            // Mostra modal risultato con simulazione
+            // NUOVO: Usa simulazione interattiva in tempo reale
+            if (window.ChallengeMatch && window.FeatureFlags?.isEnabled('interactiveChallenges')) {
+                try {
+                    // Crea partita interattiva
+                    const matchId = await window.ChallengeMatch.createInteractiveMatch(challenge);
+
+                    // Aggiorna sfida con riferimento alla partita live
+                    await updateDoc(doc(window.db, challengesPath, challenge.id), {
+                        status: 'in_match',
+                        liveMatchId: matchId
+                    });
+
+                    // Unisciti alla partita
+                    window.ChallengeMatch.joinMatch(matchId);
+
+                    if (window.Toast) window.Toast.success("Partita interattiva avviata!");
+                    return;
+                } catch (interactiveError) {
+                    console.warn("Errore avvio partita interattiva, fallback a simulazione classica:", interactiveError);
+                }
+            }
+
+            // Fallback: Mostra modal risultato con simulazione classica
             this.showMatchSimulationModal(homeTeam, awayTeam, challenge);
 
         } catch (error) {
@@ -1158,6 +1226,10 @@ window.Challenges = {
         if (this.unsubscribeChallenges) {
             this.unsubscribeChallenges();
             this.unsubscribeChallenges = null;
+        }
+        if (this.unsubscribeMyAcceptedChallenges) {
+            this.unsubscribeMyAcceptedChallenges();
+            this.unsubscribeMyAcceptedChallenges = null;
         }
     }
 };

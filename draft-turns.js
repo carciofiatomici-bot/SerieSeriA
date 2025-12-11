@@ -535,27 +535,35 @@ window.DraftTurns = {
                 return;
             }
 
+            // Skip durante la pausa notturna (il timer non scorre)
+            if (window.DraftConstants.isNightPauseActive()) {
+                console.log("Timeout check: pausa notturna attiva (00:00-08:00), skip.");
+                return;
+            }
+
             // Converti turnStartTime se e' un Timestamp Firestore
             let turnStartTime = draftTurns.turnStartTime;
             if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
                 turnStartTime = turnStartTime.toMillis();
             }
-            const elapsed = Date.now() - turnStartTime;
+
+            // Calcola tempo effettivo trascorso (escludendo pause notturne)
+            const effectiveElapsed = window.DraftConstants.getEffectiveElapsedTime(turnStartTime);
 
             // Usa il timeout appropriato: normale (1h) o furto (10min)
             const { DRAFT_STEAL_TIMEOUT_MS } = window.DraftConstants;
             const currentTimeout = draftTurns.isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
-            const timeRemaining = currentTimeout - elapsed;
+            const timeRemaining = currentTimeout - effectiveElapsed;
 
             // Log ogni 5 minuti circa (ogni 10 check da 30 secondi)
-            if (Math.floor(elapsed / 300000) !== Math.floor((elapsed - 30000) / 300000)) {
+            if (Math.floor(effectiveElapsed / 300000) !== Math.floor((effectiveElapsed - 30000) / 300000)) {
                 const currentRound = draftTurns.currentRound;
                 const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
                 const currentTeam = draftTurns[orderKey]?.[draftTurns.currentTurnIndex];
-                console.log(`[Timer] Turno di ${currentTeam?.teamName || 'N/A'} - Tempo rimanente: ${Math.floor(timeRemaining / 60000)} minuti`);
+                console.log(`[Timer] Turno di ${currentTeam?.teamName || 'N/A'} - Tempo rimanente: ${Math.floor(timeRemaining / 60000)} minuti (effettivo)`);
             }
 
-            if (elapsed >= currentTimeout) {
+            if (effectiveElapsed >= currentTimeout) {
                 // Verifica che il team corrente non abbia gia' draftato (race condition check)
                 const currentRound = draftTurns.currentRound;
                 const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
@@ -1426,7 +1434,10 @@ window.DraftTurns = {
 
         // Usa il timeout appropriato: normale (1h) o furto (10min)
         const currentTimeout = isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
-        const timeRemaining = Math.max(0, currentTimeout - (Date.now() - turnStartTime));
+
+        // Calcola tempo rimanente considerando la pausa notturna
+        const isNightPause = window.DraftConstants.isNightPauseActive();
+        const timeRemaining = window.DraftConstants.getEffectiveTimeRemaining(turnStartTime, currentTimeout);
 
         // Trova la posizione nella coda
         let position = 0;
@@ -1469,7 +1480,11 @@ window.DraftTurns = {
             isStolenTurn,
             currentTimeout, // 1h o 10min a seconda se e' turno rubato
             stealStrikes: teamEntry?.stealStrikes || 0,
-            currentTeamStealStrikes
+            currentTeamStealStrikes,
+            // Pausa notturna
+            isNightPause,
+            nightPauseStart: window.DraftConstants.DRAFT_NIGHT_PAUSE_START_HOUR,
+            nightPauseEnd: window.DraftConstants.DRAFT_NIGHT_PAUSE_END_HOUR
         };
     },
 

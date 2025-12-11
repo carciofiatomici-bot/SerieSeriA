@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // L'alert e' globale quindi viene mostrato ovunque
     setTimeout(() => {
         window.InterfacciaDashboard.initDraftAlert();
+        window.InterfacciaDashboard.initDraftAlertButton(); // Inizializza bottone e stato minimizzato
     }, 2000); // Ritardo per aspettare che Firebase sia pronto
 
     // Aggiorna l'alert quando cambia schermata
