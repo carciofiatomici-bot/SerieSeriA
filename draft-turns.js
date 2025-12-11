@@ -14,6 +14,9 @@ window.DraftTurns = {
     // Timer per il controllo del timeout
     turnCheckInterval: null,
 
+    // Lock per prevenire chiamate concorrenti a advanceToNextTurn
+    _advanceTurnLock: false,
+
     /**
      * Genera l'ordine del draft basato sulla classifica o media rosa.
      * Ordine: Ultimo, Primo, Penultimo, Secondo, Terzultimo, Terzo...
@@ -340,6 +343,13 @@ window.DraftTurns = {
      * @param {boolean} hasDrafted - Se l'utente ha draftato
      */
     async advanceToNextTurn(context, hasDrafted = true) {
+        // Lock per prevenire chiamate concorrenti
+        if (this._advanceTurnLock) {
+            console.log("advanceToNextTurn: chiamata bloccata (lock attivo)");
+            return;
+        }
+        this._advanceTurnLock = true;
+
         const { db, firestoreTools, paths } = context;
         const { doc, getDoc, setDoc } = firestoreTools;
         const { CONFIG_DOC_ID, DRAFT_MAX_ATTEMPTS, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
@@ -357,7 +367,8 @@ window.DraftTurns = {
 
             const currentRound = draftTurns.currentRound;
             const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
-            const currentOrder = [...draftTurns[orderKey]];
+            // DEEP COPY per evitare mutazioni accidentali degli oggetti originali
+            const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
             let currentIndex = draftTurns.currentTurnIndex;
 
             // Aggiorna lo stato del team corrente
@@ -443,6 +454,9 @@ window.DraftTurns = {
 
         } catch (error) {
             console.error("Errore nel passaggio al turno successivo:", error);
+        } finally {
+            // Rilascia il lock
+            this._advanceTurnLock = false;
         }
     },
 
@@ -571,7 +585,8 @@ window.DraftTurns = {
 
             const currentRound = draftTurns.currentRound;
             const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
-            const currentOrder = [...draftTurns[orderKey]];
+            // DEEP COPY per evitare mutazioni accidentali degli oggetti originali
+            const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
             const currentIndex = draftTurns.currentTurnIndex;
             const currentTeamName = currentOrder[currentIndex]?.teamName || 'Sconosciuto';
 
@@ -647,6 +662,77 @@ window.DraftTurns = {
 
         } catch (error) {
             console.error("Errore nel forzare avanzamento turno:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Salta direttamente a una squadra specifica (anche se ha gia' draftato).
+     * Resetta lo stato hasDrafted della squadra selezionata e di tutte quelle successive.
+     * @param {Object} context - Contesto con db e firestoreTools
+     * @param {string} targetTeamId - ID della squadra a cui saltare
+     * @returns {Promise<Object>} - { success, message }
+     */
+    async jumpToTeam(context, targetTeamId) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc } = firestoreTools;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                return { success: false, message: 'Configurazione non trovata.' };
+            }
+
+            const config = configDoc.data();
+            const draftTurns = config.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                return { success: false, message: 'Draft a turni non attivo.' };
+            }
+
+            const currentRound = draftTurns.currentRound;
+            const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+            // DEEP COPY per evitare mutazioni accidentali
+            const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
+
+            // Trova l'indice della squadra target
+            const targetIndex = currentOrder.findIndex(t => t.teamId === targetTeamId);
+
+            if (targetIndex === -1) {
+                return { success: false, message: 'Squadra non trovata nell\'ordine del draft.' };
+            }
+
+            const targetTeamName = currentOrder[targetIndex].teamName;
+
+            // Resetta lo stato hasDrafted della squadra target e di tutte quelle successive
+            for (let i = targetIndex; i < currentOrder.length; i++) {
+                currentOrder[i].hasDrafted = false;
+                currentOrder[i].attempts = 0;
+            }
+
+            // Aggiorna Firestore con il nuovo stato
+            await setDoc(configDocRef, {
+                draftTurns: {
+                    ...draftTurns,
+                    [orderKey]: currentOrder,
+                    currentTurnIndex: targetIndex,
+                    currentTeamId: targetTeamId,
+                    turnStartTime: Date.now()
+                }
+            }, { merge: true });
+
+            console.log(`Draft: turno passato a ${targetTeamName} (index ${targetIndex})`);
+
+            return {
+                success: true,
+                message: `Turno passato a ${targetTeamName}. Il draft riprende da questa squadra.`
+            };
+
+        } catch (error) {
+            console.error("Errore nel saltare alla squadra:", error);
             return { success: false, message: error.message };
         }
     },

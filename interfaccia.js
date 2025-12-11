@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Espone gli elementi globalmente per uso futuro (es. ripristino navigazione)
     window.elements = elements;
 
-    console.log("âœ… Interfaccia principale inizializzata.");
+    console.log("[OK] Interfaccia principale inizializzata.");
     }; // Fine initializeApplication
     
     // Avvia il processo di inizializzazione

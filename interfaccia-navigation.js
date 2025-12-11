@@ -215,4 +215,4 @@ window.InterfacciaNavigation = {
     }
 };
 
-console.log("âœ… Modulo interfaccia-navigation.js caricato.");
+console.log("[OK] Modulo interfaccia-navigation.js caricato.");

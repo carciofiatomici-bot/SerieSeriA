@@ -3,30 +3,53 @@
 // CHANGELOG.JS - Storico Aggiornamenti Serie SeriA
 // ====================================================================
 //
+// Supporta due modalita:
+// - showPlayers() / show(): mostra solo le modifiche rilevanti per i giocatori
+// - showAdmin(): mostra tutte le modifiche incluse quelle admin-only
+//
 
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.94',
+    currentVersion: '0.9.95',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
 
+    // Modalita corrente (admin o players)
+    currentMode: 'players',
+
     // Storico changelog (dal piu recente al piu vecchio)
+    // adminOnly: true = visibile solo nel changelog admin
+    // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '0.9.95',
+            date: '2025-12-11',
+            time: '22:30',
+            title: 'Correzioni Sistema Draft',
+            changes: [
+                { text: 'Fix bug salto turno: risolto problema che saltava una squadra durante il draft', adminOnly: false },
+                { text: 'Migliorata stabilita del sistema turni con protezione race condition', adminOnly: false },
+                { text: 'Admin puo cliccare su una squadra nella lista per passare il turno', adminOnly: true },
+                { text: 'Changelog separato per admin e giocatori', adminOnly: true }
+            ],
+            type: 'bugfix'
+        },
         {
             version: '0.9.94',
             date: '2025-12-11',
             time: '21:00',
             title: 'Miglioramenti Pannello Admin',
             changes: [
-                'Aggiunto bottone "Assegna CS a Tutte" per dare crediti a tutte le squadre',
-                'Aggiunto bottone "Assegna CSS a Tutte" per dare crediti super seri a tutte',
-                'Lista squadre in box scrollabile (max 8 visibili, poi scroll)',
-                'Accesso rapido dashboard Mucche Mannare e Schalke104 in Utilita Admin',
-                'Rimosso testo superfluo dalla homepage admin'
+                { text: 'Aggiunto bottone "Assegna CS a Tutte" per dare crediti a tutte le squadre', adminOnly: true },
+                { text: 'Aggiunto bottone "Assegna CSS a Tutte" per dare crediti super seri a tutte', adminOnly: true },
+                { text: 'Lista squadre in box scrollabile (max 8 visibili, poi scroll)', adminOnly: true },
+                { text: 'Accesso rapido dashboard Mucche Mannare e Schalke104 in Utilita Admin', adminOnly: true },
+                { text: 'Rimosso testo superfluo dalla homepage admin', adminOnly: true }
             ],
-            type: 'feature'
+            type: 'feature',
+            adminOnly: true
         },
         {
             version: '0.9.93',
@@ -34,11 +57,11 @@ window.Changelog = {
             time: '19:45',
             title: 'Pausa/Riprendi Draft',
             changes: [
-                'Aggiunto bottone "Metti in Pausa" per sospendere temporaneamente il draft',
-                'Aggiunto bottone "Riprendi Draft" per riprendere dalla pausa',
-                'Il countdown si ferma durante la pausa e riprende da dove era',
-                'Gli utenti vedono UI "Draft in Pausa" quando sospeso',
-                'Pannello admin mostra stato pausa con colore arancione'
+                { text: 'Il draft puo essere messo in pausa temporaneamente', adminOnly: false },
+                { text: 'Il countdown si ferma durante la pausa e riprende da dove era', adminOnly: false },
+                { text: 'Interfaccia mostra chiaramente quando il draft e in pausa', adminOnly: false },
+                { text: 'Aggiunto bottone "Metti in Pausa" per admin', adminOnly: true },
+                { text: 'Aggiunto bottone "Riprendi Draft" per admin', adminOnly: true }
             ],
             type: 'feature'
         },
@@ -46,15 +69,14 @@ window.Changelog = {
             version: '0.9.92',
             date: '2025-12-11',
             time: '18:30',
-            title: 'Draft Debug & Admin Panel',
+            title: 'Miglioramenti Draft',
             changes: [
-                'Riorganizzato pannello admin: Draft a Turni dentro "Controllo Stato"',
-                'Aggiunto bottone "Avanza Turno Manualmente" per admin',
-                'Box Draft a Turni nascosto quando draft e chiuso',
-                'Fix countdown desync: sincronizzazione con server ogni 10 secondi',
-                'Fix race condition: guard aggiuntivi prima degli update',
-                'Fix doppio draft: verifica isDrafted con dati freschi',
-                'Migliorata gestione turni con verifica stato real-time'
+                { text: 'Fix sincronizzazione countdown con il server', adminOnly: false },
+                { text: 'Migliorata gestione turni con verifica stato real-time', adminOnly: false },
+                { text: 'Fix doppio draft: verifica piu accurata prima dell\'acquisto', adminOnly: false },
+                { text: 'Riorganizzato pannello admin: Draft a Turni dentro "Controllo Stato"', adminOnly: true },
+                { text: 'Aggiunto bottone "Avanza Turno Manualmente" per admin', adminOnly: true },
+                { text: 'Box Draft a Turni nascosto quando draft e chiuso', adminOnly: true }
             ],
             type: 'bugfix'
         },
@@ -64,29 +86,54 @@ window.Changelog = {
             time: '16:45',
             title: 'Bug Fix & Ottimizzazioni',
             changes: [
-                'Fix Draft Snake: risolto turno 2 saltato (race condition)',
-                'Fix costo Draft: mostra range min-max invece di valore singolo',
-                'Fix pannello Admin Automazioni: risolto blocco su "Aggiornamento"',
-                'Fix mobile: toggle switches allineati su iPhone/Android',
-                'Fix immagini: migrato a raw.githubusercontent.com',
-                'Fix URL Icone: corretto case-sensitive (Icone/ maiuscolo)',
-                'Aggiunta sanitizzazione automatica URL GitHub legacy',
-                'Aggiunto Changelog in homepage'
+                { text: 'Fix Draft Snake: risolto problema turni', adminOnly: false },
+                { text: 'Fix costo Draft: mostra range min-max invece di valore singolo', adminOnly: false },
+                { text: 'Fix mobile: toggle switches allineati su iPhone/Android', adminOnly: false },
+                { text: 'Fix immagini giocatori', adminOnly: false },
+                { text: 'Fix pannello Admin Automazioni: risolto blocco su "Aggiornamento"', adminOnly: true }
             ],
             type: 'bugfix'
         }
     ],
 
     /**
-     * Mostra il modal changelog
+     * Mostra il modal changelog per giocatori (default)
      */
     show() {
+        this.showPlayers();
+    },
+
+    /**
+     * Mostra il changelog per giocatori (esclude modifiche admin)
+     */
+    showPlayers() {
+        this.currentMode = 'players';
+        this._showModal('Novita per i Giocatori');
+    },
+
+    /**
+     * Mostra il changelog completo per admin
+     */
+    showAdmin() {
+        this.currentMode = 'admin';
+        this._showModal('Changelog Completo (Admin)');
+    },
+
+    /**
+     * Mostra il modal con titolo personalizzato
+     */
+    _showModal(title) {
         const modal = document.getElementById('changelog-modal');
         const content = document.getElementById('changelog-content');
+        const titleEl = document.getElementById('changelog-title');
 
         if (!modal || !content) {
             console.error('Changelog: elementi DOM non trovati');
             return;
+        }
+
+        if (titleEl) {
+            titleEl.innerHTML = `<span>📋</span> ${title}`;
         }
 
         content.innerHTML = this.renderChangelog();
@@ -127,10 +174,51 @@ window.Changelog = {
     },
 
     /**
+     * Filtra le entries in base alla modalita corrente
+     */
+    getFilteredEntries() {
+        if (this.currentMode === 'admin') {
+            // Admin vede tutto
+            return this.entries;
+        }
+
+        // Players: filtra le entries che sono adminOnly a livello di entry
+        // e filtra i singoli changes adminOnly
+        return this.entries
+            .filter(entry => !entry.adminOnly)
+            .map(entry => ({
+                ...entry,
+                changes: entry.changes.filter(change => {
+                    // Supporta sia il vecchio formato (stringa) che il nuovo (oggetto)
+                    if (typeof change === 'string') return true;
+                    return !change.adminOnly;
+                })
+            }))
+            .filter(entry => entry.changes.length > 0); // Rimuovi entries senza changes visibili
+    },
+
+    /**
+     * Ottiene il testo di un change (supporta vecchio e nuovo formato)
+     */
+    getChangeText(change) {
+        if (typeof change === 'string') return change;
+        return change.text;
+    },
+
+    /**
      * Renderizza il contenuto del changelog
      */
     renderChangelog() {
-        const entriesToShow = this.entries.slice(0, this.maxEntries);
+        const filteredEntries = this.getFilteredEntries();
+        const entriesToShow = filteredEntries.slice(0, this.maxEntries);
+
+        if (entriesToShow.length === 0) {
+            return `
+                <div class="text-center text-gray-400 py-8">
+                    <p>Nessun aggiornamento recente.</p>
+                </div>
+            `;
+        }
 
         let html = `
             <div class="text-center mb-6">
@@ -140,12 +228,12 @@ window.Changelog = {
             </div>
         `;
 
+        let firstShown = false;
         entriesToShow.forEach((entry, index) => {
-            const isFirst = index === 0;
-
-            if (isFirst) {
+            if (!firstShown) {
                 // Prima entry (piu recente) - sempre espansa
                 html += this.renderEntryExpanded(entry, true);
+                firstShown = true;
             } else {
                 // Altre entries - accordion collassabile
                 html += this.renderEntryAccordion(entry, index);
@@ -186,7 +274,7 @@ window.Changelog = {
                     ${entry.changes.map(change => `
                         <li class="text-gray-300 text-sm flex items-start gap-2">
                             <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
-                            <span>${change}</span>
+                            <span>${this.getChangeText(change)}</span>
                         </li>
                     `).join('')}
                 </ul>
@@ -223,7 +311,7 @@ window.Changelog = {
                         ${entry.changes.map(change => `
                             <li class="text-gray-300 text-sm flex items-start gap-2">
                                 <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
-                                <span>${change}</span>
+                                <span>${this.getChangeText(change)}</span>
                             </li>
                         `).join('')}
                     </ul>

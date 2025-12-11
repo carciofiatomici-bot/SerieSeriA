@@ -271,4 +271,4 @@ window.InterfacciaOnboarding = {
     }
 };
 
-console.log("âœ… Modulo interfaccia-onboarding.js caricato.");
+console.log("[OK] Modulo interfaccia-onboarding.js caricato.");

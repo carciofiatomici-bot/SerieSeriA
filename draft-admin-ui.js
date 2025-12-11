@@ -54,10 +54,12 @@ window.DraftAdminUI = {
                         </div>
                     </div>
                     <div class="mt-3">
-                        <p class="text-xs text-gray-400 mb-2">Ordine Round ${currentRound}:</p>
-                        <div class="flex flex-wrap gap-1">
+                        <p class="text-xs text-gray-400 mb-2">Ordine Round ${currentRound}: <span class="text-cyan-400">(clicca su una squadra per passare il turno)</span></p>
+                        <div id="draft-order-list" class="flex flex-wrap gap-1">
                             ${currentOrder.map((t, i) => `
-                                <span class="text-xs px-2 py-1 rounded ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white')}">${i+1}. ${t.teamName}</span>
+                                <button data-action="jump-to-team" data-team-id="${t.teamId}" data-team-name="${t.teamName}"
+                                        class="text-xs px-2 py-1 rounded cursor-pointer hover:ring-2 hover:ring-cyan-400 transition
+                                        ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white hover:bg-gray-600')}">${i+1}. ${t.teamName}</button>
                             `).join('')}
                         </div>
                     </div>
@@ -267,6 +269,19 @@ window.DraftAdminUI = {
                 this.handleUpdateDraftCosts(context);
             });
         }
+
+        // Event listener per Jump to Team (event delegation sulla lista ordine)
+        const draftOrderList = document.getElementById('draft-order-list');
+        if (draftOrderList) {
+            draftOrderList.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action="jump-to-team"]');
+                if (btn) {
+                    const teamId = btn.dataset.teamId;
+                    const teamName = btn.dataset.teamName;
+                    this.handleJumpToTeam(context, teamId, teamName);
+                }
+            });
+        }
     },
 
     /**
@@ -336,6 +351,45 @@ window.DraftAdminUI = {
             displayMessage(`Errore: ${error.message}`, 'error', 'draft-toggle-message');
             btn.disabled = false;
             btn.textContent = 'Ferma Draft a Turni';
+        }
+    },
+
+    /**
+     * Gestisce il salto a una squadra specifica nel draft
+     * @param {Object} context - Contesto
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     */
+    async handleJumpToTeam(context, teamId, teamName) {
+        const { displayMessage } = window.DraftUtils;
+
+        // Chiedi conferma prima di cambiare il turno
+        const confirmed = confirm(
+            `Vuoi passare il turno a "${teamName}"?\n\n` +
+            `ATTENZIONE: Il draft ripartira da questa squadra.\n` +
+            `Le squadre successive potranno draftare di nuovo.`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        displayMessage(`Passaggio turno a ${teamName} in corso...`, 'info', 'draft-toggle-message');
+
+        try {
+            const result = await window.DraftTurns.jumpToTeam(context, teamId);
+
+            if (result.success) {
+                displayMessage(result.message, 'success', 'draft-toggle-message');
+                // Ricarica il pannello per mostrare lo stato aggiornato
+                this.render(context);
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error("Errore nel passaggio turno:", error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'draft-toggle-message');
         }
     },
 

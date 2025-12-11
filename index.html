@@ -240,9 +240,9 @@
                 </div>
                 <div class="mt-3 flex justify-center">
                     <button id="btn-show-changelog"
-                            onclick="window.Changelog?.show()"
+                            onclick="window.Changelog?.showPlayers()"
                             class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
-                        <span>📋</span> Changelog <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v0.9.91</span>
+                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v0.9.95</span>
                     </button>
                 </div>
             </div>
@@ -488,10 +488,17 @@
                 <p class="text-gray-400 text-center">Inizializzazione...</p>
             </div>
             
-            <button id="admin-logout-button"
-                    class="mt-6 w-full bg-red-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-400 transition duration-150 transform hover:scale-[1.02]">
-                Logout Admin
-            </button>
+            <div class="mt-6 flex gap-3">
+                <button id="btn-admin-changelog"
+                        onclick="window.Changelog?.showAdmin()"
+                        class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📋</span> Changelog
+                </button>
+                <button id="admin-logout-button"
+                        class="flex-1 bg-red-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-400 transition duration-150 transform hover:scale-[1.02]">
+                    Logout Admin
+                </button>
+            </div>
         </div>
         
         <!-- 5. CONTENUTO AREA DRAFT (Utente) - NASCOSTO -->
@@ -908,8 +915,8 @@
         <div id="changelog-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-4">
             <div class="bg-gray-800 rounded-xl border-2 border-indigo-500 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <span>📋</span> Changelog - Serie SeriA
+                    <h3 id="changelog-title" class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>📋</span> Novita per i Giocatori
                     </h3>
                     <button onclick="window.Changelog?.hide()" class="text-white hover:text-gray-300 text-2xl font-bold">&times;</button>
                 </div>

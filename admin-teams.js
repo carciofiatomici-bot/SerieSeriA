@@ -853,7 +853,7 @@ window.AdminTeams = {
                                 <select id="player-type-input" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500">
                                     <option value="Potenza" ${player.type === 'Potenza' ? 'selected' : ''}>💪 Potenza</option>
                                     <option value="Tecnica" ${player.type === 'Tecnica' ? 'selected' : ''}>🎯 Tecnica</option>
-                                    <option value="Velocita" ${player.type === 'Velocita' ? 'selected' : ''}>⚡ VelocitÃ </option>
+                                    <option value="Velocita" ${player.type === 'Velocita' ? 'selected' : ''}>⚡ Velocita</option>
                                 </select>
                             </div>
                         </div>
@@ -882,7 +882,7 @@ window.AdminTeams = {
                         `}
 
                         <div>
-                            <label class="text-gray-300 block mb-2 font-bold">AbilitÃ </label>
+                            <label class="text-gray-300 block mb-2 font-bold">Abilita</label>
                             <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
                             <div id="abilities-selection" class="space-y-3" data-editing-index="${index}">
                                 ${this.renderAbilitiesSelection(player.role, player.abilities || [], this.isPlayerIcona(player), index)}
@@ -924,8 +924,8 @@ window.AdminTeams = {
             return p.abilities && p.abilities.includes('Icona');
         });
 
-        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">✏️… abilita Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
-        
+        let html = '<div class="bg-gray-900 p-3 rounded border border-green-500"><h5 class="text-green-400 font-bold mb-2">Abilita Positive (Max 3)</h5><div class="grid grid-cols-2 gap-2">';
+
         roleAbilities.positive.forEach(ability => {
             const checked = currentAbilities.includes(ability) ? 'checked' : '';
             html += `
@@ -939,7 +939,7 @@ window.AdminTeams = {
         
         html += '</div></div>';
         
-        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">Ã¢ÂÅ’ abilita Negative (Max 2)</h5>';
+        html += '<div class="bg-gray-900 p-3 rounded border border-red-500 mt-3"><h5 class="text-red-400 font-bold mb-2">Abilita Negative (Max 2)</h5>';
         html += '<p class="text-xs text-yellow-300 mb-2">Attenzione: effetti dannosi!</p><div class="grid grid-cols-2 gap-2">';
         
         roleAbilities.negative.forEach(ability => {
@@ -1011,14 +1011,14 @@ window.AdminTeams = {
         // Limita positive a 3
         if (positiveChecks.length > 3) {
             event.target.checked = false;
-            alert('Ã¢ÂÅ’ Massimo 3 abilita positive!');
+            alert('Massimo 3 abilita positive!');
             return false;
         }
         
         // Limita negative a 2
         if (negativeChecks.length > 2) {
             event.target.checked = false;
-            alert('Ã¢ÂÅ’ Massimo 2 abilita negative!');
+            alert('Massimo 2 abilita negative!');
             return false;
         }
         
@@ -1139,7 +1139,7 @@ window.AdminTeams = {
         }
 
         console.log('PlayerData salvato:', JSON.stringify(playerData, null, 2));
-        console.log('Abilities nel playerData:', playerData.abilities);
+        console.log('Abilita nel playerData:', playerData.abilities);
 
         this.closePlayerEditModal();
         document.getElementById('players-list-edit').innerHTML = this.renderPlayersList();
@@ -1163,7 +1163,7 @@ window.AdminTeams = {
         const creditiSuperSeri = parseInt(document.getElementById('edit-css').value) || 0;
 
         if (!teamName || teamName.length < 3) {
-            alert('Ã¢ÂÅ’ Il nome squadra deve avere almeno 3 caratteri!');
+            alert('¢Å’ Il nome squadra deve avere almeno 3 caratteri!');
             return;
         }
         
@@ -1172,7 +1172,7 @@ window.AdminTeams = {
         const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
         
         const msgElement = document.getElementById('edit-message');
-        msgElement.textContent = 'Ã¢ÂÂ³ Salvataggio in corso...';
+        msgElement.textContent = '¢³ Salvataggio in corso...';
         msgElement.className = 'text-center text-sm mb-4 text-yellow-400';
         
         try {
@@ -1197,7 +1197,7 @@ window.AdminTeams = {
                 playersFormStatus: updatedFormStatus
             });
             
-            msgElement.textContent = '✏️… Modifiche salvate con successo!';
+            msgElement.textContent = ' Modifiche salvate con successo!';
             msgElement.className = 'text-center text-sm mb-4 text-green-400';
             
             setTimeout(() => {
@@ -1207,7 +1207,7 @@ window.AdminTeams = {
             
         } catch (error) {
             console.error('Errore salvataggio:', error);
-            msgElement.textContent = `Ã¢ÂÅ’ Errore: ${error.message}`;
+            msgElement.textContent = `¢Å’ Errore: ${error.message}`;
             msgElement.className = 'text-center text-sm mb-4 text-red-400';
         }
     },
@@ -1378,7 +1378,7 @@ window.AdminTeams = {
             if (needsLevelFix || hasObsoleteFields) {
                 let repairNote = `${player.name}: `;
                 if (needsLevelFix) {
-                    repairNote += `Lv ${currentLevel} â†’ ${correctLevel}`;
+                    repairNote += `Lv ${currentLevel} -> ${correctLevel}`;
                 }
                 if (hasObsoleteFields) {
                     repairNote += needsLevelFix ? ', rimossi campi obsoleti' : 'rimossi campi obsoleti';
@@ -1413,10 +1413,10 @@ window.AdminTeams = {
 
         // Mostra risultato
         if (repairs.length > 0) {
-            msgElement.innerHTML = `<span class="text-green-400">✏️… Riparati ${repairs.length} giocatori:</span><br><span class="text-xs text-gray-300">${repairs.join('<br>')}</span>`;
+            msgElement.innerHTML = `<span class="text-green-400"> Riparati ${repairs.length} giocatori:</span><br><span class="text-xs text-gray-300">${repairs.join('<br>')}</span>`;
             msgElement.className = 'text-center text-sm mt-2';
         } else {
-            msgElement.textContent = '✏️… Nessuna riparazione necessaria. Tutti i dati sono corretti.';
+            msgElement.textContent = ' Nessuna riparazione necessaria. Tutti i dati sono corretti.';
             msgElement.className = 'text-center text-sm mt-2 text-green-400';
         }
     },
@@ -1453,7 +1453,7 @@ window.AdminTeams = {
         // Rimuovi l'abilita "Icona" dalle icone false
         this.currentEditingPlayers = this.currentEditingPlayers.map(player => {
             if (iconeFalse.includes(player)) {
-                const newAbilities = (player.abilities || []).filter(a => a !== 'Icona');
+                const newAbilita = (player.abilities || []).filter(a => a !== 'Icona');
                 fixes.push(`Rimossa abilita "Icona" da ${player.name}`);
                 return {
                     ...player,
@@ -1476,6 +1476,6 @@ window.AdminTeams = {
     }
 };
 
-console.log('✏️… AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
+console.log(' AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
 
 

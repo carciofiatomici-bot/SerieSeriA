@@ -68,15 +68,15 @@ window.ChampionshipRewards = {
         standings.forEach((team, index) => {
             let reward;
             
-            // Prime 3 squadre â†’ 150 CS
+            // Prime 3 squadre <-’ 150 CS
             if (index < 3) { 
                 reward = 150;
             } 
-            // Ultime 3 squadre â†’ 200 CS
+            // Ultime 3 squadre <-’ 200 CS
             else if (index >= numTeams - 3) { 
                 reward = 200;
             }
-            // Tutte le altre squadre partecipanti â†’ 100 CS
+            // Tutte le altre squadre partecipanti <-’ 100 CS
             else {
                 reward = 100;
             }

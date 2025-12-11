@@ -1137,6 +1137,16 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResumeDraft.addEventListener('click', handleResumeDraft);
         }
 
+        // Event delegation per Jump to Team nella lista ordine draft (admin)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action="admin-jump-to-team"]');
+            if (btn) {
+                const teamId = btn.dataset.teamId;
+                const teamName = btn.dataset.teamName;
+                handleAdminJumpToTeam(teamId, teamName);
+            }
+        });
+
         // Bottoni Visualizza Lista Giocatori - Aprono modal separati
         const btnViewDraftPlayers = document.getElementById('btn-view-draft-players');
         if (btnViewDraftPlayers) {
@@ -1290,9 +1300,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div><span class="text-gray-400">Rimanenti:</span> <span class="text-white font-bold">${remainingTeams}</span></div>
                             </div>
                             <p class="text-sm mt-2"><span class="text-gray-400">Turno:</span> <span class="text-yellow-400 font-bold">${currentTeam ? currentTeam.teamName : 'N/A'}</span></p>
-                            <div class="mt-2 flex flex-wrap gap-1">
+                            <p class="text-xs text-cyan-400 mt-1">(clicca su una squadra per passare il turno)</p>
+                            <div id="admin-draft-order-list" class="mt-2 flex flex-wrap gap-1">
                                 ${currentOrder.map((t, i) => `
-                                    <span class="text-xs px-2 py-1 rounded ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white')}">${i+1}. ${t.teamName}</span>
+                                    <button data-action="admin-jump-to-team" data-team-id="${t.teamId}" data-team-name="${t.teamName}"
+                                            class="text-xs px-2 py-1 rounded cursor-pointer hover:ring-2 hover:ring-cyan-400 transition
+                                            ${t.hasDrafted ? 'bg-gray-600 text-gray-400 line-through' : (t.teamId === draftTurns.currentTeamId ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-white hover:bg-gray-600')}">${i+1}. ${t.teamName}</button>
                                 `).join('')}
                             </div>
                         </div>
@@ -1831,6 +1844,49 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.innerHTML = '⏭️ Avanza Turno Manualmente';
+        }
+    };
+
+    /**
+     * Gestisce il salto a una squadra specifica nel draft (admin)
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     */
+    const handleAdminJumpToTeam = async (teamId, teamName) => {
+        // Chiedi conferma prima di cambiare il turno
+        const confirmed = confirm(
+            `Vuoi passare il turno a "${teamName}"?\n\n` +
+            `ATTENZIONE: Il draft ripartira da questa squadra.\n` +
+            `Le squadre successive potranno draftare di nuovo.`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        displayMessage(`Passaggio turno a ${teamName} in corso...`, 'info', 'toggle-status-message');
+
+        try {
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+
+            const result = await window.DraftTurns.jumpToTeam(context, teamId);
+
+            if (result.success) {
+                displayMessage(result.message, 'success', 'toggle-status-message');
+                loadDraftTurnsStatus();
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error('Errore nel passaggio turno:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
         }
     };
 
