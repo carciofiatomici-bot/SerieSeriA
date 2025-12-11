@@ -38,18 +38,45 @@ window.InterfacciaCore = {
     set captainCandidates(val) { captainCandidates = val; },
 };
 
+// --- FUNZIONE HELPER PER SANITIZZARE URL GITHUB ---
+/**
+ * Converte URL GitHub dal vecchio formato (github.com/.../blob/...?raw=true)
+ * al nuovo formato (raw.githubusercontent.com/...)
+ * @param {string} url - URL da sanitizzare
+ * @returns {string} - URL nel formato corretto
+ */
+window.sanitizeGitHubUrl = function(url) {
+    if (!url || typeof url !== 'string') return url;
+
+    // Se e' gia' nel formato corretto, ritorna cosi' com'e'
+    if (url.includes('raw.githubusercontent.com')) {
+        return url.replace('?raw=true', '');
+    }
+
+    // Converti dal vecchio formato github.com/.../blob/... al nuovo
+    if (url.includes('github.com') && url.includes('/blob/')) {
+        let newUrl = url
+            .replace('github.com', 'raw.githubusercontent.com')
+            .replace('/blob/', '/')
+            .replace('?raw=true', '');
+        return newUrl;
+    }
+
+    return url;
+};
+
 // --- COSTANTI GLOBALI ---
 window.InterfacciaConstants = {
     // Credenziali Admin Hardcoded
     ADMIN_USERNAME: "serieseria",
     ADMIN_PASSWORD: "admin",
     ADMIN_USERNAME_LOWER: "serieseria",
-    
+
     // Password Gate
     MASTER_PASSWORD: "seria",
-    
+
     // Logo Placeholder
-    DEFAULT_LOGO_URL: "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true",
+    DEFAULT_LOGO_URL: "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg",
     
     // Limite massimo di giocatori nella rosa (escludendo l'Icona)
     MAX_ROSA_PLAYERS: 12, // 12 giocatori + 1 Icona
@@ -149,7 +176,9 @@ const fetchAllTeamLogos = async () => {
         const logos = {};
         teamsSnapshot.forEach(doc => {
             const data = doc.data();
-            logos[doc.id] = data.logoUrl || window.InterfacciaConstants.DEFAULT_LOGO_URL;
+            // Sanitizza l'URL per convertire vecchi formati GitHub
+            const rawLogoUrl = data.logoUrl || window.InterfacciaConstants.DEFAULT_LOGO_URL;
+            logos[doc.id] = window.sanitizeGitHubUrl(rawLogoUrl);
         });
         
         teamLogosMap = logos;

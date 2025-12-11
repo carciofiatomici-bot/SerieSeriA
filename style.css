@@ -8,7 +8,7 @@ CONTENUTO DEL MODULO STYLE.CSS
 body {
     font-family: 'Inter', sans-serif;
     /* Immagine di Sfondo */
-    background-image: url('https://github.com/carciofiatomici-bot/immaginiserie/blob/main/sfondo%20app.jpg?raw=true');
+    background-image: url('https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/sfondo%20app.jpg');
     background-size: cover;          
     background-repeat: no-repeat;
     background-attachment: fixed;    
@@ -788,6 +788,111 @@ html {
 @media (max-width: 639px) {
     .grid.grid-cols-1.md\\:grid-cols-2 {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* ===================== TOGGLE SWITCHES MOBILE FIX ===================== */
+
+/* Fix per toggle switches su mobile */
+@media (max-width: 639px) {
+    /* Container dei toggle - stack verticale su mobile stretto */
+    .flex.items-center.justify-center.space-x-3 {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Label dei toggle - dimensione fissa per evitare shrink */
+    label.relative.inline-flex.items-center.cursor-pointer {
+        flex-shrink: 0 !important;
+        min-width: 44px;
+    }
+
+    /* Toggle switch container - dimensioni fisse */
+    label.relative.inline-flex.items-center.cursor-pointer > div {
+        flex-shrink: 0 !important;
+        width: 44px !important;
+        height: 24px !important;
+        min-width: 44px !important;
+    }
+
+    /* Toggle knob - posizionamento corretto */
+    label.relative.inline-flex.items-center.cursor-pointer > div::after {
+        width: 20px !important;
+        height: 20px !important;
+        top: 2px !important;
+        left: 2px !important;
+    }
+
+    /* Quando checked, sposta il knob */
+    .peer:checked ~ div::after {
+        transform: translateX(20px) !important;
+    }
+
+    /* Sezione partecipazione - layout migliorato */
+    #dashboard-participation-section .flex.items-center.justify-center {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        padding: 0 8px;
+    }
+
+    #dashboard-participation-section .flex.items-center.justify-center > span {
+        flex: 1;
+        text-align: left;
+        font-size: 0.875rem;
+    }
+
+    /* Toggle nella sezione admin */
+    #admin-dashboard-container label.relative.inline-flex {
+        margin-left: auto;
+    }
+
+    /* Feature flags toggles */
+    .flag-toggle + div {
+        flex-shrink: 0 !important;
+    }
+
+    /* Team participation checkboxes */
+    .team-item .flex.items-center.space-x-4 {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .team-item input[type="checkbox"] {
+        flex-shrink: 0;
+    }
+
+    /* Feature flags cards - layout mobile */
+    #feature-flags-container .bg-gray-800 > .p-4.flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    #feature-flags-container .bg-gray-800 > .p-4.flex > .flex.items-center.gap-4:last-child {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #374151;
+    }
+
+    /* Toggle piu grande per touch su mobile */
+    #feature-flags-container .w-14.h-7 {
+        width: 56px !important;
+        height: 28px !important;
+        flex-shrink: 0;
+    }
+
+    /* Admin toggle draft/mercato - layout migliorato */
+    #admin-dashboard-container .flex.items-center.justify-between {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #admin-dashboard-container .flex.items-center.justify-between > .flex.items-center {
+        flex: 1 1 auto;
+        min-width: 120px;
     }
 }
 

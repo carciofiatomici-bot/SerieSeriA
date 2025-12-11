@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CONFIG_DOC_ID = 'settings';
     const SCHEDULE_DOC_ID = 'full_schedule';
     const LEADERBOARD_DOC_ID = 'standings';
-    const DEFAULT_LOGO_URL = "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true";
+    const DEFAULT_LOGO_URL = "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg";
 
     const getLogoHtml = (teamId) => {
         if (window.getLogoHtml) return window.getLogoHtml(teamId);

@@ -110,7 +110,7 @@ window.UserCompetitions = {
 
             // Funzione per ottenere logo grande
             const getLargeLogoHtml = (teamId) => {
-                const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+                const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
                 return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
             };
 
@@ -354,7 +354,7 @@ window.UserCompetitions = {
 
         // Funzione per ottenere logo grande
         const getLargeLogoHtml = (teamId) => {
-            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
         };
 
@@ -620,7 +620,7 @@ window.UserCompetitions = {
 
         // Funzione per ottenere logo grande
         const getLargeLogoHtml = (teamId) => {
-            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover mx-auto">`;
         };
 

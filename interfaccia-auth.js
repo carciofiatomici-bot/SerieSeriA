@@ -546,7 +546,7 @@ window.InterfacciaAuth = {
             const logoImg = document.getElementById('remembered-team-logo');
             const teamNameEl = document.getElementById('remembered-team-name');
 
-            if (logoImg) logoImg.src = rememberedSession.logoUrl || DEFAULT_LOGO_URL;
+            if (logoImg) logoImg.src = window.sanitizeGitHubUrl(rememberedSession.logoUrl) || DEFAULT_LOGO_URL;
             if (teamNameEl) teamNameEl.textContent = rememberedSession.teamName || rememberedSession.teamId;
 
             rememberedBox.classList.remove('hidden');
@@ -782,7 +782,7 @@ window.InterfacciaAuth = {
         // Popola il container
         container.innerHTML = iconeOrdinate.map(icona => `
             <div class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 text-center shadow-lg">
-                <img src="${icona.photoUrl}"
+                <img src="${window.sanitizeGitHubUrl(icona.photoUrl)}"
                      alt="${icona.name}"
                      class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400">
                 <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
@@ -859,7 +859,8 @@ window.InterfacciaAuth = {
                 const teamColor = squadra.primaryColor || '#22c55e';
                 const players = squadra.players || [];
                 const playersCount = players.length;
-                const logoUrl = squadra.logoUrl || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
+                // Sanitizza URL per convertire vecchi formati GitHub
+                const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
                 // Trova l'icona (capitano)
                 const icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
@@ -872,9 +873,9 @@ window.InterfacciaAuth = {
                         t.id === icona.id || t.name === icona.name
                     );
                     if (iconaTemplate && iconaTemplate.photoUrl) {
-                        iconaPhoto = iconaTemplate.photoUrl;
+                        iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
                     } else if (icona.photoUrl) {
-                        iconaPhoto = icona.photoUrl;
+                        iconaPhoto = window.sanitizeGitHubUrl(icona.photoUrl);
                     }
                 }
 
@@ -976,13 +977,13 @@ window.InterfacciaAuth = {
                                 const roleColor = roleColors[player.role] || 'bg-gray-600';
 
                                 // Per le icone, cerca il photoUrl dal template per avere sempre il link aggiornato
-                                let photoUrl = player.photoUrl || 'https://placehold.co/40x40/374151/9ca3af?text=' + (player.name ? player.name.charAt(0) : '?');
+                                let photoUrl = window.sanitizeGitHubUrl(player.photoUrl) || 'https://placehold.co/40x40/374151/9ca3af?text=' + (player.name ? player.name.charAt(0) : '?');
                                 if (isIcona) {
                                     const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t =>
                                         t.id === player.id || t.name === player.name
                                     );
                                     if (iconaTemplate && iconaTemplate.photoUrl) {
-                                        photoUrl = iconaTemplate.photoUrl;
+                                        photoUrl = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
                                     }
                                 }
 

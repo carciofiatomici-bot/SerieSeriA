@@ -81,7 +81,7 @@ window.AdminTeams = {
                 const checkboxColorClasses = isParticipating ? 'bg-green-500 border-green-500' : 'bg-gray-700 border-gray-500';
                 const cupCheckboxColorClasses = isCupParticipating ? 'bg-purple-500 border-purple-500' : 'bg-gray-700 border-gray-500';
 
-                const logoUrl = teamData.logoUrl || 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+                const logoUrl = teamData.logoUrl || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
 
                 teamsHtml += `
                     <div class="team-item flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-500 transition duration-150">
@@ -511,7 +511,7 @@ window.AdminTeams = {
      * Gestisce il cambio del logo della squadra
      */
     async handleChangeLogo(teamId, imgElement, TEAMS_COLLECTION_PATH) {
-        const DEFAULT_LOGO_URL = 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true';
+        const DEFAULT_LOGO_URL = 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
         const currentUrl = imgElement.src;
 
         const newLogoUrl = prompt("Inserisci il link (URL) del nuovo logo della squadra:", currentUrl);

@@ -29,7 +29,7 @@ window.GestioneSquadreConstants = {
     },
 
     // URL dell'immagine legenda tipologie
-    TYPE_LEGEND_URL: "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Logica%20Tipologie.png?raw=true",
+    TYPE_LEGEND_URL: "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Logica%20Tipologie.png",
 
     // Costo sostituzione Icona (in CSS - Crediti Super Seri)
     ICONA_REPLACEMENT_COST: 1

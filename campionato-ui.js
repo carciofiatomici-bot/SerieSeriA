@@ -10,7 +10,7 @@ window.ChampionshipUI = {
      * Renderizza l'anteprima del calendario (prime 6 giornate).
      */
     renderSchedulePreview(schedule, numTeams) {
-        const DEFAULT_LOGO_URL = "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true";
+        const DEFAULT_LOGO_URL = "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg";
         
         if (!schedule || schedule.length === 0) {
             return `<p class="text-gray-400 text-center">Nessun calendario generato. Clicca il pulsante sopra.</p>`;
@@ -57,7 +57,7 @@ window.ChampionshipUI = {
         const scheduleContainer = document.getElementById('schedule-display-container');
         if (!scheduleContainer) return;
         
-        const DEFAULT_LOGO_URL = "https://github.com/carciofiatomici-bot/immaginiserie/blob/main/placeholder.jpg?raw=true";
+        const DEFAULT_LOGO_URL = "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg";
         const getLogoHtml = window.getLogoHtml || ((teamId) => `<img src="${DEFAULT_LOGO_URL}" alt="Logo" class="w-6 h-6 rounded-full border border-gray-500 inline-block align-middle mr-2">`);
         
         const nextRound = schedule.find(round => 

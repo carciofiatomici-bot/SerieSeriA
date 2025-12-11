@@ -25,7 +25,9 @@ window.InterfacciaDashboard = {
         }
 
         window.InterfacciaCore.currentTeamId = teamDocId;
-        elements.teamLogoElement.src = logoUrl || DEFAULT_LOGO_URL;
+        // Sanitizza URL per convertire vecchi formati GitHub
+        const sanitizedLogoUrl = window.sanitizeGitHubUrl(logoUrl) || DEFAULT_LOGO_URL;
+        elements.teamLogoElement.src = sanitizedLogoUrl;
 
         // Aggiorna l'avatar dell'Icona
         const iconaAvatarElement = document.getElementById('team-icona-avatar');
@@ -58,7 +60,8 @@ window.InterfacciaDashboard = {
                 const iconaType = playerType || 'N/A';
 
                 if (photoUrl) {
-                    iconaAvatarElement.src = photoUrl;
+                    // Sanitizza URL per convertire vecchi formati GitHub
+                    iconaAvatarElement.src = window.sanitizeGitHubUrl(photoUrl);
                 } else {
                     iconaAvatarElement.src = 'https://placehold.co/96x96/facc15/000?text=?';
                 }

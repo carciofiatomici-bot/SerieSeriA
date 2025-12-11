@@ -213,11 +213,17 @@ window.DraftUserUI = {
 
         listContainer.innerHTML = filteredPlayers.length > 0
             ? filteredPlayers.map(player => {
-                const isAffordable = budgetRimanente >= player.cost;
+                // Calcola il range di costo basato sui livelli min/max
+                const calculatePlayerCost = window.calculatePlayerCost;
+                const costMin = calculatePlayerCost ? calculatePlayerCost(player.levelRange[0], player.abilities || []) : player.cost;
+                const costMax = calculatePlayerCost ? calculatePlayerCost(player.levelRange[1], player.abilities || []) : player.cost;
+                const costDisplay = costMin === costMax ? `${costMin}` : `${costMin}-${costMax}`;
+
+                const isAffordable = budgetRimanente >= costMin;
                 const canBuy = isAffordable;
 
                 const buttonClass = canBuy ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
-                const buttonText = isAffordable ? `Drafta (${player.cost} CS)` : `Costo ${player.cost} CS (No Budget)`;
+                const buttonText = isAffordable ? `Drafta (${costDisplay} CS)` : `Costo ${costDisplay} CS (No Budget)`;
 
                 // Mostra abilita se presenti
                 const abilitiesText = player.abilities && player.abilities.length > 0
@@ -233,10 +239,10 @@ window.DraftUserUI = {
                     <div class="flex justify-between items-center p-3 bg-gray-600 rounded-lg border border-yellow-500">
                         <div>
                             <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span>${abilitiesText}</p>
-                            <p class="text-sm text-yellow-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${player.cost} CS</p>
+                            <p class="text-sm text-yellow-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${costDisplay} CS</p>
                         </div>
                         <button data-player-id="${player.id}"
-                                data-player-cost="${player.cost}"
+                                data-player-cost="${costMin}"
                                 data-player-level-min="${player.levelRange[0]}"
                                 data-player-level-max="${player.levelRange[1]}"
                                 data-player-name="${player.name}"
@@ -574,11 +580,17 @@ window.DraftUserUI = {
             <div id="available-players-list" class="mt-2 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
                 ${filteredPlayers.length > 0
                     ? filteredPlayers.map(player => {
-                        const isAffordable = budgetRimanente >= player.cost;
+                        // Calcola il range di costo basato sui livelli min/max
+                        const calculatePlayerCost = window.calculatePlayerCost;
+                        const costMin = calculatePlayerCost ? calculatePlayerCost(player.levelRange[0], player.abilities || []) : player.cost;
+                        const costMax = calculatePlayerCost ? calculatePlayerCost(player.levelRange[1], player.abilities || []) : player.cost;
+                        const costDisplay = costMin === costMax ? `${costMin}` : `${costMin}-${costMax}`;
+
+                        const isAffordable = budgetRimanente >= costMin;
                         const canBuy = isAffordable;
 
                         const buttonClass = canBuy ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
-                        const buttonText = isAffordable ? `Drafta (${player.cost} CS)` : `Costo ${player.cost} CS (No Budget)`;
+                        const buttonText = isAffordable ? `Drafta (${costDisplay} CS)` : `Costo ${costDisplay} CS (No Budget)`;
 
                         // Mostra abilita se presenti
                         const abilitiesText = player.abilities && player.abilities.length > 0
@@ -594,10 +606,10 @@ window.DraftUserUI = {
                             <div class="flex justify-between items-center p-3 bg-gray-600 rounded-lg border border-yellow-500">
                                 <div>
                                     <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span>${abilitiesText}</p>
-                                    <p class="text-sm text-yellow-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${player.cost} CS</p>
+                                    <p class="text-sm text-yellow-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${costDisplay} CS</p>
                                 </div>
                                 <button data-player-id="${player.id}"
-                                        data-player-cost="${player.cost}"
+                                        data-player-cost="${costMin}"
                                         data-player-level-min="${player.levelRange[0]}"
                                         data-player-level-max="${player.levelRange[1]}"
                                         data-player-name="${player.name}"

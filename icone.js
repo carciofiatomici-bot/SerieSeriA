@@ -40,7 +40,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Croccante.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Croccante.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     }, 
@@ -55,7 +55,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/shikanto.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/shikanto.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -70,7 +70,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/cap.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cap.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -85,7 +85,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/simone.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/simone.jpg',
         type: TYPE_VELOCITA,
         abilities: ['Icona']
     },
@@ -100,7 +100,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/dappino.png?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/dappino.png',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     }, 
@@ -115,7 +115,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/blatta.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/blatta.jpg',
         type: TYPE_VELOCITA,
         abilities: ['Icona']
     },
@@ -130,7 +130,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/icone/antony.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/antony.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },
@@ -145,7 +145,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/gladio.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/gladio.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },
@@ -160,7 +160,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/amedemo.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/amedemo.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },
@@ -175,7 +175,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/elficario.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/elficario.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -190,7 +190,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/luca.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/luca.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },
@@ -205,7 +205,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mel.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mel.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -220,7 +220,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Mark%20Falco.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mark%20Falco.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },
@@ -235,7 +235,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/sandro.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/sandro.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -250,7 +250,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/Fosco.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Fosco.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
     },
@@ -265,7 +265,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 12,
-        photoUrl: 'https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/cocco.jpg?raw=true',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cocco.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona']
     },

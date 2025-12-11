@@ -257,6 +257,11 @@ window.DraftTurns = {
 
             // Aggiorna lo stato del team corrente
             if (hasDrafted) {
+                // Guard: se il team corrente ha gia' draftato, qualcun altro ha gia' avanzato il turno
+                if (currentOrder[currentIndex].hasDrafted) {
+                    console.log(`Guard: Team ${currentOrder[currentIndex].teamName} ha gia' draftato in questo round, skip avanzamento.`);
+                    return;
+                }
                 currentOrder[currentIndex].hasDrafted = true;
             } else {
                 // Timeout: incrementa tentativi
@@ -360,6 +365,17 @@ window.DraftTurns = {
             const elapsed = Date.now() - turnStartTime;
 
             if (elapsed >= DRAFT_TURN_TIMEOUT_MS) {
+                // Verifica che il team corrente non abbia gia' draftato (race condition check)
+                const currentRound = draftTurns.currentRound;
+                const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+                const currentOrder = draftTurns[orderKey];
+                const currentIndex = draftTurns.currentTurnIndex;
+
+                if (currentOrder[currentIndex] && currentOrder[currentIndex].hasDrafted) {
+                    console.log("Timeout check: team corrente ha gia' draftato, skip.");
+                    return;
+                }
+
                 console.log("Tempo scaduto per il turno corrente!");
                 await this.advanceToNextTurn(context, false); // false = non ha draftato
             }

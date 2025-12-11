@@ -851,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="font-bold text-lg text-white">Stato: </span>
                             <span class="font-extrabold ${statusColor}">${statusText}</span>
                         </div>
-                        <button id="btn-toggle-automation"
+                        <button id="btn-toggle-automation-state"
                                 class="px-6 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${buttonColor} text-white ${!canEnable && !info.isEnabled ? 'opacity-50 cursor-not-allowed' : ''}"
                                 ${!canEnable && !info.isEnabled ? 'disabled' : ''}>
                             ${buttonText}
@@ -896,12 +896,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             container.innerHTML = statusHtml;
 
-            // Aggiungi listener al pulsante
-            const btnToggle = document.getElementById('btn-toggle-automation');
-            if (btnToggle) {
-                btnToggle.addEventListener('click', async () => {
-                    btnToggle.disabled = true;
-                    btnToggle.textContent = 'Aggiornamento...';
+            // Aggiungi listener al pulsante toggle stato (NON l'accordion!)
+            const btnToggleState = document.getElementById('btn-toggle-automation-state');
+            if (btnToggleState) {
+                btnToggleState.addEventListener('click', async () => {
+                    btnToggleState.disabled = true;
+                    btnToggleState.textContent = 'Aggiornamento...';
 
                     try {
                         if (info.isEnabled) {
