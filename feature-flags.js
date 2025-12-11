@@ -203,6 +203,23 @@ window.FeatureFlags = {
                     <li>Underdog vince (media rosa -2.0): vincita x1.25</li>
                 </ul>
                 <p class="mt-2 text-yellow-400">Sfida i tuoi amici e dimostra chi e' il piu' forte!</p>`
+        },
+        tutorial: {
+            id: 'tutorial',
+            name: 'Tutorial Interattivo',
+            description: 'Guida passo-passo per i nuovi utenti attraverso le funzionalita del gioco',
+            icon: '📖',
+            enabled: false,
+            category: 'support',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Tutorial guidato step-by-step</li>
+                    <li>Evidenziazione elementi dell'interfaccia</li>
+                    <li>Spiegazione di tutte le funzionalita principali</li>
+                    <li>Bottone "Tutorial" nel box Supporto della homepage</li>
+                    <li>Possibilita di saltare o ripetere il tutorial</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Perfetto per i nuovi giocatori! Attivalo per aiutare chi inizia.</p>`
         }
     },
 
@@ -212,12 +229,17 @@ window.FeatureFlags = {
         return appId ? `artifacts/${appId}/public/data/config/featureFlags` : null;
     },
 
+    // Unsubscribe function per il listener real-time
+    _unsubscribe: null,
+
     /**
      * Inizializza i feature flags caricandoli da Firestore
      */
     async init() {
         try {
             await this.loadFromFirestore();
+            // Avvia listener real-time per aggiornamenti immediati
+            this.startRealtimeListener();
             console.log("Feature Flags inizializzati:", this.getEnabledFlags());
         } catch (error) {
             console.warn("Impossibile caricare feature flags, uso defaults:", error);
@@ -225,7 +247,7 @@ window.FeatureFlags = {
     },
 
     /**
-     * Carica i flags da Firestore
+     * Carica i flags da Firestore (una tantum)
      */
     async loadFromFirestore() {
         const path = this.getConfigPath();
@@ -243,6 +265,61 @@ window.FeatureFlags = {
                     this.flags[key].enabled = value.enabled || false;
                 }
             }
+        }
+    },
+
+    /**
+     * Avvia listener real-time per aggiornamenti immediati dei flags
+     */
+    startRealtimeListener() {
+        const path = this.getConfigPath();
+        if (!path || !window.db || !window.firestoreTools) return;
+
+        // Evita duplicati
+        if (this._unsubscribe) {
+            this._unsubscribe();
+        }
+
+        try {
+            const { doc, onSnapshot } = window.firestoreTools;
+            const docRef = doc(window.db, path);
+
+            this._unsubscribe = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const savedFlags = docSnap.data();
+
+                    // Controlla quali flags sono cambiati
+                    for (const [key, value] of Object.entries(savedFlags)) {
+                        if (this.flags[key]) {
+                            const newEnabled = value.enabled || false;
+                            const oldEnabled = this.flags[key].enabled;
+
+                            // Se lo stato e' cambiato, aggiorna e notifica
+                            if (newEnabled !== oldEnabled) {
+                                this.flags[key].enabled = newEnabled;
+                                console.log(`Feature Flag "${key}" cambiato: ${oldEnabled} -> ${newEnabled}`);
+                                this.notifyChange(key, newEnabled);
+                            }
+                        }
+                    }
+                }
+            }, (error) => {
+                console.warn("Errore listener feature flags:", error);
+            });
+
+            console.log("Listener real-time feature flags attivo");
+        } catch (error) {
+            console.error("Errore setup listener feature flags:", error);
+        }
+    },
+
+    /**
+     * Ferma il listener real-time
+     */
+    stopRealtimeListener() {
+        if (this._unsubscribe) {
+            this._unsubscribe();
+            this._unsubscribe = null;
         }
     },
 
@@ -294,6 +371,16 @@ window.FeatureFlags = {
     async enable(flagId, save = true) {
         if (this.flags[flagId]) {
             this.flags[flagId].enabled = true;
+
+            // Mutua esclusione tra matchAnimations e matchHighlights
+            if (flagId === 'matchAnimations' && this.flags['matchHighlights']?.enabled) {
+                this.flags['matchHighlights'].enabled = false;
+                this.notifyChange('matchHighlights', false);
+            } else if (flagId === 'matchHighlights' && this.flags['matchAnimations']?.enabled) {
+                this.flags['matchAnimations'].enabled = false;
+                this.notifyChange('matchAnimations', false);
+            }
+
             if (save) await this.saveToFirestore();
             this.notifyChange(flagId, true);
         }
@@ -318,9 +405,15 @@ window.FeatureFlags = {
      */
     async toggle(flagId) {
         if (this.flags[flagId]) {
-            this.flags[flagId].enabled = !this.flags[flagId].enabled;
-            await this.saveToFirestore();
-            this.notifyChange(flagId, this.flags[flagId].enabled);
+            const newState = !this.flags[flagId].enabled;
+
+            if (newState) {
+                // Usa enable per gestire mutua esclusione
+                await this.enable(flagId, true);
+            } else {
+                await this.disable(flagId, true);
+            }
+
             return this.flags[flagId].enabled;
         }
         return false;

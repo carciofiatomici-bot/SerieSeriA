@@ -222,15 +222,28 @@ window.Chat = {
         if (isAdmin) {
             teamName = 'Presidente Lega Seria';
         } else {
-            // Prova diversi modi per ottenere il nome squadra
-            teamName = window.InterfacciaCore?.currentTeamData?.teamName
-                    || window.InterfacciaCore?.currentTeamData?.name
-                    || window.InterfacciaCore?.getCurrentTeam?.()?.teamName
-                    || window.InterfacciaCore?.getCurrentTeam?.()?.name
-                    || 'Anonimo';
+            // Ottieni i dati squadra
+            const teamData = window.InterfacciaCore?.currentTeamData;
+            const sessionTeamName = localStorage.getItem('fanta_session_team_name');
+
+            // Debug
+            console.log("Chat DEBUG - teamData:", teamData);
+            console.log("Chat DEBUG - teamData.teamName:", teamData?.teamName);
+            console.log("Chat DEBUG - sessionTeamName:", sessionTeamName);
+            console.log("Chat DEBUG - teamId:", teamId);
+
+            // Ordine di priorita per ottenere il nome squadra:
+            if (teamData && teamData.teamName && teamData.teamName !== '') {
+                teamName = teamData.teamName;
+            } else if (sessionTeamName && sessionTeamName !== '') {
+                teamName = sessionTeamName;
+            } else if (teamId && teamId !== 'unknown' && teamId !== '') {
+                // teamId e' spesso il nome squadra usato come ID documento
+                teamName = teamId;
+            }
         }
 
-        console.log("Chat sendMessage - teamId:", teamId, "teamName:", teamName);
+        console.log("Chat sendMessage - FINAL teamName:", teamName);
 
         const message = {
             id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

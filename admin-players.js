@@ -38,8 +38,17 @@ window.AdminPlayers = {
         return map;
     },
 
-    calculateCost(levelMax, abilitiesCount = 0) {
-        return 100 + (10 * levelMax) + (50 * abilitiesCount);
+    calculateCost(level, abilitiesCount = 0) {
+        return 100 + (10 * level) + (50 * abilitiesCount);
+    },
+
+    /**
+     * Calcola il range di costo basato su livello min e max
+     */
+    calculateCostRange(levelMin, levelMax, abilitiesCount = 0) {
+        const costMin = this.calculateCost(levelMin, abilitiesCount);
+        const costMax = this.calculateCost(levelMax, abilitiesCount);
+        return { costMin, costMax };
     },
 
     /**
@@ -53,15 +62,45 @@ window.AdminPlayers = {
         return nationalityData ? nationalityData.flag : '';
     },
 
+    /**
+     * Formatta il costo per la visualizzazione (range o singolo valore)
+     * @param {object} player - Oggetto giocatore
+     * @returns {string} - Stringa formattata del costo
+     */
+    formatCost(player) {
+        // Se ha costRange, mostra il range
+        if (player.costRange && Array.isArray(player.costRange) && player.costRange.length === 2) {
+            const [costMin, costMax] = player.costRange;
+            if (costMin === costMax) {
+                return `${costMin} CS`;
+            }
+            return `${costMin}-${costMax} CS`;
+        }
+        // Fallback al costo singolo
+        return `${player.cost || '?'} CS`;
+    },
+
     updateCostDisplay() {
+        const levelMinInput = document.getElementById('player-level-min');
         const levelMaxInput = document.getElementById('player-level-max');
         const costDisplayInput = document.getElementById('player-cost-display');
-        if (!levelMaxInput || !costDisplayInput) return;
-        const levelMaxVal = parseInt(levelMaxInput.value) || 0;
+        if (!levelMinInput || !levelMaxInput || !costDisplayInput) return;
+
+        const levelMinVal = parseInt(levelMinInput.value) || 1;
+        const levelMaxVal = parseInt(levelMaxInput.value) || 1;
         const abilitiesCount = document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').length;
-        const newCost = this.calculateCost(levelMaxVal, abilitiesCount);
-        costDisplayInput.value = `Costo: ${newCost} CS`;
-        costDisplayInput.dataset.calculatedCost = newCost;
+
+        const { costMin, costMax } = this.calculateCostRange(levelMinVal, levelMaxVal, abilitiesCount);
+
+        if (levelMinVal === levelMaxVal) {
+            costDisplayInput.value = `Costo: ${costMin} CS`;
+        } else {
+            costDisplayInput.value = `Costo: ${costMin} - ${costMax} CS`;
+        }
+
+        // Salva entrambi i valori per riferimento
+        costDisplayInput.dataset.calculatedCostMin = costMin;
+        costDisplayInput.dataset.calculatedCostMax = costMax;
     },
 
     updateAbilitiesChecklist() {
@@ -188,7 +227,6 @@ window.AdminPlayers = {
         const selectedNegative = shuffledNegative.slice(0, numNegative);
 
         const totalAbilities = numPositive + numNegative;
-        const calculatedCost = this.calculateCost(randomLevelMax, totalAbilities);
 
         // Imposta i valori nei campi
         if (randomNationality) {
@@ -199,12 +237,6 @@ window.AdminPlayers = {
         document.getElementById('player-age').value = randomAge;
         document.getElementById('player-level-min').value = randomLevelMin;
         document.getElementById('player-level-max').value = randomLevelMax;
-
-        const costDisplayInput = document.getElementById('player-cost-display');
-        if (costDisplayInput) {
-            costDisplayInput.value = `Costo: ${calculatedCost} CS`;
-            costDisplayInput.dataset.calculatedCost = calculatedCost;
-        }
 
         // Aggiorna le checkbox delle abilita
         this.updateAbilitiesChecklist();
@@ -220,6 +252,9 @@ window.AdminPlayers = {
             const checkbox = document.getElementById(`ability-${ability.replace(/\s/g, '-')}`);
             if (checkbox) checkbox.checked = true;
         });
+
+        // Aggiorna il display del costo con il range
+        this.updateCostDisplay();
 
         if (msgElement) {
             msgElement.textContent = "Campi riempiti con valori casuali. Inserisci il Nome e aggiungi.";
@@ -248,12 +283,12 @@ window.AdminPlayers = {
         const costDisplayInput = document.getElementById('player-cost-display');
         const selectedAbilities = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked')).map(cb => cb.value);
         const abilitiesCount = selectedAbilities.length;
-        const cost = this.calculateCost(levelMax, abilitiesCount);
+        const { costMin, costMax } = this.calculateCostRange(levelMin, levelMax, abilitiesCount);
         const allowedAbilities = this.ROLE_ABILITIES_MAP[role] || [];
 
-        if (!name || !role || !type || !nationality || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) || isNaN(cost) ||
+        if (!name || !role || !type || !nationality || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) ||
             age < 15 || age > 50 || levelMin < 1 || levelMin > 20 || levelMax < 1 || levelMax > 20 ||
-            levelMin > levelMax || cost < 1) {
+            levelMin > levelMax || costMin < 1) {
              if (msgElement) {
                  msgElement.textContent = "Errore: controlla che tutti i campi (inclusa Nazionalita) siano compilati e validi.";
                  msgElement.classList.add('text-red-400');
@@ -279,7 +314,10 @@ window.AdminPlayers = {
         }
 
         const newPlayer = {
-            name, nationality, role, age, levelRange: [levelMin, levelMax], cost, type,
+            name, nationality, role, age, levelRange: [levelMin, levelMax],
+            costRange: [costMin, costMax], // Range di costo basato sui livelli
+            cost: costMax, // Costo massimo per compatibilita
+            type,
             abilities: selectedAbilities,
             isDrafted: false, teamId: null, creationDate: new Date().toISOString()
         };
@@ -348,7 +386,7 @@ window.AdminPlayers = {
                     <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
                         <div>
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
+                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                             <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
@@ -388,7 +426,7 @@ window.AdminPlayers = {
                  <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
                      <div>
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
+                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                          <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
@@ -436,7 +474,7 @@ window.AdminPlayers = {
                     <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
                         <div>
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
+                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                             <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
@@ -476,7 +514,7 @@ window.AdminPlayers = {
                  <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
                      <div>
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${player.cost} CS</p>
+                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                          <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>

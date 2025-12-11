@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="theme-color" content="#1f2937">
+    <meta name="theme-color" content="#16a34a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Serie SeriA">
+    <meta name="description" content="Gestisci la tua squadra di fantacalcio, partecipa al draft e sfida i tuoi amici!">
     <title>Serie SeriA</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icone PWA -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Collega il foglio di stile esterno -->
@@ -216,11 +226,18 @@
             <!-- BOX 3: SUPPORTO -->
             <div class="p-4 bg-gray-700 rounded-lg border-2 border-red-500">
                 <h3 class="text-sm font-bold text-red-400 mb-3 text-center">Supporto</h3>
-                <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
-                   target="_blank"
-                   class="block w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] text-center">
-                    🐛 Segnala Bug
-                </a>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-how-to-create-team"
+                            onclick="window.Tutorial?.startHowToCreateTeam()"
+                            class="bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs">
+                        📖 Come creare la mia squadra
+                    </button>
+                    <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
+                       target="_blank"
+                       class="bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
+                        🐛 Segnala Bug
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -371,6 +388,10 @@
                             class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
                         <span>⚔️</span> Sfida
                     </button>
+                    <button id="btn-training"
+                            class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                        <span>⚽</span> Allenamento
+                    </button>
                 </div>
                 <!-- BOX BUDGET (nascosto, visibile su hover) -->
                 <div id="team-budget-box" class="hidden group-hover:block p-3 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border-2 border-yellow-500 text-center shadow-lg mt-3 transition-all duration-300">
@@ -426,6 +447,15 @@
                 <button id="btn-delete-team"
                         class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02]">
                     Elimina Squadra
+                </button>
+            </div>
+
+            <!-- Pulsante Tutorial - In fondo alla dashboard -->
+            <div class="mt-6 flex justify-center">
+                <button id="btn-start-tutorial"
+                        onclick="window.Tutorial?.start()"
+                        class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📖</span> Tutorial
                 </button>
             </div>
         </div>
@@ -977,6 +1007,8 @@
     <script src="match-animations.js"></script>
     <script src="drag-drop.js"></script>
     <script src="challenges.js"></script>
+    <script src="dashboard-features.js"></script>
+    <script src="tutorial.js"></script>
 
     <!-- 2. LOGICA DI SIMULAZIONE (Dipende solo dalle costanti) -->
     <script src="simulazione.js"></script> 
@@ -1060,6 +1092,36 @@
 
     <!-- 14. UNIFORM EDITOR (Editor Divisa Squadra) -->
     <script src="uniform-editor.js"></script>
+
+    <!-- 15. PWA SERVICE WORKER REGISTRATION -->
+    <script>
+        // Registra il Service Worker per PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrato con successo:', registration.scope);
+
+                        // Controlla aggiornamenti
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Nuova versione disponibile
+                                    console.log('Nuova versione disponibile! Ricarica la pagina.');
+                                    if (window.Toast) {
+                                        window.Toast.info('Nuova versione disponibile! Ricarica la pagina.');
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.warn('Registrazione Service Worker fallita:', error);
+                    });
+            });
+        }
+    </script>
 
 </body>
 </html><!-- ============================================ -->

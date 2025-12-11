@@ -1482,3 +1482,194 @@ button,
         -webkit-tap-highlight-color: rgba(52, 211, 153, 0.2);
     }
 }
+
+/* ====================================================================
+   TUTORIAL INTERATTIVO
+   ==================================================================== */
+
+/* Overlay scuro con buco per spotlight */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+/* Spotlight che evidenzia l'elemento */
+.tutorial-spotlight {
+    position: absolute;
+    z-index: 10001;
+    border-radius: 8px;
+    box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.85),
+        0 0 20px 5px rgba(52, 211, 153, 0.6);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* Tooltip del tutorial */
+.tutorial-tooltip {
+    position: absolute;
+    z-index: 10002;
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 2px solid #34d399;
+    border-radius: 12px;
+    padding: 0;
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(52, 211, 153, 0.3);
+    font-family: 'Inter', sans-serif;
+}
+
+.tutorial-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    border-radius: 10px 10px 0 0;
+}
+
+.tutorial-step-indicator {
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.tutorial-title {
+    flex: 1;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.tutorial-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.tutorial-close:hover {
+    opacity: 1;
+}
+
+.tutorial-content {
+    padding: 20px;
+    color: #d1d5db;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.tutorial-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 10px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.tutorial-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.tutorial-btn-skip {
+    background: transparent;
+    color: #9ca3af;
+    border: 1px solid #4b5563;
+}
+
+.tutorial-btn-skip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #d1d5db;
+}
+
+.tutorial-btn-prev {
+    background: #374151;
+    color: white;
+}
+
+.tutorial-btn-prev:hover {
+    background: #4b5563;
+}
+
+.tutorial-btn-next {
+    background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    color: white;
+}
+
+.tutorial-btn-next:hover {
+    background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+    transform: translateY(-1px);
+}
+
+/* Responsive tutorial su mobile */
+@media (max-width: 639px) {
+    .tutorial-tooltip {
+        min-width: auto;
+        max-width: calc(100vw - 30px);
+        left: 15px !important;
+        right: 15px;
+        width: auto !important;
+    }
+
+    .tutorial-tooltip-header {
+        padding: 12px 15px;
+    }
+
+    .tutorial-title {
+        font-size: 16px;
+    }
+
+    .tutorial-content {
+        padding: 15px;
+        font-size: 14px;
+    }
+
+    .tutorial-footer {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .tutorial-btn-skip {
+        order: 2;
+        width: 100%;
+        text-align: center;
+    }
+
+    .tutorial-nav {
+        order: 1;
+        width: 100%;
+    }
+
+    .tutorial-nav .tutorial-btn {
+        flex: 1;
+    }
+}

@@ -526,6 +526,59 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-xs text-gray-500 text-center mt-3">Simulazione basata su 30 occasioni per squadra</p>
                 `;
 
+                // Gestione bottoni animazione
+                const animationButtonsContainer = document.getElementById('test-simulation-animation-buttons');
+                const btnTestReplay = document.getElementById('btn-test-view-replay');
+                const btnTestHighlights = document.getElementById('btn-test-view-highlights');
+
+                const fullAnimEnabled = window.FeatureFlags?.isEnabled('matchAnimations');
+                const highlightsEnabled = window.FeatureFlags?.isEnabled('matchHighlights');
+
+                if (fullAnimEnabled || highlightsEnabled) {
+                    animationButtonsContainer.classList.remove('hidden');
+
+                    // Mostra/nascondi bottoni in base ai flag
+                    if (btnTestReplay) {
+                        if (fullAnimEnabled) {
+                            btnTestReplay.classList.remove('hidden');
+                            btnTestReplay.onclick = () => {
+                                modal.classList.add('hidden');
+                                if (window.MatchAnimations) {
+                                    window.MatchAnimations.open({
+                                        homeTeam: homeTeamData,
+                                        awayTeam: awayTeamData,
+                                        result: `${result.homeGoals}-${result.awayGoals}`,
+                                        highlightsOnly: false
+                                    });
+                                }
+                            };
+                        } else {
+                            btnTestReplay.classList.add('hidden');
+                        }
+                    }
+
+                    if (btnTestHighlights) {
+                        if (highlightsEnabled) {
+                            btnTestHighlights.classList.remove('hidden');
+                            btnTestHighlights.onclick = () => {
+                                modal.classList.add('hidden');
+                                if (window.MatchAnimations) {
+                                    window.MatchAnimations.open({
+                                        homeTeam: homeTeamData,
+                                        awayTeam: awayTeamData,
+                                        result: `${result.homeGoals}-${result.awayGoals}`,
+                                        highlightsOnly: true
+                                    });
+                                }
+                            };
+                        } else {
+                            btnTestHighlights.classList.add('hidden');
+                        }
+                    }
+                } else {
+                    animationButtonsContainer.classList.add('hidden');
+                }
+
                 console.log('Test simulazione completato:', {
                     home: homeTeamData.teamName,
                     away: awayTeamData.teamName,
@@ -942,11 +995,11 @@ document.addEventListener('DOMContentLoaded', () => {
              roleSelect.addEventListener('change', () => window.AdminPlayers.updateAbilitiesChecklist());
         }
         
-        const btnToggleDraft = document.getElementById('btn-toggle-draft');
-        if (btnToggleDraft) btnToggleDraft.addEventListener('click', handleToggleState);
+        const toggleDraftCheckbox = document.getElementById('toggle-draft-checkbox');
+        if (toggleDraftCheckbox) toggleDraftCheckbox.addEventListener('change', handleToggleState);
 
-        const btnToggleMarket = document.getElementById('btn-toggle-market');
-        if (btnToggleMarket) btnToggleMarket.addEventListener('click', handleToggleState);
+        const toggleMarketCheckbox = document.getElementById('toggle-market-checkbox');
+        if (toggleMarketCheckbox) toggleMarketCheckbox.addEventListener('change', handleToggleState);
 
         // Listener per Draft a Turni
         const btnGenerateDraftList = document.getElementById('btn-generate-draft-list');
@@ -977,23 +1030,21 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         });
         
+        const levelMinInput = document.getElementById('player-level-min');
         const levelMaxInput = document.getElementById('player-level-max');
-        const costDisplayInput = document.getElementById('player-cost-display');
 
+        // Usa la funzione updateCostDisplay di AdminPlayers
         const updateCostDisplay = () => {
-            const levelMax = parseInt(levelMaxInput.value);
-            const validLevel = isNaN(levelMax) || levelMax < 1 || levelMax > 20 ? 1 : levelMax;
-            const calculatedCost = window.AdminPlayers.calculateCost(validLevel);
-            costDisplayInput.value = `Costo: ${calculatedCost} CS`;
-            costDisplayInput.dataset.calculatedCost = calculatedCost; 
+            window.AdminPlayers.updateCostDisplay();
         };
 
         if (levelMaxInput) {
             levelMaxInput.addEventListener('input', updateCostDisplay);
-            const levelMinInput = document.getElementById('player-level-min');
-            if(levelMinInput) levelMinInput.addEventListener('input', updateCostDisplay);
-            updateCostDisplay(); 
         }
+        if (levelMinInput) {
+            levelMinInput.addEventListener('input', updateCostDisplay);
+        }
+        updateCostDisplay();
 
         const draftList = document.getElementById('draft-players-list');
         const marketList = document.getElementById('market-players-list');
@@ -1159,40 +1210,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const stateType = target.dataset.type;
         const key = stateType === 'draft' ? 'isDraftOpen' : 'isMarketOpen';
         const statusTextId = stateType === 'draft' ? 'draft-status-text' : 'market-status-text';
-        
+
         const { doc, setDoc } = firestoreTools;
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
 
-        const currentlyOpen = target.dataset.isOpen === 'true';
-        const newState = !currentlyOpen;
-        
-        target.textContent = 'Aggiornamento...';
+        // Per i checkbox, il nuovo stato e' il valore checked
+        const newState = target.checked;
+
         target.disabled = true;
         displayMessage(`Aggiornamento stato ${stateType}...`, 'info', 'toggle-status-message');
 
         try {
             await setDoc(configDocRef, { [key]: newState, isSeasonOver: false }, { merge: true });
-            
-            displayMessage(`Stato ${stateType} aggiornato: ${newState ? 'APERTO' : 'CHIUSO'}`, 'success', 'toggle-status-message');
-            
-            target.dataset.isOpen = newState;
-            target.textContent = newState ? `CHIUDI ${stateType}` : `APRI ${stateType}`;
-            
-            const statusBox = target.closest('div');
-            const statusText = document.getElementById(statusTextId);
 
-            statusText.textContent = newState ? 'APERTO' : 'CHIUSO';
-            statusBox.classList.remove(newState ? 'border-red-500' : 'border-green-500', newState ? 'bg-red-900' : 'bg-green-900');
-            statusBox.classList.add(newState ? 'border-green-500' : 'border-red-500', newState ? 'bg-green-900' : 'bg-red-900');
-            target.classList.remove(newState ? 'bg-green-600' : 'bg-red-600', newState ? 'hover:bg-green-700' : 'hover:bg-red-700');
-            target.classList.add(newState ? 'bg-red-600' : 'bg-green-600', newState ? 'hover:bg-red-700' : 'hover:bg-green-700');
-            
+            displayMessage(`Stato ${stateType} aggiornato: ${newState ? 'APERTO' : 'CHIUSO'}`, 'success', 'toggle-status-message');
+
+            // Aggiorna lo stato visuale
+            const statusText = document.getElementById(statusTextId);
+            const containerBox = target.closest('.p-4.rounded-lg');
+
+            if (statusText) {
+                statusText.textContent = newState ? 'APERTO' : 'CHIUSO';
+                statusText.classList.remove(newState ? 'text-red-400' : 'text-green-400');
+                statusText.classList.add(newState ? 'text-green-400' : 'text-red-400');
+            }
+
+            if (containerBox) {
+                containerBox.classList.remove(newState ? 'border-red-500' : 'border-green-500');
+                containerBox.classList.add(newState ? 'border-green-500' : 'border-red-500');
+            }
+
             const summaryText = document.getElementById(`${stateType}-status-text-summary`);
             if (summaryText) summaryText.textContent = newState ? 'APERTO' : 'CHIUSO';
 
         } catch (error) {
             console.error(`Errore nell'aggiornamento dello stato ${stateType}:`, error);
             displayMessage(`Errore durante l'aggiornamento: ${error.message}`, 'error', 'toggle-status-message');
+            // Ripristina lo stato del checkbox in caso di errore
+            target.checked = !newState;
         } finally {
             target.disabled = false;
         }

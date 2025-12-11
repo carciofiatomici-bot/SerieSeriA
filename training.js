@@ -204,9 +204,21 @@ window.Training = {
                     </div>
                 </div>
 
+                <!-- Selezione squadra lega (nascosto di default) -->
+                <div id="league-team-selection" class="bg-gray-700 rounded-xl p-4 hidden">
+                    <h3 class="font-bold text-white mb-3">🏆 Scegli Squadra della Lega</h3>
+                    <select id="league-team-select" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                        <option value="">Caricamento squadre...</option>
+                    </select>
+                    <div id="league-team-info" class="hidden mt-3 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400">Info squadra</p>
+                    </div>
+                </div>
+
                 <!-- Selezione difficolta' -->
-                <div class="bg-gray-700 rounded-xl p-4">
+                <div id="difficulty-selection" class="bg-gray-700 rounded-xl p-4">
                     <h3 class="font-bold text-white mb-3">⚙️ Difficolta'</h3>
+                    <p id="difficulty-note" class="text-gray-400 text-xs mb-3 hidden">Nota: la difficolta' non si applica alle squadre della lega</p>
 
                     <div class="grid grid-cols-3 gap-3">
                         <button class="difficulty-btn p-3 bg-green-600 rounded-lg text-center" data-difficulty="easy">
@@ -249,10 +261,18 @@ window.Training = {
         // Stato selezioni
         let selectedOpponent = 'random';
         let selectedDifficulty = 'easy';
+        let selectedLeagueTeam = null;
+
+        // Elementi UI
+        const leagueTeamSelection = document.getElementById('league-team-selection');
+        const leagueTeamSelect = document.getElementById('league-team-select');
+        const leagueTeamInfo = document.getElementById('league-team-info');
+        const difficultySelection = document.getElementById('difficulty-selection');
+        const difficultyNote = document.getElementById('difficulty-note');
 
         // Event listeners tipo avversario
         container.querySelectorAll('.opponent-type').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 container.querySelectorAll('.opponent-type').forEach(b => {
                     b.classList.remove('bg-green-600', 'ring-2', 'ring-green-400');
                     b.classList.add('bg-gray-600');
@@ -260,7 +280,31 @@ window.Training = {
                 btn.classList.remove('bg-gray-600');
                 btn.classList.add('bg-green-600', 'ring-2', 'ring-green-400');
                 selectedOpponent = btn.dataset.type;
+
+                // Mostra/nascondi selezione squadra lega
+                if (selectedOpponent === 'league') {
+                    leagueTeamSelection.classList.remove('hidden');
+                    difficultyNote.classList.remove('hidden');
+                    // Carica squadre della lega
+                    await this.loadLeagueTeams(leagueTeamSelect);
+                } else {
+                    leagueTeamSelection.classList.add('hidden');
+                    difficultyNote.classList.add('hidden');
+                    selectedLeagueTeam = null;
+                }
             });
+        });
+
+        // Event listener selezione squadra lega
+        leagueTeamSelect.addEventListener('change', async (e) => {
+            const teamId = e.target.value;
+            if (teamId) {
+                selectedLeagueTeam = await this.loadLeagueTeamData(teamId);
+                this.showLeagueTeamInfo(leagueTeamInfo, selectedLeagueTeam);
+            } else {
+                selectedLeagueTeam = null;
+                leagueTeamInfo.classList.add('hidden');
+            }
         });
 
         // Event listeners difficolta'
@@ -278,11 +322,127 @@ window.Training = {
 
         // Avvia partita
         document.getElementById('start-training-match').addEventListener('click', () => {
-            this.startMatch(selectedOpponent, selectedDifficulty);
+            // Verifica selezione squadra lega
+            if (selectedOpponent === 'league' && !selectedLeagueTeam) {
+                if (window.Toast) window.Toast.warning("Seleziona una squadra della lega");
+                return;
+            }
+            this.startMatch(selectedOpponent, selectedDifficulty, selectedLeagueTeam);
         });
 
         // Seleziona default
         container.querySelector('.opponent-type[data-type="random"]').click();
+    },
+
+    /**
+     * Carica le squadre della lega per il dropdown
+     */
+    async loadLeagueTeams(selectElement) {
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
+
+        try {
+            const { collection, getDocs } = window.firestoreTools;
+            const appId = window.firestoreTools?.appId;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+            const snapshot = await getDocs(collection(window.db, teamsPath));
+            const teams = [];
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                // Escludi la propria squadra
+                if (doc.id !== myTeamId && data.teamName && data.formation?.titolari?.length) {
+                    teams.push({
+                        id: doc.id,
+                        teamName: data.teamName
+                    });
+                }
+            });
+
+            if (teams.length === 0) {
+                selectElement.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
+                return;
+            }
+
+            selectElement.innerHTML = '<option value="">Seleziona squadra...</option>' +
+                teams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+
+        } catch (error) {
+            console.error("Errore caricamento squadre lega:", error);
+            selectElement.innerHTML = '<option value="">Errore caricamento</option>';
+        }
+    },
+
+    /**
+     * Carica i dati completi di una squadra della lega
+     */
+    async loadLeagueTeamData(teamId) {
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools?.appId;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+            const docSnap = await getDoc(doc(window.db, teamsPath, teamId));
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() };
+            }
+            return null;
+        } catch (error) {
+            console.error("Errore caricamento dati squadra:", error);
+            return null;
+        }
+    },
+
+    /**
+     * Mostra info squadra lega selezionata
+     */
+    showLeagueTeamInfo(infoElement, team) {
+        if (!team || !infoElement) {
+            if (infoElement) infoElement.classList.add('hidden');
+            return;
+        }
+
+        const titolari = team.formation?.titolari || [];
+        const avgLevel = titolari.length > 0
+            ? Math.round(titolari.reduce((sum, p) => sum + (p.level || p.livello || 15), 0) / titolari.length)
+            : '?';
+
+        infoElement.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="font-bold text-white">${team.teamName}</p>
+                    <p class="text-xs text-gray-400">${titolari.length} titolari</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-yellow-400 font-bold">Lv. ${avgLevel}</p>
+                    <p class="text-xs text-gray-500">media</p>
+                </div>
+            </div>
+        `;
+        infoElement.classList.remove('hidden');
+    },
+
+    /**
+     * Ottiene la formazione corrente (titolari)
+     */
+    getMyFormation() {
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        // La formazione e' in formation.titolari
+        return teamData?.formation?.titolari || [];
+    },
+
+    /**
+     * Calcola la media livello della formazione
+     */
+    getMyAverageLevel() {
+        const formation = this.getMyFormation();
+        if (formation.length === 0) return 15;
+
+        const totalLevel = formation.reduce((sum, p) => {
+            return sum + (p.level || p.livello || 15);
+        }, 0);
+
+        return Math.round(totalLevel / formation.length);
     },
 
     /**
@@ -292,9 +452,8 @@ window.Training = {
         const preview = document.getElementById('training-formation-preview');
         if (!preview) return;
 
-        // Prova a caricare la formazione attuale
-        const team = window.InterfacciaCore?.getCurrentTeam?.();
-        const formation = team?.formation || [];
+        // Prova a caricare la formazione attuale (titolari)
+        const formation = this.getMyFormation();
 
         if (formation.length === 0) {
             preview.innerHTML = `
@@ -314,6 +473,8 @@ window.Training = {
             }
         });
 
+        const avgLevel = this.getMyAverageLevel();
+
         preview.innerHTML = `
             <div class="grid grid-cols-4 gap-2 text-center">
                 ${Object.entries(roleGroups).map(([role, players]) => `
@@ -324,7 +485,7 @@ window.Training = {
                 `).join('')}
             </div>
             <div class="mt-3 text-center text-sm text-gray-400">
-                Totale: ${formation.length} giocatori
+                Totale: ${formation.length} giocatori | Media Lv: <span class="text-yellow-400 font-bold">${avgLevel}</span>
             </div>
         `;
     },
@@ -332,7 +493,7 @@ window.Training = {
     /**
      * Avvia partita di allenamento
      */
-    async startMatch(opponentType, difficulty) {
+    async startMatch(opponentType, difficulty, leagueTeam = null) {
         const content = document.getElementById('training-content');
         if (!content) return;
 
@@ -349,7 +510,7 @@ window.Training = {
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         // Genera avversario
-        const opponent = this.generateOpponent(opponentType, difficulty);
+        const opponent = this.generateOpponent(opponentType, difficulty, leagueTeam);
 
         // Simula partita
         const result = this.simulateMatch(opponent, difficulty);
@@ -374,20 +535,50 @@ window.Training = {
     /**
      * Genera squadra avversaria
      */
-    generateOpponent(type, difficulty) {
+    generateOpponent(type, difficulty, leagueTeam = null) {
         const levelMod = { easy: -3, normal: 0, hard: 3 }[difficulty];
-        const baseLevel = 15 + levelMod;
+        // Usa la media della tua squadra come base, non 15 fisso
+        const myAvgLevel = this.getMyAverageLevel();
 
+        // Se e' una squadra della lega, usa i suoi dati reali
+        if (type === 'league' && leagueTeam) {
+            const leagueFormation = leagueTeam.formation?.titolari || [];
+            const leagueAvgLevel = leagueFormation.length > 0
+                ? Math.round(leagueFormation.reduce((sum, p) => sum + (p.level || p.livello || 15), 0) / leagueFormation.length)
+                : 15;
+
+            return {
+                name: leagueTeam.teamName,
+                type: 'league',
+                level: leagueAvgLevel,
+                formation: leagueFormation,
+                isRealTeam: true,
+                teamData: leagueTeam
+            };
+        }
+
+        // Per specchio, usa la tua formazione
+        if (type === 'mirror') {
+            const myFormation = this.getMyFormation();
+            return {
+                name: 'Squadra Specchio',
+                type: 'mirror',
+                level: myAvgLevel,
+                formation: myFormation,
+                isRealTeam: false
+            };
+        }
+
+        // Squadra casuale generata
+        const baseLevel = Math.max(1, myAvgLevel + levelMod);
         const names = ['FC Training', 'Sparring Team', 'Test Squad', 'Practice XI', 'Friendly FC'];
-        const name = type === 'mirror' ? 'Squadra Specchio' :
-                     type === 'league' ? 'Squadra Lega' :
-                     names[Math.floor(Math.random() * names.length)];
 
         return {
-            name,
-            type,
+            name: names[Math.floor(Math.random() * names.length)],
+            type: 'random',
             level: baseLevel,
-            formation: this.generateRandomFormation(baseLevel)
+            formation: this.generateRandomFormation(baseLevel),
+            isRealTeam: false
         };
     },
 
@@ -451,8 +642,7 @@ window.Training = {
      * Calcola forza squadra
      */
     calculateTeamStrength() {
-        const team = window.InterfacciaCore?.getCurrentTeam?.();
-        const formation = team?.formation || [];
+        const formation = this.getMyFormation();
 
         if (formation.length === 0) return 100;
 
@@ -519,6 +709,18 @@ window.Training = {
                 </p>
             </div>
 
+            <!-- Bottoni Animazione -->
+            <div id="training-animation-buttons" class="hidden mb-4">
+                <div class="flex gap-3">
+                    <button id="btn-training-replay" class="hidden flex-1 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-semibold flex items-center justify-center gap-2">
+                        <span>🎬</span> Replay Completo
+                    </button>
+                    <button id="btn-training-highlights" class="hidden flex-1 py-3 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white font-semibold flex items-center justify-center gap-2">
+                        <span>⭐</span> Solo Highlights
+                    </button>
+                </div>
+            </div>
+
             <!-- Azioni -->
             <div class="flex gap-3">
                 <button onclick="window.Training.renderTab('new')" class="flex-1 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-white font-semibold">
@@ -529,6 +731,88 @@ window.Training = {
                 </button>
             </div>
         `;
+
+        // Gestione bottoni animazione
+        this.setupAnimationButtons(result, opponent);
+    },
+
+    /**
+     * Setup bottoni animazione dopo il risultato
+     */
+    setupAnimationButtons(result, opponent) {
+        const animButtonsContainer = document.getElementById('training-animation-buttons');
+        const btnReplay = document.getElementById('btn-training-replay');
+        const btnHighlights = document.getElementById('btn-training-highlights');
+
+        if (!animButtonsContainer) return;
+
+        const fullAnimEnabled = window.FeatureFlags?.isEnabled('matchAnimations');
+        const highlightsEnabled = window.FeatureFlags?.isEnabled('matchHighlights');
+
+        if (fullAnimEnabled || highlightsEnabled) {
+            animButtonsContainer.classList.remove('hidden');
+
+            // Prepara i dati per le animazioni
+            const teamData = window.InterfacciaCore?.currentTeamData;
+            const myTeamData = {
+                id: window.InterfacciaCore?.currentTeamId || 'training-my-team',
+                teamName: teamData?.teamName || 'La Mia Squadra',
+                formation: { titolari: this.getMyFormation() }
+            };
+
+            // Se e' una squadra della lega, usa i dati reali
+            const opponentData = opponent.isRealTeam && opponent.teamData
+                ? {
+                    id: opponent.teamData.id,
+                    teamName: opponent.teamData.teamName,
+                    formation: opponent.teamData.formation
+                }
+                : {
+                    id: 'training-opponent',
+                    teamName: opponent.name,
+                    formation: { titolari: opponent.formation }
+                };
+
+            if (btnReplay) {
+                if (fullAnimEnabled) {
+                    btnReplay.classList.remove('hidden');
+                    btnReplay.onclick = () => {
+                        this.close();
+                        if (window.MatchAnimations) {
+                            window.MatchAnimations.open({
+                                homeTeam: myTeamData,
+                                awayTeam: opponentData,
+                                result: result.score,
+                                highlightsOnly: false
+                            });
+                        }
+                    };
+                } else {
+                    btnReplay.classList.add('hidden');
+                }
+            }
+
+            if (btnHighlights) {
+                if (highlightsEnabled) {
+                    btnHighlights.classList.remove('hidden');
+                    btnHighlights.onclick = () => {
+                        this.close();
+                        if (window.MatchAnimations) {
+                            window.MatchAnimations.open({
+                                homeTeam: myTeamData,
+                                awayTeam: opponentData,
+                                result: result.score,
+                                highlightsOnly: true
+                            });
+                        }
+                    };
+                } else {
+                    btnHighlights.classList.add('hidden');
+                }
+            }
+        } else {
+            animButtonsContainer.classList.add('hidden');
+        }
     },
 
     /**

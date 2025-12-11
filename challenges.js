@@ -83,7 +83,7 @@ window.Challenges = {
      */
     getMyCS() {
         const teamData = window.InterfacciaCore?.currentTeamData;
-        return teamData?.crediti || teamData?.credits || 0;
+        return teamData?.budget || 0;
     },
 
     /**
@@ -1070,16 +1070,16 @@ window.Challenges = {
                 const winnerData = winnerDoc.data();
                 const loserData = loserDoc.data();
 
-                const winnerCredits = winnerData.crediti || winnerData.credits || 0;
-                const loserCredits = loserData.crediti || loserData.credits || 0;
+                const winnerBudget = winnerData.budget || 0;
+                const loserBudget = loserData.budget || 0;
 
-                // Aggiorna crediti
+                // Aggiorna budget (CS)
                 await Promise.all([
                     updateDoc(doc(window.db, teamsPath, winnerId), {
-                        crediti: winnerCredits + winnings
+                        budget: winnerBudget + winnings
                     }),
                     updateDoc(doc(window.db, teamsPath, loserId), {
-                        crediti: Math.max(0, loserCredits - betAmount)
+                        budget: Math.max(0, loserBudget - betAmount)
                     })
                 ]);
 
@@ -1087,11 +1087,11 @@ window.Challenges = {
                 const myTeamId = window.InterfacciaCore?.currentTeamId;
                 if (myTeamId === winnerId) {
                     if (window.InterfacciaCore?.currentTeamData) {
-                        window.InterfacciaCore.currentTeamData.crediti = winnerCredits + winnings;
+                        window.InterfacciaCore.currentTeamData.budget = winnerBudget + winnings;
                     }
                 } else if (myTeamId === loserId) {
                     if (window.InterfacciaCore?.currentTeamData) {
-                        window.InterfacciaCore.currentTeamData.crediti = Math.max(0, loserCredits - betAmount);
+                        window.InterfacciaCore.currentTeamData.budget = Math.max(0, loserBudget - betAmount);
                     }
                 }
 

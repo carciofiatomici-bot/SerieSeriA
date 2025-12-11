@@ -1,0 +1,41 @@
+{
+  "name": "Serie SeriA - Fantacalcio",
+  "short_name": "Serie SeriA",
+  "description": "Gestisci la tua squadra di fantacalcio, partecipa al draft e sfida i tuoi amici!",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16a34a",
+  "categories": ["games", "sports"],
+  "lang": "it-IT",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Vai alla dashboard",
+      "url": "./index.html",
+      "icons": [{ "src": "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png", "sizes": "256x256" }]
+    }
+  ]
+}

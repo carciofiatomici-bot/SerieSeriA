@@ -90,6 +90,11 @@ window.InterfacciaNavigation = {
         // Sfida un'altra squadra
         if (elements.btnChallenge) {
             elements.btnChallenge.addEventListener('click', () => {
+                // Verifica se le sfide sono abilitate
+                if (!window.FeatureFlags?.isEnabled('challenges')) {
+                    if (window.Toast) window.Toast.info("Sfide non aperte");
+                    return;
+                }
                 if (window.Challenges) {
                     window.Challenges.showChallengeModal();
                 } else {

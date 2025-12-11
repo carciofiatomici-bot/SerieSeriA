@@ -182,6 +182,294 @@ window.GestioneSquadreFormazione = {
         window.handleDragStart = (e) => this.handleDragStart(e);
         window.handleDragEnd = (e) => this.handleDragEnd(e);
         window.handleDrop = (e, role) => this.handleDrop(e, role, context);
+
+        // Setup touch support per mobile
+        this.setupTouchSupport(context);
+    },
+
+    // ========================================
+    // TOUCH SUPPORT PER MOBILE
+    // ========================================
+
+    touchState: {
+        isDragging: false,
+        draggedElement: null,
+        draggedPlayerId: null,
+        ghostElement: null,
+        startX: 0,
+        startY: 0,
+        longPressTimer: null
+    },
+
+    /**
+     * Setup touch listeners per mobile
+     */
+    setupTouchSupport(context) {
+        const fieldArea = document.getElementById('field-area');
+        const panchinaSlots = document.getElementById('panchina-slots');
+        const fullSquadList = document.getElementById('full-squad-list');
+
+        [fieldArea, panchinaSlots, fullSquadList].forEach(container => {
+            if (container) {
+                container.addEventListener('touchstart', (e) => this.handleTouchStart(e, context), { passive: false });
+                container.addEventListener('touchmove', (e) => this.handleTouchMove(e, context), { passive: false });
+                container.addEventListener('touchend', (e) => this.handleTouchEnd(e, context));
+                container.addEventListener('touchcancel', (e) => this.handleTouchEnd(e, context));
+            }
+        });
+    },
+
+    /**
+     * Handle touch start
+     */
+    handleTouchStart(e, context) {
+        const target = e.target.closest('.slot-target[data-id], .player-card[data-id]');
+        if (!target || !target.dataset.id) return;
+
+        const touch = e.touches[0];
+        this.touchState.startX = touch.clientX;
+        this.touchState.startY = touch.clientY;
+
+        // Long press per attivare drag (300ms)
+        this.touchState.longPressTimer = setTimeout(() => {
+            this.startTouchDrag(target, touch, context);
+        }, 300);
+    },
+
+    /**
+     * Avvia il drag da touch
+     */
+    startTouchDrag(element, touch, context) {
+        this.touchState.isDragging = true;
+        this.touchState.draggedElement = element;
+        this.touchState.draggedPlayerId = element.dataset.id;
+
+        element.classList.add('opacity-50', 'border-4', 'border-indigo-400');
+
+        // Crea ghost element
+        this.createTouchGhost(element, touch);
+
+        // Vibrazione feedback
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    },
+
+    /**
+     * Crea ghost element per touch drag
+     */
+    createTouchGhost(element, touch) {
+        const ghost = document.createElement('div');
+        ghost.className = 'fixed pointer-events-none z-[9999] bg-indigo-600 text-white px-3 py-2 rounded-lg shadow-xl text-sm font-bold';
+        ghost.style.left = (touch.clientX - 40) + 'px';
+        ghost.style.top = (touch.clientY - 20) + 'px';
+
+        // Trova nome giocatore
+        const nameEl = element.querySelector('.truncate') || element.querySelector('[class*="font-bold"]');
+        ghost.textContent = nameEl?.textContent || 'Giocatore';
+
+        document.body.appendChild(ghost);
+        this.touchState.ghostElement = ghost;
+    },
+
+    /**
+     * Handle touch move
+     */
+    handleTouchMove(e, context) {
+        const touch = e.touches[0];
+
+        // Cancella long press se si muove troppo prima dell'attivazione
+        if (this.touchState.longPressTimer) {
+            const dx = Math.abs(touch.clientX - this.touchState.startX);
+            const dy = Math.abs(touch.clientY - this.touchState.startY);
+
+            if (dx > 10 || dy > 10) {
+                clearTimeout(this.touchState.longPressTimer);
+                this.touchState.longPressTimer = null;
+            }
+        }
+
+        if (!this.touchState.isDragging) return;
+
+        e.preventDefault();
+
+        // Aggiorna posizione ghost
+        if (this.touchState.ghostElement) {
+            this.touchState.ghostElement.style.left = (touch.clientX - 40) + 'px';
+            this.touchState.ghostElement.style.top = (touch.clientY - 20) + 'px';
+        }
+
+        // Evidenzia drop zone sotto il dito
+        this.highlightDropZone(touch.clientX, touch.clientY);
+    },
+
+    /**
+     * Evidenzia la drop zone sotto il punto touch
+     */
+    highlightDropZone(x, y) {
+        // Rimuovi highlight precedenti
+        document.querySelectorAll('.touch-drop-highlight').forEach(el => {
+            el.classList.remove('touch-drop-highlight', 'ring-4', 'ring-green-400');
+        });
+
+        // Nascondi ghost temporaneamente per trovare elemento sotto
+        if (this.touchState.ghostElement) {
+            this.touchState.ghostElement.style.display = 'none';
+        }
+
+        const elementBelow = document.elementFromPoint(x, y);
+
+        if (this.touchState.ghostElement) {
+            this.touchState.ghostElement.style.display = '';
+        }
+
+        // Trova drop zone valida
+        const dropZone = elementBelow?.closest('.slot-target, #panchina-slots, #full-squad-list');
+        if (dropZone) {
+            dropZone.classList.add('touch-drop-highlight', 'ring-4', 'ring-green-400');
+        }
+    },
+
+    /**
+     * Handle touch end
+     */
+    handleTouchEnd(e, context) {
+        // Cancella timer long press
+        if (this.touchState.longPressTimer) {
+            clearTimeout(this.touchState.longPressTimer);
+            this.touchState.longPressTimer = null;
+        }
+
+        if (!this.touchState.isDragging) return;
+
+        const touch = e.changedTouches[0];
+
+        // Rimuovi highlight
+        document.querySelectorAll('.touch-drop-highlight').forEach(el => {
+            el.classList.remove('touch-drop-highlight', 'ring-4', 'ring-green-400');
+        });
+
+        // Nascondi ghost per trovare drop zone
+        if (this.touchState.ghostElement) {
+            this.touchState.ghostElement.style.display = 'none';
+        }
+
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Trova drop zone
+        const dropZone = elementBelow?.closest('.slot-target, #panchina-slots, #full-squad-list');
+
+        if (dropZone && this.touchState.draggedPlayerId) {
+            // Simula drop
+            this.executeTouchDrop(dropZone, context);
+        }
+
+        // Cleanup
+        this.cleanupTouchDrag();
+    },
+
+    /**
+     * Esegue il drop da touch
+     */
+    executeTouchDrop(dropZone, context) {
+        const { displayMessage, removePlayerFromPosition } = window.GestioneSquadreUtils;
+        const playerId = this.touchState.draggedPlayerId;
+
+        const player = context.currentTeamData.players.find(p => p.id === playerId);
+        if (!player) {
+            displayMessage('formation-message', 'Errore: Giocatore non trovato.', 'error');
+            return;
+        }
+
+        // Determina target role
+        let targetRole = dropZone.dataset.role;
+
+        if (dropZone.id === 'panchina-slots' || dropZone.closest('#panchina-slots')) {
+            targetRole = 'B';
+        } else if (dropZone.id === 'full-squad-list' || dropZone.closest('#full-squad-list')) {
+            targetRole = 'ROSALIBERA';
+        }
+
+        if (!targetRole) {
+            // Prova a trovare il ruolo dal parent
+            const parentSlot = dropZone.closest('[data-role]');
+            if (parentSlot) {
+                targetRole = parentSlot.dataset.role;
+            }
+        }
+
+        if (!targetRole) {
+            displayMessage('formation-message', 'Drop non valido.', 'error');
+            return;
+        }
+
+        // Gestisci scambio se c'e' un giocatore nello slot
+        let playerInSlot = null;
+        if (dropZone.dataset.id && dropZone.dataset.id !== playerId) {
+            playerInSlot = context.currentTeamData.players.find(p => p.id === dropZone.dataset.id);
+        }
+
+        // Rimuovi giocatore dalla posizione attuale
+        removePlayerFromPosition(playerId, context.currentTeamData);
+
+        if (targetRole === 'ROSALIBERA') {
+            if (playerInSlot) removePlayerFromPosition(playerInSlot.id, context.currentTeamData);
+            displayMessage('formation-message', `${player.name} liberato.`, 'success');
+
+        } else if (targetRole === 'B') {
+            if (playerInSlot) {
+                removePlayerFromPosition(playerInSlot.id, context.currentTeamData);
+            } else if (context.currentTeamData.formation.panchina.length >= 3) {
+                displayMessage('formation-message', 'Panchina piena (max 3).', 'error');
+                this.renderFieldSlots(context.currentTeamData, context);
+                return;
+            }
+            context.currentTeamData.formation.panchina.push(player);
+            displayMessage('formation-message', `${player.name} in panchina.`, 'success');
+
+        } else {
+            // Campo - verifica ruolo
+            if (player.role !== targetRole && targetRole !== 'P' && targetRole !== 'D' && targetRole !== 'C' && targetRole !== 'A') {
+                displayMessage('formation-message', 'Posizione non valida.', 'error');
+                this.renderFieldSlots(context.currentTeamData, context);
+                return;
+            }
+
+            if (playerInSlot) {
+                removePlayerFromPosition(playerInSlot.id, context.currentTeamData);
+                displayMessage('formation-message', `${player.name} scambiato con ${playerInSlot.name}.`, 'info');
+            } else {
+                displayMessage('formation-message', `${player.name} in campo come ${targetRole}.`, 'success');
+            }
+
+            context.currentTeamData.formation.titolari.push(player);
+        }
+
+        // Re-render
+        this.renderFieldSlots(context.currentTeamData, context);
+    },
+
+    /**
+     * Cleanup dopo touch drag
+     */
+    cleanupTouchDrag() {
+        if (this.touchState.draggedElement) {
+            this.touchState.draggedElement.classList.remove('opacity-50', 'border-4', 'border-indigo-400');
+        }
+
+        if (this.touchState.ghostElement) {
+            this.touchState.ghostElement.remove();
+        }
+
+        this.touchState = {
+            isDragging: false,
+            draggedElement: null,
+            draggedPlayerId: null,
+            ghostElement: null,
+            startX: 0,
+            startY: 0,
+            longPressTimer: null
+        };
     },
 
     /**

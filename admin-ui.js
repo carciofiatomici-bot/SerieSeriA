@@ -159,6 +159,14 @@ window.AdminUI = {
                                 Log Dettagliato
                             </button>
                         </div>
+                        <div id="test-simulation-animation-buttons" class="hidden flex gap-2 mt-4">
+                            <button id="btn-test-view-replay" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span>🎬</span> Replay Completo
+                            </button>
+                            <button id="btn-test-view-highlights" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span>⭐</span> Solo Highlights
+                            </button>
+                        </div>
                         <div id="test-simulation-simple-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
                             <h5 class="text-sm font-bold text-blue-400 mb-2">Log Ristretto</h5>
                             <pre id="test-simulation-simple-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
@@ -194,24 +202,38 @@ window.AdminUI = {
             <!-- CONTROLLO STATI -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2">Controllo Stato Mercato & Draft</h3>
             <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="p-4 rounded-lg border ${draftOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block mb-2">Stato Draft: <span id="draft-status-text" class="font-extrabold">${draftOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                    <button id="btn-toggle-draft"
-                            data-type="draft"
-                            data-is-open="${draftOpen}"
-                            class="w-full px-4 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${draftOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                        ${draftOpen ? 'CHIUDI Draft' : 'APRI Draft'}
-                    </button>
+                <!-- TOGGLE DRAFT -->
+                <div class="p-4 rounded-lg border-2 ${draftOpen ? 'border-green-500 bg-gray-800' : 'border-red-500 bg-gray-800'}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-lg text-white block">Draft</span>
+                            <span id="draft-status-text" class="text-sm ${draftOpen ? 'text-green-400' : 'text-red-400'} font-semibold">${draftOpen ? 'APERTO' : 'CHIUSO'}</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-draft-checkbox"
+                                   class="sr-only peer"
+                                   ${draftOpen ? 'checked' : ''}
+                                   data-type="draft">
+                            <div class="w-14 h-7 bg-red-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="p-4 rounded-lg border ${marketOpen ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'}">
-                    <span class="font-bold text-lg text-white block mb-2">Stato Mercato: <span id="market-status-text" class="font-extrabold">${marketOpen ? 'APERTO' : 'CHIUSO'}</span></span>
-                    <button id="btn-toggle-market"
-                            data-type="market"
-                            data-is-open="${marketOpen}"
-                            class="w-full px-4 py-2 rounded-lg font-semibold shadow-md transition duration-150 ${marketOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                        ${marketOpen ? 'CHIUDI Mercato' : 'APRI Mercato'}
-                    </button>
+                <!-- TOGGLE MERCATO -->
+                <div class="p-4 rounded-lg border-2 ${marketOpen ? 'border-green-500 bg-gray-800' : 'border-red-500 bg-gray-800'}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-lg text-white block">Mercato</span>
+                            <span id="market-status-text" class="text-sm ${marketOpen ? 'text-green-400' : 'text-red-400'} font-semibold">${marketOpen ? 'APERTO' : 'CHIUSO'}</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-market-checkbox"
+                                   class="sr-only peer"
+                                   ${marketOpen ? 'checked' : ''}
+                                   data-type="market">
+                            <div class="w-14 h-7 bg-red-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
                 </div>
             </div>
             <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
