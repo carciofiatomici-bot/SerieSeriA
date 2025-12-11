@@ -117,8 +117,45 @@ window.InterfacciaDashboard = {
         // Inizializza il countdown per la prossima partita
         this.initNextMatchCountdown();
 
+        // Gestisce il bottone "Torna al Pannello Admin"
+        this.initAdminReturnButton();
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
+    },
+
+    /**
+     * Inizializza il bottone "Torna al Pannello Admin".
+     * Visibile SOLO se si e' acceduti alla dashboard tramite pannello admin.
+     */
+    initAdminReturnButton() {
+        const container = document.getElementById('admin-return-button-container');
+        const button = document.getElementById('btn-return-to-admin');
+
+        if (!container || !button) return;
+
+        // Mostra il bottone SOLO se si e' arrivati dal pannello admin
+        if (window.accessedFromAdminPanel === true) {
+            container.classList.remove('hidden');
+
+            // Rimuovi listener precedenti clonando il bottone
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+
+            // Aggiungi listener per tornare al pannello admin
+            newButton.addEventListener('click', () => {
+                // Resetta il flag
+                window.accessedFromAdminPanel = false;
+
+                // Torna al pannello admin
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent && window.showScreen) {
+                    window.showScreen(adminContent);
+                }
+            });
+        } else {
+            container.classList.add('hidden');
+        }
     },
 
     /**
@@ -697,6 +734,341 @@ window.InterfacciaDashboard = {
     async initCreditiSuperSeriWidget() {
         if (window.CreditiSuperSeriUI) {
             await window.CreditiSuperSeriUI.initDashboardWidget();
+        }
+    },
+
+    // ====================================================================
+    // ALERT DRAFT ATTIVO
+    // ====================================================================
+
+    // Intervallo per aggiornare il countdown dell'alert draft
+    _draftAlertInterval: null,
+
+    // Listener real-time per lo stato del draft
+    _draftAlertUnsubscribe: null,
+
+    /**
+     * Avvia il listener real-time per l'alert del draft
+     */
+    startDraftAlertListener() {
+        // Ferma listener precedente
+        this.stopDraftAlertListener();
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        const adminUsername = window.InterfacciaConstants?.ADMIN_USERNAME_LOWER || 'serieseria';
+        if (!currentTeamId || currentTeamId === 'admin' || currentTeamId === adminUsername) {
+            return;
+        }
+
+        try {
+            const { doc, onSnapshot } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const CONFIG_PATH = `artifacts/${appId}/public/data/config`;
+            const CONFIG_DOC_ID = 'settings';
+
+            const configDocRef = doc(window.db, CONFIG_PATH, CONFIG_DOC_ID);
+
+            this._draftAlertUnsubscribe = onSnapshot(configDocRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+
+                // Aggiorna l'alert con i nuovi dati
+                this.updateDraftAlertFromSnapshot(snapshot.data());
+            }, (error) => {
+                console.error('[DraftAlert] Errore listener:', error);
+            });
+
+            console.log('[DraftAlert] Listener real-time avviato');
+
+        } catch (error) {
+            console.error('[DraftAlert] Errore avvio listener:', error);
+        }
+    },
+
+    /**
+     * Ferma il listener real-time per l'alert del draft
+     */
+    stopDraftAlertListener() {
+        if (this._draftAlertUnsubscribe) {
+            this._draftAlertUnsubscribe();
+            this._draftAlertUnsubscribe = null;
+            console.log('[DraftAlert] Listener real-time fermato');
+        }
+    },
+
+    /**
+     * Aggiorna l'alert del draft da uno snapshot Firestore
+     */
+    updateDraftAlertFromSnapshot(configData) {
+        const banner = document.getElementById('draft-alert-banner');
+        if (!banner) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        const adminUsername = window.InterfacciaConstants?.ADMIN_USERNAME_LOWER || 'serieseria';
+        if (!currentTeamId || currentTeamId === 'admin' || currentTeamId === adminUsername) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        const draftTurns = configData.draftTurns;
+        const isDraftOpen = configData.isDraftOpen;
+        const isDraftTurnsActive = draftTurns && draftTurns.isActive;
+        const timerEnabled = draftTurns ? draftTurns.timerEnabled !== false : true;
+        const isPaused = draftTurns && draftTurns.isPaused;
+
+        // Mostra alert solo se draft aperto, turni attivi e timer abilitato
+        if (!isDraftOpen || !isDraftTurnsActive || !timerEnabled || isPaused) {
+            banner.classList.add('hidden');
+            this.stopDraftAlert();
+            return;
+        }
+
+        // Ottieni info sul turno corrente
+        const currentRound = draftTurns.currentRound;
+        const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+        const currentOrder = draftTurns[orderKey] || [];
+        const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
+        // Converti turnStartTime se e' un Timestamp Firestore
+        let turnStartTime = draftTurns.turnStartTime;
+        if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+            turnStartTime = turnStartTime.toMillis();
+        }
+        const turnExpired = draftTurns.turnExpired || false;
+        const isStolenTurn = draftTurns.isStolenTurn || false;
+
+        if (!currentTeam) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // Mostra il banner
+        banner.classList.remove('hidden');
+
+        // Aggiorna nome squadra
+        const teamNameEl = document.getElementById('draft-alert-team');
+        const countdownEl = document.getElementById('draft-alert-countdown');
+        const stealInfoEl = document.getElementById('draft-alert-steal-info');
+
+        // Controlla se l'utente corrente puo' rubare il turno
+        // Puo' rubare SOLO se: turno scaduto, non e' il suo turno, e NON ha ancora draftato in questo round
+        const userEntry = currentOrder.find(t => t.teamId === currentTeamId);
+        const hasDraftedThisRound = userEntry ? userEntry.hasDrafted : false;
+        const canSteal = turnExpired && currentTeamId !== draftTurns.currentTeamId && !hasDraftedThisRound;
+
+        if (teamNameEl) {
+            teamNameEl.textContent = currentTeam.teamName;
+        }
+
+        // Ferma countdown precedente prima di aggiornare
+        this.stopDraftAlert();
+
+        // Gestisci lo stato del banner in base alla situazione
+        if (canSteal) {
+            // Turno rubabile - colore rosso
+            const bannerInner = banner.querySelector('div');
+            if (bannerInner) {
+                bannerInner.classList.remove('from-purple-900', 'to-indigo-900', 'border-purple-500');
+                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
+                bannerInner.classList.add('from-red-900', 'to-rose-900', 'border-red-500');
+            }
+            if (teamNameEl) {
+                teamNameEl.textContent = `⚡ RUBA TURNO a ${currentTeam.teamName}!`;
+                teamNameEl.classList.remove('text-yellow-400', 'text-green-400');
+                teamNameEl.classList.add('text-red-400');
+            }
+            if (countdownEl) {
+                countdownEl.textContent = 'SCADUTO';
+                countdownEl.classList.add('text-red-400', 'animate-pulse');
+                countdownEl.classList.remove('text-white');
+            }
+            // Mostra info sul furto
+            if (stealInfoEl) {
+                stealInfoEl.classList.remove('hidden');
+                stealInfoEl.textContent = `Strikes: ${currentTeam.stealStrikes || 0}/5`;
+            }
+
+        } else if (hasDraftedThisRound) {
+            // L'utente ha gia' draftato in questo round - colore grigio/viola
+            const bannerInner = banner.querySelector('div');
+            if (bannerInner) {
+                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
+                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
+                bannerInner.classList.add('from-purple-900', 'to-indigo-900', 'border-purple-500');
+            }
+            if (teamNameEl) {
+                teamNameEl.textContent = currentTeam.teamName;
+                teamNameEl.classList.remove('text-green-400', 'text-red-400');
+                teamNameEl.classList.add('text-yellow-400');
+            }
+            if (countdownEl) {
+                countdownEl.classList.remove('text-red-400', 'animate-pulse');
+                countdownEl.classList.add('text-white');
+            }
+            if (stealInfoEl) {
+                stealInfoEl.classList.remove('hidden');
+                stealInfoEl.textContent = '✓ Hai gia\' draftato';
+                stealInfoEl.classList.remove('text-red-300');
+                stealInfoEl.classList.add('text-green-300');
+            }
+            // Avvia countdown comunque per mostrare il tempo rimanente
+            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
+
+        } else if (currentTeamId === draftTurns.currentTeamId) {
+            // E' il turno dell'utente - colore verde
+            const bannerInner = banner.querySelector('div');
+            if (bannerInner) {
+                bannerInner.classList.remove('from-purple-900', 'to-indigo-900', 'border-purple-500');
+                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
+                bannerInner.classList.add('from-green-900', 'to-emerald-900', 'border-green-500');
+            }
+            if (teamNameEl) {
+                teamNameEl.textContent = '🎉 TOCCA A TE!';
+                teamNameEl.classList.remove('text-yellow-400', 'text-red-400');
+                teamNameEl.classList.add('text-green-400');
+            }
+            if (countdownEl) {
+                countdownEl.classList.remove('text-red-400', 'animate-pulse');
+            }
+            if (stealInfoEl) {
+                stealInfoEl.classList.add('hidden');
+            }
+            // Mostra tempo appropriato (10 min se turno rubato)
+            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
+
+        } else {
+            // In attesa del turno - colore viola
+            const bannerInner = banner.querySelector('div');
+            if (bannerInner) {
+                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
+                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
+                bannerInner.classList.add('from-purple-900', 'to-indigo-900', 'border-purple-500');
+            }
+            if (teamNameEl) {
+                teamNameEl.classList.remove('text-green-400', 'text-red-400');
+                teamNameEl.classList.add('text-yellow-400');
+            }
+            if (countdownEl) {
+                countdownEl.classList.remove('text-red-400', 'animate-pulse');
+                countdownEl.classList.add('text-white');
+            }
+            if (stealInfoEl) {
+                stealInfoEl.classList.add('hidden');
+            }
+            // Avvia countdown con tempo appropriato
+            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
+        }
+    },
+
+    /**
+     * Inizializza e aggiorna l'alert del draft nella homepage.
+     * Avvia anche il listener real-time per aggiornamenti automatici.
+     */
+    async initDraftAlert() {
+        const banner = document.getElementById('draft-alert-banner');
+        if (!banner) return;
+
+        // Ferma eventuali timer precedenti
+        this.stopDraftAlert();
+
+        // Nascondi l'alert per l'admin
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        const adminUsername = window.InterfacciaConstants?.ADMIN_USERNAME_LOWER || 'serieseria';
+        if (!currentTeamId || currentTeamId === 'admin' || currentTeamId === adminUsername) {
+            banner.classList.add('hidden');
+            this.stopDraftAlertListener();
+            return;
+        }
+
+        // Avvia il listener real-time se non gia' attivo
+        if (!this._draftAlertUnsubscribe) {
+            this.startDraftAlertListener();
+        }
+
+        // Fa anche un fetch iniziale per mostrare subito lo stato
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const CONFIG_PATH = `artifacts/${appId}/public/data/config`;
+            const CONFIG_DOC_ID = 'settings';
+
+            const configDocRef = doc(window.db, CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                banner.classList.add('hidden');
+                return;
+            }
+
+            // Usa la funzione di update comune
+            this.updateDraftAlertFromSnapshot(configDoc.data());
+
+        } catch (error) {
+            console.error('[DraftAlert] Errore:', error);
+            banner.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Avvia il countdown nell'alert draft
+     * @param {number} turnStartTimeParam - Timestamp di inizio turno
+     * @param {boolean} isStolenTurn - Se true, usa timeout di 10 minuti invece di 1 ora
+     */
+    startDraftAlertCountdown(turnStartTimeParam, isStolenTurn = false) {
+        const countdownEl = document.getElementById('draft-alert-countdown');
+        if (!countdownEl) return;
+
+        // Converti turnStartTime se e' un Timestamp Firestore
+        let turnStartTime = turnStartTimeParam;
+        if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+            turnStartTime = turnStartTime.toMillis();
+        }
+
+        const { DRAFT_TURN_TIMEOUT_MS, DRAFT_STEAL_TIMEOUT_MS } = window.DraftConstants || {
+            DRAFT_TURN_TIMEOUT_MS: 3600000,
+            DRAFT_STEAL_TIMEOUT_MS: 600000
+        };
+
+        // Usa il timeout appropriato
+        const timeout = isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
+
+        const updateCountdown = () => {
+            const elapsed = Date.now() - turnStartTime;
+            const timeRemaining = Math.max(0, timeout - elapsed);
+            const minutes = Math.floor(timeRemaining / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
+            countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // Soglia di avviso: 5 minuti per turno normale, 2 minuti per turno rubato
+            const warningThreshold = isStolenTurn ? 2 * 60 * 1000 : 5 * 60 * 1000;
+            if (timeRemaining < warningThreshold) {
+                countdownEl.classList.add('text-red-400');
+                countdownEl.classList.remove('text-white');
+            } else {
+                countdownEl.classList.remove('text-red-400');
+                countdownEl.classList.add('text-white');
+            }
+
+            // Se scaduto, ricarica lo stato per mostrare "Ruba Turno"
+            if (timeRemaining <= 0) {
+                countdownEl.textContent = 'SCADUTO';
+                countdownEl.classList.add('animate-pulse');
+                // Ricarica per aggiornare lo stato (mostrare opzione Ruba Turno)
+                setTimeout(() => this.initDraftAlert(), 2000);
+            }
+        };
+
+        // Aggiorna subito e poi ogni secondo
+        updateCountdown();
+        this._draftAlertInterval = setInterval(updateCountdown, 1000);
+    },
+
+    /**
+     * Ferma il countdown dell'alert draft
+     */
+    stopDraftAlert() {
+        if (this._draftAlertInterval) {
+            clearInterval(this._draftAlertInterval);
+            this._draftAlertInterval = null;
         }
     }
 };

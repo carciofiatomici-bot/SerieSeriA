@@ -26,6 +26,29 @@
 </head>
 <body>
 
+    <!-- ALERT DRAFT ATTIVO - Flottante in alto a sinistra, sempre visibile quando c'è un draft -->
+    <div id="draft-alert-banner" class="hidden"
+         style="position: fixed; top: 10px; left: 10px; z-index: 9999; max-width: 320px;">
+        <div class="p-3 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg border-2 border-purple-500 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🎯</span>
+                <div class="flex-1">
+                    <p class="text-purple-300 text-xs font-semibold">DRAFT IN CORSO</p>
+                    <p class="text-white font-bold text-sm"><span id="draft-alert-team" class="text-yellow-400">--</span></p>
+                    <p id="draft-alert-steal-info" class="hidden text-red-300 text-xs font-semibold"></p>
+                </div>
+                <div class="text-center">
+                    <p class="text-purple-300 text-xs">Tempo</p>
+                    <p id="draft-alert-countdown" class="text-xl font-bold text-white">--:--</p>
+                </div>
+            </div>
+            <button onclick="window.showScreen(document.getElementById('draft-content'))"
+                    class="w-full mt-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 px-3 rounded-lg transition text-xs">
+                Vai al Draft →
+            </button>
+        </div>
+    </div>
+
     <!-- Bottone Regole Globale (sempre visibile) - z-index alto per stare sopra tutto -->
     <button id="rules-global-btn"
             onclick="window.RulesPanel.toggle()"
@@ -467,6 +490,14 @@
                 <button id="btn-delete-team"
                         class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02]">
                     🗑️ Elimina Squadra
+                </button>
+            </div>
+
+            <!-- Bottone Torna al Pannello Admin - Visibile SOLO se si accede dalla dashboard admin -->
+            <div id="admin-return-button-container" class="mt-4 hidden">
+                <button id="btn-return-to-admin"
+                        class="w-full bg-indigo-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02]">
+                    🔧 Torna al Pannello Admin
                 </button>
             </div>
 
@@ -951,7 +982,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // *** IMPORTAZIONE CRITICA: Importa TUTTE le funzioni necessarie per l'oggetto firestoreTools ***
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Imposta il livello di log (utile per il debug)
@@ -982,7 +1013,7 @@
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
         // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
-        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, appId }; 
+        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, appId }; 
         
         // Funzione globale per cambiare schermata
         window.showScreen = (elementToShow) => {

@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {
-            btnDashboardMucche.addEventListener('click', () => goToTeamDashboardByName('Mucche Mannare'));
+            btnDashboardMucche.addEventListener('click', () => goToTeamDashboardByName('MuccheMannare'));
         }
 
         const btnDashboardSchalke = document.getElementById('btn-dashboard-schalke');
@@ -262,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Vai alla dashboard di una squadra cercandola per nome
+     * Setta un flag per mostrare il bottone "Torna al Pannello Admin"
      */
     const goToTeamDashboardByName = async (teamName) => {
         try {
@@ -282,6 +283,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`Squadra "${teamName}" non trovata!`);
                 return;
             }
+
+            // Setta il flag per mostrare il bottone "Torna al Pannello Admin"
+            window.accessedFromAdminPanel = true;
 
             // Usa la funzione viewTeamDashboard di AdminTeams
             if (window.AdminTeams && window.AdminTeams.viewTeamDashboard) {
@@ -1291,7 +1295,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Calcola tempo rimanente per il timer
                 const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants || { DRAFT_TURN_TIMEOUT_MS: 3600000 };
-                const turnStartTime = draftTurns.turnStartTime || Date.now();
+                // Converti turnStartTime se e' un Timestamp Firestore
+                let turnStartTime = draftTurns.turnStartTime || Date.now();
+                if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+                    turnStartTime = turnStartTime.toMillis();
+                }
                 const elapsed = Date.now() - turnStartTime;
                 const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
                 const minutes = Math.floor(timeRemaining / 60000);
@@ -1366,10 +1374,16 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Avvia il countdown del timer nel pannello admin
      */
-    const startAdminDraftCountdown = (turnStartTime) => {
+    const startAdminDraftCountdown = (turnStartTimeParam) => {
         // Pulisci timer precedente
         if (adminCountdownInterval) {
             clearInterval(adminCountdownInterval);
+        }
+
+        // Converti turnStartTime se e' un Timestamp Firestore
+        let turnStartTime = turnStartTimeParam;
+        if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+            turnStartTime = turnStartTime.toMillis();
         }
 
         const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants || { DRAFT_TURN_TIMEOUT_MS: 3600000 };

@@ -196,6 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestisce l'evento personalizzato per l'aggiornamento della dashboard
     document.addEventListener('dashboardNeedsUpdate', () => {
         window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(elements);
+        // Aggiorna anche l'alert draft
+        window.InterfacciaDashboard.initDraftAlert();
+    });
+
+    // Inizializza l'alert draft all'avvio e quando cambia schermata
+    // L'alert e' globale quindi viene mostrato ovunque
+    setTimeout(() => {
+        window.InterfacciaDashboard.initDraftAlert();
+    }, 2000); // Ritardo per aspettare che Firebase sia pronto
+
+    // Aggiorna l'alert quando cambia schermata
+    document.addEventListener('screenChanged', () => {
+        window.InterfacciaDashboard.initDraftAlert();
     });
 
     // --- INIZIALIZZAZIONE APP ---

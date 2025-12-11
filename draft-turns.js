@@ -6,9 +6,9 @@
 // Gestisce:
 // - Generazione ordine draft (basato su classifica o media rosa)
 // - Gestione turni e timeout con timer di 1 ora
-// - Passaggio automatico al prossimo utente
+// - Sistema "Ruba Turno": quando il timer scade, altri utenti possono rubare
 // - Notifiche in-app e push quando tocca a un utente
-// - Sistema 3 strikes: dopo 3 scadenze, escluso dal round corrente
+// - Sistema 5 strikes: dopo 5 furti subiti, assegnazione giocatore random
 //
 
 window.DraftTurns = {
@@ -499,11 +499,13 @@ window.DraftTurns = {
 
     /**
      * Controlla se il tempo del turno corrente e' scaduto.
+     * Con il nuovo sistema "Ruba Turno", quando il timer scade non si avanza automaticamente,
+     * ma si setta un flag che permette agli altri utenti di rubare il turno.
      * @param {Object} context - Contesto
      */
     async checkTurnTimeout(context) {
         const { db, firestoreTools, paths } = context;
-        const { doc, getDoc } = firestoreTools;
+        const { doc, getDoc, setDoc } = firestoreTools;
         const { CONFIG_DOC_ID, DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
 
         try {
@@ -533,9 +535,17 @@ window.DraftTurns = {
                 return;
             }
 
-            const turnStartTime = draftTurns.turnStartTime;
+            // Converti turnStartTime se e' un Timestamp Firestore
+            let turnStartTime = draftTurns.turnStartTime;
+            if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+                turnStartTime = turnStartTime.toMillis();
+            }
             const elapsed = Date.now() - turnStartTime;
-            const timeRemaining = DRAFT_TURN_TIMEOUT_MS - elapsed;
+
+            // Usa il timeout appropriato: normale (1h) o furto (10min)
+            const { DRAFT_STEAL_TIMEOUT_MS } = window.DraftConstants;
+            const currentTimeout = draftTurns.isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
+            const timeRemaining = currentTimeout - elapsed;
 
             // Log ogni 5 minuti circa (ogni 10 check da 30 secondi)
             if (Math.floor(elapsed / 300000) !== Math.floor((elapsed - 30000) / 300000)) {
@@ -545,7 +555,7 @@ window.DraftTurns = {
                 console.log(`[Timer] Turno di ${currentTeam?.teamName || 'N/A'} - Tempo rimanente: ${Math.floor(timeRemaining / 60000)} minuti`);
             }
 
-            if (elapsed >= DRAFT_TURN_TIMEOUT_MS) {
+            if (elapsed >= currentTimeout) {
                 // Verifica che il team corrente non abbia gia' draftato (race condition check)
                 const currentRound = draftTurns.currentRound;
                 const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
@@ -557,13 +567,208 @@ window.DraftTurns = {
                     return;
                 }
 
-                console.log(`[TIMEOUT] Tempo scaduto per ${currentOrder[currentIndex]?.teamName}!`);
-                await this.advanceToNextTurn(context, false); // false = non ha draftato
+                const currentTeamName = currentOrder[currentIndex]?.teamName || 'N/A';
+
+                // Se il turno era gia' stato rubato e scade di nuovo, il ladro ha fallito
+                // In questo caso il turno torna aperto per essere rubato da qualcun altro
+                if (draftTurns.isStolenTurn) {
+                    console.log(`[TIMEOUT FURTO] Il ladro ${currentTeamName} non ha draftato in tempo!`);
+                    // Resetta lo stato del furto - il turno torna alla vittima originale
+                    // ma rimane aperto per essere rubato di nuovo
+                    await setDoc(configDocRef, {
+                        draftTurns: {
+                            ...draftTurns,
+                            isStolenTurn: false,
+                            turnExpired: true, // Rimane rubabile
+                            turnStartTime: Date.now() // Reset del timer per la vittima
+                        }
+                    }, { merge: true });
+                    return;
+                }
+
+                // Timer principale scaduto - setta il flag "turnExpired" per permettere il furto
+                if (!draftTurns.turnExpired) {
+                    console.log(`[TIMEOUT] Tempo scaduto per ${currentTeamName}! Turno disponibile per furto.`);
+
+                    // Controlla se e' l'ultimo giocatore rimasto a dover draftare
+                    const remainingPlayers = currentOrder.filter(t => !t.hasDrafted);
+                    const isLastPlayer = remainingPlayers.length === 1;
+
+                    if (isLastPlayer) {
+                        // E' l'ultimo giocatore - gestisci assegnazione automatica (solo in orario consentito)
+                        await this.handleAutoAssignOrSkip(context, currentOrder, currentIndex, currentTeamName, draftTurns, orderKey, configDocRef);
+                        return;
+                    }
+
+                    await setDoc(configDocRef, {
+                        draftTurns: {
+                            ...draftTurns,
+                            turnExpired: true, // Flag che indica che il turno puo' essere rubato
+                            turnExpiredAt: Date.now() // Timestamp per il timer secondario
+                        }
+                    }, { merge: true });
+
+                    // Notifica che il turno e' disponibile per il furto
+                    this.sendStealAvailableNotification(currentOrder[currentIndex]?.teamId, currentTeamName);
+                } else {
+                    // Il turno e' gia' scaduto e rubabile - controlla il timer secondario
+                    const turnExpiredAt = draftTurns.turnExpiredAt;
+                    if (turnExpiredAt) {
+                        // Converti se e' un Timestamp Firestore
+                        let expiredAtMs = turnExpiredAt;
+                        if (turnExpiredAt && typeof turnExpiredAt.toMillis === 'function') {
+                            expiredAtMs = turnExpiredAt.toMillis();
+                        }
+
+                        const elapsedSinceExpired = Date.now() - expiredAtMs;
+                        const STEAL_WINDOW_TIMEOUT_MS = DRAFT_TURN_TIMEOUT_MS; // 1 ora per rubare
+
+                        if (elapsedSinceExpired >= STEAL_WINDOW_TIMEOUT_MS) {
+                            console.log(`[TIMEOUT FURTO] Nessuno ha rubato il turno di ${currentTeamName} entro 1 ora.`);
+
+                            // Controlla se siamo nella finestra oraria consentita (9:00 - 22:30)
+                            if (!this.isWithinAllowedTimeWindow()) {
+                                console.log(`[NOTTE] Fuori dalla finestra oraria (9:00-22:30). Assegnazione automatica sospesa.`);
+                                return;
+                            }
+
+                            // Gestisci assegnazione automatica o skip
+                            await this.handleAutoAssignOrSkip(context, currentOrder, currentIndex, currentTeamName, draftTurns, orderKey, configDocRef);
+                        }
+                    }
+                }
             }
 
         } catch (error) {
             console.error("Errore nel controllo timeout:", error);
         }
+    },
+
+    /**
+     * Controlla se siamo nella finestra oraria consentita per le assegnazioni automatiche.
+     * Finestra consentita: 9:00 - 22:30
+     * @returns {boolean} - true se siamo nella finestra consentita
+     */
+    isWithinAllowedTimeWindow() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const currentTimeInMinutes = hours * 60 + minutes;
+
+        const startTime = 9 * 60; // 9:00 = 540 minuti
+        const endTime = 22 * 60 + 30; // 22:30 = 1350 minuti
+
+        return currentTimeInMinutes >= startTime && currentTimeInMinutes <= endTime;
+    },
+
+    /**
+     * Gestisce l'assegnazione automatica o lo skip del turno.
+     * Assegna un giocatore random se c'e' budget sufficiente, altrimenti salta il turno.
+     * @param {Object} context - Contesto
+     * @param {Array} currentOrder - Ordine corrente del draft
+     * @param {number} currentIndex - Indice del giocatore corrente
+     * @param {string} currentTeamName - Nome della squadra corrente
+     * @param {Object} draftTurns - Stato del draft
+     * @param {string} orderKey - Chiave dell'ordine (round1Order o round2Order)
+     * @param {Object} configDocRef - Riferimento al documento di configurazione
+     */
+    async handleAutoAssignOrSkip(context, currentOrder, currentIndex, currentTeamName, draftTurns, orderKey, configDocRef) {
+        const { db, firestoreTools, paths } = context;
+        const { setDoc } = firestoreTools;
+
+        // Controlla se siamo nella finestra oraria consentita
+        if (!this.isWithinAllowedTimeWindow()) {
+            console.log(`[NOTTE] Fuori dalla finestra oraria (9:00-22:30). Assegnazione automatica sospesa per ${currentTeamName}.`);
+            return;
+        }
+
+        const teamId = currentOrder[currentIndex].teamId;
+
+        // Prova ad assegnare un giocatore random
+        const assignResult = await this.assignRandomCheapestPlayer(context, teamId);
+
+        if (assignResult.success) {
+            // Assegnazione riuscita
+            console.log(`[AUTO-ASSEGNATO] ${assignResult.playerName} assegnato a ${currentTeamName}`);
+            this.sendAutoAssignNotification(teamId, currentTeamName, assignResult.playerName);
+
+            currentOrder[currentIndex].hasDrafted = true;
+            currentOrder[currentIndex].autoAssigned = true;
+        } else if (assignResult.insufficientBudget) {
+            // Budget insufficiente - salta il turno (rinuncia forzata)
+            console.log(`[BUDGET INSUFFICIENTE] ${currentTeamName} non ha budget sufficiente. Turno saltato.`);
+            this.sendSkipTurnNotification(teamId, currentTeamName, 'budget_insufficient');
+
+            currentOrder[currentIndex].hasDrafted = true;
+            currentOrder[currentIndex].skippedTurn = true;
+            currentOrder[currentIndex].skipReason = 'budget_insufficient';
+        } else {
+            // Altro errore - salta comunque il turno
+            console.log(`[ERRORE ASSEGNAZIONE] Errore per ${currentTeamName}: ${assignResult.message}. Turno saltato.`);
+            this.sendSkipTurnNotification(teamId, currentTeamName, 'error');
+
+            currentOrder[currentIndex].hasDrafted = true;
+            currentOrder[currentIndex].skippedTurn = true;
+            currentOrder[currentIndex].skipReason = 'error';
+        }
+
+        // Aggiorna Firestore
+        await setDoc(configDocRef, {
+            draftTurns: {
+                ...draftTurns,
+                [orderKey]: currentOrder,
+                turnExpired: false,
+                turnExpiredAt: null
+            }
+        }, { merge: true });
+
+        // Avanza al prossimo turno/round
+        await this.advanceToNextTurn(context, true);
+    },
+
+    /**
+     * Invia una notifica quando il turno viene saltato.
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     * @param {string} reason - Motivo dello skip ('budget_insufficient', 'voluntary', 'error')
+     */
+    sendSkipTurnNotification(teamId, teamName, reason) {
+        let message = '';
+        let title = '';
+
+        switch (reason) {
+            case 'budget_insufficient':
+                title = 'Turno Saltato - Budget Insufficiente';
+                message = `Non hai abbastanza CS per draftare nessun giocatore. Il tuo turno e' stato saltato.`;
+                break;
+            case 'voluntary':
+                title = 'Rinuncia al Pick Confermata';
+                message = `Hai rinunciato al pick per questo round.`;
+                break;
+            case 'error':
+            default:
+                title = 'Turno Saltato';
+                message = `Il tuo turno e' stato saltato a causa di un errore.`;
+                break;
+        }
+
+        // Notifica in-app
+        if (window.Notifications && window.Notifications.add) {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: title,
+                message: message,
+                action: null
+            });
+        }
+
+        // Push notification se e' l'utente corrente
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId === teamId) {
+            this.sendBrowserPushNotification(title, message, 'warning');
+        }
+
+        console.log(`[Notifica Skip] ${teamName}: ${reason}`);
     },
 
     /**
@@ -807,10 +1012,384 @@ window.DraftTurns = {
     },
 
     /**
+     * Ruba il turno di un altro utente.
+     * Usa una TRANSAZIONE Firestore per garantire atomicita' e prevenire race conditions
+     * quando due utenti cliccano "Ruba Turno" simultaneamente.
+     *
+     * REGOLA: Il ladro prende il posto corrente, la vittima va in FONDO alla coda
+     * (come ultimo tra quelli che non hanno ancora draftato).
+     *
+     * @param {Object} context - Contesto con db e firestoreTools
+     * @param {string} stealerTeamId - ID della squadra che ruba il turno
+     * @returns {Promise<Object>} - { success, message }
+     */
+    async stealTurn(context, stealerTeamId) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, runTransaction } = firestoreTools;
+        const { CONFIG_DOC_ID, DRAFT_MAX_STEAL_STRIKES } = window.DraftConstants;
+
+        // Variabili per notifiche post-transazione
+        let stealerTeamName = '';
+        let victimTeamId = '';
+        let victimTeamName = '';
+        let autoAssignNeeded = false;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+
+            // Esegui tutto in una transazione atomica
+            const result = await runTransaction(db, async (transaction) => {
+                const configDoc = await transaction.get(configDocRef);
+
+                if (!configDoc.exists()) {
+                    throw new Error('Configurazione non trovata.');
+                }
+
+                const config = configDoc.data();
+                const draftTurns = config.draftTurns;
+
+                if (!draftTurns || !draftTurns.isActive) {
+                    throw new Error('Draft non attivo.');
+                }
+
+                // VERIFICA CRITICA: il turno deve essere ancora scaduto
+                // Se qualcun altro ha gia' rubato, turnExpired sara' false
+                if (!draftTurns.turnExpired) {
+                    throw new Error('Turno gia\' rubato da un altro utente! Ricarica la pagina.');
+                }
+
+                const currentRound = draftTurns.currentRound;
+                const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+                // DEEP COPY per evitare mutazioni
+                const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
+                const currentIndex = draftTurns.currentTurnIndex;
+                const victimTeam = currentOrder[currentIndex];
+
+                // Salva info per notifiche
+                victimTeamId = victimTeam.teamId;
+                victimTeamName = victimTeam.teamName;
+
+                // Verifica che il ladro non sia la vittima stessa
+                if (victimTeam.teamId === stealerTeamId) {
+                    throw new Error('Non puoi rubare il tuo stesso turno!');
+                }
+
+                // Trova l'indice del ladro nell'ordine
+                const stealerIndex = currentOrder.findIndex(t => t.teamId === stealerTeamId);
+                if (stealerIndex === -1) {
+                    throw new Error('Squadra non trovata nell\'ordine del draft.');
+                }
+
+                // Verifica che il ladro non abbia gia' draftato in questo round
+                if (currentOrder[stealerIndex].hasDrafted) {
+                    throw new Error('Hai gia\' draftato in questo round.');
+                }
+
+                stealerTeamName = currentOrder[stealerIndex].teamName;
+
+                // Incrementa lo strike counter della vittima
+                victimTeam.stealStrikes = (victimTeam.stealStrikes || 0) + 1;
+                console.log(`[FURTO TRANSAZIONE] ${stealerTeamName} ruba il turno a ${victimTeamName} (Strike ${victimTeam.stealStrikes}/${DRAFT_MAX_STEAL_STRIKES})`);
+
+                // Controlla se la vittima ha raggiunto il limite di strikes
+                if (victimTeam.stealStrikes >= DRAFT_MAX_STEAL_STRIKES) {
+                    autoAssignNeeded = true;
+                    victimTeam.hasDrafted = true;
+                    victimTeam.autoAssigned = true;
+                    victimTeam.stealStrikes = 0;
+                }
+
+                // NUOVA REGOLA: il ladro prende il posto corrente, la vittima va in FONDO alla coda
+                const stealerTeam = { ...currentOrder[stealerIndex] };
+
+                // Rimuovi il ladro dalla sua posizione originale
+                currentOrder.splice(stealerIndex, 1);
+
+                // Se l'indice corrente e' maggiore dell'indice del ladro, dobbiamo aggiustarlo
+                const adjustedCurrentIndex = stealerIndex < currentIndex ? currentIndex - 1 : currentIndex;
+
+                // Metti il ladro nella posizione corrente del turno
+                currentOrder[adjustedCurrentIndex] = stealerTeam;
+
+                // Rimuovi la vittima dalla posizione corrente (ora occupata dal ladro)
+                // e aggiungila in fondo (solo se non ha gia' draftato per via dei 5 strikes)
+                if (!victimTeam.hasDrafted) {
+                    // Trova l'ultimo indice dei giocatori che non hanno ancora draftato
+                    let lastNonDraftedIndex = currentOrder.length - 1;
+                    while (lastNonDraftedIndex >= 0 && currentOrder[lastNonDraftedIndex].hasDrafted) {
+                        lastNonDraftedIndex--;
+                    }
+
+                    // Inserisci la vittima dopo l'ultimo che non ha draftato
+                    // (cioe' prima di quelli che hanno gia' draftato)
+                    currentOrder.splice(lastNonDraftedIndex + 1, 0, victimTeam);
+                }
+
+                // Aggiorna Firestore ATOMICAMENTE
+                transaction.update(configDocRef, {
+                    [`draftTurns.${orderKey}`]: currentOrder,
+                    'draftTurns.currentTeamId': stealerTeamId,
+                    'draftTurns.turnStartTime': Date.now(),
+                    'draftTurns.turnExpired': false, // CRITICO: resetta il flag atomicamente
+                    'draftTurns.isStolenTurn': true,
+                    'draftTurns.stolenFrom': victimTeamId,
+                    'draftTurns.stolenBy': stealerTeamId
+                });
+
+                return { success: true, victimTeamName };
+            });
+
+            // Operazioni post-transazione (notifiche, assegnazione giocatore)
+            // Queste non sono critiche per l'atomicita'
+
+            // Se servono 5 strikes, assegna giocatore random
+            if (autoAssignNeeded) {
+                console.log(`[5 STRIKES] ${victimTeamName} ha subito ${DRAFT_MAX_STEAL_STRIKES} furti. Assegnazione giocatore random...`);
+                const assignResult = await this.assignRandomCheapestPlayer(context, victimTeamId);
+                if (assignResult.success) {
+                    console.log(`[AUTO-ASSEGNATO] ${assignResult.playerName} assegnato a ${victimTeamName}`);
+                    this.sendAutoAssignNotification(victimTeamId, victimTeamName, assignResult.playerName);
+                }
+            }
+
+            // Notifica il ladro che ora e' il suo turno
+            this.sendTurnNotification(stealerTeamId, stealerTeamName);
+
+            return {
+                success: true,
+                message: `Hai rubato il turno a ${result.victimTeamName}! Hai 10 minuti per draftare.`
+            };
+
+        } catch (error) {
+            console.error("Errore nel furto del turno:", error);
+            // Messaggi user-friendly per errori comuni
+            if (error.message.includes('gia\' rubato')) {
+                return { success: false, message: 'Qualcun altro ha rubato il turno prima di te! Ricarica la pagina.' };
+            }
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Assegna un giocatore random dal costo piu' basso a una squadra.
+     * Usato quando una squadra subisce 5 furti o quando scade il timer secondario.
+     * Verifica che la squadra abbia budget sufficiente prima di assegnare.
+     * @param {Object} context - Contesto
+     * @param {string} teamId - ID della squadra a cui assegnare il giocatore
+     * @returns {Promise<Object>} - { success, playerName, playerId, insufficientBudget }
+     */
+    async assignRandomCheapestPlayer(context, teamId) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc } = firestoreTools;
+
+        try {
+            // Carica i dati della squadra PRIMA per verificare il budget
+            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, message: 'Squadra non trovata.' };
+            }
+
+            const teamData = teamDoc.data();
+            const currentPlayers = teamData.players || [];
+            const budget = teamData.budget || 0;
+
+            // Carica i giocatori disponibili
+            const playersCollectionRef = collection(db, paths.DRAFT_PLAYERS_COLLECTION_PATH);
+            const q = query(playersCollectionRef, where('isDrafted', '==', false));
+            const playersSnapshot = await getDocs(q);
+
+            if (playersSnapshot.empty) {
+                return { success: false, message: 'Nessun giocatore disponibile.' };
+            }
+
+            // Calcola il costo per ogni giocatore e filtra quelli accessibili
+            const players = [];
+            const calculatePlayerCost = window.calculatePlayerCost;
+
+            playersSnapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                // Usa il livello minimo per calcolare il costo minimo possibile
+                const levelMin = data.levelRange?.[0] || 1;
+                let cost;
+                if (calculatePlayerCost) {
+                    cost = calculatePlayerCost(levelMin, data.abilities || []);
+                } else {
+                    cost = data.cost || levelMin;
+                }
+                players.push({ id: docSnap.id, ...data, calculatedCost: cost });
+            });
+
+            // Filtra i giocatori che la squadra puo' permettersi
+            const affordablePlayers = players.filter(p => p.calculatedCost <= budget);
+
+            // Se nessun giocatore e' accessibile, ritorna insufficientBudget
+            if (affordablePlayers.length === 0) {
+                console.log(`[BUDGET] Squadra ${teamId} non ha budget sufficiente (${budget} CS) per nessun giocatore.`);
+                return {
+                    success: false,
+                    insufficientBudget: true,
+                    message: 'Budget insufficiente per qualsiasi giocatore disponibile.',
+                    currentBudget: budget
+                };
+            }
+
+            // Trova il costo minimo tra quelli accessibili
+            let minCost = Infinity;
+            affordablePlayers.forEach(p => {
+                if (p.calculatedCost < minCost) minCost = p.calculatedCost;
+            });
+
+            // Filtra solo i giocatori con il costo minimo
+            const cheapestPlayers = affordablePlayers.filter(p => p.calculatedCost === minCost);
+
+            // Scegli un giocatore random tra i piu' economici
+            const randomIndex = Math.floor(Math.random() * cheapestPlayers.length);
+            const selectedPlayer = cheapestPlayers[randomIndex];
+
+            // Determina il livello (random nel range)
+            const levelMin = selectedPlayer.levelRange?.[0] || 1;
+            const levelMax = selectedPlayer.levelRange?.[1] || levelMin;
+            const finalLevel = Math.floor(Math.random() * (levelMax - levelMin + 1)) + levelMin;
+
+            // Calcola il costo effettivo con il livello finale
+            const finalCost = calculatePlayerCost ? calculatePlayerCost(finalLevel, selectedPlayer.abilities || []) : selectedPlayer.cost || minCost;
+
+            // Verifica di nuovo che il budget sia sufficiente (con il livello finale)
+            if (finalCost > budget) {
+                // Se il costo finale e' troppo alto, usa il livello minimo
+                const safeLevel = levelMin;
+                const safeCost = calculatePlayerCost ? calculatePlayerCost(safeLevel, selectedPlayer.abilities || []) : selectedPlayer.cost || minCost;
+
+                if (safeCost > budget) {
+                    return {
+                        success: false,
+                        insufficientBudget: true,
+                        message: 'Budget insufficiente anche per il livello minimo.',
+                        currentBudget: budget
+                    };
+                }
+            }
+
+            // Crea il giocatore per la rosa
+            const newPlayer = {
+                id: selectedPlayer.id,
+                name: selectedPlayer.name,
+                role: selectedPlayer.role,
+                age: selectedPlayer.age,
+                type: selectedPlayer.type,
+                level: finalLevel,
+                abilities: selectedPlayer.abilities || [],
+                nationality: selectedPlayer.nationality || 'IT',
+                draftedAt: new Date().toISOString(),
+                autoAssigned: true // Flag per indicare assegnazione automatica
+            };
+
+            // Aggiorna la squadra
+            await setDoc(teamDocRef, {
+                players: [...currentPlayers, newPlayer],
+                budget: Math.max(0, budget - finalCost)
+            }, { merge: true });
+
+            // Marca il giocatore come draftato
+            const playerDocRef = doc(db, paths.DRAFT_PLAYERS_COLLECTION_PATH, selectedPlayer.id);
+            await updateDoc(playerDocRef, {
+                isDrafted: true,
+                draftedBy: teamId,
+                draftedAt: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                playerName: selectedPlayer.name,
+                playerId: selectedPlayer.id,
+                cost: finalCost
+            };
+
+        } catch (error) {
+            console.error("Errore nell'assegnazione automatica:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Rinuncia volontaria al pick del turno corrente.
+     * L'utente decide di non draftare nessun giocatore in questo turno.
+     * @param {Object} context - Contesto con db e firestoreTools
+     * @param {string} teamId - ID della squadra che rinuncia
+     * @returns {Promise<Object>} - { success, message }
+     */
+    async skipTurn(context, teamId) {
+        const { db, firestoreTools, paths } = context;
+        const { doc, getDoc, setDoc } = firestoreTools;
+        const { CONFIG_DOC_ID } = window.DraftConstants;
+
+        try {
+            const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) {
+                return { success: false, message: 'Configurazione non trovata.' };
+            }
+
+            const config = configDoc.data();
+            const draftTurns = config.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                return { success: false, message: 'Draft non attivo.' };
+            }
+
+            // Verifica che sia il turno dell'utente
+            if (draftTurns.currentTeamId !== teamId) {
+                return { success: false, message: 'Non e\' il tuo turno!' };
+            }
+
+            const currentRound = draftTurns.currentRound;
+            const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
+            const currentOrder = draftTurns[orderKey].map(t => ({ ...t }));
+            const currentIndex = draftTurns.currentTurnIndex;
+            const currentTeam = currentOrder[currentIndex];
+
+            // Marca come "ha draftato" (con flag skip)
+            currentTeam.hasDrafted = true;
+            currentTeam.skippedTurn = true;
+            currentTeam.skipReason = 'voluntary';
+
+            console.log(`[RINUNCIA] ${currentTeam.teamName} ha rinunciato al pick nel round ${currentRound}`);
+
+            // Invia notifica
+            this.sendSkipTurnNotification(teamId, currentTeam.teamName, 'voluntary');
+
+            // Aggiorna Firestore
+            await setDoc(configDocRef, {
+                draftTurns: {
+                    ...draftTurns,
+                    [orderKey]: currentOrder,
+                    turnExpired: false,
+                    turnExpiredAt: null
+                }
+            }, { merge: true });
+
+            // Avanza al prossimo turno
+            await this.advanceToNextTurn(context, true);
+
+            return {
+                success: true,
+                message: 'Hai rinunciato al pick per questo round.'
+            };
+
+        } catch (error) {
+            console.error("Errore nella rinuncia al turno:", error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
      * Verifica se e' il turno di una specifica squadra.
      * @param {Object} context - Contesto
      * @param {string} teamId - ID della squadra
-     * @returns {Promise<Object>} - { isMyTurn, timeRemaining, position, totalTeams, currentRound }
+     * @returns {Promise<Object>} - { isMyTurn, timeRemaining, position, totalTeams, currentRound, canSteal, ... }
      */
     async checkTeamTurn(context, teamId) {
         const draftState = await this.getDraftState(context);
@@ -830,15 +1409,24 @@ window.DraftTurns = {
             };
         }
 
-        const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
+        const { DRAFT_TURN_TIMEOUT_MS, DRAFT_STEAL_TIMEOUT_MS } = window.DraftConstants;
         const currentRound = draftState.currentRound;
         const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
         const currentOrder = draftState[orderKey];
         const currentTeamId = draftState.currentTeamId;
-        const turnStartTime = draftState.turnStartTime;
+        // Converti turnStartTime se e' un Timestamp Firestore
+        let turnStartTime = draftState.turnStartTime;
+        if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+            turnStartTime = turnStartTime.toMillis();
+        }
+        const turnExpired = draftState.turnExpired || false;
+        const isStolenTurn = draftState.isStolenTurn || false;
 
         const isMyTurn = currentTeamId === teamId;
-        const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - (Date.now() - turnStartTime));
+
+        // Usa il timeout appropriato: normale (1h) o furto (10min)
+        const currentTimeout = isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
+        const timeRemaining = Math.max(0, currentTimeout - (Date.now() - turnStartTime));
 
         // Trova la posizione nella coda
         let position = 0;
@@ -854,6 +1442,14 @@ window.DraftTurns = {
         const teamEntry = currentOrder.find(t => t.teamId === teamId);
         const hasDraftedThisRound = teamEntry ? teamEntry.hasDrafted : false;
 
+        // Controlla se il team corrente puo' rubare il turno
+        // Puo' rubare se: il turno e' scaduto, non e' il suo turno, e non ha ancora draftato
+        const canSteal = turnExpired && !isMyTurn && !hasDraftedThisRound;
+
+        // Conta gli strikes (furti subiti) del team corrente nel turno
+        const currentTeamEntry = currentOrder.find(t => t.teamId === currentTeamId);
+        const currentTeamStealStrikes = currentTeamEntry?.stealStrikes || 0;
+
         return {
             draftActive: true,
             isMyTurn,
@@ -865,7 +1461,15 @@ window.DraftTurns = {
             currentRound,
             totalRounds: draftState.totalRounds,
             timerEnabled: draftState.timerEnabled !== false, // default true per retrocompatibilita
-            currentTeamName: currentOrder.find(t => t.teamId === currentTeamId)?.teamName || 'Sconosciuto'
+            currentTeamName: currentOrder.find(t => t.teamId === currentTeamId)?.teamName || 'Sconosciuto',
+            currentTeamId: currentTeamId,
+            // Nuovi campi per il sistema "Ruba Turno"
+            turnExpired,
+            canSteal,
+            isStolenTurn,
+            currentTimeout, // 1h o 10min a seconda se e' turno rubato
+            stealStrikes: teamEntry?.stealStrikes || 0,
+            currentTeamStealStrikes
         };
     },
 
@@ -1006,6 +1610,64 @@ window.DraftTurns = {
         }
 
         return false;
+    },
+
+    /**
+     * Notifica che un turno e' disponibile per essere rubato.
+     * @param {string} victimTeamId - ID della squadra che ha fatto scadere il tempo
+     * @param {string} victimTeamName - Nome della squadra
+     */
+    sendStealAvailableNotification(victimTeamId, victimTeamName) {
+        console.log(`[Notifica] Turno di ${victimTeamName} disponibile per furto!`);
+
+        // Dispatch evento custom per aggiornare UI
+        document.dispatchEvent(new CustomEvent('draftTurnExpired', {
+            detail: { victimTeamId, victimTeamName }
+        }));
+
+        // Notifica in-app
+        if (window.Notifications && window.Notifications.add) {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: 'Turno Disponibile!',
+                message: `Il turno di ${victimTeamName} e' scaduto! Puoi rubarlo cliccando "Ruba Turno".`,
+                action: 'draft'
+            });
+        }
+
+        // Push notification a tutti gli utenti che non hanno ancora draftato
+        // (questo viene fatto lato client quando ricevono l'evento)
+    },
+
+    /**
+     * Notifica quando un giocatore viene assegnato automaticamente
+     * dopo 5 furti subiti.
+     * @param {string} teamId - ID della squadra
+     * @param {string} teamName - Nome della squadra
+     * @param {string} playerName - Nome del giocatore assegnato
+     */
+    sendAutoAssignNotification(teamId, teamName, playerName) {
+        console.log(`[Notifica] ${playerName} assegnato automaticamente a ${teamName}`);
+
+        // Push notification se e' l'utente corrente
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId === teamId) {
+            this.sendBrowserPushNotification(
+                'Giocatore Assegnato Automaticamente',
+                `Dopo 5 furti subiti, ti e' stato assegnato ${playerName}.`,
+                'warning'
+            );
+
+            // Notifica in-app
+            if (window.Notifications && window.Notifications.add) {
+                window.Notifications.add({
+                    type: 'draft_turn',
+                    title: 'Giocatore Assegnato',
+                    message: `Hai subito 5 furti di turno. Ti e' stato assegnato automaticamente ${playerName}.`,
+                    action: null
+                });
+            }
+        }
     }
 };
 

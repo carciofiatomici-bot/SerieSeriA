@@ -513,9 +513,19 @@ window.DraftUserUI = {
             const minutes = Math.floor(timeRemaining / 60000);
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
 
+            // Verifica se il turno e' scaduto e puo' essere rubato
+            const canSteal = turnInfo.canSteal;
+            const turnExpired = turnInfo.turnExpired;
+
+            // Info sul turno rubato
+            const isStolenTurn = turnInfo.isStolenTurn;
+            const timeoutLabel = isStolenTurn ? '(Turno rubato - 10 min)' : '';
+
             draftToolsContainer.innerHTML = `
-                <div class="p-6 bg-gray-700 rounded-lg border-2 border-yellow-500 shadow-xl space-y-4">
-                    <p class="text-center text-2xl font-extrabold text-yellow-400">IN ATTESA DEL TUO TURNO</p>
+                <div class="p-6 bg-gray-700 rounded-lg border-2 ${canSteal ? 'border-red-500' : 'border-yellow-500'} shadow-xl space-y-4">
+                    <p class="text-center text-2xl font-extrabold ${canSteal ? 'text-red-400 animate-pulse' : 'text-yellow-400'}">
+                        ${canSteal ? 'TURNO RUBABILE!' : 'IN ATTESA DEL TUO TURNO'}
+                    </p>
                     <p class="text-center text-lg text-gray-300">
                         Round ${turnInfo.currentRound} / ${turnInfo.totalRounds}
                     </p>
@@ -523,17 +533,32 @@ window.DraftUserUI = {
                          Rosa attuale: <span class="${isRosaFull ? 'text-red-400' : 'text-green-400'}">${currentRosaCount}</span> / ${MAX_ROSA_PLAYERS} giocatori (+ Icona)
                     </p>
 
-                    <div class="mt-4 p-4 bg-gray-800 rounded-lg border border-yellow-600">
-                        <p class="text-center text-gray-300">Turno corrente:</p>
-                        <p class="text-center text-2xl font-bold text-yellow-400">${turnInfo.currentTeamName}</p>
-                        <p class="text-center text-sm text-gray-400 mt-2">
-                            Tempo rimanente: <span id="draft-turn-countdown" class="text-white font-bold">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>
-                        </p>
+                    <div class="mt-4 p-4 bg-gray-800 rounded-lg border ${canSteal ? 'border-red-600' : 'border-yellow-600'}">
+                        <p class="text-center text-gray-300">Turno corrente: ${timeoutLabel}</p>
+                        <p class="text-center text-2xl font-bold ${canSteal ? 'text-red-400' : 'text-yellow-400'}">${turnInfo.currentTeamName}</p>
+                        ${canSteal ? `
+                            <p class="text-center text-red-400 font-bold mt-2">TEMPO SCADUTO!</p>
+                            <p class="text-center text-sm text-gray-400">Strikes: ${turnInfo.currentTeamStealStrikes}/5</p>
+                        ` : `
+                            <p class="text-center text-sm text-gray-400 mt-2">
+                                Tempo rimanente: <span id="draft-turn-countdown" class="text-white font-bold">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>
+                            </p>
+                        `}
                     </div>
 
-                    <div class="mt-4 p-3 bg-gray-800 rounded-lg">
-                        <p class="text-sm text-gray-400">La tua posizione in coda: <span class="text-cyan-400 font-bold">${turnInfo.position + 1}</span> su ${turnInfo.totalTeams} squadre rimanenti</p>
-                    </div>
+                    ${canSteal ? `
+                        <div class="mt-4 p-4 bg-red-900 rounded-lg border-2 border-red-500">
+                            <p class="text-center text-white font-bold mb-3">Puoi rubare questo turno!</p>
+                            <p class="text-center text-sm text-red-200 mb-3">Rubando il turno, ${turnInfo.currentTeamName} andra' in fondo alla coda. Avrai 10 minuti per draftare.</p>
+                            <button id="btn-steal-turn" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition text-lg animate-pulse">
+                                ⚡ RUBA TURNO ⚡
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="mt-4 p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm text-gray-400">La tua posizione in coda: <span class="text-cyan-400 font-bold">${turnInfo.position + 1}</span> su ${turnInfo.totalTeams} squadre rimanenti</p>
+                        </div>
+                    `}
 
                     <button id="btn-refresh-draft" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-500 transition">
                         Aggiorna Stato
@@ -541,13 +566,37 @@ window.DraftUserUI = {
                 </div>
             `;
 
-            // Avvia il countdown con turnStartTime dal server
-            this.startTurnCountdown(context, turnInfo.turnStartTime);
+            // Avvia il countdown con turnStartTime dal server (solo se non scaduto)
+            if (!canSteal) {
+                this.startTurnCountdown(context, turnInfo.turnStartTime, turnInfo.currentTimeout);
+            }
 
             // Event listener per il refresh
             document.getElementById('btn-refresh-draft').addEventListener('click', () => {
                 this.render(context);
             });
+
+            // Event listener per rubare il turno
+            const stealBtn = document.getElementById('btn-steal-turn');
+            if (stealBtn) {
+                stealBtn.addEventListener('click', async () => {
+                    stealBtn.disabled = true;
+                    stealBtn.textContent = 'Rubando turno...';
+                    stealBtn.classList.remove('animate-pulse');
+
+                    const result = await window.DraftTurns.stealTurn(context, context.currentTeamId);
+
+                    if (result.success) {
+                        // Ricarica per mostrare che ora e' il turno dell'utente
+                        this.render(context);
+                    } else {
+                        stealBtn.disabled = false;
+                        stealBtn.textContent = '⚡ RUBA TURNO ⚡';
+                        stealBtn.classList.add('animate-pulse');
+                        alert(result.message);
+                    }
+                });
+            }
 
             return;
         }
@@ -626,6 +675,15 @@ window.DraftUserUI = {
                 <p id="filtered-count" class="text-sm text-gray-400">${filteredPlayers.length} giocatori trovati</p>
             </div>
 
+            <!-- Bottone Rinuncia al Pick -->
+            <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                <p class="text-sm text-gray-400 mb-2">Non vuoi draftare in questo round?</p>
+                <button id="btn-skip-turn" class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-500 transition border border-gray-500">
+                    ↪ Rinuncia al Pick
+                </button>
+                <p class="text-xs text-gray-500 mt-1 text-center">Salta questo turno senza draftare nessun giocatore</p>
+            </div>
+
             <!-- Lista giocatori -->
             <div id="available-players-list" class="mt-2 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
                 ${filteredPlayers.length > 0
@@ -690,19 +748,51 @@ window.DraftUserUI = {
         document.getElementById('available-players-list').addEventListener('click', (e) => {
             window.DraftUserActions.handleUserDraftAction(e, context);
         });
+
+        // Event listener per Rinuncia al Pick
+        const skipTurnBtn = document.getElementById('btn-skip-turn');
+        if (skipTurnBtn) {
+            skipTurnBtn.addEventListener('click', async () => {
+                // Conferma rinuncia
+                const confirmed = confirm('Sei sicuro di voler rinunciare al pick?\n\nSalterai questo turno senza draftare nessun giocatore.');
+                if (!confirmed) return;
+
+                skipTurnBtn.disabled = true;
+                skipTurnBtn.textContent = 'Rinuncia in corso...';
+
+                const result = await window.DraftTurns.skipTurn(context, context.currentTeamId);
+
+                if (result.success) {
+                    // Ricarica UI per mostrare stato aggiornato
+                    this.render(context);
+                } else {
+                    skipTurnBtn.disabled = false;
+                    skipTurnBtn.textContent = '↪ Rinuncia al Pick';
+                    alert('Errore: ' + result.message);
+                }
+            });
+        }
     },
 
     /**
      * Avvia il countdown del turno con sincronizzazione server
      * @param {Object} context - Contesto
-     * @param {number} turnStartTime - Timestamp di inizio turno dal server
+     * @param {number} turnStartTimeParam - Timestamp di inizio turno dal server
+     * @param {number} timeout - Timeout in millisecondi (default 1 ora, 10 min per turni rubati)
      */
-    startTurnCountdown(context, turnStartTime) {
+    startTurnCountdown(context, turnStartTimeParam, timeout) {
         this.clearTurnTimer();
+
+        // Converti turnStartTime se e' un Timestamp Firestore
+        let turnStartTime = turnStartTimeParam;
+        if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
+            turnStartTime = turnStartTime.toMillis();
+        }
 
         // Salva il turnStartTime dal server
         this.serverTurnStartTime = turnStartTime;
         const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
+        const currentTimeout = timeout || DRAFT_TURN_TIMEOUT_MS;
         const countdownElement = document.getElementById('draft-turn-countdown');
 
         const updateCountdown = () => {
@@ -713,13 +803,13 @@ window.DraftUserUI = {
 
             // Calcola tempo rimanente basandosi sul turnStartTime del server
             const elapsed = Date.now() - this.serverTurnStartTime;
-            const timeRemaining = Math.max(0, DRAFT_TURN_TIMEOUT_MS - elapsed);
+            const timeRemaining = Math.max(0, currentTimeout - elapsed);
 
             if (timeRemaining <= 0) {
                 countdownElement.textContent = '00:00';
                 countdownElement.classList.add('text-red-500');
                 this.clearTurnTimer();
-                // Ricarica per aggiornare lo stato
+                // Ricarica per aggiornare lo stato (mostrare bottone Ruba Turno)
                 setTimeout(() => this.render(context), 2000);
                 return;
             }
@@ -728,8 +818,9 @@ window.DraftUserUI = {
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
             countdownElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // Cambia colore quando mancano meno di 5 minuti
-            if (timeRemaining < 5 * 60 * 1000) {
+            // Cambia colore quando mancano meno di 5 minuti (o 2 minuti per turni rubati)
+            const warningThreshold = currentTimeout < DRAFT_TURN_TIMEOUT_MS ? 2 * 60 * 1000 : 5 * 60 * 1000;
+            if (timeRemaining < warningThreshold) {
                 countdownElement.classList.add('text-red-400');
             } else {
                 countdownElement.classList.remove('text-red-400');

@@ -124,9 +124,12 @@ window.DraftConstants = {
     // Tempo massimo per draftare (1 ora in millisecondi)
     DRAFT_TURN_TIMEOUT_MS: 60 * 60 * 1000,
 
-    // Numero massimo di tentativi (scadenze timer) prima di essere escluso dal round
-    // Dopo 3 scadenze l'utente viene escluso dal turno corrente e rientra nel prossimo
-    DRAFT_MAX_TIMEOUT_STRIKES: 3,
+    // Tempo per chi ruba il turno (10 minuti in millisecondi)
+    DRAFT_STEAL_TIMEOUT_MS: 10 * 60 * 1000,
+
+    // Numero massimo di furti subiti prima di assegnazione automatica giocatore
+    // Dopo 5 furti viene assegnato un giocatore random dal costo piu' basso
+    DRAFT_MAX_STEAL_STRIKES: 5,
 
     // Numero di turni totali del draft
     DRAFT_TOTAL_ROUNDS: 2,
