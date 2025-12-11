@@ -31,8 +31,8 @@ window.CreditiSuperSeriUI = {
                     </div>
                     <button id="btn-open-css-shop"
                             class="bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 flex items-center gap-2">
-                        <span>Potenzia</span>
-                        <span class="text-lg">⚡</span>
+                        <span>Acquista</span>
+                        <span class="text-lg">🛒</span>
                     </button>
                 </div>
             </div>
@@ -78,6 +78,9 @@ window.CreditiSuperSeriUI = {
                     <button id="tab-abilita" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-6 rounded-lg hover:bg-gray-600">
                         Assegna Abilita
                     </button>
+                    <button id="tab-servizi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-6 rounded-lg hover:bg-gray-600">
+                        Servizi
+                    </button>
                 </div>
 
                 <!-- Content -->
@@ -105,6 +108,11 @@ window.CreditiSuperSeriUI = {
         document.getElementById('tab-abilita').addEventListener('click', () => {
             this.setActiveTab('abilita');
             this.renderAbilitaContent(rosa, saldo);
+        });
+
+        document.getElementById('tab-servizi').addEventListener('click', () => {
+            this.setActiveTab('servizi');
+            this.renderServiziContent(saldo);
         });
 
         // Renderizza contenuto iniziale
@@ -319,6 +327,106 @@ window.CreditiSuperSeriUI = {
                 await this.handleAssegnaAbilita(playerId, abilityName);
             });
         });
+    },
+
+    /**
+     * Renderizza il contenuto del tab Servizi
+     */
+    renderServiziContent(saldo) {
+        const container = document.getElementById('css-panel-content');
+        if (!container) return;
+
+        const costoSostituzioneIcona = 1;
+        const canAffordIcona = saldo >= costoSostituzioneIcona;
+
+        container.innerHTML = `
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-amber-400 mb-4">Servizi Disponibili</h3>
+
+                <!-- Servizio: Sostituisci Icona -->
+                <div class="bg-gray-700 rounded-lg p-4 border border-orange-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">👑</span>
+                            <div>
+                                <p class="text-white font-bold text-lg">Sostituisci Icona</p>
+                                <p class="text-gray-400 text-sm">Cambia l'Icona della tua squadra con una nuova</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="${canAffordIcona ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${costoSostituzioneIcona} CSS</span>
+                            <button id="btn-sostituisci-icona"
+                                    class="${canAffordIcona
+                                        ? 'bg-orange-600 hover:bg-orange-500 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    ${canAffordIcona ? '' : 'disabled'}>
+                                Acquista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Placeholder per futuri servizi -->
+                <div class="bg-gray-700 rounded-lg p-4 border border-gray-600 opacity-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🔮</span>
+                            <div>
+                                <p class="text-white font-bold text-lg">Altri Servizi</p>
+                                <p class="text-gray-400 text-sm">Prossimamente...</p>
+                            </div>
+                        </div>
+                        <span class="text-gray-500 font-bold">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Event listener per Sostituisci Icona
+        const btnSostituisci = document.getElementById('btn-sostituisci-icona');
+        if (btnSostituisci && canAffordIcona) {
+            btnSostituisci.addEventListener('click', async () => {
+                await this.handleSostituisciIcona();
+            });
+        }
+    },
+
+    /**
+     * Gestisce la sostituzione dell'Icona
+     */
+    async handleSostituisciIcona() {
+        const CSS = window.CreditiSuperSeri;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!CSS || !teamId) {
+            this.showMessage('Errore: sistema non disponibile', 'error');
+            return;
+        }
+
+        // Verifica saldo
+        const saldo = await CSS.getSaldo(teamId);
+        if (saldo < 1) {
+            this.showMessage('CSS insufficienti per questo servizio', 'error');
+            return;
+        }
+
+        // Chiudi il pannello CSS
+        const overlay = document.getElementById('css-potenziamento-overlay');
+        if (overlay) overlay.remove();
+
+        // Ricarica i dati della squadra e vai alla selezione icona
+        if (window.GestioneSquadre && typeof window.GestioneSquadre.loadTeamDataFromFirestore === 'function') {
+            window.GestioneSquadre.loadTeamDataFromFirestore(teamId, 'icona-swap');
+        } else {
+            // Fallback: usa il metodo del core
+            const loadTeamFn = window.InterfacciaCore?.loadTeamDataFromFirestore;
+            if (loadTeamFn) {
+                loadTeamFn(teamId, 'icona-swap');
+            } else {
+                this.showMessage('Errore: impossibile caricare la selezione icona', 'error');
+            }
+        }
     },
 
     /**

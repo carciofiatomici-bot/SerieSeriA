@@ -262,6 +262,51 @@ window.Notifications = {
                 title: title,
                 message: message
             });
+        },
+
+        marketOpened() {
+            window.Notifications.add({
+                type: 'market_player',
+                title: 'Mercato Aperto!',
+                message: 'Il mercato e\' stato aperto, puoi acquistare nuovi giocatori!',
+                action: { type: 'navigate', target: 'mercato-content' }
+            });
+        },
+
+        marketClosed() {
+            window.Notifications.add({
+                type: 'market_player',
+                title: 'Mercato Chiuso',
+                message: 'Il mercato e\' stato chiuso. Attendi la prossima apertura.',
+                action: null
+            });
+        },
+
+        draftOpened() {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: 'Draft Aperto!',
+                message: 'Il draft e\' stato aperto, preparati a scegliere!',
+                action: { type: 'navigate', target: 'draft-content' }
+            });
+        },
+
+        draftClosed() {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: 'Draft Chiuso',
+                message: 'Il draft e\' terminato. Buona fortuna con la tua rosa!',
+                action: null
+            });
+        },
+
+        challengeReceived(fromTeam, betAmount) {
+            window.Notifications.add({
+                type: 'challenge',
+                title: 'Nuova Sfida!',
+                message: betAmount > 0 ? `${fromTeam} ti sfida con ${betAmount} CS in palio!` : `${fromTeam} ti ha sfidato!`,
+                action: { type: 'navigate', target: 'app-content' }
+            });
         }
     },
 
@@ -442,6 +487,31 @@ window.Notifications = {
                 } else {
                     this.destroy();
                 }
+            }
+        });
+
+        // Ascolta apertura/chiusura mercato
+        document.addEventListener('marketStatusChanged', (e) => {
+            if (e.detail?.isOpen) {
+                this.notify.marketOpened();
+            } else {
+                this.notify.marketClosed();
+            }
+        });
+
+        // Ascolta apertura/chiusura draft
+        document.addEventListener('draftStatusChanged', (e) => {
+            if (e.detail?.isOpen) {
+                this.notify.draftOpened();
+            } else {
+                this.notify.draftClosed();
+            }
+        });
+
+        // Ascolta sfide ricevute
+        document.addEventListener('challengeReceived', (e) => {
+            if (e.detail) {
+                this.notify.challengeReceived(e.detail.fromTeam, e.detail.betAmount || 0);
             }
         });
     },

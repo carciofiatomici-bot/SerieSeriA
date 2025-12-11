@@ -199,6 +199,23 @@ window.DraftAdminUI = {
 
                 <!-- SEZIONE 3: LISTA CALCIATORI ESISTENTI -->
                 <h3 class="text-xl font-bold text-gray-400 border-b border-gray-700 pb-2 mt-8 pt-4">Calciatori Disponibili nel Draft</h3>
+
+                <!-- Pulsante Aggiorna Costi -->
+                <div class="mt-4 p-4 bg-gray-700 rounded-lg border border-orange-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold text-orange-400">Aggiorna Costi Giocatori</h4>
+                            <p class="text-sm text-gray-400">Ricalcola i costi di tutti i giocatori nel draft usando la nuova formula</p>
+                            <p class="text-xs text-gray-500 mt-1">Formula: 100 + (livello * 10) + (rarita abilita * 25)</p>
+                        </div>
+                        <button id="btn-update-draft-costs"
+                                class="bg-orange-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-500 transition">
+                            🔄 Aggiorna Costi
+                        </button>
+                    </div>
+                    <p id="update-costs-message" class="text-center mt-2 text-sm"></p>
+                </div>
+
                 <div id="draft-players-list" class="mt-4 space-y-3">
                      <p class="text-gray-500 text-center">Caricamento in corso...</p>
                 </div>
@@ -240,6 +257,14 @@ window.DraftAdminUI = {
         if (btnStopDraftTurns) {
             btnStopDraftTurns.addEventListener('click', () => {
                 this.handleStopDraftTurns(context);
+            });
+        }
+
+        // Event listener per Aggiorna Costi
+        const btnUpdateCosts = document.getElementById('btn-update-draft-costs');
+        if (btnUpdateCosts) {
+            btnUpdateCosts.addEventListener('click', () => {
+                this.handleUpdateDraftCosts(context);
             });
         }
     },
@@ -420,6 +445,112 @@ window.DraftAdminUI = {
         negativeChecks.forEach(cb => abilities.push(cb.value));
 
         return abilities;
+    },
+
+    /**
+     * Aggiorna i costi di tutti i giocatori nel draft usando la nuova formula
+     * Formula: 100 + (livello * 10) + (rarita abilita * 25)
+     * @param {Object} context - Contesto con riferimenti
+     */
+    async handleUpdateDraftCosts(context) {
+        const { db, firestoreTools, paths } = context;
+        const { collection, getDocs, doc, updateDoc } = firestoreTools;
+        const msgEl = document.getElementById('update-costs-message');
+        const btn = document.getElementById('btn-update-draft-costs');
+
+        if (!confirm('Vuoi aggiornare i costi di tutti i giocatori nel draft?\nQuesta operazione ricalcolera i costi basandosi sulla nuova formula.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Aggiornamento in corso...';
+        if (msgEl) {
+            msgEl.textContent = 'Caricamento giocatori...';
+            msgEl.className = 'text-center mt-2 text-sm text-yellow-400';
+        }
+
+        try {
+            // Carica tutti i giocatori del draft
+            const playersRef = collection(db, paths.DRAFT_PLAYERS_PATH);
+            const playersSnapshot = await getDocs(playersRef);
+
+            if (playersSnapshot.empty) {
+                if (msgEl) {
+                    msgEl.textContent = 'Nessun giocatore nel draft da aggiornare.';
+                    msgEl.className = 'text-center mt-2 text-sm text-gray-400';
+                }
+                btn.disabled = false;
+                btn.textContent = '🔄 Aggiorna Costi';
+                return;
+            }
+
+            let updatedCount = 0;
+            let errorCount = 0;
+            const totalPlayers = playersSnapshot.size;
+
+            for (const playerDoc of playersSnapshot.docs) {
+                try {
+                    const playerData = playerDoc.data();
+                    const playerId = playerDoc.id;
+
+                    // Determina il livello (usa levelMin e levelMax per range, o level se singolo)
+                    const levelMin = playerData.levelMin || playerData.level || 1;
+                    const levelMax = playerData.levelMax || playerData.level || levelMin;
+                    const abilities = playerData.abilities || [];
+
+                    // Calcola il nuovo costo usando la formula aggiornata
+                    const newCostMin = window.AdminPlayers.calculateCost(levelMin, abilities);
+                    const newCostMax = window.AdminPlayers.calculateCost(levelMax, abilities);
+
+                    // Prepara l'aggiornamento
+                    const updateData = {
+                        cost: newCostMin, // Costo base (livello minimo)
+                        costRange: [newCostMin, newCostMax]
+                    };
+
+                    // Aggiorna su Firestore
+                    const playerRef = doc(db, paths.DRAFT_PLAYERS_PATH, playerId);
+                    await updateDoc(playerRef, updateData);
+
+                    updatedCount++;
+
+                    // Aggiorna il messaggio di progresso
+                    if (msgEl) {
+                        msgEl.textContent = `Aggiornando... ${updatedCount}/${totalPlayers}`;
+                    }
+
+                } catch (playerError) {
+                    console.error(`Errore aggiornamento giocatore ${playerDoc.id}:`, playerError);
+                    errorCount++;
+                }
+            }
+
+            // Messaggio finale
+            if (msgEl) {
+                if (errorCount > 0) {
+                    msgEl.textContent = `Completato: ${updatedCount} aggiornati, ${errorCount} errori.`;
+                    msgEl.className = 'text-center mt-2 text-sm text-orange-400';
+                } else {
+                    msgEl.textContent = `Tutti i ${updatedCount} giocatori aggiornati con successo!`;
+                    msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                }
+            }
+
+            // Ricarica la lista giocatori
+            window.DraftAdminPlayers.loadDraftPlayers(context);
+
+            console.log(`Aggiornamento costi completato: ${updatedCount} giocatori aggiornati, ${errorCount} errori`);
+
+        } catch (error) {
+            console.error("Errore nell'aggiornamento dei costi:", error);
+            if (msgEl) {
+                msgEl.textContent = `Errore: ${error.message}`;
+                msgEl.className = 'text-center mt-2 text-sm text-red-400';
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔄 Aggiorna Costi';
+        }
     }
 };
 

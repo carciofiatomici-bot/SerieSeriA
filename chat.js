@@ -216,11 +216,11 @@ window.Chat = {
         const teamId = window.InterfacciaCore?.currentTeamId || 'unknown';
         const isAdmin = teamId === 'admin';
 
-        // Se admin, usa nome speciale "Presidente Lega Seria"
+        // Se admin, usa nome speciale "Presidente Lega"
         // Altrimenti prendi il nome dalla squadra corrente
         let teamName = 'Anonimo';
         if (isAdmin) {
-            teamName = 'Presidente Lega Seria';
+            teamName = 'Presidente Lega';
         } else {
             // Ottieni i dati squadra
             const teamData = window.InterfacciaCore?.currentTeamData;
@@ -461,7 +461,7 @@ window.Chat = {
     showWelcomeMessage() {
         this.messages = [{
             id: 'welcome',
-            author: 'Presidente Lega Seria',
+            author: 'Presidente Lega',
             authorId: 'admin',
             content: 'Benvenuti nella chat della lega! Scrivete qui per comunicare con tutti i manager.',
             timestamp: Date.now(),

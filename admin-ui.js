@@ -16,15 +16,6 @@ window.AdminUI = {
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
         adminDashboardContainer.innerHTML = `
-            <!-- SEZIONE AUTOMAZIONE SIMULAZIONI -->
-            <h3 class="text-2xl font-bold text-teal-400 mb-4 border-b border-gray-600 pb-2">Automazione Simulazioni</h3>
-            <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500 mb-6">
-                <p class="text-gray-400 text-sm mb-3">Simula automaticamente partite di Campionato e Coppa alle 20:30 in alternanza</p>
-                <div id="automation-status-container">
-                    <p class="text-gray-400 text-center text-sm">Caricamento stato automazione...</p>
-                </div>
-            </div>
-
             <!-- Pulsanti Navigazione Principale -->
             <div class="mb-6 space-y-4">
                 <div class="grid grid-cols-4 gap-4">
@@ -47,78 +38,134 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- SEZIONE SERIESERIA -->
-            <h3 class="text-2xl font-bold text-green-400 mb-4 border-b border-gray-600 pb-2 pt-6">🏆 SerieSeriA</h3>
-            <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500 mb-6">
-                <p class="text-gray-400 text-sm mb-3">Gestisci il campionato principale</p>
-                <div class="grid grid-cols-3 gap-4">
-                    <button id="btn-admin-leaderboard"
-                            class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150">
-                        <i class="fas fa-chart-bar mr-2"></i> Classifica
-                    </button>
-                    <button id="btn-admin-schedule"
-                            class="bg-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
-                        <i class="fas fa-calendar-alt mr-2"></i> Calendario
-                    </button>
-                    <button id="btn-generate-championship-schedule"
-                            class="bg-green-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-700 transition duration-150">
-                        <i class="fas fa-plus-circle mr-2"></i> Genera Calendario
-                    </button>
-                </div>
-                <div id="serieseria-status-container" class="mt-4">
-                    <p class="text-gray-400 text-center text-sm">Caricamento stato campionato...</p>
+            <!-- MENU A SCOMPARSA GESTIONE LEGA -->
+            <div class="mb-6">
+                <button id="btn-toggle-league-management" class="w-full bg-gradient-to-r from-green-600 via-purple-600 to-yellow-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <i class="fas fa-trophy mr-3"></i> Gestione Lega
+                    </span>
+                    <i id="league-management-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <!-- Contenuto a scomparsa -->
+                <div id="league-management-content" class="hidden mt-4 space-y-6 transition-all duration-300">
+                    <!-- SEZIONE SERIESERIA -->
+                    <div>
+                        <h3 class="text-xl font-bold text-green-400 mb-3 flex items-center">
+                            <span class="mr-2">🏅</span> SerieSeriA
+                        </h3>
+                        <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500">
+                            <p class="text-gray-400 text-sm mb-3">Gestisci il campionato principale</p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <button id="btn-admin-leaderboard"
+                                        class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150">
+                                    <i class="fas fa-chart-bar mr-2"></i> Classifica
+                                </button>
+                                <button id="btn-admin-schedule"
+                                        class="bg-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
+                                    <i class="fas fa-calendar-alt mr-2"></i> Calendario
+                                </button>
+                                <button id="btn-generate-championship-schedule"
+                                        class="bg-green-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-700 transition duration-150">
+                                    <i class="fas fa-plus-circle mr-2"></i> Genera Calendario
+                                </button>
+                            </div>
+                            <div id="serieseria-status-container" class="mt-4">
+                                <p class="text-gray-400 text-center text-sm">Caricamento stato campionato...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEZIONE COPPA SERIA -->
+                    <div>
+                        <h3 class="text-xl font-bold text-purple-400 mb-3 flex items-center">
+                            <span class="mr-2">🏆</span> CoppaSeriA
+                        </h3>
+                        <div id="coppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-purple-500">
+                            <p class="text-gray-400 text-sm mb-3">Gestisci il torneo a eliminazione diretta</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button id="btn-generate-cup-schedule"
+                                        class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
+                                    <i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa
+                                </button>
+                                <button id="btn-view-cup-bracket"
+                                        class="bg-purple-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-700 transition duration-150">
+                                    <i class="fas fa-sitemap mr-2"></i> Visualizza Tabellone
+                                </button>
+                            </div>
+                            <div id="coppa-status-container" class="mt-4">
+                                <p class="text-gray-400 text-center text-sm">Caricamento stato coppa...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEZIONE SUPERCOPPA -->
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
+                            <span class="mr-2">⭐</span> SuperCoppaSeriA
+                        </h3>
+                        <div id="supercoppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-yellow-500">
+                            <p class="text-gray-400 text-sm mb-3">Campione vs Vincitore Coppa (o 2° classificato)</p>
+                            <!-- Il contenuto viene renderizzato da Supercoppa.renderAdminUI() -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- SEZIONE COPPA SERIA -->
-            <h3 class="text-2xl font-bold text-purple-400 mb-4 border-b border-gray-600 pb-2 pt-6">CoppaSeriA</h3>
-            <div id="coppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-purple-500 mb-6">
-                <p class="text-gray-400 text-sm mb-3">Gestisci il torneo a eliminazione diretta</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-generate-cup-schedule"
-                            class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
-                        <i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa
-                    </button>
-                    <button id="btn-view-cup-bracket"
-                            class="bg-purple-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-700 transition duration-150">
-                        <i class="fas fa-sitemap mr-2"></i> Visualizza Tabellone
-                    </button>
-                </div>
-                <div id="coppa-status-container" class="mt-4">
-                    <p class="text-gray-400 text-center text-sm">Caricamento stato coppa...</p>
+            <!-- MENU A SCOMPARSA AUTOMAZIONE SIMULAZIONI -->
+            <div class="mb-6">
+                <button id="btn-toggle-automation" class="w-full bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <i class="fas fa-robot mr-3"></i> Automazione Simulazioni
+                    </span>
+                    <i id="automation-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <!-- Contenuto a scomparsa -->
+                <div id="automation-content" class="hidden mt-4 transition-all duration-300">
+                    <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500">
+                        <p class="text-gray-400 text-sm mb-3">Simula automaticamente partite di Campionato e Coppa alle 20:30 in alternanza</p>
+                        <div id="automation-status-container">
+                            <p class="text-gray-400 text-center text-sm">Caricamento stato automazione...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- SEZIONE SUPERCOPPA -->
-            <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-600 pb-2 pt-6">Supercoppa</h3>
-            <div id="supercoppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-yellow-500 mb-6">
-                <p class="text-gray-400 text-sm mb-3">Campione vs Vincitore Coppa (o 2° classificato)</p>
-                <!-- Il contenuto viene renderizzato da Supercoppa.renderAdminUI() -->
-            </div>
+            <!-- MENU A SCOMPARSA UTILITA ADMIN -->
+            <div class="mb-6">
+                <button id="btn-toggle-admin-utils" class="w-full bg-gradient-to-r from-red-700 to-red-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <i class="fas fa-tools mr-3"></i> Utilita Admin
+                    </span>
+                    <i id="admin-utils-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
 
-            <!-- UTILITA ADMIN -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Utilita Admin</h3>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                 <button id="btn-sync-data"
-                        class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
-                    Sincronizza Dati Calciatori (Mock)
-                </button>
-                <button id="btn-test-simulation"
-                        class="bg-blue-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
-                    🧪 Test Simulazione Partita
-                </button>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <button id="btn-fix-icone-ability"
-                        class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
-                    👑 Fix Abilita Icone
-                </button>
-                <div id="fix-icone-result" class="flex items-center justify-center text-sm text-gray-400">
-                    Assegna abilita "Icona" a tutte le Icone
+                <!-- Contenuto a scomparsa -->
+                <div id="admin-utils-content" class="hidden mt-4 space-y-4 transition-all duration-300">
+                    <div class="grid grid-cols-2 gap-4">
+                         <button id="btn-sync-data"
+                                class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
+                            Sincronizza Dati Calciatori (Mock)
+                        </button>
+                        <button id="btn-test-simulation"
+                                class="bg-blue-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
+                            🧪 Test Simulazione Partita
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="btn-fix-icone-ability"
+                                class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
+                            👑 Fix Abilita Icone
+                        </button>
+                        <div id="fix-icone-result" class="flex items-center justify-center text-sm text-gray-400">
+                            Assegna abilita "Icona" a tutte le Icone
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-sm">
+                        Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="text-gray-400 text-sm mb-6">
-                Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
             </div>
 
             <!-- MODAL TEST SIMULAZIONE -->
@@ -238,6 +285,19 @@ window.AdminUI = {
             </div>
             <p id="toggle-status-message" class="text-center mt-3 mb-6 text-red-400"></p>
 
+            <!-- VISUALIZZA LISTA GIOCATORI -->
+            <h3 class="text-2xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Visualizza Giocatori Creati</h3>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button id="btn-view-draft-players"
+                        class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01]">
+                    📝 Lista Giocatori Draft
+                </button>
+                <button id="btn-view-market-players"
+                        class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01]">
+                    💰 Lista Giocatori Mercato
+                </button>
+            </div>
+
             <!-- GESTIONE DRAFT A TURNI -->
             <div class="p-4 bg-gray-700 rounded-lg border border-purple-500 mb-6">
                 <h4 class="text-lg font-bold text-purple-300 mb-3">Draft a Turni</h4>
@@ -346,6 +406,20 @@ window.AdminUI = {
             <!-- LISTE GIOCATORI -->
             <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Elenco Giocatori (Draft & Mercato)</h3>
 
+            <!-- Ordinamento per ruolo -->
+            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <span class="text-gray-300 font-semibold">Ordina per ruolo:</span>
+                    <div class="flex gap-2">
+                        <button id="btn-sort-all" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500 font-bold border-2 border-cyan-400">Tutti</button>
+                        <button id="btn-sort-P" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">P</button>
+                        <button id="btn-sort-D" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">D</button>
+                        <button id="btn-sort-C" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">C</button>
+                        <button id="btn-sort-A" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">A</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-6 mb-4">
                 <button data-action="clear-collection" data-target="draft"
                         class="bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition duration-150">
@@ -359,20 +433,544 @@ window.AdminUI = {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500">
-                    <h4 class="text-xl font-bold text-yellow-400 mb-3">Giocatori Draft</h4>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xl font-bold text-yellow-400">Giocatori Draft</h4>
+                        <button id="btn-update-draft-costs" class="bg-orange-600 text-white text-sm font-bold py-1 px-3 rounded hover:bg-orange-500 transition">
+                            🔄 Aggiorna Costi
+                        </button>
+                    </div>
+                    <p id="update-draft-costs-message" class="text-center text-xs mb-2"></p>
                     <div id="draft-players-list" class="space-y-3 max-h-96 overflow-y-auto" data-collection="draft">
                          <p class="text-gray-500 text-center">Caricamento Draft...</p>
                     </div>
                 </div>
 
                 <div class="p-4 bg-gray-700 rounded-lg border border-blue-500">
-                    <h4 class="text-xl font-bold text-blue-400 mb-3">Giocatori Mercato</h4>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xl font-bold text-blue-400">Giocatori Mercato</h4>
+                        <button id="btn-update-market-costs" class="bg-orange-600 text-white text-sm font-bold py-1 px-3 rounded hover:bg-orange-500 transition">
+                            🔄 Aggiorna Costi
+                        </button>
+                    </div>
+                    <p id="update-market-costs-message" class="text-center text-xs mb-2"></p>
                     <div id="market-players-list" class="space-y-3 max-h-96 overflow-y-auto" data-collection="market">
                          <p class="text-gray-500 text-center">Caricamento Mercato...</p>
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Renderizza il modal per la lista giocatori (Draft o Mercato)
+     */
+    renderPlayersListModal(container, type, players, onEdit, onDelete, onClose) {
+        const isDraft = type === 'draft';
+        const title = isDraft ? '📝 Lista Giocatori Draft' : '💰 Lista Giocatori Mercato';
+        const borderColor = isDraft ? 'border-yellow-500' : 'border-blue-500';
+        const headerBg = isDraft ? 'bg-gradient-to-r from-yellow-600 to-amber-500' : 'bg-gradient-to-r from-blue-600 to-cyan-500';
+
+        const modalHtml = `
+            <div id="players-list-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] mx-4 flex flex-col border-2 ${borderColor}">
+                    <!-- Header -->
+                    <div class="${headerBg} p-4 rounded-t-lg flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-white">${title}</h2>
+                        <button id="btn-close-players-modal" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+                    </div>
+
+                    <!-- Filtri -->
+                    <div class="p-4 bg-gray-800 border-b border-gray-700">
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <span class="text-gray-300 font-semibold">Filtra per ruolo:</span>
+                            <div class="flex gap-2">
+                                <button data-filter="all" class="filter-btn bg-cyan-600 text-white px-3 py-1 rounded text-sm font-bold">Tutti</button>
+                                <button data-filter="P" class="filter-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">P</button>
+                                <button data-filter="D" class="filter-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">D</button>
+                                <button data-filter="C" class="filter-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">C</button>
+                                <button data-filter="A" class="filter-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">A</button>
+                            </div>
+                            <span class="text-gray-400 text-sm ml-auto" id="players-count">Totale: ${players.length} giocatori</span>
+                        </div>
+                    </div>
+
+                    <!-- Lista Giocatori -->
+                    <div class="flex-1 overflow-y-auto p-4" id="modal-players-list">
+                        ${this.renderPlayersList(players, isDraft)}
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-4 bg-gray-800 border-t border-gray-700 rounded-b-lg">
+                        <div class="flex justify-between items-center">
+                            <button id="btn-update-costs-modal" class="bg-orange-600 text-white font-bold py-2 px-4 rounded hover:bg-orange-500 transition">
+                                🔄 Aggiorna Costi Tutti
+                            </button>
+                            <button id="btn-close-players-modal-bottom" class="bg-gray-600 text-white font-bold py-2 px-4 rounded hover:bg-gray-500 transition">
+                                Chiudi
+                            </button>
+                        </div>
+                        <p id="modal-action-message" class="text-center mt-2 text-sm"></p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Inserisce il modal nel body
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        const modal = document.getElementById('players-list-modal');
+
+        // Event listeners
+        const closeModal = () => {
+            modal.remove();
+            if (onClose) onClose();
+        };
+
+        document.getElementById('btn-close-players-modal').addEventListener('click', closeModal);
+        document.getElementById('btn-close-players-modal-bottom').addEventListener('click', closeModal);
+
+        // Click fuori dal modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Filtri per ruolo
+        const filterButtons = modal.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-cyan-600', 'font-bold');
+                    b.classList.add('bg-gray-600');
+                });
+                btn.classList.remove('bg-gray-600');
+                btn.classList.add('bg-cyan-600', 'font-bold');
+
+                const filter = btn.dataset.filter;
+                const playerCards = modal.querySelectorAll('.player-card');
+                let visibleCount = 0;
+
+                playerCards.forEach(card => {
+                    if (filter === 'all' || card.dataset.role === filter) {
+                        card.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                document.getElementById('players-count').textContent = `Visibili: ${visibleCount} / ${players.length} giocatori`;
+            });
+        });
+
+        // Azioni sui giocatori (Modifica/Elimina)
+        const playersList = document.getElementById('modal-players-list');
+        playersList.addEventListener('click', (e) => {
+            const target = e.target;
+            const playerId = target.dataset.playerId;
+
+            if (target.dataset.action === 'edit' && onEdit) {
+                onEdit(playerId, type);
+            } else if (target.dataset.action === 'delete') {
+                if (target.textContent === 'Elimina') {
+                    target.textContent = 'CONFERMA?';
+                    target.classList.remove('bg-red-600');
+                    target.classList.add('bg-orange-500');
+                } else if (target.textContent === 'CONFERMA?') {
+                    target.textContent = '...';
+                    target.disabled = true;
+                    if (onDelete) onDelete(playerId, type, target);
+                }
+            }
+        });
+
+        return modal;
+    },
+
+    /**
+     * Renderizza la lista dei giocatori per il modal
+     */
+    renderPlayersList(players, isDraft) {
+        if (!players || players.length === 0) {
+            return '<p class="text-center text-gray-400 py-8">Nessun giocatore disponibile.</p>';
+        }
+
+        return `
+            <div class="grid gap-3">
+                ${players.map(player => {
+                    const levelRange = player.levelRange || [player.level || 1, player.level || 1];
+                    const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
+                    const status = player.isDrafted
+                        ? `<span class="text-red-400">Venduto a ${player.teamId}</span>`
+                        : `<span class="text-green-400">Disponibile</span>`;
+                    const bgClass = player.isDrafted ? 'bg-red-900/30' : 'bg-gray-700';
+                    const flag = window.AdminPlayers?.getFlag(player.nationality) || '';
+
+                    return `
+                        <div class="player-card ${bgClass} p-3 rounded-lg border border-gray-600 hover:border-gray-500 transition" data-role="${player.role}" data-player-id="${player.id}">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-lg font-bold text-white">${flag} ${player.name}</span>
+                                        <span class="px-2 py-0.5 rounded text-xs font-bold ${this.getRoleBadgeClass(player.role)}">${player.role}</span>
+                                        <span class="px-2 py-0.5 rounded text-xs bg-gray-600 text-gray-300">${player.type || 'N/A'}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-x-4 text-sm text-gray-400">
+                                        <p>Livello: <span class="text-yellow-400 font-semibold">${levelRange[0]}-${levelRange[1]}</span></p>
+                                        <p>Costo: <span class="text-green-400 font-semibold">${window.AdminPlayers?.formatCost(player) || player.cost + ' CS'}</span></p>
+                                        <p>Eta: <span class="text-white">${player.age || 'N/A'}</span></p>
+                                        <p>${status}</p>
+                                    </div>
+                                    <p class="text-xs text-yellow-300 mt-1">Abilita: ${abilitiesList}</p>
+                                </div>
+                                <div class="flex flex-col gap-2 ml-4">
+                                    <button data-player-id="${player.id}" data-action="edit"
+                                            class="bg-blue-600 text-white text-sm px-3 py-1.5 rounded hover:bg-blue-500 transition font-semibold">
+                                        ✏️ Modifica
+                                    </button>
+                                    <button data-player-id="${player.id}" data-action="delete"
+                                            class="bg-red-600 text-white text-sm px-3 py-1.5 rounded hover:bg-red-500 transition font-semibold">
+                                        Elimina
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    },
+
+    /**
+     * Ottiene la classe CSS per il badge del ruolo
+     */
+    getRoleBadgeClass(role) {
+        const classes = {
+            'P': 'bg-orange-600 text-white',
+            'D': 'bg-blue-600 text-white',
+            'C': 'bg-green-600 text-white',
+            'A': 'bg-red-600 text-white'
+        };
+        return classes[role] || 'bg-gray-600 text-white';
+    },
+
+    /**
+     * Renderizza il modal per la modifica di un giocatore
+     */
+    renderEditPlayerModal(player, type, onSave, onClose) {
+        const isDraft = type === 'draft';
+        const title = `Modifica: ${player.name}`;
+        const borderColor = isDraft ? 'border-yellow-500' : 'border-blue-500';
+
+        const nationalities = window.DraftConstants?.NATIONALITIES || [];
+        const types = ['Potenza', 'Tecnica', 'Velocita'];
+        const roles = ['P', 'D', 'C', 'A'];
+
+        const modalHtml = `
+            <div id="edit-player-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60]">
+                <div class="bg-gray-900 rounded-lg w-full max-w-2xl mx-4 border-2 ${borderColor}">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-t-lg flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-white">✏️ ${title}</h2>
+                        <button id="btn-close-edit-modal" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Nome</label>
+                                <input type="text" id="edit-player-name" value="${player.name}"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Nazionalita</label>
+                                <select id="edit-player-nationality" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                                    ${nationalities.map(n => `<option value="${n.code}" ${n.code === player.nationality ? 'selected' : ''}>${n.flag} ${n.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Ruolo</label>
+                                <select id="edit-player-role" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                                    ${roles.map(r => `<option value="${r}" ${r === player.role ? 'selected' : ''}>${r}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Tipo</label>
+                                <select id="edit-player-type" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                                    ${types.map(t => `<option value="${t}" ${t === player.type ? 'selected' : ''}>${t}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Eta</label>
+                                <input type="number" id="edit-player-age" value="${player.age || 25}" min="15" max="50"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Livello Min</label>
+                                <input type="number" id="edit-player-level-min" value="${player.levelRange?.[0] || player.level || 1}" min="1" max="30"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Livello Max</label>
+                                <input type="number" id="edit-player-level-max" value="${player.levelRange?.[1] || player.level || 1}" min="1" max="30"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">Costo Calcolato</label>
+                                <input type="text" id="edit-player-cost-display" value="--" readonly disabled
+                                       class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-yellow-400 font-bold">
+                            </div>
+                        </div>
+
+                        <!-- Abilita attuali -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Abilita attuali</label>
+                            <div class="flex flex-wrap gap-2" id="edit-current-abilities">
+                                ${(player.abilities || []).length > 0 ? (player.abilities || []).map(ab => `
+                                    <span class="px-2 py-1 bg-yellow-600 text-white rounded text-sm flex items-center gap-1">
+                                        ${ab}
+                                        <button data-ability="${ab}" class="remove-ability text-white hover:text-red-300 font-bold">&times;</button>
+                                    </span>
+                                `).join('') : '<span class="text-gray-500 no-abilities-msg">Nessuna abilita</span>'}
+                            </div>
+                        </div>
+
+                        <!-- Aggiungi Abilita -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Aggiungi Abilita</label>
+                            <div class="flex gap-2">
+                                <select id="edit-add-ability-select" class="flex-1 p-2 rounded bg-gray-700 border border-gray-600 text-white">
+                                    <option value="">-- Seleziona abilita --</option>
+                                </select>
+                                <button id="btn-add-ability" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500 transition font-semibold">
+                                    + Aggiungi
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Max 3 abilita positive + 2 negative</p>
+                        </div>
+
+                        <p id="edit-player-message" class="text-center text-sm"></p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-4 bg-gray-800 border-t border-gray-700 rounded-b-lg flex justify-end gap-4">
+                        <button id="btn-cancel-edit" class="bg-gray-600 text-white font-bold py-2 px-6 rounded hover:bg-gray-500 transition">
+                            Annulla
+                        </button>
+                        <button id="btn-save-edit" class="bg-green-600 text-white font-bold py-2 px-6 rounded hover:bg-green-500 transition">
+                            💾 Salva Modifiche
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        const modal = document.getElementById('edit-player-modal');
+        let currentAbilities = [...(player.abilities || [])];
+
+        // Lista abilita negative
+        const negativeAbilities = window.AdminPlayers?.NEGATIVE_ABILITIES || [
+            'Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni',
+            'Falloso', 'Insicuro', 'Fuori Posizione',
+            'Egoista', 'Impreciso', 'Ingabbiato',
+            'Piedi a banana', 'Eccesso di sicurezza'
+        ];
+
+        // Funzione per verificare se un'abilita e' negativa
+        const isNegative = (abilityName) => negativeAbilities.includes(abilityName);
+
+        // Funzione per contare abilita positive e negative
+        const countAbilities = () => {
+            let positive = 0;
+            let negative = 0;
+            currentAbilities.forEach(ab => {
+                if (isNegative(ab)) negative++;
+                else positive++;
+            });
+            return { positive, negative };
+        };
+
+        // Funzione per aggiornare il dropdown delle abilita disponibili
+        const updateAbilityDropdown = () => {
+            const role = document.getElementById('edit-player-role').value;
+            const select = document.getElementById('edit-add-ability-select');
+            if (!select) return;
+
+            const roleAbilities = window.AdminPlayers?.ROLE_ABILITIES_SEPARATED?.[role] || { positive: [], negative: [] };
+            const allRoleAbilities = [...(roleAbilities.positive || []), ...(roleAbilities.negative || [])];
+
+            // Filtra le abilita gia presenti
+            const availableAbilities = allRoleAbilities.filter(ab => !currentAbilities.includes(ab));
+
+            // Raggruppa per tipo
+            const availablePositive = availableAbilities.filter(ab => !isNegative(ab));
+            const availableNegative = availableAbilities.filter(ab => isNegative(ab));
+
+            let optionsHtml = '<option value="">-- Seleziona abilita --</option>';
+
+            if (availablePositive.length > 0) {
+                optionsHtml += '<optgroup label="Abilita Positive">';
+                availablePositive.forEach(ab => {
+                    const rarity = window.AdminPlayers?.getAbilityRarity?.(ab) || 'Comune';
+                    optionsHtml += `<option value="${ab}">${ab} (${rarity})</option>`;
+                });
+                optionsHtml += '</optgroup>';
+            }
+
+            if (availableNegative.length > 0) {
+                optionsHtml += '<optgroup label="Abilita Negative">';
+                availableNegative.forEach(ab => {
+                    optionsHtml += `<option value="${ab}">${ab}</option>`;
+                });
+                optionsHtml += '</optgroup>';
+            }
+
+            select.innerHTML = optionsHtml;
+        };
+
+        // Funzione per aggiornare la visualizzazione delle abilita correnti
+        const updateCurrentAbilitiesDisplay = () => {
+            const container = document.getElementById('edit-current-abilities');
+            if (!container) return;
+
+            if (currentAbilities.length === 0) {
+                container.innerHTML = '<span class="text-gray-500 no-abilities-msg">Nessuna abilita</span>';
+            } else {
+                container.innerHTML = currentAbilities.map(ab => {
+                    const bgColor = isNegative(ab) ? 'bg-red-600' : 'bg-yellow-600';
+                    return `
+                        <span class="px-2 py-1 ${bgColor} text-white rounded text-sm flex items-center gap-1">
+                            ${ab}
+                            <button data-ability="${ab}" class="remove-ability text-white hover:text-red-300 font-bold">&times;</button>
+                        </span>
+                    `;
+                }).join('');
+            }
+        };
+
+        // Aggiorna costo display
+        const updateCostDisplay = () => {
+            const levelMin = parseInt(document.getElementById('edit-player-level-min').value) || 1;
+            const levelMax = parseInt(document.getElementById('edit-player-level-max').value) || 1;
+            const costMin = window.AdminPlayers?.calculateCost(levelMin, currentAbilities) || 0;
+            const costMax = window.AdminPlayers?.calculateCost(levelMax, currentAbilities) || 0;
+            const costDisplay = document.getElementById('edit-player-cost-display');
+            if (costDisplay) {
+                costDisplay.value = costMin === costMax ? `${costMin} CS` : `${costMin} - ${costMax} CS`;
+            }
+        };
+
+        // Event listeners per aggiornare il costo
+        document.getElementById('edit-player-level-min').addEventListener('input', updateCostDisplay);
+        document.getElementById('edit-player-level-max').addEventListener('input', updateCostDisplay);
+
+        // Aggiorna dropdown quando cambia il ruolo
+        document.getElementById('edit-player-role').addEventListener('change', updateAbilityDropdown);
+
+        // Aggiunta abilita
+        document.getElementById('btn-add-ability').addEventListener('click', () => {
+            const select = document.getElementById('edit-add-ability-select');
+            const selectedAbility = select.value;
+            const msgEl = document.getElementById('edit-player-message');
+
+            if (!selectedAbility) {
+                if (msgEl) {
+                    msgEl.textContent = 'Seleziona un\'abilita da aggiungere';
+                    msgEl.className = 'text-center text-sm text-yellow-400';
+                    setTimeout(() => { msgEl.textContent = ''; }, 2000);
+                }
+                return;
+            }
+
+            const counts = countAbilities();
+            const isNeg = isNegative(selectedAbility);
+
+            // Controlla i limiti
+            if (!isNeg && counts.positive >= 3) {
+                if (msgEl) {
+                    msgEl.textContent = 'Massimo 3 abilita positive!';
+                    msgEl.className = 'text-center text-sm text-red-400';
+                    setTimeout(() => { msgEl.textContent = ''; }, 2000);
+                }
+                return;
+            }
+
+            if (isNeg && counts.negative >= 2) {
+                if (msgEl) {
+                    msgEl.textContent = 'Massimo 2 abilita negative!';
+                    msgEl.className = 'text-center text-sm text-red-400';
+                    setTimeout(() => { msgEl.textContent = ''; }, 2000);
+                }
+                return;
+            }
+
+            // Aggiungi l'abilita
+            currentAbilities.push(selectedAbility);
+            updateCurrentAbilitiesDisplay();
+            updateAbilityDropdown();
+            updateCostDisplay();
+
+            if (msgEl) {
+                msgEl.textContent = `Abilita "${selectedAbility}" aggiunta!`;
+                msgEl.className = 'text-center text-sm text-green-400';
+                setTimeout(() => { msgEl.textContent = ''; }, 2000);
+            }
+        });
+
+        // Rimozione abilita
+        document.getElementById('edit-current-abilities').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-ability')) {
+                const abilityToRemove = e.target.dataset.ability;
+                currentAbilities = currentAbilities.filter(a => a !== abilityToRemove);
+                updateCurrentAbilitiesDisplay();
+                updateAbilityDropdown();
+                updateCostDisplay();
+            }
+        });
+
+        // Inizializza
+        updateAbilityDropdown();
+        updateCurrentAbilitiesDisplay();
+        updateCostDisplay();
+
+        const closeModal = () => {
+            modal.remove();
+            if (onClose) onClose();
+        };
+
+        document.getElementById('btn-close-edit-modal').addEventListener('click', closeModal);
+        document.getElementById('btn-cancel-edit').addEventListener('click', closeModal);
+
+        document.getElementById('btn-save-edit').addEventListener('click', () => {
+            const updatedData = {
+                name: document.getElementById('edit-player-name').value.trim(),
+                nationality: document.getElementById('edit-player-nationality').value,
+                role: document.getElementById('edit-player-role').value,
+                type: document.getElementById('edit-player-type').value,
+                age: parseInt(document.getElementById('edit-player-age').value),
+                levelRange: [
+                    parseInt(document.getElementById('edit-player-level-min').value),
+                    parseInt(document.getElementById('edit-player-level-max').value)
+                ],
+                abilities: currentAbilities
+            };
+
+            // Calcola nuovo costo
+            const costMin = window.AdminPlayers?.calculateCost(updatedData.levelRange[0], currentAbilities) || 100;
+            const costMax = window.AdminPlayers?.calculateCost(updatedData.levelRange[1], currentAbilities) || 100;
+            updatedData.cost = costMax;
+            updatedData.costRange = [costMin, costMax];
+
+            if (onSave) onSave(player.id, updatedData, type, closeModal);
+        });
+
+        return modal;
     },
 
     /**

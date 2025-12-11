@@ -32,6 +32,260 @@ document.addEventListener('DOMContentLoaded', () => {
     let CHAMPIONSHIP_CONFIG_PATH;
     let TEAMS_COLLECTION_PATH;
 
+    // Stato filtri Mercato
+    let marketFilters = {
+        role: 'all',
+        type: 'all',
+        minCost: null,
+        maxCost: null,
+        sortBy: 'cost_asc'
+    };
+
+    // Cache giocatori disponibili
+    let availablePlayersCache = [];
+    let currentBudgetCache = 0;
+
+    /**
+     * Resetta i filtri ai valori di default
+     */
+    const resetMarketFilters = () => {
+        marketFilters = {
+            role: 'all',
+            type: 'all',
+            minCost: null,
+            maxCost: null,
+            sortBy: 'cost_asc'
+        };
+    };
+
+    /**
+     * Filtra e ordina i giocatori del mercato
+     */
+    const filterAndSortMarketPlayers = (players) => {
+        return players
+            .filter(p => {
+                // Filtro ruolo
+                if (marketFilters.role !== 'all' && p.role !== marketFilters.role) return false;
+
+                // Filtro tipo
+                if (marketFilters.type !== 'all' && p.type !== marketFilters.type) return false;
+
+                // Filtro costo minimo
+                const cost = p.cost || 0;
+                if (marketFilters.minCost !== null && cost < marketFilters.minCost) return false;
+
+                // Filtro costo massimo
+                if (marketFilters.maxCost !== null && cost > marketFilters.maxCost) return false;
+
+                return true;
+            })
+            .sort((a, b) => {
+                switch(marketFilters.sortBy) {
+                    case 'cost_asc': return (a.cost || 0) - (b.cost || 0);
+                    case 'cost_desc': return (b.cost || 0) - (a.cost || 0);
+                    case 'level_desc': return (b.level || 0) - (a.level || 0);
+                    case 'name': return (a.name || '').localeCompare(b.name || '');
+                    default: return 0;
+                }
+            });
+    };
+
+    /**
+     * Genera l'HTML della barra filtri per il Mercato
+     */
+    const renderMarketFiltersBar = () => {
+        return `
+            <div class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+                        <span>🔍</span> Filtri
+                    </h4>
+                    <button id="btn-reset-market-filters" class="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition">
+                        Resetta
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Filtro Ruolo -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Ruolo</label>
+                        <div class="flex gap-1 flex-wrap">
+                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="all">Tutti</button>
+                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'P' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="P">P</button>
+                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'D' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="D">D</button>
+                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'C' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="C">C</button>
+                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'A' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="A">A</button>
+                        </div>
+                    </div>
+
+                    <!-- Filtro Tipo -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Tipo</label>
+                        <div class="flex gap-1 flex-wrap">
+                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="all">Tutti</button>
+                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Potenza' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Potenza">Potenza</button>
+                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Tecnica' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Tecnica">Tecnica</button>
+                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Velocita' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Velocita">Velocita</button>
+                        </div>
+                    </div>
+
+                    <!-- Filtro Costo -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Costo (CS)</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="filter-market-min-cost" placeholder="Min" value="${marketFilters.minCost || ''}"
+                                   class="w-20 px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
+                            <span class="text-gray-500">-</span>
+                            <input type="number" id="filter-market-max-cost" placeholder="Max" value="${marketFilters.maxCost || ''}"
+                                   class="w-20 px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Ordinamento -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Ordina per</label>
+                        <select id="filter-market-sort" class="w-full px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
+                            <option value="cost_asc" ${marketFilters.sortBy === 'cost_asc' ? 'selected' : ''}>Costo (crescente)</option>
+                            <option value="cost_desc" ${marketFilters.sortBy === 'cost_desc' ? 'selected' : ''}>Costo (decrescente)</option>
+                            <option value="level_desc" ${marketFilters.sortBy === 'level_desc' ? 'selected' : ''}>Livello (decrescente)</option>
+                            <option value="name" ${marketFilters.sortBy === 'name' ? 'selected' : ''}>Nome (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    /**
+     * Setup event listeners per i filtri del Mercato
+     */
+    const setupMarketFilterListeners = () => {
+        // Filtro ruolo
+        document.querySelectorAll('.filter-market-role-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                marketFilters.role = e.target.dataset.role;
+                renderMarketPlayersList();
+            });
+        });
+
+        // Filtro tipo
+        document.querySelectorAll('.filter-market-type-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                marketFilters.type = e.target.dataset.type;
+                renderMarketPlayersList();
+            });
+        });
+
+        // Filtro costo min
+        const minCostInput = document.getElementById('filter-market-min-cost');
+        if (minCostInput) {
+            minCostInput.addEventListener('change', (e) => {
+                marketFilters.minCost = e.target.value ? parseInt(e.target.value) : null;
+                renderMarketPlayersList();
+            });
+        }
+
+        // Filtro costo max
+        const maxCostInput = document.getElementById('filter-market-max-cost');
+        if (maxCostInput) {
+            maxCostInput.addEventListener('change', (e) => {
+                marketFilters.maxCost = e.target.value ? parseInt(e.target.value) : null;
+                renderMarketPlayersList();
+            });
+        }
+
+        // Ordinamento
+        const sortSelect = document.getElementById('filter-market-sort');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                marketFilters.sortBy = e.target.value;
+                renderMarketPlayersList();
+            });
+        }
+
+        // Reset filtri
+        const resetBtn = document.getElementById('btn-reset-market-filters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                resetMarketFilters();
+                renderMarketPlayersList();
+            });
+        }
+    };
+
+    /**
+     * Renderizza solo la lista giocatori del Mercato (per aggiornamenti filtri)
+     */
+    const renderMarketPlayersList = () => {
+        const listContainer = document.getElementById('available-market-players-list');
+        const filtersContainer = document.getElementById('market-filters-container');
+        if (!listContainer) return;
+
+        // Aggiorna UI filtri
+        if (filtersContainer) {
+            filtersContainer.innerHTML = renderMarketFiltersBar();
+            setupMarketFilterListeners();
+        }
+
+        const filteredPlayers = filterAndSortMarketPlayers(availablePlayersCache);
+        const budgetRimanente = currentBudgetCache;
+
+        listContainer.innerHTML = filteredPlayers.length > 0
+            ? filteredPlayers.map(player => {
+                const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
+                const isAffordable = budgetRimanente >= player.cost;
+                const canBuy = isAffordable;
+
+                const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
+                let buttonText = isAffordable ? `Acquista (${player.cost} CS)` : `Costo ${player.cost} CS (No Budget)`;
+
+                // Mostra abilita se presenti
+                const abilitiesText = player.abilities && player.abilities.length > 0
+                    ? `<p class="text-xs text-purple-300 mt-1">Abilita: ${player.abilities.join(', ')}</p>`
+                    : '';
+
+                // Colore tipo
+                const typeColor = player.type === 'Potenza' ? 'text-red-400' :
+                                  player.type === 'Tecnica' ? 'text-blue-400' :
+                                  player.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
+
+                return `
+                    <div class="flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-blue-500">
+                        <div>
+                            <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span></p>
+                            <p class="text-sm text-blue-300">Livello: ${playerLevel}</p>
+                            ${abilitiesText}
+                        </div>
+                        <button data-player-id="${player.id}"
+                                data-player-cost="${player.cost}"
+                                data-player-level="${playerLevel}"
+                                data-player-name="${player.name}"
+                                data-player-role="${player.role}"
+                                data-player-age="${player.age}"
+                                data-player-type="${player.type}"
+                                data-action="buy-market"
+                                ${canBuy ? '' : 'disabled'}
+                                class="text-sm px-4 py-2 rounded-lg font-bold transition duration-150 mt-2 sm:mt-0 ${buttonClass}">
+                            ${buttonText}
+                        </button>
+                    </div>
+                `;
+            }).join('')
+            : '<p class="text-center text-gray-400 font-semibold">Nessun calciatore trovato con i filtri selezionati.</p>';
+
+        // Mostra conteggio risultati
+        const countEl = document.getElementById('market-filtered-count');
+        if (countEl) {
+            countEl.textContent = `${filteredPlayers.length} giocatori trovati`;
+        }
+
+        // Re-attach event listener per l'acquisto
+        if (!listContainer._hasClickListener) {
+            listContainer.addEventListener('click', handleUserMercatoAction);
+            listContainer._hasClickListener = true;
+        }
+    };
+
     /**
      * Ferma il listener real-time
      */
@@ -294,10 +548,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(player => !player.isDrafted);
 
+            // Salva nella cache per i filtri
+            availablePlayersCache = availablePlayers;
+            currentBudgetCache = budgetRimanente;
 
-            // 4. Renderizza la lista dei giocatori
-            if (availablePlayers.length > 0) {
-                 playersListContainer.innerHTML = availablePlayers.map(player => {
+            // Applica filtri iniziali
+            const filteredPlayers = filterAndSortMarketPlayers(availablePlayers);
+
+            // 4. Aggiungi container filtri e lista giocatori
+            // Rimuovi i container esistenti e ricreali con i filtri
+            const existingFiltersContainer = document.getElementById('market-filters-container');
+            if (existingFiltersContainer) existingFiltersContainer.remove();
+            const existingCountContainer = document.getElementById('market-filtered-count');
+            if (existingCountContainer && existingCountContainer.parentElement) {
+                existingCountContainer.parentElement.remove();
+            }
+
+            // Inserisci filtri prima della lista
+            playersListContainer.insertAdjacentHTML('beforebegin', `
+                <!-- Container Filtri -->
+                <div id="market-filters-container" class="mt-4">
+                    ${renderMarketFiltersBar()}
+                </div>
+
+                <!-- Conteggio risultati -->
+                <div class="flex justify-between items-center mt-2 px-2">
+                    <p id="market-filtered-count" class="text-sm text-gray-400">${filteredPlayers.length} giocatori trovati</p>
+                </div>
+            `);
+
+            // Renderizza la lista dei giocatori
+            if (filteredPlayers.length > 0) {
+                 playersListContainer.innerHTML = filteredPlayers.map(player => {
                     // Nel mercato i giocatori hanno level fisso (non range)
                     const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
                     const isAffordable = budgetRimanente >= player.cost;
@@ -317,10 +599,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         ? `<p class="text-xs text-purple-300 mt-1">Abilita: ${player.abilities.join(', ')}</p>`
                         : '';
 
+                    // Colore tipo
+                    const typeColor = player.type === 'Potenza' ? 'text-red-400' :
+                                      player.type === 'Tecnica' ? 'text-blue-400' :
+                                      player.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
+
                     return `
                         <div class="flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-blue-500">
                             <div>
-                                <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="text-red-300">(${player.type || 'N/A'})</span></p>
+                                <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span></p>
                                 <p class="text-sm text-blue-300">Livello: ${playerLevel}</p>
                                 ${abilitiesText}
                             </div>
@@ -340,9 +627,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                  }).join('');
 
-                 playersListContainer.addEventListener('click', handleUserMercatoAction);
+                 // Setup listeners filtri
+                 setupMarketFilterListeners();
+
+                 // Event listener per l'acquisto
+                 if (!playersListContainer._hasClickListener) {
+                     playersListContainer.addEventListener('click', handleUserMercatoAction);
+                     playersListContainer._hasClickListener = true;
+                 }
             } else {
-                 playersListContainer.innerHTML = '<p class="text-center text-red-400 font-semibold">Nessun calciatore Mercato disponibile al momento.</p>';
+                 playersListContainer.innerHTML = '<p class="text-center text-gray-400 font-semibold">Nessun calciatore trovato con i filtri selezionati.</p>';
+                 // Setup listeners filtri comunque
+                 setupMarketFilterListeners();
             }
 
         } catch (error) {

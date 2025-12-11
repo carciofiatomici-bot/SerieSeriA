@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!teams || teams.length < 2) {
             return displayConfigMessage("Errore: Necessarie almeno 2 squadre flaggate per generare il calendario.", 'error');
         }
-        
+
         displayConfigMessage("Generazione calendario in corso...", 'info');
         const button = document.getElementById('btn-generate-schedule');
         button.disabled = true;
@@ -144,13 +144,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const schedule = window.ChampionshipSchedule.generateRoundRobinSchedule(teams);
             const result = await window.ChampionshipSchedule.saveScheduleAndInitialize(teams, schedule);
-            
+
             // FIX: Imposta la data CORRENTE invece di 0 per evitare simulazione immediata
             // Il countdown partirà da ORA (48h da adesso)
-            await window.ChampionshipMain.updateLastAutoSimulatedDate(Date.now()); 
+            await window.ChampionshipMain.updateLastAutoSimulatedDate(Date.now());
+
+            // AUTOMAZIONE CSS: Disattiva automaticamente i CSS se il flag cssAutomation è abilitato
+            await disableCSSAutomation();
 
             displayConfigMessage(
-                `Calendario di ${result.totalRounds} giornate (Andata/Ritorno) generato e salvato per ${result.numTeams} squadre flaggate! Classifica azzerata.`, 
+                `Calendario di ${result.totalRounds} giornate (Andata/Ritorno) generato e salvato per ${result.numTeams} squadre flaggate! Classifica azzerata.`,
                 'success'
             );
             button.disabled = false;
@@ -160,6 +163,39 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Errore nel salvataggio del calendario:", error);
             displayConfigMessage(`Errore di salvataggio: ${error.message}`, 'error');
             button.disabled = false;
+        }
+    };
+
+    /**
+     * Disattiva automaticamente i CSS se l'automazione è abilitata
+     * (da chiamare quando inizia il nuovo campionato)
+     */
+    const disableCSSAutomation = async () => {
+        if (!window.FeatureFlags) return;
+
+        const cssAutomationEnabled = window.FeatureFlags.isEnabled('cssAutomation');
+        if (!cssAutomationEnabled) {
+            console.log('Automazione CSS disabilitata - CSS non disattivato automaticamente');
+            return;
+        }
+
+        // Verifica che il flag creditiSuperSeri esista
+        if (!window.FeatureFlags.flags.creditiSuperSeri) {
+            console.log('Flag creditiSuperSeri non trovato');
+            return;
+        }
+
+        // Disattiva i CSS
+        try {
+            await window.FeatureFlags.setFlag('creditiSuperSeri', false);
+            console.log('AUTOMAZIONE CSS: Crediti Super Seri DISATTIVATI automaticamente (inizio stagione)');
+
+            // Notifica se disponibile
+            if (window.Toast) {
+                window.Toast.info('I Crediti Super Seri sono stati disattivati per la nuova stagione.');
+            }
+        } catch (error) {
+            console.error('Errore disattivazione automatica CSS:', error);
         }
     };
 
@@ -366,17 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
 
-                        <!-- Toggle Draft/Mercato -->
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <button id="btn-toggle-draft"
-                                    class="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold transition ${draftOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                                <span>${draftOpen ? '🔒 Chiudi Draft' : '🔓 Apri Draft'}</span>
-                            </button>
-                            <button id="btn-toggle-market"
-                                    class="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold transition ${marketOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white">
-                                <span>${marketOpen ? '🔒 Chiudi Mercato' : '🔓 Apri Mercato'}</span>
-                            </button>
-                        </div>
+                        <!-- Nota: Toggle Draft/Mercato spostati in Gestione Giocatori -->
                     </div>
 
                     <!-- SEZIONE: Statistiche Stagione -->
@@ -486,47 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Toggle Draft
-            const btnToggleDraft = document.getElementById('btn-toggle-draft');
-            if (btnToggleDraft) {
-                btnToggleDraft.addEventListener('click', async () => {
-                    try {
-                        btnToggleDraft.disabled = true;
-                        btnToggleDraft.innerHTML = '<span class="animate-pulse">Aggiornamento...</span>';
-
-                        const { setDoc } = firestoreTools;
-                        await setDoc(configDocRef, { isDraftOpen: !draftOpen }, { merge: true });
-
-                        displayConfigMessage(`Draft ${!draftOpen ? 'aperto' : 'chiuso'} con successo!`, 'success');
-                        renderChampionshipPanel(); // Ricarica il pannello
-                    } catch (error) {
-                        console.error('Errore toggle draft:', error);
-                        displayConfigMessage('Errore nel toggle draft', 'error');
-                        btnToggleDraft.disabled = false;
-                    }
-                });
-            }
-
-            // Toggle Mercato
-            const btnToggleMarket = document.getElementById('btn-toggle-market');
-            if (btnToggleMarket) {
-                btnToggleMarket.addEventListener('click', async () => {
-                    try {
-                        btnToggleMarket.disabled = true;
-                        btnToggleMarket.innerHTML = '<span class="animate-pulse">Aggiornamento...</span>';
-
-                        const { setDoc } = firestoreTools;
-                        await setDoc(configDocRef, { isMarketOpen: !marketOpen }, { merge: true });
-
-                        displayConfigMessage(`Mercato ${!marketOpen ? 'aperto' : 'chiuso'} con successo!`, 'success');
-                        renderChampionshipPanel(); // Ricarica il pannello
-                    } catch (error) {
-                        console.error('Errore toggle mercato:', error);
-                        displayConfigMessage('Errore nel toggle mercato', 'error');
-                        btnToggleMarket.disabled = false;
-                    }
-                });
-            }
+            // Nota: Toggle Draft/Mercato ora sono in Gestione Giocatori (admin-ui.js)
 
             if (canGenerate) {
                  document.getElementById('btn-generate-schedule').addEventListener('click', () => generateSchedule(participatingTeams));

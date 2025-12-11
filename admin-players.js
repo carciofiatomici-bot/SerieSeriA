@@ -38,16 +38,96 @@ window.AdminPlayers = {
         return map;
     },
 
-    calculateCost(level, abilitiesCount = 0) {
-        return 100 + (10 * level) + (50 * abilitiesCount);
+    // Mappa rarita abilita -> valore per calcolo costo
+    ABILITY_RARITY_VALUES: {
+        'Comune': 1,
+        'Rara': 2,
+        'Epica': 3,
+        'Leggendaria': 4
+    },
+
+    /**
+     * Ottiene il valore di rarita di un'abilita
+     * @param {string} abilityName - Nome dell'abilita
+     * @returns {number} - Valore rarita (1-4)
+     */
+    getAbilityRarityValue(abilityName) {
+        // Cerca l'abilita nell'enciclopedia
+        const encyclopedia = window.AbilitiesEncyclopedia?.ABILITIES || [];
+        const ability = encyclopedia.find(a => a.name === abilityName);
+
+        if (ability && ability.rarity) {
+            return this.ABILITY_RARITY_VALUES[ability.rarity] || 1;
+        }
+
+        // Default: Comune (1)
+        return 1;
+    },
+
+    // Lista delle abilita negative
+    NEGATIVE_ABILITIES: [
+        'Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni',
+        'Falloso', 'Insicuro', 'Fuori Posizione',
+        'Egoista', 'Impreciso', 'Ingabbiato',
+        'Piedi a banana', 'Eccesso di sicurezza'
+    ],
+
+    /**
+     * Verifica se un'abilita e' negativa
+     * @param {string} abilityName - Nome dell'abilita
+     * @returns {boolean} - True se l'abilita e' negativa
+     */
+    isNegativeAbility(abilityName) {
+        return this.NEGATIVE_ABILITIES.includes(abilityName);
+    },
+
+    /**
+     * Calcola il costo di un giocatore basato su livello e abilita
+     * Formula: 100 + (livello * 10) + (livello abilita positive * 25) - (25 * numero abilita negative)
+     * @param {number} level - Livello del giocatore
+     * @param {Array} abilities - Array di nomi abilita
+     * @returns {number} - Costo calcolato
+     */
+    calculateCost(level, abilities = []) {
+        // Supporto retrocompatibilita: se abilities e' un numero, usa la vecchia logica
+        if (typeof abilities === 'number') {
+            // Vecchia formula per compatibilita
+            const abilitiesCount = abilities;
+            let totalRarityValue = abilitiesCount * 2; // Assume rarita media "Rara"
+            return 100 + (level * 10) + (totalRarityValue * 25);
+        }
+
+        // Nuova formula con rarita e deduzione per abilita negative
+        let positiveRarityValue = 0;
+        let negativeCount = 0;
+
+        if (Array.isArray(abilities)) {
+            abilities.forEach(abilityName => {
+                if (this.isNegativeAbility(abilityName)) {
+                    negativeCount++;
+                } else {
+                    positiveRarityValue += this.getAbilityRarityValue(abilityName);
+                }
+            });
+        }
+
+        // Formula: 100 + (livello * 10) + (rarita abilita positive * 25) - (25 * numero abilita negative)
+        const baseCost = 100 + (level * 10) + (positiveRarityValue * 25) - (25 * negativeCount);
+
+        // Il costo minimo e' 100
+        return Math.max(100, baseCost);
     },
 
     /**
      * Calcola il range di costo basato su livello min e max
+     * @param {number} levelMin - Livello minimo
+     * @param {number} levelMax - Livello massimo
+     * @param {Array} abilities - Array di nomi abilita
+     * @returns {object} - { costMin, costMax }
      */
-    calculateCostRange(levelMin, levelMax, abilitiesCount = 0) {
-        const costMin = this.calculateCost(levelMin, abilitiesCount);
-        const costMax = this.calculateCost(levelMax, abilitiesCount);
+    calculateCostRange(levelMin, levelMax, abilities = []) {
+        const costMin = this.calculateCost(levelMin, abilities);
+        const costMax = this.calculateCost(levelMax, abilities);
         return { costMin, costMax };
     },
 
@@ -88,9 +168,14 @@ window.AdminPlayers = {
 
         const levelMinVal = parseInt(levelMinInput.value) || 1;
         const levelMaxVal = parseInt(levelMaxInput.value) || 1;
-        const abilitiesCount = document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').length;
 
-        const { costMin, costMax } = this.calculateCostRange(levelMinVal, levelMaxVal, abilitiesCount);
+        // Ottieni i nomi delle abilita selezionate
+        const selectedAbilities = [];
+        document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').forEach(checkbox => {
+            selectedAbilities.push(checkbox.value);
+        });
+
+        const { costMin, costMax } = this.calculateCostRange(levelMinVal, levelMaxVal, selectedAbilities);
 
         if (levelMinVal === levelMaxVal) {
             costDisplayInput.value = `Costo: ${costMin} CS`;
@@ -420,25 +505,40 @@ window.AdminPlayers = {
             const q = query(playersCollectionRef, where('isDrafted', '==', false));
             const querySnapshot = await getDocs(q);
 
-            const playersHtml = querySnapshot.docs.map(doc => {
+            // Ordine ruoli: P, D, C, A
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            const sortedDocs = querySnapshot.docs.slice().sort((a, b) => {
+                const roleA = roleOrder[a.data().role] ?? 4;
+                const roleB = roleOrder[b.data().role] ?? 4;
+                return roleA - roleB;
+            });
+
+            const playersHtml = sortedDocs.map(doc => {
                 const player = doc.data();
                 const playerId = doc.id;
                 const status = `<span class="text-green-400">Disponibile</span>`;
                 const playerType = player.type || 'N/A';
                 const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
+                const levelRange = player.levelRange || [player.level || 1, player.level || 1];
 
                 return `
-                    <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
-                        <div>
+                    <div data-player-id="${playerId}" data-player-role="${player.role}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
+                        <div class="flex-1">
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
+                            <p class="text-xs text-gray-400">Liv: ${levelRange[0]}-${levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                             <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
-                        <button data-player-id="${playerId}" data-action="delete"
-                                class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
-                            Elimina
-                        </button>
+                        <div class="flex gap-1">
+                            <button data-player-id="${playerId}" data-action="edit"
+                                    class="bg-blue-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-150">
+                                Modifica
+                            </button>
+                            <button data-player-id="${playerId}" data-action="delete"
+                                    class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
+                                Elimina
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -460,25 +560,40 @@ window.AdminPlayers = {
          const playersCollectionRef = collection(db, DRAFT_PLAYERS_COLLECTION_PATH);
          const querySnapshot = await getDocs(playersCollectionRef);
 
-         const playersHtml = querySnapshot.docs.map(doc => {
+         // Ordine ruoli: P, D, C, A
+         const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+         const sortedDocs = querySnapshot.docs.slice().sort((a, b) => {
+             const roleA = roleOrder[a.data().role] ?? 4;
+             const roleB = roleOrder[b.data().role] ?? 4;
+             return roleA - roleB;
+         });
+
+         const playersHtml = sortedDocs.map(doc => {
              const player = doc.data();
              const playerId = doc.id;
              const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`;
              const playerType = player.type || 'N/A';
              const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
+             const levelRange = player.levelRange || [player.level || 1, player.level || 1];
 
              return `
-                 <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
-                     <div>
+                 <div data-player-id="${playerId}" data-player-role="${player.role}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
+                     <div class="flex-1">
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
+                         <p class="text-xs text-gray-400">Liv: ${levelRange[0]}-${levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                          <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
-                     <button data-player-id="${playerId}" data-action="delete"
-                             class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
-                         Elimina
-                     </button>
+                     <div class="flex gap-1">
+                         <button data-player-id="${playerId}" data-action="edit"
+                                 class="bg-blue-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-150">
+                             Modifica
+                         </button>
+                         <button data-player-id="${playerId}" data-action="delete"
+                                 class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
+                             Elimina
+                         </button>
+                     </div>
                  </div>
              `;
          }).join('');
@@ -508,25 +623,40 @@ window.AdminPlayers = {
             const q = query(playersCollectionRef, where('isDrafted', '==', false));
             const querySnapshot = await getDocs(q);
 
-            const playersHtml = querySnapshot.docs.map(doc => {
+            // Ordine ruoli: P, D, C, A
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+            const sortedDocs = querySnapshot.docs.slice().sort((a, b) => {
+                const roleA = roleOrder[a.data().role] ?? 4;
+                const roleB = roleOrder[b.data().role] ?? 4;
+                return roleA - roleB;
+            });
+
+            const playersHtml = sortedDocs.map(doc => {
                 const player = doc.data();
                 const playerId = doc.id;
                 const status = `<span class="text-green-400">Disponibile</span>`;
                 const playerType = player.type || 'N/A';
                 const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
+                const levelRange = player.levelRange || [player.level || 1, player.level || 1];
 
                 return `
-                    <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
-                        <div>
+                    <div data-player-id="${playerId}" data-player-role="${player.role}" class="player-item flex justify-between items-center p-2 bg-gray-600 rounded-lg text-white">
+                        <div class="flex-1">
                             <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                            <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
+                            <p class="text-xs text-gray-400">Liv: ${levelRange[0]}-${levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                             <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                             <p class="text-xs text-gray-500">${status}</p>
                         </div>
-                        <button data-player-id="${playerId}" data-action="delete"
-                                class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
-                            Elimina
-                        </button>
+                        <div class="flex gap-1">
+                            <button data-player-id="${playerId}" data-action="edit"
+                                    class="bg-blue-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-150">
+                                Modifica
+                            </button>
+                            <button data-player-id="${playerId}" data-action="delete"
+                                    class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
+                                Elimina
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -548,25 +678,40 @@ window.AdminPlayers = {
          const playersCollectionRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
          const querySnapshot = await getDocs(playersCollectionRef);
 
-         const playersHtml = querySnapshot.docs.map(doc => {
+         // Ordine ruoli: P, D, C, A
+         const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+         const sortedDocs = querySnapshot.docs.slice().sort((a, b) => {
+             const roleA = roleOrder[a.data().role] ?? 4;
+             const roleB = roleOrder[b.data().role] ?? 4;
+             return roleA - roleB;
+         });
+
+         const playersHtml = sortedDocs.map(doc => {
              const player = doc.data();
              const playerId = doc.id;
              const status = player.isDrafted ? `<span class="text-red-400">Venduto a ${player.teamId}</span>` : `<span class="text-green-400">Disponibile</span>`;
              const playerType = player.type || 'N/A';
              const abilitiesList = player.abilities && player.abilities.length > 0 ? player.abilities.join(', ') : 'Nessuna';
+             const levelRange = player.levelRange || [player.level || 1, player.level || 1];
 
              return `
-                 <div data-player-id="${playerId}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
-                     <div>
+                 <div data-player-id="${playerId}" data-player-role="${player.role}" class="player-item flex justify-between items-center p-2 ${player.isDrafted ? 'bg-red-900/50' : 'bg-gray-600'} rounded-lg text-white">
+                     <div class="flex-1">
                          <p class="font-semibold">${this.getFlag(player.nationality)} ${player.name} (${player.role})</p>
-                         <p class="text-xs text-gray-400">Liv: ${player.levelRange[0]}-${player.levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
+                         <p class="text-xs text-gray-400">Liv: ${levelRange[0]}-${levelRange[1]} | Tipo: ${playerType} | Costo: ${this.formatCost(player)}</p>
                          <p class="text-xs text-yellow-300">Abilita: ${abilitiesList}</p>
                          <p class="text-xs text-gray-500">${status} (FALLBACK: Indice mancante)</p>
                      </div>
-                     <button data-player-id="${playerId}" data-action="delete"
-                             class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
-                         Elimina
-                     </button>
+                     <div class="flex gap-1">
+                         <button data-player-id="${playerId}" data-action="edit"
+                                 class="bg-blue-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-150">
+                             Modifica
+                         </button>
+                         <button data-player-id="${playerId}" data-action="delete"
+                                 class="bg-red-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-red-700 transition duration-150">
+                             Elimina
+                         </button>
+                     </div>
                  </div>
              `;
          }).join('');

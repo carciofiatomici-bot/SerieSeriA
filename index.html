@@ -167,11 +167,11 @@
                     <p class="text-xs text-gray-400 mb-4">Sessione attiva</p>
                     <button id="btn-reenter-dashboard"
                             class="w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02] mb-2">
-                        Rientra in Dashboard
+                        🏠 Rientra in Dashboard
                     </button>
                     <button id="btn-full-logout"
                             class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150">
-                        Logout Completo
+                        🚪 Logout Completo
                     </button>
                 </div>
             </div>
@@ -198,11 +198,11 @@
                 <div class="grid grid-cols-2 gap-2">
                     <button id="btn-leaderboard"
                             class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-500 transition duration-150 transform hover:scale-[1.02]">
-                        Classifica
+                        📊 Classifica
                     </button>
                     <button id="btn-schedule"
                             class="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-500 transition duration-150 transform hover:scale-[1.02]">
-                        Calendario
+                        📅 Calendario
                     </button>
                     <button id="btn-coppa-home"
                             class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
@@ -252,8 +252,12 @@
                        value="#22c55e">
             </div>
 
-            <!-- NOME SQUADRA -->
-            <h2 id="team-dashboard-title" class="text-4xl font-extrabold text-center mb-4 uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+            <!-- BOX NOME SQUADRA -->
+            <div class="flex justify-center mb-4">
+                <div class="py-3 px-8 bg-gray-700 rounded-lg shadow-xl border-2 border-green-500">
+                    <h2 id="team-dashboard-title" class="text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+                </div>
+            </div>
 
             <!-- COUNTDOWN, LOGO, ICONA E DIVISA -->
             <div id="team-logo-container" class="flex justify-center items-center gap-4 mb-6">
@@ -326,31 +330,34 @@
                 </div>
             </div>
 
-            <!-- RIEPILOGO STATISTICHE SQUADRA -->
-            <div class="grid grid-cols-2 gap-4 my-6">
-                <!-- Statistica 1: Livello Medio Rosa -->
-                <div class="p-4 bg-gray-800 rounded-lg border-2 border-green-500 text-center shadow-lg">
-                    <p class="text-sm text-gray-400 font-semibold">Livello Medio Rosa</p>
-                    <p id="stat-rosa-level" class="text-3xl font-extrabold text-green-400 mt-1">N/A</p>
-                    <p id="stat-rosa-count" class="text-xs text-gray-500">(0 giocatori)</p>
+            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME (piccoli) -->
+            <div class="flex justify-center gap-3 mt-6 w-2/3 mx-auto">
+                <!-- Statistica: Livello Medio Rosa -->
+                <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center">
+                    <p class="text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
+                    <p class="mt-0.5"><span id="stat-rosa-level" class="text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-xs text-gray-400">(0)</span></p>
                 </div>
-                <!-- Statistica 2: Livello Medio Formazione -->
-                <div class="p-4 bg-gray-800 rounded-lg border-2 border-yellow-500 text-center shadow-lg">
-                    <p class="text-sm text-gray-400 font-semibold">Livello Tattico (5 Titolari)</p>
-                    <p id="stat-formazione-level" class="text-3xl font-extrabold text-yellow-400 mt-1">N/A</p>
-                    <p class="text-xs text-gray-500">Livello Base: 5</p>
+                <!-- Bottone Hall of Fame -->
+                <button id="btn-hall-of-fame"
+                        class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] flex flex-col items-center justify-center border border-yellow-300">
+                    <span class="text-lg">🏛️</span>
+                    <span>Hall of Fame</span>
+                </button>
+                <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
+                <div class="hidden">
+                    <p id="stat-formazione-level">N/A</p>
                 </div>
             </div>
 
-            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE -->
-            <div class="mt-8 grid grid-cols-2 gap-4">
+            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE (grandi) -->
+            <div class="mt-4 grid grid-cols-2 gap-4">
                 <button id="btn-gestione-rosa"
-                        class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150 transform hover:scale-[1.01]">
-                    Gestione Rosa
+                        class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-6 text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02]">
+                    👥 Gestione Rosa
                 </button>
                 <button id="btn-gestione-formazione"
-                        class="bg-indigo-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.01]">
-                    Gestione Formazione
+                        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-6 text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02]">
+                    📋 Gestione Formazione
                 </button>
             </div>
 
@@ -358,7 +365,7 @@
             <div class="mt-4 space-y-3">
                 <button id="btn-user-campionato"
                         class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
-                    <span class="text-2xl">🏆</span>
+                    <span class="text-2xl">🏅</span>
                     <span class="text-xl">SerieSeriA</span>
                 </button>
                 <button id="btn-user-coppa"
@@ -367,7 +374,7 @@
                     <span class="text-xl">CoppaSeriA</span>
                 </button>
                 <button id="btn-user-supercoppa"
-                        class="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-yellow-500 hover:to-orange-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
+                        class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
                     <span class="text-2xl">⭐</span>
                     <span class="text-xl">Super CoppaSeriA</span>
                 </button>
@@ -375,15 +382,19 @@
 
             <!-- PULSANTI DRAFT E MERCATO CON BUDGET SU HOVER -->
             <div id="draft-mercato-container" class="mt-4 relative group">
-                <div class="grid grid-cols-3 gap-4">
+                <!-- Riga 1: Draft e Mercato -->
+                <div class="grid grid-cols-2 gap-4 mb-3">
                     <button id="btn-draft-utente"
-                            class="bg-yellow-600 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.01]">
-                        Draft
+                            class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01]">
+                        📝 Draft
                     </button>
                     <button id="btn-mercato-utente"
-                            class="bg-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-500 transition duration-150 transform hover:scale-[1.01]">
-                        Mercato
+                            class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01]">
+                        💰 Mercato
                     </button>
+                </div>
+                <!-- Riga 2: Sfida e Allenamento -->
+                <div class="grid grid-cols-2 gap-4">
                     <button id="btn-challenge"
                             class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
                         <span>⚔️</span> Sfida
@@ -394,9 +405,11 @@
                     </button>
                 </div>
                 <!-- BOX BUDGET (nascosto, visibile su hover) -->
-                <div id="team-budget-box" class="hidden group-hover:block p-3 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border-2 border-yellow-500 text-center shadow-lg mt-3 transition-all duration-300">
-                    <p class="text-sm text-yellow-200 font-semibold">Budget Disponibile</p>
-                    <p id="team-budget-value" class="text-3xl font-extrabold text-yellow-400 mt-1">-- CS</p>
+                <div class="hidden group-hover:flex justify-center mt-3">
+                    <div id="team-budget-box" class="w-1/2 p-2 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border border-yellow-500 text-center shadow-lg transition-all duration-300">
+                        <p class="text-xs text-yellow-200 font-semibold">Budget Disponibile</p>
+                        <p id="team-budget-value" class="text-xl font-extrabold text-yellow-400">-- CS</p>
+                    </div>
                 </div>
             </div>
 
@@ -410,10 +423,10 @@
                 <!-- Toggle Campionato -->
                 <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
                     <div class="flex items-center justify-center space-x-3 mb-2">
-                        <input type="checkbox" id="championship-participation-toggle"
-                               class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out bg-gray-600 border-green-500">
-                        <label for="championship-participation-toggle" class="text-white font-bold cursor-pointer">
-                            🏆 Campionato
+                        <span class="text-white font-bold">🏅 Campionato</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
                     <p id="championship-participation-status" class="text-xs text-gray-400">
@@ -424,10 +437,10 @@
                 <!-- Toggle CoppaSeriA -->
                 <div class="p-4 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
                     <div class="flex items-center justify-center space-x-3 mb-2">
-                        <input type="checkbox" id="cup-participation-toggle"
-                               class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out bg-gray-600 border-purple-500">
-                        <label for="cup-participation-toggle" class="text-white font-bold cursor-pointer">
-                            🏆 CoppaSeriA
+                        <span class="text-white font-bold">🏆 CoppaSeriA</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                         </label>
                     </div>
                     <p id="cup-participation-status" class="text-xs text-gray-400">
@@ -441,12 +454,12 @@
             <div class="grid grid-cols-2 gap-4 mt-6">
                 <button id="user-back-to-login-button"
                         class="w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
-                    Torna al Login
+                    🔙 Torna al Login
                 </button>
                 <!-- NUOVO PULSANTE ELIMINA SQUADRA -->
                 <button id="btn-delete-team"
                         class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02]">
-                    Elimina Squadra
+                    🗑️ Elimina Squadra
                 </button>
             </div>
 
@@ -606,7 +619,19 @@
                 Torna alla Dashboard
             </button>
         </div>
-        
+
+        <!-- 10b. CONTENUTO HALL OF FAME (Storico Partite) - NASCOSTO -->
+        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-amber-400 text-center mb-4 border-b-4 border-amber-600 pb-2">🏛️ Hall of Fame</h2>
+             <div id="match-history-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento storico partite...</p>
+             </div>
+             <button id="match-history-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard
+            </button>
+        </div>
+
         <!-- 11. CONTENUTO: GESTIONE GIOCATORI ADMIN -->
         <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Calciatori (Creazione e Liste)</h2>
@@ -933,6 +958,7 @@
                 document.getElementById('championship-content'),
                 document.getElementById('squadra-content'),
                 document.getElementById('mercato-content'),
+                document.getElementById('match-history-content'), // Hall of Fame
                 document.getElementById('player-management-content'), // Gestione Giocatori Admin
                 document.getElementById('team-management-content'), // Gestione Squadre Admin
                 document.getElementById('feature-flags-content'), // Gestione Feature Flags Admin
@@ -1009,6 +1035,10 @@
     <script src="challenges.js"></script>
     <script src="dashboard-features.js"></script>
     <script src="tutorial.js"></script>
+    <script src="match-history.js"></script>
+    <script src="image-compressor.js"></script>
+    <script src="lazy-loader.js"></script>
+    <script src="tests.js"></script>
 
     <!-- 2. LOGICA DI SIMULAZIONE (Dipende solo dalle costanti) -->
     <script src="simulazione.js"></script> 

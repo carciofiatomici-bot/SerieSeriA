@@ -113,6 +113,57 @@ window.CoppaMain = {
 
             // Applica i crediti per gol
             await this.applyMatchCredits(match.homeTeam.teamId, match.awayTeam.teamId, result);
+
+            // Salva nello storico partite per entrambe le squadre
+            if (window.MatchHistory && result.resultString) {
+                const parts = result.resultString.split(' ')[0].split('-');
+                const homeGoals = parseInt(parts[0]) || 0;
+                const awayGoals = parseInt(parts[1]) || 0;
+
+                // Salva per squadra di casa
+                await window.MatchHistory.saveMatch(match.homeTeam.teamId, {
+                    type: 'coppa',
+                    homeTeam: {
+                        id: match.homeTeam.teamId,
+                        name: match.homeTeam.teamName,
+                        logoUrl: homeTeamData.logoUrl || ''
+                    },
+                    awayTeam: {
+                        id: match.awayTeam.teamId,
+                        name: match.awayTeam.teamName,
+                        logoUrl: awayTeamData.logoUrl || ''
+                    },
+                    homeScore: homeGoals,
+                    awayScore: awayGoals,
+                    isHome: true,
+                    details: {
+                        round: round.roundName,
+                        leg: legType
+                    }
+                });
+
+                // Salva per squadra ospite
+                await window.MatchHistory.saveMatch(match.awayTeam.teamId, {
+                    type: 'coppa',
+                    homeTeam: {
+                        id: match.homeTeam.teamId,
+                        name: match.homeTeam.teamName,
+                        logoUrl: homeTeamData.logoUrl || ''
+                    },
+                    awayTeam: {
+                        id: match.awayTeam.teamId,
+                        name: match.awayTeam.teamName,
+                        logoUrl: awayTeamData.logoUrl || ''
+                    },
+                    homeScore: homeGoals,
+                    awayScore: awayGoals,
+                    isHome: false,
+                    details: {
+                        round: round.roundName,
+                        leg: legType
+                    }
+                });
+            }
         }
 
         // Verifica se il turno e completato

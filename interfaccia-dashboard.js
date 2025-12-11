@@ -364,23 +364,19 @@ window.InterfacciaDashboard = {
     updateChampionshipParticipationUI() {
         const toggle = document.getElementById('championship-participation-toggle');
         const statusText = document.getElementById('championship-participation-status');
-        
+
         if (!toggle || !statusText) return;
-        
+
         const currentTeamData = window.InterfacciaCore.currentTeamData;
         const isParticipating = currentTeamData?.isParticipating || false;
-        
+
         toggle.checked = isParticipating;
-        
+
         if (isParticipating) {
-            toggle.classList.remove('bg-gray-600', 'border-purple-500');
-            toggle.classList.add('bg-green-500', 'border-green-500');
             statusText.textContent = '✅ Stai partecipando al campionato';
             statusText.classList.remove('text-gray-400', 'text-red-400');
             statusText.classList.add('text-green-400');
         } else {
-            toggle.classList.remove('bg-green-500', 'border-green-500');
-            toggle.classList.add('bg-gray-600', 'border-purple-500');
             statusText.textContent = '❌ Non stai partecipando al campionato';
             statusText.classList.remove('text-green-400', 'text-red-400');
             statusText.classList.add('text-gray-400');
@@ -421,14 +417,10 @@ window.InterfacciaDashboard = {
             
             // Aggiorna l'UI
             if (isChecked) {
-                toggle.classList.remove('bg-gray-600', 'border-purple-500');
-                toggle.classList.add('bg-green-500', 'border-green-500');
                 statusText.textContent = '✅ Stai partecipando al campionato';
                 statusText.classList.remove('text-yellow-400');
                 statusText.classList.add('text-green-400');
             } else {
-                toggle.classList.remove('bg-green-500', 'border-green-500');
-                toggle.classList.add('bg-gray-600', 'border-purple-500');
                 statusText.textContent = '❌ Non stai partecipando al campionato';
                 statusText.classList.remove('text-yellow-400');
                 statusText.classList.add('text-gray-400');
@@ -475,14 +467,10 @@ window.InterfacciaDashboard = {
         toggle.checked = isCupParticipating;
 
         if (isCupParticipating) {
-            toggle.classList.remove('bg-gray-600', 'border-purple-500');
-            toggle.classList.add('bg-purple-500', 'border-purple-500');
             statusText.textContent = '✅ Iscritto alla CoppaSeriA';
             statusText.classList.remove('text-gray-400', 'text-red-400');
             statusText.classList.add('text-purple-400');
         } else {
-            toggle.classList.remove('bg-purple-500', 'border-purple-500');
-            toggle.classList.add('bg-gray-600', 'border-gray-500');
             statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
             statusText.classList.remove('text-purple-400', 'text-red-400');
             statusText.classList.add('text-gray-400');
@@ -515,14 +503,10 @@ window.InterfacciaDashboard = {
 
             // Aggiorna l'UI
             if (isChecked) {
-                toggle.classList.remove('bg-gray-600', 'border-gray-500');
-                toggle.classList.add('bg-purple-500', 'border-purple-500');
                 statusText.textContent = '✅ Iscritto alla CoppaSeriA';
                 statusText.classList.remove('text-yellow-400');
                 statusText.classList.add('text-purple-400');
             } else {
-                toggle.classList.remove('bg-purple-500', 'border-purple-500');
-                toggle.classList.add('bg-gray-600', 'border-gray-500');
                 statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
                 statusText.classList.remove('text-yellow-400');
                 statusText.classList.add('text-gray-400');

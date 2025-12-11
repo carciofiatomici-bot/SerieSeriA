@@ -193,7 +193,43 @@ window.Supercoppa = {
 
         console.log(`Supercoppa completata: ${finalResult}. Vincitore: ${winner.teamName}`);
 
+        // AUTOMAZIONE CSS: Attiva automaticamente i CSS se il flag cssAutomation è abilitato
+        await this.triggerCSSAutomation();
+
         return supercoppaBracket;
+    },
+
+    /**
+     * Attiva automaticamente i CSS se l'automazione è abilitata
+     * (da chiamare quando la supercoppa è terminata = fine stagione completa)
+     */
+    async triggerCSSAutomation() {
+        if (!window.FeatureFlags) return;
+
+        const cssAutomationEnabled = window.FeatureFlags.isEnabled('cssAutomation');
+        if (!cssAutomationEnabled) {
+            console.log('Automazione CSS disabilitata - CSS non attivato automaticamente');
+            return;
+        }
+
+        // Verifica che il flag creditiSuperSeri esista
+        if (!window.FeatureFlags.flags.creditiSuperSeri) {
+            console.log('Flag creditiSuperSeri non trovato');
+            return;
+        }
+
+        // Attiva i CSS
+        try {
+            await window.FeatureFlags.setFlag('creditiSuperSeri', true);
+            console.log('AUTOMAZIONE CSS: Crediti Super Seri ATTIVATI automaticamente (fine stagione)');
+
+            // Notifica se disponibile
+            if (window.Toast) {
+                window.Toast.success('I Crediti Super Seri sono ora disponibili!');
+            }
+        } catch (error) {
+            console.error('Errore attivazione automatica CSS:', error);
+        }
     },
 
     /**

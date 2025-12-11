@@ -162,6 +162,21 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-yellow-400">I CSS sono piu' rari dei crediti normali e danno vantaggi esclusivi.</p>`
         },
+        cssAutomation: {
+            id: 'cssAutomation',
+            name: 'Automazione CSS',
+            description: 'Attiva/disattiva automaticamente i CSS quando la stagione termina/inizia',
+            icon: '🤖',
+            enabled: false,
+            category: 'economy',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Attivazione automatica CSS a fine stagione (campionato + coppa + supercoppa terminati)</li>
+                    <li>Disattivazione automatica CSS all'inizio del nuovo campionato</li>
+                    <li>Permette ai manager di usare i CSS solo nella finestra di mercato</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Richiede che il flag "Crediti Super Seri" sia abilitato.</p>`
+        },
         dragDrop: {
             id: 'dragDrop',
             name: 'Drag & Drop Migliorato',
@@ -220,6 +235,24 @@ window.FeatureFlags = {
                     <li>Possibilita di saltare o ripetere il tutorial</li>
                 </ul>
                 <p class="mt-2 text-yellow-400">Perfetto per i nuovi giocatori! Attivalo per aiutare chi inizia.</p>`
+        },
+        matchHistory: {
+            id: 'matchHistory',
+            name: 'Hall of Fame',
+            description: 'Storico delle partite giocate con risultati e statistiche',
+            icon: '🏛️',
+            enabled: false,
+            category: 'stats',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Bottone "Hall of Fame" nella dashboard sopra il nome squadra</li>
+                    <li>Lista completa di tutte le partite giocate</li>
+                    <li>Filtri per tipo: Campionato, Sfide, Coppa, Allenamenti</li>
+                    <li>Statistiche riepilogative: vittorie, pareggi, sconfitte</li>
+                    <li>Dettagli partita: marcatori, risultato, avversario</li>
+                    <li>Percentuale vittorie e andamento</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">La gloria della tua squadra, immortalata per sempre!</p>`
         }
     },
 

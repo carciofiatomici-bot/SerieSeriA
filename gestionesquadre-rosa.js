@@ -38,11 +38,6 @@ window.GestioneSquadreRosa = {
                 <h3 class="text-2xl font-bold text-green-400 mb-4">I Tuoi Calciatori (Ordinati per Icona, Ruolo e Livello)</h3>
                 <div id="player-list-message" class="text-center mb-4 text-green-500"></div>
 
-                <button id="btn-replace-icona"
-                        class="w-full bg-orange-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150 transform hover:scale-[1.01] mb-4">
-                    Sostituisci Icona (Costo: 1 CSS)
-                </button>
-
                 <div id="player-list" class="space-y-3">
                     ${sortedPlayers.length === 0
                         ? '<p class="text-gray-400">Nessun calciatore in rosa. Vai al Draft per acquistarne!</p>'
@@ -150,9 +145,6 @@ window.GestioneSquadreRosa = {
             });
         }
 
-        document.getElementById('btn-replace-icona').addEventListener('click', () => {
-            loadTeamDataFromFirestore(currentTeamId, 'icona-swap');
-        });
     },
 
     /**

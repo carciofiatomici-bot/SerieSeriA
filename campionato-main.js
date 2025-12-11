@@ -251,10 +251,49 @@ window.ChampionshipMain = {
                 
                 // NUOVO: Applica i crediti
                 await window.ChampionshipRewards.applyMatchRewards(
-                    homeGoals, awayGoals, 
-                    homeTeamData, awayTeamData, 
+                    homeGoals, awayGoals,
+                    homeTeamData, awayTeamData,
                     match.homeId, match.awayId
                 );
+
+                // Salva nello storico partite per entrambe le squadre
+                if (window.MatchHistory) {
+                    // Salva per squadra di casa
+                    await window.MatchHistory.saveMatch(match.homeId, {
+                        type: 'campionato',
+                        homeTeam: {
+                            id: match.homeId,
+                            name: homeTeamData.teamName,
+                            logoUrl: homeTeamData.logoUrl || ''
+                        },
+                        awayTeam: {
+                            id: match.awayId,
+                            name: awayTeamData.teamName,
+                            logoUrl: awayTeamData.logoUrl || ''
+                        },
+                        homeScore: homeGoals,
+                        awayScore: awayGoals,
+                        isHome: true
+                    });
+
+                    // Salva per squadra ospite
+                    await window.MatchHistory.saveMatch(match.awayId, {
+                        type: 'campionato',
+                        homeTeam: {
+                            id: match.homeId,
+                            name: homeTeamData.teamName,
+                            logoUrl: homeTeamData.logoUrl || ''
+                        },
+                        awayTeam: {
+                            id: match.awayId,
+                            name: awayTeamData.teamName,
+                            logoUrl: awayTeamData.logoUrl || ''
+                        },
+                        homeScore: homeGoals,
+                        awayScore: awayGoals,
+                        isHome: false
+                    });
+                }
             }
             
             // 6. Resetta lo stato della forma dopo la simulazione per TUTTE le squadre coinvolte

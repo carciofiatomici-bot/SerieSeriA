@@ -103,6 +103,66 @@ document.addEventListener('DOMContentLoaded', () => {
      * Cabla gli eventi della dashboard
      */
     const setupAdminDashboardEvents = () => {
+        // Toggle menu Gestione Lega
+        const btnToggleLeague = document.getElementById('btn-toggle-league-management');
+        const leagueContent = document.getElementById('league-management-content');
+        const leagueChevron = document.getElementById('league-management-chevron');
+
+        if (btnToggleLeague && leagueContent) {
+            btnToggleLeague.addEventListener('click', () => {
+                const isHidden = leagueContent.classList.contains('hidden');
+                if (isHidden) {
+                    leagueContent.classList.remove('hidden');
+                    leagueChevron?.classList.add('rotate-180');
+                } else {
+                    leagueContent.classList.add('hidden');
+                    leagueChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Toggle menu Utilita Admin
+        const btnToggleAdminUtils = document.getElementById('btn-toggle-admin-utils');
+        const adminUtilsContent = document.getElementById('admin-utils-content');
+        const adminUtilsChevron = document.getElementById('admin-utils-chevron');
+
+        if (btnToggleAdminUtils && adminUtilsContent) {
+            btnToggleAdminUtils.addEventListener('click', () => {
+                const isHidden = adminUtilsContent.classList.contains('hidden');
+                if (isHidden) {
+                    adminUtilsContent.classList.remove('hidden');
+                    adminUtilsChevron?.classList.add('rotate-180');
+                } else {
+                    adminUtilsContent.classList.add('hidden');
+                    adminUtilsChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Toggle menu Automazione Simulazioni
+        const btnToggleAutomation = document.getElementById('btn-toggle-automation');
+        const automationContent = document.getElementById('automation-content');
+        const automationChevron = document.getElementById('automation-chevron');
+        let automationLoaded = false;
+
+        if (btnToggleAutomation && automationContent) {
+            btnToggleAutomation.addEventListener('click', () => {
+                const isHidden = automationContent.classList.contains('hidden');
+                if (isHidden) {
+                    automationContent.classList.remove('hidden');
+                    automationChevron?.classList.add('rotate-180');
+                    // Carica il pannello automazione solo la prima volta che viene aperto
+                    if (!automationLoaded) {
+                        loadAutomationPanel();
+                        automationLoaded = true;
+                    }
+                } else {
+                    automationContent.classList.add('hidden');
+                    automationChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
         const btnChampionshipSettings = document.getElementById('btn-championship-settings');
         if (btnChampionshipSettings) btnChampionshipSettings.addEventListener('click', () => {
              if (window.showScreen) {
@@ -182,11 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Carica stato campionato, coppa, supercoppa e automazione
+        // Carica stato campionato, coppa, supercoppa (automazione si carica solo quando apri il menu)
         loadSerieSeriaStatus();
         loadCupStatus();
         loadSupercoppPanel();
-        loadAutomationPanel();
+        // loadAutomationPanel(); // Non caricare automaticamente, si carica al click sul menu
     };
 
     /**
@@ -1012,6 +1072,51 @@ document.addEventListener('DOMContentLoaded', () => {
             btnStopDraftTurns.addEventListener('click', handleStopDraftTurns);
         }
 
+        // Bottoni Visualizza Lista Giocatori - Aprono modal separati
+        const btnViewDraftPlayers = document.getElementById('btn-view-draft-players');
+        if (btnViewDraftPlayers) {
+            btnViewDraftPlayers.addEventListener('click', async () => {
+                await openPlayersListModal('draft');
+            });
+        }
+
+        const btnViewMarketPlayers = document.getElementById('btn-view-market-players');
+        if (btnViewMarketPlayers) {
+            btnViewMarketPlayers.addEventListener('click', async () => {
+                await openPlayersListModal('market');
+            });
+        }
+
+        // Bottone Aggiorna Costi Draft
+        const btnUpdateDraftCosts = document.getElementById('btn-update-draft-costs');
+        if (btnUpdateDraftCosts) {
+            btnUpdateDraftCosts.addEventListener('click', () => {
+                handleUpdateDraftCosts();
+            });
+        }
+
+        // Bottone Aggiorna Costi Mercato
+        const btnUpdateMarketCosts = document.getElementById('btn-update-market-costs');
+        if (btnUpdateMarketCosts) {
+            btnUpdateMarketCosts.addEventListener('click', () => {
+                handleUpdateMarketCosts();
+            });
+        }
+
+        // Bottoni ordinamento per ruolo
+        const sortButtons = document.querySelectorAll('.sort-btn');
+        sortButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Rimuovi bordo attivo da tutti
+                sortButtons.forEach(b => b.classList.remove('border-2', 'border-cyan-400', 'font-bold'));
+                // Aggiungi bordo attivo al bottone cliccato
+                btn.classList.add('border-2', 'border-cyan-400', 'font-bold');
+
+                const roleFilter = btn.id.replace('btn-sort-', '');
+                filterPlayersByRole(roleFilter);
+            });
+        });
+
         // Carica lo stato corrente del draft a turni
         loadDraftTurnsStatus();
         
@@ -1159,6 +1264,407 @@ document.addEventListener('DOMContentLoaded', () => {
             displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
             btn.disabled = false;
             btn.textContent = 'Genera Lista Draft';
+        }
+    };
+
+    /**
+     * Filtra i giocatori visualizzati per ruolo
+     */
+    const filterPlayersByRole = (role) => {
+        const draftList = document.getElementById('draft-players-list');
+        const marketList = document.getElementById('market-players-list');
+
+        const filterList = (listElement) => {
+            if (!listElement) return;
+
+            const playerCards = listElement.querySelectorAll('[data-player-role]');
+            playerCards.forEach(card => {
+                if (role === 'all') {
+                    card.classList.remove('hidden');
+                } else {
+                    const playerRole = card.dataset.playerRole;
+                    if (playerRole === role) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                }
+            });
+        };
+
+        filterList(draftList);
+        filterList(marketList);
+    };
+
+    /**
+     * Apre il modal con la lista dei giocatori (Draft o Mercato)
+     */
+    const openPlayersListModal = async (type) => {
+        const isDraft = type === 'draft';
+        const collectionPath = isDraft ? DRAFT_PLAYERS_COLLECTION_PATH : MARKET_PLAYERS_COLLECTION_PATH;
+
+        try {
+            // Carica i giocatori
+            const { collection, getDocs } = firestoreTools;
+            const playersRef = collection(db, collectionPath);
+            const snapshot = await getDocs(playersRef);
+
+            // Ordine ruoli: P, D, C, A
+            const roleOrder = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
+
+            const players = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })).sort((a, b) => {
+                const roleA = roleOrder[a.role] ?? 4;
+                const roleB = roleOrder[b.role] ?? 4;
+                return roleA - roleB;
+            });
+
+            // Funzione per gestire la modifica
+            const handleEdit = async (playerId, playerType) => {
+                const player = players.find(p => p.id === playerId);
+                if (!player) return;
+
+                window.AdminUI.renderEditPlayerModal(player, playerType, async (id, updatedData, pType, closeEditModal) => {
+                    try {
+                        const { doc, updateDoc } = firestoreTools;
+                        const playerPath = pType === 'draft' ? DRAFT_PLAYERS_COLLECTION_PATH : MARKET_PLAYERS_COLLECTION_PATH;
+                        const playerRef = doc(db, playerPath, id);
+                        await updateDoc(playerRef, updatedData);
+
+                        // Aggiorna la card nel modal
+                        const playerCard = document.querySelector(`.player-card[data-player-id="${id}"]`);
+                        if (playerCard) {
+                            // Aggiorna i dati visivamente
+                            const nameEl = playerCard.querySelector('.text-lg.font-bold');
+                            if (nameEl) {
+                                const flag = window.AdminPlayers?.getFlag(updatedData.nationality) || '';
+                                nameEl.textContent = `${flag} ${updatedData.name}`;
+                            }
+                        }
+
+                        closeEditModal();
+
+                        // Mostra messaggio di successo
+                        const msgEl = document.getElementById('modal-action-message');
+                        if (msgEl) {
+                            msgEl.textContent = `Giocatore ${updatedData.name} aggiornato con successo!`;
+                            msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                            setTimeout(() => { msgEl.textContent = ''; }, 3000);
+                        }
+
+                        // Ricarica il modal per mostrare i dati aggiornati
+                        document.getElementById('players-list-modal')?.remove();
+                        await openPlayersListModal(pType);
+
+                    } catch (error) {
+                        console.error('Errore aggiornamento giocatore:', error);
+                        const msgEl = document.getElementById('edit-player-message');
+                        if (msgEl) {
+                            msgEl.textContent = `Errore: ${error.message}`;
+                            msgEl.className = 'text-center text-sm text-red-400';
+                        }
+                    }
+                });
+            };
+
+            // Funzione per gestire l'eliminazione
+            const handleDelete = async (playerId, playerType, buttonEl) => {
+                try {
+                    const { doc, deleteDoc } = firestoreTools;
+                    const playerPath = playerType === 'draft' ? DRAFT_PLAYERS_COLLECTION_PATH : MARKET_PLAYERS_COLLECTION_PATH;
+                    const playerRef = doc(db, playerPath, playerId);
+                    await deleteDoc(playerRef);
+
+                    // Rimuovi la card dal DOM
+                    const playerCard = buttonEl.closest('.player-card');
+                    if (playerCard) {
+                        playerCard.remove();
+                    }
+
+                    // Aggiorna il contatore
+                    const countEl = document.getElementById('players-count');
+                    const remainingCards = document.querySelectorAll('.player-card').length;
+                    if (countEl) {
+                        countEl.textContent = `Totale: ${remainingCards} giocatori`;
+                    }
+
+                    // Mostra messaggio di successo
+                    const msgEl = document.getElementById('modal-action-message');
+                    if (msgEl) {
+                        msgEl.textContent = 'Giocatore eliminato con successo!';
+                        msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                        setTimeout(() => { msgEl.textContent = ''; }, 3000);
+                    }
+
+                } catch (error) {
+                    console.error('Errore eliminazione giocatore:', error);
+                    buttonEl.textContent = 'ERRORE';
+                    buttonEl.classList.remove('bg-orange-500');
+                    buttonEl.classList.add('bg-red-600');
+                }
+            };
+
+            // Funzione per aggiornare i costi dal modal
+            const setupUpdateCostsButton = () => {
+                const btnUpdateCosts = document.getElementById('btn-update-costs-modal');
+                if (btnUpdateCosts) {
+                    btnUpdateCosts.addEventListener('click', async () => {
+                        btnUpdateCosts.disabled = true;
+                        btnUpdateCosts.textContent = 'Aggiornamento...';
+                        const msgEl = document.getElementById('modal-action-message');
+
+                        try {
+                            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+                            const playersRef = collection(db, collectionPath);
+                            const playersSnapshot = await getDocs(playersRef);
+
+                            let updatedCount = 0;
+                            for (const playerDoc of playersSnapshot.docs) {
+                                const playerData = playerDoc.data();
+                                const levelMin = playerData.levelRange?.[0] || playerData.level || 1;
+                                const levelMax = playerData.levelRange?.[1] || playerData.level || levelMin;
+                                const abilities = playerData.abilities || [];
+
+                                const newCostMin = window.AdminPlayers.calculateCost(levelMin, abilities);
+                                const newCostMax = window.AdminPlayers.calculateCost(levelMax, abilities);
+
+                                const playerRef = doc(db, collectionPath, playerDoc.id);
+                                await updateDoc(playerRef, {
+                                    cost: newCostMax,
+                                    costRange: [newCostMin, newCostMax]
+                                });
+                                updatedCount++;
+                            }
+
+                            if (msgEl) {
+                                msgEl.textContent = `Aggiornati i costi di ${updatedCount} giocatori!`;
+                                msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                            }
+
+                            // Ricarica il modal
+                            document.getElementById('players-list-modal')?.remove();
+                            await openPlayersListModal(type);
+
+                        } catch (error) {
+                            console.error('Errore aggiornamento costi:', error);
+                            if (msgEl) {
+                                msgEl.textContent = `Errore: ${error.message}`;
+                                msgEl.className = 'text-center mt-2 text-sm text-red-400';
+                            }
+                        } finally {
+                            btnUpdateCosts.disabled = false;
+                            btnUpdateCosts.textContent = '🔄 Aggiorna Costi Tutti';
+                        }
+                    });
+                }
+            };
+
+            // Renderizza il modal
+            window.AdminUI.renderPlayersListModal(
+                document.body,
+                type,
+                players,
+                handleEdit,
+                handleDelete,
+                () => {
+                    // Ricarica le liste inline quando il modal viene chiuso
+                    if (isDraft) {
+                        window.AdminPlayers.loadDraftPlayers(DRAFT_PLAYERS_COLLECTION_PATH);
+                    } else {
+                        window.AdminPlayers.loadMarketPlayers(MARKET_PLAYERS_COLLECTION_PATH);
+                    }
+                }
+            );
+
+            // Setup bottone aggiorna costi
+            setupUpdateCostsButton();
+
+        } catch (error) {
+            console.error('Errore apertura modal giocatori:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        }
+    };
+
+    /**
+     * Aggiorna i costi di tutti i giocatori nel draft usando la nuova formula
+     */
+    const handleUpdateDraftCosts = async () => {
+        const msgEl = document.getElementById('update-draft-costs-message');
+        const btn = document.getElementById('btn-update-draft-costs');
+
+        if (!confirm('Vuoi aggiornare i costi di tutti i giocatori nel draft?\nQuesta operazione ricalcolera i costi basandosi sulla nuova formula.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Aggiornamento in corso...';
+        if (msgEl) {
+            msgEl.textContent = 'Caricamento giocatori...';
+            msgEl.className = 'text-center mt-2 text-sm text-yellow-400';
+        }
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const playersRef = collection(db, DRAFT_PLAYERS_COLLECTION_PATH);
+            const playersSnapshot = await getDocs(playersRef);
+
+            if (playersSnapshot.empty) {
+                if (msgEl) {
+                    msgEl.textContent = 'Nessun giocatore nel draft da aggiornare.';
+                    msgEl.className = 'text-center mt-2 text-sm text-gray-400';
+                }
+                btn.disabled = false;
+                btn.textContent = '🔄 Aggiorna Costi';
+                return;
+            }
+
+            let updatedCount = 0;
+            let errorCount = 0;
+            const totalPlayers = playersSnapshot.size;
+
+            for (const playerDoc of playersSnapshot.docs) {
+                try {
+                    const playerData = playerDoc.data();
+                    const playerId = playerDoc.id;
+
+                    const levelMin = playerData.levelMin || playerData.level || 1;
+                    const levelMax = playerData.levelMax || playerData.level || levelMin;
+                    const abilities = playerData.abilities || [];
+
+                    const newCostMin = window.AdminPlayers.calculateCost(levelMin, abilities);
+                    const newCostMax = window.AdminPlayers.calculateCost(levelMax, abilities);
+
+                    const updateData = {
+                        cost: newCostMin,
+                        costRange: [newCostMin, newCostMax]
+                    };
+
+                    const playerRef = doc(db, DRAFT_PLAYERS_COLLECTION_PATH, playerId);
+                    await updateDoc(playerRef, updateData);
+
+                    updatedCount++;
+
+                    if (msgEl) {
+                        msgEl.textContent = `Aggiornando... ${updatedCount}/${totalPlayers}`;
+                    }
+
+                } catch (playerError) {
+                    console.error(`Errore aggiornamento giocatore ${playerDoc.id}:`, playerError);
+                    errorCount++;
+                }
+            }
+
+            if (msgEl) {
+                if (errorCount > 0) {
+                    msgEl.textContent = `Completato: ${updatedCount} aggiornati, ${errorCount} errori.`;
+                    msgEl.className = 'text-center mt-2 text-sm text-orange-400';
+                } else {
+                    msgEl.textContent = `Tutti i ${updatedCount} giocatori aggiornati!`;
+                    msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                }
+            }
+
+            window.AdminPlayers.loadDraftPlayers(DRAFT_PLAYERS_COLLECTION_PATH);
+            console.log(`Aggiornamento costi draft completato: ${updatedCount} giocatori`);
+
+        } catch (error) {
+            console.error("Errore nell'aggiornamento dei costi draft:", error);
+            if (msgEl) {
+                msgEl.textContent = `Errore: ${error.message}`;
+                msgEl.className = 'text-center mt-2 text-sm text-red-400';
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔄 Aggiorna Costi';
+        }
+    };
+
+    /**
+     * Aggiorna i costi di tutti i giocatori nel mercato usando la nuova formula
+     */
+    const handleUpdateMarketCosts = async () => {
+        const msgEl = document.getElementById('update-market-costs-message');
+        const btn = document.getElementById('btn-update-market-costs');
+
+        if (!confirm('Vuoi aggiornare i costi di tutti i giocatori nel mercato?\nQuesta operazione ricalcolera i costi basandosi sulla nuova formula.')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Aggiornamento in corso...';
+        if (msgEl) {
+            msgEl.textContent = 'Caricamento giocatori...';
+            msgEl.className = 'text-center mt-2 text-sm text-yellow-400';
+        }
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const playersRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
+            const playersSnapshot = await getDocs(playersRef);
+
+            if (playersSnapshot.empty) {
+                if (msgEl) {
+                    msgEl.textContent = 'Nessun giocatore nel mercato da aggiornare.';
+                    msgEl.className = 'text-center mt-2 text-sm text-gray-400';
+                }
+                btn.disabled = false;
+                btn.textContent = '🔄 Aggiorna Costi';
+                return;
+            }
+
+            let updatedCount = 0;
+            let errorCount = 0;
+            const totalPlayers = playersSnapshot.size;
+
+            for (const playerDoc of playersSnapshot.docs) {
+                try {
+                    const playerData = playerDoc.data();
+                    const playerId = playerDoc.id;
+
+                    const level = playerData.level || 1;
+                    const abilities = playerData.abilities || [];
+
+                    const newCost = window.AdminPlayers.calculateCost(level, abilities);
+
+                    const playerRef = doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId);
+                    await updateDoc(playerRef, { cost: newCost });
+
+                    updatedCount++;
+
+                    if (msgEl) {
+                        msgEl.textContent = `Aggiornando... ${updatedCount}/${totalPlayers}`;
+                    }
+
+                } catch (playerError) {
+                    console.error(`Errore aggiornamento giocatore ${playerDoc.id}:`, playerError);
+                    errorCount++;
+                }
+            }
+
+            if (msgEl) {
+                if (errorCount > 0) {
+                    msgEl.textContent = `Completato: ${updatedCount} aggiornati, ${errorCount} errori.`;
+                    msgEl.className = 'text-center mt-2 text-sm text-orange-400';
+                } else {
+                    msgEl.textContent = `Tutti i ${updatedCount} giocatori aggiornati!`;
+                    msgEl.className = 'text-center mt-2 text-sm text-green-400';
+                }
+            }
+
+            window.AdminPlayers.loadMarketPlayers(MARKET_PLAYERS_COLLECTION_PATH);
+            console.log(`Aggiornamento costi mercato completato: ${updatedCount} giocatori`);
+
+        } catch (error) {
+            console.error("Errore nell'aggiornamento dei costi mercato:", error);
+            if (msgEl) {
+                msgEl.textContent = `Errore: ${error.message}`;
+                msgEl.className = 'text-center mt-2 text-sm text-red-400';
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔄 Aggiorna Costi';
         }
     };
 

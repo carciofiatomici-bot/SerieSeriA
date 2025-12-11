@@ -90,6 +90,34 @@ window.DashboardFeatures = {
             });
         }
 
+        // Bottone Hall of Fame (Storico Partite)
+        const btnHallOfFame = document.getElementById('btn-hall-of-fame');
+        const matchHistoryContent = document.getElementById('match-history-content');
+        const matchHistoryBackButton = document.getElementById('match-history-back-button');
+        const appContent = document.getElementById('app-content');
+
+        if (btnHallOfFame) {
+            btnHallOfFame.addEventListener('click', () => {
+                // Verifica se lo storico e' abilitato
+                if (!window.FeatureFlags?.isEnabled('matchHistory')) {
+                    if (window.Toast) window.Toast.info("Hall of Fame non disponibile");
+                    return;
+                }
+                if (window.MatchHistory && matchHistoryContent) {
+                    window.showScreen(matchHistoryContent);
+                    window.MatchHistory.render();
+                } else {
+                    if (window.Toast) window.Toast.error("Hall of Fame non disponibile");
+                }
+            });
+        }
+
+        if (matchHistoryBackButton && appContent) {
+            matchHistoryBackButton.addEventListener('click', () => {
+                window.showScreen(appContent);
+            });
+        }
+
         // Nota: il bottone Sfida e' gia' gestito in interfaccia-navigation.js
     },
 

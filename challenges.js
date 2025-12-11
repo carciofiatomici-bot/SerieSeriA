@@ -12,7 +12,7 @@ window.Challenges = {
     // Configurazione scommesse
     betConfig: {
         maxBet: 50,           // Massimo CS scommettibili
-        cooldownMs: 60 * 60 * 1000  // 1 ora tra scommesse
+        cooldownMs: 24 * 60 * 60 * 1000  // 24 ore (1 giorno) tra scommesse
     },
 
     // Path Firestore
@@ -39,7 +39,7 @@ window.Challenges = {
     },
 
     /**
-     * Verifica se l'utente puo' scommettere (cooldown 1 ora)
+     * Verifica se l'utente puo' scommettere (cooldown 24 ore)
      */
     async canBet() {
         const myTeamId = window.InterfacciaCore?.currentTeamId;
@@ -53,10 +53,14 @@ window.Challenges = {
                 const elapsed = Date.now() - parseInt(lastBetTime);
                 if (elapsed < this.betConfig.cooldownMs) {
                     const remainingMs = this.betConfig.cooldownMs - elapsed;
-                    const remainingMin = Math.ceil(remainingMs / 60000);
+                    const remainingHours = Math.floor(remainingMs / 3600000);
+                    const remainingMin = Math.ceil((remainingMs % 3600000) / 60000);
+                    const timeText = remainingHours > 0
+                        ? `${remainingHours} ore e ${remainingMin} minuti`
+                        : `${remainingMin} minuti`;
                     return {
                         canBet: false,
-                        reason: `Devi aspettare ancora ${remainingMin} minuti per scommettere`,
+                        reason: `Devi aspettare ancora ${timeText} per scommettere`,
                         remainingMs
                     };
                 }
@@ -960,6 +964,30 @@ window.Challenges = {
             }
 
             await updateDoc(doc(window.db, challengesPath, challenge.id), updateData);
+
+            // Salva nello storico partite
+            const myTeamId = window.InterfacciaCore?.currentTeamId;
+            if (myTeamId && window.MatchHistory) {
+                const isHome = homeTeam.teamId === myTeamId;
+                await window.MatchHistory.saveMatch(myTeamId, {
+                    type: 'sfida',
+                    homeTeam: {
+                        id: homeTeam.teamId,
+                        name: homeTeam.teamName,
+                        logoUrl: homeTeam.logoUrl || ''
+                    },
+                    awayTeam: {
+                        id: awayTeam.teamId,
+                        name: awayTeam.teamName,
+                        logoUrl: awayTeam.logoUrl || ''
+                    },
+                    homeScore: result.homeGoals,
+                    awayScore: result.awayGoals,
+                    isHome: isHome,
+                    betAmount: betResult.hasBet ? betResult.betAmount : 0,
+                    creditsWon: betResult.hasBet ? (betResult.winnings || 0) : 0
+                });
+            }
         } catch (e) {
             console.warn("Errore aggiornamento sfida:", e);
         }
