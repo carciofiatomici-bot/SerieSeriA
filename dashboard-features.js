@@ -118,7 +118,54 @@ window.DashboardFeatures = {
             });
         }
 
+        // Bottone Scambi
+        const btnTrades = document.getElementById('btn-trades');
+        if (btnTrades) {
+            btnTrades.addEventListener('click', () => {
+                // Verifica se gli scambi sono abilitati
+                if (!window.FeatureFlags?.isEnabled('trades')) {
+                    // Mostra alert temporaneo
+                    this.showTemporaryAlert('Scambi Momentaneamente Non Disponibili');
+                    return;
+                }
+                if (window.Trades) {
+                    window.Trades.openPanel();
+                } else {
+                    if (window.Toast) window.Toast.error("Sistema Scambi non disponibile");
+                }
+            });
+        }
+
         // Nota: il bottone Sfida e' gia' gestito in interfaccia-navigation.js
+    },
+
+    /**
+     * Mostra un alert temporaneo che scompare dopo 2 secondi
+     * @param {string} message - Messaggio da mostrare
+     */
+    showTemporaryAlert(message) {
+        // Rimuovi alert precedente se esiste
+        const existingAlert = document.getElementById('temporary-alert');
+        if (existingAlert) existingAlert.remove();
+
+        // Crea l'alert
+        const alert = document.createElement('div');
+        alert.id = 'temporary-alert';
+        alert.className = `
+            fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+            z-[9999] px-6 py-4 bg-red-600 text-white font-bold text-lg
+            rounded-xl shadow-2xl border-2 border-red-400
+            animate-pulse
+        `.replace(/\s+/g, ' ').trim();
+        alert.textContent = message;
+
+        document.body.appendChild(alert);
+
+        // Rimuovi dopo 2 secondi
+        setTimeout(() => {
+            alert.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(() => alert.remove(), 300);
+        }, 2000);
     },
 
     /**

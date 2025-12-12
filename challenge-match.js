@@ -8,7 +8,7 @@
 // - Lanci di dado in tempo reale con animazioni
 // - Sincronizzazione via Firestore onSnapshot
 // - Sistema presenza/heartbeat per rilevare disconnessioni
-// - 60 occasioni (30 per squadra) con 3 fasi ciascuna
+// - 20 occasioni (10 per squadra) con 3 fasi ciascuna
 //
 
 window.ChallengeMatch = {
@@ -29,8 +29,8 @@ window.ChallengeMatch = {
         HEARTBEAT_INTERVAL_MS: 5000,        // Heartbeat ogni 5 secondi
         DICE_TIMEOUT_MS: 30000,             // 30 secondi per lanciare dado
         DISCONNECT_THRESHOLD_MS: 15000,     // 15 secondi = disconnessione
-        TOTAL_OCCASIONS: 60,                // 30 per squadra, alternati
-        OCCASIONS_PER_TEAM: 30
+        TOTAL_OCCASIONS: 20,                // 10 per squadra, alternati
+        OCCASIONS_PER_TEAM: 10
     },
 
     // Mappa modificatori livello (da simulazione.js)
@@ -570,6 +570,19 @@ window.ChallengeMatch = {
                 await this.resolveAttackPhase();
                 break;
 
+            case 'shot_att':
+                // Attaccante ha lanciato d10 per il tiro, ora tocca al portiere
+                await updateDoc(doc(window.db, matchPath), {
+                    'phaseData.shotRoll': diceState.result,
+                    'diceState.waitingFor': matchData.attackingTeamId === matchData.homeTeamId
+                        ? matchData.awayTeamId : matchData.homeTeamId,
+                    'diceState.diceType': 'd20',
+                    'diceState.purpose': 'shot_gk',
+                    'diceState.result': null,
+                    'diceState.rolledAt': null
+                });
+                break;
+
             case 'shot_gk':
                 // Portiere ha lanciato, calcola risultato tiro
                 await this.resolveShotPhase();
@@ -753,12 +766,33 @@ window.ChallengeMatch = {
             type: 'action'
         });
 
-        // Log risultato
+        // Log risultato con range chiari
+        const modTotaleAtt = modA_D + modA_C + coachA;
+        const modTotaleDef = modB_C + coachB;
+        const rangeMinA = 1 + modTotaleAtt;
+        const rangeMaxA = 20 + modTotaleAtt;
+        const rangeMinB = 1 + modTotaleDef;
+        const rangeMaxB = 20 + modTotaleDef;
+
         eventLogs.push({
             timestamp: Timestamp.now(),
             occasion: matchData.currentOccasion,
             phase: 'construction',
-            message: `Costruzione: 🎲${rollA}+${(modA_D+modA_C).toFixed(1)} = ${totalA.toFixed(1)} vs 🎲${rollB}+${modB_C.toFixed(1)} = ${totalB.toFixed(1)} → ${successChance}%`,
+            message: `📊 ${attTeamName}: 🎲${rollA} + ${modTotaleAtt.toFixed(1)} = ${totalA.toFixed(1)} (range ${rangeMinA.toFixed(0)}-${rangeMaxA.toFixed(0)})`,
+            type: 'dice'
+        });
+        eventLogs.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'construction',
+            message: `📊 ${defTeamName}: 🎲${rollB} + ${modTotaleDef.toFixed(1)} = ${totalB.toFixed(1)} (range ${rangeMinB.toFixed(0)}-${rangeMaxB.toFixed(0)})`,
+            type: 'dice'
+        });
+        eventLogs.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'construction',
+            message: `⚙️ Costruzione: ${totalA.toFixed(1)} vs ${totalB.toFixed(1)} → Successo ${successChance}%`,
             type: 'action'
         });
 
@@ -891,23 +925,68 @@ window.ChallengeMatch = {
         });
 
         if (attackResult >= 0) {
-            // Passa a fase tiro
-            const defendingTeamId = isHomeAttacking ? matchData.awayTeamId : matchData.homeTeamId;
+            // Passa a fase tiro - prima l'attaccante lancia d10 (o d6 se Titubanza/Sguardo Intimidatorio)
             const portiere = defFormation.P?.[0];
             const portiereInfo = portiere ? `${portiere.name}(P${portiere.currentLevel || portiere.level})` : 'Nessun portiere';
+
+            // Determina dado tiro (normalmente d10)
+            let shotDie = 'd10';
+            let shotDieReason = '';
+
+            // Titubanza (Attaccante negativa): dado diventa d6
+            const hasTitubanza = attFormation.A?.some(p => p.abilities?.includes('Titubanza'));
+            if (hasTitubanza) {
+                shotDie = 'd6';
+                shotDieReason = ' (Titubanza!)';
+            }
+
+            // Sguardo Intimidatorio (Portiere): 5% dado diventa d6
+            if (portiere?.abilities?.includes('Sguardo Intimidatorio') && Math.random() < 0.05) {
+                shotDie = 'd6';
+                shotDieReason = ' (Sguardo Intimidatorio!)';
+                eventLogs.push({
+                    timestamp: Timestamp.now(),
+                    occasion: matchData.currentOccasion,
+                    phase: 'attack',
+                    message: `👁️ ${portiere.name} attiva Sguardo Intimidatorio! Dado ridotto a d6`,
+                    type: 'action'
+                });
+            }
+
+            // Log con dado + modificatore chiaro e range
+            const modTotaleAttacco = modA_C + modA_A + coachA;
+            const modTotaleDifesa = modB_D + modB_C + coachB;
+            const rangeAttMin = 1 + modTotaleAttacco;
+            const rangeAttMax = 20 + modTotaleAttacco;
+            const rangeDefMin = 1 + modTotaleDifesa;
+            const rangeDefMax = 20 + modTotaleDifesa;
 
             eventLogs.push({
                 timestamp: Timestamp.now(),
                 occasion: matchData.currentOccasion,
                 phase: 'attack',
-                message: `Attacco: 🎲${rollA}+${(modA_C+modA_A).toFixed(1)} = ${totalA.toFixed(1)} vs 🎲${rollB}+${(modB_D+modB_C).toFixed(1)} = ${totalB.toFixed(1)} → Tiro ${Math.max(1, attackResult).toFixed(1)}`,
+                message: `📊 ${attTeamName}: 🎲${rollA} + ${modTotaleAttacco.toFixed(1)} = ${totalA.toFixed(1)} (range ${rangeAttMin.toFixed(0)}-${rangeAttMax.toFixed(0)})`,
+                type: 'dice'
+            });
+            eventLogs.push({
+                timestamp: Timestamp.now(),
+                occasion: matchData.currentOccasion,
+                phase: 'attack',
+                message: `📊 ${defTeamName}: 🎲${rollB} + ${modTotaleDifesa.toFixed(1)} = ${totalB.toFixed(1)} (range ${rangeDefMin.toFixed(0)}-${rangeDefMax.toFixed(0)})`,
+                type: 'dice'
+            });
+            eventLogs.push({
+                timestamp: Timestamp.now(),
+                occasion: matchData.currentOccasion,
+                phase: 'attack',
+                message: `⚔️ Attacco: ${totalA.toFixed(1)} vs ${totalB.toFixed(1)} → ${attackResult >= 0 ? 'SUCCESSO!' : 'Respinto'} (base ${Math.max(1, attackResult).toFixed(1)})`,
                 type: 'action'
             });
             eventLogs.push({
                 timestamp: Timestamp.now(),
                 occasion: matchData.currentOccasion,
                 phase: 'attack',
-                message: `🥅 ${portiereInfo} si prepara alla parata!`,
+                message: `⚽ ${attTeamName} prepara il tiro! (lancia 1${shotDie}${shotDieReason})`,
                 type: 'action'
             });
 
@@ -916,9 +995,9 @@ window.ChallengeMatch = {
                 'phaseData.attackResult': Math.max(1, attackResult),
                 'phaseData.attackModifier': totalA,
                 'phaseData.defenseModifier': totalB,
-                'diceState.waitingFor': defendingTeamId, // Portiere lancia
-                'diceState.diceType': 'd20',
-                'diceState.purpose': 'shot_gk',
+                'diceState.waitingFor': matchData.attackingTeamId, // Attaccante lancia dado
+                'diceState.diceType': shotDie,
+                'diceState.purpose': 'shot_att',
                 'diceState.result': null,
                 'diceState.rolledAt': null,
                 eventLog: eventLogs
@@ -927,31 +1006,38 @@ window.ChallengeMatch = {
             // 5% di passare comunque con risultato 5
             const luckyRoll = Math.floor(Math.random() * 100) + 1;
             if (luckyRoll <= 5) {
-                const defendingTeamId = isHomeAttacking ? matchData.awayTeamId : matchData.homeTeamId;
-                const portiere = defFormation.P?.[0];
-                const portiereInfo = portiere ? `${portiere.name}(P${portiere.currentLevel || portiere.level})` : 'Nessun portiere';
+                // Determina dado tiro anche nel caso fortuna
+                let shotDieLucky = 'd10';
+                const hasTitubanzaLucky = attFormation.A?.some(p => p.abilities?.includes('Titubanza'));
+                if (hasTitubanzaLucky) {
+                    shotDieLucky = 'd6';
+                }
+                const portiereLucky = defFormation.P?.[0];
+                if (portiereLucky?.abilities?.includes('Sguardo Intimidatorio') && Math.random() < 0.05) {
+                    shotDieLucky = 'd6';
+                }
 
                 eventLogs.push({
                     timestamp: Timestamp.now(),
                     occasion: matchData.currentOccasion,
                     phase: 'attack',
-                    message: `Attacco respinto ma ⭐ 5% fortuna! (${totalA.toFixed(1)} < ${totalB.toFixed(1)}) → Tiro 5`,
+                    message: `Attacco respinto ma ⭐ 5% fortuna! (${totalA.toFixed(1)} < ${totalB.toFixed(1)}) → Valore base 5`,
                     type: 'action'
                 });
                 eventLogs.push({
                     timestamp: Timestamp.now(),
                     occasion: matchData.currentOccasion,
                     phase: 'attack',
-                    message: `🥅 ${portiereInfo} si prepara alla parata!`,
+                    message: `⚽ ${attTeamName} prepara il tiro! (lancia 1${shotDieLucky})`,
                     type: 'action'
                 });
 
                 await updateDoc(doc(window.db, matchPath), {
                     currentPhase: 'shot',
                     'phaseData.attackResult': 5,
-                    'diceState.waitingFor': defendingTeamId,
-                    'diceState.diceType': 'd20',
-                    'diceState.purpose': 'shot_gk',
+                    'diceState.waitingFor': matchData.attackingTeamId,
+                    'diceState.diceType': shotDieLucky,
+                    'diceState.purpose': 'shot_att',
                     'diceState.result': null,
                     'diceState.rolledAt': null,
                     eventLog: eventLogs
@@ -975,6 +1061,7 @@ window.ChallengeMatch = {
 
     /**
      * Risolvi fase tiro
+     * Formula: [1d20 + Mod. Portiere] - [1d10 + Valore Tiro Fase 2]
      */
     async resolveShotPhase() {
         const matchData = this.currentMatch;
@@ -998,45 +1085,115 @@ window.ChallengeMatch = {
         const modPortiere = this.calculatePlayerModifier(portiere, hasIconaB, []);
         const coachB = (defFormation.coachLevel || 1) / 2;
 
-        const rollP = matchData.diceState.result;
-        const attackResult = matchData.phaseData.attackResult;
+        const rollP = matchData.diceState.result; // d20 del portiere
+        let shotRoll = matchData.phaseData.shotRoll || 0; // d10 (o d6) dell'attaccante
+        const attackResult = matchData.phaseData.attackResult; // Valore base dalla fase 2
 
+        // Tiro Potente (D, C, A): 5% di tirare un secondo dado e prendere il più alto
+        const allShooters = [...(attFormation.D || []), ...(attFormation.C || []), ...(attFormation.A || [])];
+        const hasTiroPotente = allShooters.some(p => p.abilities?.includes('Tiro Potente'));
+        let tiroPotenteBonusRoll = null;
+        if (hasTiroPotente && Math.random() < 0.05) {
+            // Determina il tipo di dado usato
+            const shotDieType = matchData.diceState.diceType === 'd6' ? 6 : 10;
+            tiroPotenteBonusRoll = Math.floor(Math.random() * shotDieType) + 1;
+            if (tiroPotenteBonusRoll > shotRoll) {
+                shotRoll = tiroPotenteBonusRoll;
+            }
+        }
+
+        // Formula: [1d20 + Mod. Portiere + Coach] - [1d10 + Valore Tiro]
         const totalPortiere = rollP + modPortiere + coachB;
-        const saveResult = totalPortiere - attackResult;
+        let totalShot = shotRoll + attackResult;
+
+        // Tiro dalla porta (Portiere attaccante): 5% aggiunge 1/2 modificatore portiere
+        const portiereAttaccante = attFormation.P?.[0];
+        let tiroDallaPortaBonus = 0;
+        if (portiereAttaccante?.abilities?.includes('Tiro dalla porta') && Math.random() < 0.05) {
+            const hasIconaA = attFormation.formationInfo?.isIconaActive || false;
+            const modPortiereAtt = this.calculatePlayerModifier(portiereAttaccante, hasIconaA, []);
+            tiroDallaPortaBonus = Math.floor(modPortiereAtt / 2);
+            totalShot += tiroDallaPortaBonus;
+        }
+
+        const saveResult = totalPortiere - totalShot;
 
         // Prepara log dettagliato
         const eventLogs = [...(matchData.eventLog || [])];
         const portiereInfo = `${portiere.name}(P${portiere.currentLevel || portiere.level})`;
         const portiereAbilities = portiere.abilities?.filter(a =>
-            ['Pugno di ferro', 'Uscita Kamikaze', 'Presa Sicura', 'Miracolo', 'Parata con i piedi'].includes(a)
+            ['Pugno di ferro', 'Uscita Kamikaze', 'Presa Sicura', 'Miracolo', 'Parata con i piedi', 'Sguardo Intimidatorio', 'Tiro dalla porta'].includes(a)
         ) || [];
 
-        // Log calcolo parata
-        eventLogs.push({
-            timestamp: Timestamp.now(),
-            occasion: matchData.currentOccasion,
-            phase: 'shot',
-            message: `🧤 ${portiereInfo} para: 🎲${rollP}+${modPortiere.toFixed(1)}+coach${coachB.toFixed(1)} = ${totalPortiere.toFixed(1)}`,
-            type: 'action'
-        });
-
-        // Log abilità portiere se presenti
-        if (portiereAbilities.length > 0) {
+        // Log abilità attivate
+        if (tiroPotenteBonusRoll !== null) {
+            const shooterWithTiroPotente = allShooters.find(p => p.abilities?.includes('Tiro Potente'));
             eventLogs.push({
                 timestamp: Timestamp.now(),
                 occasion: matchData.currentOccasion,
                 phase: 'shot',
-                message: `✨ Abilità portiere: ${portiereAbilities.join(', ')}`,
+                message: `💪 ${shooterWithTiroPotente?.name || 'Giocatore'} attiva Tiro Potente! Secondo dado: ${tiroPotenteBonusRoll}`,
                 type: 'action'
             });
         }
 
-        // Log confronto
+        if (tiroDallaPortaBonus > 0) {
+            eventLogs.push({
+                timestamp: Timestamp.now(),
+                occasion: matchData.currentOccasion,
+                phase: 'shot',
+                message: `🥅 ${portiereAttaccante.name} attiva Tiro dalla porta! +${tiroDallaPortaBonus} al tiro`,
+                type: 'action'
+            });
+        }
+
+        // Log tiro attaccante con range
+        // Determina il dado usato per il tiro (d6 se Titubanza o Sguardo Intimidatorio attivo)
+        const originalShotRoll = matchData.phaseData.shotRoll || 0;
+        const hadTitubanza = attFormation.A?.some(p => p.abilities?.includes('Titubanza'));
+        const shotDieUsed = hadTitubanza || originalShotRoll <= 6 ? 'd6' : 'd10';
+        const dieMax = shotDieUsed === 'd6' ? 6 : 10;
+        const rangeTiroMin = 1 + attackResult + tiroDallaPortaBonus;
+        const rangeTiroMax = dieMax + attackResult + tiroDallaPortaBonus;
+
+        let shotLogMessage = `📊 Tiro: 🎲${shotRoll}`;
+        if (tiroPotenteBonusRoll !== null && tiroPotenteBonusRoll > originalShotRoll) {
+            shotLogMessage = `📊 Tiro: 🎲${originalShotRoll}→${shotRoll} (Potente!)`;
+        }
+        shotLogMessage += ` + ${attackResult.toFixed(1)}`;
+        if (tiroDallaPortaBonus > 0) {
+            shotLogMessage += ` + ${tiroDallaPortaBonus}`;
+        }
+        shotLogMessage += ` = ${totalShot.toFixed(1)} (range ${rangeTiroMin.toFixed(0)}-${rangeTiroMax.toFixed(0)})`;
+
         eventLogs.push({
             timestamp: Timestamp.now(),
             occasion: matchData.currentOccasion,
             phase: 'shot',
-            message: `⚡ Tiro ${attackResult.toFixed(1)} vs Parata ${totalPortiere.toFixed(1)} → Diff: ${saveResult.toFixed(1)}`,
+            message: shotLogMessage,
+            type: 'dice'
+        });
+
+        // Log portiere con range
+        const modTotPortiere = modPortiere + coachB;
+        const rangeParataMin = 1 + modTotPortiere;
+        const rangeParataMax = 20 + modTotPortiere;
+
+        eventLogs.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'shot',
+            message: `📊 ${portiere.name}: 🎲${rollP} + ${modTotPortiere.toFixed(1)} = ${totalPortiere.toFixed(1)} (range ${rangeParataMin.toFixed(0)}-${rangeParataMax.toFixed(0)})`,
+            type: 'dice'
+        });
+
+        // Log confronto finale compatto
+        const risultatoTesto = saveResult > 0 ? 'PARATA' : (saveResult === 0 ? '50/50' : 'GOL');
+        eventLogs.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'shot',
+            message: `🥅 ${totalPortiere.toFixed(1)} vs ${totalShot.toFixed(1)} = ${saveResult > 0 ? '+' : ''}${saveResult.toFixed(1)} → ${risultatoTesto}`,
             type: 'action'
         });
 
@@ -1045,7 +1202,7 @@ window.ChallengeMatch = {
 
         if (saveResult > 0) {
             // Parata!
-            message = `🧤 PARATA di ${portiere.name}! (${totalPortiere.toFixed(1)} > ${attackResult.toFixed(1)})`;
+            message = `🧤 PARATA di ${portiere.name}! (${totalPortiere.toFixed(1)} > ${totalShot.toFixed(1)})`;
 
             // 5% di gol comunque
             const luckyGoal = Math.floor(Math.random() * 100) + 1;
@@ -1079,7 +1236,7 @@ window.ChallengeMatch = {
         } else {
             // Gol!
             goal = true;
-            message = `⚽ GOOOOOL! Tiro ${attackResult.toFixed(1)} batte ${portiere.name} ${totalPortiere.toFixed(1)}`;
+            message = `⚽ GOOOOOL! Tiro ${totalShot.toFixed(1)} batte ${portiere.name} ${totalPortiere.toFixed(1)}`;
 
             // Miracolo (5% salva se differenza < 3)
             if (portiere.abilities?.includes('Miracolo') && Math.abs(saveResult) < 3) {
@@ -1111,6 +1268,112 @@ window.ChallengeMatch = {
     },
 
     /**
+     * Genera marcatore e assistman plausibili in base alla formazione
+     */
+    generateScorerAndAssist(formation) {
+        const attackers = formation.A || [];
+        const midfielders = formation.C || [];
+        const defenders = formation.D || [];
+
+        // Pesi per la probabilita di segnare in base al ruolo e abilita
+        const getScorerWeight = (player) => {
+            let weight = 1;
+            if (player.role === 'A') weight = 10;
+            else if (player.role === 'C') weight = 4;
+            else if (player.role === 'D') weight = 1;
+
+            // Bonus per abilita offensive
+            if (player.abilities?.includes('Bomber')) weight *= 2;
+            if (player.abilities?.includes('Opportunista')) weight *= 1.5;
+            if (player.abilities?.includes('Tiro Potente')) weight *= 1.3;
+            if (player.abilities?.includes('Tiro a Giro')) weight *= 1.3;
+            if (player.abilities?.includes('Tiro Fulmineo')) weight *= 1.3;
+            if (player.abilities?.includes('Cross')) weight *= 0.7; // Crossatori fanno assist
+            if (player.abilities?.includes('Regista')) weight *= 0.5; // Registi fanno assist
+
+            // Livello influisce
+            weight *= (player.currentLevel || player.level || 1) / 15;
+
+            return weight;
+        };
+
+        const getAssistWeight = (player) => {
+            let weight = 1;
+            if (player.role === 'C') weight = 8;
+            else if (player.role === 'A') weight = 4;
+            else if (player.role === 'D') weight = 2;
+
+            // Bonus per abilita di assist
+            if (player.abilities?.includes('Cross')) weight *= 2.5;
+            if (player.abilities?.includes('Regista')) weight *= 2;
+            if (player.abilities?.includes('Visione di Gioco')) weight *= 1.8;
+            if (player.abilities?.includes('Passaggio Corto')) weight *= 1.5;
+            if (player.abilities?.includes('Mago del pallone')) weight *= 1.3;
+            if (player.abilities?.includes('Tocco Di Velluto')) weight *= 1.3;
+            if (player.abilities?.includes('Lancio lungo')) weight *= 1.2;
+            if (player.abilities?.includes('Pivot')) weight *= 1.5;
+
+            weight *= (player.currentLevel || player.level || 1) / 15;
+
+            return weight;
+        };
+
+        // Tutti i giocatori che possono segnare (non portieri)
+        const allPlayers = [...attackers, ...midfielders, ...defenders];
+
+        // Selezione pesata del marcatore
+        const scorerWeights = allPlayers.map(p => ({ player: p, weight: getScorerWeight(p) }));
+        const totalScorerWeight = scorerWeights.reduce((sum, p) => sum + p.weight, 0);
+        let random = Math.random() * totalScorerWeight;
+        let scorer = null;
+        for (const p of scorerWeights) {
+            random -= p.weight;
+            if (random <= 0) {
+                scorer = p.player;
+                break;
+            }
+        }
+        if (!scorer && allPlayers.length > 0) {
+            scorer = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+        }
+
+        // Selezione assistman (diverso dal marcatore)
+        const assistCandidates = allPlayers.filter(p => p !== scorer);
+        let assistMan = null;
+
+        // 80% di probabilita di avere un assist
+        if (Math.random() < 0.80 && assistCandidates.length > 0) {
+            const assistWeights = assistCandidates.map(p => ({ player: p, weight: getAssistWeight(p) }));
+            const totalAssistWeight = assistWeights.reduce((sum, p) => sum + p.weight, 0);
+            random = Math.random() * totalAssistWeight;
+            for (const p of assistWeights) {
+                random -= p.weight;
+                if (random <= 0) {
+                    assistMan = p.player;
+                    break;
+                }
+            }
+            if (!assistMan) {
+                assistMan = assistCandidates[Math.floor(Math.random() * assistCandidates.length)];
+            }
+        }
+
+        return { scorer, assistMan };
+    },
+
+    /**
+     * Calcola il minuto di gioco in base all'occasione
+     * 20 occasioni = 90 minuti, con varianza
+     */
+    calculateMatchMinute(occasion) {
+        // Base: occasione 1 = minuto ~5, occasione 20 = minuto ~90
+        const baseMinute = Math.floor((occasion / 20) * 90);
+        // Aggiungi varianza casuale (-2 a +2 minuti)
+        const variance = Math.floor(Math.random() * 5) - 2;
+        return Math.max(1, Math.min(90 + 4, baseMinute + variance)); // Max 94' (recupero)
+    },
+
+    /**
      * Segna un gol
      */
     async scoreGoal(message = 'GOOOOOL!') {
@@ -1127,17 +1390,78 @@ window.ChallengeMatch = {
         const newAwayScore = isHomeAttacking ? matchData.awayScore : matchData.awayScore + 1;
 
         const scorerTeamName = isHomeAttacking ? matchData.homeTeamName : matchData.awayTeamName;
+        const attFormation = isHomeAttacking ? matchData.homeFormation : matchData.awayFormation;
+
+        // Genera marcatore e assist
+        const { scorer, assistMan } = this.generateScorerAndAssist(attFormation);
+
+        // Calcola minuto di gioco
+        const minute = this.calculateMatchMinute(matchData.currentOccasion);
+
+        // Prepara messaggio gol dettagliato con minuto
+        let goalDetail = '';
+        if (scorer) {
+            goalDetail = `${minute}' ⚽ ${scorer.name}`;
+            if (assistMan) {
+                goalDetail += ` (assist: ${assistMan.name})`;
+            }
+        }
+
+        // Aggiorna statistiche gol nel match
+        const goals = freshData.goals || [];
+        goals.push({
+            occasion: matchData.currentOccasion,
+            minute: minute,
+            teamId: matchData.attackingTeamId,
+            teamName: scorerTeamName,
+            scorer: scorer ? { name: scorer.name, role: scorer.role, level: scorer.currentLevel || scorer.level } : null,
+            assistMan: assistMan ? { name: assistMan.name, role: assistMan.role, level: assistMan.currentLevel || assistMan.level } : null
+        });
+
+        // Aggiorna statistiche giocatori (gol e assist totali per la partita)
+        const playerStats = freshData.playerStats || {};
+
+        if (scorer) {
+            const scorerKey = `${matchData.attackingTeamId}_${scorer.name}`;
+            if (!playerStats[scorerKey]) {
+                playerStats[scorerKey] = { name: scorer.name, role: scorer.role, teamId: matchData.attackingTeamId, goals: 0, assists: 0 };
+            }
+            playerStats[scorerKey].goals++;
+        }
+
+        if (assistMan) {
+            const assistKey = `${matchData.attackingTeamId}_${assistMan.name}`;
+            if (!playerStats[assistKey]) {
+                playerStats[assistKey] = { name: assistMan.name, role: assistMan.role, teamId: matchData.attackingTeamId, goals: 0, assists: 0 };
+            }
+            playerStats[assistKey].assists++;
+        }
+
+        const eventLogs = [...(freshData.eventLog || [])];
+        eventLogs.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'goal',
+            message: `${minute}' ${message} - ${scorerTeamName} segna! (${newHomeScore}-${newAwayScore})`,
+            type: 'goal'
+        });
+
+        if (goalDetail) {
+            eventLogs.push({
+                timestamp: Timestamp.now(),
+                occasion: matchData.currentOccasion,
+                phase: 'goal',
+                message: goalDetail,
+                type: 'goal'
+            });
+        }
 
         await updateDoc(doc(window.db, matchPath), {
             homeScore: newHomeScore,
             awayScore: newAwayScore,
-            eventLog: [...(freshData.eventLog || []), {
-                timestamp: Timestamp.now(),
-                occasion: matchData.currentOccasion,
-                phase: 'goal',
-                message: `${message} - ${scorerTeamName} segna! (${newHomeScore}-${newAwayScore})`,
-                type: 'goal'
-            }]
+            goals: goals,
+            playerStats: playerStats,
+            eventLog: eventLogs
         });
 
         // Piccola pausa poi prossima occasione
@@ -1625,7 +1949,8 @@ window.ChallengeMatch = {
             'construction_d100': 'Verifica costruzione (d100)',
             'attack_att': 'Lancio attacco',
             'attack_def': 'Lancio difesa',
-            'shot_gk': 'Lancio portiere'
+            'shot_att': 'Lancio tiro (d10)',
+            'shot_gk': 'Lancio portiere (d20)'
         };
         return descriptions[purpose] || purpose;
     },
@@ -1853,6 +2178,126 @@ window.ChallengeMatch = {
     },
 
     /**
+     * Genera HTML riepilogo marcatori con minuti e statistiche
+     */
+    generateScorersHtml(matchData) {
+        const goals = matchData.goals || [];
+        if (goals.length === 0) return '';
+
+        // Raggruppa gol per squadra
+        const homeGoals = goals.filter(g => g.teamId === matchData.homeTeamId);
+        const awayGoals = goals.filter(g => g.teamId === matchData.awayTeamId);
+
+        // Colori squadre
+        const homeColor = matchData.homeFormation?.primaryColor || '#f97316';
+        const awayColor = matchData.awayFormation?.primaryColor || '#06b6d4';
+
+        const formatGoals = (teamGoals, teamName, color) => {
+            if (teamGoals.length === 0) return '';
+
+            // Raggruppa per marcatore con minuti
+            const scorerMap = new Map();
+            teamGoals.forEach(g => {
+                if (g.scorer) {
+                    const key = g.scorer.name;
+                    if (!scorerMap.has(key)) {
+                        scorerMap.set(key, { scorer: g.scorer, minutes: [], count: 0 });
+                    }
+                    scorerMap.get(key).minutes.push(g.minute || '?');
+                    scorerMap.get(key).count++;
+                }
+            });
+
+            // Raggruppa assist
+            const assistMap = new Map();
+            teamGoals.forEach(g => {
+                if (g.assistMan) {
+                    const key = g.assistMan.name;
+                    if (!assistMap.has(key)) {
+                        assistMap.set(key, { assistMan: g.assistMan, count: 0 });
+                    }
+                    assistMap.get(key).count++;
+                }
+            });
+
+            let html = `<div class="mb-3">
+                <p class="text-xs font-bold uppercase tracking-wider mb-1" style="color: ${color}">${teamName}</p>
+                <div class="text-sm text-gray-300 space-y-1">`;
+
+            // Marcatori con minuti
+            const scorers = Array.from(scorerMap.values());
+            scorers.forEach(s => {
+                const minutesStr = s.minutes.map(m => `${m}'`).join(', ');
+                html += `<div class="flex items-center gap-1">
+                    <span class="text-white font-medium">⚽ ${s.scorer.name}</span>
+                    <span class="text-yellow-500 text-xs">${minutesStr}</span>
+                </div>`;
+            });
+
+            // Assist con conteggio
+            const assists = Array.from(assistMap.values());
+            if (assists.length > 0) {
+                html += `<div class="mt-1 pt-1 border-t border-gray-700/50">
+                    <span class="text-gray-500 text-xs">Assist: `;
+                assists.forEach((a, i) => {
+                    html += `<span class="text-cyan-400">${a.assistMan.name}</span>`;
+                    if (a.count > 1) html += ` <span class="text-cyan-600">(${a.count})</span>`;
+                    if (i < assists.length - 1) html += ', ';
+                });
+                html += `</span></div>`;
+            }
+
+            html += `</div></div>`;
+            return html;
+        };
+
+        // Statistiche complessive dalla partita
+        const playerStats = matchData.playerStats || {};
+        const topScorers = Object.values(playerStats)
+            .filter(p => p.goals > 0)
+            .sort((a, b) => b.goals - a.goals)
+            .slice(0, 3);
+        const topAssisters = Object.values(playerStats)
+            .filter(p => p.assists > 0)
+            .sort((a, b) => b.assists - a.assists)
+            .slice(0, 3);
+
+        let html = `<div class="mt-4 pt-4 border-t border-gray-700 max-h-48 overflow-y-auto">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Tabellino</p>`;
+
+        if (homeGoals.length > 0) {
+            html += formatGoals(homeGoals, matchData.homeTeamName, homeColor);
+        }
+        if (awayGoals.length > 0) {
+            html += formatGoals(awayGoals, matchData.awayTeamName, awayColor);
+        }
+
+        // Mostra statistiche top se ci sono multipli gol
+        if (goals.length >= 3 && (topScorers.length > 0 || topAssisters.length > 0)) {
+            html += `<div class="mt-3 pt-3 border-t border-gray-700/50 grid grid-cols-2 gap-2 text-xs">`;
+
+            if (topScorers.length > 0) {
+                html += `<div>
+                    <p class="text-gray-500 mb-1">Top Marcatori</p>
+                    ${topScorers.map(p => `<p class="text-gray-300">${p.name}: <span class="text-yellow-400 font-bold">${p.goals}</span></p>`).join('')}
+                </div>`;
+            }
+
+            if (topAssisters.length > 0) {
+                html += `<div>
+                    <p class="text-gray-500 mb-1">Top Assist</p>
+                    ${topAssisters.map(p => `<p class="text-gray-300">${p.name}: <span class="text-cyan-400 font-bold">${p.assists}</span></p>`).join('')}
+                </div>`;
+            }
+
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    },
+
+    /**
      * Mostra risultato finale (responsive)
      */
     showFinalResult(matchData) {
@@ -1871,6 +2316,9 @@ window.ChallengeMatch = {
             }
         }
 
+        // Genera riepilogo marcatori
+        const scorersHtml = this.generateScorersHtml(matchData);
+
         if (matchData.status === 'abandoned') {
             const iWon = matchData.winnerId === this.myTeamId;
             resultHtml = `
@@ -1879,6 +2327,7 @@ window.ChallengeMatch = {
                 </p>
                 <p class="text-lg sm:text-xl text-white mb-2">${matchData.homeScore} - ${matchData.awayScore}</p>
                 <p class="text-sm sm:text-base text-gray-400">Partita abbandonata dall'avversario</p>
+                ${scorersHtml}
                 <button id="btn-close-match" class="mt-4 bg-gray-600 hover:bg-gray-500 active:bg-gray-700 text-white font-bold py-3 px-6 sm:px-8 rounded-xl min-h-[48px] touch-manipulation">
                     Chiudi
                 </button>
@@ -1895,6 +2344,7 @@ window.ChallengeMatch = {
                 <p class="text-5xl sm:text-6xl mb-3 sm:mb-4">${emoji}</p>
                 <p class="text-2xl sm:text-3xl ${colorClass} font-bold mb-3 sm:mb-4">${resultText}</p>
                 <p class="text-3xl sm:text-4xl text-white mb-3 sm:mb-4">${matchData.homeScore} - ${matchData.awayScore}</p>
+                ${scorersHtml}
                 <button id="btn-close-match" class="mt-3 sm:mt-4 bg-gray-600 hover:bg-gray-500 active:bg-gray-700 text-white font-bold py-3 px-6 sm:px-8 rounded-xl min-h-[48px] touch-manipulation transition-all">
                     Chiudi
                 </button>

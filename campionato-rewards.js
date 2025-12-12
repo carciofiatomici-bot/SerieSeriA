@@ -5,10 +5,14 @@
 //
 
 window.ChampionshipRewards = {
-    
+
     // Costante per il livello massimo dell'allenatore
     COACH_MAX_LEVEL: 10,
-    
+
+    // Costanti reward
+    GOAL_CS: 5,        // 5 CS per gol segnato
+    WIN_CS: 25,        // 25 CS per vittoria
+
     /**
      * Calcola e assegna i crediti durante una partita.
      * @param {number} homeGoals - Gol squadra casa
@@ -23,10 +27,10 @@ window.ChampionshipRewards = {
         const { doc, updateDoc } = window.firestoreTools;
         const db = window.db;
         const TEAMS_COLLECTION_PATH = `artifacts/${window.firestoreTools.appId}/public/data/teams`;
-        
+
         // Calcola i crediti guadagnati
-        let homeCreditsEarned = homeGoals; // 1 CS per gol
-        let awayCreditsEarned = awayGoals; // 1 CS per gol
+        let homeCreditsEarned = homeGoals * this.GOAL_CS; // 5 CS per gol
+        let awayCreditsEarned = awayGoals * this.GOAL_CS; // 5 CS per gol
 
         // Bonus vittoria: 25 CS
         if (homeGoals > awayGoals) {

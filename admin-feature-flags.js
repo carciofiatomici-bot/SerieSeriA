@@ -114,12 +114,401 @@ window.AdminFeatureFlags = {
     },
 
     /**
+     * Renderizza la sezione gestione achievements
+     */
+    renderAchievementsSection() {
+        const achievements = window.Achievements?.definitions || {};
+        const achievementsList = Object.values(achievements);
+
+        const categories = {
+            progressione: '📈 Progressione',
+            vittorie: '🏆 Vittorie',
+            gol: '⚽ Gol',
+            rosa: '👥 Rosa',
+            classifica: '📊 Classifica',
+            speciali: '✨ Speciali'
+        };
+
+        return `
+            <div class="bg-gray-700 rounded-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-600 to-yellow-500 px-4 py-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <span>🏆</span>
+                            <span>Gestione Achievements</span>
+                        </h3>
+                        <button id="btn-add-achievement" class="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-white text-sm font-semibold flex items-center gap-1">
+                            <span>+</span> Nuovo Achievement
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-gray-800 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-amber-400">${achievementsList.length}</p>
+                            <p class="text-xs text-gray-400">Totali</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-green-400">${Object.keys(categories).length}</p>
+                            <p class="text-xs text-gray-400">Categorie</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-purple-400">${achievementsList.reduce((sum, a) => sum + (a.points || 0), 0)}</p>
+                            <p class="text-xs text-gray-400">Punti Totali</p>
+                        </div>
+                    </div>
+
+                    <!-- Lista achievements per categoria -->
+                    <div class="space-y-3 max-h-96 overflow-y-auto" id="achievements-admin-list">
+                        ${Object.entries(categories).map(([catKey, catName]) => {
+                            const catAchievements = achievementsList.filter(a => a.category === catKey);
+                            if (catAchievements.length === 0) return '';
+
+                            return `
+                                <details class="bg-gray-800 rounded-lg overflow-hidden" open>
+                                    <summary class="px-4 py-2 bg-gray-750 cursor-pointer hover:bg-gray-700 flex items-center justify-between">
+                                        <span class="font-semibold text-white">${catName}</span>
+                                        <span class="text-xs text-gray-400">${catAchievements.length} achievements</span>
+                                    </summary>
+                                    <div class="p-2 space-y-2">
+                                        ${catAchievements.map(ach => this.renderAchievementAdminCard(ach)).join('')}
+                                    </div>
+                                </details>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza card achievement per admin
+     */
+    renderAchievementAdminCard(achievement) {
+        const cssReward = achievement.cssReward || achievement.points || 0;
+        return `
+            <div class="bg-gray-700 rounded-lg p-2 flex items-center gap-2 hover:bg-gray-650 transition text-sm" data-achievement-id="${achievement.id}">
+                <div class="text-2xl">${achievement.icon || '🏆'}</div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold text-white truncate text-sm">${achievement.name}</h4>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-purple-400">+${cssReward} CSS</span>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    <button class="btn-edit-achievement p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white text-xs" data-id="${achievement.id}" title="Modifica">
+                        ✏️
+                    </button>
+                    <button class="btn-delete-achievement p-1.5 bg-red-600 hover:bg-red-500 rounded text-white text-xs" data-id="${achievement.id}" title="Elimina">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Mostra modal per aggiungere/modificare achievement
+     */
+    showAchievementModal(achievement = null) {
+        const isEdit = achievement !== null;
+        const title = isEdit ? 'Modifica Achievement' : 'Nuovo Achievement';
+
+        const categories = [
+            { value: 'progressione', label: '📈 Progressione' },
+            { value: 'vittorie', label: '🏆 Vittorie' },
+            { value: 'gol', label: '⚽ Gol' },
+            { value: 'rosa', label: '👥 Rosa' },
+            { value: 'classifica', label: '📊 Classifica' },
+            { value: 'speciali', label: '✨ Speciali' }
+        ];
+
+        const conditionTypes = [
+            { value: 'matches_played', label: 'Partite giocate' },
+            { value: 'matches_won', label: 'Partite vinte' },
+            { value: 'goals_scored', label: 'Gol segnati' },
+            { value: 'clean_sheets', label: 'Clean sheets' },
+            { value: 'win_streak', label: 'Vittorie consecutive' },
+            { value: 'purchases', label: 'Acquisti mercato' },
+            { value: 'player_level', label: 'Livello giocatore' },
+            { value: 'leaderboard_position', label: 'Posizione classifica' },
+            { value: 'login_streak', label: 'Giorni login consecutivi' },
+            { value: 'custom', label: 'Personalizzato' }
+        ];
+
+        // Valori default o da achievement esistente
+        const values = {
+            id: achievement?.id || '',
+            name: achievement?.name || '',
+            description: achievement?.description || '',
+            icon: achievement?.icon || '🏆',
+            category: achievement?.category || 'progressione',
+            cssReward: achievement?.cssReward || achievement?.points || 10,
+            conditionType: achievement?.conditionType || 'matches_played',
+            conditionValue: achievement?.conditionValue || 1
+        };
+
+        const modalHtml = `
+            <div id="achievement-modal" class="fixed inset-0 z-[9999] bg-black bg-opacity-80 flex items-center justify-center p-4">
+                <div class="bg-gray-800 rounded-xl shadow-2xl border-2 border-amber-500 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div class="p-4 bg-gradient-to-r from-amber-600 to-yellow-500 flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-white">${title}</h3>
+                        <button id="close-achievement-modal" class="text-white hover:text-amber-200 text-2xl">&times;</button>
+                    </div>
+
+                    <form id="achievement-form" class="p-4 space-y-4">
+                        ${isEdit ? `<input type="hidden" name="id" value="${values.id}">` : ''}
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm font-semibold">Nome *</label>
+                                <input type="text" name="name" value="${values.name}" required
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm font-semibold">Icona (emoji)</label>
+                                <input type="text" name="icon" value="${values.icon}"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white text-center text-2xl focus:border-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-300 mb-1 text-sm font-semibold">Descrizione *</label>
+                            <textarea name="description" required rows="2"
+                                      class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">${values.description}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm font-semibold">Categoria</label>
+                                <select name="category"
+                                        class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">
+                                    ${categories.map(c => `<option value="${c.value}" ${values.category === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm font-semibold">CSS (Crediti Super Seri)</label>
+                                <input type="number" name="cssReward" value="${values.cssReward}" min="1" max="500"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-750 rounded-lg p-3 border border-gray-600">
+                            <h4 class="text-amber-400 font-semibold mb-2">Condizione di Sblocco</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-300 mb-1 text-sm">Tipo condizione</label>
+                                    <select name="conditionType"
+                                            class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">
+                                        ${conditionTypes.map(c => `<option value="${c.value}" ${values.conditionType === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-300 mb-1 text-sm">Valore richiesto</label>
+                                    <input type="number" name="conditionValue" value="${values.conditionValue}" min="1"
+                                           class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-amber-500 focus:outline-none">
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Es: "Partite giocate" con valore 10 = sblocca dopo 10 partite</p>
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" id="cancel-achievement-modal"
+                                    class="flex-1 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white font-semibold">
+                                Annulla
+                            </button>
+                            <button type="submit"
+                                    class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-white font-semibold">
+                                ${isEdit ? 'Salva Modifiche' : 'Crea Achievement'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // Rimuovi modal esistente
+        document.getElementById('achievement-modal')?.remove();
+
+        // Aggiungi al DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Event listeners
+        document.getElementById('close-achievement-modal').addEventListener('click', () => {
+            document.getElementById('achievement-modal')?.remove();
+        });
+        document.getElementById('cancel-achievement-modal').addEventListener('click', () => {
+            document.getElementById('achievement-modal')?.remove();
+        });
+        document.getElementById('achievement-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'achievement-modal') {
+                document.getElementById('achievement-modal')?.remove();
+            }
+        });
+
+        // Form submit
+        document.getElementById('achievement-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveAchievement(new FormData(e.target), isEdit);
+        });
+    },
+
+    /**
+     * Salva achievement (nuovo o modificato)
+     */
+    async saveAchievement(formData, isEdit) {
+        const data = Object.fromEntries(formData.entries());
+
+        // Genera ID se nuovo
+        if (!isEdit) {
+            data.id = data.name.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+        }
+
+        // Converti cssReward e conditionValue in numeri
+        data.cssReward = parseInt(data.cssReward) || 10;
+        data.conditionValue = parseInt(data.conditionValue) || 1;
+
+        try {
+            // Aggiorna le definizioni locali
+            if (window.Achievements) {
+                window.Achievements.definitions[data.id] = {
+                    id: data.id,
+                    name: data.name,
+                    description: data.description,
+                    icon: data.icon || '🏆',
+                    category: data.category,
+                    cssReward: data.cssReward,
+                    conditionType: data.conditionType,
+                    conditionValue: data.conditionValue
+                };
+            }
+
+            // Salva su Firestore
+            await this.saveAchievementsToFirestore();
+
+            // Chiudi modal
+            document.getElementById('achievement-modal')?.remove();
+
+            // Mostra toast
+            if (window.Toast) {
+                window.Toast.success(isEdit ? 'Achievement modificato!' : 'Achievement creato!');
+            }
+
+            // Aggiorna UI
+            this.updateUI();
+
+        } catch (error) {
+            console.error('Errore salvataggio achievement:', error);
+            if (window.Toast) {
+                window.Toast.error('Errore nel salvataggio');
+            }
+        }
+    },
+
+    /**
+     * Elimina achievement
+     */
+    async deleteAchievement(achievementId) {
+        if (window.ConfirmDialog) {
+            const confirmed = await window.ConfirmDialog.show({
+                title: 'Elimina Achievement',
+                message: `Sei sicuro di voler eliminare questo achievement?`,
+                confirmText: 'Elimina',
+                confirmClass: 'bg-red-600 hover:bg-red-500',
+                type: 'danger'
+            });
+            if (!confirmed) return;
+        }
+
+        try {
+            // Rimuovi dalle definizioni locali
+            if (window.Achievements?.definitions) {
+                delete window.Achievements.definitions[achievementId];
+            }
+
+            // Salva su Firestore
+            await this.saveAchievementsToFirestore();
+
+            if (window.Toast) {
+                window.Toast.success('Achievement eliminato!');
+            }
+
+            // Aggiorna UI
+            this.updateUI();
+
+        } catch (error) {
+            console.error('Errore eliminazione achievement:', error);
+            if (window.Toast) {
+                window.Toast.error('Errore nell\'eliminazione');
+            }
+        }
+    },
+
+    /**
+     * Salva achievements su Firestore
+     */
+    async saveAchievementsToFirestore() {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('Firestore non disponibile');
+            return;
+        }
+
+        const { doc, setDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const achievementsDocRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'achievements');
+
+        await setDoc(achievementsDocRef, {
+            definitions: window.Achievements?.definitions || {},
+            lastUpdated: new Date().toISOString()
+        });
+
+        console.log('Achievements salvati su Firestore');
+    },
+
+    /**
+     * Carica achievements da Firestore
+     */
+    async loadAchievementsFromFirestore() {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('Firestore non disponibile');
+            return;
+        }
+
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const achievementsDocRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'achievements');
+
+            const docSnap = await getDoc(achievementsDocRef);
+
+            if (docSnap.exists() && docSnap.data().definitions) {
+                // Sovrascrivi le definizioni locali con quelle da Firestore
+                if (window.Achievements) {
+                    window.Achievements.definitions = docSnap.data().definitions;
+                }
+                console.log('Achievements caricati da Firestore');
+            }
+        } catch (error) {
+            console.error('Errore caricamento achievements da Firestore:', error);
+        }
+    },
+
+    /**
      * Renderizza card singolo flag
      */
     renderFlagCard(flag) {
         const statusClass = flag.enabled ? 'bg-green-500' : 'bg-gray-500';
         const statusText = flag.enabled ? 'Attiva' : 'Disattiva';
         const hasDetails = flag.details && flag.details.trim() !== '';
+
+        // Controlla se questo e' il flag achievements e se e' attivo
+        const isAchievementsFlag = flag.id === 'achievements';
+        const showAchievementsManager = isAchievementsFlag && flag.enabled;
 
         return `
             <div class="bg-gray-800 rounded-lg overflow-hidden">
@@ -159,6 +548,76 @@ window.AdminFeatureFlags = {
                         </div>
                     </div>
                 ` : ''}
+                ${showAchievementsManager ? this.renderAchievementsManager() : ''}
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza il manager degli achievements (menu a scomparsa)
+     */
+    renderAchievementsManager() {
+        const achievements = window.Achievements?.definitions || {};
+        const achievementsList = Object.values(achievements);
+
+        const categories = {
+            progressione: '📈 Progressione',
+            vittorie: '🏆 Vittorie',
+            gol: '⚽ Gol',
+            rosa: '👥 Rosa',
+            classifica: '📊 Classifica',
+            speciali: '✨ Speciali'
+        };
+
+        return `
+            <div class="border-t border-amber-600">
+                <button class="achievements-manager-toggle w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-gray-700 flex items-center gap-2 transition-colors bg-gray-750">
+                    <svg class="w-4 h-4 transform transition-transform achievements-manager-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                    <span class="font-semibold">⚙️ Gestione Achievements</span>
+                    <span class="ml-auto text-xs text-gray-400">${achievementsList.length} totali</span>
+                </button>
+                <div class="achievements-manager-content hidden bg-gray-900 bg-opacity-50">
+                    <div class="p-4">
+                        <!-- Header con bottone aggiungi -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="text-center">
+                                    <p class="text-xl font-bold text-amber-400">${achievementsList.length}</p>
+                                    <p class="text-xs text-gray-400">Totali</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xl font-bold text-purple-400">${achievementsList.reduce((sum, a) => sum + (a.cssReward || 0), 0)}</p>
+                                    <p class="text-xs text-gray-400">CSS Totali</p>
+                                </div>
+                            </div>
+                            <button id="btn-add-achievement" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-white text-sm font-semibold flex items-center gap-1">
+                                <span>+</span> Nuovo
+                            </button>
+                        </div>
+
+                        <!-- Lista achievements per categoria -->
+                        <div class="space-y-2 max-h-80 overflow-y-auto" id="achievements-admin-list">
+                            ${Object.entries(categories).map(([catKey, catName]) => {
+                                const catAchievements = achievementsList.filter(a => a.category === catKey);
+                                if (catAchievements.length === 0) return '';
+
+                                return `
+                                    <details class="bg-gray-800 rounded-lg overflow-hidden">
+                                        <summary class="px-3 py-2 cursor-pointer hover:bg-gray-700 flex items-center justify-between text-sm">
+                                            <span class="font-semibold text-white">${catName}</span>
+                                            <span class="text-xs text-gray-400">${catAchievements.length}</span>
+                                        </summary>
+                                        <div class="p-2 space-y-1">
+                                            ${catAchievements.map(ach => this.renderAchievementAdminCard(ach)).join('')}
+                                        </div>
+                                    </details>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     },
@@ -271,6 +730,52 @@ window.AdminFeatureFlags = {
                         }
                     }
                 }
+            });
+        });
+
+        // === ACHIEVEMENTS EVENT LISTENERS ===
+
+        // Toggle menu gestione achievements
+        this.container.querySelectorAll('.achievements-manager-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const content = btn.nextElementSibling;
+                const arrow = btn.querySelector('.achievements-manager-arrow');
+
+                if (content) {
+                    content.classList.toggle('hidden');
+
+                    if (arrow) {
+                        if (content.classList.contains('hidden')) {
+                            arrow.style.transform = 'rotate(0deg)';
+                        } else {
+                            arrow.style.transform = 'rotate(180deg)';
+                        }
+                    }
+                }
+            });
+        });
+
+        // Aggiungi nuovo achievement
+        document.getElementById('btn-add-achievement')?.addEventListener('click', () => {
+            this.showAchievementModal(null);
+        });
+
+        // Modifica achievement
+        this.container.querySelectorAll('.btn-edit-achievement').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const achievementId = btn.dataset.id;
+                const achievement = window.Achievements?.definitions?.[achievementId];
+                if (achievement) {
+                    this.showAchievementModal(achievement);
+                }
+            });
+        });
+
+        // Elimina achievement
+        this.container.querySelectorAll('.btn-delete-achievement').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const achievementId = btn.dataset.id;
+                this.deleteAchievement(achievementId);
             });
         });
     }

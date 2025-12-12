@@ -235,10 +235,26 @@ window.FeatureFlags = {
                     <li>Animazione dado visibile a entrambi in tempo reale</li>
                     <li>Sistema presenza: se ti disconnetti per piu di 15 secondi perdi!</li>
                     <li>Sistema sasso-carta-forbice per tipi giocatori</li>
-                    <li>Forma fisica casuale (da -3 a +6 per Icone)</li>
+                    <li>Forma fisica casuale: da -3 a +3 per giocatori normali, da 0 a +6 per Icone</li>
                 </ul>
                 <p class="mt-2 text-red-400"><strong>ATTENZIONE:</strong> Richiede che entrambi i giocatori siano online!</p>
                 <p class="mt-2 text-yellow-400">Richiede che il flag "Sfide tra Squadre" sia abilitato.</p>`
+        },
+        unlimitedChallenges: {
+            id: 'unlimitedChallenges',
+            name: 'Sfide Illimitate',
+            description: 'Rimuove il limite di una sfida al giorno per utente',
+            icon: '♾️',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Rimuove il limite di 1 sfida al giorno per utente</li>
+                    <li>I giocatori possono sfidare e essere sfidati senza limiti</li>
+                    <li>Utile per eventi speciali o periodi di test</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Di default ogni utente puo' fare/ricevere solo 1 sfida al giorno (reset a mezzanotte).</p>
+                <p class="mt-2 text-cyan-400">Richiede che il flag "Sfide tra Squadre" sia abilitato.</p>`
         },
         tutorial: {
             id: 'tutorial',

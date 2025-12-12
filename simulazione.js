@@ -118,22 +118,37 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         return 0;
     }
 
+    // Calcola livello effettivo considerando penalita fuori ruolo (-15% arrotondato per difetto)
+    let effectiveLevel = player.level || 1;
+    if (player.assignedPosition && player.assignedPosition !== player.role) {
+        effectiveLevel = Math.floor(effectiveLevel * 0.85);
+    }
+
     // Livello base (limitato a 1-30)
-    const baseLevel = Math.min(30, Math.max(1, player.level || 1));
+    const baseLevel = Math.min(30, Math.max(1, effectiveLevel));
     let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
 
     // Forma (currentLevel ha già il livello modificato dalla forma, limitato a 1-30)
+    // Applica anche la penalita fuori ruolo alla forma
     if (player.currentLevel !== undefined) {
-        const clampedLevel = Math.min(30, Math.max(1, player.currentLevel));
+        let effectiveCurrentLevel = player.currentLevel;
+        if (player.assignedPosition && player.assignedPosition !== player.role) {
+            effectiveCurrentLevel = Math.floor(effectiveCurrentLevel * 0.85);
+        }
+        const clampedLevel = Math.min(30, Math.max(1, effectiveCurrentLevel));
         modifier = LEVEL_MODIFIERS[clampedLevel] || modifier;
     }
 
-    // Freddezza: la forma non può mai essere negativa
+    // Freddezza: la forma non puo mai essere negativa
     if (player.abilities?.includes('Freddezza')) {
         const formaDiff = (player.currentLevel || player.level) - (player.level || 1);
         if (formaDiff < 0) {
-            // Ricalcola senza malus forma
-            modifier = LEVEL_MODIFIERS[player.level || 1] || 1.0;
+            // Ricalcola senza malus forma (ma con penalita fuori ruolo se applicabile)
+            let effectiveLevelForFreddezza = player.level || 1;
+            if (player.assignedPosition && player.assignedPosition !== player.role) {
+                effectiveLevelForFreddezza = Math.floor(effectiveLevelForFreddezza * 0.85);
+            }
+            modifier = LEVEL_MODIFIERS[effectiveLevelForFreddezza] || 1.0;
         }
     }
 
@@ -630,29 +645,30 @@ const phaseAttack = (teamA, teamB) => {
 
 // ====================================================================
 // FASE 3: TIRO VS PORTIERE
+// Formula: [1d20 + Mod. Portiere] - [1d10 + Valore Tiro Fase 2]
 // ====================================================================
 
 const phaseShot = (teamA, teamB, attackResult) => {
     if (!teamB.P || teamB.P.length === 0) return true; // No portiere = gol
-    
+
     const portiere = teamB.P[0];
-    
+
     // Tiro fulmineo (Attaccante): 5% annulla abilità portiere
     const hasTiroFulmineo = teamA.A?.some(p => p.abilities?.includes('Tiro Fulmineo') && !nullifiedAbilities.has(p.id));
     if (hasTiroFulmineo && checkChance(5)) {
         nullifiedAbilities.add(portiere.id);
     }
-    
+
     // Modificatore portiere
     let modPortiere = calculatePlayerModifier(portiere, teamB.formationInfo?.isIconaActive, teamA.A || []);
-    
+
     // Uscita Kamikaze: raddoppia modificatore
     let kamikazeActive = false;
     if (portiere.abilities?.includes('Uscita Kamikaze') && !nullifiedAbilities.has(portiere.id)) {
         modPortiere *= 2;
         kamikazeActive = true;
     }
-    
+
     // Deviazione (Difensore): 5% aggiunge modificatore del difensore
     if (teamB.D?.length > 0) {
         const hasDeviazione = teamB.D.some(p => p.abilities?.includes('Deviazione') && !nullifiedAbilities.has(p.id));
@@ -661,31 +677,31 @@ const phaseShot = (teamA, teamB, attackResult) => {
             modPortiere += calculatePlayerModifier(difensore, teamB.formationInfo?.isIconaActive, []);
         }
     }
-    
+
     // Mani di burro (Portiere negativa): 5% sottrae invece di aggiungere
     if (portiere.abilities?.includes('Mani di burro') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
         modPortiere *= -1;
     }
-    
+
     // Fuori dai pali (Portiere negativa): 5% non aggiunge modificatore
     if (portiere.abilities?.includes('Fuori dai pali') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
         modPortiere = 0;
     }
-    
+
     // Coach bonus
     const coachB = (teamB.coachLevel || 1) / 2;
-    
+
     // Bomber (Attaccante): +1 al risultato attacco
     let attackBonus = 0;
     if (teamA.A?.some(p => p.abilities?.includes('Bomber') && !nullifiedAbilities.has(p.id))) {
         attackBonus = 1;
     }
-    
+
     // Tiro dalla distanza (Centrocampista/Difensore): sostituisce modificatore attaccante più basso
-    const shooters = [...(teamA.C || []), ...(teamA.D || [])].filter(p => 
+    const shooters = [...(teamA.C || []), ...(teamA.D || [])].filter(p =>
         p.abilities?.includes('Tiro dalla distanza') && !nullifiedAbilities.has(p.id)
     );
-    
+
     if (shooters.length > 0 && teamA.A?.length > 0) {
         // Trova attaccante con modificatore più basso
         let worstAttacker = teamA.A.reduce((worst, curr) => {
@@ -693,33 +709,70 @@ const phaseShot = (teamA, teamB, attackResult) => {
             const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
             return modCurr < modWorst ? curr : worst;
         });
-        
+
         const worstAttackerMod = calculatePlayerModifier(worstAttacker, teamA.formationInfo?.isIconaActive, []);
-        
+
         // Trova miglior shooter
         const bestShooter = shooters.reduce((best, curr) => {
             const modBest = calculatePlayerModifier(best, teamA.formationInfo?.isIconaActive, []);
             const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
             return modCurr > modBest ? curr : best;
         });
-        
+
         const bestShooterMod = calculatePlayerModifier(bestShooter, teamA.formationInfo?.isIconaActive, []);
-        
+
         // Se lo shooter è migliore, sostituisce
         if (bestShooterMod > worstAttackerMod) {
             attackBonus += (bestShooterMod - worstAttackerMod);
         }
     }
-    
+
     const finalAttackResult = attackResult + attackBonus;
 
-    // Muro Psicologico (Portiere): 5% attacco tira 1d10 invece di 1d20
-    let attackRollDie = 20;
-    if (portiere.abilities?.includes('Muro Psicologico') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
-        attackRollDie = 10;
+    // Determina dado tiro attaccante (normalmente 1d10)
+    let shotDie = 10;
+    let shotDiceCount = 1; // Numero di dadi da tirare (per Tiro Potente)
+
+    // Titubanza (Attaccante negativa): il dado diventa 1d6 invece di 1d10
+    const hasTitubanza = teamA.A?.some(p =>
+        p.abilities?.includes('Titubanza') &&
+        !nullifiedAbilities.has(p.id) &&
+        !injuredPlayers.has(p.id)
+    );
+    if (hasTitubanza) {
+        shotDie = 6;
     }
 
-    // Roll portiere
+    // Sguardo Intimidatorio (Portiere): 5% che l'attacco usi 1d6 invece di 1d10
+    if (portiere.abilities?.includes('Sguardo Intimidatorio') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        shotDie = 6;
+    }
+
+    // Tiro Potente (Difensore, Centrocampista, Attaccante): 5% di tirare 2d10 e prendere il più alto
+    const allShooters = [...(teamA.D || []), ...(teamA.C || []), ...(teamA.A || [])];
+    const hasTiroPotente = allShooters.some(p =>
+        p.abilities?.includes('Tiro Potente') &&
+        !nullifiedAbilities.has(p.id) &&
+        !injuredPlayers.has(p.id)
+    );
+    if (hasTiroPotente && checkChance(5)) {
+        shotDiceCount = 2; // Tira 2 dadi e prende il più alto
+    }
+
+    // Muro Psicologico (Portiere): 5% dimezza il valore del tiro
+    let muroPsicologicoActive = false;
+    if (portiere.abilities?.includes('Muro Psicologico') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
+        muroPsicologicoActive = true;
+    }
+
+    // Roll tiro attaccante (1d10 o 1d6, o 2d10/2d6 se Tiro Potente)
+    let shotRoll = rollDice(1, shotDie);
+    if (shotDiceCount === 2) {
+        const roll2 = rollDice(1, shotDie);
+        shotRoll = Math.max(shotRoll, roll2);
+    }
+
+    // Roll portiere (1d20)
     let rollP = rollDice(1, 20);
 
     // Parata con i piedi (Portiere): 5% tira due dadi e tiene il più alto
@@ -735,16 +788,26 @@ const phaseShot = (teamA, teamB, attackResult) => {
 
     const totalPortiere = rollP + modPortiere + coachB;
 
-    // Calcola risultato (considerando Muro Psicologico che riduce il dado dell'attacco)
-    // Nota: il finalAttackResult già include il roll fatto in phaseAttack
-    // Per Muro Psicologico, applichiamo una penalità proporzionale
-    let effectiveAttackResult = finalAttackResult;
-    if (attackRollDie === 10) {
-        // Riduce il risultato dell'attacco come se avesse tirato un d10 invece di d20
-        effectiveAttackResult = Math.max(1, finalAttackResult - 5); // Penalità media
+    // Calcola totale tiro: 1d10 (o 1d6) + Valore Tiro Fase 2 + bonus
+    let totalShot = shotRoll + finalAttackResult;
+
+    // Tiro dalla porta (Portiere attaccante): 5% di aggiungere 1/2 modificatore portiere al tiro
+    const portiereAttaccante = teamA.P?.[0];
+    if (portiereAttaccante?.abilities?.includes('Tiro dalla porta') &&
+        !nullifiedAbilities.has(portiereAttaccante.id) &&
+        !injuredPlayers.has(portiereAttaccante.id) &&
+        checkChance(5)) {
+        const modPortiereAtt = calculatePlayerModifier(portiereAttaccante, teamA.formationInfo?.isIconaActive, []);
+        totalShot += Math.floor(modPortiereAtt / 2);
     }
 
-    let saveResult = totalPortiere - effectiveAttackResult;
+    // Muro Psicologico: dimezza il valore del tiro
+    if (muroPsicologicoActive) {
+        totalShot = Math.max(1, Math.floor(totalShot / 2));
+    }
+
+    // Formula: Totale Portiere - Totale Tiro
+    let saveResult = totalPortiere - totalShot;
 
     // Pugno di ferro: soglia parata -2 invece di 0
     let saveThreshold = 0;
@@ -755,7 +818,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
     // Kamikaze fail check: 5% fallisce anche se parata riuscita
     if (kamikazeActive && saveResult > saveThreshold && checkChance(5)) {
         // Salvataggio sulla Linea può ancora salvare
-        if (checkSalvataggioSullaLinea(teamB, effectiveAttackResult)) {
+        if (checkSalvataggioSullaLinea(teamB, totalShot)) {
             return false; // Salvato!
         }
         return true; // Gol!
@@ -773,7 +836,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
         // 5% di gol comunque
         if (checkChance(5)) {
             // Salvataggio sulla Linea può ancora salvare
-            if (checkSalvataggioSullaLinea(teamB, effectiveAttackResult)) {
+            if (checkSalvataggioSullaLinea(teamB, totalShot)) {
                 return false;
             }
             return true;
@@ -791,7 +854,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
 
         if (checkChance(goalChance)) {
             // Salvataggio sulla Linea può ancora salvare
-            if (checkSalvataggioSullaLinea(teamB, effectiveAttackResult)) {
+            if (checkSalvataggioSullaLinea(teamB, totalShot)) {
                 return false;
             }
             return true;
@@ -807,7 +870,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
         }
 
         // Salvataggio sulla Linea (Difensore): 5% salva dopo goal
-        if (checkSalvataggioSullaLinea(teamB, effectiveAttackResult)) {
+        if (checkSalvataggioSullaLinea(teamB, totalShot)) {
             return false; // Salvato!
         }
 
@@ -907,29 +970,45 @@ const calculatePlayerModifierWithLog = (player, hasIcona, opposingPlayers = []) 
         return { mod: 0, details: ['INFORTUNATO'], abilityBonuses: [] };
     }
 
-    // Livello base
-    const baseLevel = Math.min(30, Math.max(1, player.level || 1));
-    let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
-    details.push(`base Lv.${baseLevel}=${modifier.toFixed(1)}`);
+    // Calcola livello effettivo con penalita fuori ruolo (-15%)
+    const isOutOfPosition = player.assignedPosition && player.assignedPosition !== player.role;
+    let effectiveLevel = player.level || 1;
+    if (isOutOfPosition) {
+        effectiveLevel = Math.floor(effectiveLevel * 0.85);
+        abilityBonuses.push({ ability: 'Fuori Ruolo', effect: `-15% (${player.role}->${player.assignedPosition})` });
+    }
 
-    // Forma (currentLevel)
+    // Livello base
+    const baseLevel = Math.min(30, Math.max(1, effectiveLevel));
+    let modifier = LEVEL_MODIFIERS[baseLevel] || 1.0;
+    if (isOutOfPosition) {
+        details.push(`base Lv.${player.level}-15%=${baseLevel}=${modifier.toFixed(1)}`);
+    } else {
+        details.push(`base Lv.${baseLevel}=${modifier.toFixed(1)}`);
+    }
+
+    // Forma (currentLevel) - applica anche penalita fuori ruolo
     if (player.currentLevel !== undefined && player.currentLevel !== baseLevel) {
-        const clampedLevel = Math.min(30, Math.max(1, player.currentLevel));
+        let effectiveCurrentLevel = player.currentLevel;
+        if (isOutOfPosition) {
+            effectiveCurrentLevel = Math.floor(effectiveCurrentLevel * 0.85);
+        }
+        const clampedLevel = Math.min(30, Math.max(1, effectiveCurrentLevel));
         const formaMod = LEVEL_MODIFIERS[clampedLevel] || modifier;
 
         // Freddezza: la forma non puo mai essere negativa
         if (player.abilities?.includes('Freddezza')) {
-            const formaDiff = player.currentLevel - baseLevel;
+            const formaDiff = player.currentLevel - (player.level || 1);
             if (formaDiff < 0) {
                 // Ignora malus forma
-                details.push(`forma Lv.${clampedLevel} ignorata`);
+                details.push(`forma Lv.${player.currentLevel}${isOutOfPosition ? '-15%' : ''} ignorata`);
                 abilityBonuses.push({ ability: 'Freddezza', effect: 'forma negativa ignorata' });
             } else {
-                details.push(`forma Lv.${clampedLevel}=${formaMod.toFixed(1)}`);
+                details.push(`forma Lv.${player.currentLevel}${isOutOfPosition ? '-15%=' + clampedLevel : ''}=${formaMod.toFixed(1)}`);
                 modifier = formaMod;
             }
         } else {
-            details.push(`forma Lv.${clampedLevel}=${formaMod.toFixed(1)}`);
+            details.push(`forma Lv.${player.currentLevel}${isOutOfPosition ? '-15%=' + clampedLevel : ''}=${formaMod.toFixed(1)}`);
             modifier = formaMod;
         }
     }

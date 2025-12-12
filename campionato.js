@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="text-sm space-y-1">
                                 <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">Primi 3 posti:</span><span class="text-green-400">150 CS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">Ultimi 3 posti:</span><span class="text-green-400">200 CS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">Altre posizioni:</span><span class="text-green-400">100 CS</span></li>
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="text-sm space-y-1">
                                 <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
                                 <li class="flex justify-between"><span class="text-gray-300">2°, 3°, 4° posto:</span><span class="text-green-400">100 CS</span></li>
                             </ul>
                         </div>
@@ -407,6 +407,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <!-- SEZIONE: Statistiche Stagione -->
                     ${statsHtml}
+
+                    <!-- SEZIONE: Premi Individuali (Capocannoniere, Assistman, Clean Sheets) -->
+                    <div id="season-individual-stats-container"></div>
 
                     <!-- SEZIONE: Tabella Premi -->
                     ${rewardsHtml}
@@ -502,6 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Carica stato e UI per Supercoppa
             loadSupercoppEndSection();
+
+            // Carica statistiche individuali stagionali (capocannoniere, assistman, clean sheets)
+            if (window.PlayerSeasonStatsUI && totalRounds > 0 && !isSeasonOver) {
+                window.PlayerSeasonStatsUI.renderStatsPanel('season-individual-stats-container');
+            }
 
             const btnShowFullSchedule = document.getElementById('btn-show-full-schedule');
             if (btnShowFullSchedule) {

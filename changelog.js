@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.96',
+    currentVersion: '0.9.98',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,43 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '0.9.98',
+            date: '2025-12-12',
+            time: '19:00',
+            title: 'Formazioni + Fuori Ruolo + Draft UI',
+            changes: [
+                { text: 'Nuove formazioni disponibili: 1-1-1-2, 1-2-1-1, 1-2-2-0, 1-0-2-2, 1-0-3-1, 1-4-0-0, 1-0-0-4, 1-0-4-0', adminOnly: false },
+                { text: 'Menu selezione modulo ora mostra anche i ruoli (es. 1-2-1-1 P-DD-C-A)', adminOnly: false },
+                { text: 'Giocatori fuori ruolo: -15% al livello (arrotondato per difetto)', adminOnly: false },
+                { text: 'Notifica quando si salvano giocatori fuori ruolo nella formazione', adminOnly: false },
+                { text: 'Draft: rinominato "Pick Recenti" in "Pick Effettuati"', adminOnly: false },
+                { text: 'Draft: ora mostra nome, ruolo (badge colorato), livello e squadra', adminOnly: false },
+                { text: 'Preview abilita al click nella sezione Regole', adminOnly: false },
+                { text: 'Notifiche turno draft e possibilita di rubare turno', adminOnly: false },
+                { text: 'Toast notifiche anche quando il flag notifiche e disabilitato', adminOnly: false },
+                { text: 'Aggiornata descrizione flag Sfide Interattive con range forma corretto', adminOnly: true }
+            ],
+            type: 'feature'
+        },
+        {
+            version: '0.9.97',
+            date: '2025-12-12',
+            time: '16:00',
+            title: 'Sfide Giornaliere + Rewards + Mobile',
+            changes: [
+                { text: 'Reward goal segnati aumentato da 1 CS a 5 CS (Campionato e Coppa)', adminOnly: false },
+                { text: 'Limite 1 sfida al giorno per utente (reset a mezzanotte)', adminOnly: false },
+                { text: 'Bottone Scambi aggiunto nella dashboard accanto a Sfida', adminOnly: false },
+                { text: 'Bottone Allenamento spostato in Gestione Rosa sotto l\'allenatore', adminOnly: false },
+                { text: 'Achievements: tutti i reward ora danno 1 CSS', adminOnly: false },
+                { text: 'Ottimizzazione completa mobile/app (dashboard, modali, bottoni)', adminOnly: false },
+                { text: 'Budget visibile sempre su mobile (non serve hover)', adminOnly: false },
+                { text: 'Nuovo flag "Sfide Illimitate" per rimuovere limite giornaliero', adminOnly: true },
+                { text: 'Gestione Achievements spostata sotto flag nel pannello admin', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '0.9.96',
             date: '2025-12-11',

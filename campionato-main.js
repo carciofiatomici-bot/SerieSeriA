@@ -73,8 +73,13 @@ window.ChampionshipMain = {
             
             // 3. Simula partita
             const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
-                
-                // REPLAY: Mostra replay SOLO se non è admin
+
+            // 3.5. Registra statistiche stagionali (goal, assist, clean sheets)
+            if (window.PlayerSeasonStats) {
+                await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
+            }
+
+            // REPLAY: Mostra replay SOLO se non e admin
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
                 if (window.MatchReplaySimple && !isAdmin) {
                     await window.MatchReplaySimple.playFromResult(
@@ -214,8 +219,13 @@ window.ChampionshipMain = {
                 }
 
                 const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
-                
-                // REPLAY: Mostra replay SOLO se non è admin
+
+                // Registra statistiche stagionali (goal, assist, clean sheets)
+                if (window.PlayerSeasonStats) {
+                    await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
+                }
+
+                // REPLAY: Mostra replay SOLO se non e admin
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
                 if (window.MatchReplaySimple && !isAdmin) {
                     await window.MatchReplaySimple.playFromResult(
@@ -226,7 +236,7 @@ window.ChampionshipMain = {
                     );
                 }
                 const resultString = `${homeGoals}-${awayGoals}`;
-                
+
                 const matchIndexInRound = round.matches.findIndex(m => m.homeId === match.homeId && m.awayId === match.awayId && m.result === null);
                 if (matchIndexInRound !== -1) {
                     round.matches[matchIndexInRound].result = resultString;

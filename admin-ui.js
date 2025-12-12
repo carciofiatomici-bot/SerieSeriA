@@ -53,7 +53,7 @@ window.AdminUI = {
                         <ul class="text-sm space-y-1">
                             <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">Primi 3 posti:</span><span class="text-green-400">150 CS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">Ultimi 3 posti:</span><span class="text-green-400">200 CS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">Altre posizioni:</span><span class="text-green-400">100 CS</span></li>
@@ -65,7 +65,7 @@ window.AdminUI = {
                         <ul class="text-sm space-y-1">
                             <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">1 CS</span></li>
+                            <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
                             <li class="flex justify-between"><span class="text-gray-300">2°, 3°, 4° posto:</span><span class="text-green-400">100 CS</span></li>
                         </ul>
                     </div>

@@ -17,7 +17,7 @@ window.CoppaConstants = {
         WINNER_CSS: 1,           // 1 CSS al vincitore
         PLACES_2_3_4_CS: 100,    // 100 CS ai posti 2, 3, 4
         MATCH_WIN_CS: 25,        // 25 CS per vittoria partita
-        GOAL_CS: 1               // 1 CS per gol
+        GOAL_CS: 5               // 5 CS per gol
     },
 
     // Risultato bye (vittoria a tavolino)

@@ -23,13 +23,15 @@ window.Notifications = {
     // Tipi di notifica
     types: {
         draft_turn: { icon: '📋', color: 'yellow', priority: 'high' },
+        draft_steal: { icon: '🏴‍☠️', color: 'red', priority: 'high' },
         match_result: { icon: '⚽', color: 'green', priority: 'medium' },
         market_player: { icon: '💰', color: 'blue', priority: 'low' },
         trade_request: { icon: '🔄', color: 'purple', priority: 'high' },
         achievement: { icon: '🏆', color: 'amber', priority: 'medium' },
         system: { icon: '⚙️', color: 'gray', priority: 'low' },
         chat: { icon: '💬', color: 'cyan', priority: 'medium' },
-        challenge: { icon: '⚔️', color: 'orange', priority: 'high' }
+        challenge: { icon: '⚔️', color: 'orange', priority: 'high' },
+        out_of_position: { icon: '⚠️', color: 'orange', priority: 'medium' }
     },
 
     /**
@@ -185,7 +187,15 @@ window.Notifications = {
      * Aggiunge una notifica locale
      */
     add(notification) {
-        if (!window.FeatureFlags?.isEnabled('notifications')) return;
+        const typeConfig = this.types[notification.type] || this.types.system;
+
+        // Se le notifiche sono disabilitate, mostra almeno un Toast per le notifiche importanti
+        if (!window.FeatureFlags?.isEnabled('notifications')) {
+            if (window.Toast && (typeConfig.priority === 'high' || typeConfig.priority === 'medium')) {
+                window.Toast.info(`${typeConfig.icon} ${notification.title}: ${notification.message}`);
+            }
+            return;
+        }
 
         const notif = {
             id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -199,7 +209,6 @@ window.Notifications = {
         this.updateUI();
 
         // Mostra anche toast se priorità alta
-        const typeConfig = this.types[notification.type] || this.types.system;
         if (typeConfig.priority === 'high' && window.Toast) {
             window.Toast.info(`${typeConfig.icon} ${notification.title}`);
         }
@@ -306,6 +315,26 @@ window.Notifications = {
                 title: 'Nuova Sfida!',
                 message: betAmount > 0 ? `${fromTeam} ti sfida con ${betAmount} CS in palio!` : `${fromTeam} ti ha sfidato!`,
                 action: { type: 'navigate', target: 'app-content' }
+            });
+        },
+
+        outOfPosition(playersCount, playerNames) {
+            window.Notifications.add({
+                type: 'out_of_position',
+                title: 'Giocatori Fuori Ruolo!',
+                message: playersCount === 1
+                    ? `${playerNames[0]} sta giocando fuori ruolo (-15% livello)`
+                    : `${playersCount} giocatori fuori ruolo: ${playerNames.join(', ')} (-15% livello)`,
+                action: { type: 'navigate', target: 'gestione-content' }
+            });
+        },
+
+        draftTurnSteal(teamName, timeRemaining) {
+            window.Notifications.add({
+                type: 'draft_steal',
+                title: 'Puoi Rubare il Turno!',
+                message: `${teamName} non ha ancora draftato. Puoi rubare il suo turno!`,
+                action: { type: 'navigate', target: 'draft-content' }
             });
         }
     },

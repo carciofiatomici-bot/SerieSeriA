@@ -17,11 +17,13 @@ window.InterfacciaDashboard = {
         elements.teamDashboardTitle.textContent = teamName.toUpperCase();
         elements.teamFirestoreId.textContent = teamDocId;
 
-        // Aggiorna il box budget
+        // Aggiorna il box budget (desktop e mobile)
         const budgetElement = document.getElementById('team-budget-value');
-        if (budgetElement) {
+        const budgetElementMobile = document.getElementById('team-budget-value-mobile');
+        if (budgetElement || budgetElementMobile) {
             const budget = currentTeamData.budget || 0;
-            budgetElement.textContent = `${budget} CS`;
+            if (budgetElement) budgetElement.textContent = `${budget} CS`;
+            if (budgetElementMobile) budgetElementMobile.textContent = `${budget} CS`;
         }
 
         window.InterfacciaCore.currentTeamId = teamDocId;

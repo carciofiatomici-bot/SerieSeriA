@@ -124,6 +124,9 @@ window.DraftUserActions = {
                 await updateDoc(playerDraftDocRef, {
                     isDrafted: true,
                     teamId: currentTeamId,
+                    draftedBy: currentTeamId,
+                    draftedAt: new Date().toISOString(),
+                    level: finalLevel // Salva il livello assegnato per visualizzarlo nei pick effettuati
                 });
 
                 // 9. Aggiorna Firestore - Squadra

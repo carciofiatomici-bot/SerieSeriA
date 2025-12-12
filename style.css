@@ -655,6 +655,72 @@ html {
     }
 }
 
+/* ===================== GESTIONE ROSA MOBILE ===================== */
+
+@media (max-width: 639px) {
+    /* Player list container */
+    #player-list {
+        padding: 0 4px !important;
+    }
+
+    /* Player card in gestione rosa */
+    #player-list > div {
+        flex-direction: column !important;
+        padding: 12px !important;
+        gap: 8px !important;
+    }
+
+    #player-list > div > .flex.items-center {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    /* Nome giocatore e stats */
+    #player-list span.text-white,
+    #player-list span.text-orange-400 {
+        font-size: 0.95rem !important;
+    }
+
+    #player-list .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    #player-list .text-xs {
+        font-size: 0.65rem !important;
+    }
+
+    /* Bottoni in gestione rosa - stack verticale */
+    #player-list > div > .flex.flex-col,
+    #player-list > div > .flex.space-x-4 {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    #player-list button {
+        width: 100% !important;
+        padding: 10px !important;
+        font-size: 0.8rem !important;
+        min-height: 44px !important;
+    }
+
+    /* Box allenatore */
+    #squadra-tools-container > div:first-child {
+        padding: 12px !important;
+    }
+
+    #squadra-tools-container .text-xl {
+        font-size: 1.1rem !important;
+    }
+
+    /* Bottone allenamento in rosa */
+    #btn-training-rosa {
+        width: 100% !important;
+        padding: 14px 20px !important;
+    }
+}
+
 /* Mercato responsive */
 @media (max-width: 639px) {
     #mercato-tools-container .grid {
@@ -1163,55 +1229,114 @@ html {
 
 /* Tutti i modali */
 .fixed.inset-0[class*="modal"],
+.fixed.inset-0[class*="panel"],
 #delete-team-modal,
 #lista-icone-modal,
 #uniform-editor-modal,
-#test-simulation-modal {
+#test-simulation-modal,
+#trades-panel,
+#training-panel,
+#achievements-panel {
     padding: 8px !important;
 }
 
 @media (max-width: 639px) {
-    /* Modali - contenuto interno */
+    /* Modali - Full screen su mobile */
     .fixed.inset-0 .football-box,
-    .fixed.inset-0 > div > div {
-        margin: 4px !important;
+    .fixed.inset-0 > div > div,
+    .fixed.inset-0 .bg-gray-800,
+    .fixed.inset-0 .bg-gray-900 {
+        margin: 0 !important;
         padding: 12px !important;
-        max-height: 95vh !important;
+        max-height: 100vh !important;
+        height: 100vh !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        border-radius: 0 !important;
         overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* Header modali */
+    /* Modali con max-w che non devono essere full screen */
+    .fixed.inset-0 .max-w-sm,
+    .fixed.inset-0 .max-w-md {
+        height: auto !important;
+        max-height: 90vh !important;
+        margin: auto !important;
+        border-radius: 12px !important;
+    }
+
+    /* Header modali - sticky su mobile */
+    .fixed.inset-0 h2,
     .fixed.inset-0 h3 {
         font-size: 1.25rem !important;
         margin-bottom: 12px !important;
+        position: sticky;
+        top: 0;
+        background: inherit;
+        z-index: 10;
+        padding-bottom: 8px;
     }
 
-    /* Bottone chiudi modali */
+    /* Bottone chiudi modali - piu grande per touch */
     .fixed.inset-0 button[class*="close"],
-    .fixed.inset-0 [onclick*="close"] {
-        font-size: 1.5rem !important;
-        padding: 4px 8px !important;
+    .fixed.inset-0 [onclick*="close"],
+    .fixed.inset-0 button:has(> span:only-child) {
+        font-size: 1.75rem !important;
+        padding: 8px 12px !important;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     /* Modal delete team */
     #delete-team-modal .football-box {
         max-width: 100% !important;
+        height: auto !important;
+        max-height: 90vh !important;
+        border-radius: 12px !important;
     }
 
     /* Modal lista icone */
     #lista-icone-modal .football-box {
-        margin: 8px !important;
-        max-height: 90vh !important;
+        margin: 0 !important;
+        max-height: 100vh !important;
     }
 
     #lista-icone-container {
-        max-height: 60vh !important;
+        max-height: 70vh !important;
         overflow-y: auto !important;
     }
 
     /* Modal uniform editor */
     #uniform-editor-modal .football-box {
-        margin: 8px !important;
+        margin: 0 !important;
+    }
+
+    /* Panel Scambi (Trades) */
+    #trades-panel > div {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    /* Panel Training */
+    #training-panel > div {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    /* Panel Achievements */
+    #achievements-panel > div {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    /* Safe area per dispositivi con notch */
+    .fixed.inset-0 > div {
+        padding-top: env(safe-area-inset-top, 0) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0) !important;
     }
 }
 
@@ -1423,18 +1548,344 @@ html {
     }
 }
 
-/* ===================== SAFE AREA (NOTCH) ===================== */
+/* ===================== SAFE AREA (NOTCH / DYNAMIC ISLAND) ===================== */
+/* Supporto completo per iPhone X/XS/XR/11/12/13/14/15/16 e Android con notch */
 
 @supports (padding: max(0px)) {
+    /* Body con safe areas per tutti i lati */
     body {
+        padding-top: env(safe-area-inset-top, 0px);
         padding-left: max(8px, env(safe-area-inset-left));
         padding-right: max(8px, env(safe-area-inset-right));
         padding-bottom: max(8px, env(safe-area-inset-bottom));
     }
 
+    /* HTML per evitare content shift */
+    html {
+        background-color: #0d1b2a;
+    }
+
+    /* Bottone regole rispetta safe area */
     #rules-global-btn {
-        bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px)) !important;
         right: max(12px, env(safe-area-inset-right)) !important;
+    }
+
+    /* Alert draft rispetta safe area in alto */
+    #draft-alert-banner {
+        top: max(10px, calc(env(safe-area-inset-top) + 10px)) !important;
+        left: max(10px, env(safe-area-inset-left)) !important;
+    }
+
+    /* Elementi fixed in basso */
+    .fixed-bottom,
+    [style*="position: fixed"][style*="bottom:"] {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Elementi fixed in alto */
+    .fixed-top,
+    [style*="position: fixed"][style*="top: 0"] {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* Modal overlay rispetta safe areas */
+    .fixed.inset-0 {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
+    }
+}
+
+/* ===================== OTTIMIZZAZIONI iPHONE MODERNI ===================== */
+
+/* iPhone 14 Pro/Pro Max, 15 Pro/Pro Max, 16 Pro/Pro Max con Dynamic Island */
+@media only screen
+    and (device-width: 393px)
+    and (device-height: 852px)
+    and (-webkit-device-pixel-ratio: 3) {
+
+    body {
+        padding-top: max(59px, env(safe-area-inset-top));
+    }
+
+    #draft-alert-banner {
+        top: max(65px, calc(env(safe-area-inset-top) + 10px)) !important;
+    }
+}
+
+@media only screen
+    and (device-width: 430px)
+    and (device-height: 932px)
+    and (-webkit-device-pixel-ratio: 3) {
+
+    body {
+        padding-top: max(59px, env(safe-area-inset-top));
+    }
+
+    #draft-alert-banner {
+        top: max(65px, calc(env(safe-area-inset-top) + 10px)) !important;
+    }
+}
+
+/* iPhone 14/15/16 standard */
+@media only screen
+    and (device-width: 390px)
+    and (device-height: 844px)
+    and (-webkit-device-pixel-ratio: 3) {
+
+    body {
+        padding-top: max(47px, env(safe-area-inset-top));
+    }
+}
+
+/* iPhone 14 Plus/15 Plus/16 Plus */
+@media only screen
+    and (device-width: 428px)
+    and (device-height: 926px)
+    and (-webkit-device-pixel-ratio: 3) {
+
+    body {
+        padding-top: max(47px, env(safe-area-inset-top));
+    }
+}
+
+/* ===================== OTTIMIZZAZIONI ANDROID MODERNI ===================== */
+
+/* Android con display punch-hole o notch */
+@media screen and (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+}
+
+/* Samsung Galaxy S21/S22/S23/S24 series */
+@media screen and (min-width: 360px) and (max-width: 412px) and (min-resolution: 2.5dppx) {
+    body {
+        padding-top: max(24px, env(safe-area-inset-top));
+    }
+}
+
+/* Google Pixel 6/7/8 series */
+@media screen and (width: 412px) and (min-resolution: 2.5dppx) {
+    body {
+        padding-top: max(28px, env(safe-area-inset-top));
+    }
+}
+
+/* ===================== TOUCH OPTIMIZATIONS ===================== */
+
+/* Touch target minimo 44x44 per Apple HIG / 48x48 per Material Design */
+@media (pointer: coarse) {
+    button,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"],
+    input[type="checkbox"],
+    input[type="radio"],
+    a.btn,
+    .clickable {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Checkbox e radio piu grandi */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 24px !important;
+        height: 24px !important;
+        cursor: pointer;
+    }
+
+    /* Toggle switches touch-friendly */
+    .toggle-switch,
+    [class*="toggle"],
+    label.relative.inline-flex {
+        min-height: 44px;
+        padding: 8px;
+    }
+
+    /* Link con padding touch */
+    a:not(.btn) {
+        padding: 8px 4px;
+        margin: -8px -4px;
+    }
+}
+
+/* Rimuovi 300ms delay su tap (iOS legacy) */
+* {
+    touch-action: manipulation;
+}
+
+/* Previeni pull-to-refresh accidentale */
+body {
+    overscroll-behavior-y: contain;
+}
+
+/* ===================== MOMENTUM SCROLLING iOS ===================== */
+
+/* Scroll fluido nativo per iOS */
+.scroll-container,
+.overflow-y-auto,
+.overflow-x-auto,
+[style*="overflow"] {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+/* Container scrollabili con momentum */
+#full-squad-list,
+#draft-tools-container,
+#mercato-tools-container,
+#lista-icone-container,
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* ===================== VISUAL FEEDBACK MOBILE ===================== */
+
+/* Tap highlight per feedback visivo */
+@media (pointer: coarse) {
+    button:active,
+    [role="button"]:active,
+    a:active,
+    .clickable:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+        transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+
+    /* Highlight color personalizzato */
+    * {
+        -webkit-tap-highlight-color: rgba(52, 211, 153, 0.25);
+        tap-highlight-color: rgba(52, 211, 153, 0.25);
+    }
+}
+
+/* ===================== KEYBOARD AVOIDANCE ===================== */
+
+/* Quando la tastiera e' aperta su mobile */
+@media (max-height: 500px) and (pointer: coarse) {
+    /* Riduci elementi non essenziali */
+    #footer-logo {
+        display: none;
+    }
+
+    #rules-global-btn {
+        bottom: 8px !important;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+    }
+
+    /* Modal si adatta alla tastiera */
+    .fixed.inset-0 > div {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* ===================== DARK MODE SYSTEM ===================== */
+
+/* Rispetta preferenze sistema per dark mode */
+@media (prefers-color-scheme: dark) {
+    /* Il sito e' gia dark, ma possiamo aggiustare alcuni elementi */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+        color-scheme: dark;
+        background-color: #1f2937;
+        color: #ffffff;
+    }
+}
+
+/* ===================== REDUCED MOTION ===================== */
+
+/* Rispetta preferenze accessibilita per animazioni ridotte */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .transition,
+    .transition-all {
+        transition: none !important;
+    }
+}
+
+/* ===================== HIGH CONTRAST MODE ===================== */
+
+@media (prefers-contrast: high) {
+    .football-box {
+        border-width: 3px;
+    }
+
+    button {
+        border: 2px solid currentColor;
+    }
+
+    .text-gray-400,
+    .text-gray-500 {
+        color: #d1d5db !important;
+    }
+}
+
+/* ===================== PWA STANDALONE MODE ===================== */
+
+/* Stili specifici quando l'app e' installata come PWA */
+@media (display-mode: standalone) {
+    /* Nascondi elementi non necessari in PWA */
+    .pwa-hide {
+        display: none !important;
+    }
+
+    /* Padding extra per barra di stato */
+    body {
+        padding-top: max(env(safe-area-inset-top), 20px);
+    }
+
+    /* Status bar area click-through */
+    #app-status-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: env(safe-area-inset-top, 0px);
+        background: linear-gradient(to bottom, rgba(13, 27, 42, 0.95), transparent);
+        z-index: 9998;
+        pointer-events: none;
+    }
+}
+
+/* ===================== NOTCH-SPECIFIC LAYOUTS ===================== */
+
+/* Layout per dispositivi con notch in landscape */
+@media (orientation: landscape) and (min-width: 700px) {
+    @supports (padding: env(safe-area-inset-left)) {
+        body {
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+        }
+
+        /* Sidebar navigation se presente */
+        .sidebar {
+            padding-left: env(safe-area-inset-left, 0px);
+        }
+
+        /* Content area */
+        main {
+            margin-left: env(safe-area-inset-left, 0px);
+            margin-right: env(safe-area-inset-right, 0px);
+        }
     }
 }
 

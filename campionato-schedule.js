@@ -128,11 +128,17 @@ window.ChampionshipSchedule = {
         
         // Inizializza classifica a zero
         const initialStandings = this.initializeLeaderboard(teams);
-        await setDoc(leaderboardDocRef, { 
-            standings: initialStandings, 
-            lastUpdated: new Date().toISOString() 
+        await setDoc(leaderboardDocRef, {
+            standings: initialStandings,
+            lastUpdated: new Date().toISOString()
         });
-        
+
+        // Resetta le statistiche stagionali (goal, assist, clean sheets)
+        if (window.PlayerSeasonStats) {
+            await window.PlayerSeasonStats.resetSeasonStats(teams);
+            console.log('ChampionshipSchedule: Statistiche stagionali resettate per nuova stagione.');
+        }
+
         // Imposta stagione IN CORSO
         await setDoc(configDocRef, { isSeasonOver: false }, { merge: true });
 

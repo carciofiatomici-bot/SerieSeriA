@@ -138,8 +138,8 @@ window.GestioneSquadreUtils = {
      * @returns {Array} Array pulito
      */
     cleanFormationForSave(players) {
-        return players.map(({ id, name, role, age, cost, level, isCaptain, type, abilities }) =>
-            ({ id, name, role, age, cost, level, isCaptain, type, abilities })
+        return players.map(({ id, name, role, age, cost, level, isCaptain, type, abilities, assignedPosition }) =>
+            ({ id, name, role, age, cost, level, isCaptain, type, abilities, assignedPosition })
         );
     },
 

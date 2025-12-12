@@ -1036,6 +1036,14 @@ window.DraftTurns = {
         const { doc, runTransaction } = firestoreTools;
         const { CONFIG_DOC_ID, DRAFT_MAX_STEAL_STRIKES } = window.DraftConstants;
 
+        // BLOCCO NOTTURNO: Non permettere il furto durante la pausa notturna (00:00-08:00)
+        if (window.DraftConstants.isNightPauseActive()) {
+            return {
+                success: false,
+                message: 'Non puoi rubare il turno durante la pausa notturna (00:00-08:00).'
+            };
+        }
+
         // Variabili per notifiche post-transazione
         let stealerTeamName = '';
         let victimTeamId = '';
@@ -1162,6 +1170,9 @@ window.DraftTurns = {
 
             // Notifica il ladro che ora e' il suo turno
             this.sendTurnNotification(stealerTeamId, stealerTeamName);
+
+            // Notifica la vittima che il suo turno e' stato rubato
+            this.sendStealVictimNotification(victimTeamId, victimTeamName, stealerTeamName);
 
             return {
                 success: true,
@@ -1683,6 +1694,42 @@ window.DraftTurns = {
                 });
             }
         }
+    },
+
+    /**
+     * Invia notifica alla vittima quando il suo turno viene rubato.
+     * @param {string} victimTeamId - ID della squadra vittima
+     * @param {string} victimTeamName - Nome della squadra vittima
+     * @param {string} stealerTeamName - Nome della squadra che ha rubato il turno
+     */
+    sendStealVictimNotification(victimTeamId, victimTeamName, stealerTeamName) {
+        console.log(`[Notifica] ${stealerTeamName} ha rubato il turno a ${victimTeamName}`);
+
+        // Notifica in-app (viene mostrata a tutti, ma e' rilevante solo per la vittima)
+        if (window.Notifications && window.Notifications.add) {
+            window.Notifications.add({
+                type: 'draft_turn',
+                title: 'Turno Rubato!',
+                message: `${stealerTeamName} ha rubato il turno a ${victimTeamName}.`,
+                action: 'draft',
+                targetTeamId: victimTeamId // Per identificare la vittima
+            });
+        }
+
+        // Push notification se l'utente corrente e' la vittima
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId === victimTeamId) {
+            this.sendBrowserPushNotification(
+                'Il tuo turno e\' stato rubato!',
+                `${stealerTeamName} ha rubato il tuo turno nel draft. Sei stato spostato in fondo alla coda.`,
+                'warning'
+            );
+        }
+
+        // Dispatch evento custom per aggiornare UI
+        document.dispatchEvent(new CustomEvent('draftTurnStolen', {
+            detail: { victimTeamId, victimTeamName, stealerTeamName }
+        }));
     }
 };
 

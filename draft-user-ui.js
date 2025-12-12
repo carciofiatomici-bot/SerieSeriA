@@ -50,7 +50,7 @@ window.DraftUserUI = {
         const { collection, getDocs, query, where, orderBy, doc, getDoc } = firestoreTools;
 
         try {
-            // Query per giocatori draftati, ordinati per data (piu recenti prima)
+            // Query per giocatori draftati
             const playersCollectionRef = collection(db, paths.DRAFT_PLAYERS_COLLECTION_PATH);
             const q = query(
                 playersCollectionRef,
@@ -60,17 +60,22 @@ window.DraftUserUI = {
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
+                console.log('[RecentPicks] Nessun giocatore draftato trovato');
                 return [];
             }
+
+            console.log('[RecentPicks] Giocatori draftati trovati:', snapshot.size);
 
             // Mappa per i nomi delle squadre (cache)
             const teamNamesCache = {};
 
-            // Converti in array e ordina per draftedAt
+            // Converti in array
             const picks = [];
             for (const docSnap of snapshot.docs) {
                 const data = docSnap.data();
-                if (data.draftedAt && data.draftedBy) {
+
+                // Accetta giocatori con draftedBy (anche senza draftedAt)
+                if (data.draftedBy) {
                     // Ottieni il nome della squadra (con cache)
                     let teamName = teamNamesCache[data.draftedBy];
                     if (!teamName) {
@@ -84,6 +89,17 @@ window.DraftUserUI = {
                         }
                     }
 
+                    // Converti draftedAt se e' un Timestamp Firestore
+                    let draftedAtDate = data.draftedAt;
+                    if (draftedAtDate && typeof draftedAtDate.toDate === 'function') {
+                        draftedAtDate = draftedAtDate.toDate().toISOString();
+                    } else if (draftedAtDate && typeof draftedAtDate.toMillis === 'function') {
+                        draftedAtDate = new Date(draftedAtDate.toMillis()).toISOString();
+                    } else if (!draftedAtDate) {
+                        // Se non c'e' draftedAt, usa la data corrente come fallback
+                        draftedAtDate = new Date().toISOString();
+                    }
+
                     picks.push({
                         id: docSnap.id,
                         name: data.name,
@@ -92,11 +108,13 @@ window.DraftUserUI = {
                         level: data.level || data.levelRange?.[0] || '?',
                         draftedBy: data.draftedBy,
                         draftedByName: teamName,
-                        draftedAt: data.draftedAt,
+                        draftedAt: draftedAtDate,
                         autoAssigned: data.autoAssigned || false
                     });
                 }
             }
+
+            console.log('[RecentPicks] Pick processati:', picks.length);
 
             // Ordina per data (piu recenti prima) e limita
             picks.sort((a, b) => {
@@ -126,7 +144,7 @@ window.DraftUserUI = {
                 <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
                     <div class="flex justify-between items-center">
                         <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                            <span>📋</span> Pick Recenti
+                            <span>📋</span> Pick Effettuati
                         </h4>
                     </div>
                     <p class="text-gray-500 text-sm mt-2 text-center">Nessun pick ancora effettuato</p>
@@ -137,6 +155,14 @@ window.DraftUserUI = {
         const isExpanded = this.recentPicksExpanded;
         const visiblePicks = isExpanded ? picks : picks.slice(0, 3);
 
+        // Badge colori per ruolo
+        const roleBadge = {
+            'P': '<span class="px-1 py-0.5 bg-yellow-600 text-yellow-100 rounded text-xs font-bold">P</span>',
+            'D': '<span class="px-1 py-0.5 bg-blue-600 text-blue-100 rounded text-xs font-bold">D</span>',
+            'C': '<span class="px-1 py-0.5 bg-green-600 text-green-100 rounded text-xs font-bold">C</span>',
+            'A': '<span class="px-1 py-0.5 bg-red-600 text-red-100 rounded text-xs font-bold">A</span>'
+        };
+
         const picksHtml = visiblePicks.map((pick, index) => {
             const isMyPick = pick.draftedBy === currentTeamId;
             const typeColor = pick.type === 'Potenza' ? 'text-red-400' :
@@ -145,19 +171,22 @@ window.DraftUserUI = {
 
             const timeAgo = this.formatTimeAgo(pick.draftedAt);
             const autoTag = pick.autoAssigned ? '<span class="text-orange-400 text-xs ml-1">(auto)</span>' : '';
+            const levelDisplay = pick.level ? `<span class="text-yellow-400 text-xs font-bold ml-1">Lv.${pick.level}</span>` : '';
 
             return `
                 <div class="flex items-center justify-between py-2 ${index > 0 ? 'border-t border-gray-700' : ''} ${isMyPick ? 'bg-green-900/20 -mx-2 px-2 rounded' : ''}">
                     <div class="flex items-center gap-2 min-w-0 flex-1">
                         <span class="text-gray-500 text-xs w-5">#${index + 1}</span>
                         <div class="min-w-0 flex-1">
-                            <p class="text-white text-sm font-medium truncate">
-                                ${pick.name} <span class="text-gray-400">(${pick.role})</span>
+                            <p class="text-white text-sm font-medium flex items-center gap-1 flex-wrap">
+                                <span class="truncate">${pick.name}</span>
+                                ${roleBadge[pick.role] || '<span class="text-gray-400 text-xs">(?)</span>'}
+                                ${levelDisplay}
                                 <span class="${typeColor} text-xs">${pick.type || ''}</span>
                                 ${autoTag}
                             </p>
                             <p class="text-xs ${isMyPick ? 'text-green-400' : 'text-gray-500'} truncate">
-                                ${isMyPick ? '✓ Tu' : pick.draftedByName} - ${timeAgo}
+                                📍 ${isMyPick ? '✓ Tu' : (pick.draftedByName || 'Squadra sconosciuta')} - ${timeAgo}
                             </p>
                         </div>
                     </div>
@@ -175,7 +204,7 @@ window.DraftUserUI = {
             <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
                 <div class="flex justify-between items-center mb-2">
                     <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                        <span>📋</span> Pick Recenti
+                        <span>📋</span> Pick Effettuati
                     </h4>
                     <button id="btn-refresh-recent-picks" class="text-xs text-gray-400 hover:text-white transition" title="Aggiorna">
                         🔄
@@ -611,9 +640,41 @@ window.DraftUserUI = {
                         console.log("[DraftUserUI] Avvio controllo timer per draft esistente...");
                         window.DraftTurns.startTurnCheck(context);
                     }
+
+                    // Notifica per turno draft o possibilita di rubare
+                    if (window.Notifications?.notify) {
+                        const lastTurnNotifKey = `draft_turn_notif_${currentTeamId}_${turnInfo.currentRound}`;
+                        const lastStealNotifKey = `draft_steal_notif_${turnInfo.currentTeamId}`;
+
+                        if (turnInfo.isMyTurn && !turnInfo.hasDraftedThisRound) {
+                            // E' il mio turno e non ho ancora draftato
+                            if (!sessionStorage.getItem(lastTurnNotifKey)) {
+                                window.Notifications.notify.draftTurn();
+                                sessionStorage.setItem(lastTurnNotifKey, 'true');
+                            }
+                        } else if (turnInfo.canSteal && turnInfo.currentTeamName) {
+                            // Posso rubare il turno
+                            if (!sessionStorage.getItem(lastStealNotifKey)) {
+                                window.Notifications.notify.draftTurnSteal(turnInfo.currentTeamName);
+                                sessionStorage.setItem(lastStealNotifKey, 'true');
+                            }
+                        }
+                    }
                 } catch (turnError) {
                     console.error("Errore nel controllo turno:", turnError);
                     turnInfo = null;
+                }
+            }
+
+            // Inizializza il box stato draft (giocatori disponibili e ordine)
+            if (isDraftOpen && window.DraftStatusBox) {
+                await window.DraftStatusBox.init('draft-status-box-container');
+            } else {
+                // Nascondi il box se il draft e' chiuso
+                const statusBoxContainer = document.getElementById('draft-status-box-container');
+                if (statusBoxContainer) {
+                    statusBoxContainer.classList.add('hidden');
+                    statusBoxContainer.innerHTML = '';
                 }
             }
 

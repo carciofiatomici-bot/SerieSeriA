@@ -251,7 +251,7 @@ window.RulesPanel = {
     },
 
     /**
-     * Renderizza una card abilita in formato mini
+     * Renderizza una card abilita in formato mini con preview al click
      * @param {Object} ability - Dati dell'abilita
      * @param {boolean} isMultiRole - Se true, mostra i ruoli disponibili
      */
@@ -284,9 +284,12 @@ window.RulesPanel = {
             roleDisplay = roleLabel[ability.role] || ability.role;
         }
 
+        // Escapa caratteri speciali per evitare problemi con onclick
+        const safeName = ability.name.replace(/'/g, "\\'");
+
         return `
-            <div class="bg-gray-800 rounded p-2 border ${rarityBorder[ability.rarity] || 'border-gray-600'} hover:bg-gray-700 cursor-pointer transition"
-                 onclick="window.AbilitiesUI.showDetails('${ability.name}')">
+            <div class="bg-gray-800 rounded p-2 border ${rarityBorder[ability.rarity] || 'border-gray-600'} hover:bg-gray-700 cursor-pointer transition relative ability-preview-card"
+                 onclick="window.RulesPanel.showAbilityPreview('${safeName}', event)">
                 <div class="flex items-center gap-2">
                     <span class="text-lg">${ability.icon}</span>
                     <div class="flex-1 min-w-0">
@@ -296,6 +299,119 @@ window.RulesPanel = {
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Mostra preview rapida dell'abilita al click
+     * @param {string} abilityName - Nome dell'abilita
+     * @param {Event} event - Evento click
+     */
+    showAbilityPreview(abilityName, event) {
+        event.stopPropagation();
+
+        // Rimuovi preview esistente
+        this.hideAbilityPreview();
+
+        const ability = window.AbilitiesEncyclopedia?.abilities[abilityName];
+        if (!ability) {
+            console.warn('Abilita non trovata:', abilityName);
+            return;
+        }
+
+        const rarityColors = {
+            'Comune': 'border-gray-500 bg-gray-900',
+            'Rara': 'border-purple-500 bg-purple-900',
+            'Leggendaria': 'border-red-500 bg-red-900',
+            'Epica': 'border-orange-500 bg-orange-900',
+            'Unica': 'border-yellow-500 bg-yellow-900'
+        };
+
+        const typeIcon = ability.type === 'Negativa' ? '❌' : '✅';
+        const typeColor = ability.type === 'Negativa' ? 'text-red-400' : 'text-green-400';
+
+        const preview = document.createElement('div');
+        preview.id = 'ability-preview-popup';
+        preview.className = `fixed z-[10000] p-4 rounded-xl border-2 ${rarityColors[ability.rarity] || 'border-gray-500 bg-gray-900'} shadow-2xl max-w-sm animate-fade-in`;
+
+        preview.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">${ability.icon}</span>
+                    <div>
+                        <h4 class="font-bold ${ability.color} text-lg">${ability.name}</h4>
+                        <p class="text-xs text-gray-400">${ability.rarity} | ${typeIcon} <span class="${typeColor}">${ability.type}</span></p>
+                    </div>
+                </div>
+                <button onclick="window.RulesPanel.hideAbilityPreview()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <div class="bg-black bg-opacity-40 rounded p-3 mb-3">
+                <p class="text-white text-sm">${ability.description}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 text-xs mb-3">
+                <span class="bg-blue-800 px-2 py-1 rounded text-blue-200">📍 Fase: ${ability.phase || 'N/A'}</span>
+                <span class="bg-green-800 px-2 py-1 rounded text-green-200">🎯 Prob: ${ability.probability || 'N/A'}</span>
+            </div>
+
+            <button onclick="window.AbilitiesUI.showDetails('${ability.name.replace(/'/g, "\\'")}'); window.RulesPanel.hideAbilityPreview();"
+                    class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 rounded transition">
+                📔 Vedi dettagli completi
+            </button>
+        `;
+
+        document.body.appendChild(preview);
+
+        // Posiziona il popup vicino al click
+        const rect = event.target.closest('.ability-preview-card')?.getBoundingClientRect();
+        if (rect) {
+            let top = rect.bottom + 10;
+            let left = rect.left;
+
+            // Assicurati che il popup sia visibile
+            const popupRect = preview.getBoundingClientRect();
+
+            if (left + popupRect.width > window.innerWidth) {
+                left = window.innerWidth - popupRect.width - 20;
+            }
+            if (top + popupRect.height > window.innerHeight) {
+                top = rect.top - popupRect.height - 10;
+            }
+
+            preview.style.top = `${Math.max(10, top)}px`;
+            preview.style.left = `${Math.max(10, left)}px`;
+        } else {
+            // Fallback: centra lo schermo
+            preview.style.top = '50%';
+            preview.style.left = '50%';
+            preview.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // Chiudi cliccando fuori
+        setTimeout(() => {
+            document.addEventListener('click', this.handleOutsideClick);
+        }, 100);
+    },
+
+    /**
+     * Nasconde la preview dell'abilita
+     */
+    hideAbilityPreview() {
+        const popup = document.getElementById('ability-preview-popup');
+        if (popup) {
+            popup.remove();
+        }
+        document.removeEventListener('click', this.handleOutsideClick);
+    },
+
+    /**
+     * Gestisce click fuori dal popup
+     */
+    handleOutsideClick(event) {
+        const popup = document.getElementById('ability-preview-popup');
+        if (popup && !popup.contains(event.target)) {
+            window.RulesPanel.hideAbilityPreview();
+        }
     }
 };
 

@@ -112,7 +112,11 @@ window.GestioneSquadreFormazione = {
                 <div class="lg:w-1/3 p-4 bg-gray-800 rounded-lg border border-indigo-500 space-y-4">
                     <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2">Seleziona Modulo</h3>
                     <select id="formation-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-indigo-600">
-                        ${Object.keys(MODULI).map(mod => `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod}</option>`).join('')}
+                        ${Object.keys(MODULI).map(mod => {
+                            const m = MODULI[mod];
+                            const rolesStr = ['P', 'D', 'C', 'A'].filter(r => m[r] > 0).map(r => r.repeat(m[r])).join('-');
+                            return `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod} (${rolesStr})</option>`;
+                        }).join('')}
                     </select>
                     <p id="module-description" class="text-sm text-gray-400">${MODULI[teamData.formation.modulo].description}</p>
 
@@ -442,6 +446,8 @@ window.GestioneSquadreFormazione = {
                 displayMessage('formation-message', `${player.name} in campo come ${targetRole}.`, 'success');
             }
 
+            // Salva la posizione assegnata per il calcolo della penalita fuori ruolo
+            player.assignedPosition = targetRole;
             context.currentTeamData.formation.titolari.push(player);
         }
 
@@ -758,6 +764,8 @@ window.GestioneSquadreFormazione = {
                 displayMessage('formation-message', `${player.name} messo in campo come ${finalTargetRole}.`, 'success');
             }
 
+            // Salva la posizione assegnata per il calcolo della penalita fuori ruolo
+            player.assignedPosition = finalTargetRole;
             context.currentTeamData.formation.titolari.push(player);
         }
 
@@ -821,6 +829,15 @@ window.GestioneSquadreFormazione = {
                     titolari: cleanFormationForSave(currentTeamData.formation.titolari),
                     panchina: cleanFormationForSave(currentTeamData.formation.panchina)
                 };
+            }
+
+            // Notifica per giocatori fuori ruolo
+            const outOfPositionPlayers = currentTeamData.formation.titolari.filter(p =>
+                p.assignedPosition && p.assignedPosition !== p.role
+            );
+            if (outOfPositionPlayers.length > 0 && window.Notifications?.notify?.outOfPosition) {
+                const playerNames = outOfPositionPlayers.map(p => p.name);
+                window.Notifications.notify.outOfPosition(outOfPositionPlayers.length, playerNames);
             }
 
         } catch (error) {

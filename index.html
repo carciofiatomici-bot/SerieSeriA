@@ -2,20 +2,50 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="theme-color" content="#16a34a">
+    <!-- Viewport ottimizzato per iPhone moderni (notch, Dynamic Island) e Android -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+
+    <!-- Theme colors per browser mobile -->
+    <meta name="theme-color" content="#16a34a" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0d1b2a" media="(prefers-color-scheme: dark)">
+
+    <!-- iOS PWA ottimizzazioni -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Serie SeriA">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Formato telefono e email -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+
+    <!-- Descrizione e SEO -->
     <meta name="description" content="Gestisci la tua squadra di fantacalcio, partecipa al draft e sfida i tuoi amici!">
+    <meta name="application-name" content="Serie SeriA">
+
+    <!-- Microsoft/Windows Phone -->
+    <meta name="msapplication-TileColor" content="#16a34a">
+    <meta name="msapplication-tap-highlight" content="no">
+
     <title>Serie SeriA</title>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
 
-    <!-- Icone PWA -->
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <!-- Icone PWA - Multiple sizes per tutti i dispositivi -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+
+    <!-- Splash screens iOS (iPhone moderni) -->
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
 
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -308,28 +338,28 @@
                 </div>
             </div>
 
-            <!-- COUNTDOWN, LOGO, ICONA E DIVISA -->
-            <div id="team-logo-container" class="flex justify-center items-center gap-4 mb-6">
-                <!-- BOX SPONSOR (random) -->
-                <div id="sponsor-box" class="relative w-28 h-28 flex-shrink-0">
+            <!-- COUNTDOWN, LOGO, ICONA E DIVISA - Mobile Optimized -->
+            <div id="team-logo-container" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <!-- BOX SPONSOR (hidden on very small screens) -->
+                <div id="sponsor-box" class="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex-shrink-0 hidden sm:block">
                     <img id="sponsor-image"
                          src="https://placehold.co/128x128/374151/9ca3af?text=Sponsor"
                          alt="Sponsor"
-                         class="w-full h-full rounded-lg border-4 shadow-lg object-cover bg-gray-800"
+                         class="w-full h-full rounded-lg border-2 sm:border-4 shadow-lg object-cover bg-gray-800"
                          style="border-color: #22c55e;"
                          title="Sponsor">
                 </div>
                 <!-- BOX COUNTDOWN PROSSIMA PARTITA -->
-                <div id="next-match-countdown" class="p-2 bg-gray-800 rounded-full border-4 border-teal-500 text-center shadow-lg w-28 h-28 flex flex-col justify-center items-center">
-                    <p id="countdown-label-top" class="text-xs text-teal-300 font-semibold">Prossima</p>
-                    <p id="countdown-timer" class="text-lg font-extrabold text-teal-400">--:--</p>
-                    <p id="countdown-label-bottom" class="text-xs text-gray-500">Partita</p>
+                <div id="next-match-countdown" class="p-1 sm:p-2 bg-gray-800 rounded-full border-2 sm:border-4 border-teal-500 text-center shadow-lg w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex flex-col justify-center items-center">
+                    <p id="countdown-label-top" class="text-[10px] sm:text-xs text-teal-300 font-semibold">Prossima</p>
+                    <p id="countdown-timer" class="text-sm sm:text-lg font-extrabold text-teal-400">--:--</p>
+                    <p id="countdown-label-bottom" class="text-[10px] sm:text-xs text-gray-500">Partita</p>
                 </div>
-                <div id="team-logo-wrapper" class="relative w-28 h-28">
+                <div id="team-logo-wrapper" class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28">
                     <img id="team-logo"
                          src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
                          alt="Logo Squadra Modificabile"
-                         class="w-full h-full rounded-full border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
+                         class="w-full h-full rounded-full border-2 sm:border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
                          style="border-color: #22c55e;"
                          title="Clicca per cambiare il logo (Inserisci URL)">
                 </div>
@@ -337,7 +367,7 @@
                     <img id="team-icona-avatar"
                          src="https://placehold.co/128x128/facc15/000?text=?"
                          alt="Avatar Icona"
-                         class="w-28 h-28 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                         class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 sm:border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
                     <!-- Tooltip personalizzato -->
                     <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
@@ -347,8 +377,8 @@
                     </div>
                 </div>
                 <!-- BOX DIVISA SQUADRA -->
-                <div id="team-uniform-box" class="p-2 bg-gray-800 rounded-full border-4 border-purple-500 text-center shadow-lg w-28 h-28 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
-                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-20 h-20">
+                <div id="team-uniform-box" class="p-1 sm:p-2 bg-gray-800 rounded-full border-2 sm:border-4 border-purple-500 text-center shadow-lg w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
+                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
                         <defs></defs>
                         <!-- Maglia stile jersey.xml -->
                         <g id="shirt-preview" transform="translate(0, 5)">
@@ -366,30 +396,30 @@
                                 fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
                         </g>
                     </svg>
-                    <p class="text-xs text-purple-300 mt-0">Divisa</p>
+                    <p class="text-[10px] sm:text-xs text-purple-300 mt-0">Divisa</p>
                 </div>
-                <!-- BOX MEDIA (random) -->
-                <div id="media-box" class="relative w-28 h-28 flex-shrink-0">
+                <!-- BOX MEDIA (hidden on very small screens) -->
+                <div id="media-box" class="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex-shrink-0 hidden sm:block">
                     <img id="media-image"
                          src="https://placehold.co/128x128/374151/9ca3af?text=Media"
                          alt="Media"
-                         class="w-full h-full rounded-lg border-4 shadow-lg object-cover bg-gray-800"
+                         class="w-full h-full rounded-lg border-2 sm:border-4 shadow-lg object-cover bg-gray-800"
                          style="border-color: #22c55e;"
                          title="Media Partner">
                 </div>
             </div>
 
-            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME (piccoli) -->
-            <div class="flex justify-center gap-3 mt-6 w-2/3 mx-auto">
+            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME - Mobile Optimized -->
+            <div class="flex justify-center gap-2 sm:gap-3 mt-4 sm:mt-6 w-full sm:w-2/3 mx-auto px-2 sm:px-0">
                 <!-- Statistica: Livello Medio Rosa -->
-                <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center">
-                    <p class="text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
-                    <p class="mt-0.5"><span id="stat-rosa-level" class="text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-xs text-gray-400">(0)</span></p>
+                <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center min-w-0">
+                    <p class="text-[10px] sm:text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
+                    <p class="mt-0.5"><span id="stat-rosa-level" class="text-base sm:text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[10px] sm:text-xs text-gray-400">(0)</span></p>
                 </div>
                 <!-- Bottone Hall of Fame -->
                 <button id="btn-hall-of-fame"
-                        class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] flex flex-col items-center justify-center border border-yellow-300">
-                    <span class="text-lg">🏛️</span>
+                        class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
+                    <span class="text-base sm:text-lg">🏛️</span>
                     <span>Hall of Fame</span>
                 </button>
                 <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
@@ -398,62 +428,68 @@
                 </div>
             </div>
 
-            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE (grandi) -->
-            <div class="mt-4 grid grid-cols-2 gap-4">
+            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE - Mobile Optimized -->
+            <div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 px-1 sm:px-0">
                 <button id="btn-gestione-rosa"
-                        class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-6 text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02]">
-                    👥 Gestione Rosa
+                        class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    👥 <span class="hidden sm:inline">Gestione </span>Rosa
                 </button>
                 <button id="btn-gestione-formazione"
-                        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-6 text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02]">
-                    📋 Gestione Formazione
+                        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    📋 <span class="hidden sm:inline">Gestione </span>Formazione
                 </button>
             </div>
 
-            <!-- PULSANTI COMPETIZIONI (SerieSeriA, CoppaSeriA, Super CoppaSeriA) -->
-            <div class="mt-4 space-y-3">
+            <!-- PULSANTI COMPETIZIONI - Mobile Optimized -->
+            <div class="mt-3 sm:mt-4 space-y-2 sm:space-y-3 px-1 sm:px-0">
                 <button id="btn-user-campionato"
-                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
-                    <span class="text-2xl">🏅</span>
-                    <span class="text-xl">SerieSeriA</span>
+                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                    <span class="text-xl sm:text-2xl">🏅</span>
+                    <span class="text-base sm:text-xl">SerieSeriA</span>
                 </button>
                 <button id="btn-user-coppa"
-                        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
-                    <span class="text-2xl">🏆</span>
-                    <span class="text-xl">CoppaSeriA</span>
+                        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                    <span class="text-xl sm:text-2xl">🏆</span>
+                    <span class="text-base sm:text-xl">CoppaSeriA</span>
                 </button>
                 <button id="btn-user-supercoppa"
-                        class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-3">
-                    <span class="text-2xl">⭐</span>
-                    <span class="text-xl">Super CoppaSeriA</span>
+                        class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                    <span class="text-xl sm:text-2xl">⭐</span>
+                    <span class="text-base sm:text-xl">Super CoppaSeriA</span>
                 </button>
             </div>
 
-            <!-- PULSANTI DRAFT E MERCATO CON BUDGET SU HOVER -->
-            <div id="draft-mercato-container" class="mt-4 relative group">
+            <!-- PULSANTI DRAFT E MERCATO - Mobile Optimized -->
+            <div id="draft-mercato-container" class="mt-3 sm:mt-4 relative group px-1 sm:px-0">
                 <!-- Riga 1: Draft e Mercato -->
-                <div class="grid grid-cols-2 gap-4 mb-3">
+                <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-3">
                     <button id="btn-draft-utente"
-                            class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01]">
+                            class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
                         📝 Draft
                     </button>
                     <button id="btn-mercato-utente"
-                            class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01]">
+                            class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
                         💰 Mercato
                     </button>
                 </div>
-                <!-- Riga 2: Sfida e Allenamento -->
-                <div class="grid grid-cols-2 gap-4">
+                <!-- Riga 2: Sfida e Scambi -->
+                <div class="grid grid-cols-2 gap-2 sm:gap-4">
                     <button id="btn-challenge"
-                            class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                            class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
                         <span>⚔️</span> Sfida
                     </button>
-                    <button id="btn-training"
-                            class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
-                        <span>⚽</span> Allenamento
+                    <button id="btn-trades"
+                            class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                        <span>🔄</span> Scambi
                     </button>
                 </div>
-                <!-- BOX BUDGET (nascosto, visibile su hover) -->
+                <!-- BOX BUDGET (sempre visibile su mobile, hover su desktop) -->
+                <div class="flex sm:hidden justify-center mt-2">
+                    <div id="team-budget-box-mobile" class="w-2/3 p-2 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border border-yellow-500 text-center shadow-lg">
+                        <p class="text-[10px] text-yellow-200 font-semibold">Budget Disponibile</p>
+                        <p id="team-budget-value-mobile" class="text-base font-extrabold text-yellow-400">-- CS</p>
+                    </div>
+                </div>
                 <div class="hidden group-hover:flex justify-center mt-3">
                     <div id="team-budget-box" class="w-1/2 p-2 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border border-yellow-500 text-center shadow-lg transition-all duration-300">
                         <p class="text-xs text-yellow-200 font-semibold">Budget Disponibile</p>
@@ -467,48 +503,48 @@
                 <!-- Il widget CSS viene renderizzato qui dinamicamente -->
             </div>
 
-            <!-- Toggle Partecipazione Campionato e Coppa -->
-            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
+            <div class="mt-4 sm:mt-8 grid grid-cols-2 gap-2 sm:gap-4 px-1 sm:px-0">
                 <!-- Toggle Campionato -->
-                <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
-                    <div class="flex items-center justify-center space-x-3 mb-2">
-                        <span class="text-white font-bold">🏅 Campionato</span>
+                <div class="p-2 sm:p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+                    <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                        <span class="text-white font-bold text-xs sm:text-base">🏅 <span class="hidden sm:inline">Campionato</span><span class="sm:hidden">Camp.</span></span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            <div class="w-9 h-5 sm:w-11 sm:h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
-                    <p id="championship-participation-status" class="text-xs text-gray-400">
-                        Caricamento stato...
+                    <p id="championship-participation-status" class="text-[10px] sm:text-xs text-gray-400 truncate">
+                        Caricamento...
                     </p>
                 </div>
 
                 <!-- Toggle CoppaSeriA -->
-                <div class="p-4 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
-                    <div class="flex items-center justify-center space-x-3 mb-2">
-                        <span class="text-white font-bold">🏆 CoppaSeriA</span>
+                <div class="p-2 sm:p-4 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
+                    <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                        <span class="text-white font-bold text-xs sm:text-base">🏆 <span class="hidden sm:inline">CoppaSeriA</span><span class="sm:hidden">Coppa</span></span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                            <div class="w-9 h-5 sm:w-11 sm:h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                         </label>
                     </div>
-                    <p id="cup-participation-status" class="text-xs text-gray-400">
-                        Caricamento stato...
+                    <p id="cup-participation-status" class="text-[10px] sm:text-xs text-gray-400 truncate">
+                        Caricamento...
                     </p>
                 </div>
             </div>
 
             <span id="team-firestore-id" class="hidden">N/A</span>
 
-            <div class="grid grid-cols-2 gap-4 mt-6">
+            <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4 sm:mt-6 px-1 sm:px-0">
                 <button id="user-back-to-login-button"
-                        class="w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
-                    🔙 Torna al Login
+                        class="w-full bg-yellow-500 text-gray-900 font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    🔙 <span class="hidden sm:inline">Torna al </span>Login
                 </button>
-                <!-- NUOVO PULSANTE ELIMINA SQUADRA -->
+                <!-- PULSANTE ELIMINA SQUADRA -->
                 <button id="btn-delete-team"
-                        class="w-full bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02]">
-                    🗑️ Elimina Squadra
+                        class="w-full bg-red-600 text-white font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    🗑️ <span class="hidden sm:inline">Elimina </span>Squadra
                 </button>
             </div>
 
@@ -564,6 +600,10 @@
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Draft Calciatori</h2>
              <div id="draft-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Strumenti di gestione Draft in caricamento...</p>
+             </div>
+             <!-- CONTAINER DRAFT STATUS BOX (giocatori disponibili e ordine draft) - SOTTO il box dei round -->
+             <div id="draft-status-box-container" class="mt-4 hidden">
+                 <!-- Il box stato draft viene renderizzato qui dinamicamente da draft-status-box.js -->
              </div>
              <button id="draft-back-button"
                     class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
@@ -1158,6 +1198,7 @@
     <script src="draft-admin-players.js"></script>
     <script src="draft-user-ui.js"></script>
     <script src="draft-user-actions.js"></script>
+    <script src="draft-status-box.js"></script>
     <script src="draft.js"></script> <!-- Orchestratore Draft -->
     <script src="mercato.js"></script> 
 
@@ -1170,6 +1211,8 @@
     <script src="admin-feature-flags.js"></script>
 
     <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
+    <script src="player-season-stats.js"></script>
+    <script src="player-season-stats-ui.js"></script>
     <script src="campionato-rewards.js"></script>
     <script src="campionato-simulation.js"></script>
     <script src="campionato-schedule.js"></script>
@@ -1214,7 +1257,10 @@
     <!-- 14. UNIFORM EDITOR (Editor Divisa Squadra) -->
     <script src="uniform-editor.js"></script>
 
-    <!-- 15. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->
+    <!-- 15. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
+    <script src="version-check.js"></script>
+
+    <!-- 16. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->
     <script>
         // Sistema di aggiornamento PWA
         window.PWAUpdater = {

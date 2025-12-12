@@ -27,6 +27,82 @@ window.Challenges = {
     },
 
     /**
+     * Ottieni la data di oggi in formato YYYY-MM-DD (per reset a mezzanotte)
+     */
+    getTodayDateString() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    },
+
+    /**
+     * Verifica se il limite sfide giornaliere e' disabilitato tramite flag
+     */
+    isDailyLimitDisabled() {
+        return window.FeatureFlags?.isEnabled('unlimitedChallenges') || false;
+    },
+
+    /**
+     * Verifica se una squadra ha gia' fatto la sfida giornaliera
+     * @param {string} teamId - ID della squadra
+     * @returns {Promise<{canChallenge: boolean, reason?: string}>}
+     */
+    async canChallengeToday(teamId) {
+        // Se il flag unlimitedChallenges e' attivo, permetti sempre
+        if (this.isDailyLimitDisabled()) {
+            return { canChallenge: true };
+        }
+
+        if (!teamId) return { canChallenge: false, reason: "ID squadra non valido" };
+
+        try {
+            const { collection, query, where, getDocs, Timestamp } = window.firestoreTools;
+            const challengesPath = this.getChallengesPath();
+
+            if (!challengesPath) return { canChallenge: true };
+
+            // Calcola l'inizio di oggi (00:00:00)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTimestamp = Timestamp.fromDate(today);
+
+            // Cerca sfide di oggi dove questa squadra e' coinvolta (come sfidante o sfidato)
+            // che sono state accettate o completate
+            const qFrom = query(
+                collection(window.db, challengesPath),
+                where('fromTeamId', '==', teamId),
+                where('timestamp', '>=', todayTimestamp),
+                where('status', 'in', ['accepted', 'completed', 'in_match'])
+            );
+
+            const qTo = query(
+                collection(window.db, challengesPath),
+                where('toTeamId', '==', teamId),
+                where('timestamp', '>=', todayTimestamp),
+                where('status', 'in', ['accepted', 'completed', 'in_match'])
+            );
+
+            const [fromSnapshot, toSnapshot] = await Promise.all([
+                getDocs(qFrom),
+                getDocs(qTo)
+            ]);
+
+            const totalChallenges = fromSnapshot.size + toSnapshot.size;
+
+            if (totalChallenges >= 1) {
+                return {
+                    canChallenge: false,
+                    reason: "Hai gia' effettuato la tua sfida giornaliera. Riprova domani dopo le 00:00!"
+                };
+            }
+
+            return { canChallenge: true };
+        } catch (error) {
+            console.error("Errore verifica sfida giornaliera:", error);
+            return { canChallenge: true }; // In caso di errore, permetti
+        }
+    },
+
+    /**
      * Inizializza il sistema sfide
      */
     init() {
@@ -307,6 +383,22 @@ window.Challenges = {
         const myTeamId = window.InterfacciaCore?.currentTeamId;
         const myTeamName = window.InterfacciaCore?.currentTeamData?.teamName || 'Squadra';
 
+        // Verifica limite sfide giornaliere per lo sfidante
+        const myDailyStatus = await this.canChallengeToday(myTeamId);
+        if (!myDailyStatus.canChallenge) {
+            if (window.Toast) window.Toast.error(myDailyStatus.reason);
+            return;
+        }
+
+        // Verifica limite sfide giornaliere per lo sfidato
+        const targetDailyStatus = await this.canChallengeToday(targetTeamId);
+        if (!targetDailyStatus.canChallenge) {
+            const targetTeam = this.availableTeams?.find(t => t.id === targetTeamId);
+            const targetName = targetTeam?.teamName || 'La squadra selezionata';
+            if (window.Toast) window.Toast.error(`${targetName} ha gia' effettuato la sua sfida giornaliera. Riprova domani!`);
+            return;
+        }
+
         // Ottieni importo scommessa
         const betAmount = parseInt(document.getElementById('challenge-bet-slider')?.value || 0);
 
@@ -502,7 +594,20 @@ window.Challenges = {
 
         // Verifica se puo' scommettere (cooldown)
         const betStatus = await this.canBet();
-        const canAcceptBet = hasBet ? (canAffordBet && betStatus.canBet) : true;
+
+        // Verifica limite sfide giornaliere per chi riceve la sfida
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
+        const dailyStatus = await this.canChallengeToday(myTeamId);
+
+        // Verifica anche che lo sfidante possa ancora sfidare
+        const challengerDailyStatus = await this.canChallengeToday(challenge.fromTeamId);
+
+        const canAcceptDaily = dailyStatus.canChallenge && challengerDailyStatus.canChallenge;
+        const dailyLimitReason = !dailyStatus.canChallenge
+            ? dailyStatus.reason
+            : (!challengerDailyStatus.canChallenge ? `${challenge.fromTeamName} ha gia' effettuato la sua sfida giornaliera.` : null);
+
+        const canAcceptBet = hasBet ? (canAffordBet && betStatus.canBet && canAcceptDaily) : canAcceptDaily;
 
         const modal = document.createElement('div');
         modal.id = 'incoming-challenge-modal';
@@ -550,11 +655,22 @@ window.Challenges = {
                                     <p class="text-red-400 text-sm">⏱️ ${betStatus.reason}</p>
                                 </div>
                             ` : ''}
+
+                            ${dailyLimitReason ? `
+                                <div class="mt-3 bg-red-900/50 border border-red-500 rounded p-2">
+                                    <p class="text-red-400 text-sm">🚫 ${dailyLimitReason}</p>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 ` : `
                     <div class="bg-gray-700 rounded-lg p-3 mb-4 text-center">
                         <p class="text-gray-300">🤝 Sfida Amichevole (senza scommessa)</p>
+                        ${dailyLimitReason ? `
+                            <div class="mt-3 bg-red-900/50 border border-red-500 rounded p-2">
+                                <p class="text-red-400 text-sm">🚫 ${dailyLimitReason}</p>
+                            </div>
+                        ` : ''}
                     </div>
                 `}
 

@@ -268,6 +268,38 @@ window.AbilitiesEncyclopedia = {
             synergy: ['Icona', 'Fortunato']
         },
 
+        'Sguardo Intimidatorio': {
+            name: 'Sguardo Intimidatorio',
+            icon: '👁️‍🗨️',
+            role: 'P',
+            color: 'text-red-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% che l\'avversario usi 1d6 invece di 1d10 in Fase 3',
+            effect: '5% l\'attacco tira 1d6 invece di 1d10 in fase tiro',
+            mechanics: 'In Fase 3, 5% di probabilità che la squadra avversaria usi 1d6 invece di 1d10 per il tiro',
+            activation: '5%',
+            example: 'Fase 3 → 5% Sguardo Intimidatorio → Attacco tira 1d6+mod invece di 1d10+mod!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Pugno di Ferro', 'Muro Psicologico', 'Parata con i piedi']
+        },
+
+        'Tiro dalla porta': {
+            name: 'Tiro dalla porta',
+            icon: '🥅',
+            role: 'P',
+            color: 'text-emerald-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di aggiungere metà del suo mod alla fase tiro della propria squadra',
+            effect: '5% aggiunge 1/2 mod alla Fase 3 quando la sua squadra attacca',
+            mechanics: 'In Fase 3 (quando la sua squadra tira), 5% di probabilità di aggiungere metà del suo modificatore al tiro',
+            activation: '5%',
+            example: 'Portiere mod +10 → 5% → Tiro della squadra riceve +5!',
+            phase: 'Fase 3 (Tiro vs Portiere - in attacco)',
+            synergy: ['Lancio lungo', 'Teletrasporto']
+        },
+
         'Lento a carburare': {
             name: 'Lento a carburare',
             icon: '🐢',
@@ -459,6 +491,23 @@ window.AbilitiesEncyclopedia = {
             phase: 'Fase 3 (dopo Goal)',
             synergy: ['Deviazione', 'Muro'],
             warning: 'Si attiva solo DOPO che il portiere è stato battuto'
+        },
+
+        'Tiro dalla distanza': {
+            name: 'Tiro dalla distanza',
+            icon: '🚀',
+            role: 'D',
+            color: 'text-violet-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Sostituisce il mod dell\'attaccante più debole se il suo è più alto',
+            effect: 'In Fase 2, sostituisce il mod dell\'attaccante più debole con il proprio (se maggiore)',
+            mechanics: 'Durante Fase Attacco vs Difesa, se il suo mod è maggiore di quello dell\'attaccante con mod più basso, lo sostituisce',
+            activation: '100% (condizionale)',
+            example: 'Difensore mod +9, Attaccante più debole +4 → Attaccante diventa +9!',
+            phase: 'Fase 2 (Attacco vs Difesa)',
+            synergy: ['Bomber', 'Cross', 'Muro'],
+            warning: 'Funziona solo se il mod del difensore è maggiore di quello dell\'attaccante più debole'
         },
 
         'Falloso': {
@@ -668,6 +717,23 @@ window.AbilitiesEncyclopedia = {
             warning: '⚠️ ABILITÀ NEGATIVA - Può danneggiare i compagni!'
         },
 
+        'Tiro Potente': {
+            name: 'Tiro Potente',
+            icon: '💥',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-orange-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '5% di tirare 2d10 in Fase 3 e prendere il più alto',
+            effect: '5% tira 2d10 invece di 1d10 in fase tiro e tiene il migliore',
+            mechanics: 'In Fase 3 (Tiro vs Portiere), 5% di lanciare 2d10 e scegliere il risultato più alto',
+            activation: '5%',
+            example: 'Fase 3 → 5% Tiro Potente → Tiro 1: 4, Tiro 2: 9 → Usa 9!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Bomber', 'Cross', 'Tiro dalla distanza']
+        },
+
         'Impreciso': {
             name: 'Impreciso',
             icon: '❌',
@@ -873,6 +939,23 @@ window.AbilitiesEncyclopedia = {
             warning: '⚠️ NEGATIVA!'
         },
 
+        'Titubanza': {
+            name: 'Titubanza',
+            icon: '😨',
+            role: 'A',
+            color: 'text-gray-600',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'In attacco, il dado del tiro diventa 1d6 invece di 1d10',
+            effect: 'In Fase 3, la squadra usa 1d6 invece di 1d10 per il tiro',
+            mechanics: 'In Fase 3 (Tiro vs Portiere), quando l\'attaccante con Titubanza tira, la squadra usa 1d6 invece di 1d10',
+            activation: '100% (passiva)',
+            example: 'Fase 3 → Titubanza → Tiro con 1d6+mod invece di 1d10+mod!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Nessuna (abilità negativa)'],
+            warning: '⚠️ ABILITÀ NEGATIVA - Riduce drasticamente il potenziale di tiro!'
+        },
+
         // Nota: Fuori Posizione è definita come Multi-Ruolo (D, C, A) nella sezione DIFENSORE
 
         // ========================================
@@ -995,4 +1078,4 @@ window.AbilitiesEncyclopedia = {
     }
 };
 
-console.log('✅ Enciclopedia Abilità V3.0 caricata - 60 abilità complete!');
+console.log('✅ Enciclopedia Abilità V3.1 caricata - 65 abilità complete!');

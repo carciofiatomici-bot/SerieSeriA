@@ -28,10 +28,18 @@ window.GestioneSquadreRosa = {
 
         squadraToolsContainer.innerHTML = `
             <!-- BOX ALLENATORE -->
-            <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-6">
+            <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-4">
                 <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
                 <p class="text-xl font-extrabold text-orange-400 mt-1">${coachName}</p>
                 <p class="text-xs text-gray-500">Livello: ${coachLevel}</p>
+            </div>
+
+            <!-- BOTTONE ALLENAMENTO (centrato) -->
+            <div class="flex justify-center mb-6">
+                <button id="btn-training-rosa"
+                        class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 px-8 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>⚽</span> Allenamento
+                </button>
             </div>
 
             <div class="bg-gray-700 p-6 rounded-lg border border-green-500">
@@ -145,6 +153,22 @@ window.GestioneSquadreRosa = {
             });
         }
 
+        // Bottone Allenamento nella Gestione Rosa
+        const btnTrainingRosa = document.getElementById('btn-training-rosa');
+        if (btnTrainingRosa) {
+            btnTrainingRosa.addEventListener('click', () => {
+                // Verifica se l'allenamento e' abilitato
+                if (!window.FeatureFlags?.isEnabled('training')) {
+                    if (window.Toast) window.Toast.info("Allenamento non disponibile");
+                    return;
+                }
+                if (window.Training) {
+                    window.Training.openPanel();
+                } else {
+                    if (window.Toast) window.Toast.error("Sistema Allenamento non disponibile");
+                }
+            });
+        }
     },
 
     /**
