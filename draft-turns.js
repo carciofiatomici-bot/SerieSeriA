@@ -46,9 +46,17 @@ window.DraftTurns = {
             const teams = [];
             teamsSnapshot.forEach(docSnap => {
                 const data = docSnap.data();
+                const teamName = data.teamName || docSnap.id;
+
+                // Escludi account admin dal draft
+                if (teamName.toLowerCase() === 'serieseria' || data.isAdmin === true) {
+                    console.log(`[Draft] Squadra admin "${teamName}" esclusa dall'ordine draft.`);
+                    return; // skip this team
+                }
+
                 teams.push({
                     id: docSnap.id,
-                    name: data.teamName || docSnap.id,
+                    name: teamName,
                     players: data.players || []
                 });
             });

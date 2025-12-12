@@ -6,6 +6,9 @@
 
 window.DraftUserActions = {
 
+    // Lock per prevenire acquisti multipli simultanei (race condition fix)
+    _purchaseLock: false,
+
     /**
      * Gestisce l'azione di acquisto di un giocatore (Utente).
      * @param {Event} event
@@ -20,6 +23,13 @@ window.DraftUserActions = {
         const target = event.target;
 
         if (target.dataset.action === 'buy') {
+            // LOCK: Prevenire acquisti multipli simultanei
+            if (this._purchaseLock) {
+                console.log("[Draft] Acquisto bloccato: operazione gia' in corso");
+                return;
+            }
+            this._purchaseLock = true;
+
             const playerId = target.dataset.playerId;
             const levelMin = parseInt(target.dataset.playerLevelMin);
             const levelMax = parseInt(target.dataset.playerLevelMax);
@@ -32,6 +42,10 @@ window.DraftUserActions = {
 
             displayMessage(`Acquisto di ${playerName} in corso...`, 'info', 'user-draft-message');
             target.disabled = true;
+
+            // Disabilita TUTTI i bottoni di acquisto per prevenire click multipli
+            const allBuyButtons = document.querySelectorAll('[data-action="buy"]');
+            allBuyButtons.forEach(btn => btn.disabled = true);
 
             try {
                 const { doc, getDoc, updateDoc } = firestoreTools;
@@ -153,6 +167,12 @@ window.DraftUserActions = {
                 console.error("Errore durante l'acquisto:", error);
                 displayMessage(`Acquisto Fallito: ${error.message}`, 'error', 'user-draft-message');
                 target.disabled = false;
+                // Riabilita tutti i bottoni in caso di errore
+                const allBuyButtons = document.querySelectorAll('[data-action="buy"]');
+                allBuyButtons.forEach(btn => btn.disabled = false);
+            } finally {
+                // RILASCIA IL LOCK sempre, sia in caso di successo che di errore
+                this._purchaseLock = false;
             }
         }
     }

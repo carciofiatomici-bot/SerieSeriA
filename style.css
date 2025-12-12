@@ -103,14 +103,19 @@ body {
         margin: 24px auto;
     }
 
-    /* Grid a singola colonna su mobile */
-    .grid-cols-2 {
-        grid-template-columns: 1fr !important;
-    }
+    /* Grid su mobile - mantieni 2 colonne per bottoni affiancati */
+    /* NON forzare grid-cols-2 a 1 colonna - deve restare a 2 */
 
     .grid-cols-3,
     .grid-cols-4 {
         grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Solo griglie specifiche che devono essere a 1 colonna */
+    #mercato-tools-container .grid-cols-2,
+    #admin-dashboard-container .grid-cols-3,
+    .team-card-admin .grid-cols-2 {
+        grid-template-columns: 1fr !important;
     }
 
     /* Gap piu stretto */
@@ -122,133 +127,53 @@ body {
         gap: 1rem !important;
     }
 
-    /* Container logo/icona/countdown nella dashboard */
+    /* Container logo/icona/countdown nella dashboard - SEMPLIFICATO */
     #team-logo-container {
+        display: flex !important;
         flex-wrap: wrap !important;
         gap: 8px !important;
         justify-content: center !important;
+        align-items: center !important;
+        padding: 0 8px !important;
     }
 
-    /* Logo e icona sopra, countdown e divisa sotto */
-    #team-logo-wrapper,
-    #team-logo-container .relative.group {
-        order: 0;
+    /* Tutti gli elementi del container - dimensioni uniformi */
+    #team-logo-container > * {
+        flex-shrink: 0 !important;
     }
 
-    #next-match-countdown {
-        order: 1;
-    }
-
-    #team-uniform-box {
-        order: 2;
-    }
-
-    /* Countdown e divisa */
+    /* Elementi piccoli: countdown, divisa */
     #next-match-countdown,
     #team-uniform-box {
-        width: 70px !important;
-        height: 70px !important;
-        flex-shrink: 0;
+        width: 56px !important;
+        height: 56px !important;
+        min-width: 56px !important;
     }
 
-    /* Container logo e icona - leggermente piu grandi */
+    /* Elementi medi: sponsor, media, logo, icona */
+    #sponsor-box,
+    #media-box,
     #team-logo-wrapper,
     #team-logo-container .relative.group {
-        width: 100px !important;
-        height: 100px !important;
-        min-width: 100px !important;
-        min-height: 100px !important;
-        max-width: 100px !important;
-        max-height: 100px !important;
-        flex-shrink: 0;
-        border-radius: 50% !important;
-        overflow: hidden;
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
     }
 
-    /* Logo squadra - riempie il container */
-    #team-logo {
-        width: 100px !important;
-        height: 100px !important;
-        min-width: 100px !important;
-        min-height: 100px !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
-    }
-
-    /* Icona giocatore - riempie il container */
+    /* Logo e icona rotondi */
+    #team-logo,
     #team-icona-avatar {
-        width: 100px !important;
-        height: 100px !important;
-        min-width: 100px !important;
-        min-height: 100px !important;
+        width: 64px !important;
+        height: 64px !important;
         object-fit: cover !important;
-        border-radius: 50% !important;
     }
 
-    /* Box sponsor e media - 100px come logo e icona */
-    #sponsor-box,
-    #media-box {
-        width: 100px !important;
-        height: 100px !important;
-        min-width: 100px !important;
-        min-height: 100px !important;
-        max-width: 100px !important;
-        max-height: 100px !important;
-        flex-shrink: 0;
-    }
-
+    /* Immagini sponsor e media */
     #sponsor-image,
     #media-image {
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;
-        border-radius: 8px !important;
-    }
-
-    /* Layout mobile: sponsor+media, countdown, logo+icona, divisa */
-    #team-logo-container {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-    }
-
-    #sponsor-box {
-        order: 0;
-        width: 100px !important;
-        flex: 0 0 100px !important;
-    }
-
-    #media-box {
-        order: 1;
-        width: 100px !important;
-        flex: 0 0 100px !important;
-    }
-
-    /* Countdown su riga singola */
-    #next-match-countdown {
-        order: 2;
-        width: 100% !important;
-        max-width: 200px !important;
-        flex: 0 0 100% !important;
-        margin: 8px 0 !important;
-    }
-
-    #team-logo-wrapper {
-        order: 3;
-        flex: 0 0 100px !important;
-    }
-
-    #team-logo-container .relative.group {
-        order: 4;
-        flex: 0 0 100px !important;
-    }
-
-    /* Divisa su riga singola */
-    #team-uniform-box {
-        order: 5;
-        width: 100% !important;
-        max-width: 100px !important;
-        flex: 0 0 100% !important;
-        margin-top: 8px !important;
     }
 
     #countdown-timer {
@@ -283,21 +208,22 @@ body {
         font-size: 1.75rem !important;
     }
 
-    /* Bottoni piu compatti */
+    /* Bottoni - mantieni touch-friendly (min 44px) */
     button {
-        padding-top: 0.625rem !important;
-        padding-bottom: 0.625rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
         font-size: 0.875rem !important;
+        min-height: 44px !important;
     }
 
     .py-3 {
-        padding-top: 0.625rem !important;
-        padding-bottom: 0.625rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
     }
 
     .py-4 {
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
     }
 
     /* Text sizing */
@@ -1241,29 +1167,33 @@ html {
 }
 
 @media (max-width: 639px) {
-    /* Modali - Full screen su mobile */
-    .fixed.inset-0 .football-box,
-    .fixed.inset-0 > div > div,
-    .fixed.inset-0 .bg-gray-800,
-    .fixed.inset-0 .bg-gray-900 {
-        margin: 0 !important;
+    /* Modali - adattivi su mobile, NON forzare full screen */
+    .fixed.inset-0 .football-box {
+        margin: 8px !important;
         padding: 12px !important;
-        max-height: 100vh !important;
-        height: 100vh !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-        border-radius: 0 !important;
+        max-height: 95vh !important;
+        height: auto !important;
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        border-radius: 12px !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Modali con max-w che non devono essere full screen */
+    /* Modali piccoli - centrati */
     .fixed.inset-0 .max-w-sm,
     .fixed.inset-0 .max-w-md {
         height: auto !important;
         max-height: 90vh !important;
         margin: auto !important;
         border-radius: 12px !important;
+    }
+
+    /* Modali grandi - quasi full screen ma con margini */
+    .fixed.inset-0 .max-w-4xl,
+    .fixed.inset-0 .max-w-5xl {
+        margin: 8px !important;
+        max-height: 95vh !important;
     }
 
     /* Header modali - sticky su mobile */
@@ -1356,21 +1286,23 @@ html {
         border-radius: 8px !important;
     }
 
-    /* Gruppi form inline -> stack */
+    /* Gruppi form inline -> wrap ma NON forzare 100% width */
     .flex.gap-2,
     .flex.gap-3,
     .flex.gap-4 {
         flex-wrap: wrap;
     }
 
-    .flex.gap-2 > *,
-    .flex.gap-3 > *,
-    .flex.gap-4 > * {
+    /* Solo form specifici devono stackare */
+    #mercato-tools-container .flex.gap-4 > *,
+    #draft-tools-container .flex.gap-4 > select,
+    #draft-tools-container .flex.gap-4 > input {
         flex: 1 1 100%;
         min-width: 100%;
     }
 
-    /* Eccezione per bottoni affiancati */
+    /* Bottoni affiancati - mantieni fianco a fianco */
+    .grid.grid-cols-2 > button,
     .flex.gap-2 > button,
     .flex.gap-3 > button,
     .flex.gap-4 > button {
