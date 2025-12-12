@@ -554,12 +554,16 @@ const phaseConstruction = (teamA, teamB) => {
     // Roll + coach bonus (Regola 6: +1/2 livello allenatore)
     const rollA = rollDice(1, 20);
     const rollB = rollDice(1, 20);
-    
+
     const coachA = (teamA.coachLevel || 1) / 2;
     const coachB = (teamB.coachLevel || 1) / 2;
-    
-    const totalA = rollA + modA_D + modA_C + coachA;
-    const totalB = rollB + modB_C + coachB;
+
+    // Home bonus (Stadio) - applicato alla squadra che ha il campo homeBonus
+    const homeBonusA = teamA.homeBonus || 0;
+    const homeBonusB = teamB.homeBonus || 0;
+
+    const totalA = rollA + modA_D + modA_C + coachA + homeBonusA;
+    const totalB = rollB + modB_C + coachB + homeBonusB;
     
     // Calcola % successo
     const successChance = Math.max(5, Math.min(95, totalA - totalB + 50)); // Centrato a 50%
@@ -630,17 +634,21 @@ const phaseAttack = (teamA, teamB) => {
     const coachA = (teamA.coachLevel || 1) / 2;
     const coachB = (teamB.coachLevel || 1) / 2;
 
-    const totalA = rollA + modA_C + modA_A + coachA;
-    const totalB = rollB + modB_D + modB_C + coachB;
+    // Home bonus (Stadio)
+    const homeBonusA = teamA.homeBonus || 0;
+    const homeBonusB = teamB.homeBonus || 0;
+
+    const totalA = rollA + modA_C + modA_A + coachA + homeBonusA;
+    const totalB = rollB + modB_D + modB_C + coachB + homeBonusB;
 
     const result = totalA - totalB;
-    
+
     // Se >= 0 passa
     if (result >= 0) return Math.max(1, result);
-    
+
     // Se < 0, 5% di passare comunque con risultato 5
     if (checkChance(5)) return 5;
-    
+
     return -1;
 };
 
@@ -787,10 +795,14 @@ const phaseShot = (teamA, teamB, attackResult) => {
         rollP = rollDice(1, 20);
     }
 
-    const totalPortiere = rollP + modPortiere + coachB;
+    // Home bonus (Stadio)
+    const homeBonusA = teamA.homeBonus || 0;
+    const homeBonusB = teamB.homeBonus || 0;
+
+    const totalPortiere = rollP + modPortiere + coachB + homeBonusB;
 
     // Calcola totale tiro: 1d10 (o 1d6) + Valore Tiro Fase 2 + bonus
-    let totalShot = shotRoll + finalAttackResult;
+    let totalShot = shotRoll + finalAttackResult + homeBonusA;
 
     // Tiro dalla porta (Portiere attaccante): 5% di aggiungere 1/2 modificatore portiere al tiro
     const portiereAttaccante = teamA.P?.[0];

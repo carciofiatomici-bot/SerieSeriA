@@ -523,4 +523,103 @@ window.resetAllHallOfFame = async function() {
     }
 };
 
+/**
+ * Resetta TUTTE le statistiche dei giocatori (individuali per ogni squadra)
+ * Elimina la subcollection playerStats di ogni team
+ * Chiamare da console: await window.resetAllPlayerStats()
+ * @returns {Promise<number>} Numero di giocatori resettati
+ */
+window.resetAllPlayerStats = async function() {
+    if (!window.db || !window.firestoreTools) {
+        console.error("[resetAllPlayerStats] Firestore non disponibile");
+        return 0;
+    }
+
+    try {
+        const { collection, getDocs, doc, deleteDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+        const teamsCollectionRef = collection(window.db, TEAMS_PATH);
+        const teamsSnapshot = await getDocs(teamsCollectionRef);
+
+        let totalDeleted = 0;
+
+        for (const teamDoc of teamsSnapshot.docs) {
+            const teamId = teamDoc.id;
+            const playerStatsPath = `${TEAMS_PATH}/${teamId}/playerStats`;
+
+            try {
+                const playerStatsRef = collection(window.db, playerStatsPath);
+                const playerStatsSnapshot = await getDocs(playerStatsRef);
+
+                for (const playerStatDoc of playerStatsSnapshot.docs) {
+                    await deleteDoc(doc(window.db, playerStatsPath, playerStatDoc.id));
+                    totalDeleted++;
+                }
+
+                if (playerStatsSnapshot.size > 0) {
+                    console.log(`[resetAllPlayerStats] Reset ${playerStatsSnapshot.size} giocatori per ${teamDoc.data().teamName || teamId}`);
+                }
+            } catch (subError) {
+                console.warn(`[resetAllPlayerStats] Errore per team ${teamId}:`, subError.message);
+            }
+        }
+
+        console.log(`[resetAllPlayerStats] Totale statistiche giocatori eliminate: ${totalDeleted}`);
+        return totalDeleted;
+    } catch (error) {
+        console.error("[resetAllPlayerStats] Errore:", error);
+        return 0;
+    }
+};
+
+/**
+ * RESET COMPLETO - Resetta TUTTO: Hall of Fame, statistiche stagionali e statistiche giocatori
+ * Chiamare da console: await window.resetAllStats()
+ * @returns {Promise<Object>} Riepilogo reset
+ */
+window.resetAllStats = async function() {
+    console.log("========================================");
+    console.log("[RESET COMPLETO] Inizio reset di tutte le statistiche...");
+    console.log("========================================");
+
+    const results = {
+        hallOfFame: 0,
+        seasonStats: false,
+        playerStats: 0
+    };
+
+    // 1. Reset Hall of Fame squadre
+    console.log("\n[1/3] Resettando Hall of Fame squadre...");
+    results.hallOfFame = await window.resetAllHallOfFame();
+
+    // 2. Reset statistiche stagionali
+    console.log("\n[2/3] Resettando statistiche stagionali...");
+    if (window.PlayerSeasonStats?.resetSeasonStats) {
+        try {
+            await window.PlayerSeasonStats.resetSeasonStats();
+            results.seasonStats = true;
+            console.log("[resetAllStats] Statistiche stagionali resettate.");
+        } catch (e) {
+            console.error("[resetAllStats] Errore reset stagionali:", e);
+        }
+    } else {
+        console.warn("[resetAllStats] PlayerSeasonStats non disponibile");
+    }
+
+    // 3. Reset statistiche individuali giocatori
+    console.log("\n[3/3] Resettando statistiche individuali giocatori...");
+    results.playerStats = await window.resetAllPlayerStats();
+
+    console.log("\n========================================");
+    console.log("[RESET COMPLETO] Riepilogo:");
+    console.log(`  - Hall of Fame: ${results.hallOfFame} squadre`);
+    console.log(`  - Statistiche stagionali: ${results.seasonStats ? 'OK' : 'SKIP'}`);
+    console.log(`  - Statistiche giocatori: ${results.playerStats} record`);
+    console.log("========================================");
+
+    return results;
+};
+
 console.log("Modulo interfaccia-core.js caricato.");

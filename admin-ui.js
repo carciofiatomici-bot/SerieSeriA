@@ -240,6 +240,15 @@ window.AdminUI = {
                             Assegna abilita "Icona" a tutte le Icone
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <button id="btn-reset-hall-of-fame"
+                                class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
+                            🏛️ Reset Hall of Fame Stats
+                        </button>
+                        <div id="reset-hof-result" class="flex items-center justify-center text-sm text-gray-400">
+                            Resetta statistiche di una o tutte le squadre
+                        </div>
+                    </div>
                     <!-- Accesso rapido dashboard squadre -->
                     <div class="border-t border-gray-600 pt-4 mt-2">
                         <p class="text-gray-400 text-sm mb-3">Accesso rapido Dashboard:</p>

@@ -50,6 +50,9 @@ B. Bonus Allenatore:
 C. Bonus Capitano:
    Il capitano della squadra ha sempre i suoi modificatori aumentati di +1.
 
+D. Bonus Stadio (solo in casa):
+	Lo stadio ha modificatori variabili in base alle strutture costruite
+
 
 3. SVOLGIMENTO DELLA PARTITA
 --------------------------------------------------------------------------------

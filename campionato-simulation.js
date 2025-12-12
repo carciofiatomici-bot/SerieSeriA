@@ -150,6 +150,11 @@ window.ChampionshipSimulation = {
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
+        // Applica bonus casa dalla struttura stadio (se feature abilitata)
+        if (window.Stadium?.isEnabled() && homeTeamData.stadium?.totalBonus) {
+            teamA.homeBonus = homeTeamData.stadium.totalBonus;
+        }
+
         let homeGoals = 0;
         let awayGoals = 0;
         const totalOccasions = 30;
@@ -186,6 +191,11 @@ window.ChampionshipSimulation = {
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
+        // Applica bonus casa dalla struttura stadio (se feature abilitata)
+        if (window.Stadium?.isEnabled() && homeTeamData.stadium?.totalBonus) {
+            teamA.homeBonus = homeTeamData.stadium.totalBonus;
+        }
+
         let homeGoals = 0;
         let awayGoals = 0;
         const totalOccasions = 30;
@@ -212,6 +222,9 @@ window.ChampionshipSimulation = {
         // Log giocatori squadra casa
         log.push(`*** ${homeTeamData.teamName} (CASA) ***`);
         log.push(`Coach Level: ${teamA.coachLevel}`);
+        if (teamA.homeBonus) {
+            log.push(`Bonus Casa (Stadio): +${teamA.homeBonus.toFixed(2)}`);
+        }
         log.push(`Modulo: ${homeTeamData.formation?.modulo || '?'}`);
         const allPlayersA = sortPlayers(teamA.formationInfo?.allPlayers || []);
         allPlayersA.forEach(p => {
@@ -307,7 +320,8 @@ window.ChampionshipSimulation = {
 
         // Info squadre compatte
         log.push(`${homeTeamData.teamName} (CASA)`);
-        log.push(`  Coach Lv.${teamA.coachLevel} | Modulo: ${homeTeamData.formation?.modulo || '?'}`);
+        const homeBonusStr = teamA.homeBonus ? ` | Bonus Casa: +${teamA.homeBonus.toFixed(2)}` : '';
+        log.push(`  Coach Lv.${teamA.coachLevel} | Modulo: ${homeTeamData.formation?.modulo || '?'}${homeBonusStr}`);
         const playersA = sortPlayers(teamA.formationInfo?.allPlayers || []);
         log.push(`  Titolari: ${playersA.map(p => `${p.role}:${p.name}(${p.currentLevel})`).join(', ')}`);
         log.push('');

@@ -76,6 +76,9 @@ window.InterfacciaNavigation = {
                 }
             });
         }
+
+        // Toggle partecipazione Draft
+        this.initDraftParticipationToggle();
         
         // Mercato Utente
         if (elements.btnMercatoUtente) {
@@ -201,16 +204,125 @@ window.InterfacciaNavigation = {
     handleBackNavigation(elements) {
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         const userType = localStorage.getItem('fanta_session_type');
-        
+
         // Cancella lo stato dell'ultima schermata salvata quando si torna indietro.
-        localStorage.removeItem('fanta_last_screen'); 
-        
+        localStorage.removeItem('fanta_last_screen');
+
         if (currentTeamId && userType === 'admin') {
             window.showScreen(elements.adminContent);
         } else if (currentTeamId) {
             window.showScreen(elements.appContent);
         } else {
             window.showScreen(elements.loginBox);
+        }
+    },
+
+    /**
+     * Inizializza il toggle di partecipazione al Draft
+     */
+    initDraftParticipationToggle() {
+        const toggle = document.getElementById('draft-participation-toggle');
+        const toggleContainer = document.getElementById('draft-toggle-container');
+
+        if (!toggle || !toggleContainer) return;
+
+        // Previeni la propagazione del click al bottone genitore
+        toggleContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Gestione cambio stato toggle
+        toggle.addEventListener('change', async (e) => {
+            e.stopPropagation();
+            await this.handleDraftToggle(e.target.checked);
+        });
+
+        // Carica lo stato iniziale
+        this.loadDraftParticipationState();
+    },
+
+    /**
+     * Carica lo stato di partecipazione al Draft da Firestore
+     */
+    async loadDraftParticipationState() {
+        const toggle = document.getElementById('draft-participation-toggle');
+        if (!toggle) return;
+
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) return;
+
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const teamDocRef = doc(window.db, window.TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                const isEnabled = teamData.draft_enabled === true;
+                toggle.checked = isEnabled;
+                this.updateToggleTooltip(isEnabled);
+            }
+        } catch (error) {
+            console.error('[DraftToggle] Errore caricamento stato:', error);
+        }
+    },
+
+    /**
+     * Gestisce il cambio di stato del toggle Draft
+     * @param {boolean} enabled - Nuovo stato
+     */
+    async handleDraftToggle(enabled) {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) {
+            if (window.Toast) window.Toast.error('Nessuna squadra selezionata');
+            return;
+        }
+
+        const toggle = document.getElementById('draft-participation-toggle');
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const teamDocRef = doc(window.db, window.TEAMS_COLLECTION_PATH, teamId);
+
+            await updateDoc(teamDocRef, {
+                draft_enabled: enabled
+            });
+
+            // Aggiorna anche i dati locali
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.draft_enabled = enabled;
+            }
+
+            this.updateToggleTooltip(enabled);
+
+            if (window.Toast) {
+                if (enabled) {
+                    window.Toast.success('Partecipazione al Draft attivata');
+                } else {
+                    window.Toast.info('Partecipazione al Draft disattivata');
+                }
+            }
+
+            console.log(`[DraftToggle] draft_enabled = ${enabled}`);
+
+        } catch (error) {
+            console.error('[DraftToggle] Errore salvataggio:', error);
+            if (window.Toast) window.Toast.error('Errore nel salvare la preferenza');
+            // Ripristina lo stato precedente
+            if (toggle) toggle.checked = !enabled;
+        }
+    },
+
+    /**
+     * Aggiorna il tooltip del toggle
+     * @param {boolean} enabled - Stato attuale
+     */
+    updateToggleTooltip(enabled) {
+        const container = document.getElementById('draft-toggle-container');
+        if (container) {
+            container.title = enabled
+                ? 'Stai partecipando al Draft (clicca per disattivare)'
+                : 'Non stai partecipando al Draft (clicca per attivare)';
         }
     }
 };

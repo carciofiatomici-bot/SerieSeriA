@@ -310,6 +310,26 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-red-400">Applica a: Campionato, Coppa, Supercoppa (NON sfide e allenamenti)</p>
                 <p class="mt-2 text-yellow-400">Gestisci bene la tua rosa per non restare senza giocatori!</p>`
+        },
+        stadium: {
+            id: 'stadium',
+            name: 'Stadio',
+            description: 'Costruisci e migliora il tuo stadio per ottenere bonus nelle partite in casa',
+            icon: '🏟️',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Bottone "Stadio" nella dashboard per accedere alla gestione</li>
+                    <li>Visualizzazione grafica del campo con strutture costruibili</li>
+                    <li>Tribune (4 slot): 250 CS, +0.25 bonus casa ciascuna</li>
+                    <li>Fari illuminazione (4 slot): 250 CS, +0.25 bonus casa ciascuno</li>
+                    <li>Tabelloni punteggio (2 slot): 250 CS, +0.25 bonus casa ciascuno</li>
+                    <li>Area Media/VIP (2 slot): 500 CS, +0.50 bonus casa ciascuna</li>
+                    <li>Panchine (2 slot): 250 CS, +0.25 bonus casa ciascuna</li>
+                </ul>
+                <p class="mt-2 text-green-400">Bonus Casa Massimo: +4.0 (con tutte le strutture)</p>
+                <p class="mt-2 text-yellow-400">Il bonus si applica automaticamente nelle partite in casa!</p>`
         }
     },
 

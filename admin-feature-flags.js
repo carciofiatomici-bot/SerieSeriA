@@ -499,11 +499,11 @@ window.AdminFeatureFlags = {
     },
 
     /**
-     * Renderizza card singolo flag
+     * Renderizza card singolo flag come accordion collassabile
      */
     renderFlagCard(flag) {
         const statusClass = flag.enabled ? 'bg-green-500' : 'bg-gray-500';
-        const statusText = flag.enabled ? 'Attiva' : 'Disattiva';
+        const statusText = flag.enabled ? 'ON' : 'OFF';
         const hasDetails = flag.details && flag.details.trim() !== '';
 
         // Controlla se questo e' il flag achievements e se e' attivo
@@ -514,46 +514,56 @@ window.AdminFeatureFlags = {
         const isInjuriesFlag = flag.id === 'injuries';
         const showInjuriesSettings = isInjuriesFlag && flag.enabled;
 
+        // Verifica se ha contenuto espandibile
+        const hasExpandableContent = hasDetails || showAchievementsManager || showInjuriesSettings;
+
         return `
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-                <div class="p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="text-3xl">${flag.icon || '⚙️'}</div>
-                        <div>
-                            <h4 class="font-semibold text-white">${flag.name}</h4>
-                            <p class="text-gray-400 text-sm">${flag.description}</p>
+            <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700" data-flag-card="${flag.id}">
+                <!-- Header sempre visibile -->
+                <div class="flex items-center justify-between p-3 ${hasExpandableContent ? 'cursor-pointer hover:bg-gray-750' : ''} flag-card-header"
+                     data-flag-id="${flag.id}" data-expandable="${hasExpandableContent}">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        ${hasExpandableContent ? `
+                            <svg class="w-4 h-4 text-gray-400 transform transition-transform flag-card-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        ` : '<div class="w-4"></div>'}
+                        <div class="text-2xl flex-shrink-0">${flag.icon || '⚙️'}</div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-semibold text-white text-sm truncate">${flag.name}</h4>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <span class="px-2 py-1 ${statusClass} rounded text-xs text-white font-semibold">
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <span class="px-2 py-0.5 ${statusClass} rounded text-xs text-white font-bold">
                             ${statusText}
                         </span>
-                        <label class="relative inline-flex items-center cursor-pointer">
+                        <label class="relative inline-flex items-center cursor-pointer" onclick="event.stopPropagation()">
                             <input type="checkbox"
                                    class="sr-only peer flag-toggle"
                                    data-flag-id="${flag.id}"
                                    ${flag.enabled ? 'checked' : ''}>
-                            <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
                 </div>
-                ${hasDetails ? `
-                    <div class="border-t border-gray-700">
-                        <button class="flag-details-toggle w-full px-4 py-2 text-left text-sm text-purple-400 hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                                data-flag-id="${flag.id}">
-                            <svg class="w-4 h-4 transform transition-transform flag-details-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                            <span>Maggiori informazioni</span>
-                        </button>
-                        <div class="flag-details-content hidden px-4 pb-4 text-sm text-gray-300 bg-gray-900 bg-opacity-50"
-                             id="flag-details-${flag.id}">
-                            ${flag.details}
+
+                <!-- Contenuto espandibile -->
+                ${hasExpandableContent ? `
+                    <div class="flag-card-content hidden border-t border-gray-700" data-flag-content="${flag.id}">
+                        <!-- Descrizione -->
+                        <div class="px-4 py-3 bg-gray-850">
+                            <p class="text-gray-400 text-sm">${flag.description}</p>
                         </div>
+
+                        ${hasDetails ? `
+                            <div class="px-4 py-3 text-sm text-gray-300 bg-gray-900 bg-opacity-50 border-t border-gray-700">
+                                ${flag.details}
+                            </div>
+                        ` : ''}
+                        ${showAchievementsManager ? this.renderAchievementsManager() : ''}
+                        ${showInjuriesSettings ? this.renderInjuriesSettings() : ''}
                     </div>
                 ` : ''}
-                ${showAchievementsManager ? this.renderAchievementsManager() : ''}
-                ${showInjuriesSettings ? this.renderInjuriesSettings() : ''}
             </div>
         `;
     },
@@ -842,22 +852,25 @@ window.AdminFeatureFlags = {
             if (window.Toast) window.Toast.info("Feature flags ricaricati");
         });
 
-        // Toggle dettagli espandibili
-        this.container.querySelectorAll('.flag-details-toggle').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const flagId = btn.dataset.flagId;
-                const detailsContent = document.getElementById(`flag-details-${flagId}`);
-                const arrow = btn.querySelector('.flag-details-arrow');
+        // Toggle accordion card (click su header)
+        this.container.querySelectorAll('.flag-card-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                // Non espandere se non ha contenuto espandibile
+                if (header.dataset.expandable !== 'true') return;
 
-                if (detailsContent) {
-                    detailsContent.classList.toggle('hidden');
+                const flagId = header.dataset.flagId;
+                const content = document.querySelector(`[data-flag-content="${flagId}"]`);
+                const arrow = header.querySelector('.flag-card-arrow');
+
+                if (content) {
+                    content.classList.toggle('hidden');
 
                     // Ruota freccia
                     if (arrow) {
-                        if (detailsContent.classList.contains('hidden')) {
+                        if (content.classList.contains('hidden')) {
                             arrow.style.transform = 'rotate(0deg)';
                         } else {
-                            arrow.style.transform = 'rotate(180deg)';
+                            arrow.style.transform = 'rotate(90deg)';
                         }
                     }
                 }

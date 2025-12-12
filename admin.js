@@ -272,6 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
             btnFixIcone.addEventListener('click', handleFixIconeAbility);
         }
 
+        // Reset Hall of Fame Stats
+        const btnResetHoF = document.getElementById('btn-reset-hall-of-fame');
+        if (btnResetHoF) {
+            btnResetHoF.addEventListener('click', handleResetHallOfFame);
+        }
+
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {
@@ -461,6 +467,150 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.innerHTML = '👑 Fix Abilita Icone';
+        }
+    };
+
+    /**
+     * Gestisce il reset delle statistiche Hall of Fame
+     * Mostra un modal per selezionare quale squadra resettare
+     */
+    const handleResetHallOfFame = async () => {
+        const resultDiv = document.getElementById('reset-hof-result');
+
+        // Carica lista squadre
+        try {
+            const { collection, getDocs } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            const teams = teamsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                teamName: doc.data().teamName || doc.id
+            })).filter(t => t.teamName);
+
+            // Crea modal
+            const existingModal = document.getElementById('reset-hof-modal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'reset-hof-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-gray-900 rounded-lg w-full max-w-md mx-4 border-2 border-red-500">
+                    <div class="bg-gradient-to-r from-red-700 to-red-500 p-4 rounded-t-lg flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-white">🏛️ Reset Hall of Fame</h2>
+                        <button id="btn-close-reset-hof" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+                    </div>
+
+                    <div class="p-6">
+                        <p class="text-gray-300 mb-4">Seleziona la squadra di cui vuoi resettare le statistiche:</p>
+
+                        <select id="reset-hof-team-select" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white mb-4">
+                            <option value="__ALL__">⚠️ TUTTE LE SQUADRE</option>
+                            ${teams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('')}
+                        </select>
+
+                        <div class="bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded-lg p-3 mb-4">
+                            <p class="text-yellow-400 text-sm">⚠️ <strong>Attenzione:</strong> Questa azione cancellera:</p>
+                            <ul class="text-yellow-300 text-xs mt-2 space-y-1 list-disc ml-4">
+                                <li>Storico partite (matchHistory)</li>
+                                <li>Trofei (campionati, coppe, supercoppe)</li>
+                                <li>Statistiche giocatori (goal, assist, MVP, ecc.)</li>
+                            </ul>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button id="btn-confirm-reset-hof" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg transition">
+                                Conferma Reset
+                            </button>
+                            <button id="btn-cancel-reset-hof" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg transition">
+                                Annulla
+                            </button>
+                        </div>
+
+                        <p id="reset-hof-message" class="text-center mt-3 text-sm"></p>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Event listeners
+            const closeModal = () => modal.remove();
+
+            document.getElementById('btn-close-reset-hof').addEventListener('click', closeModal);
+            document.getElementById('btn-cancel-reset-hof').addEventListener('click', closeModal);
+
+            document.getElementById('btn-confirm-reset-hof').addEventListener('click', async () => {
+                const select = document.getElementById('reset-hof-team-select');
+                const msgEl = document.getElementById('reset-hof-message');
+                const confirmBtn = document.getElementById('btn-confirm-reset-hof');
+                const selectedValue = select.value;
+
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Reset in corso...';
+                msgEl.textContent = '';
+                msgEl.className = 'text-center mt-3 text-sm';
+
+                try {
+                    if (selectedValue === '__ALL__') {
+                        // Reset TUTTE le squadre
+                        const results = await window.resetAllStats();
+                        msgEl.textContent = `Reset completato: ${results.hallOfFame} squadre, ${results.playerStats} statistiche giocatori`;
+                        msgEl.className = 'text-center mt-3 text-sm text-green-400';
+                    } else {
+                        // Reset singola squadra
+                        const selectedTeam = teams.find(t => t.id === selectedValue);
+                        const teamName = selectedTeam?.teamName || selectedValue;
+
+                        // Reset Hall of Fame della squadra
+                        await window.resetTeamHallOfFame(teamName);
+
+                        // Reset statistiche giocatori della squadra
+                        const { collection: coll, getDocs: gd, doc: d, deleteDoc: dd } = firestoreTools;
+                        const playerStatsPath = `${TEAMS_COLLECTION_PATH}/${selectedValue}/playerStats`;
+                        try {
+                            const playerStatsRef = coll(db, playerStatsPath);
+                            const playerStatsSnapshot = await gd(playerStatsRef);
+                            let deleted = 0;
+                            for (const pDoc of playerStatsSnapshot.docs) {
+                                await dd(d(db, playerStatsPath, pDoc.id));
+                                deleted++;
+                            }
+                            msgEl.textContent = `Reset completato per "${teamName}": HoF + ${deleted} stats giocatori`;
+                        } catch (e) {
+                            msgEl.textContent = `Reset HoF completato per "${teamName}"`;
+                        }
+                        msgEl.className = 'text-center mt-3 text-sm text-green-400';
+                    }
+
+                    // Aggiorna risultato nella pagina admin
+                    if (resultDiv) {
+                        resultDiv.textContent = 'Reset completato!';
+                        resultDiv.className = 'flex items-center justify-center text-sm text-green-400 font-bold';
+                        setTimeout(() => {
+                            resultDiv.textContent = 'Resetta statistiche di una o tutte le squadre';
+                            resultDiv.className = 'flex items-center justify-center text-sm text-gray-400';
+                        }, 3000);
+                    }
+
+                    // Chiudi modal dopo 2 secondi
+                    setTimeout(closeModal, 2000);
+
+                } catch (error) {
+                    console.error('Errore reset HoF:', error);
+                    msgEl.textContent = `Errore: ${error.message}`;
+                    msgEl.className = 'text-center mt-3 text-sm text-red-400';
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Conferma Reset';
+                }
+            });
+
+        } catch (error) {
+            console.error('Errore caricamento squadre per reset HoF:', error);
+            if (resultDiv) {
+                resultDiv.textContent = `Errore: ${error.message}`;
+                resultDiv.className = 'flex items-center justify-center text-sm text-red-400';
+            }
         }
     };
 

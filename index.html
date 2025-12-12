@@ -627,8 +627,14 @@
                 </div>
             </div>
 
-            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME - Mobile Optimized -->
-            <div class="flex justify-center gap-2 sm:gap-3 mt-4 sm:mt-6 w-full sm:w-2/3 mx-auto px-2 sm:px-0">
+            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO - Mobile Optimized -->
+            <div class="flex justify-center gap-2 sm:gap-4 mt-4 sm:mt-6 px-1 sm:px-0">
+                <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
+                <button id="btn-stadium"
+                        class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">
+                    <span class="text-base sm:text-lg">🏟️</span>
+                    <span>Stadio</span>
+                </button>
                 <!-- Statistica: Livello Medio Rosa -->
                 <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center min-w-0">
                     <p class="text-[10px] sm:text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
@@ -681,10 +687,29 @@
             <div id="draft-mercato-container" class="mt-3 sm:mt-4 relative group px-1 sm:px-0">
                 <!-- Riga 1: Draft e Mercato -->
                 <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-3">
-                    <button id="btn-draft-utente"
-                            class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
-                        📝 Draft
-                    </button>
+                    <!-- Contenitore Draft con Toggle -->
+                    <div id="btn-draft-container"
+                         class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
+                        <!-- Parte cliccabile per navigazione -->
+                        <button id="btn-draft-utente"
+                                class="flex-1 py-3 px-2 text-left flex items-center justify-center gap-1 hover:bg-white/10 transition active:scale-95">
+                            📝 Draft
+                        </button>
+                        <!-- Separatore -->
+                        <div class="w-px h-8 bg-yellow-800/50"></div>
+                        <!-- Toggle Switch per partecipazione Draft -->
+                        <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
+                                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                            after:bg-white after:border-gray-300 after:border after:rounded-full
+                                            after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
+                                            peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                    </div>
                     <button id="btn-mercato-utente"
                             class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
                         💰 Mercato
@@ -975,6 +1000,12 @@
                     class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
                 Torna alla Dashboard
             </button>
+        </div>
+
+        <!-- 10c. CONTENUTO STADIO - NASCOSTO -->
+        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
+            <!-- Il contenuto e' iniettato da stadium-ui.js -->
+            <p class="text-center text-gray-400 p-8">Caricamento stadio...</p>
         </div>
 
         <!-- 11. CONTENUTO: GESTIONE GIOCATORI ADMIN -->
@@ -1435,6 +1466,8 @@
     <script src="trades.js"></script>
     <script src="achievements.js"></script>
     <script src="injuries.js"></script>
+    <script src="stadium.js"></script>
+    <script src="stadium-ui.js"></script>
     <script src="training.js"></script>
     <script src="match-animations.js"></script>
     <script src="drag-drop.js"></script>

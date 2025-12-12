@@ -20,19 +20,7 @@ window.GestioneSquadreRosa = {
 
         const sortedPlayers = sortPlayersByRole(teamData.players);
 
-        // Dati allenatore
-        const coach = teamData.coach || { name: 'N/A', level: 1 };
-        const coachName = coach.name || 'N/A';
-        const coachLevel = coach.level || 1;
-
         squadraToolsContainer.innerHTML = `
-            <!-- BOX ALLENATORE -->
-            <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg mb-4">
-                <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
-                <p class="text-xl font-extrabold text-orange-400 mt-1">${coachName}</p>
-                <p class="text-xs text-gray-500">Livello: ${coachLevel}</p>
-            </div>
-
             <!-- BOTTONE ALLENAMENTO (centrato) -->
             <div class="flex justify-center mb-6">
                 <button id="btn-training-rosa"

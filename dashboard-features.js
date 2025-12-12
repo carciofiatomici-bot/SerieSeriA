@@ -29,6 +29,9 @@ window.DashboardFeatures = {
         // Widget Crediti Super Seri
         this.updateCSSWidget();
 
+        // Bottone Stadio
+        this.updateStadiumButton();
+
         // Aggiorna il layout della griglia in base ai bottoni visibili
         this.updateGridLayout();
     },
@@ -39,6 +42,23 @@ window.DashboardFeatures = {
     async updateCSSWidget() {
         if (window.CreditiSuperSeriUI) {
             await window.CreditiSuperSeriUI.initDashboardWidget();
+        }
+    },
+
+    /**
+     * Aggiorna la visibilita' del bottone Stadio
+     */
+    updateStadiumButton() {
+        const btnStadium = document.getElementById('btn-stadium');
+        if (btnStadium) {
+            const isEnabled = window.FeatureFlags?.isEnabled?.('stadium') || false;
+            if (isEnabled) {
+                btnStadium.classList.remove('hidden');
+                btnStadium.classList.add('flex');
+            } else {
+                btnStadium.classList.add('hidden');
+                btnStadium.classList.remove('flex');
+            }
         }
     },
 
@@ -137,6 +157,36 @@ window.DashboardFeatures = {
         }
 
         // Nota: il bottone Sfida e' gia' gestito in interfaccia-navigation.js
+
+        // Bottone Stadio
+        const btnStadium = document.getElementById('btn-stadium');
+        const stadiumContent = document.getElementById('stadium-content');
+
+        if (btnStadium) {
+            btnStadium.addEventListener('click', async () => {
+                // Verifica se lo stadio e' abilitato
+                if (!window.FeatureFlags?.isEnabled('stadium')) {
+                    if (window.Toast) window.Toast.info("Stadio non disponibile");
+                    return;
+                }
+
+                if (window.StadiumUI && stadiumContent) {
+                    // Recupera dati team corrente
+                    const teamId = window.InterfacciaCore?.currentTeamId;
+                    const teamData = window.InterfacciaCore?.currentTeamData;
+
+                    if (!teamId || !teamData) {
+                        if (window.Toast) window.Toast.error("Dati squadra non disponibili");
+                        return;
+                    }
+
+                    window.showScreen(stadiumContent);
+                    await window.StadiumUI.init(teamId, teamData);
+                } else {
+                    if (window.Toast) window.Toast.error("Sistema Stadio non disponibile");
+                }
+            });
+        }
     },
 
     /**
@@ -240,6 +290,11 @@ window.DashboardFeatures = {
                 case 'matchAnimations':
                 case 'matchHighlights':
                     // Questi non richiedono init/destroy, sono usati on-demand
+                    break;
+
+                case 'stadium':
+                    // Aggiorna visibilita' bottone stadio
+                    this.updateStadiumButton();
                     break;
             }
 
