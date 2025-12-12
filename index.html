@@ -595,12 +595,21 @@
                 </button>
             </div>
 
-            <!-- Pulsante Tutorial - In fondo alla dashboard -->
-            <div class="mt-6 flex justify-center">
+            <!-- Pulsanti Tutorial e Admin Panel - In fondo alla dashboard -->
+            <div class="mt-6 flex justify-center gap-3">
+                <!-- Bottone Admin Panel - Visibile SOLO per squadre admin -->
+                <button id="btn-goto-admin-panel"
+                        class="hidden bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔧</span> Pannello Admin
+                </button>
                 <button id="btn-start-tutorial"
                         onclick="window.Tutorial?.start()"
                         class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
                     <span>📖</span> Tutorial
+                </button>
+                <button id="btn-change-password"
+                        class="bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔑</span> Cambia Password
                 </button>
             </div>
 
@@ -621,7 +630,16 @@
                 <p class="text-gray-400 text-center">Inizializzazione...</p>
             </div>
             
-            <div class="mt-6 flex gap-3">
+            <!-- Bottone Torna alla Dashboard (solo per squadre admin, non serieseria) -->
+            <div id="admin-return-dashboard-container" class="mt-6 hidden">
+                <button id="btn-return-to-team-dashboard"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold rounded-lg shadow-lg transition transform hover:scale-[1.01] flex items-center justify-center gap-3 border-2 border-blue-400">
+                    <span class="text-xl">🏠</span>
+                    <span id="return-dashboard-team-name">Torna alla Dashboard</span>
+                </button>
+            </div>
+
+            <div class="mt-4 flex gap-3">
                 <button id="btn-admin-changelog"
                         onclick="window.Changelog?.showAdmin()"
                         class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
@@ -1048,6 +1066,43 @@
             </div>
         </div>
 
+        <!-- MODAL CAMBIO PASSWORD -->
+        <div id="change-password-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-xl border-2 border-gray-500 shadow-2xl max-w-md w-full overflow-hidden">
+                <div class="bg-gray-700 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>🔑</span> Cambia Password
+                    </h3>
+                    <button id="btn-close-change-password" class="text-white hover:text-gray-300 text-2xl font-bold">&times;</button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-gray-300 text-sm font-semibold mb-2">Nuova Password</label>
+                        <input type="password" id="new-password-input"
+                               class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                               placeholder="Inserisci la nuova password">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-300 text-sm font-semibold mb-2">Conferma Password</label>
+                        <input type="password" id="confirm-password-input"
+                               class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                               placeholder="Conferma la nuova password">
+                    </div>
+                    <p id="change-password-message" class="text-center mb-4 text-sm hidden"></p>
+                    <div class="flex gap-3">
+                        <button id="btn-cancel-change-password"
+                                class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition">
+                            Annulla
+                        </button>
+                        <button id="btn-confirm-change-password"
+                                class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-lg transition">
+                            Cambia Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL CHANGELOG -->
         <div id="changelog-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-4">
             <div class="bg-gray-800 rounded-xl border-2 border-indigo-500 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -1178,6 +1233,7 @@
     <!-- 1. DEFINIZIONI BASE (Icone, Costanti, Variabili Globali) -->
     <script src="icone.js"></script>
     <script src="firestore-cache.js"></script>
+    <script src="config-listener.js"></script>
     <script src="listener-manager.js"></script>
     <script src="interfaccia-core.js"></script>
 

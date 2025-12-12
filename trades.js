@@ -1,7 +1,9 @@
 //
 // ====================================================================
-// TRADES.JS - Sistema Scambi Giocatori
+// TRADES.JS - Sistema Scambi Giocatori Completo
 // ====================================================================
+// Flusso: Ricevuti -> Seleziona Squadra -> Rosa Avversaria ->
+//         Rosa Propria -> Offerta CS -> Conferma
 //
 
 window.Trades = {
@@ -9,68 +11,66 @@ window.Trades = {
     panel: null,
     isOpen: false,
 
+    // Stato corrente del flusso
+    currentStep: 'received', // received, selectTeam, targetRoster, myRoster, confirmCS
+    selectedTargetTeam: null,
+    selectedTargetPlayer: null,
+    selectedOfferPlayer: null,
+    offeredCS: 0,
+
     // Dati scambi
     trades: [],
-    pendingTrades: [],
+
+    // Cache squadre e rose
+    teamsCache: [],
+    targetRosterCache: [],
 
     /**
      * Inizializza il sistema scambi
      */
     init() {
         if (!window.FeatureFlags?.isEnabled('trades')) {
-            console.log("Sistema Scambi disabilitato");
+            console.log('[Trades] Sistema Scambi disabilitato');
             return;
         }
 
         this.createPanel();
-        this.loadTrades();
         this.setupListeners();
-
-        console.log("Sistema Scambi inizializzato");
+        console.log('[Trades] Sistema Scambi inizializzato');
     },
 
     /**
      * Crea il pannello scambi
      */
     createPanel() {
-        // Rimuovi se esiste
         const existing = document.getElementById('trades-panel');
         if (existing) existing.remove();
 
         this.panel = document.createElement('div');
         this.panel.id = 'trades-panel';
-        this.panel.className = `
-            fixed inset-0 z-[9999] bg-black bg-opacity-80
-            flex items-center justify-center
-            hidden
-        `.replace(/\s+/g, ' ').trim();
+        this.panel.className = 'fixed inset-0 z-[9999] bg-black bg-opacity-80 flex items-center justify-center hidden';
 
         this.panel.innerHTML = `
-            <div class="bg-gray-800 rounded-2xl shadow-2xl border-2 border-gray-600 w-full max-w-4xl max-h-[90vh] overflow-hidden m-4">
+            <div class="bg-gray-800 rounded-2xl shadow-2xl border-2 border-purple-600 w-full max-w-4xl max-h-[90vh] overflow-hidden m-4">
                 <!-- Header -->
-                <div class="p-4 bg-gray-700 border-b border-gray-600 flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <span>🔄</span>
-                        <span>Mercato Scambi</span>
-                    </h2>
+                <div id="trades-header" class="p-4 bg-gray-700 border-b border-gray-600 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <button id="trades-back-btn" class="text-gray-400 hover:text-white text-xl hidden">&larr;</button>
+                        <h2 id="trades-title" class="text-xl font-bold text-white flex items-center gap-2">
+                            <span>🔄</span>
+                            <span>Scambi Ricevuti</span>
+                        </h2>
+                    </div>
                     <button id="close-trades-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
 
-                <!-- Tabs -->
-                <div class="flex border-b border-gray-600">
-                    <button class="trade-tab active flex-1 py-3 text-center bg-purple-600 text-white font-semibold" data-tab="incoming">
-                        📥 Ricevute <span id="incoming-count" class="ml-1 px-2 py-0.5 bg-red-500 rounded-full text-xs hidden">0</span>
-                    </button>
-                    <button class="trade-tab flex-1 py-3 text-center bg-gray-700 text-gray-300 hover:bg-gray-600" data-tab="outgoing">
-                        📤 Inviate
-                    </button>
-                    <button class="trade-tab flex-1 py-3 text-center bg-gray-700 text-gray-300 hover:bg-gray-600" data-tab="new">
-                        ➕ Nuova Proposta
-                    </button>
+                <!-- Breadcrumb -->
+                <div id="trades-breadcrumb" class="px-4 py-2 bg-gray-750 border-b border-gray-600 text-sm text-gray-400 hidden">
+                    <span class="text-purple-400">Ricevuti</span>
                 </div>
 
                 <!-- Content -->
-                <div id="trades-content" class="p-4 overflow-y-auto max-h-[calc(90vh-160px)]">
+                <div id="trades-content" class="p-4 overflow-y-auto max-h-[calc(90vh-140px)]">
                     <!-- Contenuto dinamico -->
                 </div>
             </div>
@@ -80,39 +80,34 @@ window.Trades = {
 
         // Event listeners
         document.getElementById('close-trades-panel').addEventListener('click', () => this.close());
+        document.getElementById('trades-back-btn').addEventListener('click', () => this.goBack());
         this.panel.addEventListener('click', (e) => {
             if (e.target === this.panel) this.close();
-        });
-
-        // Tab switching
-        this.panel.querySelectorAll('.trade-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                this.panel.querySelectorAll('.trade-tab').forEach(t => {
-                    t.classList.remove('active', 'bg-purple-600');
-                    t.classList.add('bg-gray-700', 'text-gray-300');
-                });
-                tab.classList.add('active', 'bg-purple-600');
-                tab.classList.remove('bg-gray-700', 'text-gray-300');
-
-                this.renderTab(tab.dataset.tab);
-            });
         });
     },
 
     /**
      * Apri pannello
      */
-    openPanel() {
+    async openPanel() {
         if (!window.FeatureFlags?.isEnabled('trades')) {
-            if (window.Toast) window.Toast.info("Sistema scambi non disponibile");
+            if (window.Toast) window.Toast.info('Sistema scambi non disponibile');
             return;
         }
 
         if (!this.panel) this.createPanel();
         this.panel.classList.remove('hidden');
         this.isOpen = true;
-        this.loadTrades();
-        this.renderTab('incoming');
+
+        // Reset stato
+        this.currentStep = 'received';
+        this.selectedTargetTeam = null;
+        this.selectedTargetPlayer = null;
+        this.selectedOfferPlayer = null;
+        this.offeredCS = 0;
+
+        await this.loadTrades();
+        this.renderStep();
     },
 
     /**
@@ -126,167 +121,155 @@ window.Trades = {
     },
 
     /**
-     * Carica scambi
+     * Torna indietro
+     */
+    goBack() {
+        switch (this.currentStep) {
+            case 'selectTeam':
+                this.currentStep = 'received';
+                break;
+            case 'targetRoster':
+                this.currentStep = 'selectTeam';
+                this.selectedTargetTeam = null;
+                break;
+            case 'myRoster':
+                this.currentStep = 'targetRoster';
+                this.selectedTargetPlayer = null;
+                break;
+            case 'confirmCS':
+                this.currentStep = 'myRoster';
+                this.selectedOfferPlayer = null;
+                break;
+        }
+        this.renderStep();
+    },
+
+    /**
+     * Renderizza lo step corrente
+     */
+    renderStep() {
+        const content = document.getElementById('trades-content');
+        const title = document.getElementById('trades-title');
+        const backBtn = document.getElementById('trades-back-btn');
+        const breadcrumb = document.getElementById('trades-breadcrumb');
+
+        if (!content) return;
+
+        // Aggiorna UI header
+        backBtn.classList.toggle('hidden', this.currentStep === 'received');
+        breadcrumb.classList.toggle('hidden', this.currentStep === 'received');
+
+        switch (this.currentStep) {
+            case 'received':
+                title.innerHTML = '<span>🔄</span><span>Scambi Ricevuti</span>';
+                this.renderReceivedTrades(content);
+                break;
+            case 'selectTeam':
+                title.innerHTML = '<span>👥</span><span>Seleziona Squadra</span>';
+                breadcrumb.innerHTML = '<span class="text-gray-500">Ricevuti</span> → <span class="text-purple-400">Seleziona Squadra</span>';
+                this.renderTeamSelection(content);
+                break;
+            case 'targetRoster':
+                title.innerHTML = `<span>⚽</span><span>Rosa di ${this.selectedTargetTeam?.teamName || 'Squadra'}</span>`;
+                breadcrumb.innerHTML = '<span class="text-gray-500">Ricevuti → Squadra</span> → <span class="text-purple-400">Seleziona Giocatore</span>';
+                this.renderTargetRoster(content);
+                break;
+            case 'myRoster':
+                title.innerHTML = '<span>🎁</span><span>Scegli Giocatore da Offrire</span>';
+                breadcrumb.innerHTML = '<span class="text-gray-500">Ricevuti → Squadra → Giocatore</span> → <span class="text-purple-400">Tua Offerta</span>';
+                this.renderMyRoster(content);
+                break;
+            case 'confirmCS':
+                title.innerHTML = '<span>💰</span><span>Aggiungi Crediti Seri</span>';
+                breadcrumb.innerHTML = '<span class="text-gray-500">Ricevuti → Squadra → Giocatore → Offerta</span> → <span class="text-purple-400">Crediti</span>';
+                this.renderCSConfirmation(content);
+                break;
+        }
+    },
+
+    // ========================================
+    // STEP 1: SCAMBI RICEVUTI
+    // ========================================
+
+    /**
+     * Carica scambi da Firestore
      */
     async loadTrades() {
-        // Carica da localStorage per demo
-        const saved = localStorage.getItem('fanta_trades');
-        if (saved) {
-            this.trades = JSON.parse(saved);
-        } else {
-            // Demo trades
-            this.trades = this.generateDemoTrades();
-            this.saveTrades();
+        if (!window.db || !window.firestoreTools) {
+            this.trades = [];
+            return;
         }
-
-        // Carica da Firestore se disponibile
-        await this.fetchFromFirestore();
-
-        this.updateBadge();
-    },
-
-    /**
-     * Genera scambi demo
-     */
-    generateDemoTrades() {
-        const myTeamId = window.InterfacciaCore?.currentTeamId || 'my_team';
-        return [
-            {
-                id: 'trade_1',
-                fromTeamId: 'team_alpha',
-                fromTeamName: 'Squadra Alpha',
-                toTeamId: myTeamId,
-                toTeamName: 'La Mia Squadra',
-                offeredPlayers: [{ name: 'Mario Rossi', role: 'C', level: 18 }],
-                requestedPlayers: [{ name: 'Luigi Verdi', role: 'A', level: 20 }],
-                credits: 5,
-                status: 'pending',
-                timestamp: Date.now() - 3600000,
-                message: 'Ti propongo questo scambio vantaggioso!'
-            },
-            {
-                id: 'trade_2',
-                fromTeamId: myTeamId,
-                fromTeamName: 'La Mia Squadra',
-                toTeamId: 'team_beta',
-                toTeamName: 'FC Beta',
-                offeredPlayers: [{ name: 'Andrea Bianchi', role: 'D', level: 15 }],
-                requestedPlayers: [{ name: 'Paolo Neri', role: 'D', level: 17 }],
-                credits: -3,
-                status: 'pending',
-                timestamp: Date.now() - 7200000,
-                message: ''
-            }
-        ];
-    },
-
-    /**
-     * Fetch da Firestore
-     */
-    async fetchFromFirestore() {
-        if (!window.db || !window.firestoreTools) return;
 
         const myTeamId = window.InterfacciaCore?.currentTeamId;
         if (!myTeamId) return;
 
         try {
-            const { collection, query, where, getDocs, or } = window.firestoreTools;
+            const { collection, query, where, getDocs, orderBy } = window.firestoreTools;
             const appId = window.firestoreTools.appId;
             const tradesPath = `artifacts/${appId}/public/data/trades`;
 
-            // Query per scambi dove sono coinvolto
+            // Query per scambi ricevuti (pending)
             const q = query(
                 collection(window.db, tradesPath),
-                or(
-                    where('fromTeamId', '==', myTeamId),
-                    where('toTeamId', '==', myTeamId)
-                )
+                where('toTeamId', '==', myTeamId),
+                where('status', '==', 'pending')
             );
 
             const snapshot = await getDocs(q);
-            snapshot.docs.forEach(doc => {
-                const data = doc.data();
-                const existing = this.trades.find(t => t.id === doc.id);
-                if (!existing) {
-                    this.trades.push({
-                        id: doc.id,
-                        ...data,
-                        timestamp: data.timestamp?.toMillis?.() || Date.now()
-                    });
-                }
-            });
+            this.trades = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toMillis?.() || Date.now()
+            }));
+
+            // Ordina per timestamp decrescente
+            this.trades.sort((a, b) => b.timestamp - a.timestamp);
+
         } catch (error) {
-            console.warn("Errore caricamento scambi:", error);
+            console.error('[Trades] Errore caricamento:', error);
+            this.trades = [];
         }
     },
 
     /**
-     * Salva scambi
+     * Renderizza scambi ricevuti + bottone Proponi
      */
-    saveTrades() {
-        localStorage.setItem('fanta_trades', JSON.stringify(this.trades));
-    },
-
-    /**
-     * Aggiorna badge notifiche
-     */
-    updateBadge() {
+    renderReceivedTrades(container) {
         const myTeamId = window.InterfacciaCore?.currentTeamId;
-        const pending = this.trades.filter(t =>
-            t.toTeamId === myTeamId && t.status === 'pending'
-        ).length;
 
-        const badge = document.getElementById('incoming-count');
-        if (badge) {
-            if (pending > 0) {
-                badge.textContent = pending;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-    },
+        let html = `
+            <!-- Bottone Proponi Scambio -->
+            <div class="mb-6">
+                <button id="btn-propose-trade" class="w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-3 transition transform hover:scale-[1.02]">
+                    <span class="text-2xl">➕</span>
+                    <span>Proponi Scambio</span>
+                </button>
+            </div>
 
-    /**
-     * Renderizza tab
-     */
-    renderTab(tabName) {
-        const content = document.getElementById('trades-content');
-        if (!content) return;
+            <h3 class="text-lg font-bold text-gray-300 mb-4 border-b border-gray-600 pb-2">📥 Proposte Ricevute</h3>
+        `;
 
-        switch (tabName) {
-            case 'incoming':
-                this.renderIncoming(content);
-                break;
-            case 'outgoing':
-                this.renderOutgoing(content);
-                break;
-            case 'new':
-                this.renderNewTrade(content);
-                break;
-        }
-    },
-
-    /**
-     * Renderizza scambi ricevuti
-     */
-    renderIncoming(container) {
-        const myTeamId = window.InterfacciaCore?.currentTeamId;
-        const incoming = this.trades.filter(t => t.toTeamId === myTeamId);
-
-        if (incoming.length === 0) {
-            container.innerHTML = `
+        if (this.trades.length === 0) {
+            html += `
                 <div class="text-center py-12">
                     <div class="text-5xl mb-4">📭</div>
                     <p class="text-gray-400">Nessuna proposta di scambio ricevuta</p>
+                    <p class="text-gray-500 text-sm mt-2">Quando qualcuno ti proporra uno scambio, apparira qui</p>
                 </div>
             `;
-            return;
+        } else {
+            html += this.trades.map(trade => this.renderTradeCard(trade)).join('');
         }
 
-        container.innerHTML = incoming.map(trade => this.renderTradeCard(trade, 'incoming')).join('');
+        container.innerHTML = html;
 
-        // Aggiungi event listeners
+        // Event listener bottone proponi
+        document.getElementById('btn-propose-trade').addEventListener('click', () => {
+            this.currentStep = 'selectTeam';
+            this.renderStep();
+        });
+
+        // Event listeners accetta/rifiuta
         container.querySelectorAll('[data-accept]').forEach(btn => {
             btn.addEventListener('click', () => this.acceptTrade(btn.dataset.accept));
         });
@@ -296,364 +279,738 @@ window.Trades = {
     },
 
     /**
-     * Renderizza scambi inviati
+     * Renderizza card singolo scambio
      */
-    renderOutgoing(container) {
-        const myTeamId = window.InterfacciaCore?.currentTeamId;
-        const outgoing = this.trades.filter(t => t.fromTeamId === myTeamId);
+    renderTradeCard(trade) {
+        const offeredPlayer = trade.offeredPlayer || {};
+        const requestedPlayer = trade.requestedPlayer || {};
 
-        if (outgoing.length === 0) {
+        return `
+            <div class="bg-gray-700 rounded-xl p-4 mb-4 border-l-4 border-purple-500">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <span class="text-gray-400 text-sm">Da:</span>
+                        <span class="text-white font-semibold ml-2">${window.escapeHtml(trade.fromTeamName)}</span>
+                    </div>
+                    <span class="text-gray-500 text-xs">${this.formatDate(trade.timestamp)}</span>
+                </div>
+
+                <!-- Contenuto scambio -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <!-- Giocatore offerto (ricevi) -->
+                    <div class="bg-gray-800 rounded-lg p-3 border border-green-600">
+                        <p class="text-xs text-green-400 font-semibold mb-2">📥 Ricevi</p>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-green-700 rounded text-xs text-white">${offeredPlayer.role || '?'}</span>
+                            <div>
+                                <p class="text-white font-medium">${window.escapeHtml(offeredPlayer.name || 'Giocatore')}</p>
+                                <p class="text-gray-400 text-xs">Lv.${offeredPlayer.level || '?'} - ${offeredPlayer.type || '?'}</p>
+                            </div>
+                        </div>
+                        ${trade.offeredCS > 0 ? `<p class="text-yellow-400 text-sm mt-2">+${trade.offeredCS} CS</p>` : ''}
+                    </div>
+
+                    <!-- Giocatore richiesto (cedi) -->
+                    <div class="bg-gray-800 rounded-lg p-3 border border-red-600">
+                        <p class="text-xs text-red-400 font-semibold mb-2">📤 Cedi</p>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-red-700 rounded text-xs text-white">${requestedPlayer.role || '?'}</span>
+                            <div>
+                                <p class="text-white font-medium">${window.escapeHtml(requestedPlayer.name || 'Giocatore')}</p>
+                                <p class="text-gray-400 text-xs">Lv.${requestedPlayer.level || '?'} - ${requestedPlayer.type || '?'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Azioni -->
+                <div class="flex gap-2 justify-end">
+                    <button data-reject="${trade.id}" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm font-semibold transition">
+                        ❌ Rifiuta
+                    </button>
+                    <button data-accept="${trade.id}" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-semibold transition">
+                        ✅ Accetta
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+    // ========================================
+    // STEP 2: SELEZIONE SQUADRA
+    // ========================================
+
+    /**
+     * Renderizza lista squadre
+     */
+    async renderTeamSelection(container) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin text-4xl mb-4">⚽</div>
+                <p class="text-gray-400">Caricamento squadre...</p>
+            </div>
+        `;
+
+        await this.loadTeams();
+
+        if (this.teamsCache.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-12">
-                    <div class="text-5xl mb-4">📤</div>
-                    <p class="text-gray-400">Nessuna proposta inviata</p>
-                    <button onclick="window.Trades.renderTab('new')" class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white">
-                        Crea Nuova Proposta
-                    </button>
+                    <div class="text-5xl mb-4">😢</div>
+                    <p class="text-gray-400">Nessuna altra squadra disponibile</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = outgoing.map(trade => this.renderTradeCard(trade, 'outgoing')).join('');
+        let html = `
+            <p class="text-gray-400 mb-4">Seleziona la squadra con cui vuoi proporre uno scambio:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        `;
 
-        // Aggiungi event listeners per cancellazione
-        container.querySelectorAll('[data-cancel]').forEach(btn => {
-            btn.addEventListener('click', () => this.cancelTrade(btn.dataset.cancel));
+        for (const team of this.teamsCache) {
+            const logoUrl = team.logoUrl || window.InterfacciaConstants?.DEFAULT_LOGO_URL || '';
+            html += `
+                <button class="team-select-btn bg-gray-700 hover:bg-gray-600 rounded-xl p-4 flex items-center gap-4 transition border-2 border-transparent hover:border-purple-500"
+                        data-team-id="${team.id}">
+                    <img src="${window.escapeHtml(logoUrl)}" alt="" class="w-12 h-12 rounded-full border-2 border-gray-500 object-cover">
+                    <div class="text-left">
+                        <p class="text-white font-semibold">${window.escapeHtml(team.teamName)}</p>
+                        <p class="text-gray-400 text-sm">${team.playersCount || 0} giocatori</p>
+                    </div>
+                </button>
+            `;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Event listeners
+        container.querySelectorAll('.team-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const teamId = btn.dataset.teamId;
+                this.selectedTargetTeam = this.teamsCache.find(t => t.id === teamId);
+                this.currentStep = 'targetRoster';
+                this.renderStep();
+            });
         });
     },
 
     /**
-     * Renderizza card scambio
+     * Carica lista squadre da Firestore
      */
-    renderTradeCard(trade, type) {
-        const isPending = trade.status === 'pending';
-        const statusColors = {
-            pending: 'yellow',
-            accepted: 'green',
-            rejected: 'red',
-            cancelled: 'gray'
-        };
-        const statusLabels = {
-            pending: 'In Attesa',
-            accepted: 'Accettato',
-            rejected: 'Rifiutato',
-            cancelled: 'Annullato'
-        };
+    async loadTeams() {
+        if (!window.db || !window.firestoreTools) {
+            this.teamsCache = [];
+            return;
+        }
 
-        return `
-            <div class="bg-gray-700 rounded-xl p-4 mb-4 border-l-4 border-${statusColors[trade.status]}-500">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <span class="text-gray-400 text-sm">${type === 'incoming' ? 'Da' : 'A'}:</span>
-                        <span class="text-white font-semibold ml-2">${type === 'incoming' ? trade.fromTeamName : trade.toTeamName}</span>
-                    </div>
-                    <span class="px-2 py-1 bg-${statusColors[trade.status]}-600 rounded text-xs text-white">
-                        ${statusLabels[trade.status]}
-                    </span>
-                </div>
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
 
-                <!-- Contenuto scambio -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <!-- Giocatori offerti -->
-                    <div class="bg-gray-800 rounded-lg p-3">
-                        <p class="text-xs text-green-400 font-semibold mb-2">📥 ${type === 'incoming' ? 'Ricevi' : 'Offri'}</p>
-                        ${trade.offeredPlayers.map(p => `
-                            <div class="flex items-center gap-2 text-sm">
-                                <span class="px-1 bg-gray-600 rounded text-xs">${p.role}</span>
-                                <span class="text-white">${p.name}</span>
-                                <span class="text-gray-400 text-xs">Lv.${p.level}</span>
-                            </div>
-                        `).join('')}
-                        ${trade.credits > 0 ? `<p class="text-yellow-400 text-sm mt-1">+${trade.credits} crediti</p>` : ''}
-                    </div>
+        try {
+            const { collection, getDocs } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
 
-                    <!-- Giocatori richiesti -->
-                    <div class="bg-gray-800 rounded-lg p-3">
-                        <p class="text-xs text-red-400 font-semibold mb-2">📤 ${type === 'incoming' ? 'Cedi' : 'Richiedi'}</p>
-                        ${trade.requestedPlayers.map(p => `
-                            <div class="flex items-center gap-2 text-sm">
-                                <span class="px-1 bg-gray-600 rounded text-xs">${p.role}</span>
-                                <span class="text-white">${p.name}</span>
-                                <span class="text-gray-400 text-xs">Lv.${p.level}</span>
-                            </div>
-                        `).join('')}
-                        ${trade.credits < 0 ? `<p class="text-yellow-400 text-sm mt-1">${trade.credits} crediti</p>` : ''}
-                    </div>
-                </div>
+            const snapshot = await getDocs(collection(window.db, teamsPath));
+            this.teamsCache = [];
 
-                ${trade.message ? `<p class="text-gray-400 text-sm italic mb-3">"${trade.message}"</p>` : ''}
+            snapshot.docs.forEach(doc => {
+                // Escludi la propria squadra e squadre admin
+                if (doc.id !== myTeamId) {
+                    const data = doc.data();
+                    // Escludi squadre admin (serieseria o isAdmin)
+                    if (data.teamName?.toLowerCase() !== 'serieseria' && !data.isAdmin) {
+                        this.teamsCache.push({
+                            id: doc.id,
+                            teamName: data.teamName || doc.id,
+                            logoUrl: data.logoUrl,
+                            playersCount: (data.players || []).length,
+                            players: data.players || []
+                        });
+                    }
+                }
+            });
 
-                <!-- Azioni -->
-                ${isPending ? `
-                    <div class="flex gap-2 justify-end">
-                        ${type === 'incoming' ? `
-                            <button data-reject="${trade.id}" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm">
-                                ❌ Rifiuta
-                            </button>
-                            <button data-accept="${trade.id}" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm">
-                                ✅ Accetta
-                            </button>
-                        ` : `
-                            <button data-cancel="${trade.id}" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm">
-                                🗑️ Annulla
-                            </button>
-                        `}
-                    </div>
-                ` : ''}
+            // Ordina alfabeticamente
+            this.teamsCache.sort((a, b) => a.teamName.localeCompare(b.teamName));
 
-                <!-- Footer -->
-                <p class="text-gray-500 text-xs mt-3">${this.formatDate(trade.timestamp)}</p>
-            </div>
-        `;
+        } catch (error) {
+            console.error('[Trades] Errore caricamento squadre:', error);
+            this.teamsCache = [];
+        }
     },
 
+    // ========================================
+    // STEP 3: ROSA SQUADRA TARGET
+    // ========================================
+
     /**
-     * Renderizza form nuova proposta
+     * Renderizza rosa della squadra selezionata
      */
-    renderNewTrade(container) {
+    renderTargetRoster(container) {
+        if (!this.selectedTargetTeam) {
+            this.currentStep = 'selectTeam';
+            this.renderStep();
+            return;
+        }
+
+        const players = this.selectedTargetTeam.players || [];
+
+        if (players.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-5xl mb-4">👻</div>
+                    <p class="text-gray-400">Questa squadra non ha giocatori</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Escludi l'Icona dallo scambio
+        const tradablePlayers = players.filter(p => !(p.abilities && p.abilities.includes('Icona')));
+
+        let html = `
+            <p class="text-gray-400 mb-4">Seleziona il giocatore che vuoi richiedere:</p>
+            <div class="space-y-2">
+        `;
+
+        for (const player of tradablePlayers) {
+            const abilitiesStr = (player.abilities || []).join(', ') || 'Nessuna';
+            html += `
+                <div class="bg-gray-700 rounded-lg p-3 flex items-center justify-between hover:bg-gray-650 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-1 bg-${this.getRoleColor(player.role)}-600 rounded text-xs text-white font-bold">${player.role || '?'}</span>
+                        <div>
+                            <p class="text-white font-medium">${window.escapeHtml(player.name)}</p>
+                            <p class="text-gray-400 text-xs">Lv.${player.level || 1} - ${player.type || 'N/A'}</p>
+                            <p class="text-purple-400 text-xs">${abilitiesStr}</p>
+                        </div>
+                    </div>
+                    <button class="request-player-btn px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white text-sm font-semibold transition"
+                            data-player-id="${player.id}">
+                        Richiedi
+                    </button>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Event listeners
+        container.querySelectorAll('.request-player-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const playerId = btn.dataset.playerId;
+                this.selectedTargetPlayer = tradablePlayers.find(p => p.id === playerId);
+                this.currentStep = 'myRoster';
+                this.renderStep();
+            });
+        });
+    },
+
+    // ========================================
+    // STEP 4: LA MIA ROSA (OFFERTA)
+    // ========================================
+
+    /**
+     * Renderizza la propria rosa per selezionare l'offerta
+     */
+    renderMyRoster(container) {
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const myPlayers = currentTeamData?.players || [];
+
+        if (myPlayers.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-5xl mb-4">👻</div>
+                    <p class="text-gray-400">Non hai giocatori da offrire</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Escludi l'Icona dallo scambio
+        const tradablePlayers = myPlayers.filter(p => !(p.abilities && p.abilities.includes('Icona')));
+
+        let html = `
+            <div class="bg-gray-700 rounded-lg p-3 mb-4">
+                <p class="text-sm text-gray-400">Stai richiedendo:</p>
+                <p class="text-white font-semibold">${window.escapeHtml(this.selectedTargetPlayer?.name || 'Giocatore')}
+                    <span class="text-gray-400">(${this.selectedTargetPlayer?.role || '?'} Lv.${this.selectedTargetPlayer?.level || '?'})</span>
+                </p>
+                <p class="text-gray-500 text-xs">da ${window.escapeHtml(this.selectedTargetTeam?.teamName || 'Squadra')}</p>
+            </div>
+
+            <p class="text-gray-400 mb-4">Seleziona quale tuo giocatore vuoi offrire in cambio:</p>
+            <div class="space-y-2">
+        `;
+
+        for (const player of tradablePlayers) {
+            const abilitiesStr = (player.abilities || []).join(', ') || 'Nessuna';
+            html += `
+                <div class="bg-gray-700 rounded-lg p-3 flex items-center justify-between hover:bg-gray-650 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-1 bg-${this.getRoleColor(player.role)}-600 rounded text-xs text-white font-bold">${player.role || '?'}</span>
+                        <div>
+                            <p class="text-white font-medium">${window.escapeHtml(player.name)}</p>
+                            <p class="text-gray-400 text-xs">Lv.${player.level || 1} - ${player.type || 'N/A'}</p>
+                            <p class="text-purple-400 text-xs">${abilitiesStr}</p>
+                        </div>
+                    </div>
+                    <button class="offer-player-btn px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-semibold transition"
+                            data-player-id="${player.id}">
+                        Offri
+                    </button>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Event listeners
+        container.querySelectorAll('.offer-player-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const playerId = btn.dataset.playerId;
+                this.selectedOfferPlayer = tradablePlayers.find(p => p.id === playerId);
+                this.currentStep = 'confirmCS';
+                this.renderStep();
+            });
+        });
+    },
+
+    // ========================================
+    // STEP 5: CONFERMA CS
+    // ========================================
+
+    /**
+     * Renderizza conferma con input CS
+     */
+    renderCSConfirmation(container) {
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const maxBudget = currentTeamData?.budget || 0;
+
         container.innerHTML = `
-            <div class="space-y-4">
-                <p class="text-gray-400">Seleziona la squadra con cui vuoi proporre uno scambio:</p>
+            <div class="space-y-6">
+                <!-- Riepilogo scambio -->
+                <div class="bg-gray-700 rounded-xl p-4">
+                    <h4 class="text-lg font-bold text-white mb-4 text-center">Riepilogo Scambio</h4>
 
-                <!-- Selezione squadra -->
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Squadra destinataria</label>
-                    <select id="trade-target-team" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                        <option value="">-- Seleziona squadra --</option>
-                    </select>
-                </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Offri -->
+                        <div class="bg-gray-800 rounded-lg p-3 border border-green-600">
+                            <p class="text-xs text-green-400 font-semibold mb-2 text-center">📤 OFFRI</p>
+                            <div class="text-center">
+                                <span class="px-2 py-1 bg-green-700 rounded text-xs text-white">${this.selectedOfferPlayer?.role || '?'}</span>
+                                <p class="text-white font-medium mt-2">${window.escapeHtml(this.selectedOfferPlayer?.name || 'Giocatore')}</p>
+                                <p class="text-gray-400 text-xs">Lv.${this.selectedOfferPlayer?.level || '?'}</p>
+                            </div>
+                        </div>
 
-                <!-- Giocatori da offrire -->
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Giocatori da offrire (dalla tua rosa)</label>
-                    <div id="trade-offer-players" class="bg-gray-700 rounded-lg p-3 min-h-[60px]">
-                        <p class="text-gray-500 text-sm">Seleziona prima una squadra</p>
+                        <!-- Richiedi -->
+                        <div class="bg-gray-800 rounded-lg p-3 border border-red-600">
+                            <p class="text-xs text-red-400 font-semibold mb-2 text-center">📥 RICHIEDI</p>
+                            <div class="text-center">
+                                <span class="px-2 py-1 bg-red-700 rounded text-xs text-white">${this.selectedTargetPlayer?.role || '?'}</span>
+                                <p class="text-white font-medium mt-2">${window.escapeHtml(this.selectedTargetPlayer?.name || 'Giocatore')}</p>
+                                <p class="text-gray-400 text-xs">Lv.${this.selectedTargetPlayer?.level || '?'}</p>
+                            </div>
+                        </div>
                     </div>
+
+                    <p class="text-center text-gray-500 text-sm mt-3">
+                        A: <span class="text-white">${window.escapeHtml(this.selectedTargetTeam?.teamName || 'Squadra')}</span>
+                    </p>
                 </div>
 
-                <!-- Giocatori da richiedere -->
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Giocatori da richiedere</label>
-                    <div id="trade-request-players" class="bg-gray-700 rounded-lg p-3 min-h-[60px]">
-                        <p class="text-gray-500 text-sm">Seleziona prima una squadra</p>
+                <!-- Input CS -->
+                <div class="bg-gray-700 rounded-xl p-4">
+                    <h4 class="text-md font-bold text-yellow-400 mb-3">💰 Vuoi offrire dei Crediti Seri?</h4>
+                    <p class="text-gray-400 text-sm mb-3">Il tuo budget attuale: <span class="text-yellow-400 font-bold">${maxBudget} CS</span></p>
+
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="cs-slider" min="0" max="${maxBudget}" value="0"
+                               class="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="cs-input" min="0" max="${maxBudget}" value="0"
+                                   class="w-20 px-3 py-2 bg-gray-800 border border-yellow-600 rounded-lg text-white text-center">
+                            <span class="text-yellow-400">CS</span>
+                        </div>
                     </div>
+                    <p class="text-gray-500 text-xs mt-2">Trascina o inserisci manualmente l'importo (0 = nessun CS)</p>
                 </div>
 
-                <!-- Crediti -->
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Crediti da aggiungere/richiedere</label>
-                    <input type="number" id="trade-credits" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                        value="0" min="-50" max="50">
-                    <p class="text-xs text-gray-500 mt-1">Positivo = offri crediti, Negativo = richiedi crediti</p>
-                </div>
-
-                <!-- Messaggio -->
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Messaggio (opzionale)</label>
-                    <textarea id="trade-message" rows="2" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none"
-                        placeholder="Aggiungi un messaggio alla proposta..." maxlength="200"></textarea>
-                </div>
-
-                <!-- Bottone invio -->
-                <button id="send-trade" class="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-bold">
-                    📤 Invia Proposta
+                <!-- Bottone conferma -->
+                <button id="btn-confirm-trade" class="w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-white font-bold text-lg transition transform hover:scale-[1.02]">
+                    📤 Invia Proposta di Scambio
                 </button>
             </div>
         `;
 
-        // Carica squadre
-        this.loadTeamsForTrade();
+        // Sincronizza slider e input
+        const slider = document.getElementById('cs-slider');
+        const input = document.getElementById('cs-input');
 
-        // Event listener invio
-        document.getElementById('send-trade').addEventListener('click', () => this.createTrade());
+        slider.addEventListener('input', () => {
+            input.value = slider.value;
+            this.offeredCS = parseInt(slider.value);
+        });
+
+        input.addEventListener('input', () => {
+            let val = parseInt(input.value) || 0;
+            if (val < 0) val = 0;
+            if (val > maxBudget) val = maxBudget;
+            input.value = val;
+            slider.value = val;
+            this.offeredCS = val;
+        });
+
+        // Bottone conferma
+        document.getElementById('btn-confirm-trade').addEventListener('click', () => this.submitTrade());
+    },
+
+    // ========================================
+    // INVIO PROPOSTA
+    // ========================================
+
+    /**
+     * Invia la proposta di scambio
+     */
+    async submitTrade() {
+        // Validazioni
+        if (!this.selectedTargetTeam || !this.selectedTargetPlayer || !this.selectedOfferPlayer) {
+            if (window.Toast) window.Toast.error('Dati scambio incompleti');
+            return;
+        }
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
+        const myTeamName = currentTeamData?.teamName || 'Squadra';
+
+        // Verifica budget
+        if (this.offeredCS > (currentTeamData?.budget || 0)) {
+            if (window.Toast) window.Toast.error('Budget insufficiente');
+            return;
+        }
+
+        // Conferma
+        if (window.ConfirmDialog) {
+            const confirmed = await window.ConfirmDialog.confirm(
+                'Conferma Proposta',
+                `Vuoi inviare questa proposta di scambio a ${this.selectedTargetTeam.teamName}?`,
+                { confirmText: 'Invia', cancelText: 'Annulla', type: 'info' }
+            );
+            if (!confirmed) return;
+        }
+
+        // Crea oggetto trade
+        const trade = {
+            fromTeamId: myTeamId,
+            fromTeamName: myTeamName,
+            toTeamId: this.selectedTargetTeam.id,
+            toTeamName: this.selectedTargetTeam.teamName,
+            offeredPlayer: {
+                id: this.selectedOfferPlayer.id,
+                name: this.selectedOfferPlayer.name,
+                role: this.selectedOfferPlayer.role,
+                level: this.selectedOfferPlayer.level,
+                type: this.selectedOfferPlayer.type,
+                abilities: this.selectedOfferPlayer.abilities || []
+            },
+            requestedPlayer: {
+                id: this.selectedTargetPlayer.id,
+                name: this.selectedTargetPlayer.name,
+                role: this.selectedTargetPlayer.role,
+                level: this.selectedTargetPlayer.level,
+                type: this.selectedTargetPlayer.type,
+                abilities: this.selectedTargetPlayer.abilities || []
+            },
+            offeredCS: this.offeredCS,
+            status: 'pending',
+            timestamp: new Date()
+        };
+
+        // Salva su Firestore
+        try {
+            if (window.db && window.firestoreTools) {
+                const { collection, addDoc, Timestamp } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                const tradesPath = `artifacts/${appId}/public/data/trades`;
+
+                trade.timestamp = Timestamp.now();
+                await addDoc(collection(window.db, tradesPath), trade);
+
+                // Invia notifica al destinatario
+                await this.sendTradeNotification(trade);
+
+                if (window.Toast) window.Toast.success('Proposta di scambio inviata!');
+            } else {
+                // Fallback localStorage per demo
+                trade.id = `trade_${Date.now()}`;
+                trade.timestamp = Date.now();
+                const savedTrades = JSON.parse(localStorage.getItem('fanta_trades') || '[]');
+                savedTrades.push(trade);
+                localStorage.setItem('fanta_trades', JSON.stringify(savedTrades));
+                if (window.Toast) window.Toast.success('Proposta salvata (demo mode)');
+            }
+
+            // Reset e torna alla lista
+            this.currentStep = 'received';
+            this.selectedTargetTeam = null;
+            this.selectedTargetPlayer = null;
+            this.selectedOfferPlayer = null;
+            this.offeredCS = 0;
+            await this.loadTrades();
+            this.renderStep();
+
+        } catch (error) {
+            console.error('[Trades] Errore invio proposta:', error);
+            if (window.Toast) window.Toast.error('Errore durante l\'invio della proposta');
+        }
     },
 
     /**
-     * Carica squadre per il dropdown
+     * Invia notifica al destinatario dello scambio
      */
-    async loadTeamsForTrade() {
-        const select = document.getElementById('trade-target-team');
-        if (!select) return;
+    async sendTradeNotification(trade) {
+        // Notifica in-app se il sistema notifiche e' attivo
+        if (window.Notifications && window.Notifications.notify) {
+            // Questa notifica viene aggiunta localmente, idealmente si dovrebbe
+            // salvare anche in Firestore per il destinatario
+            console.log('[Trades] Notifica inviata a:', trade.toTeamId);
+        }
 
-        const myTeamId = window.InterfacciaCore?.currentTeamId;
-
-        // Carica squadre da Firestore o usa demo
-        let teams = [];
-
+        // Salva notifica in Firestore per il destinatario
         if (window.db && window.firestoreTools) {
             try {
-                const { collection, getDocs } = window.firestoreTools;
+                const { collection, addDoc, Timestamp } = window.firestoreTools;
                 const appId = window.firestoreTools.appId;
-                const teamsPath = `artifacts/${appId}/public/data/teams`;
+                const notificationsPath = `artifacts/${appId}/public/data/notifications`;
 
-                const snapshot = await getDocs(collection(window.db, teamsPath));
-                snapshot.docs.forEach(doc => {
-                    if (doc.id !== myTeamId) {
-                        teams.push({ id: doc.id, name: doc.data().name || doc.id });
+                await addDoc(collection(window.db, notificationsPath), {
+                    teamId: trade.toTeamId,
+                    type: 'trade_request',
+                    title: 'Proposta di scambio',
+                    message: `${trade.fromTeamName} ti propone uno scambio per ${trade.requestedPlayer.name}`,
+                    read: false,
+                    timestamp: Timestamp.now(),
+                    data: {
+                        tradeFromTeam: trade.fromTeamId,
+                        tradeFromTeamName: trade.fromTeamName
                     }
                 });
             } catch (error) {
-                console.warn("Errore caricamento squadre:", error);
+                console.warn('[Trades] Errore invio notifica:', error);
             }
         }
-
-        // Se nessuna squadra, usa demo
-        if (teams.length === 0) {
-            teams = [
-                { id: 'team_alpha', name: 'Squadra Alpha' },
-                { id: 'team_beta', name: 'FC Beta' },
-                { id: 'team_gamma', name: 'Gamma United' }
-            ];
-        }
-
-        select.innerHTML = '<option value="">-- Seleziona squadra --</option>' +
-            teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
-        // Listener cambio squadra
-        select.addEventListener('change', () => this.onTeamSelected(select.value));
     },
 
-    /**
-     * Handler selezione squadra
-     */
-    onTeamSelected(teamId) {
-        // Per demo, mostra placeholder
-        const offerDiv = document.getElementById('trade-offer-players');
-        const requestDiv = document.getElementById('trade-request-players');
-
-        if (!teamId) {
-            offerDiv.innerHTML = '<p class="text-gray-500 text-sm">Seleziona prima una squadra</p>';
-            requestDiv.innerHTML = '<p class="text-gray-500 text-sm">Seleziona prima una squadra</p>';
-            return;
-        }
-
-        // Demo: mostra checkbox con giocatori fittizi
-        offerDiv.innerHTML = `
-            <div class="space-y-2">
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" name="offer" value="p1" class="rounded bg-gray-600">
-                    <span class="text-white text-sm">Mario Rossi (C) Lv.18</span>
-                </label>
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" name="offer" value="p2" class="rounded bg-gray-600">
-                    <span class="text-white text-sm">Luigi Verdi (A) Lv.20</span>
-                </label>
-            </div>
-        `;
-
-        requestDiv.innerHTML = `
-            <div class="space-y-2">
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" name="request" value="p3" class="rounded bg-gray-600">
-                    <span class="text-white text-sm">Paolo Neri (D) Lv.17</span>
-                </label>
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" name="request" value="p4" class="rounded bg-gray-600">
-                    <span class="text-white text-sm">Andrea Bianchi (C) Lv.19</span>
-                </label>
-            </div>
-        `;
-    },
+    // ========================================
+    // ACCETTA / RIFIUTA
+    // ========================================
 
     /**
-     * Crea nuova proposta
-     */
-    async createTrade() {
-        const targetTeam = document.getElementById('trade-target-team').value;
-        const credits = parseInt(document.getElementById('trade-credits').value) || 0;
-        const message = document.getElementById('trade-message').value.trim();
-
-        if (!targetTeam) {
-            if (window.Toast) window.Toast.warning("Seleziona una squadra");
-            return;
-        }
-
-        // Demo: crea scambio fittizio
-        const trade = {
-            id: `trade_${Date.now()}`,
-            fromTeamId: window.InterfacciaCore?.currentTeamId || 'my_team',
-            fromTeamName: window.InterfacciaCore?.getCurrentTeam?.()?.name || 'La Mia Squadra',
-            toTeamId: targetTeam,
-            toTeamName: document.getElementById('trade-target-team').selectedOptions[0].text,
-            offeredPlayers: [{ name: 'Giocatore Demo', role: 'C', level: 15 }],
-            requestedPlayers: [{ name: 'Giocatore Richiesto', role: 'A', level: 18 }],
-            credits: credits,
-            status: 'pending',
-            timestamp: Date.now(),
-            message: message
-        };
-
-        this.trades.push(trade);
-        this.saveTrades();
-
-        if (window.Toast) window.Toast.success("Proposta inviata!");
-
-        // Vai alla tab inviate
-        this.panel.querySelector('[data-tab="outgoing"]').click();
-    },
-
-    /**
-     * Accetta scambio
+     * Accetta uno scambio
      */
     async acceptTrade(tradeId) {
         const trade = this.trades.find(t => t.id === tradeId);
         if (!trade) return;
 
+        // Conferma
         if (window.ConfirmDialog) {
-            const confirmed = await window.ConfirmDialog.show({
-                title: 'Accetta Scambio',
-                message: 'Sei sicuro di voler accettare questo scambio?',
-                confirmText: 'Accetta',
-                confirmClass: 'bg-green-600 hover:bg-green-500'
-            });
+            const confirmed = await window.ConfirmDialog.confirm(
+                'Accetta Scambio',
+                `Vuoi accettare lo scambio con ${trade.fromTeamName}?\n\nRiceverai: ${trade.offeredPlayer?.name}\nCederai: ${trade.requestedPlayer?.name}${trade.offeredCS > 0 ? `\n+${trade.offeredCS} CS` : ''}`,
+                { confirmText: 'Accetta', cancelText: 'Annulla', type: 'warning' }
+            );
             if (!confirmed) return;
         }
 
-        trade.status = 'accepted';
-        this.saveTrades();
-        this.renderTab('incoming');
+        try {
+            // Esegui lo scambio
+            await this.executeTrade(trade);
 
-        if (window.Toast) window.Toast.success("Scambio accettato!");
-        if (window.Notifications) {
-            window.Notifications.notify.system('Scambio completato', `Hai completato uno scambio con ${trade.fromTeamName}`);
+            // Aggiorna stato in Firestore
+            if (window.db && window.firestoreTools) {
+                const { doc, updateDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                const tradesPath = `artifacts/${appId}/public/data/trades`;
+
+                await updateDoc(doc(window.db, tradesPath, tradeId), {
+                    status: 'accepted',
+                    acceptedAt: window.firestoreTools.Timestamp.now()
+                });
+            }
+
+            // Notifica mittente
+            await this.notifyTradeResult(trade, 'accepted');
+
+            if (window.Toast) window.Toast.success('Scambio completato!');
+
+            // Ricarica
+            await this.loadTrades();
+            this.renderStep();
+
+            // Aggiorna dashboard
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+
+        } catch (error) {
+            console.error('[Trades] Errore accettazione:', error);
+            if (window.Toast) window.Toast.error('Errore durante lo scambio');
         }
     },
 
     /**
-     * Rifiuta scambio
+     * Esegue lo scambio effettivo (sposta giocatori e CS)
+     */
+    async executeTrade(trade) {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('[Trades] Firestore non disponibile per eseguire lo scambio');
+            return;
+        }
+
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+        // Carica entrambe le squadre
+        const fromTeamRef = doc(window.db, teamsPath, trade.fromTeamId);
+        const toTeamRef = doc(window.db, teamsPath, trade.toTeamId);
+
+        const [fromTeamSnap, toTeamSnap] = await Promise.all([
+            getDoc(fromTeamRef),
+            getDoc(toTeamRef)
+        ]);
+
+        if (!fromTeamSnap.exists() || !toTeamSnap.exists()) {
+            throw new Error('Squadra non trovata');
+        }
+
+        const fromTeamData = fromTeamSnap.data();
+        const toTeamData = toTeamSnap.data();
+
+        // Trova e rimuovi giocatori dalle rose
+        const fromPlayers = [...(fromTeamData.players || [])];
+        const toPlayers = [...(toTeamData.players || [])];
+
+        const offeredPlayerIndex = fromPlayers.findIndex(p => p.id === trade.offeredPlayer.id);
+        const requestedPlayerIndex = toPlayers.findIndex(p => p.id === trade.requestedPlayer.id);
+
+        if (offeredPlayerIndex === -1 || requestedPlayerIndex === -1) {
+            throw new Error('Giocatore non trovato nella rosa');
+        }
+
+        // Scambia giocatori
+        const offeredPlayer = fromPlayers.splice(offeredPlayerIndex, 1)[0];
+        const requestedPlayer = toPlayers.splice(requestedPlayerIndex, 1)[0];
+
+        fromPlayers.push(requestedPlayer);
+        toPlayers.push(offeredPlayer);
+
+        // Calcola nuovi budget
+        const fromBudget = (fromTeamData.budget || 0) - (trade.offeredCS || 0);
+        const toBudget = (toTeamData.budget || 0) + (trade.offeredCS || 0);
+
+        // Aggiorna entrambe le squadre
+        await Promise.all([
+            updateDoc(fromTeamRef, { players: fromPlayers, budget: fromBudget }),
+            updateDoc(toTeamRef, { players: toPlayers, budget: toBudget })
+        ]);
+
+        // Aggiorna dati locali se siamo il destinatario
+        const myTeamId = window.InterfacciaCore?.currentTeamId;
+        if (myTeamId === trade.toTeamId && window.InterfacciaCore?.currentTeamData) {
+            window.InterfacciaCore.currentTeamData.players = toPlayers;
+            window.InterfacciaCore.currentTeamData.budget = toBudget;
+        }
+
+        console.log('[Trades] Scambio eseguito con successo');
+    },
+
+    /**
+     * Rifiuta uno scambio
      */
     async rejectTrade(tradeId) {
         const trade = this.trades.find(t => t.id === tradeId);
         if (!trade) return;
 
-        trade.status = 'rejected';
-        this.saveTrades();
-        this.renderTab('incoming');
+        try {
+            // Aggiorna stato in Firestore
+            if (window.db && window.firestoreTools) {
+                const { doc, updateDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                const tradesPath = `artifacts/${appId}/public/data/trades`;
 
-        if (window.Toast) window.Toast.info("Scambio rifiutato");
+                await updateDoc(doc(window.db, tradesPath, tradeId), {
+                    status: 'rejected',
+                    rejectedAt: window.firestoreTools.Timestamp.now()
+                });
+            }
+
+            // Notifica mittente
+            await this.notifyTradeResult(trade, 'rejected');
+
+            if (window.Toast) window.Toast.info('Scambio rifiutato');
+
+            // Ricarica
+            await this.loadTrades();
+            this.renderStep();
+
+        } catch (error) {
+            console.error('[Trades] Errore rifiuto:', error);
+            if (window.Toast) window.Toast.error('Errore durante il rifiuto');
+        }
     },
 
     /**
-     * Annulla scambio
+     * Notifica il mittente del risultato
      */
-    async cancelTrade(tradeId) {
-        const trade = this.trades.find(t => t.id === tradeId);
-        if (!trade) return;
+    async notifyTradeResult(trade, result) {
+        if (!window.db || !window.firestoreTools) return;
 
-        trade.status = 'cancelled';
-        this.saveTrades();
-        this.renderTab('outgoing');
+        try {
+            const { collection, addDoc, Timestamp } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const notificationsPath = `artifacts/${appId}/public/data/notifications`;
 
-        if (window.Toast) window.Toast.info("Proposta annullata");
+            const title = result === 'accepted' ? 'Scambio accettato!' : 'Scambio rifiutato';
+            const message = result === 'accepted'
+                ? `${trade.toTeamName} ha accettato il tuo scambio per ${trade.requestedPlayer?.name}`
+                : `${trade.toTeamName} ha rifiutato il tuo scambio per ${trade.requestedPlayer?.name}`;
+
+            await addDoc(collection(window.db, notificationsPath), {
+                teamId: trade.fromTeamId,
+                type: result === 'accepted' ? 'system' : 'system',
+                title: title,
+                message: message,
+                read: false,
+                timestamp: Timestamp.now()
+            });
+        } catch (error) {
+            console.warn('[Trades] Errore invio notifica risultato:', error);
+        }
+    },
+
+    // ========================================
+    // UTILITIES
+    // ========================================
+
+    /**
+     * Colore per ruolo
+     */
+    getRoleColor(role) {
+        const colors = { P: 'yellow', D: 'blue', C: 'green', A: 'red' };
+        return colors[role] || 'gray';
     },
 
     /**
      * Formatta data
      */
     formatDate(timestamp) {
-        return new Date(timestamp).toLocaleString('it-IT', {
+        const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+        return date.toLocaleString('it-IT', {
             day: '2-digit',
             month: '2-digit',
             year: '2-digit',
@@ -697,4 +1054,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
-console.log("Modulo Trades caricato.");
+console.log('Modulo Trades caricato.');

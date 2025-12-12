@@ -90,6 +90,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderAdminDashboardLayout();
         adminLogoutButton.addEventListener('click', handleAdminLogout);
+
+        // Event listener per bottone "Torna alla Dashboard" (per squadre admin non serieseria)
+        const returnDashboardBtn = document.getElementById('btn-return-to-team-dashboard');
+        if (returnDashboardBtn) {
+            returnDashboardBtn.addEventListener('click', async () => {
+                const teamId = window.adminTeamAccessingPanel?.teamId;
+                window.adminTeamAccessingPanel = null;
+
+                // Nascondi il bottone
+                const returnContainer = document.getElementById('admin-return-dashboard-container');
+                if (returnContainer) returnContainer.classList.add('hidden');
+
+                if (teamId) {
+                    try {
+                        const { doc, getDoc } = firestoreTools;
+                        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+                        const teamDoc = await getDoc(teamDocRef);
+
+                        if (teamDoc.exists()) {
+                            const teamData = teamDoc.data();
+                            window.InterfacciaCore.currentTeamData = teamData;
+                            window.InterfacciaCore.currentTeamId = teamId;
+
+                            if (window.InterfacciaDashboard && window.elements) {
+                                window.InterfacciaDashboard.updateTeamUI(
+                                    teamData.teamName,
+                                    teamId,
+                                    teamData.logoUrl,
+                                    false,
+                                    window.elements
+                                );
+                            }
+
+                            const appContent = document.getElementById('app-content');
+                            if (appContent && window.showScreen) {
+                                window.showScreen(appContent);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('[Admin] Errore ritorno a dashboard:', error);
+                        if (window.Toast) {
+                            window.Toast.error('Errore nel ritorno alla dashboard');
+                        }
+                    }
+                }
+            });
+        }
     };
 
     /**

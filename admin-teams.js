@@ -74,6 +74,11 @@ window.AdminTeams = {
             querySnapshot.forEach(doc => {
                 const teamData = doc.data();
                 const teamId = doc.id;
+
+                // Escludi "serieseria" dalla lista - e' un account admin puro, non una squadra
+                if (teamData.teamName && teamData.teamName.toLowerCase() === 'serieseria') {
+                    return; // Skip this team
+                }
                 const isParticipating = teamData.isParticipating || false;
                 const isCupParticipating = teamData.isCupParticipating || false;
 
@@ -108,7 +113,7 @@ window.AdminTeams = {
                                  class="w-16 h-16 rounded-full border-2 border-yellow-500 mr-4 cursor-pointer hover:border-yellow-300 hover:scale-110 transition object-cover"
                                  title="Clicca per cambiare il logo">
                             <div>
-                                <p class="text-lg font-bold text-white">${teamData.teamName}</p>
+                                <p class="text-lg font-bold text-white">${teamData.teamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}</p>
                                 <p class="text-xs text-gray-400">ID: ${teamId}</p>
                                 <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
                                 <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
@@ -637,6 +642,22 @@ window.AdminTeams = {
                             </div>
                         </div>
 
+                        <!-- Sezione Permessi Admin -->
+                        <div class="mt-6 p-4 bg-red-900 rounded-lg border border-red-500">
+                            <h4 class="text-lg font-bold text-red-400 mb-2">🔐 Permessi Amministratore</h4>
+                            <p class="text-sm text-gray-300 mb-3">Abilita l'accesso al pannello admin per questa squadra.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white font-semibold">Squadra Admin</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="edit-is-admin" class="sr-only peer" ${teamData.isAdmin ? 'checked' : ''}>
+                                    <div class="w-14 h-7 bg-gray-600 peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                                </label>
+                            </div>
+                            <p id="admin-status-text" class="text-xs mt-2 ${teamData.isAdmin ? 'text-red-400' : 'text-gray-500'}">
+                                ${teamData.isAdmin ? 'Questa squadra ha accesso al pannello admin' : 'Squadra normale senza permessi admin'}
+                            </p>
+                        </div>
+
                         <!-- Sezione Ripara Squadra -->
                         <div class="mt-6 p-4 bg-orange-900 rounded-lg border border-orange-500">
                             <h4 class="text-lg font-bold text-orange-400 mb-2">🔧 Strumenti di Riparazione</h4>
@@ -685,6 +706,7 @@ window.AdminTeams = {
 
         mainElement.insertAdjacentHTML('beforeend', modalHtml);
         this.modalInstance = document.getElementById('edit-team-modal');
+        this.initAdminToggleListener();
     },
 
     /**
@@ -695,7 +717,7 @@ window.AdminTeams = {
         const tabPlayers = document.getElementById('tab-players');
         const contentInfo = document.getElementById('tab-content-info');
         const contentPlayers = document.getElementById('tab-content-players');
-        
+
         if (tab === 'info') {
             tabInfo.className = 'px-4 py-2 font-bold bg-blue-600 text-white rounded-t transition';
             tabPlayers.className = 'px-4 py-2 font-bold bg-gray-700 text-gray-300 rounded-t hover:bg-gray-600 transition';
@@ -707,6 +729,47 @@ window.AdminTeams = {
             contentInfo.classList.add('hidden');
             contentPlayers.classList.remove('hidden');
         }
+    },
+
+    /**
+     * Inizializza il listener per il toggle admin con conferma
+     */
+    initAdminToggleListener() {
+        const toggle = document.getElementById('edit-is-admin');
+        const statusText = document.getElementById('admin-status-text');
+        if (!toggle) return;
+
+        toggle.addEventListener('change', async (e) => {
+            if (e.target.checked) {
+                // Chiedi conferma quando si ATTIVA il flag admin
+                let confirmed = false;
+                if (window.ConfirmDialog?.show) {
+                    confirmed = await window.ConfirmDialog.show({
+                        title: 'Conferma Permessi Admin',
+                        message: 'Sei sicuro di voler concedere i permessi admin a questa squadra? Potra accedere al pannello di amministrazione.',
+                        confirmText: 'Si, Concedi Admin',
+                        cancelText: 'Annulla',
+                        type: 'warning'
+                    });
+                } else {
+                    confirmed = confirm('Sei sicuro di voler concedere i permessi admin a questa squadra?');
+                }
+
+                if (!confirmed) {
+                    e.target.checked = false;
+                    return;
+                }
+            }
+
+            // Aggiorna testo stato
+            if (e.target.checked) {
+                statusText.textContent = 'Questa squadra ha accesso al pannello admin';
+                statusText.className = 'text-xs mt-2 text-red-400';
+            } else {
+                statusText.textContent = 'Squadra normale senza permessi admin';
+                statusText.className = 'text-xs mt-2 text-gray-500';
+            }
+        });
     },
 
     /**
@@ -1161,9 +1224,10 @@ window.AdminTeams = {
         const teamName = document.getElementById('edit-team-name').value.trim();
         const budget = parseInt(document.getElementById('edit-budget').value);
         const creditiSuperSeri = parseInt(document.getElementById('edit-css').value) || 0;
+        const isAdmin = document.getElementById('edit-is-admin')?.checked || false;
 
         if (!teamName || teamName.length < 3) {
-            alert('¢Å’ Il nome squadra deve avere almeno 3 caratteri!');
+            alert('Il nome squadra deve avere almeno 3 caratteri!');
             return;
         }
         
@@ -1192,6 +1256,7 @@ window.AdminTeams = {
                 teamName,
                 budget,
                 creditiSuperSeri,
+                isAdmin,
                 players: this.currentEditingPlayers,
                 formation: updatedFormation,
                 playersFormStatus: updatedFormStatus
@@ -1477,5 +1542,7 @@ window.AdminTeams = {
 };
 
 console.log(' AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
+
+
 
 

@@ -141,9 +141,15 @@ window.GestioneSquadreUtils = {
     cleanFormationForSave(players) {
         // Salva solo campi essenziali: id, role, level, type, abilities, assignedPosition, isCaptain
         // I campi name, age, cost sono ridondanti (presenti nella rosa)
+        // IMPORTANTE: Firebase non accetta valori undefined, quindi aggiungiamo solo campi definiti
         return players.map(({ id, role, level, isCaptain, type, abilities, assignedPosition }) => {
-            const compressed = { id, role, level, type, assignedPosition };
-            // Aggiungi solo se presenti per risparmiare spazio
+            const compressed = {};
+            // Aggiungi solo campi con valori definiti (Firebase rifiuta undefined)
+            if (id !== undefined) compressed.id = id;
+            if (role !== undefined) compressed.role = role;
+            if (level !== undefined) compressed.level = level;
+            if (type !== undefined) compressed.type = type;
+            if (assignedPosition !== undefined) compressed.assignedPosition = assignedPosition;
             if (isCaptain) compressed.isCaptain = true;
             if (abilities && abilities.length > 0) compressed.abilities = abilities;
             return compressed;

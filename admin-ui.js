@@ -15,6 +15,20 @@ window.AdminUI = {
         const cssEnabled = configData.creditiSuperSeriEnabled || false;
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
+        // Gestione bottone "Torna alla Dashboard" (in fondo alla pagina, in index.html)
+        const adminTeamInfo = window.adminTeamAccessingPanel;
+        const returnContainer = document.getElementById('admin-return-dashboard-container');
+        const returnTeamName = document.getElementById('return-dashboard-team-name');
+
+        if (returnContainer && returnTeamName) {
+            if (adminTeamInfo) {
+                returnTeamName.textContent = `Torna alla Dashboard di ${adminTeamInfo.teamName}`;
+                returnContainer.classList.remove('hidden');
+            } else {
+                returnContainer.classList.add('hidden');
+            }
+        }
+
         adminDashboardContainer.innerHTML = `
             <!-- STATO GENERALE - In cima alla pagina -->
             <div class="mb-6 bg-gray-900 rounded-lg p-4 border border-gray-700">

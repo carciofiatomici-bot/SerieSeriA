@@ -13,6 +13,13 @@ window.InterfacciaDashboard = {
         const { DEFAULT_LOGO_URL } = window.InterfacciaConstants;
         const currentTeamData = window.InterfacciaCore.currentTeamData;
 
+        // CASO SPECIALE: serieseria e' un account admin puro, non una squadra
+        // Mostra SOLO il pannello admin, nasconde tutta la dashboard normale
+        if (teamName && teamName.toLowerCase() === 'serieseria') {
+            this.showAdminOnlyView(elements);
+            return;
+        }
+
         // Nome squadra in maiuscolo
         elements.teamDashboardTitle.textContent = teamName.toUpperCase();
         elements.teamFirestoreId.textContent = teamDocId;
@@ -122,8 +129,64 @@ window.InterfacciaDashboard = {
         // Gestisce il bottone "Torna al Pannello Admin"
         this.initAdminReturnButton();
 
+        // Gestisce il bottone "Pannello Admin" per squadre admin
+        this.initAdminPanelButton();
+
+        // Inizializza il sistema di cambio password
+        this.initChangePassword();
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
+    },
+
+    /**
+     * Mostra una vista speciale per l'account admin "serieseria".
+     * Questo account non e' una squadra ma serve solo per accedere al pannello admin.
+     */
+    showAdminOnlyView(elements) {
+        // Nascondi elementi dashboard normali e mostra vista admin-only
+        const appContent = elements.appContent;
+        if (!appContent) return;
+
+        // Crea overlay admin-only
+        let adminOnlyOverlay = document.getElementById('admin-only-overlay');
+        if (!adminOnlyOverlay) {
+            adminOnlyOverlay = document.createElement('div');
+            adminOnlyOverlay.id = 'admin-only-overlay';
+            adminOnlyOverlay.className = 'fixed inset-0 bg-gray-900 flex items-center justify-center z-50';
+            adminOnlyOverlay.innerHTML = `
+                <div class="text-center p-8 max-w-md">
+                    <div class="text-8xl mb-6">🔧</div>
+                    <h1 class="text-3xl font-bold text-white mb-4">Pannello Amministrazione</h1>
+                    <p class="text-gray-400 mb-8">
+                        Questo account e' riservato all'amministrazione del sistema.
+                    </p>
+                    <button id="btn-admin-only-enter"
+                            class="w-full py-4 px-8 bg-red-600 hover:bg-red-500 text-white font-bold text-xl rounded-xl shadow-lg transition transform hover:scale-105">
+                        Accedi al Pannello Admin
+                    </button>
+                    <p class="text-gray-500 text-sm mt-6">
+                        Serie SeriA - Account Amministratore
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(adminOnlyOverlay);
+
+            // Event listener per il bottone
+            document.getElementById('btn-admin-only-enter').addEventListener('click', () => {
+                // Rimuovi l'overlay
+                adminOnlyOverlay.remove();
+
+                // Naviga al pannello admin
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent && window.showScreen) {
+                    window.showScreen(adminContent);
+                    document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+                }
+            });
+        }
+
+        console.log('[Dashboard] Account serieseria - mostrata vista admin-only');
     },
 
     /**
@@ -157,6 +220,71 @@ window.InterfacciaDashboard = {
             });
         } else {
             container.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Inizializza il bottone "Pannello Admin" per squadre con permessi admin.
+     * Visibile SOLO se la squadra corrente ha isAdmin: true.
+     * La verifica usa la funzione centralizzata window.isTeamAdmin().
+     */
+    initAdminPanelButton() {
+        const button = document.getElementById('btn-goto-admin-panel');
+        if (!button) return;
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+
+        // Verifica admin usando la funzione centralizzata (interfaccia-core.js)
+        // isTeamAdmin controlla: teamName === 'serieseria' OPPURE isAdmin === true
+        const isAdmin = window.isTeamAdmin(
+            currentTeamData?.teamName,
+            currentTeamData
+        );
+
+        if (isAdmin && currentTeamId) {
+            // Mostra il bottone
+            button.classList.remove('hidden');
+
+            // Rimuovi listener precedenti clonando il bottone
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+
+            // Aggiungi listener per aprire il pannello admin
+            newButton.addEventListener('click', async () => {
+                // Doppia verifica di sicurezza: ricontrolla permessi prima di navigare
+                const stillAdmin = await window.checkCurrentTeamIsAdmin();
+                if (!stillAdmin) {
+                    if (window.Toast) {
+                        window.Toast.error('Accesso negato: permessi insufficienti');
+                    }
+                    newButton.classList.add('hidden');
+                    return;
+                }
+
+                // Imposta flag per mostrare "Torna alla Dashboard" nel pannello admin
+                // Solo per squadre admin diverse da serieseria
+                const teamName = currentTeamData?.teamName;
+                if (teamName && teamName.toLowerCase() !== 'serieseria') {
+                    window.adminTeamAccessingPanel = {
+                        teamId: currentTeamId,
+                        teamName: teamName
+                    };
+                }
+
+                // Naviga al pannello admin
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent && window.showScreen) {
+                    window.showScreen(adminContent);
+                    // Trigger evento per inizializzare il pannello admin
+                    document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+                }
+            });
+
+            console.log('[Dashboard] Bottone Admin Panel attivato per squadra admin');
+        } else {
+            // Nascondi il bottone per squadre non admin
+            button.classList.add('hidden');
         }
     },
 
@@ -1233,6 +1361,156 @@ window.InterfacciaDashboard = {
 
         // Ripristina stato minimizzato
         this.restoreDraftAlertMinimizedState();
+    },
+
+    // ====================================================================
+    // CAMBIO PASSWORD
+    // ====================================================================
+
+    /**
+     * Inizializza il sistema di cambio password
+     */
+    initChangePassword() {
+        const openBtn = document.getElementById('btn-change-password');
+        const modal = document.getElementById('change-password-modal');
+        const closeBtn = document.getElementById('btn-close-change-password');
+        const cancelBtn = document.getElementById('btn-cancel-change-password');
+        const confirmBtn = document.getElementById('btn-confirm-change-password');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const confirmPasswordInput = document.getElementById('confirm-password-input');
+        const messageEl = document.getElementById('change-password-message');
+
+        if (!openBtn || !modal) return;
+
+        // Apri modal
+        openBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            messageEl.classList.add('hidden');
+            newPasswordInput.focus();
+        });
+
+        // Chiudi modal
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            messageEl.classList.add('hidden');
+        };
+
+        closeBtn?.addEventListener('click', closeModal);
+        cancelBtn?.addEventListener('click', closeModal);
+
+        // Chiudi cliccando fuori
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Conferma cambio password
+        confirmBtn?.addEventListener('click', async () => {
+            await this.handleChangePassword(newPasswordInput, confirmPasswordInput, messageEl, closeModal);
+        });
+
+        // Enter per confermare
+        confirmPasswordInput?.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                await this.handleChangePassword(newPasswordInput, confirmPasswordInput, messageEl, closeModal);
+            }
+        });
+    },
+
+    /**
+     * Gestisce il cambio password
+     */
+    async handleChangePassword(newPasswordInput, confirmPasswordInput, messageEl, closeModal) {
+        const newPassword = newPasswordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+
+        // Validazione
+        if (!newPassword) {
+            this.showChangePasswordMessage(messageEl, 'Inserisci la nuova password', 'error');
+            return;
+        }
+
+        if (newPassword.length < 4) {
+            this.showChangePasswordMessage(messageEl, 'La password deve essere di almeno 4 caratteri', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            this.showChangePasswordMessage(messageEl, 'Le password non corrispondono', 'error');
+            return;
+        }
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId) {
+            this.showChangePasswordMessage(messageEl, 'Errore: nessuna squadra selezionata', 'error');
+            return;
+        }
+
+        // Disabilita bottone durante il salvataggio
+        const confirmBtn = document.getElementById('btn-confirm-change-password');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Salvataggio...';
+        }
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            const teamDocRef = doc(window.db, teamsPath, currentTeamId);
+
+            await updateDoc(teamDocRef, {
+                password: newPassword
+            });
+
+            // Aggiorna anche i dati locali
+            if (window.InterfacciaCore.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.password = newPassword;
+            }
+
+            // Aggiorna la sessione salvata se presente
+            const savedSession = localStorage.getItem('fanta_session');
+            if (savedSession) {
+                try {
+                    const session = JSON.parse(savedSession);
+                    // Non salviamo la password in localStorage per sicurezza
+                } catch (e) {}
+            }
+
+            this.showChangePasswordMessage(messageEl, 'Password cambiata con successo!', 'success');
+
+            // Mostra toast se disponibile
+            if (window.Toast) {
+                window.Toast.success('Password aggiornata con successo');
+            }
+
+            // Chiudi modal dopo 1.5 secondi
+            setTimeout(() => {
+                closeModal();
+            }, 1500);
+
+        } catch (error) {
+            console.error('[ChangePassword] Errore:', error);
+            this.showChangePasswordMessage(messageEl, 'Errore durante il salvataggio. Riprova.', 'error');
+        } finally {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Cambia Password';
+            }
+        }
+    },
+
+    /**
+     * Mostra un messaggio nel modal cambio password
+     */
+    showChangePasswordMessage(messageEl, text, type) {
+        if (!messageEl) return;
+        messageEl.textContent = text;
+        messageEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
+        messageEl.classList.add(type === 'success' ? 'text-green-400' : 'text-red-400');
     }
 };
 

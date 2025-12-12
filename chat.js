@@ -19,9 +19,14 @@ window.Chat = {
 
     // Configurazione
     config: {
-        maxMessages: 100,
-        maxMessageLength: 500
+        maxMessages: 20,           // Ridotto da 50 a 20 per risparmiare Firebase reads
+        maxMessageLength: 500,
+        inactivityTimeoutMs: 5 * 60 * 1000  // 5 minuti di inattivita' prima di chiudere il listener
     },
+
+    // Timer per inattivita'
+    _inactivityTimer: null,
+    _listenerPaused: false,
 
     /**
      * Inizializza la chat
@@ -138,6 +143,14 @@ window.Chat = {
         this.isOpen = true;
         this.markAsRead();
         document.getElementById('chat-input').focus();
+
+        // Riavvia listener se era in pausa
+        if (this._listenerPaused) {
+            this.resumeListener();
+        }
+
+        // Reset timer inattivita'
+        this.resetInactivityTimer();
     },
 
     /**
@@ -260,6 +273,9 @@ window.Chat = {
         input.value = '';
         document.getElementById('chat-char-count').textContent = '0';
 
+        // Reset timer inattivita' (l'utente e' attivo)
+        this.resetInactivityTimer();
+
         // Invia a Firestore
         await this.saveToFirestore(message);
     },
@@ -374,12 +390,12 @@ window.Chat = {
 
             console.log("Avvio listener chat real-time su:", chatPath);
 
-            // Query per ultimi 50 messaggi ordinati per timestamp
+            // Query per ultimi 20 messaggi ordinati per timestamp (ridotto da 50 per risparmiare reads)
             const chatCollection = collection(window.db, chatPath);
             const q = query(
                 chatCollection,
                 orderBy('timestamp', 'desc'),
-                limit(50)
+                limit(this.config.maxMessages)
             );
 
             // Mostra loading iniziale
@@ -416,8 +432,8 @@ window.Chat = {
                 // Ordina per timestamp crescente (piu' vecchi prima)
                 newMessages.sort((a, b) => a.timestamp - b.timestamp);
 
-                // Mantieni solo ultimi 50
-                const finalMessages = newMessages.slice(-50);
+                // Mantieni solo ultimi N messaggi (config.maxMessages)
+                const finalMessages = newMessages.slice(-this.config.maxMessages);
 
                 const previousCount = this.messages.length;
                 this.messages = finalMessages;
@@ -471,6 +487,73 @@ window.Chat = {
     },
 
     /**
+     * Reset timer inattivita' - chiamato quando l'utente interagisce con la chat
+     */
+    resetInactivityTimer() {
+        // Cancella timer esistente
+        if (this._inactivityTimer) {
+            clearTimeout(this._inactivityTimer);
+            this._inactivityTimer = null;
+        }
+
+        // Imposta nuovo timer solo se la chat e' aperta
+        if (this.isOpen) {
+            this._inactivityTimer = setTimeout(() => {
+                console.log('[Chat] Timeout inattivita - pausa listener per risparmiare risorse');
+                this.pauseListener();
+            }, this.config.inactivityTimeoutMs);
+        }
+    },
+
+    /**
+     * Pausa il listener real-time per risparmiare risorse Firebase
+     */
+    pauseListener() {
+        if (this.unsubscribe && !this._listenerPaused) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+            this._listenerPaused = true;
+            console.log('[Chat] Listener in pausa per inattivita');
+
+            // Mostra messaggio all'utente
+            const container = document.getElementById('chat-messages');
+            if (container && this.isOpen) {
+                const pauseNotice = document.createElement('div');
+                pauseNotice.id = 'chat-pause-notice';
+                pauseNotice.className = 'text-center py-3 px-4 bg-yellow-600/20 border border-yellow-500/50 rounded-lg mx-2 my-2';
+                pauseNotice.innerHTML = `
+                    <p class="text-yellow-400 text-sm">Chat in pausa per inattivita'</p>
+                    <button onclick="window.Chat.resumeListener()" class="mt-2 px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white text-xs rounded">
+                        Riattiva Chat
+                    </button>
+                `;
+                container.appendChild(pauseNotice);
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+    },
+
+    /**
+     * Riprendi il listener real-time
+     */
+    resumeListener() {
+        if (this._listenerPaused) {
+            console.log('[Chat] Riattivazione listener...');
+
+            // Rimuovi notice di pausa
+            const pauseNotice = document.getElementById('chat-pause-notice');
+            if (pauseNotice) pauseNotice.remove();
+
+            // Riavvia listener
+            this._listenerPaused = false;
+            this.startRealtimeListener();
+
+            // Reset timer
+            this.resetInactivityTimer();
+        }
+    },
+
+    /**
      * Setup listeners
      */
     setupListeners() {
@@ -494,6 +577,14 @@ window.Chat = {
             this.unsubscribe();
             this.unsubscribe = null;
         }
+
+        // Cancella timer inattivita'
+        if (this._inactivityTimer) {
+            clearTimeout(this._inactivityTimer);
+            this._inactivityTimer = null;
+        }
+
+        this._listenerPaused = false;
 
         const button = document.getElementById('chat-button');
         if (button) button.remove();

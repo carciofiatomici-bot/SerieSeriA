@@ -13,7 +13,9 @@ window.DraftStatusBox = {
     // Cache per i dati
     _cachedPlayers: null,
     _cachedDraftState: null,
-    _unsubscribe: null,
+    _configSubscriberId: null,  // ID subscriber per ConfigListener condiviso
+    _lastDraftTurnsHash: null,  // Hash per rilevare cambiamenti rilevanti
+    _containerId: null,         // Salva containerId per refresh
 
     /**
      * Inizializza il box di stato del draft nella dashboard.
@@ -98,7 +100,23 @@ window.DraftStatusBox = {
     },
 
     /**
+     * Genera un hash dei dati rilevanti del draft per rilevare cambiamenti.
+     * Ricarica i giocatori SOLO quando cambiano: round, turno, o lista hasDrafted.
+     */
+    _getDraftTurnsHash(data) {
+        if (!data || !data.draftTurns) return 'no-draft';
+
+        const dt = data.draftTurns;
+        // Crea hash con: round corrente, team corrente, e stato hasDrafted di ogni team
+        const round1Drafted = (dt.round1Order || []).map(t => `${t.teamId}:${t.hasDrafted}`).join(',');
+        const round2Drafted = (dt.round2Order || []).map(t => `${t.teamId}:${t.hasDrafted}`).join(',');
+
+        return `${dt.isActive}-${dt.currentRound}-${dt.currentTeamId}-${round1Drafted}-${round2Drafted}`;
+    },
+
+    /**
      * Avvia il listener real-time per aggiornamenti.
+     * OTTIMIZZATO: Ricarica i giocatori solo quando il draft state cambia realmente.
      */
     startRealTimeListener(containerId) {
         this.stopRealTimeListener();
@@ -114,7 +132,6 @@ window.DraftStatusBox = {
                 if (!snapshot.exists()) return;
 
                 const data = snapshot.data();
-                this._cachedDraftState = data;
 
                 // Se il draft non e' piu' aperto, nascondi il box
                 if (!data.isDraftOpen) {
@@ -127,13 +144,31 @@ window.DraftStatusBox = {
                     return;
                 }
 
-                // Aggiorna la UI
-                await this.refresh(containerId);
+                // Calcola hash del draft state corrente
+                const currentHash = this._getDraftTurnsHash(data);
+
+                // Controlla se il draft state e' cambiato
+                const draftStateChanged = (this._lastDraftTurnsHash !== currentHash);
+
+                // Aggiorna cache
+                this._cachedDraftState = data;
+                this._lastDraftTurnsHash = currentHash;
+
+                // OTTIMIZZAZIONE: Ricarica giocatori SOLO se il draft state e' cambiato
+                // (es. qualcuno ha draftato, turno cambiato, round cambiato)
+                if (draftStateChanged) {
+                    console.log('[DraftStatusBox] Draft state cambiato, ricarico giocatori');
+                    await this.refresh(containerId, true);  // forceReload = true
+                } else {
+                    // Solo aggiorna UI con dati cached (senza ricaricare giocatori)
+                    console.log('[DraftStatusBox] Config aggiornato ma draft state invariato, uso cache');
+                    await this.refresh(containerId, false); // forceReload = false
+                }
             });
 
-            console.log('DraftStatusBox: Listener real-time avviato');
+            console.log('[DraftStatusBox] Listener real-time avviato (ottimizzato)');
         } catch (error) {
-            console.error('DraftStatusBox: Errore avvio listener:', error);
+            console.error('[DraftStatusBox] Errore avvio listener:', error);
         }
     },
 
@@ -149,16 +184,24 @@ window.DraftStatusBox = {
 
     /**
      * Aggiorna la UI del box.
+     * @param {string} containerId - ID del container HTML
+     * @param {boolean} forceReload - Se true, ricarica i giocatori da Firestore. Se false, usa cache.
      */
-    async refresh(containerId) {
+    async refresh(containerId, forceReload = true) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        // Carica dati in parallelo
-        const [configData, players] = await Promise.all([
-            this._cachedDraftState || this.loadConfig(),
-            this.loadAvailablePlayers()
-        ]);
+        // Usa config cached se disponibile
+        const configData = this._cachedDraftState || await this.loadConfig();
+
+        // OTTIMIZZAZIONE: Ricarica giocatori solo se richiesto o se cache vuota
+        let players;
+        if (forceReload || !this._cachedPlayers) {
+            players = await this.loadAvailablePlayers();
+        } else {
+            players = this._cachedPlayers;
+            console.log('[DraftStatusBox] Usando giocatori dalla cache');
+        }
 
         if (!configData || !configData.isDraftOpen) {
             container.innerHTML = '';
@@ -346,6 +389,7 @@ window.DraftStatusBox = {
         this.stopRealTimeListener();
         this._cachedPlayers = null;
         this._cachedDraftState = null;
+        this._lastDraftTurnsHash = null;
     }
 };
 

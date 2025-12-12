@@ -282,16 +282,26 @@ window.getLogoHtml = getLogoHtml;
 
 /**
  * Carica tutti i loghi delle squadre e li mappa {id: url}
+ * OTTIMIZZATO: Usa cache per evitare chiamate Firestore ripetute
+ * @param {boolean} forceRefresh - Se true, ignora la cache e ricarica da Firestore
+ * @returns {Object} Mappa {teamId: logoUrl}
  */
-const fetchAllTeamLogos = async () => {
+const fetchAllTeamLogos = async (forceRefresh = false) => {
+    // OTTIMIZZAZIONE: Se già in cache e non forzato, ritorna cache
+    if (!forceRefresh && teamLogosMap && Object.keys(teamLogosMap).length > 0) {
+        console.log("[fetchAllTeamLogos] Usando cache (0 reads)");
+        return teamLogosMap;
+    }
+
     const { collection, getDocs } = window.firestoreTools;
     const appId = window.firestoreTools.appId;
     const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
-    
+
     try {
+        console.log("[fetchAllTeamLogos] Caricamento da Firestore...");
         const teamsCollectionRef = collection(window.db, TEAMS_COLLECTION_PATH);
         const teamsSnapshot = await getDocs(teamsCollectionRef);
-        
+
         const logos = {};
         teamsSnapshot.forEach(doc => {
             const data = doc.data();
@@ -299,18 +309,30 @@ const fetchAllTeamLogos = async () => {
             const rawLogoUrl = data.logoUrl || window.InterfacciaConstants.DEFAULT_LOGO_URL;
             logos[doc.id] = window.sanitizeGitHubUrl(rawLogoUrl);
         });
-        
+
         teamLogosMap = logos;
         window.InterfacciaCore.teamLogosMap = logos;
-        console.log("Mappa loghi caricata con successo.");
+        console.log(`[fetchAllTeamLogos] Caricati ${Object.keys(logos).length} loghi.`);
+
+        return logos;
 
     } catch (error) {
-        console.error("Errore nel caricamento dei loghi:", error);
+        console.error("[fetchAllTeamLogos] Errore:", error);
         teamLogosMap = {};
         window.InterfacciaCore.teamLogosMap = {};
+        return {};
     }
 };
 window.fetchAllTeamLogos = fetchAllTeamLogos;
+
+/**
+ * Invalida la cache dei loghi (chiamare quando un logo viene modificato)
+ */
+window.invalidateTeamLogosCache = function() {
+    teamLogosMap = {};
+    window.InterfacciaCore.teamLogosMap = {};
+    console.log("[fetchAllTeamLogos] Cache invalidata");
+};
 
 /**
  * Genera la lista completa dei candidati Icona con i livelli iniziali calcolati.
@@ -382,4 +404,123 @@ const calculatePlayerCost = (level, abilities = []) => {
 };
 window.calculatePlayerCost = calculatePlayerCost;
 
-console.log("✅ Modulo interfaccia-core.js caricato.");
+// --- UTILITY ADMIN DA CONSOLE ---
+
+/**
+ * Imposta una squadra come admin (aggiunge isAdmin: true al documento Firestore)
+ * Chiamare da console: await window.setTeamAsAdmin('nomesquadra')
+ * @param {string} teamName - Nome della squadra (case insensitive)
+ * @returns {Promise<boolean>}
+ */
+window.setTeamAsAdmin = async function(teamName) {
+    if (!window.db || !window.firestoreTools) {
+        console.error("[setTeamAsAdmin] Firestore non disponibile");
+        return false;
+    }
+
+    const teamDocId = teamName.toLowerCase().replace(/\s/g, '');
+
+    try {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+        const teamDocRef = doc(window.db, TEAMS_PATH, teamDocId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            console.error(`[setTeamAsAdmin] Squadra '${teamName}' non trovata (ID: ${teamDocId})`);
+            return false;
+        }
+
+        await updateDoc(teamDocRef, { isAdmin: true });
+        console.log(`[setTeamAsAdmin] Squadra '${teamName}' impostata come admin`);
+        return true;
+    } catch (error) {
+        console.error("[setTeamAsAdmin] Errore:", error);
+        return false;
+    }
+};
+
+/**
+ * Resetta le statistiche Hall of Fame di una squadra
+ * Chiamare da console: await window.resetTeamHallOfFame('nomesquadra')
+ * @param {string} teamName - Nome della squadra (case insensitive)
+ * @returns {Promise<boolean>}
+ */
+window.resetTeamHallOfFame = async function(teamName) {
+    if (!window.db || !window.firestoreTools) {
+        console.error("[resetTeamHallOfFame] Firestore non disponibile");
+        return false;
+    }
+
+    const teamDocId = teamName.toLowerCase().replace(/\s/g, '');
+
+    try {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+        const teamDocRef = doc(window.db, TEAMS_PATH, teamDocId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            console.error(`[resetTeamHallOfFame] Squadra '${teamName}' non trovata (ID: ${teamDocId})`);
+            return false;
+        }
+
+        await updateDoc(teamDocRef, {
+            matchHistory: [],
+            campionatiVinti: 0,
+            coppeSerieVinte: 0,
+            supercoppeSerieVinte: 0
+        });
+        console.log(`[resetTeamHallOfFame] Statistiche Hall of Fame resettate per '${teamName}'`);
+        return true;
+    } catch (error) {
+        console.error("[resetTeamHallOfFame] Errore:", error);
+        return false;
+    }
+};
+
+/**
+ * Resetta le statistiche Hall of Fame di TUTTE le squadre
+ * Chiamare da console: await window.resetAllHallOfFame()
+ * @returns {Promise<number>} Numero di squadre resettate
+ */
+window.resetAllHallOfFame = async function() {
+    if (!window.db || !window.firestoreTools) {
+        console.error("[resetAllHallOfFame] Firestore non disponibile");
+        return 0;
+    }
+
+    try {
+        const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+        const teamsCollectionRef = collection(window.db, TEAMS_PATH);
+        const teamsSnapshot = await getDocs(teamsCollectionRef);
+
+        let count = 0;
+        for (const teamDoc of teamsSnapshot.docs) {
+            const teamDocRef = doc(window.db, TEAMS_PATH, teamDoc.id);
+            await updateDoc(teamDocRef, {
+                matchHistory: [],
+                campionatiVinti: 0,
+                coppeSerieVinte: 0,
+                supercoppeSerieVinte: 0
+            });
+            count++;
+            console.log(`[resetAllHallOfFame] Reset: ${teamDoc.data().teamName || teamDoc.id}`);
+        }
+
+        console.log(`[resetAllHallOfFame] Resettate ${count} squadre`);
+        return count;
+    } catch (error) {
+        console.error("[resetAllHallOfFame] Errore:", error);
+        return 0;
+    }
+};
+
+console.log("Modulo interfaccia-core.js caricato.");

@@ -321,19 +321,26 @@ window.InterfacciaAuth = {
                         return;
                     }
 
-                    this.saveSession(teamDocId, 'admin', teamData.teamName, teamData.logoUrl);
-                    localStorage.setItem('fanta_last_screen', elements.adminContent.id);
+                    // DISTINZIONE: "serieseria" va direttamente al pannello admin
+                    // Altre squadre admin vanno alla loro dashboard normale
+                    const isSerieseria = teamData.teamName?.toLowerCase() === 'serieseria';
 
-                    // Salva i dati admin nel core
-                    window.InterfacciaCore.currentTeamData = teamData;
+                    if (isSerieseria) {
+                        // serieseria: account admin puro, va al pannello admin
+                        this.saveSession(teamDocId, 'admin', teamData.teamName, teamData.logoUrl);
+                        localStorage.setItem('fanta_last_screen', elements.adminContent.id);
+                        window.InterfacciaCore.currentTeamData = teamData;
 
-                    elements.loginMessage.textContent = "Accesso Amministratore Riuscito!";
-                    setTimeout(() => {
-                        window.showScreen(elements.adminContent);
-                        window.InterfacciaCore.currentTeamId = teamDocId;
-                        document.dispatchEvent(new CustomEvent('adminLoggedIn'));
-                    }, 1000);
-                    return;
+                        elements.loginMessage.textContent = "Accesso Amministratore Riuscito!";
+                        setTimeout(() => {
+                            window.showScreen(elements.adminContent);
+                            window.InterfacciaCore.currentTeamId = teamDocId;
+                            document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+                        }, 1000);
+                        return;
+                    }
+                    // Altre squadre admin: continua con il login normale per andare alla dashboard
+                    // Il bottone "Pannello Admin" sara' visibile nella loro dashboard
                 }
             } else if (teamDocId === ADMIN_USERNAME_LOWER) {
                 // Account admin principale non esiste ancora - crealo

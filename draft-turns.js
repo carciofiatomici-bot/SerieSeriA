@@ -502,7 +502,12 @@ window.DraftTurns = {
                             currentRound: nextRound,
                             currentTurnIndex: 0,
                             currentTeamId: nextOrder[0].teamId,
-                            turnStartTime: Date.now()
+                            turnStartTime: Date.now(),
+                            // CRITICO: Reset flag turno rubato per il nuovo round
+                            isStolenTurn: false,
+                            turnExpired: false,
+                            stolenFrom: null,
+                            stolenBy: null
                         }
                     }, { merge: true });
 
@@ -527,7 +532,12 @@ window.DraftTurns = {
                         [orderKey]: currentOrder,
                         currentTurnIndex: nextIndex,
                         currentTeamId: nextTeam.teamId,
-                        turnStartTime: Date.now()
+                        turnStartTime: Date.now(),
+                        // CRITICO: Reset flag turno rubato per il nuovo turno (timer torna a 1 ora)
+                        isStolenTurn: false,
+                        turnExpired: false,
+                        stolenFrom: null,
+                        stolenBy: null
                     }
                 }, { merge: true });
 
