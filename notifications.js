@@ -31,7 +31,8 @@ window.Notifications = {
         system: { icon: '⚙️', color: 'gray', priority: 'low' },
         chat: { icon: '💬', color: 'cyan', priority: 'medium' },
         challenge: { icon: '⚔️', color: 'orange', priority: 'high' },
-        out_of_position: { icon: '⚠️', color: 'orange', priority: 'medium' }
+        out_of_position: { icon: '⚠️', color: 'orange', priority: 'medium' },
+        credits_received: { icon: '💎', color: 'emerald', priority: 'high' }
     },
 
     /**
@@ -339,6 +340,15 @@ window.Notifications = {
                 title: 'Puoi Rubare il Turno!',
                 message: `${teamName} non ha ancora draftato. Puoi rubare il suo turno!`,
                 action: { type: 'navigate', target: 'draft-content' }
+            });
+        },
+
+        creditsReceived(amount, motivo) {
+            window.Notifications.add({
+                type: 'credits_received',
+                title: `+${amount} Crediti Super Seri!`,
+                message: motivo || 'Hai ricevuto dei crediti',
+                action: { type: 'navigate', target: 'gestione-content' }
             });
         }
     },

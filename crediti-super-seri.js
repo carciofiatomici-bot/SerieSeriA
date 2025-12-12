@@ -178,6 +178,12 @@ window.CreditiSuperSeri = {
 
             console.log(`CSS +${amount} a ${teamId}. Motivo: ${motivo}. Nuovo saldo: ${nuovoSaldo}`);
 
+            // Invia notifica all'utente se e' lui a ricevere i crediti
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            if (currentTeamId === teamId && window.Notifications?.notify?.creditsReceived) {
+                window.Notifications.notify.creditsReceived(amount, motivo);
+            }
+
             return { success: true, nuovoSaldo };
         } catch (error) {
             console.error('Errore aggiunta CSS:', error);

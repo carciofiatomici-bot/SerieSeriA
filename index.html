@@ -193,8 +193,80 @@
                             <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
                             <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
                             <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
-                            <li>• Ogni giocatore ha un livello (1-20) che influenza le statistiche</li>
+                            <li>• Ogni giocatore ha un livello (1-30) che influenza le statistiche</li>
                         </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Livelli Giocatore (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-sky-500">
+                    <button onclick="window.RulesPanel.toggleSection('livelli')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📊</span>
+                            <h3 class="text-xl font-bold text-sky-400">Livelli e Modificatori</h3>
+                        </div>
+                        <span id="arrow-livelli" class="text-sky-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-livelli" class="hidden p-4 border-t border-sky-700">
+                        <div class="space-y-4 text-sm">
+                            <!-- Spiegazione -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-sky-500">
+                                <p class="text-gray-300 mb-2">Il <strong class="text-sky-400">Livello</strong> di un giocatore determina il suo <strong class="text-white">Modificatore</strong>, un bonus numerico che viene aggiunto ai tiri durante le fasi di gioco.</p>
+                                <p class="text-gray-400 text-xs">Piu alto il livello = piu forte il giocatore nelle simulazioni.</p>
+                            </div>
+
+                            <!-- Tabella Modificatori -->
+                            <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                                <h4 class="font-bold text-sky-400 mb-3 text-center">Tabella Modificatori per Livello</h4>
+                                <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                                    <!-- Colonna 1: Liv 1-10 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 1</span><span class="text-white font-mono">1.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 2</span><span class="text-white font-mono">1.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 3</span><span class="text-white font-mono">2.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 4</span><span class="text-white font-mono">2.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 5</span><span class="text-white font-mono">3.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 6</span><span class="text-white font-mono">3.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 7</span><span class="text-white font-mono">4.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 8</span><span class="text-white font-mono">4.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 9</span><span class="text-white font-mono">5.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 10</span><span class="text-white font-mono">5.5</span></div>
+                                    </div>
+                                    <!-- Colonna 2: Liv 11-20 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 11</span><span class="text-white font-mono">6.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 12</span><span class="text-white font-mono">6.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 13</span><span class="text-white font-mono">7.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 14</span><span class="text-white font-mono">7.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 15</span><span class="text-white font-mono">8.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 16</span><span class="text-white font-mono">8.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 17</span><span class="text-white font-mono">9.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 18</span><span class="text-white font-mono">9.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 19</span><span class="text-white font-mono">10.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 20</span><span class="text-white font-mono">11.0</span></div>
+                                    </div>
+                                    <!-- Colonna 3: Liv 21-30 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 21</span><span class="text-white font-mono">11.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 22</span><span class="text-white font-mono">12.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 23</span><span class="text-white font-mono">12.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 24</span><span class="text-white font-mono">13.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 25</span><span class="text-white font-mono">13.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 26</span><span class="text-white font-mono">14.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 27</span><span class="text-white font-mono">14.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 28</span><span class="text-white font-mono">15.0</span></div>
+                                        <div class="flex justify-between"><span class="text-yellow-400">Liv 29</span><span class="text-yellow-400 font-mono">17.5</span></div>
+                                        <div class="flex justify-between"><span class="text-yellow-400">Liv 30</span><span class="text-yellow-400 font-mono">18.5</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note -->
+                            <div class="bg-yellow-900 bg-opacity-20 rounded p-2 border border-yellow-700">
+                                <p class="text-yellow-300 text-xs">I livelli 29 e 30 hanno modificatori piu alti della media, premiando i giocatori al massimo!</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
