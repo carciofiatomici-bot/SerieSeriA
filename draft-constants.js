@@ -131,6 +131,10 @@ window.DraftConstants = {
     // Dopo 5 furti viene assegnato un giocatore random dal costo piu' basso
     DRAFT_MAX_STEAL_STRIKES: 5,
 
+    // Numero massimo di timeout prima di esclusione dal round (alias per retrocompatibilita')
+    // Dopo 3 timeout il team viene spostato in fondo e poi escluso
+    DRAFT_MAX_TIMEOUT_STRIKES: 3,
+
     // Numero di turni totali del draft
     DRAFT_TOTAL_ROUNDS: 2,
 

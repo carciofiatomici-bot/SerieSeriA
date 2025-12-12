@@ -907,7 +907,7 @@ window.InterfacciaDashboard = {
     },
 
     // ====================================================================
-    // ALERT DRAFT ATTIVO
+    // ALERT DRAFT ATTIVO - Sistema Refactored
     // ====================================================================
 
     // Intervallo per aggiornare il countdown dell'alert draft
@@ -915,6 +915,15 @@ window.InterfacciaDashboard = {
 
     // Listener real-time per lo stato del draft
     _draftAlertUnsubscribe: null,
+
+    // Stato corrente del draft alert (per evitare aggiornamenti ridondanti)
+    _draftAlertState: {
+        currentTeamId: null,
+        turnStartTime: null,
+        turnExpired: false,
+        isStolenTurn: false,
+        lastUpdate: 0
+    },
 
     /**
      * Avvia il listener real-time per l'alert del draft
@@ -977,6 +986,7 @@ window.InterfacciaDashboard = {
 
     /**
      * Aggiorna l'alert del draft da uno snapshot Firestore
+     * REFACTORED: Usa lo stato come single source of truth
      */
     updateDraftAlertFromSnapshot(configData) {
         const banner = document.getElementById('draft-alert-banner');
@@ -999,6 +1009,7 @@ window.InterfacciaDashboard = {
         if (!isDraftOpen || !isDraftTurnsActive || !timerEnabled || isPaused) {
             banner.classList.add('hidden');
             this.stopDraftAlert();
+            this._resetDraftAlertState();
             return;
         }
 
@@ -1006,48 +1017,142 @@ window.InterfacciaDashboard = {
         const currentRound = draftTurns.currentRound;
         const orderKey = currentRound === 1 ? 'round1Order' : 'round2Order';
         const currentOrder = draftTurns[orderKey] || [];
-        const currentTeam = currentOrder.find(t => t.teamId === draftTurns.currentTeamId);
+        const currentTurnTeamId = draftTurns.currentTeamId;
+        const currentTeam = currentOrder.find(t => t.teamId === currentTurnTeamId);
+
         // Converti turnStartTime se e' un Timestamp Firestore
         let turnStartTime = draftTurns.turnStartTime;
         if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
             turnStartTime = turnStartTime.toMillis();
         }
         const turnExpired = draftTurns.turnExpired || false;
-        const isStolenTurn = draftTurns.isStolenTurn || false;
+
+        // CONTROLLO: Valida isStolenTurn per evitare valori inconsistenti
+        // Un turno e' considerato "rubato" SOLO se:
+        // 1. isStolenTurn e' true in Firestore
+        // 2. E stolenBy/stolenFrom sono impostati (indicano chi ha rubato da chi)
+        // Se isStolenTurn e' true ma mancano questi campi, e' un valore stale
+        let isStolenTurn = draftTurns.isStolenTurn || false;
+        if (isStolenTurn) {
+            const hasStealInfo = draftTurns.stolenBy || draftTurns.stolenFrom;
+            if (!hasStealInfo) {
+                // isStolenTurn e' true ma non ci sono info sul furto - probabilmente stale
+                console.warn('[DraftAlert] isStolenTurn=true ma mancano stolenBy/stolenFrom - uso timeout normale (1h)');
+                isStolenTurn = false;
+            }
+        }
+
+        // Aggiorna DraftTimerSync con i dati dal server
+        if (window.DraftTimerSync) {
+            window.DraftTimerSync.updateFromFirestore(draftTurns);
+        }
+
+        // Debug: mostra quale timeout viene usato
+        console.log('[DraftAlert] Stato:', {
+            currentTeam: currentTeam?.teamName,
+            turnExpired,
+            isStolenTurn,
+            stolenBy: draftTurns.stolenBy || null,
+            stolenFrom: draftTurns.stolenFrom || null,
+            timeout: isStolenTurn ? '10 min (stolen)' : '1 ora (normal)'
+        });
 
         if (!currentTeam) {
             banner.classList.add('hidden');
+            this._resetDraftAlertState();
             return;
         }
 
         // Mostra il banner
         banner.classList.remove('hidden');
 
-        // Aggiorna nome squadra
+        // Elementi UI
         const teamNameEl = document.getElementById('draft-alert-team');
         const countdownEl = document.getElementById('draft-alert-countdown');
         const stealInfoEl = document.getElementById('draft-alert-steal-info');
+        const bannerInner = banner.querySelector('div');
 
         // Controlla se l'utente corrente puo' rubare il turno
-        // Puo' rubare SOLO se: turno scaduto, non e' il suo turno, e NON ha ancora draftato in questo round
         const userEntry = currentOrder.find(t => t.teamId === currentTeamId);
         const hasDraftedThisRound = userEntry ? userEntry.hasDrafted : false;
-        const canSteal = turnExpired && currentTeamId !== draftTurns.currentTeamId && !hasDraftedThisRound;
+        const canSteal = turnExpired && currentTeamId !== currentTurnTeamId && !hasDraftedThisRound;
+        const isMyTurn = currentTeamId === currentTurnTeamId;
 
-        if (teamNameEl) {
-            teamNameEl.textContent = currentTeam.teamName;
-        }
-
-        // Ferma countdown precedente prima di aggiornare
+        // SEMPRE ferma e riavvia il countdown per mantenerlo sincronizzato con Firestore
         this.stopDraftAlert();
 
-        // Gestisci lo stato del banner in base alla situazione
+        // Aggiorna lo stato salvato
+        this._updateDraftAlertState(currentTurnTeamId, turnStartTime, turnExpired, isStolenTurn);
+
+        // Applica lo stile e il contenuto in base allo stato
+        this._applyDraftAlertStyle(banner, bannerInner, teamNameEl, countdownEl, stealInfoEl, {
+            currentTeam,
+            canSteal,
+            isMyTurn,
+            hasDraftedThisRound,
+            turnExpired,
+            isStolenTurn,
+            turnStartTime
+        });
+    },
+
+    /**
+     * Controlla se lo stato del draft e' cambiato
+     */
+    _hasDraftStateChanged(teamId, turnStartTime, turnExpired, isStolenTurn) {
+        const state = this._draftAlertState;
+        return (
+            state.currentTeamId !== teamId ||
+            state.turnStartTime !== turnStartTime ||
+            state.turnExpired !== turnExpired ||
+            state.isStolenTurn !== isStolenTurn
+        );
+    },
+
+    /**
+     * Aggiorna lo stato interno del draft alert
+     */
+    _updateDraftAlertState(teamId, turnStartTime, turnExpired, isStolenTurn) {
+        this._draftAlertState = {
+            currentTeamId: teamId,
+            turnStartTime: turnStartTime,
+            turnExpired: turnExpired,
+            isStolenTurn: isStolenTurn,
+            lastUpdate: Date.now()
+        };
+    },
+
+    /**
+     * Reset dello stato del draft alert
+     */
+    _resetDraftAlertState() {
+        this._draftAlertState = {
+            currentTeamId: null,
+            turnStartTime: null,
+            turnExpired: false,
+            isStolenTurn: false,
+            lastUpdate: 0
+        };
+    },
+
+    /**
+     * Applica lo stile e contenuto al banner del draft
+     */
+    _applyDraftAlertStyle(banner, bannerInner, teamNameEl, countdownEl, stealInfoEl, data) {
+        const { currentTeam, canSteal, isMyTurn, hasDraftedThisRound, turnExpired, isStolenTurn, turnStartTime } = data;
+
+        // Reset classi del banner
+        if (bannerInner) {
+            bannerInner.classList.remove(
+                'from-purple-900', 'to-indigo-900', 'border-purple-500',
+                'from-green-900', 'to-emerald-900', 'border-green-500',
+                'from-red-900', 'to-rose-900', 'border-red-500'
+            );
+        }
+
+        // STATO 1: Turno rubabile (SCADUTO e posso rubare)
         if (canSteal) {
-            // Turno rubabile - colore rosso
-            const bannerInner = banner.querySelector('div');
             if (bannerInner) {
-                bannerInner.classList.remove('from-purple-900', 'to-indigo-900', 'border-purple-500');
-                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
                 bannerInner.classList.add('from-red-900', 'to-rose-900', 'border-red-500');
             }
             if (teamNameEl) {
@@ -1060,18 +1165,17 @@ window.InterfacciaDashboard = {
                 countdownEl.classList.add('text-red-400', 'animate-pulse');
                 countdownEl.classList.remove('text-white');
             }
-            // Mostra info sul furto
             if (stealInfoEl) {
                 stealInfoEl.classList.remove('hidden');
-                stealInfoEl.textContent = `Strikes: ${currentTeam.stealStrikes || 0}/5`;
+                stealInfoEl.textContent = `Strikes: ${currentTeam.timeoutStrikes || 0}/3`;
             }
+            // NON avviare countdown - stato statico "SCADUTO"
+            return;
+        }
 
-        } else if (hasDraftedThisRound) {
-            // L'utente ha gia' draftato in questo round - colore grigio/viola
-            const bannerInner = banner.querySelector('div');
+        // STATO 2: Ho gia' draftato in questo round
+        if (hasDraftedThisRound) {
             if (bannerInner) {
-                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
-                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
                 bannerInner.classList.add('from-purple-900', 'to-indigo-900', 'border-purple-500');
             }
             if (teamNameEl) {
@@ -1089,15 +1193,14 @@ window.InterfacciaDashboard = {
                 stealInfoEl.classList.remove('text-red-300');
                 stealInfoEl.classList.add('text-green-300');
             }
-            // Avvia countdown comunque per mostrare il tempo rimanente
-            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
+            // Avvia countdown per mostrare tempo rimanente (solo info)
+            this.startDraftAlertCountdown(turnStartTime, isStolenTurn, false);
+            return;
+        }
 
-        } else if (currentTeamId === draftTurns.currentTeamId) {
-            // E' il turno dell'utente - colore verde
-            const bannerInner = banner.querySelector('div');
+        // STATO 3: E' il mio turno
+        if (isMyTurn) {
             if (bannerInner) {
-                bannerInner.classList.remove('from-purple-900', 'to-indigo-900', 'border-purple-500');
-                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
                 bannerInner.classList.add('from-green-900', 'to-emerald-900', 'border-green-500');
             }
             if (teamNameEl) {
@@ -1107,35 +1210,34 @@ window.InterfacciaDashboard = {
             }
             if (countdownEl) {
                 countdownEl.classList.remove('text-red-400', 'animate-pulse');
-            }
-            if (stealInfoEl) {
-                stealInfoEl.classList.add('hidden');
-            }
-            // Mostra tempo appropriato (10 min se turno rubato)
-            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
-
-        } else {
-            // In attesa del turno - colore viola
-            const bannerInner = banner.querySelector('div');
-            if (bannerInner) {
-                bannerInner.classList.remove('from-green-900', 'to-emerald-900', 'border-green-500');
-                bannerInner.classList.remove('from-red-900', 'to-rose-900', 'border-red-500');
-                bannerInner.classList.add('from-purple-900', 'to-indigo-900', 'border-purple-500');
-            }
-            if (teamNameEl) {
-                teamNameEl.classList.remove('text-green-400', 'text-red-400');
-                teamNameEl.classList.add('text-yellow-400');
-            }
-            if (countdownEl) {
-                countdownEl.classList.remove('text-red-400', 'animate-pulse');
                 countdownEl.classList.add('text-white');
             }
             if (stealInfoEl) {
                 stealInfoEl.classList.add('hidden');
             }
-            // Avvia countdown con tempo appropriato
-            this.startDraftAlertCountdown(turnStartTime, isStolenTurn);
+            // Avvia countdown con possibilita' di mostrare SCADUTO se e' il mio turno
+            this.startDraftAlertCountdown(turnStartTime, isStolenTurn, true);
+            return;
         }
+
+        // STATO 4: In attesa del mio turno (turno di qualcun altro, non scaduto)
+        if (bannerInner) {
+            bannerInner.classList.add('from-purple-900', 'to-indigo-900', 'border-purple-500');
+        }
+        if (teamNameEl) {
+            teamNameEl.textContent = currentTeam.teamName;
+            teamNameEl.classList.remove('text-green-400', 'text-red-400');
+            teamNameEl.classList.add('text-yellow-400');
+        }
+        if (countdownEl) {
+            countdownEl.classList.remove('text-red-400', 'animate-pulse');
+            countdownEl.classList.add('text-white');
+        }
+        if (stealInfoEl) {
+            stealInfoEl.classList.add('hidden');
+        }
+        // Avvia countdown - quando scade, Firestore impostera' turnExpired e il listener aggiornera' l'UI
+        this.startDraftAlertCountdown(turnStartTime, isStolenTurn, false);
     },
 
     /**
@@ -1189,15 +1291,83 @@ window.InterfacciaDashboard = {
 
     /**
      * Avvia il countdown nell'alert draft
+     * REFACTORED: Non ricarica piu' automaticamente quando scade - il listener Firestore gestisce gli aggiornamenti
      * @param {number} turnStartTimeParam - Timestamp di inizio turno
      * @param {boolean} isStolenTurn - Se true, usa timeout di 10 minuti invece di 1 ora
+     * @param {boolean} showExpiredState - Se true, mostra "SCADUTO" quando il timer arriva a 0 (solo per il proprio turno)
      */
-    startDraftAlertCountdown(turnStartTimeParam, isStolenTurn = false) {
+    startDraftAlertCountdown(turnStartTimeParam, isStolenTurn = false, showExpiredState = false) {
         const countdownEl = document.getElementById('draft-alert-countdown');
         const countdownMiniEl = document.getElementById('draft-alert-countdown-mini');
         if (!countdownEl) return;
 
-        // Converti turnStartTime se e' un Timestamp Firestore
+        // Usa DraftTimerSync per il countdown sincronizzato
+        if (window.DraftTimerSync) {
+            // Flag per tracciare se abbiamo gia' mostrato lo stato scaduto
+            let hasShownExpired = false;
+
+            // Sottoscrivi agli aggiornamenti del timer
+            this._draftAlertUnsubscribe = window.DraftTimerSync.subscribe((state) => {
+                if (!countdownEl) return;
+
+                // Se il tempo e' scaduto
+                if (state.isExpired) {
+                    if (showExpiredState && !hasShownExpired) {
+                        hasShownExpired = true;
+                        countdownEl.textContent = 'SCADUTO';
+                        countdownEl.classList.add('text-red-400', 'animate-pulse');
+                        countdownEl.classList.remove('text-white');
+                        if (countdownMiniEl) {
+                            countdownMiniEl.textContent = '00:00';
+                            countdownMiniEl.classList.add('text-red-400', 'animate-pulse');
+                        }
+                    } else if (!showExpiredState) {
+                        countdownEl.textContent = '00:00';
+                        if (countdownMiniEl) {
+                            countdownMiniEl.textContent = '00:00';
+                        }
+                    }
+                    return;
+                }
+
+                // Formatta il tempo rimanente
+                let timeText = state.formattedTime;
+                if (state.isNightPause) {
+                    timeText = `${state.formattedTime} 🌙`;
+                }
+                countdownEl.textContent = timeText;
+
+                // Aggiorna anche la versione mini
+                if (countdownMiniEl) {
+                    countdownMiniEl.textContent = state.formattedTime;
+                }
+
+                // Gestisci le classi CSS
+                countdownEl.classList.remove('text-red-400', 'text-white', 'animate-pulse');
+                countdownMiniEl?.classList.remove('text-red-400', 'text-white', 'animate-pulse');
+
+                if (state.isWarning && !state.isNightPause) {
+                    countdownEl.classList.add('text-red-400');
+                    countdownMiniEl?.classList.add('text-red-400');
+                } else {
+                    countdownEl.classList.add('text-white');
+                    countdownMiniEl?.classList.add('text-white');
+                }
+            });
+        } else {
+            // Fallback: usa il vecchio metodo se DraftTimerSync non e' disponibile
+            this._startLegacyAlertCountdown(turnStartTimeParam, isStolenTurn, showExpiredState);
+        }
+    },
+
+    /**
+     * Fallback: countdown legacy per l'alert senza DraftTimerSync
+     */
+    _startLegacyAlertCountdown(turnStartTimeParam, isStolenTurn, showExpiredState) {
+        const countdownEl = document.getElementById('draft-alert-countdown');
+        const countdownMiniEl = document.getElementById('draft-alert-countdown-mini');
+        if (!countdownEl) return;
+
         let turnStartTime = turnStartTimeParam;
         if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
             turnStartTime = turnStartTime.toMillis();
@@ -1208,35 +1378,41 @@ window.InterfacciaDashboard = {
             DRAFT_STEAL_TIMEOUT_MS: 600000
         };
 
-        // Usa il timeout appropriato
         const timeout = isStolenTurn ? DRAFT_STEAL_TIMEOUT_MS : DRAFT_TURN_TIMEOUT_MS;
+        let hasShownExpired = false;
 
         const updateCountdown = () => {
-            // Usa getEffectiveTimeRemaining per considerare la pausa notturna
             const timeRemaining = window.DraftConstants?.getEffectiveTimeRemaining
                 ? window.DraftConstants.getEffectiveTimeRemaining(turnStartTime, timeout)
                 : Math.max(0, timeout - (Date.now() - turnStartTime));
 
             const minutes = Math.floor(timeRemaining / 60000);
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
-
-            // Controlla se siamo in pausa notturna
             const isNightPause = window.DraftConstants?.isNightPauseActive?.() || false;
 
-            let timeText;
-            if (isNightPause) {
-                timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} 🌙`;
-            } else {
-                timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            if (timeRemaining <= 0 && !isNightPause) {
+                if (showExpiredState && !hasShownExpired) {
+                    hasShownExpired = true;
+                    countdownEl.textContent = 'SCADUTO';
+                    countdownEl.classList.add('text-red-400', 'animate-pulse');
+                    countdownEl.classList.remove('text-white');
+                    if (countdownMiniEl) {
+                        countdownMiniEl.textContent = '00:00';
+                        countdownMiniEl.classList.add('text-red-400', 'animate-pulse');
+                    }
+                } else if (!showExpiredState) {
+                    countdownEl.textContent = '00:00';
+                    if (countdownMiniEl) countdownMiniEl.textContent = '00:00';
+                }
+                return;
             }
+
+            let timeText = isNightPause
+                ? `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} 🌙`
+                : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             countdownEl.textContent = timeText;
+            if (countdownMiniEl) countdownMiniEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // Aggiorna anche la versione mini
-            if (countdownMiniEl) {
-                countdownMiniEl.textContent = isNightPause ? `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : timeText;
-            }
-
-            // Soglia di avviso: 5 minuti per turno normale, 2 minuti per turno rubato
             const warningThreshold = isStolenTurn ? 2 * 60 * 1000 : 5 * 60 * 1000;
             if (timeRemaining < warningThreshold && !isNightPause) {
                 countdownEl.classList.add('text-red-400');
@@ -1249,21 +1425,8 @@ window.InterfacciaDashboard = {
                 countdownMiniEl?.classList.remove('text-red-400');
                 countdownMiniEl?.classList.add('text-white');
             }
-
-            // Se scaduto (e non in pausa notturna), ricarica lo stato per mostrare "Ruba Turno"
-            if (timeRemaining <= 0 && !isNightPause) {
-                countdownEl.textContent = 'SCADUTO';
-                countdownEl.classList.add('animate-pulse');
-                if (countdownMiniEl) {
-                    countdownMiniEl.textContent = '00:00';
-                    countdownMiniEl.classList.add('animate-pulse');
-                }
-                // Ricarica per aggiornare lo stato (mostrare opzione Ruba Turno)
-                setTimeout(() => this.initDraftAlert(), 2000);
-            }
         };
 
-        // Aggiorna subito e poi ogni secondo
         updateCountdown();
         this._draftAlertInterval = setInterval(updateCountdown, 1000);
     },
@@ -1272,6 +1435,12 @@ window.InterfacciaDashboard = {
      * Ferma il countdown dell'alert draft
      */
     stopDraftAlert() {
+        // Rimuovi sottoscrizione DraftTimerSync
+        if (this._draftAlertUnsubscribe) {
+            this._draftAlertUnsubscribe();
+            this._draftAlertUnsubscribe = null;
+        }
+        // Legacy cleanup
         if (this._draftAlertInterval) {
             clearInterval(this._draftAlertInterval);
             this._draftAlertInterval = null;

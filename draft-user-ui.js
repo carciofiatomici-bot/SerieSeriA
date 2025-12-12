@@ -550,8 +550,14 @@ window.DraftUserUI = {
 
             const configData = snapshot.data();
             const isDraftOpen = configData.isDraftOpen || false;
+            const draftTurns = configData.draftTurns || null;
 
             console.log("Draft real-time update - isDraftOpen:", isDraftOpen);
+
+            // Aggiorna DraftTimerSync con i dati dal server
+            if (window.DraftTimerSync && draftTurns) {
+                window.DraftTimerSync.updateFromFirestore(draftTurns);
+            }
 
             // Se siamo ancora nella pagina Draft, aggiorna l'UI
             const draftContent = document.getElementById('draft-content');
@@ -1091,21 +1097,57 @@ window.DraftUserUI = {
     },
 
     /**
-     * Avvia il countdown del turno con sincronizzazione server
+     * Avvia il countdown del turno usando DraftTimerSync (timer condiviso)
      * @param {Object} context - Contesto
-     * @param {number} turnStartTimeParam - Timestamp di inizio turno dal server
-     * @param {number} timeout - Timeout in millisecondi (default 1 ora, 10 min per turni rubati)
+     * @param {number} turnStartTimeParam - Timestamp di inizio turno dal server (legacy, non usato)
+     * @param {number} timeout - Timeout in millisecondi (legacy, non usato)
      */
     startTurnCountdown(context, turnStartTimeParam, timeout) {
         this.clearTurnTimer();
 
-        // Converti turnStartTime se e' un Timestamp Firestore
+        const countdownElement = document.getElementById('draft-turn-countdown');
+        if (!countdownElement) return;
+
+        // Usa DraftTimerSync per il countdown sincronizzato
+        if (window.DraftTimerSync) {
+            // Sottoscrivi agli aggiornamenti del timer
+            this._timerUnsubscribe = window.DraftTimerSync.subscribe((state) => {
+                if (!countdownElement) {
+                    this.clearTurnTimer();
+                    return;
+                }
+
+                // Aggiorna il countdown element
+                countdownElement.textContent = state.formattedTime;
+
+                // Gestisci le classi CSS
+                countdownElement.classList.remove('text-indigo-400', 'text-red-400', 'text-red-500', 'text-white');
+
+                if (state.isNightPause) {
+                    countdownElement.classList.add('text-indigo-400');
+                } else if (state.isExpired) {
+                    countdownElement.classList.add('text-red-500');
+                } else if (state.isWarning) {
+                    countdownElement.classList.add('text-red-400');
+                } else {
+                    countdownElement.classList.add('text-white');
+                }
+            });
+        } else {
+            // Fallback: usa il vecchio metodo se DraftTimerSync non e' disponibile
+            this._startLegacyCountdown(context, turnStartTimeParam, timeout);
+        }
+    },
+
+    /**
+     * Fallback: countdown legacy senza DraftTimerSync
+     */
+    _startLegacyCountdown(context, turnStartTimeParam, timeout) {
         let turnStartTime = turnStartTimeParam;
         if (turnStartTime && typeof turnStartTime.toMillis === 'function') {
             turnStartTime = turnStartTime.toMillis();
         }
 
-        // Salva il turnStartTime dal server
         this.serverTurnStartTime = turnStartTime;
         const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants;
         const currentTimeout = timeout || DRAFT_TURN_TIMEOUT_MS;
@@ -1117,17 +1159,13 @@ window.DraftUserUI = {
                 return;
             }
 
-            // Verifica se siamo in pausa notturna
             const isNightPause = window.DraftConstants.isNightPauseActive();
-
-            // Calcola tempo rimanente effettivo (escludendo pause notturne)
             const timeRemaining = window.DraftConstants.getEffectiveTimeRemaining(this.serverTurnStartTime, currentTimeout);
 
             if (timeRemaining <= 0 && !isNightPause) {
                 countdownElement.textContent = '00:00';
                 countdownElement.classList.add('text-red-500');
                 this.clearTurnTimer();
-                // Ricarica per aggiornare lo stato (mostrare bottone Ruba Turno)
                 setTimeout(() => this.render(context), 2000);
                 return;
             }
@@ -1136,13 +1174,11 @@ window.DraftUserUI = {
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
             countdownElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // Mostra indicatore pausa notturna
             if (isNightPause) {
                 countdownElement.classList.add('text-indigo-400');
                 countdownElement.classList.remove('text-red-400', 'text-white');
             } else {
                 countdownElement.classList.remove('text-indigo-400');
-                // Cambia colore quando mancano meno di 5 minuti (o 2 minuti per turni rubati)
                 const warningThreshold = currentTimeout < DRAFT_TURN_TIMEOUT_MS ? 2 * 60 * 1000 : 5 * 60 * 1000;
                 if (timeRemaining < warningThreshold) {
                     countdownElement.classList.add('text-red-400');
@@ -1154,13 +1190,9 @@ window.DraftUserUI = {
             }
         };
 
-        // Aggiorna subito
         updateCountdown();
-
-        // Poi ogni secondo
         this.turnTimerInterval = setInterval(updateCountdown, 1000);
 
-        // Risincronizza con il server ogni 10 secondi
         this.serverSyncInterval = setInterval(async () => {
             await this.syncWithServer(context);
         }, 10000);
@@ -1211,6 +1243,12 @@ window.DraftUserUI = {
      * Pulisce il timer del turno e il sync
      */
     clearTurnTimer() {
+        // Rimuovi sottoscrizione DraftTimerSync
+        if (this._timerUnsubscribe) {
+            this._timerUnsubscribe();
+            this._timerUnsubscribe = null;
+        }
+        // Legacy cleanup
         if (this.turnTimerInterval) {
             clearInterval(this.turnTimerInterval);
             this.turnTimerInterval = null;
