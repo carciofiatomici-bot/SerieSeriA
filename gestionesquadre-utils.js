@@ -186,14 +186,24 @@ window.GestioneSquadreUtils = {
     },
 
     /**
-     * Restituisce l'HTML per l'icona del tipo di giocatore
+     * Restituisce l'HTML per il badge del tipo di giocatore (PlayerTypeBadge)
+     * @param {string} playerType - Tipo del giocatore ('Potenza', 'Tecnica', 'Velocita')
+     * @param {string} size - Dimensione: 'xs', 'sm', 'md', 'lg' (default: 'sm')
+     * @returns {string} HTML del badge
+     */
+    getTypeBadgeHtml(playerType, size = 'sm') {
+        return window.GestioneSquadreConstants.getTypeBadgeHtml(playerType, size);
+    },
+
+    /**
+     * @deprecated Usa getTypeBadgeHtml() invece
+     * Restituisce l'HTML per l'icona del tipo di giocatore (legacy)
      * @param {string} playerType - Tipo del giocatore
      * @returns {string} HTML dell'icona
      */
     getTypeIconHtml(playerType) {
-        const { TYPE_ICONS } = window.GestioneSquadreConstants;
-        const typeData = TYPE_ICONS[playerType] || TYPE_ICONS['N/A'];
-        return `<i class="${typeData.icon} ${typeData.color} text-lg ml-2" title="Tipo: ${playerType}"></i>`;
+        // Ora restituisce il badge invece dell'icona
+        return this.getTypeBadgeHtml(playerType, 'sm');
     }
 };
 

@@ -94,7 +94,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
     {
         id: 'dappi',
         role: 'C',
-        name: 'Dappino',
+        name: 'A. H. Uunanana',
         levelRange: [12, 18],
         age: 24,
         cost: 0,

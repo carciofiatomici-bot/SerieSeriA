@@ -16,15 +16,38 @@ window.GestioneSquadreFormazione = {
      */
     render(teamData, context) {
         const { squadraMainTitle, squadraSubtitle, squadraToolsContainer } = context;
-        const { MODULI, TYPE_LEGEND_URL } = window.GestioneSquadreConstants;
+        const { MODULI } = window.GestioneSquadreConstants;
         const { displayMessage } = window.GestioneSquadreUtils;
 
         squadraMainTitle.textContent = "Gestione Formazione";
         squadraSubtitle.textContent = `Modulo Attuale: ${teamData.formation.modulo} | Trascina i giocatori in campo! (Forma attiva)`;
 
+        // Legenda tipologie con badge system
         const legendHtml = `
-            <div class="flex justify-center items-center p-2">
-                <img src="${TYPE_LEGEND_URL}" alt="Legenda Tipologie" class="w-full h-auto max-w-xs rounded-lg shadow-xl">
+            <div class="flex flex-col gap-3 p-3">
+                <div class="text-center text-sm text-gray-400 mb-2">Sistema Sasso-Carta-Forbice</div>
+                <div class="flex justify-center items-center gap-4 flex-wrap">
+                    <div class="flex flex-col items-center gap-1">
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'md')}
+                        <span class="text-xs text-gray-400">Potenza</span>
+                    </div>
+                    <span class="text-green-400 text-lg font-bold">></span>
+                    <div class="flex flex-col items-center gap-1">
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Tecnica', 'md')}
+                        <span class="text-xs text-gray-400">Tecnica</span>
+                    </div>
+                    <span class="text-green-400 text-lg font-bold">></span>
+                    <div class="flex flex-col items-center gap-1">
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Velocita', 'md')}
+                        <span class="text-xs text-gray-400">Velocita</span>
+                    </div>
+                    <span class="text-green-400 text-lg font-bold">></span>
+                    <div class="flex flex-col items-center gap-1">
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'md')}
+                        <span class="text-xs text-gray-400">Potenza</span>
+                    </div>
+                </div>
+                <div class="text-center text-xs text-gray-500 mt-1">Bonus: +5% a +25% | Malus: -5% a -25%</div>
             </div>
         `;
 
@@ -638,7 +661,6 @@ window.GestioneSquadreFormazione = {
      * Crea lo slot per un giocatore nel campo
      */
     createPlayerSlot(role, index, player, context) {
-        const { TYPE_ICONS } = window.GestioneSquadreConstants;
         const slotId = `${role}-${index}`;
         const playerWithForm = player;
 
@@ -674,17 +696,17 @@ window.GestioneSquadreFormazione = {
         const modColor = playerWithForm && playerWithForm.formModifier > 0 ? 'text-green-600' : (playerWithForm && playerWithForm.formModifier < 0 ? 'text-red-600' : 'text-gray-600');
         const modText = playerWithForm && playerWithForm.formModifier !== 0 ? `(${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier})` : '(0)';
 
+        // Badge tipologia (PlayerTypeBadge)
         const playerType = playerWithForm ? (playerWithForm.type || 'N/A') : 'N/A';
-        const typeData = TYPE_ICONS[playerType] || TYPE_ICONS['N/A'];
-        const typeIconHtml = playerWithForm ? `<i class="${typeData.icon} ${typeData.color} text-xs ml-1"></i>` : '';
+        const typeBadgeHtml = playerWithForm ? window.GestioneSquadreConstants.getTypeBadgeHtml(playerType, 'xs') : '';
 
         const internalLabelColor = 'text-gray-600';
 
         const playerContent = playerWithForm ?
             `<div class="jersey-inner">
                 <span class="jersey-name" title="${playerWithForm.name}">${playerWithForm.name}</span>
-                <span class="jersey-role ${internalLabelColor}">
-                    ${playerRole} ${typeIconHtml}
+                <span class="jersey-role ${internalLabelColor} flex items-center justify-center gap-1">
+                    ${playerRole} ${typeBadgeHtml}
                 </span>
                 <span class="jersey-base-level ${internalLabelColor}">BASE: ${baseLevel}</span>
                 <div class="jersey-level-box">
@@ -1102,7 +1124,6 @@ window.GestioneSquadreFormazione = {
         }
 
         // Genera HTML lista
-        const { TYPE_ICONS } = window.GestioneSquadreConstants;
         const roleColors = {
             'P': 'bg-yellow-600',
             'D': 'bg-blue-600',
@@ -1115,7 +1136,7 @@ window.GestioneSquadreFormazione = {
             : available.map(p => {
                 const isInjured = window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(p);
                 const isCompatible = targetRole === 'B' || p.role === targetRole;
-                const typeData = TYPE_ICONS[p.type] || TYPE_ICONS['N/A'];
+                const typeBadge = window.GestioneSquadreConstants.getTypeBadgeHtml(p.type || 'N/A', 'xs');
                 const isIcona = p.abilities && p.abilities.includes('Icona');
 
                 const bgClass = isInjured
@@ -1133,8 +1154,8 @@ window.GestioneSquadreFormazione = {
                          ${clickAttr}>
                         <span class="text-xs px-1.5 py-0.5 rounded text-white font-bold ${roleColors[p.role] || 'bg-gray-600'}">${p.role}</span>
                         <span class="text-white text-sm flex-1 truncate">${isIcona ? '⭐ ' : ''}${p.name}</span>
-                        <span class="text-gray-400 text-xs flex items-center">
-                            <i class="${typeData.icon} ${typeData.color} mr-1"></i>
+                        <span class="text-gray-400 text-xs flex items-center gap-1">
+                            ${typeBadge}
                             Lv.${p.level || 1}
                         </span>
                         ${isInjured ? '<span class="text-red-400 text-xs" title="Infortunato">🏥</span>' : ''}
@@ -1491,8 +1512,6 @@ window.GestioneSquadreFormazione = {
                 </div>
             `;
         }
-
-        const { TYPE_ICONS } = window.GestioneSquadreConstants;
 
         const playersHtml = injuredPlayers.map(p => {
             const remaining = p.injury.remainingMatches;

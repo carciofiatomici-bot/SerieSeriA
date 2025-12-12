@@ -13,8 +13,7 @@ window.GestioneSquadreRosa = {
      */
     render(teamData, context) {
         const { squadraMainTitle, squadraSubtitle, squadraToolsContainer, currentTeamId, loadTeamDataFromFirestore } = context;
-        const { TYPE_ICONS } = window.GestioneSquadreConstants;
-        const { displayMessage, sortPlayersByRole, getTypeIconHtml } = window.GestioneSquadreUtils;
+        const { displayMessage, sortPlayersByRole } = window.GestioneSquadreUtils;
 
         squadraMainTitle.textContent = "Gestione Rosa";
         squadraSubtitle.textContent = `Budget Rimanente: ${teamData.budget} Crediti Seri | Giocatori in rosa: ${window.getPlayerCountExcludingIcona(teamData.players)}/${window.InterfacciaConstants.MAX_ROSA_PLAYERS} (+ Icona)`;
@@ -49,7 +48,7 @@ window.GestioneSquadreRosa = {
                 <div id="player-list" class="space-y-3">
                     ${sortedPlayers.length === 0
                         ? '<p class="text-gray-400">Nessun calciatore in rosa. Vai al Draft per acquistarne!</p>'
-                        : sortedPlayers.map(player => this.renderPlayerCard(player, teamData, TYPE_ICONS)).join('')
+                        : sortedPlayers.map(player => this.renderPlayerCard(player, teamData)).join('')
                     }
                 </div>
             </div>
@@ -61,7 +60,7 @@ window.GestioneSquadreRosa = {
     /**
      * Renderizza una singola card giocatore
      */
-    renderPlayerCard(player, teamData, TYPE_ICONS) {
+    renderPlayerCard(player, teamData) {
         const refundCost = player.cost > 0 ? Math.floor(player.cost / 2) : 0;
         const isCaptain = player.isCaptain;
         // Verifica se è Icona: tramite abilities OPPURE tramite iconaId nel teamData
@@ -86,10 +85,9 @@ window.GestioneSquadreRosa = {
 
         const isCaptainClass = isCaptain ? 'text-orange-400 font-extrabold' : 'text-white font-semibold';
 
-        // Tipologia
+        // Badge tipologia (PlayerTypeBadge)
         const playerType = player.type || 'N/A';
-        const typeData = TYPE_ICONS[playerType] || TYPE_ICONS['N/A'];
-        const typeIconHtml = `<i class="${typeData.icon} ${typeData.color} text-lg ml-2" title="Tipo: ${playerType}"></i>`;
+        const typeBadgeHtml = window.GestioneSquadreConstants.getTypeBadgeHtml(playerType, 'sm');
 
         // Abilita (mostra tutte, inclusa Icona)
         const playerAbilities = player.abilities || [];
@@ -129,11 +127,13 @@ window.GestioneSquadreRosa = {
             <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
                 <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
                     <div>
-                        <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
-                        ${iconaMarker}
-                        ${injuryMarker}
-                        <span class="text-yellow-400">(${player.role})</span>
-                        ${typeIconHtml}
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
+                            ${iconaMarker}
+                            ${injuryMarker}
+                            <span class="text-yellow-400">(${player.role})</span>
+                            ${typeBadgeHtml}
+                        </div>
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
                         ${abilitiesHtml}
                     </div>

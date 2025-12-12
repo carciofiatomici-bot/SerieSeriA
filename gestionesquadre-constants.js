@@ -33,16 +33,44 @@ window.GestioneSquadreConstants = {
     // Mappa per l'ordinamento dei ruoli
     ROLE_ORDER: { 'P': 0, 'D': 1, 'C': 2, 'A': 3 },
 
-    // Mappa delle icone di tipologia
+    // Mappa dei badge tipologia (PlayerTypeBadge)
+    // Colori: Tecnica=Teal, Velocita=Olive, Potenza=Rust Orange
+    TYPE_BADGES: {
+        'Potenza': { label: 'POT', bgColor: 'bg-orange-700', textColor: 'text-white' },
+        'Tecnica': { label: 'TEC', bgColor: 'bg-teal-700', textColor: 'text-white' },
+        'Velocita': { label: 'VEL', bgColor: 'bg-lime-700', textColor: 'text-white' },
+        'N/A': { label: '???', bgColor: 'bg-gray-600', textColor: 'text-gray-300' }
+    },
+
+    /**
+     * PlayerTypeBadge - Genera HTML per un badge tipologia stilizzato
+     * @param {string} playerType - Tipo giocatore ('Potenza', 'Tecnica', 'Velocita')
+     * @param {string} size - Dimensione: 'sm', 'md', 'lg' (default: 'sm')
+     * @returns {string} HTML del badge
+     */
+    getTypeBadgeHtml(playerType, size = 'sm') {
+        const badge = this.TYPE_BADGES[playerType] || this.TYPE_BADGES['N/A'];
+
+        // Dimensioni responsive
+        const sizeClasses = {
+            'xs': 'text-[8px] px-1 py-0.5',
+            'sm': 'text-[10px] px-1.5 py-0.5',
+            'md': 'text-xs px-2 py-1',
+            'lg': 'text-sm px-2.5 py-1'
+        };
+
+        const sizeClass = sizeClasses[size] || sizeClasses['sm'];
+
+        return `<span class="${badge.bgColor} ${badge.textColor} ${sizeClass} font-bold rounded uppercase tracking-wide" title="Tipo: ${playerType}">${badge.label}</span>`;
+    },
+
+    // Legacy - Mappa delle icone di tipologia (per retrocompatibilita)
     TYPE_ICONS: {
         'Potenza': { icon: 'fas fa-hand-rock', color: 'text-red-500' },
         'Tecnica': { icon: 'fas fa-brain', color: 'text-blue-500' },
         'Velocita': { icon: 'fas fa-bolt', color: 'text-yellow-500' },
         'N/A': { icon: 'fas fa-question-circle', color: 'text-gray-400' }
     },
-
-    // URL dell'immagine legenda tipologie
-    TYPE_LEGEND_URL: "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Logica%20Tipologie.png",
 
     // Costo sostituzione Icona (in CSS - Crediti Super Seri)
     ICONA_REPLACEMENT_COST: 1
