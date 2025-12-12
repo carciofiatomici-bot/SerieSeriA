@@ -8,7 +8,7 @@
 
 window.VersionCheck = {
     // Versione corrente dell'app (deve corrispondere a APP_VERSION in service-worker.js)
-    CURRENT_VERSION: '1.2.7',
+    CURRENT_VERSION: '1.3.0',
 
     // Chiave localStorage per salvare la versione accettata
     VERSION_KEY: 'serie-seria-accepted-version',
@@ -195,7 +195,7 @@ window.VersionCheck = {
     },
 
     /**
-     * Forza l'aggiornamento dell'app
+     * Forza l'aggiornamento dell'app - versione aggressiva
      */
     async forceUpdate() {
         // Mostra stato di caricamento sul bottone
@@ -206,45 +206,71 @@ window.VersionCheck = {
             updateBtn.style.opacity = '0.7';
         }
 
+        console.log('[VersionCheck] Inizio aggiornamento forzato...');
+
         try {
-            // 1. Cancella tutte le cache del browser
+            // STEP 1: Cancella TUTTE le cache del browser (Cache API)
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-                console.log('[VersionCheck] Cache cancellate:', cacheNames);
+                console.log('[VersionCheck] Cache da cancellare:', cacheNames);
+                await Promise.all(cacheNames.map(name => {
+                    console.log('[VersionCheck] Cancellazione cache:', name);
+                    return caches.delete(name);
+                }));
+                console.log('[VersionCheck] Tutte le cache cancellate');
             }
 
-            // 2. Invia SKIP_WAITING al service worker in attesa (se presente)
+            // STEP 2: Gestisci il Service Worker
             if ('serviceWorker' in navigator) {
-                const registration = await navigator.serviceWorker.getRegistration();
-                if (registration) {
-                    // Se c'e' un worker in attesa, fallo attivare
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                console.log('[VersionCheck] Service workers trovati:', registrations.length);
+
+                for (const registration of registrations) {
+                    // Invia SKIP_WAITING se c'e' un worker in attesa
                     if (registration.waiting) {
                         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        console.log('[VersionCheck] SKIP_WAITING inviato');
                     }
-                    // Invia anche CLEAR_CACHE al controller attivo
-                    if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+
+                    // Invia CLEAR_CACHE al worker attivo
+                    if (registration.active) {
+                        registration.active.postMessage({ type: 'CLEAR_CACHE' });
+                        console.log('[VersionCheck] CLEAR_CACHE inviato');
                     }
-                    // Deregistra il service worker per forzare reinstallazione
-                    await registration.unregister();
-                    console.log('[VersionCheck] Service worker deregistrato');
+
+                    // Deregistra il service worker
+                    const unregistered = await registration.unregister();
+                    console.log('[VersionCheck] Service worker deregistrato:', unregistered);
                 }
             }
 
-            // 3. Attendi un momento per assicurarsi che tutto sia completato
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // STEP 3: Pulisci localStorage relativo alla versione
+            localStorage.removeItem(this.VERSION_KEY);
+            localStorage.removeItem('fanta_last_screen');
+            console.log('[VersionCheck] localStorage pulito');
 
-            // 4. Ricarica la pagina (senza parametri deprecati)
-            // Per forzare un reload senza cache, usiamo un timestamp nel URL
-            const url = new URL(window.location.href);
-            url.searchParams.set('_refresh', Date.now().toString());
-            window.location.href = url.toString();
+            // STEP 4: Attendi che tutto sia completato
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // STEP 5: Forza hard refresh usando meta refresh + location
+            // Crea un URL pulito senza query params precedenti
+            const baseUrl = window.location.origin + window.location.pathname;
+            const freshUrl = baseUrl + '?_nocache=' + Date.now();
+
+            console.log('[VersionCheck] Reindirizzamento a:', freshUrl);
+
+            // Usa location.replace per non lasciare la pagina nella history
+            window.location.replace(freshUrl);
 
         } catch (error) {
             console.error('[VersionCheck] Errore durante aggiornamento:', error);
-            // Fallback: reload semplice
-            window.location.reload();
+            // Fallback ultra-aggressivo
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            setTimeout(() => {
+                window.location.href = window.location.origin + window.location.pathname + '?force=' + Date.now();
+            }, 200);
         }
     },
 

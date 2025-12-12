@@ -1351,27 +1351,69 @@
                 });
             },
 
-            // Applica l'aggiornamento
-            applyUpdate: function() {
-                if (this.newWorker) {
-                    // Invia messaggio al nuovo SW per attivarsi subito
-                    this.newWorker.postMessage({ type: 'SKIP_WAITING' });
+            // Applica l'aggiornamento - versione robusta
+            applyUpdate: async function() {
+                console.log('[PWA] Applicazione aggiornamento...');
+
+                try {
+                    // 1. Prima pulisci tutte le cache
+                    if ('caches' in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map(name => caches.delete(name)));
+                        console.log('[PWA] Cache cancellate:', names);
+                    }
+
+                    // 2. Attiva il nuovo worker se presente
+                    if (this.newWorker) {
+                        this.newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        console.log('[PWA] SKIP_WAITING inviato al nuovo worker');
+                    }
+
+                    // 3. Aspetta un momento e ricarica
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // 4. Forza reload con cache-busting
+                    const url = window.location.origin + window.location.pathname + '?_update=' + Date.now();
+                    window.location.replace(url);
+
+                } catch (error) {
+                    console.error('[PWA] Errore applicazione aggiornamento:', error);
+                    location.reload();
                 }
             },
 
-            // Forza pulizia cache (utile per debug)
-            clearCache: function() {
-                if (navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+            // Forza pulizia cache - versione asincrona
+            clearCache: async function() {
+                console.log('[PWA] Pulizia cache in corso...');
+
+                try {
+                    // 1. Invia CLEAR_CACHE al service worker
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+                    }
+
+                    // 2. Pulisci cache dal lato client (await!)
+                    if ('caches' in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map(name => caches.delete(name)));
+                        console.log('[PWA] Cache client cancellate:', names);
+                    }
+
+                    // 3. Deregistra tutti i service workers
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(r => r.unregister()));
+                    console.log('[PWA] Service workers deregistrati');
+
+                    // 4. Aspetta e ricarica
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                    const url = window.location.origin + window.location.pathname + '?_clear=' + Date.now();
+                    window.location.replace(url);
+
+                } catch (error) {
+                    console.error('[PWA] Errore pulizia cache:', error);
+                    location.reload();
                 }
-                // Pulisci anche cache dal lato client
-                if ('caches' in window) {
-                    caches.keys().then(names => {
-                        names.forEach(name => caches.delete(name));
-                    });
-                }
-                console.log('[PWA] Cache pulita. Ricarica la pagina.');
-                location.reload();
             },
 
             // Controlla manualmente se ci sono aggiornamenti
@@ -1387,7 +1429,8 @@
         // Registra il Service Worker per PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
+                // updateViaCache: 'none' forza il browser a controllare sempre la versione del SW
+                navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
                     .then((registration) => {
                         console.log('[PWA] Service Worker registrato:', registration.scope);
                         window.PWAUpdater.registration = registration;

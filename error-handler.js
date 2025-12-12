@@ -315,6 +315,16 @@ window.ErrorHandler = {
 
 // Cattura errori globali non gestiti
 window.addEventListener('error', (event) => {
+    // Ignora errori ResizeObserver - sono warning innocui del browser
+    // che si verificano durante il rendering di elementi dinamici
+    const message = event.message || '';
+    if (message.includes('ResizeObserver') ||
+        message.includes('ResizeObserver loop completed') ||
+        message.includes('ResizeObserver loop limit exceeded')) {
+        event.preventDefault();
+        return;
+    }
+
     window.ErrorHandler.handle(event.error || event.message, {
         type: 'uncaught',
         filename: event.filename,

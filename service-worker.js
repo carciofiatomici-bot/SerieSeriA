@@ -157,9 +157,14 @@ self.addEventListener('message', (event) => {
 
     if (event.data && event.data.type === 'CLEAR_CACHE') {
         console.log('[Service Worker] Pulizia cache richiesta...');
-        caches.keys().then((names) => {
-            names.forEach((name) => caches.delete(name));
-        });
+        event.waitUntil(
+            caches.keys().then((names) => {
+                console.log('[Service Worker] Cancellazione cache:', names);
+                return Promise.all(names.map((name) => caches.delete(name)));
+            }).then(() => {
+                console.log('[Service Worker] Tutte le cache cancellate');
+            })
+        );
     }
 
     if (event.data && event.data.type === 'GET_VERSION') {
