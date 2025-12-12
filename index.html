@@ -176,67 +176,174 @@
             </div>
 
             <!-- Contenuto Regole -->
-            <div class="bg-gray-800 p-6 space-y-6">
+            <div class="bg-gray-800 p-6 space-y-4">
 
-                <!-- Sezione Squadra -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-yellow-400 mb-3">⚽ La Squadra</h3>
-                    <ul class="text-gray-300 space-y-2 text-sm">
-                        <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
-                        <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
-                        <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
-                        <li>• Ogni giocatore ha un livello (1-20) che influenza le statistiche</li>
-                    </ul>
+                <!-- Sezione Squadra (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-yellow-500">
+                    <button onclick="window.RulesPanel.toggleSection('squadra')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚽</span>
+                            <h3 class="text-xl font-bold text-yellow-400">La Squadra</h3>
+                        </div>
+                        <span id="arrow-squadra" class="text-yellow-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-squadra" class="hidden p-4 border-t border-yellow-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
+                            <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
+                            <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
+                            <li>• Ogni giocatore ha un livello (1-20) che influenza le statistiche</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Sezione Partita -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-green-400 mb-3">🎮 La Partita</h3>
-                    <ul class="text-gray-300 space-y-2 text-sm">
-                        <li>• Ogni partita ha 3 fasi: <strong class="text-white">Costruzione</strong>, <strong class="text-white">Attacco</strong>, <strong class="text-white">Tiro</strong></li>
-                        <li>• Nella fase Costruzione si contende il possesso palla</li>
-                        <li>• Nella fase Attacco si cerca di superare la difesa</li>
-                        <li>• Nella fase Tiro si cerca di segnare contro il portiere</li>
-                        <li>• Le abilita si attivano in specifiche fasi</li>
-                    </ul>
+                <!-- Sezione Partita (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-green-500">
+                    <button onclick="window.RulesPanel.toggleSection('partita')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🎮</span>
+                            <h3 class="text-xl font-bold text-green-400">La Partita</h3>
+                        </div>
+                        <span id="arrow-partita" class="text-green-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-partita" class="hidden p-4 border-t border-green-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• Ogni partita ha 3 fasi: <strong class="text-white">Costruzione</strong>, <strong class="text-white">Attacco</strong>, <strong class="text-white">Tiro</strong></li>
+                            <li>• Nella fase Costruzione si contende il possesso palla</li>
+                            <li>• Nella fase Attacco si cerca di superare la difesa</li>
+                            <li>• Nella fase Tiro si cerca di segnare contro il portiere</li>
+                            <li>• Le abilita si attivano in specifiche fasi</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Sezione Valute -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-amber-400 mb-3">💰 Valute</h3>
-                    <ul class="text-gray-300 space-y-2 text-sm">
-                        <li>• <strong class="text-white">CS (Crediti Seri)</strong>: Valuta standard per acquistare giocatori</li>
-                        <li>• <strong class="text-amber-400">CSS (Crediti Super Seri)</strong>: Valuta premium per potenziamenti e abilita</li>
-                        <li>• Si guadagnano CS vincendo partite e completando la stagione</li>
-                        <li>• Si guadagnano CSS vincendo trofei (Campionato, Coppa, Supercoppa)</li>
-                    </ul>
+                <!-- Sezione Simulazione (Accordion) - DETTAGLIATA -->
+                <div class="bg-gray-900 rounded-lg border border-cyan-500">
+                    <button onclick="window.RulesPanel.toggleSection('simulazione')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚙️</span>
+                            <h3 class="text-xl font-bold text-cyan-400">Regolamento Simulazione</h3>
+                        </div>
+                        <span id="arrow-simulazione" class="text-cyan-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-simulazione" class="hidden p-4 border-t border-cyan-700">
+                        <div class="space-y-4 text-sm">
+
+                            <!-- Preparazione -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-blue-500">
+                                <h4 class="font-bold text-blue-400 mb-2">1. Preparazione</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Schieramento</strong>: Conferma la formazione con titolari e panchina</li>
+                                    <li>• <strong>Forma Fisica</strong>: Giocatori normali: da -3 a +3 | Icone: da 0 a +6</li>
+                                    <li>• <strong>Abilita</strong>: Vengono considerate le abilita di campo e panchina</li>
+                                </ul>
+                            </div>
+
+                            <!-- Modificatori -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-green-500">
+                                <h4 class="font-bold text-green-400 mb-2">2. Modificatori Tattici</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Tipologia (Sasso-Carta-Forbice)</strong>:</li>
+                                    <li class="ml-4 text-xs"><span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span></li>
+                                    <li class="ml-4 text-xs">Bonus: +5% a +25% | Malus: -5% a -25%</li>
+                                    <li>• <strong>Bonus Allenatore</strong>: +(1/2 Livello Allenatore) in tutte le fasi</li>
+                                    <li>• <strong>Bonus Capitano</strong>: Il capitano ha sempre +1 ai modificatori</li>
+                                </ul>
+                            </div>
+
+                            <!-- Le 3 Fasi -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-yellow-500">
+                                <h4 class="font-bold text-yellow-400 mb-2">3. Le 3 Fasi (30 occasioni per squadra)</h4>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
+                                    <p class="text-cyan-400 font-bold text-xs mb-1">FASE 1: COSTRUZIONE</p>
+                                    <p class="text-gray-400 text-xs">Difensori + Centrocampisti vs Centrocampisti avversari</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Dif + Mod.Cen] vs [1d20 + Mod.Cen avv.]</p>
+                                </div>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
+                                    <p class="text-orange-400 font-bold text-xs mb-1">FASE 2: ATTACCO vs DIFESA</p>
+                                    <p class="text-gray-400 text-xs">Attaccanti + Centrocampisti vs Difensori + Centrocampisti</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Cen + Mod.Att] vs [1d20 + Mod.Dif + 1/2 Mod.Cen]</p>
+                                </div>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2">
+                                    <p class="text-red-400 font-bold text-xs mb-1">FASE 3: TIRO vs PORTIERE</p>
+                                    <p class="text-gray-400 text-xs">Valore Tiro vs Portiere</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + Mod.Portiere] - [1d10 + Valore Tiro]</p>
+                                    <p class="text-gray-400 text-xs mt-1">Risultato > 0: Parata | = 0: 50/50 | < 0: Goal</p>
+                                </div>
+                            </div>
+
+                            <!-- Post Partita -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-purple-500">
+                                <h4 class="font-bold text-purple-400 mb-2">4. Post-Partita</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Classifica</strong>: Aggiornata automaticamente</li>
+                                    <li>• <strong>Infortuni</strong>: 1% probabilita per giocatore (max 1 per squadra)</li>
+                                    <li>• <strong>Forma</strong>: Chi gioca perde forma, chi riposa la recupera</li>
+                                    <li>• <strong>Premi</strong>: CS distribuiti in base al risultato</li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Sezione Competizioni -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-purple-400 mb-3">🏆 Competizioni</h3>
-                    <ul class="text-gray-300 space-y-2 text-sm">
-                        <li>• <strong class="text-green-400">SerieSeriA</strong>: Campionato a girone unico, tutti contro tutti</li>
-                        <li>• <strong class="text-purple-400">CoppaSeriA</strong>: Eliminazione diretta con andata e ritorno</li>
-                        <li>• <strong class="text-yellow-400">Supercoppa</strong>: Partita secca tra Campione e Vincitore Coppa</li>
-                    </ul>
+                <!-- Sezione Valute (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-amber-500">
+                    <button onclick="window.RulesPanel.toggleSection('valute')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">💰</span>
+                            <h3 class="text-xl font-bold text-amber-400">Valute</h3>
+                        </div>
+                        <span id="arrow-valute" class="text-amber-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-valute" class="hidden p-4 border-t border-amber-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• <strong class="text-white">CS (Crediti Seri)</strong>: Valuta standard per acquistare giocatori</li>
+                            <li>• <strong class="text-amber-400">CSS (Crediti Super Seri)</strong>: Valuta premium per potenziamenti e abilita</li>
+                            <li>• Si guadagnano CS vincendo partite e completando la stagione</li>
+                            <li>• Si guadagnano CSS vincendo trofei (Campionato, Coppa, Supercoppa)</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Sezione Enciclopedia Abilita (Collassabile) -->
+                <!-- Sezione Competizioni (Accordion) -->
                 <div class="bg-gray-900 rounded-lg border border-purple-500">
+                    <button onclick="window.RulesPanel.toggleSection('competizioni')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🏆</span>
+                            <h3 class="text-xl font-bold text-purple-400">Competizioni</h3>
+                        </div>
+                        <span id="arrow-competizioni" class="text-purple-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-competizioni" class="hidden p-4 border-t border-purple-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• <strong class="text-green-400">SerieSeriA</strong>: Campionato a girone unico, tutti contro tutti</li>
+                            <li>• <strong class="text-purple-400">CoppaSeriA</strong>: Eliminazione diretta con andata e ritorno</li>
+                            <li>• <strong class="text-yellow-400">Supercoppa</strong>: Partita secca tra Campione e Vincitore Coppa</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Enciclopedia Abilita (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-pink-500">
                     <button id="btn-toggle-encyclopedia"
                             onclick="window.RulesPanel.toggleEncyclopedia()"
                             class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
                         <div class="flex items-center gap-3">
-                            <span class="text-3xl">📔</span>
-                            <div>
-                                <h3 class="text-xl font-bold text-purple-400">Enciclopedia Abilita</h3>
-                                <p class="text-gray-400 text-sm">Clicca per espandere la lista completa delle abilita</p>
-                            </div>
+                            <span class="text-2xl">📔</span>
+                            <h3 class="text-xl font-bold text-pink-400">Enciclopedia Abilita</h3>
                         </div>
-                        <span id="encyclopedia-arrow" class="text-purple-400 text-2xl transition-transform">▼</span>
+                        <span id="encyclopedia-arrow" class="text-pink-400 text-xl transition-transform duration-300">▶</span>
                     </button>
-                    <div id="encyclopedia-content" class="hidden p-4 border-t border-purple-700">
+                    <div id="encyclopedia-content" class="hidden p-4 border-t border-pink-700">
                         <div id="encyclopedia-container">
                             <!-- Contenuto enciclopedia caricato dinamicamente -->
                             <p class="text-gray-400 text-center">Caricamento abilita...</p>

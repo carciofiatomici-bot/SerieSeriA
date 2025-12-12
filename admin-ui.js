@@ -1137,6 +1137,17 @@ window.AdminUI = {
                 </div>
             </div>
 
+            <!-- Strumenti di Riparazione di Massa -->
+            <div class="bg-gray-800 rounded-lg border border-orange-500 p-4 mb-4">
+                <h4 class="text-lg font-bold text-orange-400 mb-3">🔧 Strumenti di Riparazione</h4>
+                <p class="text-xs text-gray-400 mb-3">Correggi automaticamente i livelli di tutti i giocatori in tutte le squadre.</p>
+                <p id="fix-all-levels-message" class="text-center text-sm mb-3"></p>
+                <button id="btn-fix-all-teams-levels"
+                        class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150">
+                    🔧 Fix Livelli Tutte le Squadre
+                </button>
+            </div>
+
             <!-- Bottoni Assegna CS/CSS a tutte le squadre -->
             <div class="bg-gray-800 rounded-lg border border-yellow-500 p-4">
                 <h4 class="text-lg font-bold text-yellow-400 mb-3">Assegnazione Crediti di Massa</h4>

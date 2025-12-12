@@ -37,10 +37,11 @@ REGOLAMENTO SIMULAZIONE PARTITA
 Prima di iniziare le fasi, applicare i seguenti aggiustamenti alle formule:
 
 A. Tipologia Giocatori (Sasso-Carta-Forbice):
-   Si applica una penalità del -25% al modificatore dello sfavorito:
-   - Giocatori Potenza  vs Tecnica  -> -25% al modificatore Tecnica
-   - Giocatori Tecnica  vs Velocità -> -25% al modificatore Velocità
-   - Giocatori Velocità vs Potenza  -> -25% al modificatore Potenza
+   Si applicano le penalità e i bonus alle fasi in questo modo:
+   - Giocatori Potenza  vs Tecnica  -> da +5 a +25% al modificatore del giocatore Potenza e da -5% a -25% al modificatore del giocatore Tecnica
+   - Giocatori Tecnica  vs Velocità -> da +5 a +25% al modificatore del giocatore Tecnica e da -5% a -25% al modificatore del giocatore Velocità
+   - Giocatori Velocità vs Potenza  -> da +5 a +25% al modificatore del giocatore Velocità e da -5% a -25% al modificatore del giocatore Potenza
+
 	(potenza > tecnica > velocità > potenza)
 
 B. Bonus Allenatore:

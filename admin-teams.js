@@ -1538,6 +1538,184 @@ window.AdminTeams = {
             msgElement.innerHTML = `<span class="text-green-400">✅ Corrette ${fixes.length} icone duplicate:</span><br><span class="text-xs text-gray-300">${fixes.join('<br>')}</span><br><span class="text-yellow-400 text-xs mt-2">Icona mantenuta: ${iconaVera.name}</span>`;
             msgElement.className = 'text-center text-sm mt-2';
         }
+    },
+
+    /**
+     * Fix livelli di tutte le squadre in batch
+     * Applica la stessa logica di repairTeam() a tutte le squadre
+     * @param {string} TEAMS_COLLECTION_PATH - Path della collection squadre
+     */
+    async fixAllTeamsLevels(TEAMS_COLLECTION_PATH) {
+        const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+
+        const msgElement = document.getElementById('fix-all-levels-message');
+        const button = document.getElementById('btn-fix-all-teams-levels');
+
+        if (msgElement) {
+            msgElement.textContent = 'Caricamento squadre...';
+            msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+        }
+        if (button) {
+            button.disabled = true;
+            button.textContent = '⏳ Elaborazione...';
+        }
+
+        try {
+            const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
+            const querySnapshot = await getDocs(teamsCollectionRef);
+
+            if (querySnapshot.empty) {
+                if (msgElement) {
+                    msgElement.textContent = 'Nessuna squadra trovata.';
+                    msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+                }
+                return;
+            }
+
+            let totalTeamsFixed = 0;
+            let totalPlayersFixed = 0;
+            const teamResults = [];
+
+            for (const teamDoc of querySnapshot.docs) {
+                const teamId = teamDoc.id;
+                const teamData = teamDoc.data();
+
+                // Salta serieseria (account admin puro)
+                if (teamData.teamName && teamData.teamName.toLowerCase() === 'serieseria') {
+                    continue;
+                }
+
+                if (!teamData.players || !Array.isArray(teamData.players)) {
+                    continue;
+                }
+
+                let teamRepairs = [];
+
+                // Applica la logica di riparazione a ogni giocatore
+                const repairedPlayers = teamData.players.map(player => {
+                    const isIcona = player.abilities && player.abilities.includes('Icona');
+                    const isBasePlayer = player.name && (
+                        player.name.includes('Base') ||
+                        player.name === 'Portiere Base' ||
+                        player.name === 'Difensore Base' ||
+                        player.name.includes('Centrocampista Base') ||
+                        player.name === 'Attaccante Base'
+                    );
+
+                    // Determina il livello corretto
+                    let correctLevel;
+                    if (isIcona) {
+                        correctLevel = 12;
+                    } else if (isBasePlayer) {
+                        correctLevel = 1;
+                    } else {
+                        // Per altri giocatori, usa il livello esistente o estrai da levelRange
+                        if (player.level !== undefined) {
+                            correctLevel = player.level;
+                        } else if (player.levelRange && Array.isArray(player.levelRange)) {
+                            correctLevel = player.levelRange[0];
+                        } else if (player.levelMin !== undefined) {
+                            correctLevel = player.levelMin;
+                        } else {
+                            correctLevel = 1;
+                        }
+                    }
+
+                    // Controlla se serve riparazione
+                    const currentLevel = player.level !== undefined ? player.level :
+                                         (player.levelRange ? player.levelRange[0] : (player.levelMin || 1));
+
+                    const needsLevelFix = currentLevel !== correctLevel;
+                    const hasObsoleteFields = player.levelRange || player.levelMin !== undefined || player.levelMax !== undefined;
+
+                    if (needsLevelFix || hasObsoleteFields) {
+                        teamRepairs.push(`${player.name}: Lv ${currentLevel} -> ${correctLevel}`);
+                    }
+
+                    // Crea oggetto giocatore pulito
+                    const repairedPlayer = {
+                        id: player.id,
+                        name: player.name,
+                        role: player.role,
+                        type: player.type,
+                        age: player.age,
+                        cost: player.cost || 0,
+                        level: correctLevel,
+                        abilities: player.abilities || [],
+                        isCaptain: this.isPlayerIcona(player)
+                    };
+
+                    // Mantieni photoUrl se presente (per Icone)
+                    if (player.photoUrl) {
+                        repairedPlayer.photoUrl = player.photoUrl;
+                    }
+
+                    return repairedPlayer;
+                });
+
+                // Se ci sono riparazioni, aggiorna la squadra su Firestore
+                if (teamRepairs.length > 0) {
+                    // Sincronizza anche la formazione
+                    const updatedFormation = this.syncFormationWithPlayers(
+                        teamData.formation,
+                        repairedPlayers
+                    );
+
+                    // Sincronizza playersFormStatus
+                    const updatedFormStatus = this.syncFormStatusWithPlayers(
+                        teamData.playersFormStatus,
+                        repairedPlayers
+                    );
+
+                    const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+                    await updateDoc(teamDocRef, {
+                        players: repairedPlayers,
+                        formation: updatedFormation,
+                        playersFormStatus: updatedFormStatus
+                    });
+
+                    totalTeamsFixed++;
+                    totalPlayersFixed += teamRepairs.length;
+                    teamResults.push({
+                        teamName: teamData.teamName,
+                        repairs: teamRepairs.length
+                    });
+                }
+            }
+
+            // Mostra risultato
+            if (msgElement) {
+                if (totalTeamsFixed > 0) {
+                    const teamsSummary = teamResults.map(t => `${t.teamName}: ${t.repairs} fix`).join(', ');
+                    msgElement.innerHTML = `<span class="text-green-400">✅ Completato!</span><br>
+                        <span class="text-white">Squadre corrette: ${totalTeamsFixed}</span><br>
+                        <span class="text-white">Giocatori corretti: ${totalPlayersFixed}</span><br>
+                        <span class="text-xs text-gray-400">${teamsSummary}</span>`;
+                    msgElement.className = 'text-center text-sm mb-3';
+                } else {
+                    msgElement.textContent = '✅ Nessuna correzione necessaria. Tutti i dati sono gia corretti.';
+                    msgElement.className = 'text-center text-sm mb-3 text-green-400';
+                }
+            }
+
+            // Ricarica la lista squadre
+            if (this.teamsListContainer) {
+                this.loadTeams(TEAMS_COLLECTION_PATH);
+            }
+
+        } catch (error) {
+            console.error('Errore nel fix di tutte le squadre:', error);
+            if (msgElement) {
+                msgElement.textContent = `❌ Errore: ${error.message}`;
+                msgElement.className = 'text-center text-sm mb-3 text-red-400';
+            }
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = '🔧 Fix Livelli Tutte le Squadre';
+            }
+        }
     }
 };
 

@@ -2385,6 +2385,11 @@ document.addEventListener('DOMContentLoaded', () => {
             handleAssignCreditsToAll('CSS');
         });
 
+        // Handler Fix Livelli Tutte le Squadre
+        document.getElementById('btn-fix-all-teams-levels').addEventListener('click', () => {
+            window.AdminTeams.fixAllTeamsLevels(TEAMS_COLLECTION_PATH);
+        });
+
         if (window.AdminTeams.teamsListContainer) {
             window.AdminTeams.teamsListContainer.addEventListener('click', (e) => {
                 window.AdminTeams.handleTeamAction(e, TEAMS_COLLECTION_PATH, () => {

@@ -959,9 +959,84 @@ window.AbilitiesEncyclopedia = {
         // Nota: Fuori Posizione è definita come Multi-Ruolo (D, C, A) nella sezione DIFENSORE
 
         // ========================================
+        // ABILITÀ MULTI-RUOLO AGGIUNTIVE
+        // ========================================
+
+        'Indistruttibile': {
+            name: 'Indistruttibile',
+            icon: '🛡️',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-emerald-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Il giocatore non puo essere infortunato',
+            effect: 'Immunita completa agli infortuni',
+            mechanics: 'Il giocatore e immune al sistema infortuni. Non puo mai subire infortuni a fine partita o durante la simulazione',
+            activation: '100% (passiva)',
+            example: 'Fine partita → Roll infortunio → Indistruttibile attivo → Nessun infortunio possibile!',
+            phase: 'Post-partita / Durante simulazione',
+            synergy: ['Freddezza', 'Icona']
+        },
+
+        'Multiruolo': {
+            name: 'Multiruolo',
+            icon: '🔀',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-violet-500',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Quando gioca fuori ruolo, il livello non subisce modifiche',
+            effect: 'Ignora il malus da fuori ruolo',
+            mechanics: 'Quando il giocatore viene schierato in un ruolo diverso dal suo, non subisce il normale malus al livello. Mantiene il suo modificatore pieno',
+            activation: '100% (passiva)',
+            example: 'Difensore schierato come Centrocampista → Normalmente malus, con Multiruolo nessun malus!',
+            phase: 'Tutte le fasi',
+            synergy: ['Adattabile', 'Tuttocampista'],
+            warning: 'Utilissimo per formazioni flessibili!'
+        },
+
+        'Fragile': {
+            name: 'Fragile',
+            icon: '🩹',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-red-600',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Raddoppia la possibilita di infortunio a fine partita',
+            effect: 'Probabilita infortunio x2 (da 1% a 2%)',
+            mechanics: 'A fine partita, la probabilita che questo giocatore si infortuni e raddoppiata rispetto al normale',
+            activation: '100% (passiva)',
+            example: 'Fine partita → Normalmente 1% infortunio → Con Fragile diventa 2%!',
+            phase: 'Post-partita',
+            synergy: ['Nessuna (abilita negativa)'],
+            warning: '⚠️ ABILITA NEGATIVA - Aumenta il rischio di infortuni!'
+        },
+
+        'Non Adattabile': {
+            name: 'Non Adattabile',
+            icon: '🚫',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-gray-600',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Modificatore -2 permanente. Malus fuori ruolo raddoppiato',
+            effect: '-2 al modificatore base. Quando gioca fuori ruolo il malus ai livelli raddoppia',
+            mechanics: 'Il giocatore ha sempre un malus di -2 al suo modificatore. Se schierato fuori ruolo, il malus normale e raddoppiato',
+            activation: '100% (passiva)',
+            example: 'Giocatore lv10 (mod 5.5) → Con Non Adattabile: mod 3.5 | Fuori ruolo: malus x2!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (abilita negativa)'],
+            warning: '⚠️ ABILITA NEGATIVA - Penalizza costantemente il giocatore!'
+        },
+
+        // ========================================
         // ABILITÀ SPECIALE - ICONA (1)
         // ========================================
-        
+
         'Icona': {
             name: 'Icona',
             icon: '👑',
@@ -969,15 +1044,15 @@ window.AbilitiesEncyclopedia = {
             color: 'text-gold-500',
             rarity: 'Unica',
             type: 'Leggendaria',
-            description: 'L\'Icona della squadra - Bonus speciali',
-            effect: '+1 a TUTTI i compagni, +1 a sé stesso, forma mai negativa',
-            mechanics: 'Tutti i giocatori ricevono +1 mod. L\'Icona riceve +1 aggiuntivo (totale +2). La forma dell\'Icona non può mai essere < 0',
+            description: 'L\'Icona della squadra - Capitano speciale con bonus unici',
+            effect: '+1 a TUTTI i compagni (escluso se stesso), forma mai negativa, immune agli infortuni',
+            mechanics: 'Da +1 ai modificatori di tutti gli altri giocatori della squadra nelle simulazioni (escluso se stesso). La forma dell\'Icona non puo mai essere negativa. Il giocatore non puo infortunarsi.',
             activation: '100% (passiva)',
-            example: 'Squadra con Icona: Tutti +1! Icona stessa +2! Icona con forma -2 → diventa 0',
+            example: 'Squadra con Icona: Tutti i compagni +1! Icona con forma -2 → diventa 0. Mai infortunato!',
             phase: 'Tutte le fasi',
             synergy: ['TUTTE (potenzia l\'intera squadra)'],
-            warning: '⚠️ Solo 1 Icona per squadra!',
-            special: 'Questa è l\'abilità più potente del gioco!'
+            warning: '⚠️ Solo 1 Icona per squadra! Riservata ai capitani scelti alla creazione.',
+            special: 'Questa e l\'abilita piu potente del gioco!'
         }
     },
     
@@ -1078,4 +1153,4 @@ window.AbilitiesEncyclopedia = {
     }
 };
 
-console.log('✅ Enciclopedia Abilità V3.1 caricata - 65 abilità complete!');
+console.log('✅ Enciclopedia Abilita V3.2 caricata - 69 abilita complete!');

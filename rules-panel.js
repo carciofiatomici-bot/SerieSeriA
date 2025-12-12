@@ -10,6 +10,36 @@ window.RulesPanel = {
     isEncyclopediaExpanded: false,
     encyclopediaLoaded: false,
 
+    // Stato delle sezioni accordion
+    expandedSections: {},
+
+    /**
+     * Toggle di una sezione accordion generica
+     * @param {string} sectionId - ID della sezione (squadra, partita, valute, competizioni, simulazione)
+     */
+    toggleSection(sectionId) {
+        const content = document.getElementById(`content-${sectionId}`);
+        const arrow = document.getElementById(`arrow-${sectionId}`);
+
+        if (!content || !arrow) return;
+
+        const isExpanded = this.expandedSections[sectionId] || false;
+
+        if (isExpanded) {
+            // Chiudi sezione
+            content.classList.add('hidden');
+            arrow.textContent = '▶';
+            arrow.style.transform = 'rotate(0deg)';
+            this.expandedSections[sectionId] = false;
+        } else {
+            // Apri sezione
+            content.classList.remove('hidden');
+            arrow.textContent = '▼';
+            arrow.style.transform = 'rotate(0deg)';
+            this.expandedSections[sectionId] = true;
+        }
+    },
+
     /**
      * Ordina le abilità per rarità (Comune -> Rara -> Epica -> Leggendaria -> Unica)
      * @param {Array} abilities - Array di abilità
@@ -74,8 +104,8 @@ window.RulesPanel = {
 
         if (this.isEncyclopediaExpanded) {
             content.classList.remove('hidden');
-            arrow.textContent = '▲';
-            arrow.style.transform = 'rotate(180deg)';
+            arrow.textContent = '▼';
+            arrow.style.transform = 'rotate(0deg)';
 
             // Carica contenuto enciclopedia se non ancora caricato
             if (!this.encyclopediaLoaded) {
@@ -83,7 +113,7 @@ window.RulesPanel = {
             }
         } else {
             content.classList.add('hidden');
-            arrow.textContent = '▼';
+            arrow.textContent = '▶';
             arrow.style.transform = 'rotate(0deg)';
         }
     },

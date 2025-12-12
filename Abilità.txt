@@ -30,6 +30,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d6 invece che 1d10 nella fase 3 "tiro vs portiere".
 -Tiro dalla porta (3): 5% di probabilità di aggiungere 1/2 del suo modificatore alla fase 3 "tiro vs portiere".
 -Indistruttibile (3): Il giocatore non può essere infortunato.
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
 
 
 
@@ -40,6 +41,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
+-Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
 
 ---------------------------------------------------
 [ DIFENSORE ]
@@ -61,6 +63,8 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+
 
 
 
@@ -72,6 +76,8 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
+-Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
+
 
 
 ---------------------------------------------------
@@ -92,6 +98,8 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+
 
 
 
@@ -104,6 +112,8 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Egoista (2): 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale, invece di sommarlo (vuole fare tutto da solo).
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
+-Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
+
 
 
 
@@ -126,6 +136,8 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Immarcabile (4): 5% di probabilità di tirare 2d20 nella Fase 2 (Attacco vs Difesa) e scegliere il risultato migliore.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+
 
 >>> Abilità Negative:
 - Piedi a banana (1): 5% di possibilità di sottrarre il suo modificatore durante fase "attacco vs difesa" quando partecipa come attaccante.
@@ -136,6 +148,7 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Titubanza(1): In attacco, il dado del tiro della squadra diventa 1d6 invece che 1d10.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
+-Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
 
 
 
