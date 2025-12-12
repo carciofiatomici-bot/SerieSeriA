@@ -725,12 +725,14 @@ window.AdminUI = {
                     const bgClass = player.isDrafted ? 'bg-red-900/30' : 'bg-gray-700';
                     const flag = window.AdminPlayers?.getFlag(player.nationality) || '';
 
+                    // Usa escapeHtml per prevenire XSS
+                    const safeName = window.escapeHtml ? window.escapeHtml(player.name) : player.name;
                     return `
                         <div class="player-card ${bgClass} p-3 rounded-lg border border-gray-600 hover:border-gray-500 transition" data-role="${player.role}" data-player-id="${player.id}">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-lg font-bold text-white">${flag} ${player.name}</span>
+                                        <span class="text-lg font-bold text-white">${flag} ${safeName}</span>
                                         <span class="px-2 py-0.5 rounded text-xs font-bold ${this.getRoleBadgeClass(player.role)}">${player.role}</span>
                                         <span class="px-2 py-0.5 rounded text-xs bg-gray-600 text-gray-300">${player.type || 'N/A'}</span>
                                     </div>
@@ -778,7 +780,10 @@ window.AdminUI = {
      */
     renderEditPlayerModal(player, type, onSave, onClose) {
         const isDraft = type === 'draft';
-        const title = `Modifica: ${player.name}`;
+        // Escape player.name per prevenire XSS
+        const safeName = window.escapeHtml ? window.escapeHtml(player.name) : player.name;
+        const safeNameAttr = safeName.replace(/"/g, '&quot;'); // Extra escape per attributi
+        const title = `Modifica: ${safeName}`;
         const borderColor = isDraft ? 'border-yellow-500' : 'border-blue-500';
 
         const nationalities = window.DraftConstants?.NATIONALITIES || [];
@@ -799,7 +804,7 @@ window.AdminUI = {
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-gray-300 mb-1 font-semibold">Nome</label>
-                                <input type="text" id="edit-player-name" value="${player.name}"
+                                <input type="text" id="edit-player-name" value="${safeNameAttr}"
                                        class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white">
                             </div>
                             <div>

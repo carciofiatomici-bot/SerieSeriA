@@ -92,6 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         squadraToolsContainer.innerHTML = `<p class="text-center text-yellow-400">Sincronizzazione dati squadra...</p>`;
 
+        // SECURITY CHECK: Verifica che l'utente possa accedere a questa squadra
+        const loggedInTeamId = window.InterfacciaCore?.currentTeamId;
+        const isAdmin = await window.checkCurrentTeamIsAdmin();
+        const isAdminViewingTeam = localStorage.getItem('fanta_admin_viewing_team') === teamId;
+
+        if (teamId !== loggedInTeamId && !isAdmin && !isAdminViewingTeam) {
+            console.error('[GestioneSquadre] Accesso negato: tentativo di accedere a squadra non propria.');
+            squadraToolsContainer.innerHTML = `<p class="text-center text-red-400">Accesso negato: non puoi visualizzare questa squadra.</p>`;
+            return;
+        }
+
         try {
             const teamDoc = await getDoc(teamDocRef);
             if (!teamDoc.exists()) {

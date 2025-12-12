@@ -197,7 +197,7 @@ window.VersionCheck = {
     /**
      * Forza l'aggiornamento dell'app
      */
-    forceUpdate() {
+    async forceUpdate() {
         // Mostra stato di caricamento sul bottone
         const updateBtn = document.getElementById('btn-force-update');
         if (updateBtn) {
@@ -206,25 +206,46 @@ window.VersionCheck = {
             updateBtn.style.opacity = '0.7';
         }
 
-        // Pulisci le cache del service worker
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
-        }
+        try {
+            // 1. Cancella tutte le cache del browser
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                console.log('[VersionCheck] Cache cancellate:', cacheNames);
+            }
 
-        // Pulisci anche la cache del browser per i file
-        if ('caches' in window) {
-            caches.keys().then(names => {
-                names.forEach(name => {
-                    caches.delete(name);
-                });
-            });
-        }
+            // 2. Invia SKIP_WAITING al service worker in attesa (se presente)
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    // Se c'e' un worker in attesa, fallo attivare
+                    if (registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                    // Invia anche CLEAR_CACHE al controller attivo
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+                    }
+                    // Deregistra il service worker per forzare reinstallazione
+                    await registration.unregister();
+                    console.log('[VersionCheck] Service worker deregistrato');
+                }
+            }
 
-        // Ricarica la pagina dopo un breve delay per permettere la pulizia cache
-        setTimeout(() => {
-            // Forza un hard reload
-            window.location.reload(true);
-        }, 500);
+            // 3. Attendi un momento per assicurarsi che tutto sia completato
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // 4. Ricarica la pagina (senza parametri deprecati)
+            // Per forzare un reload senza cache, usiamo un timestamp nel URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('_refresh', Date.now().toString());
+            window.location.href = url.toString();
+
+        } catch (error) {
+            console.error('[VersionCheck] Errore durante aggiornamento:', error);
+            // Fallback: reload semplice
+            window.location.reload();
+        }
     },
 
     /**

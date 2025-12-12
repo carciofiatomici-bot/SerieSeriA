@@ -42,7 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Inizializza il pannello admin
      */
-    const initializeAdminPanel = () => {
+    const initializeAdminPanel = async () => {
+        // SECURITY CHECK: Verifica che l'utente abbia effettivamente i permessi admin
+        const isAdmin = await window.checkCurrentTeamIsAdmin();
+        if (!isAdmin) {
+            console.error("[Admin] Accesso negato: utente non autorizzato.");
+            // Reindirizza al login
+            const loginBox = document.getElementById('login-box');
+            if (loginBox && window.showScreen) {
+                window.showScreen(loginBox);
+            }
+            return;
+        }
+
         // Usa le variabili globali caricate da interfaccia.js/index.html
         if (typeof window.db === 'undefined' || typeof window.firestoreTools === 'undefined') {
             console.error("Servizi Firebase non disponibili per il pannello Admin.");

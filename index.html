@@ -47,12 +47,21 @@
     <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
     <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
 
+    <!-- Preload risorse critiche per performance -->
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    <link rel="dns-prefetch" href="https://www.googleapis.com">
+
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Collega il foglio di stile esterno -->
     <link rel="stylesheet" href="style.css">
-    <!-- CARICA FONT AWESOME (per icone tipologie) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- CARICA FONT AWESOME (per icone tipologie) - async per non bloccare il render -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
 </head>
 <body>
 
@@ -95,6 +104,44 @@
                 <span class="text-xl">🎯</span>
                 <span id="draft-alert-countdown-mini" class="text-sm font-bold text-white">--:--</span>
             </button>
+        </div>
+    </div>
+
+    <!-- PWA INSTALL BANNER - Mostra quando l'app e' installabile -->
+    <div id="pwa-install-banner" class="hidden"
+         style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 9997; width: calc(100% - 32px); max-width: 400px;">
+        <div class="bg-gradient-to-r from-green-900 to-emerald-900 rounded-xl border-2 border-green-500 shadow-2xl p-4">
+            <div class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+                     alt="Serie SeriA"
+                     class="w-12 h-12 rounded-xl"
+                     loading="lazy"
+                     decoding="async">
+                <div class="flex-1">
+                    <p class="text-white font-bold text-sm">Installa Serie SeriA</p>
+                    <p class="text-green-300 text-xs">Accesso rapido dalla home del tuo dispositivo</p>
+                </div>
+                <button onclick="window.hideInstallBanner()"
+                        class="text-green-300 hover:text-white p-1"
+                        title="Chiudi">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex gap-2 mt-3">
+                <button onclick="window.hideInstallBanner()"
+                        class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+                    Non ora
+                </button>
+                <button onclick="window.installPWA()"
+                        class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Installa
+                </button>
+            </div>
         </div>
     </div>
 
@@ -211,20 +258,10 @@
 
     <main class="min-h-screen p-4 flex flex-col items-center justify-center">
 
-        <!-- 1. BOX GATE (Richiesta Password "seria") -->
-        <div id="gate-box" class="football-box w-full max-w-sm transition duration-500 hidden-on-load">
-            <h2 class="text-2xl font-bold text-green-400 mb-6 text-center border-b-2 border-green-600 pb-2">Accesso Riservato - Il Campo Ti Aspetta</h2>
-            <p class="text-gray-300 mb-4 text-sm text-center">Inserisci la password seria per sbloccare la panchina.</p>
-            
-            <input type="password" id="gate-password" placeholder="Password seria"
-                   class="w-full p-3 border border-green-600 rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
-            
-            <button id="gate-button"
-                    class="w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02]">
-                Inizia il Riscaldamento Serio
-            </button>
-            
-            <p id="gate-message" class="text-center mt-3 text-red-400"></p>
+        <!-- 1. BOX GATE - RIMOSSO (accesso diretto al login) -->
+        <!-- Il gate con password è stato rimosso per sicurezza -->
+        <div id="gate-box" class="hidden" style="display: none !important;">
+            <!-- Gate rimosso - gli utenti vanno direttamente al login -->
         </div>
 
         <!-- 2. BOX LOGIN (Nome Squadra / Password) -->
@@ -1470,6 +1507,80 @@
 
         // Esegui quando il DOM e' pronto
         document.addEventListener('DOMContentLoaded', setupPWAUpdateButton);
+
+        // ====================================================================
+        // PWA INSTALL PROMPT - Banner per installare l'app
+        // ====================================================================
+
+        let deferredInstallPrompt = null;
+
+        // Cattura l'evento beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Previeni il prompt automatico del browser
+            e.preventDefault();
+            // Salva l'evento per usarlo dopo
+            deferredInstallPrompt = e;
+            // Mostra il banner di installazione
+            showInstallBanner();
+            console.log('[PWA] App installabile, banner mostrato');
+        });
+
+        // Mostra il banner di installazione
+        function showInstallBanner() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        }
+
+        // Nascondi il banner
+        function hideInstallBanner() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+
+        // Installa l'app
+        async function installPWA() {
+            if (!deferredInstallPrompt) {
+                console.log('[PWA] Nessun prompt disponibile');
+                return;
+            }
+
+            // Mostra il prompt nativo
+            deferredInstallPrompt.prompt();
+
+            // Aspetta la risposta dell'utente
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            console.log('[PWA] Scelta utente:', outcome);
+
+            // Pulisci il prompt salvato
+            deferredInstallPrompt = null;
+
+            // Nascondi il banner
+            hideInstallBanner();
+
+            if (outcome === 'accepted') {
+                console.log('[PWA] App installata con successo!');
+            }
+        }
+
+        // Esponi funzioni globalmente
+        window.installPWA = installPWA;
+        window.hideInstallBanner = hideInstallBanner;
+
+        // Rileva se l'app e' gia' installata
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App installata!');
+            hideInstallBanner();
+            deferredInstallPrompt = null;
+        });
+
+        // Nascondi banner se gia' in modalita' standalone
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            console.log('[PWA] App gia\' in modalita\' standalone');
+        }
     </script>
 
 </body>

@@ -398,6 +398,46 @@ window.DraftTurns = {
 
             const currentTeam = currentOrder[currentIndex];
 
+            // PRIMA controlla se tutti hanno gia' draftato (priorita' al passaggio di round)
+            const allAlreadyDrafted = currentOrder.every(t => t.hasDrafted);
+            if (allAlreadyDrafted) {
+                console.log(`[Round Check] Tutti hanno gia' draftato nel round ${currentRound}, procedo con passaggio round.`);
+                // Procedi direttamente al passaggio di round (salta la logica di aggiornamento team)
+                if (currentRound < DRAFT_TOTAL_ROUNDS) {
+                    const nextRound = currentRound + 1;
+                    const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
+                    const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+
+                    nextOrder.forEach(t => {
+                        t.hasDrafted = false;
+                        t.timeoutStrikes = 0;
+                        t.excludedFromRound = false;
+                    });
+
+                    const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+                    await setDoc(configDocRef, {
+                        draftTurns: {
+                            ...draftTurns,
+                            [orderKey]: currentOrder,
+                            [nextOrderKey]: nextOrder,
+                            currentRound: nextRound,
+                            currentTurnIndex: 0,
+                            currentTeamId: nextOrder[0].teamId,
+                            turnStartTime: Date.now(),
+                            turnExpired: false,
+                            isStolenTurn: false
+                        }
+                    }, { merge: true });
+
+                    console.log(`Round ${currentRound} completato. Inizia Round ${nextRound}.`);
+                    this.sendTurnNotification(nextOrder[0].teamId, nextOrder[0].teamName);
+                } else {
+                    await this.stopDraftTurns(context);
+                    console.log("Draft completato! Tutti i round sono stati eseguiti.");
+                }
+                return;
+            }
+
             // Aggiorna lo stato del team corrente
             if (hasDrafted) {
                 // Guard: se il team corrente ha gia' draftato, qualcun altro ha gia' avanzato il turno

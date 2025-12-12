@@ -164,6 +164,25 @@ window.InterfacciaDashboard = {
      * Variabile per l'intervallo del countdown
      */
     _countdownInterval: null,
+    _draftAlertUnsubscribe: null,
+
+    /**
+     * Pulisce tutti gli intervalli e listener per prevenire memory leak
+     * Chiamare quando si cambia pagina o si fa logout
+     */
+    cleanup() {
+        if (this._countdownInterval) {
+            clearInterval(this._countdownInterval);
+            this._countdownInterval = null;
+        }
+        if (this._draftAlertUnsubscribe) {
+            this._draftAlertUnsubscribe();
+            this._draftAlertUnsubscribe = null;
+        }
+        this._lastStateCheck = null;
+        this._automationEnabled = null;
+        console.log('[Dashboard] Cleanup completato - intervalli e listener rimossi');
+    },
 
     /**
      * Inizializza il countdown per la prossima simulazione

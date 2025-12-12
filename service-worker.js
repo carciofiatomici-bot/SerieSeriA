@@ -7,7 +7,7 @@
 // IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const APP_VERSION = '1.2.7'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const APP_VERSION = '1.3.0'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
 const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
 const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
 const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
@@ -16,6 +16,8 @@ const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
 const STATIC_ASSETS = [
     './',
     './index.html',
+    './style.css',
+    './manifest.json',
     './interfaccia.js',
     './interfaccia-core.js',
     './interfaccia-auth.js',
@@ -25,6 +27,9 @@ const STATIC_ASSETS = [
     './gestionesquadre.js',
     './gestionesquadre-formazione.js',
     './draft.js',
+    './draft-turns.js',
+    './draft-user-actions.js',
+    './draft-constants.js',
     './mercato.js',
     './challenges.js',
     './challenge-match.js',
@@ -33,6 +38,9 @@ const STATIC_ASSETS = [
     './dashboard-features.js',
     './icone.js',
     './abilities-encyclopedia.js',
+    './admin.js',
+    './admin-ui.js',
+    './admin-feature-flags.js',
     './icons/icon-192.png',
     './icons/icon-512.png'
 ];

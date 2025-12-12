@@ -31,14 +31,28 @@ window.DraftUserActions = {
             this._purchaseLock = true;
 
             const playerId = target.dataset.playerId;
-            const levelMin = parseInt(target.dataset.playerLevelMin);
-            const levelMax = parseInt(target.dataset.playerLevelMax);
+
+            // VALIDAZIONE INPUT: usa parseIntSafe per prevenire valori non validi
+            const parseIntSafe = window.parseIntSafe || ((v, min, max, def) => {
+                const p = parseInt(v, 10);
+                return isNaN(p) ? def : Math.max(min, Math.min(max, p));
+            });
+
+            const levelMin = parseIntSafe(target.dataset.playerLevelMin, 1, 30, 1);
+            const levelMax = parseIntSafe(target.dataset.playerLevelMax, 1, 30, 30);
 
             // Raccogli gli altri dati necessari per la rosa
-            const playerName = target.dataset.playerName;
-            const playerRole = target.dataset.playerRole;
-            const playerAge = parseInt(target.dataset.playerAge);
-            const playerType = target.dataset.playerType;
+            const playerName = target.dataset.playerName || 'Giocatore';
+            const playerRole = target.dataset.playerRole || 'C';
+            const playerAge = parseIntSafe(target.dataset.playerAge, 16, 45, 25);
+            const playerType = target.dataset.playerType || 'Tecnica';
+
+            // Validazione: levelMin non puo' essere maggiore di levelMax
+            if (levelMin > levelMax) {
+                console.error('[Draft] Errore: levelMin > levelMax', { levelMin, levelMax });
+                this._purchaseLock = false;
+                return;
+            }
 
             displayMessage(`Acquisto di ${playerName} in corso...`, 'info', 'user-draft-message');
             target.disabled = true;

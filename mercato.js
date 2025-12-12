@@ -668,83 +668,91 @@ document.addEventListener('DOMContentLoaded', () => {
             target.disabled = true;
 
             try {
-                const { doc, getDoc, updateDoc } = firestoreTools;
+                const { doc, getDoc, updateDoc, runTransaction } = firestoreTools;
                 const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
                 const marketDocRef = doc(db, MARKET_PLAYERS_COLLECTION_PATH, playerId);
 
-                // Ottieni i dati della squadra e del giocatore in parallelo
-                const [teamDoc, playerDoc] = await Promise.all([
-                    getDoc(teamDocRef),
-                    getDoc(marketDocRef)
-                ]);
+                // USA TRANSAZIONE ATOMICA per prevenire acquisti doppi (race condition)
+                const result = await runTransaction(db, async (transaction) => {
+                    // Leggi entrambi i documenti nella transazione
+                    const [teamDoc, playerDoc] = await Promise.all([
+                        transaction.get(teamDocRef),
+                        transaction.get(marketDocRef)
+                    ]);
 
-                if (!teamDoc.exists()) throw new Error("Squadra non trovata.");
+                    if (!teamDoc.exists()) {
+                        throw new Error("Squadra non trovata.");
+                    }
 
-                // Verifica che il giocatore non sia gia stato acquistato
-                if (!playerDoc.exists() || playerDoc.data().isDrafted) {
-                     throw new Error("Il giocatore non e' disponibile (gia acquistato). Riprova a ricaricare.");
-                }
+                    // VERIFICA ATOMICA: il giocatore deve essere ancora disponibile
+                    if (!playerDoc.exists() || playerDoc.data().isDrafted) {
+                        throw new Error("Il giocatore non e' disponibile (gia acquistato). Riprova a ricaricare.");
+                    }
 
-                const teamData = teamDoc.data();
-                const playerMarketData = playerDoc.data();
-                const currentBudget = teamData.budget || 0;
-                const currentPlayers = teamData.players || [];
+                    const teamData = teamDoc.data();
+                    const playerMarketData = playerDoc.data();
+                    const currentBudget = teamData.budget || 0;
+                    const currentPlayers = teamData.players || [];
 
-                // Recupera le abilita del giocatore dal mercato
-                const playerAbilities = playerMarketData.abilities || [];
+                    // Recupera le abilita del giocatore dal mercato
+                    const playerAbilities = playerMarketData.abilities || [];
 
-                // *** CONTROLLO COOLDOWN MERCATO ***
-                const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0;
-                const currentTime = new Date().getTime();
-                const timeElapsed = currentTime - lastAcquisitionTimestamp;
+                    // *** CONTROLLO COOLDOWN MERCATO ***
+                    const lastAcquisitionTimestamp = teamData[MARKET_COOLDOWN_KEY] || 0;
+                    const currentTime = new Date().getTime();
+                    const timeElapsed = currentTime - lastAcquisitionTimestamp;
 
-                if (lastAcquisitionTimestamp !== 0 && timeElapsed < ACQUISITION_COOLDOWN_MS) {
-                     const minutes = Math.ceil((ACQUISITION_COOLDOWN_MS - timeElapsed) / (60 * 1000));
-                     throw new Error(`Devi aspettare ${minutes} minuti prima del prossimo acquisto.`);
-                }
-                // --- FINE CONTROLLO COOLDOWN ---
+                    if (lastAcquisitionTimestamp !== 0 && timeElapsed < ACQUISITION_COOLDOWN_MS) {
+                        const minutes = Math.ceil((ACQUISITION_COOLDOWN_MS - timeElapsed) / (60 * 1000));
+                        throw new Error(`Devi aspettare ${minutes} minuti prima del prossimo acquisto.`);
+                    }
+                    // --- FINE CONTROLLO COOLDOWN ---
 
-                // --- CONTROLLO LIMITE ROSA (RE-CHECK) ---
-                const currentRosaCount = getPlayerCountExcludingIcona(currentPlayers);
-                if (currentRosaCount >= MAX_ROSA_PLAYERS) {
-                     throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto (esclusa Icona).`);
-                }
+                    // --- CONTROLLO LIMITE ROSA (RE-CHECK) ---
+                    const currentRosaCount = getPlayerCountExcludingIcona(currentPlayers);
+                    if (currentRosaCount >= MAX_ROSA_PLAYERS) {
+                        throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto (esclusa Icona).`);
+                    }
 
-                if (currentBudget < playerCost) {
-                    throw new Error("Crediti Seri insufficienti.");
-                }
+                    if (currentBudget < playerCost) {
+                        throw new Error("Crediti Seri insufficienti.");
+                    }
 
-                // Nel mercato il level e' gia fisso, non serve generarlo
-                const finalLevel = playerLevel;
+                    // Nel mercato il level e' gia fisso, non serve generarlo
+                    const finalLevel = playerLevel;
 
-                const playerForSquad = {
-                    id: playerId,
-                    name: playerName,
-                    role: playerRole,
-                    age: playerAge,
-                    cost: playerCost,
-                    level: finalLevel,
-                    type: playerType,
-                    abilities: playerAbilities,
-                    isCaptain: false
-                };
+                    const playerForSquad = {
+                        id: playerId,
+                        name: playerName,
+                        role: playerRole,
+                        age: playerAge,
+                        cost: playerCost,
+                        level: finalLevel,
+                        type: playerType,
+                        abilities: playerAbilities,
+                        isCaptain: false
+                    };
 
-                const acquisitionTime = new Date().getTime();
+                    const acquisitionTime = new Date().getTime();
 
-                // Aggiorna Firestore: Squadra (include l'aggiornamento del timestamp MERCATO)
-                await updateDoc(teamDocRef, {
-                    budget: currentBudget - playerCost,
-                    players: [...currentPlayers, playerForSquad],
-                    [MARKET_COOLDOWN_KEY]: acquisitionTime,
+                    // AGGIORNAMENTI ATOMICI nella transazione
+                    transaction.update(teamDocRef, {
+                        budget: currentBudget - playerCost,
+                        players: [...currentPlayers, playerForSquad],
+                        [MARKET_COOLDOWN_KEY]: acquisitionTime,
+                    });
+
+                    transaction.update(marketDocRef, {
+                        isDrafted: true,
+                        teamId: currentTeamId,
+                    });
+
+                    return { finalLevel, newBudget: currentBudget - playerCost };
                 });
 
-                // Aggiorna Firestore: Giocatore Mercato (segnandolo come venduto)
-                await updateDoc(marketDocRef, {
-                    isDrafted: true,
-                    teamId: currentTeamId,
-                });
+                const { finalLevel, newBudget } = result;
 
-                displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa dal Mercato. Budget: ${currentBudget - playerCost} CS.`, 'success');
+                displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa dal Mercato. Budget: ${newBudget} CS.`, 'success');
 
                 // Ricarica la lista per mostrare che il giocatore non e' piu disponibile
                 renderUserMercatoPanel();

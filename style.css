@@ -46,14 +46,181 @@ body {
 }
 
 /* ====================================================================
+   TOUCH OPTIMIZATION - Mobile First
+   ==================================================================== */
+
+/* Base touch-friendly styles (48px minimum touch target) */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+.btn,
+a.btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Links in navigation */
+nav a,
+.nav-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 12px;
+}
+
+/* Form inputs touch-friendly */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
+    min-height: 44px;
+    padding: 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    -webkit-appearance: none;
+    border-radius: 8px;
+}
+
+/* Checkboxes and radios */
+input[type="checkbox"],
+input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+    cursor: pointer;
+}
+
+/* Touch device detection - replace hover with active */
+@media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch */
+    button:hover,
+    .btn:hover,
+    a:hover {
+        transform: none !important;
+    }
+
+    /* Active state for touch feedback */
+    button:active,
+    .btn:active,
+    [role="button"]:active {
+        transform: scale(0.97) !important;
+        opacity: 0.9 !important;
+    }
+
+    /* Larger touch targets on pure touch devices */
+    button,
+    .btn,
+    [role="button"] {
+        min-height: 48px;
+        padding: 14px 18px;
+    }
+
+    /* Ensure adequate spacing between touch targets */
+    .grid button,
+    .flex button,
+    .space-y-2 > button,
+    .space-y-3 > button {
+        margin: 4px 0;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: 2px solid #34d399;
+    outline-offset: 2px;
+}
+
+/* Remove default tap highlight */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling for touch */
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ====================================================================
    RESPONSIVE DESIGN - Mobile First
    ==================================================================== */
 
 /* Breakpoints:
-   - Mobile: < 640px
-   - Tablet: 640px - 1024px
-   - Desktop: > 1024px
+   - Mobile: < 640px (phones)
+   - Small Tablet: 640px - 767px
+   - Tablet: 768px - 1023px
+   - Desktop: >= 1024px
 */
+
+/* ===================== EXTRA SMALL (< 360px) ===================== */
+@media (max-width: 359px) {
+    /* Prevent layout break on very small screens */
+    body {
+        min-width: 320px;
+        overflow-x: auto;
+    }
+
+    .football-box {
+        padding: 10px !important;
+        margin: 4px !important;
+        width: calc(100% - 8px) !important;
+    }
+
+    h2 {
+        font-size: 1.2rem !important;
+        word-break: break-word;
+    }
+
+    h3 {
+        font-size: 1rem !important;
+    }
+
+    /* Smaller buttons on tiny screens */
+    button {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+        min-height: 40px !important;
+    }
+
+    /* Grid sempre 1 colonna */
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Nasconde elementi non essenziali */
+    .hidden-xs {
+        display: none !important;
+    }
+
+    /* Testo piu piccolo */
+    .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    .text-xs {
+        font-size: 0.65rem !important;
+    }
+
+    /* Dashboard elementi compatti */
+    #team-logo-container > * {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+    }
+}
 
 /* ===================== MOBILE (< 640px) ===================== */
 @media (max-width: 639px) {
@@ -893,13 +1060,40 @@ html {
 @media (max-width: 639px) {
     /* Admin container generale */
     #admin-content {
+        padding: 8px !important;
+    }
+
+    /* Football box admin piu compatto */
+    #admin-content .football-box {
         padding: 12px !important;
     }
 
     /* Titoli sezioni admin */
-    #admin-content h3 {
+    #admin-content h3,
+    #admin-dashboard-container h3 {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Stato Generale - grid 2x2 invece di 4 colonne */
+    #admin-dashboard-container .grid.grid-cols-2.md\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Box stato piu compatti */
+    #admin-dashboard-container .grid.grid-cols-2.md\\:grid-cols-4 > div {
+        padding: 8px !important;
+    }
+
+    #admin-dashboard-container .grid.grid-cols-2.md\\:grid-cols-4 .text-2xl {
         font-size: 1.25rem !important;
-        margin-bottom: 12px !important;
+    }
+
+    /* Bottoni navigazione principale - 2x2 su mobile */
+    #admin-dashboard-container > .mb-6 > .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
     }
 
     /* Sezioni admin */
@@ -907,27 +1101,85 @@ html {
     #serieseria-admin-section,
     #coppa-admin-section,
     #supercoppa-admin-section {
-        padding: 12px !important;
+        padding: 10px !important;
     }
 
-    /* Grid bottoni admin - forza colonna singola */
-    #admin-dashboard-container .grid.grid-cols-3,
-    #admin-dashboard-container .grid.grid-cols-2,
+    /* Tabella premi - colonna singola */
+    #admin-dashboard-container .grid.grid-cols-1.md\\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Grid bottoni lega - colonna singola */
     #serieseria-admin-section .grid.grid-cols-3,
     #coppa-admin-section .grid.grid-cols-2 {
         grid-template-columns: 1fr !important;
         gap: 8px !important;
     }
 
-    /* Bottoni admin piu compatti */
-    #admin-dashboard-container button {
+    /* Bottoni accordion piu compatti */
+    #admin-dashboard-container button[id^="btn-toggle-"] {
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Bottoni admin generici piu compatti */
+    #admin-dashboard-container button:not([id^="btn-toggle-"]) {
         padding: 10px 12px !important;
         font-size: 0.8rem !important;
     }
 
     /* Icone font-awesome nei bottoni */
     #admin-dashboard-container button i {
-        margin-right: 6px !important;
+        margin-right: 4px !important;
+    }
+
+    /* TOGGLE DRAFT/MERCATO - FIX LAYOUT */
+    #player-management-tools-container .grid.grid-cols-2 {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    /* Box toggle Draft/Mercato */
+    #player-management-tools-container .grid.grid-cols-2 > div {
+        padding: 12px !important;
+    }
+
+    /* Container toggle - layout orizzontale fisso */
+    #player-management-tools-container .flex.items-center.justify-between {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
+    }
+
+    /* Testo toggle - non cresce */
+    #player-management-tools-container .flex.items-center.justify-between > div:first-child {
+        flex: 0 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Toggle switch - dimensioni fisse */
+    #player-management-tools-container label.relative.inline-flex,
+    #draft-pause-toggle-container label.relative.inline-flex {
+        flex-shrink: 0 !important;
+    }
+
+    #player-management-tools-container .w-14.h-7,
+    #draft-pause-toggle-container .w-14.h-7 {
+        width: 52px !important;
+        height: 28px !important;
+        min-width: 52px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Knob del toggle */
+    #player-management-tools-container .w-14.h-7::after,
+    #draft-pause-toggle-container .w-14.h-7::after {
+        width: 22px !important;
+        height: 22px !important;
     }
 
     /* Modal test simulazione */
@@ -959,16 +1211,28 @@ html {
 
     /* Player management */
     #player-management-content {
+        padding: 8px !important;
+    }
+
+    #player-management-content .football-box {
         padding: 12px !important;
     }
 
-    #player-management-tools-container .grid {
-        grid-template-columns: 1fr !important;
+    /* Grid creazione giocatore */
+    #player-management-tools-container .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Sezione abilita - 2 colonne */
+    #abilities-checklist {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
     }
 
     /* Team management */
     #team-management-content {
-        padding: 12px !important;
+        padding: 8px !important;
     }
 
     #team-management-tools-container .grid {
@@ -988,6 +1252,150 @@ html {
     .team-card-admin button {
         width: 100% !important;
         margin: 2px 0 !important;
+    }
+
+    /* Draft turns section */
+    #draft-turns-section {
+        padding: 10px !important;
+    }
+
+    #draft-turns-section .grid.grid-cols-1 {
+        gap: 8px !important;
+    }
+
+    /* Timer option box */
+    #draft-timer-option {
+        padding: 10px !important;
+    }
+
+    #draft-timer-option label {
+        gap: 10px !important;
+    }
+
+    #draft-timer-option input[type="checkbox"] {
+        width: 20px !important;
+        height: 20px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Liste giocatori draft/mercato - colonna singola */
+    #player-management-tools-container .grid.grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ===================== FEATURE FLAGS RESPONSIVE ===================== */
+
+    /* Container principale feature flags */
+    #feature-flags-content {
+        padding: 8px !important;
+    }
+
+    #feature-flags-content .football-box {
+        padding: 12px !important;
+    }
+
+    /* Header feature flags */
+    #feature-flags-content .bg-gradient-to-r.from-purple-600 {
+        padding: 12px !important;
+    }
+
+    #feature-flags-content .bg-gradient-to-r.from-purple-600 h2 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Quick actions - 3 colonne su mobile */
+    #feature-flags-content > div > .flex.gap-3 {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    #feature-flags-content > div > .flex.gap-3 > button {
+        flex: 1 1 calc(33% - 6px) !important;
+        min-width: 0 !important;
+        padding: 8px 10px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Flag card - layout verticale su mobile */
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4.flex.items-center.justify-between {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    /* Icona e testo flag */
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4 > .flex.items-center.gap-4:first-child {
+        flex-direction: row !important;
+        gap: 10px !important;
+    }
+
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4 > .flex.items-center.gap-4:first-child .text-3xl {
+        font-size: 1.75rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4 > .flex.items-center.gap-4:first-child h4 {
+        font-size: 0.9rem !important;
+    }
+
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4 > .flex.items-center.gap-4:first-child p {
+        font-size: 0.75rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Toggle e status - riga orizzontale */
+    #feature-flags-content .bg-gray-800.rounded-lg > .p-4 > .flex.items-center.gap-4:last-child {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding-top: 8px !important;
+        border-top: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    /* Toggle switch feature flags - dimensioni fisse */
+    #feature-flags-content label.relative.inline-flex {
+        flex-shrink: 0 !important;
+    }
+
+    #feature-flags-content .w-14.h-7 {
+        width: 52px !important;
+        height: 28px !important;
+        min-width: 52px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Categorie flags */
+    #feature-flags-content .bg-gray-700.rounded-xl {
+        margin-bottom: 12px !important;
+    }
+
+    #feature-flags-content .bg-gray-700.rounded-xl > .bg-gray-600 h3 {
+        font-size: 0.9rem !important;
+    }
+
+    /* Achievements/Injuries settings dentro flags */
+    #feature-flags-content .grid.grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    #feature-flags-content .grid.grid-cols-3 > div {
+        padding: 8px !important;
+    }
+
+    #feature-flags-content .grid.grid-cols-3 .text-2xl {
+        font-size: 1.25rem !important;
+    }
+
+    /* Info box */
+    #feature-flags-content .bg-blue-900 {
+        padding: 12px !important;
+    }
+
+    #feature-flags-content .bg-blue-900 ul {
+        font-size: 0.75rem !important;
     }
 }
 

@@ -38,6 +38,70 @@ window.InterfacciaCore = {
     set captainCandidates(val) { captainCandidates = val; },
 };
 
+// --- FUNZIONI HELPER PER SICUREZZA ---
+
+/**
+ * Escape HTML per prevenire XSS attacks
+ * Usa questa funzione SEMPRE quando inserisci dati utente in innerHTML
+ * @param {string} text - Testo da escapare
+ * @returns {string} - Testo safe per HTML
+ */
+window.escapeHtml = function(text) {
+    if (text === null || text === undefined) return '';
+    if (typeof text !== 'string') text = String(text);
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+};
+
+/**
+ * Valida URL per prevenire javascript: injection
+ * @param {string} url - URL da validare
+ * @returns {boolean} - true se l'URL e' sicuro
+ */
+window.isValidUrl = function(url) {
+    if (!url || typeof url !== 'string') return false;
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:', 'data:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * Sanitizza URL immagine - ritorna placeholder se non valido
+ * @param {string} url - URL da sanitizzare
+ * @returns {string} - URL sicuro o placeholder
+ */
+window.sanitizeImageUrl = function(url) {
+    if (!url || !window.isValidUrl(url)) {
+        return 'https://via.placeholder.com/100?text=No+Image';
+    }
+    return url;
+};
+
+/**
+ * Valida e parsa un intero con range
+ * @param {any} value - Valore da parsare
+ * @param {number} min - Valore minimo
+ * @param {number} max - Valore massimo
+ * @param {number} defaultVal - Valore di default se non valido
+ * @returns {number} - Numero validato
+ */
+window.parseIntSafe = function(value, min, max, defaultVal) {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) return defaultVal;
+    if (parsed < min) return min;
+    if (parsed > max) return max;
+    return parsed;
+};
+
 // --- FUNZIONE HELPER PER SANITIZZARE URL GITHUB ---
 /**
  * Converte URL GitHub dal vecchio formato (github.com/.../blob/...?raw=true)
@@ -67,13 +131,14 @@ window.sanitizeGitHubUrl = function(url) {
 
 // --- COSTANTI GLOBALI ---
 window.InterfacciaConstants = {
-    // Credenziali Admin Hardcoded
+    // Nome utente admin (case-insensitive)
     ADMIN_USERNAME: "serieseria",
-    ADMIN_PASSWORD: "admin",
     ADMIN_USERNAME_LOWER: "serieseria",
 
-    // Password Gate
-    MASTER_PASSWORD: "seria",
+    // RIMOSSO: Password hardcoded (sicurezza)
+    // L'accesso admin ora è basato su:
+    // 1. teamName === "serieseria" (case insensitive)
+    // 2. OPPURE isAdmin === true nel documento Firestore della squadra
 
     // Logo Placeholder
     DEFAULT_LOGO_URL: "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg",
@@ -96,7 +161,61 @@ window.InterfacciaConstants = {
     ACQUISITION_COOLDOWN_MS: 15 * 60 * 1000,
 
     // AUTOMAZIONE CRON: 2 giorni in millisecondi
-    AUTO_SIMULATION_COOLDOWN_MS: 48 * 60 * 60 * 1000, 
+    AUTO_SIMULATION_COOLDOWN_MS: 48 * 60 * 60 * 1000,
+};
+
+// --- FUNZIONE HELPER PER VERIFICARE ADMIN ---
+/**
+ * Verifica se una squadra ha permessi admin.
+ * Admin se: teamName === "serieseria" (case insensitive) OPPURE isAdmin === true
+ * @param {string} teamName - Nome della squadra
+ * @param {object} teamData - Dati della squadra da Firestore (opzionale)
+ * @returns {boolean}
+ */
+window.isTeamAdmin = function(teamName, teamData = null) {
+    // Check 1: nome squadra è "serieseria"
+    if (teamName && teamName.toLowerCase() === 'serieseria') {
+        return true;
+    }
+    // Check 2: campo isAdmin nel documento
+    if (teamData && teamData.isAdmin === true) {
+        return true;
+    }
+    return false;
+};
+
+/**
+ * Verifica async se la squadra corrente è admin (legge da Firestore se necessario)
+ * @returns {Promise<boolean>}
+ */
+window.checkCurrentTeamIsAdmin = async function() {
+    const currentTeamData = window.InterfacciaCore?.currentTeamData;
+    const currentTeamId = window.InterfacciaCore?.currentTeamId;
+
+    if (!currentTeamId) return false;
+
+    // Se abbiamo già i dati, usiamoli
+    if (currentTeamData) {
+        return window.isTeamAdmin(currentTeamData.teamName, currentTeamData);
+    }
+
+    // Altrimenti leggi da Firestore
+    try {
+        const { doc, getDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+        const teamDocRef = doc(window.db, TEAMS_PATH, currentTeamId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (teamDoc.exists()) {
+            const data = teamDoc.data();
+            return window.isTeamAdmin(data.teamName, data);
+        }
+    } catch (error) {
+        console.error('[Admin Check] Errore verifica permessi:', error);
+    }
+
+    return false;
 };
 
 // --- ROSA INIZIALE (5 GIOCATORI: P, D, C, C, A) ---

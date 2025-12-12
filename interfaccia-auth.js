@@ -256,28 +256,13 @@ window.InterfacciaAuth = {
 
     /**
      * Gestisce il click sul pulsante Gate.
+     * NOTA: Il gate è stato rimosso - questa funzione ora mostra direttamente il login
      */
     handleGateAccess(elements) {
-        const { MASTER_PASSWORD } = window.InterfacciaConstants;
-        const password = elements.gatePasswordInput.value.trim();
-        
-        elements.gateMessage.textContent = "";
-
-        if (password === MASTER_PASSWORD) {
-            elements.gateMessage.textContent = "Accesso Gate Confermato. Prosegui al Login...";
-            elements.gateMessage.classList.remove('text-red-400');
-            elements.gateMessage.classList.add('text-green-500');
-
-            setTimeout(() => {
-                window.showScreen(elements.loginBox);
-                elements.loginUsernameInput.focus();
-            }, 1000);
-
-        } else {
-            elements.gateMessage.textContent = "Password d'accesso errata. Riprova.";
-            elements.gateMessage.classList.remove('text-green-500');
-            elements.gateMessage.classList.add('text-red-400');
-            elements.gatePasswordInput.value = '';
+        // Gate rimosso - vai direttamente al login
+        window.showScreen(elements.loginBox);
+        if (elements.loginUsernameInput) {
+            elements.loginUsernameInput.focus();
         }
     },
 
@@ -288,7 +273,7 @@ window.InterfacciaAuth = {
         const { doc, getDoc, setDoc } = window.firestoreTools;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
-        const { ADMIN_USERNAME_LOWER, ADMIN_PASSWORD, DEFAULT_LOGO_URL } = window.InterfacciaConstants;
+        const { ADMIN_USERNAME_LOWER, DEFAULT_LOGO_URL } = window.InterfacciaConstants;
         const INITIAL_SQUAD = window.INITIAL_SQUAD;
         
         const inputTeamName = elements.loginUsernameInput.value.trim();
@@ -317,25 +302,73 @@ window.InterfacciaAuth = {
             return;
         }
         
-        // Login Admin
-        if (teamDocId === ADMIN_USERNAME_LOWER) {
-            if (password !== ADMIN_PASSWORD) {
-                elements.loginMessage.textContent = "Password Amministratore non valida.";
-                elements.loginMessage.classList.remove('text-green-500');
-                elements.loginMessage.classList.add('text-red-400');
+        // Login Admin - verifica se e' un account admin e valida password da Firestore
+        try {
+            const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, teamDocId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            // Controlla se l'account esiste ed e' admin
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                const isAdmin = window.isTeamAdmin(teamData.teamName, teamData);
+
+                if (isAdmin) {
+                    // Verifica password da Firestore
+                    if (teamData.password !== password) {
+                        elements.loginMessage.textContent = "Password Amministratore non valida.";
+                        elements.loginMessage.classList.remove('text-green-500');
+                        elements.loginMessage.classList.add('text-red-400');
+                        return;
+                    }
+
+                    this.saveSession(teamDocId, 'admin', teamData.teamName, teamData.logoUrl);
+                    localStorage.setItem('fanta_last_screen', elements.adminContent.id);
+
+                    // Salva i dati admin nel core
+                    window.InterfacciaCore.currentTeamData = teamData;
+
+                    elements.loginMessage.textContent = "Accesso Amministratore Riuscito!";
+                    setTimeout(() => {
+                        window.showScreen(elements.adminContent);
+                        window.InterfacciaCore.currentTeamId = teamDocId;
+                        document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+                    }, 1000);
+                    return;
+                }
+            } else if (teamDocId === ADMIN_USERNAME_LOWER) {
+                // Account admin principale non esiste ancora - crealo
+                const adminTeamData = {
+                    teamName: 'serieseria',
+                    ownerUserId: 'admin',
+                    password: password, // Prima password diventa la password admin
+                    budget: 99999,
+                    creationDate: new Date().toISOString(),
+                    logoUrl: DEFAULT_LOGO_URL,
+                    players: [],
+                    coach: 'Admin',
+                    iconaId: null,
+                    formation: { modulo: '1-1-2-1', titolari: [], panchina: [] },
+                    isParticipating: false,
+                    isAdmin: true // Flag admin esplicito
+                };
+
+                await setDoc(teamDocRef, adminTeamData);
+
+                this.saveSession(teamDocId, 'admin', 'serieseria', DEFAULT_LOGO_URL);
+                localStorage.setItem('fanta_last_screen', elements.adminContent.id);
+                window.InterfacciaCore.currentTeamData = adminTeamData;
+
+                elements.loginMessage.textContent = "Account Admin creato! Accesso Riuscito.";
+                setTimeout(() => {
+                    window.showScreen(elements.adminContent);
+                    window.InterfacciaCore.currentTeamId = teamDocId;
+                    document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+                }, 1000);
                 return;
             }
-            
-            this.saveSession(teamDocId, 'admin');
-            localStorage.setItem('fanta_last_screen', elements.adminContent.id); // Salva destinazione Admin
-
-            elements.loginMessage.textContent = "Accesso Amministratore Riuscito!";
-            setTimeout(() => {
-                window.showScreen(elements.adminContent);
-                window.InterfacciaCore.currentTeamId = teamDocId;
-                document.dispatchEvent(new CustomEvent('adminLoggedIn'));
-            }, 1000);
-            return;
+        } catch (adminCheckError) {
+            console.error("Errore durante il check admin:", adminCheckError);
+            // Continua con il login normale se il check admin fallisce
         }
 
         // Login/Registrazione Utente

@@ -355,12 +355,14 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
         // Check if already injured
         if (injuredPlayers.has(player.id)) continue;
 
-        // Calcola mod considerando Tuttocampista negli avversari
-        // Tuttocampista impone sempre -25% agli avversari
+        // Tuttocampista: impone sempre il malus -25% agli avversari
+        // LOGICA: Se un avversario ha Tuttocampista, forziamo il malus tipologia creando
+        // un "avversario virtuale" con la tipologia che batte quella del giocatore corrente.
+        // Esempio: se il giocatore e' Potenza e l'avversario ha Tuttocampista,
+        // creiamo un avversario virtuale "Tecnica" che impone -25% a Potenza.
         let effectiveOpposingTeam = opposingTeam;
         const hasTuttocampista = opposingTeam?.some(p => p.abilities?.includes('Tuttocampista'));
         if (hasTuttocampista && player.type) {
-            // Simula che l'avversario abbia sempre la tipologia vincente
             const disadvantagedType = TYPE_DISADVANTAGE[player.type];
             if (disadvantagedType) {
                 effectiveOpposingTeam = [{ type: disadvantagedType }];
@@ -379,11 +381,9 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
             mod = mod < 0 ? 0 : mod * 2;
         }
 
-        // Bandiera del club: +1 ai compagni dello stesso ruolo
+        // Bandiera del club: +1 ai compagni dello stesso ruolo (per ogni Bandiera)
         if (player.abilities?.includes('Bandiera del club')) {
-            if (!bandiereCount[player.role]) {
-                bandiereCount[player.role] = true; // Solo una volta per ruolo
-            }
+            bandiereCount[player.role] = (bandiereCount[player.role] || 0) + 1;
         }
 
         // Abilità specifiche per fase COSTRUZIONE
@@ -500,15 +500,16 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
             if (sameRolePlayers.length > 0) {
                 const victim = sameRolePlayers[rollDice(0, sameRolePlayers.length - 1)];
                 const victimMod = calculatePlayerModifier(victim, hasIcona, opposingTeam);
-                totalModifier -= victimMod * 2; // Sottrae invece di sommare
+                totalModifier -= victimMod; // Sottrae il modificatore del compagno
             }
         }
     }
     
-    // Applica bonus Bandiera del club
+    // Applica bonus Bandiera del club (ogni Bandiera da +1 ai compagni dello stesso ruolo)
     for (const role in bandiereCount) {
+        const count = bandiereCount[role]; // numero di giocatori Bandiera del ruolo
         const sameRolePlayers = players.filter(p => p.role === role && !p.abilities?.includes('Bandiera del club'));
-        totalModifier += sameRolePlayers.length * 1.0; // +1 per ogni compagno stesso ruolo
+        totalModifier += sameRolePlayers.length * count; // +1 per ogni Bandiera per compagno
     }
     
     // Rientro Rapido (Attaccante): 5% partecipa alla difesa
