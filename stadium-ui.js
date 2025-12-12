@@ -147,6 +147,27 @@ window.StadiumUI = {
                     </div>
                 </div>
             </div>
+
+            <!-- Modal Conferma Demolizione -->
+            <div id="stadium-demolish-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg w-full max-w-md mx-4 border-2 border-red-500">
+                    <div class="bg-gradient-to-r from-red-700 to-red-500 p-4 rounded-t-lg">
+                        <h3 class="text-xl font-bold text-white" id="demolish-modal-title">Conferma Demolizione</h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="demolish-modal-info" class="mb-4"></div>
+                        <div class="flex gap-4">
+                            <button id="btn-confirm-demolish" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg transition">
+                                Demolisci
+                            </button>
+                            <button id="btn-cancel-demolish" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg transition">
+                                Annulla
+                            </button>
+                        </div>
+                        <p id="demolish-error-message" class="text-center mt-3 text-sm text-red-400"></p>
+                    </div>
+                </div>
+            </div>
         `;
 
         this.attachEventListeners();
@@ -193,9 +214,15 @@ window.StadiumUI = {
             let slotClass, content, title;
 
             if (isBuilt) {
-                slotClass = 'bg-green-700 border-green-400 cursor-default';
+                const canDemolishResult = window.Stadium.canDemolish(structureId, this._stadiumData);
+                const canDemolish = canDemolishResult.canDemolish;
+                slotClass = canDemolish
+                    ? 'bg-green-700 border-green-400 hover:border-red-400 hover:bg-red-900/50 cursor-pointer'
+                    : 'bg-green-700 border-green-400 cursor-not-allowed';
                 content = `<span class="text-2xl">${structure.icon}</span>`;
-                title = `${structure.name} (Costruito) - +${structure.bonus} bonus`;
+                title = canDemolish
+                    ? `${structure.name} (Clicca per demolire - Rimborso: ${Math.floor(structure.cost / 2)} CS)`
+                    : `${structure.name} - ${canDemolishResult.reason}`;
             } else if (isLocked) {
                 slotClass = 'bg-gray-800 border-red-900 opacity-50 cursor-not-allowed';
                 content = `<span class="text-lg">🔒</span>`;
@@ -310,7 +337,7 @@ window.StadiumUI = {
         if (btnBack) {
             btnBack.addEventListener('click', () => {
                 if (window.showScreen) {
-                    window.showScreen(document.getElementById('gestione-content'));
+                    window.showScreen(document.getElementById('app-content'));
                 }
             });
         }
@@ -323,20 +350,29 @@ window.StadiumUI = {
                 const isBuilt = slot.dataset.isBuilt === 'true';
                 const isLocked = slot.dataset.isLocked === 'true';
 
-                if (isBuilt || isLocked) return;
+                if (isBuilt) {
+                    // Apri modal demolizione se puo essere demolita
+                    const canDemolish = window.Stadium.canDemolish(structureId, this._stadiumData);
+                    if (canDemolish.canDemolish) {
+                        this.showDemolishConfirmModal(structureId);
+                    }
+                    return;
+                }
+
+                if (isLocked) return;
 
                 this.showBuildConfirmModal(structureId);
             });
         });
 
-        // Modal conferma
+        // Modal conferma costruzione
         const btnConfirm = document.getElementById('btn-confirm-build');
         const btnCancel = document.getElementById('btn-cancel-build');
-        const modal = document.getElementById('stadium-confirm-modal');
+        const buildModal = document.getElementById('stadium-confirm-modal');
 
         if (btnCancel) {
             btnCancel.addEventListener('click', () => {
-                modal?.classList.add('hidden');
+                buildModal?.classList.add('hidden');
             });
         }
 
@@ -346,10 +382,32 @@ window.StadiumUI = {
             });
         }
 
-        // Click fuori dal modal per chiudere
-        modal?.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
+        buildModal?.addEventListener('click', (e) => {
+            if (e.target === buildModal) {
+                buildModal.classList.add('hidden');
+            }
+        });
+
+        // Modal conferma demolizione
+        const btnConfirmDemolish = document.getElementById('btn-confirm-demolish');
+        const btnCancelDemolish = document.getElementById('btn-cancel-demolish');
+        const demolishModal = document.getElementById('stadium-demolish-modal');
+
+        if (btnCancelDemolish) {
+            btnCancelDemolish.addEventListener('click', () => {
+                demolishModal?.classList.add('hidden');
+            });
+        }
+
+        if (btnConfirmDemolish) {
+            btnConfirmDemolish.addEventListener('click', async () => {
+                await this.handleDemolishConfirm();
+            });
+        }
+
+        demolishModal?.addEventListener('click', (e) => {
+            if (e.target === demolishModal) {
+                demolishModal.classList.add('hidden');
             }
         });
     },
@@ -448,6 +506,92 @@ window.StadiumUI = {
             errorMsg.textContent = result.error;
             btnConfirm.disabled = false;
             btnConfirm.innerHTML = 'Costruisci';
+        }
+    },
+
+    /**
+     * Mostra il modal di conferma demolizione
+     * @param {string} structureId - ID struttura
+     */
+    showDemolishConfirmModal(structureId) {
+        const structure = window.Stadium.STRUCTURES[structureId];
+        if (!structure) return;
+
+        const modal = document.getElementById('stadium-demolish-modal');
+        const title = document.getElementById('demolish-modal-title');
+        const info = document.getElementById('demolish-modal-info');
+        const errorMsg = document.getElementById('demolish-error-message');
+
+        title.textContent = `Demolisci ${structure.name}`;
+
+        const refund = Math.floor(structure.cost / 2);
+
+        info.innerHTML = `
+            <div class="text-center mb-4">
+                <span class="text-5xl">${structure.icon}</span>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Struttura:</span>
+                    <span class="text-white font-bold">${structure.name}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Bonus attuale:</span>
+                    <span class="text-green-400 font-bold">+${structure.bonus}</span>
+                </div>
+                <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
+                    <span class="text-gray-400">Rimborso (50%):</span>
+                    <span class="text-yellow-400 font-bold">+${refund} CS</span>
+                </div>
+            </div>
+            <p class="text-center text-red-300 text-sm mt-3">
+                ⚠️ Questa azione è irreversibile!
+            </p>
+        `;
+
+        errorMsg.textContent = '';
+
+        // Salva l'ID per il confirm
+        modal.dataset.structureId = structureId;
+
+        modal.classList.remove('hidden');
+    },
+
+    /**
+     * Gestisce la conferma di demolizione
+     */
+    async handleDemolishConfirm() {
+        const modal = document.getElementById('stadium-demolish-modal');
+        const structureId = modal?.dataset.structureId;
+        const btnConfirm = document.getElementById('btn-confirm-demolish');
+        const errorMsg = document.getElementById('demolish-error-message');
+
+        if (!structureId) return;
+
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Demolendo...';
+
+        const result = await window.Stadium.demolishStructure(
+            this._teamId,
+            structureId
+        );
+
+        if (result.success) {
+            // Aggiorna dati locali
+            this._stadiumData = window.Stadium._currentStadium;
+            this._teamData.budget += result.refund;
+
+            // Mostra messaggio successo
+            this.showMessage(`${result.structure.name} demolito! Rimborsati ${result.refund} CS. Bonus casa: +${result.newBonus.toFixed(2)}`, 'success');
+
+            // Chiudi modal e re-render
+            modal.classList.add('hidden');
+            this.render();
+
+        } else {
+            errorMsg.textContent = result.error;
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = 'Demolisci';
         }
     },
 

@@ -390,6 +390,111 @@ window.Stadium = {
     },
 
     /**
+     * Verifica se una struttura puo essere demolita
+     * (non deve essere prerequisito di altre strutture costruite)
+     * @param {string} structureId - ID struttura
+     * @param {Object} stadiumData - Dati stadio (opzionale)
+     */
+    canDemolish(structureId, stadiumData = null) {
+        const structure = this.STRUCTURES[structureId];
+        if (!structure) return { canDemolish: false, reason: 'Struttura non trovata' };
+
+        const stadium = stadiumData || this._currentStadium || this.getDefaultStadium();
+        const built = stadium.built || [];
+
+        // Non costruita?
+        if (!built.includes(structureId)) {
+            return { canDemolish: false, reason: 'Non costruita' };
+        }
+
+        // Verifica se altre strutture costruite dipendono da questa
+        const dependents = [];
+        for (const builtId of built) {
+            if (builtId === structureId) continue;
+            const builtStructure = this.STRUCTURES[builtId];
+            if (builtStructure?.requires?.includes(structureId)) {
+                dependents.push(builtStructure.name);
+            }
+        }
+
+        if (dependents.length > 0) {
+            return {
+                canDemolish: false,
+                reason: `Richiesta da: ${dependents.join(', ')}`,
+                dependents: dependents
+            };
+        }
+
+        return { canDemolish: true, reason: null };
+    },
+
+    /**
+     * Demolisce una struttura e rimborsa meta del costo
+     * @param {string} teamId - ID squadra
+     * @param {string} structureId - ID struttura da demolire
+     * @returns {Object} Risultato operazione
+     */
+    async demolishStructure(teamId, structureId) {
+        const structure = this.STRUCTURES[structureId];
+        if (!structure) {
+            return { success: false, error: 'Struttura non trovata' };
+        }
+
+        // Carica stadio se necessario
+        if (!this._currentStadium || this._currentTeamId !== teamId) {
+            await this.loadStadium(teamId);
+        }
+
+        // Verifica se puo essere demolita
+        const canDemolishResult = this.canDemolish(structureId);
+        if (!canDemolishResult.canDemolish) {
+            return { success: false, error: canDemolishResult.reason };
+        }
+
+        // Calcola rimborso (50% del costo)
+        const refund = Math.floor(structure.cost / 2);
+
+        // Rimuovi struttura
+        const newBuilt = (this._currentStadium.built || []).filter(id => id !== structureId);
+        const newBonus = this.calculateTotalBonus(newBuilt);
+
+        const newStadiumData = {
+            built: newBuilt,
+            totalBonus: newBonus
+        };
+
+        // Salva su Firestore
+        const saved = await this.saveStadium(teamId, newStadiumData);
+        if (!saved) {
+            return { success: false, error: 'Errore salvataggio' };
+        }
+
+        // Aggiungi rimborso al budget della squadra
+        try {
+            const { doc, updateDoc, increment } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const teamPath = `artifacts/${appId}/public/data/teams/${teamId}`;
+            const teamRef = doc(window.db, teamPath);
+
+            await updateDoc(teamRef, {
+                budget: increment(refund)
+            });
+        } catch (error) {
+            console.error('[Stadium] Errore rimborso budget:', error);
+            // Rollback stadio
+            await this.saveStadium(teamId, this._currentStadium);
+            return { success: false, error: 'Errore rimborso crediti' };
+        }
+
+        return {
+            success: true,
+            structure: structure,
+            newBonus: newBonus,
+            refund: refund
+        };
+    },
+
+    /**
      * Calcola il bonus totale dalle strutture costruite
      * @param {Array} builtStructures - Array di ID strutture costruite
      */

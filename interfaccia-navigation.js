@@ -252,8 +252,9 @@ window.InterfacciaNavigation = {
         if (!teamId) return;
 
         try {
-            const { doc, getDoc } = window.firestoreTools;
-            const teamDocRef = doc(window.db, window.TEAMS_COLLECTION_PATH, teamId);
+            const { doc, getDoc, appId } = window.firestoreTools;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            const teamDocRef = doc(window.db, teamsPath, teamId);
             const teamDoc = await getDoc(teamDocRef);
 
             if (teamDoc.exists()) {
@@ -281,8 +282,9 @@ window.InterfacciaNavigation = {
         const toggle = document.getElementById('draft-participation-toggle');
 
         try {
-            const { doc, updateDoc } = window.firestoreTools;
-            const teamDocRef = doc(window.db, window.TEAMS_COLLECTION_PATH, teamId);
+            const { doc, updateDoc, appId } = window.firestoreTools;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            const teamDocRef = doc(window.db, teamsPath, teamId);
 
             await updateDoc(teamDocRef, {
                 draft_enabled: enabled

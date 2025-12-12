@@ -54,6 +54,12 @@ window.DraftTurns = {
                     return; // skip this team
                 }
 
+                // Includi solo squadre con draft_enabled attivo
+                if (data.draft_enabled !== true) {
+                    console.log(`[Draft] Squadra "${teamName}" non partecipa al draft (toggle disattivo).`);
+                    return; // skip this team
+                }
+
                 teams.push({
                     id: docSnap.id,
                     name: teamName,

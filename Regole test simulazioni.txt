@@ -1,0 +1,109 @@
+================================================================================
+REGOLAMENTO SIMULAZIONE PARTITA
+================================================================================
+
+1. FORMAZIONI E PREPARAZIONE
+--------------------------------------------------------------------------------
+1) Schieramento: 
+   Decretare le formazioni che scendono in campo, inclusa la panchina.
+
+2) Calcolo Modificatore Livello Giocatore:
+   Assegnare il modificatore in base al livello del giocatore:
+
+   Liv 01 = 1,0    Liv 11 = 6,0    Liv 21 = 11,5
+   Liv 02 = 1,5    Liv 12 = 6,5    Liv 22 = 12,0
+   Liv 03 = 2,0    Liv 13 = 7,0    Liv 23 = 12,5
+   Liv 04 = 2,5    Liv 14 = 7,5    Liv 24 = 13,0
+   Liv 05 = 3,0    Liv 15 = 8,0    Liv 24 = 13,5 
+   Liv 06 = 3,5    Liv 16 = 8,5    Liv 25 = 14,0
+   Liv 07 = 4,0    Liv 17 = 9,0    Liv 26 = 14,5
+   Liv 08 = 4,5    Liv 18 = 9,5    Liv 27 = 15,0
+   Liv 09 = 5,0    Liv 19 = 10,0   Liv 28 = 15,5
+   Liv 10 = 5,5    Liv 20 = 11,0   Liv 29 = 17,5
+                                   Liv 30 = 18,5
+
+3) Forma Fisica:
+   Prima delle fasi, applicare ai giocatori il bonus/malus derivante dalla loro 
+   forma fisica al modificatore base.
+
+4) Abilità Speciali:
+   Considerare le abilità dei giocatori in campo (e in panchina se applicabile) 
+   per modificare le formule. 
+   N.B. Alcune abilità non sono cumulabili tra loro.
+
+
+2. MODIFICATORI TATTICI E SITUAZIONALI
+--------------------------------------------------------------------------------
+Prima di iniziare le fasi, applicare i seguenti aggiustamenti alle formule:
+
+A. Tipologia Giocatori (Sasso-Carta-Forbice):
+   Si applicano le penalità e i bonus alle fasi in questo modo:
+   - Giocatori Potenza  vs Tecnica  -> da +5 a +25% al modificatore del giocatore Potenza e da -5% a -25% al modificatore del giocatore Tecnica
+   - Giocatori Tecnica  vs Velocità -> da +5 a +25% al modificatore del giocatore Tecnica e da -5% a -25% al modificatore del giocatore Velocità
+   - Giocatori Velocità vs Potenza  -> da +5 a +25% al modificatore del giocatore Velocità e da -5% a -25% al modificatore del giocatore Potenza
+
+	(potenza > tecnica > velocità > potenza)
+
+B. Bonus Allenatore:
+   Aggiungere sempre in tutte le fasi: + (1/2 Livello Allenatore).
+
+C. Bonus Capitano:
+   Il capitano della squadra ha sempre i suoi modificatori aumentati di +1.
+
+D. Bonus Stadio (solo in casa):
+	Lo stadio ha modificatori variabili in base alle strutture costruite
+
+
+3. SVOLGIMENTO DELLA PARTITA
+--------------------------------------------------------------------------------
+La simulazione consiste in 30 occasioni per squadra. Ogni occasione è divisa 
+in 3 fasi sequenziali.
+
+Esempio: Squadra A (Attacco) vs Squadra B (Difesa)
+
+--- FASE 1: COSTRUZIONE ---
+Partecipanti: Difensori e Centrocampisti A vs Centrocampisti B.
+
+Formula:
+[(1d20 + mod. di un difensore o un centrocampista causale della squadra A [dichiarare quale nel log]) vs (1d20 + Mod. di un centrocampista casuale della squadra B [dichiarare quale nel log] )]
+
+Esito:
+- Il risultato della formula determina la % di riuscita del passaggio.
+- Tirare 1d100: se il tiro è inferiore o uguale alla %, si passa alla Fase 2.
+- Fallimento: L'azione si ferma (5% di probabilità di passare comunque alla 
+  fase successiva).
+
+--- FASE 2: ATTACCO VS DIFESA ---
+(Solo se Fase 1 è superata)
+Partecipanti: Attaccanti e Centrocampisti A vs Difensori e Centrocampisti B.
+
+Formula:
+Squadra A: [1d20 + Mod. di un centrocampista casuale o un attaccante causale squadra A]
+           VS
+Squadra B: [1d20 + Mod. di un Difensore casuale o un Centrocampista casuale squadra B]
+
+Esito:
+- Se A > B: Si passa alla Fase 3 (mantenere il risultato di A come "Valore Tiro").
+- Se B > A: L'azione si ferma (5% di probabilità di passare comunque alla fase 
+  successiva simulando un risultato/Valore Tiro = 5).
+
+--- FASE 3: TIRO VS PORTIERE ---
+(Solo se Fase 2 è superata)
+Partecipanti: Portiere B vs Risultato Fase 2 (Valore Tiro).
+
+Formula:
+[1d20 + Mod. Portiere B] - [1d20 + mod. di un attaccante o di un centrocampista causale squadra  A]
+
+Calcolo Finale (Totale Portiere - Valore Tiro):
+1. Risultato > 0 (Positivo): PARATA.
+   (C'è un 5% di possibilità che sia comunque GOAL se avviene una parata).
+   
+2. Risultato = 0 (Pareggio): INCERTO.
+   (50% probabilità di GOAL / 50% probabilità di PARATA).
+
+3. Risultato < 0 (Negativo): GOAL del giocatore che ha tirato.
+
+
+4. FINE DELLA PARTITA
+--------------------------------------------------------------------------------
+Al termine della partita c'è l'1% di possibilità per ogni giocatore in campo e in panchina di infortunarsi (solo se flag infortunio è attivo). Massimo 1 giocatore per squadra può infortunarsi dopo la partita
