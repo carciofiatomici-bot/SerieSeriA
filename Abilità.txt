@@ -29,6 +29,8 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d6 invece che 1d10 nella fase 3 "tiro vs portiere".
 -Tiro dalla porta (3): 5% di probabilità di aggiungere 1/2 del suo modificatore alla fase 3 "tiro vs portiere".
+-Indistruttibile (3): Il giocatore non può essere infortunato.
+
 
 
 >>> Abilità Negative:
@@ -37,6 +39,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 - Fuori dai pali (1): 5% di probabilità di non aggiungere il suo modificatore durante la fase "tiro vs portiere".
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
+-Fragile: Raddoppia la possibilità di infortunio a fine partita.
 
 ---------------------------------------------------
 [ DIFENSORE ]
@@ -57,6 +60,8 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Salvataggio sulla Linea (4): Se il portiere viene battuto (Goal), questo difensore ha un 5% di probabilità di intervenire all'ultimo istante. Si lancia 1d20 + Modificatore del Difensore: se il risultato batte il totale dell'attacco avversario, il goal è salvato.
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
+-Indistruttibile (3): Il giocatore non può essere infortunato.
+
 
 
 
@@ -66,6 +71,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 - Fuori Posizione (1): 2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase (ad eccezione di fase "tiro vs portiere").
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
+-Fragile: Raddoppia la possibilità di infortunio a fine partita.
 
 
 ---------------------------------------------------
@@ -85,6 +91,8 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (Potenza, Tecnica, Velocità) contemporaneamente. Questo significa che impone sempre il malus del -25% agli avversari diretti, indipendentemente dalla loro tipologia.
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
+-Indistruttibile (3): Il giocatore non può essere infortunato.
+
 
 
 
@@ -95,6 +103,8 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Egoista (2): 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale, invece di sommarlo (vuole fare tutto da solo).
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
+-Fragile: Raddoppia la possibilità di infortunio a fine partita.
+
 
 
 
@@ -115,6 +125,7 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Tiro a Giro (3): 5% di probabilità di ignorare il modificatore di un difensore avversario nel calcolo della Fase 2, rendendo più facile arrivare alla Fase 3.
 -Immarcabile (4): 5% di probabilità di tirare 2d20 nella Fase 2 (Attacco vs Difesa) e scegliere il risultato migliore.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
+-Indistruttibile (3): Il giocatore non può essere infortunato.
 
 >>> Abilità Negative:
 - Piedi a banana (1): 5% di possibilità di sottrarre il suo modificatore durante fase "attacco vs difesa" quando partecipa come attaccante.
@@ -124,13 +135,15 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Egoista (2): 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale, invece di sommarlo (vuole fare tutto da solo).
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Titubanza(1): In attacco, il dado del tiro della squadra diventa 1d6 invece che 1d10.
+-Fragile: Raddoppia la possibilità di infortunio a fine partita.
+
 
 
 ---------------------------------------------------
 [ ABILITÀ PARTICOLARI (SOLO ICONE) ]
 (Riservate ai capitani scelti alla creazione delle squadre)
 
-- Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
+- Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni (escluso sé stesso), inoltre la sua forma non può mai essere in negativo, il giocatore non può infortunarsi.
 """
 
 file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'

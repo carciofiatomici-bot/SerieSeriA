@@ -125,6 +125,8 @@ window.GestioneSquadreFormazione = {
                          ${legendHtml}
                     </div>
 
+                    ${this.renderInjuredPlayersBox(teamData)}
+
                     <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2 pt-4">Rosa Completa (Disponibili)</h3>
                     <div id="full-squad-list" class="space-y-2 max-h-60 overflow-y-auto min-h-[100px] border border-gray-700 p-2 rounded-lg"
                          ondragover="event.preventDefault();"
@@ -385,7 +387,7 @@ window.GestioneSquadreFormazione = {
             return;
         }
 
-        // Determina target role
+        // Determina target role prima per verificare infortuni
         let targetRole = dropZone.dataset.role;
 
         if (dropZone.id === 'panchina-slots' || dropZone.closest('#panchina-slots')) {
@@ -405,6 +407,15 @@ window.GestioneSquadreFormazione = {
         if (!targetRole) {
             displayMessage('formation-message', 'Drop non valido.', 'error');
             return;
+        }
+
+        // Blocca giocatori infortunati (solo per campo e panchina, non per ROSALIBERA)
+        if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player)) {
+            const remaining = window.Injuries.getRemainingMatches(player);
+            if (targetRole !== 'ROSALIBERA') {
+                displayMessage('formation-message', `${player.name} e infortunato! Non puo giocare per altre ${remaining} ${remaining === 1 ? 'partita' : 'partite'}.`, 'error');
+                return;
+            }
         }
 
         // Gestisci scambio se c'e' un giocatore nello slot
@@ -660,12 +671,22 @@ window.GestioneSquadreFormazione = {
                 const isIcona = player.abilities && player.abilities.includes('Icona');
                 const iconaBadge = isIcona ? `<span class="text-yellow-400 font-extrabold mr-1">(ICONA)</span>` : '';
 
+                // Controllo infortunio
+                const isInjured = window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player);
+                const injuryBadge = isInjured
+                    ? `<span class="bg-red-800 text-red-300 px-1.5 py-0.5 rounded text-xs font-bold ml-1">🏥 ${window.Injuries.getRemainingMatches(player)}</span>`
+                    : '';
+                const injuredClass = isInjured
+                    ? 'bg-red-900/50 text-gray-400 cursor-not-allowed opacity-60 border border-red-700'
+                    : 'bg-gray-600 text-white cursor-grab hover:bg-gray-500';
+                const draggableAttr = isInjured ? 'draggable="false"' : 'draggable="true"';
+
                 return `
-                    <div draggable="true" data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
-                         class="player-card p-2 bg-gray-600 text-white rounded-lg shadow cursor-grab hover:bg-gray-500 transition duration-100 z-10"
-                         ondragstart="window.handleDragStart(event)"
-                         ondragend="window.handleDragEnd(event)">
-                        ${iconaBadge}${player.name} (${player.role}) (Liv: ${player.level || player.currentLevel || 1})${abilitiesSummary}
+                    <div ${draggableAttr} data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
+                         class="player-card p-2 ${injuredClass} rounded-lg shadow transition duration-100 z-10"
+                         ${isInjured ? '' : 'ondragstart="window.handleDragStart(event)" ondragend="window.handleDragEnd(event)"'}
+                         ${isInjured ? `title="${player.name} e infortunato per ${window.Injuries.getRemainingMatches(player)} partite"` : ''}>
+                        ${iconaBadge}${player.name} (${player.role}) (Liv: ${player.level || player.currentLevel || 1})${abilitiesSummary}${injuryBadge}
                         <span class="float-right text-xs font-semibold ${playerWithForm.formModifier > 0 ? 'text-green-400' : (playerWithForm.formModifier < 0 ? 'text-red-400' : 'text-gray-400')}">
                             ${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier || 0}
                         </span>
@@ -721,6 +742,14 @@ window.GestioneSquadreFormazione = {
         const player = context.currentTeamData.players.find(p => p.id === droppedId);
         if (!player) {
             return displayMessage('formation-message', 'Errore: Giocatore non trovato nella rosa (ID non valido).', 'error');
+        }
+
+        // Blocca giocatori infortunati (solo per campo e panchina, non per ROSALIBERA)
+        if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player)) {
+            const remaining = window.Injuries.getRemainingMatches(player);
+            if (targetRole !== 'ROSALIBERA') {
+                return displayMessage('formation-message', `${player.name} e infortunato! Non puo giocare per altre ${remaining} ${remaining === 1 ? 'partita' : 'partite'}.`, 'error');
+            }
         }
 
         let actualDropSlot = e.target.closest('.slot-target') || e.target.closest('#panchina-slots') || e.target.closest('#full-squad-list');
@@ -847,6 +876,63 @@ window.GestioneSquadreFormazione = {
             saveButton.textContent = 'Salva Formazione';
             saveButton.disabled = false;
         }
+    },
+
+    /**
+     * Renderizza il box degli infortunati (se feature attiva)
+     */
+    renderInjuredPlayersBox(teamData) {
+        // Se il sistema infortuni non e abilitato, non mostrare nulla
+        if (!window.Injuries?.isEnabled()) return '';
+
+        const injuredPlayers = window.Injuries.getInjuredPlayers(teamData);
+
+        if (injuredPlayers.length === 0) {
+            return `
+                <div class="p-3 bg-gray-800 rounded-lg border border-gray-600 mt-4">
+                    <h4 class="text-sm font-bold text-red-400 flex items-center gap-2 mb-2">
+                        <span>🏥</span> Infermeria
+                    </h4>
+                    <p class="text-gray-500 text-sm text-center">Nessun giocatore infortunato</p>
+                </div>
+            `;
+        }
+
+        const { TYPE_ICONS } = window.GestioneSquadreConstants;
+
+        const playersHtml = injuredPlayers.map(p => {
+            const remaining = p.injury.remainingMatches;
+            const roleColors = {
+                'P': 'bg-yellow-600 text-yellow-100',
+                'D': 'bg-blue-600 text-blue-100',
+                'C': 'bg-green-600 text-green-100',
+                'A': 'bg-red-600 text-red-100'
+            };
+            const roleBadge = `<span class="px-1.5 py-0.5 ${roleColors[p.role] || 'bg-gray-600 text-gray-100'} rounded text-xs font-bold">${p.role}</span>`;
+
+            return `
+                <div class="flex items-center justify-between py-2 px-3 bg-red-900/30 rounded border border-red-700 mb-1">
+                    <div class="flex items-center gap-2">
+                        ${roleBadge}
+                        <span class="text-white text-sm">${p.name}</span>
+                        <span class="text-gray-400 text-xs">(Liv. ${p.level || p.currentLevel || 1})</span>
+                    </div>
+                    <span class="text-red-400 text-xs font-bold">🏥 ${remaining} ${remaining === 1 ? 'partita' : 'partite'}</span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="p-3 bg-gray-800 rounded-lg border border-red-500 mt-4">
+                <h4 class="text-sm font-bold text-red-400 flex items-center gap-2 mb-2">
+                    <span>🏥</span> Infermeria (${injuredPlayers.length})
+                </h4>
+                <div class="max-h-32 overflow-y-auto">
+                    ${playersHtml}
+                </div>
+                <p class="text-xs text-red-400 mt-2 text-center font-semibold">⚠️ I giocatori infortunati non possono essere schierati</p>
+            </div>
+        `;
     }
 };
 

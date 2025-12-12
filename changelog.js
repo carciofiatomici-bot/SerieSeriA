@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.98',
+    currentVersion: '0.9.99',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,26 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '0.9.99',
+            date: '2025-12-12',
+            time: '22:00',
+            title: 'Sistema Infortuni + Layout Dashboard',
+            changes: [
+                { text: 'NUOVO: Sistema Infortuni - i giocatori possono infortunarsi dopo le partite', adminOnly: false },
+                { text: 'Infortunio: 1% di probabilita per giocatore schierato (configurabile)', adminOnly: false },
+                { text: 'Massimo 1 infortunio per partita per squadra', adminOnly: false },
+                { text: 'Durata infortunio: da 1 a 10 partite (casuale)', adminOnly: false },
+                { text: 'Box "Infermeria" nella gestione formazione mostra giocatori infortunati', adminOnly: false },
+                { text: 'Giocatori infortunati non possono essere schierati', adminOnly: false },
+                { text: 'Dashboard: sponsor, countdown, logo, icona, divisa e media tutti su una riga', adminOnly: false },
+                { text: 'Moduli ordinati per posizione (dal piu difensivo al piu offensivo)', adminOnly: false },
+                { text: 'Notifica sfida ora mostra i crediti scommessi', adminOnly: false },
+                { text: 'Nuovo flag "Sistema Infortuni" con impostazioni configurabili', adminOnly: true },
+                { text: 'Impostazioni infortuni: % infortunio, durata min/max, max % rosa infortunata', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '0.9.98',
             date: '2025-12-12',

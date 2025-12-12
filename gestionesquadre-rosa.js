@@ -76,6 +76,14 @@ window.GestioneSquadreRosa = {
             iconaMarker = ' <span class="bg-yellow-800 text-yellow-300 px-2 py-0.5 rounded-full text-xs font-extrabold">ICONA</span>';
         }
 
+        // Marker Infortunio
+        let injuryMarker = '';
+        const isInjured = window.Injuries?.isPlayerInjured(player);
+        if (isInjured) {
+            const remaining = window.Injuries.getRemainingMatches(player);
+            injuryMarker = ` <span class="bg-red-800 text-red-300 px-2 py-0.5 rounded-full text-xs font-extrabold" title="Infortunato per ${remaining} partite">🏥 ${remaining}</span>`;
+        }
+
         const isCaptainClass = isCaptain ? 'text-orange-400 font-extrabold' : 'text-white font-semibold';
 
         // Tipologia
@@ -114,12 +122,16 @@ window.GestioneSquadreRosa = {
             </button>
         `;
 
+        // Border rosso se infortunato
+        const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
+
         return `
-            <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-green-700">
+            <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
                 <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
                     <div>
                         <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}
+                        ${injuryMarker}
                         <span class="text-yellow-400">(${player.role})</span>
                         ${typeIconHtml}
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>

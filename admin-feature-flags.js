@@ -510,6 +510,10 @@ window.AdminFeatureFlags = {
         const isAchievementsFlag = flag.id === 'achievements';
         const showAchievementsManager = isAchievementsFlag && flag.enabled;
 
+        // Controlla se questo e' il flag injuries e se e' attivo
+        const isInjuriesFlag = flag.id === 'injuries';
+        const showInjuriesSettings = isInjuriesFlag && flag.enabled;
+
         return `
             <div class="bg-gray-800 rounded-lg overflow-hidden">
                 <div class="p-4 flex items-center justify-between">
@@ -549,6 +553,7 @@ window.AdminFeatureFlags = {
                     </div>
                 ` : ''}
                 ${showAchievementsManager ? this.renderAchievementsManager() : ''}
+                ${showInjuriesSettings ? this.renderInjuriesSettings() : ''}
             </div>
         `;
     },
@@ -620,6 +625,132 @@ window.AdminFeatureFlags = {
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Renderizza le impostazioni del sistema infortuni (menu a scomparsa)
+     */
+    renderInjuriesSettings() {
+        // Carica le impostazioni correnti
+        const injuryChance = (window.Injuries?.INJURY_CHANCE || 0.01) * 100;
+        const minDuration = window.Injuries?.MIN_INJURY_DURATION || 1;
+        const maxDuration = window.Injuries?.MAX_INJURY_DURATION || 10;
+        const maxRatio = (window.Injuries?.MAX_INJURIES_RATIO || 0.25) * 100;
+
+        return `
+            <div class="border-t border-red-600">
+                <button class="injuries-settings-toggle w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2 transition-colors bg-gray-750">
+                    <svg class="w-4 h-4 transform transition-transform injuries-settings-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                    <span class="font-semibold">⚙️ Impostazioni Infortuni</span>
+                </button>
+                <div class="injuries-settings-content hidden bg-gray-900 bg-opacity-50">
+                    <div class="p-4 space-y-4">
+                        <!-- Probabilita infortunio -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 text-sm font-semibold">
+                                Probabilita Infortunio per Giocatore
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" id="injury-chance-slider" min="1" max="20" value="${injuryChance}"
+                                       class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                                <span id="injury-chance-value" class="text-lg font-bold text-red-400 w-16 text-center">${injuryChance}%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">% di probabilita che un giocatore si infortuni dopo una partita</p>
+                        </div>
+
+                        <!-- Durata minima -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 mb-2 text-sm font-semibold">
+                                    Durata Minima
+                                </label>
+                                <input type="number" id="injury-min-duration" min="1" max="5" value="${minDuration}"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-red-500 focus:outline-none">
+                                <p class="text-xs text-gray-500 mt-1">partite</p>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-2 text-sm font-semibold">
+                                    Durata Massima
+                                </label>
+                                <input type="number" id="injury-max-duration" min="5" max="20" value="${maxDuration}"
+                                       class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white focus:border-red-500 focus:outline-none">
+                                <p class="text-xs text-gray-500 mt-1">partite</p>
+                            </div>
+                        </div>
+
+                        <!-- Max ratio infortunati -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 text-sm font-semibold">
+                                Max % Rosa Infortunata
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" id="injury-max-ratio-slider" min="10" max="50" value="${maxRatio}"
+                                       class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                                <span id="injury-max-ratio-value" class="text-lg font-bold text-red-400 w-16 text-center">${maxRatio}%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Massima percentuale della rosa che puo' essere infortunata contemporaneamente</p>
+                        </div>
+
+                        <!-- Bottone salva -->
+                        <button id="btn-save-injury-settings"
+                                class="w-full py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white font-semibold flex items-center justify-center gap-2">
+                            <span>💾</span> Salva Impostazioni
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Salva le impostazioni degli infortuni su Firestore
+     */
+    async saveInjurySettings() {
+        if (!window.db || !window.firestoreTools) {
+            console.error('Firestore non disponibile');
+            return false;
+        }
+
+        const injuryChance = parseFloat(document.getElementById('injury-chance-slider')?.value || 1) / 100;
+        const minDuration = parseInt(document.getElementById('injury-min-duration')?.value || 1);
+        const maxDuration = parseInt(document.getElementById('injury-max-duration')?.value || 10);
+        const maxRatio = parseFloat(document.getElementById('injury-max-ratio-slider')?.value || 25) / 100;
+
+        try {
+            const { doc, setDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const settingsDocRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'injurySettings');
+
+            await setDoc(settingsDocRef, {
+                injuryChance,
+                minDuration,
+                maxDuration,
+                maxRatio,
+                updatedAt: new Date().toISOString()
+            });
+
+            // Aggiorna anche l'oggetto Injuries locale
+            if (window.Injuries) {
+                window.Injuries.INJURY_CHANCE = injuryChance;
+                window.Injuries.MIN_INJURY_DURATION = minDuration;
+                window.Injuries.MAX_INJURY_DURATION = maxDuration;
+                window.Injuries.MAX_INJURIES_RATIO = maxRatio;
+            }
+
+            if (window.Toast) {
+                window.Toast.success('Impostazioni infortuni salvate!');
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Errore salvataggio impostazioni infortuni:', error);
+            if (window.Toast) {
+                window.Toast.error('Errore nel salvataggio');
+            }
+            return false;
+        }
     },
 
     /**
@@ -777,6 +908,51 @@ window.AdminFeatureFlags = {
                 const achievementId = btn.dataset.id;
                 this.deleteAchievement(achievementId);
             });
+        });
+
+        // === INJURIES SETTINGS EVENT LISTENERS ===
+
+        // Toggle menu impostazioni infortuni
+        this.container.querySelectorAll('.injuries-settings-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const content = btn.nextElementSibling;
+                const arrow = btn.querySelector('.injuries-settings-arrow');
+
+                if (content) {
+                    content.classList.toggle('hidden');
+
+                    if (arrow) {
+                        if (content.classList.contains('hidden')) {
+                            arrow.style.transform = 'rotate(0deg)';
+                        } else {
+                            arrow.style.transform = 'rotate(180deg)';
+                        }
+                    }
+                }
+            });
+        });
+
+        // Slider probabilita infortunio
+        const injuryChanceSlider = document.getElementById('injury-chance-slider');
+        const injuryChanceValue = document.getElementById('injury-chance-value');
+        if (injuryChanceSlider && injuryChanceValue) {
+            injuryChanceSlider.addEventListener('input', (e) => {
+                injuryChanceValue.textContent = `${e.target.value}%`;
+            });
+        }
+
+        // Slider max ratio infortunati
+        const injuryMaxRatioSlider = document.getElementById('injury-max-ratio-slider');
+        const injuryMaxRatioValue = document.getElementById('injury-max-ratio-value');
+        if (injuryMaxRatioSlider && injuryMaxRatioValue) {
+            injuryMaxRatioSlider.addEventListener('input', (e) => {
+                injuryMaxRatioValue.textContent = `${e.target.value}%`;
+            });
+        }
+
+        // Bottone salva impostazioni infortuni
+        document.getElementById('btn-save-injury-settings')?.addEventListener('click', () => {
+            this.saveInjurySettings();
         });
     }
 };

@@ -338,36 +338,38 @@
                 </div>
             </div>
 
-            <!-- COUNTDOWN, LOGO, ICONA E DIVISA - Mobile Optimized -->
-            <div id="team-logo-container" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-                <!-- BOX SPONSOR (hidden on very small screens) -->
-                <div id="sponsor-box" class="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex-shrink-0 hidden sm:block">
+            <!-- COUNTDOWN, LOGO, ICONA E DIVISA - Tutti centrati su una riga -->
+            <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 mb-4 sm:mb-6 overflow-x-auto">
+                <!-- BOX SPONSOR -->
+                <div id="sponsor-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
                     <img id="sponsor-image"
                          src="https://placehold.co/128x128/374151/9ca3af?text=Sponsor"
                          alt="Sponsor"
-                         class="w-full h-full rounded-lg border-2 sm:border-4 shadow-lg object-cover bg-gray-800"
+                         class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
                          style="border-color: #22c55e;"
                          title="Sponsor">
                 </div>
                 <!-- BOX COUNTDOWN PROSSIMA PARTITA -->
-                <div id="next-match-countdown" class="p-1 sm:p-2 bg-gray-800 rounded-full border-2 sm:border-4 border-teal-500 text-center shadow-lg w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex flex-col justify-center items-center">
-                    <p id="countdown-label-top" class="text-[10px] sm:text-xs text-teal-300 font-semibold">Prossima</p>
-                    <p id="countdown-timer" class="text-sm sm:text-lg font-extrabold text-teal-400">--:--</p>
-                    <p id="countdown-label-bottom" class="text-[10px] sm:text-xs text-gray-500">Partita</p>
+                <div id="next-match-countdown" class="p-1 bg-gray-800 rounded-full border-2 border-teal-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center flex-shrink-0">
+                    <p id="countdown-label-top" class="text-[8px] sm:text-[10px] text-teal-300 font-semibold leading-tight">Prossima</p>
+                    <p id="countdown-timer" class="text-xs sm:text-sm md:text-base font-extrabold text-teal-400 leading-tight">--:--</p>
+                    <p id="countdown-label-bottom" class="text-[8px] sm:text-[10px] text-gray-500 leading-tight">Partita</p>
                 </div>
-                <div id="team-logo-wrapper" class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28">
+                <!-- LOGO SQUADRA -->
+                <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 flex-shrink-0">
                     <img id="team-logo"
                          src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
                          alt="Logo Squadra Modificabile"
-                         class="w-full h-full rounded-full border-2 sm:border-4 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
+                         class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
                          style="border-color: #22c55e;"
                          title="Clicca per cambiare il logo (Inserisci URL)">
                 </div>
-                <div class="relative group">
+                <!-- ICONA SQUADRA -->
+                <div class="relative group flex-shrink-0">
                     <img id="team-icona-avatar"
                          src="https://placehold.co/128x128/facc15/000?text=?"
                          alt="Avatar Icona"
-                         class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 sm:border-4 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                         class="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 border-yellow-400 shadow-lg object-cover cursor-pointer">
                     <!-- Tooltip personalizzato -->
                     <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
@@ -377,8 +379,8 @@
                     </div>
                 </div>
                 <!-- BOX DIVISA SQUADRA -->
-                <div id="team-uniform-box" class="p-1 sm:p-2 bg-gray-800 rounded-full border-2 sm:border-4 border-purple-500 text-center shadow-lg w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
-                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
+                <div id="team-uniform-box" class="p-0.5 sm:p-1 bg-gray-800 rounded-full border-2 border-purple-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150 flex-shrink-0" title="Clicca per modificare la divisa">
+                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14">
                         <defs></defs>
                         <!-- Maglia stile jersey.xml -->
                         <g id="shirt-preview" transform="translate(0, 5)">
@@ -396,14 +398,14 @@
                                 fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
                         </g>
                     </svg>
-                    <p class="text-[10px] sm:text-xs text-purple-300 mt-0">Divisa</p>
+                    <p class="text-[8px] sm:text-[10px] text-purple-300 mt-0 leading-tight">Divisa</p>
                 </div>
-                <!-- BOX MEDIA (hidden on very small screens) -->
-                <div id="media-box" class="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex-shrink-0 hidden sm:block">
+                <!-- BOX MEDIA -->
+                <div id="media-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
                     <img id="media-image"
                          src="https://placehold.co/128x128/374151/9ca3af?text=Media"
                          alt="Media"
-                         class="w-full h-full rounded-lg border-2 sm:border-4 shadow-lg object-cover bg-gray-800"
+                         class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
                          style="border-color: #22c55e;"
                          title="Media Partner">
                 </div>
@@ -1158,6 +1160,7 @@
     <script src="chat.js"></script>
     <script src="trades.js"></script>
     <script src="achievements.js"></script>
+    <script src="injuries.js"></script>
     <script src="training.js"></script>
     <script src="match-animations.js"></script>
     <script src="drag-drop.js"></script>

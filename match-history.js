@@ -14,6 +14,7 @@ window.MatchHistory = {
         CAMPIONATO: 'campionato',
         COPPA: 'coppa',
         SFIDA: 'sfida',
+        SFIDA_REALTIME: 'sfida_realtime',
         ALLENAMENTO: 'allenamento',
         SUPERCOPPA: 'supercoppa'
     },
@@ -23,6 +24,7 @@ window.MatchHistory = {
         campionato: '🏅',
         coppa: '🏆',
         sfida: '⚔️',
+        sfida_realtime: '🎲',
         allenamento: '⚽',
         supercoppa: '⭐'
     },
@@ -382,6 +384,9 @@ window.MatchHistory = {
                 <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'sfida' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="sfida">
                     ⚔️ Sfide
                 </button>
+                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'sfida_realtime' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="sfida_realtime">
+                    🎲 Real-Time
+                </button>
                 <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'allenamento' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="allenamento">
                     ⚽ Allenamenti
                 </button>
@@ -422,12 +427,18 @@ window.MatchHistory = {
 
         // Info aggiuntive per sfide con scommessa
         let betInfo = '';
-        if (match.type === 'sfida' && match.betAmount > 0) {
-            const creditsChange = match.result === 'win' ? `+${match.creditsWon}` :
+        if ((match.type === 'sfida' || match.type === 'sfida_realtime') && match.betAmount > 0) {
+            const creditsChange = match.result === 'win' ? `+${match.creditsWon || match.betAmount}` :
                                   match.result === 'loss' ? `-${match.betAmount}` : '0';
             const creditsColor = match.result === 'win' ? 'text-green-400' :
                                  match.result === 'loss' ? 'text-red-400' : 'text-yellow-400';
             betInfo = `<span class="${creditsColor} text-xs ml-2">(${creditsChange} CS)</span>`;
+        }
+
+        // Info partita abbandonata
+        let abandonedInfo = '';
+        if (match.abandoned) {
+            abandonedInfo = `<span class="text-orange-400 text-xs ml-2">(Abbandonata)</span>`;
         }
 
         return `
@@ -441,7 +452,7 @@ window.MatchHistory = {
                                 ${myTeamName}
                                 <span class="${resultColor} font-bold">${myScore} - ${opponentScore}</span>
                                 ${opponentName}
-                                ${betInfo}
+                                ${betInfo}${abandonedInfo}
                             </p>
                         </div>
                     </div>

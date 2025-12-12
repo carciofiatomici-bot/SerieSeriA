@@ -87,7 +87,10 @@ window.Notifications = {
         this.dropdown.innerHTML = `
             <div class="p-3 bg-gray-700 border-b border-gray-600 flex justify-between items-center">
                 <h3 class="font-bold text-white">Notifiche</h3>
-                <button id="mark-all-read" class="text-xs text-blue-400 hover:text-blue-300">Segna tutte lette</button>
+                <div class="flex gap-2">
+                    <button id="mark-all-read" class="text-xs text-blue-400 hover:text-blue-300">Segna lette</button>
+                    <button id="clear-all-notifs" class="text-xs text-red-400 hover:text-red-300">Elimina tutte</button>
+                </div>
             </div>
             <div id="notifications-list" class="overflow-y-auto max-h-72">
                 <p class="text-center text-gray-400 py-8">Nessuna notifica</p>
@@ -100,6 +103,7 @@ window.Notifications = {
         // Event listeners
         this.bellButton.addEventListener('click', () => this.toggleDropdown());
         document.getElementById('mark-all-read').addEventListener('click', () => this.markAllRead());
+        document.getElementById('clear-all-notifs').addEventListener('click', () => this.clearAll());
 
         // Chiudi dropdown cliccando fuori
         document.addEventListener('click', (e) => {
@@ -382,18 +386,40 @@ window.Notifications = {
             const timeAgo = this.getTimeAgo(notif.timestamp);
             const unreadClass = notif.read ? '' : 'bg-gray-700';
 
+            // Bottoni azione per sfide
+            let actionButtons = '';
+            if (notif.type === 'challenge' && notif.challengeId && !notif.responded) {
+                actionButtons = `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="event.stopPropagation(); window.Notifications.acceptChallenge('${notif.id}', '${notif.challengeId}')"
+                                class="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            ✅ Accetta
+                        </button>
+                        <button onclick="event.stopPropagation(); window.Notifications.declineChallenge('${notif.id}', '${notif.challengeId}')"
+                                class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            ❌ Rifiuta
+                        </button>
+                    </div>
+                `;
+            }
+
             return `
-                <div class="p-3 border-b border-gray-700 hover:bg-gray-700 cursor-pointer ${unreadClass}"
-                     onclick="window.Notifications.handleClick('${notif.id}')">
-                    <div class="flex gap-3">
+                <div class="p-3 border-b border-gray-700 hover:bg-gray-700 ${unreadClass} group relative">
+                    <div class="flex gap-3 cursor-pointer" onclick="window.Notifications.handleClick('${notif.id}')">
                         <span class="text-xl">${typeConfig.icon}</span>
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-white text-sm ${notif.read ? 'opacity-70' : ''}">${notif.title}</p>
                             <p class="text-gray-400 text-xs truncate">${notif.message}</p>
                             <p class="text-gray-500 text-xs mt-1">${timeAgo}</p>
+                            ${actionButtons}
                         </div>
                         ${!notif.read ? '<div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>' : ''}
                     </div>
+                    <button onclick="event.stopPropagation(); window.Notifications.deleteNotification('${notif.id}')"
+                            class="absolute top-2 right-2 w-6 h-6 bg-gray-600 hover:bg-red-600 text-gray-300 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-xs"
+                            title="Elimina notifica">
+                        ✕
+                    </button>
                 </div>
             `;
         }).join('');
@@ -482,6 +508,83 @@ window.Notifications = {
     clearAll() {
         this.notifications = [];
         this.saveToLocalStorage();
+        this.updateUI();
+    },
+
+    /**
+     * Elimina una singola notifica
+     */
+    deleteNotification(notifId) {
+        this.notifications = this.notifications.filter(n => n.id !== notifId);
+        this.saveToLocalStorage();
+        this.updateUI();
+    },
+
+    /**
+     * Accetta sfida dalla notifica
+     */
+    async acceptChallenge(notifId, challengeId) {
+        // Marca la notifica come risposta
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+        }
+
+        // Chiudi dropdown notifiche
+        this.closeDropdown();
+
+        // Carica i dati della sfida e accettala tramite Challenges
+        if (window.Challenges) {
+            try {
+                const { doc, getDoc } = window.firestoreTools;
+                const challengesPath = window.Challenges.getChallengesPath();
+                const challengeDoc = await getDoc(doc(window.db, challengesPath, challengeId));
+
+                if (challengeDoc.exists()) {
+                    const challenge = { id: challengeDoc.id, ...challengeDoc.data() };
+                    await window.Challenges.acceptChallenge(challenge);
+                } else {
+                    if (window.Toast) window.Toast.error('Sfida non trovata o scaduta');
+                }
+            } catch (error) {
+                console.error('Errore accettazione sfida:', error);
+                if (window.Toast) window.Toast.error('Errore nell\'accettare la sfida');
+            }
+        }
+
+        this.updateUI();
+    },
+
+    /**
+     * Rifiuta sfida dalla notifica
+     */
+    async declineChallenge(notifId, challengeId) {
+        // Marca la notifica come risposta
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+        }
+
+        // Rifiuta tramite Challenges
+        if (window.Challenges) {
+            try {
+                const { doc, getDoc } = window.firestoreTools;
+                const challengesPath = window.Challenges.getChallengesPath();
+                const challengeDoc = await getDoc(doc(window.db, challengesPath, challengeId));
+
+                if (challengeDoc.exists()) {
+                    const challenge = { id: challengeDoc.id, ...challengeDoc.data() };
+                    await window.Challenges.declineChallenge(challenge);
+                }
+            } catch (error) {
+                console.error('Errore rifiuto sfida:', error);
+            }
+        }
+
         this.updateUI();
     },
 

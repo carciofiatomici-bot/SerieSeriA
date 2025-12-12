@@ -493,13 +493,34 @@ window.Challenges = {
                 where('status', '==', 'pending')
             );
 
+            // Flag per ignorare il primo snapshot (sfide esistenti al refresh)
+            let isFirstSnapshot = true;
+
             this.unsubscribeChallenges = onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const challenge = { id: change.doc.id, ...change.doc.data() };
+
+                        // Ignora sfide vecchie (piu' di 5 minuti) al primo caricamento
+                        if (isFirstSnapshot) {
+                            const challengeTime = challenge.timestamp?.toMillis?.() || 0;
+                            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                            if (challengeTime < fiveMinutesAgo) {
+                                console.log("[Challenges] Ignoro sfida vecchia:", challenge.id);
+                                return;
+                            }
+                        }
+
+                        // Verifica che non ci sia gia' un modal aperto
+                        if (document.getElementById('incoming-challenge-modal')) {
+                            console.log("[Challenges] Modal gia' aperto, ignoro");
+                            return;
+                        }
+
                         this.showChallengeNotification(challenge);
                     }
                 });
+                isFirstSnapshot = false;
             }, (error) => {
                 console.warn("Errore listener sfide:", error);
             });
@@ -533,10 +554,23 @@ window.Challenges = {
                 where('status', '==', 'in_match')
             );
 
+            // Flag per ignorare il primo snapshot (partite esistenti al refresh)
+            let isFirstAcceptedSnapshot = true;
+
             this.unsubscribeMyAcceptedChallenges = onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added' || change.type === 'modified') {
                         const challenge = { id: change.doc.id, ...change.doc.data() };
+
+                        // Ignora partite vecchie (piu' di 2 minuti) al primo caricamento
+                        if (isFirstAcceptedSnapshot) {
+                            const challengeTime = challenge.timestamp?.toMillis?.() || 0;
+                            const twoMinutesAgo = Date.now() - (2 * 60 * 1000);
+                            if (challengeTime < twoMinutesAgo) {
+                                console.log("[Challenges] Ignoro partita in_match vecchia:", challenge.id);
+                                return;
+                            }
+                        }
 
                         // Se c'e' un liveMatchId e non sono gia' in partita
                         if (challenge.liveMatchId && window.ChallengeMatch && !window.ChallengeMatch.currentMatch) {
@@ -547,6 +581,7 @@ window.Challenges = {
                         }
                     }
                 });
+                isFirstAcceptedSnapshot = false;
             }, (error) => {
                 console.warn("Errore listener sfide accettate:", error);
             });
@@ -560,20 +595,26 @@ window.Challenges = {
      * Mostra notifica sfida ricevuta
      */
     showChallengeNotification(challenge) {
+        const betAmount = challenge.bet?.amount || 0;
+        const hasBet = betAmount > 0;
+        const betText = hasBet ? ` con ${betAmount} CS in palio!` : '';
+
         // Aggiungi notifica nel sistema notifiche
         if (window.Notifications && window.FeatureFlags?.isEnabled('notifications')) {
             window.Notifications.add({
                 type: 'challenge',
                 title: '⚔️ Sfida Ricevuta!',
-                message: `${challenge.fromTeamName} ti ha sfidato!`,
+                message: hasBet
+                    ? `${challenge.fromTeamName} ti sfida con ${betAmount} CS in palio!`
+                    : `${challenge.fromTeamName} ti ha sfidato!`,
                 challengeId: challenge.id,
                 action: { type: 'openChallenge', challengeId: challenge.id }
             });
         }
 
-        // Mostra anche toast
+        // Mostra anche toast con info scommessa
         if (window.Toast) {
-            window.Toast.info(`⚔️ ${challenge.fromTeamName} ti ha sfidato!`);
+            window.Toast.info(`⚔️ ${challenge.fromTeamName} ti ha sfidato${betText}`);
         }
 
         // Mostra modal di sfida
@@ -584,6 +625,8 @@ window.Challenges = {
      * Mostra modal sfida in arrivo
      */
     async showIncomingChallengeModal(challenge) {
+        console.log("[Challenges] Mostrando modal per sfida:", challenge);
+
         // Rimuovi modal esistente
         document.getElementById('incoming-challenge-modal')?.remove();
 
@@ -701,18 +744,24 @@ window.Challenges = {
         document.body.appendChild(modal);
 
         // Event listeners
-        document.getElementById('btn-accept-challenge').addEventListener('click', () => {
+        document.getElementById('btn-accept-challenge').addEventListener('click', async () => {
             if (!canAcceptBet && hasBet) {
                 if (window.Toast) window.Toast.error("Non puoi accettare questa scommessa");
                 return;
             }
-            this.acceptChallenge(challenge);
+            // Disabilita il bottone per evitare doppi click
+            const btn = document.getElementById('btn-accept-challenge');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-spin">⏳</span> Accettando...';
+            }
             modal.remove();
+            await this.acceptChallenge(challenge);
         });
 
-        document.getElementById('btn-decline-challenge').addEventListener('click', () => {
-            this.declineChallenge(challenge);
+        document.getElementById('btn-decline-challenge').addEventListener('click', async () => {
             modal.remove();
+            await this.declineChallenge(challenge);
         });
     },
 
@@ -720,9 +769,23 @@ window.Challenges = {
      * Accetta sfida
      */
     async acceptChallenge(challenge) {
+        console.log("[Challenges] Accettando sfida:", challenge);
+
+        if (!challenge || !challenge.id) {
+            console.error("[Challenges] Challenge non valida:", challenge);
+            if (window.Toast) window.Toast.error("Errore: dati sfida non validi");
+            return;
+        }
+
         try {
             const { doc, updateDoc } = window.firestoreTools;
             const challengesPath = this.getChallengesPath();
+
+            console.log("[Challenges] Path:", challengesPath, "ID:", challenge.id);
+
+            if (!challengesPath) {
+                throw new Error("Path sfide non disponibile");
+            }
 
             // Se c'e' scommessa, registra timestamp
             const betAmount = challenge.bet?.amount || 0;
@@ -736,14 +799,15 @@ window.Challenges = {
                 'bet.toTeamAccepted': true
             });
 
+            console.log("[Challenges] Stato aggiornato, avvio simulazione...");
             if (window.Toast) window.Toast.success("Sfida accettata! Simulazione in corso...");
 
             // Esegui la simulazione
             await this.runChallengeMatch(challenge);
 
         } catch (error) {
-            console.error("Errore accettazione sfida:", error);
-            if (window.Toast) window.Toast.error("Errore nell'accettare la sfida");
+            console.error("[Challenges] Errore accettazione sfida:", error);
+            if (window.Toast) window.Toast.error("Errore nell'accettare la sfida: " + error.message);
         }
     },
 
@@ -751,18 +815,32 @@ window.Challenges = {
      * Rifiuta sfida
      */
     async declineChallenge(challenge) {
+        console.log("[Challenges] Rifiutando sfida:", challenge);
+
+        if (!challenge || !challenge.id) {
+            console.error("[Challenges] Challenge non valida:", challenge);
+            if (window.Toast) window.Toast.error("Errore: dati sfida non validi");
+            return;
+        }
+
         try {
             const { doc, updateDoc } = window.firestoreTools;
             const challengesPath = this.getChallengesPath();
+
+            if (!challengesPath) {
+                throw new Error("Path sfide non disponibile");
+            }
 
             await updateDoc(doc(window.db, challengesPath, challenge.id), {
                 status: 'declined'
             });
 
+            console.log("[Challenges] Sfida rifiutata con successo");
             if (window.Toast) window.Toast.info("Sfida rifiutata");
 
         } catch (error) {
-            console.error("Errore rifiuto sfida:", error);
+            console.error("[Challenges] Errore rifiuto sfida:", error);
+            if (window.Toast) window.Toast.error("Errore nel rifiuto: " + error.message);
         }
     },
 

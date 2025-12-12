@@ -2306,14 +2306,18 @@ window.ChallengeMatch = {
 
         let resultHtml = '';
 
-        // Vibrazione haptic per il risultato
-        if (navigator.vibrate) {
-            const iWon = matchData.winnerId === this.myTeamId;
-            if (iWon) {
-                navigator.vibrate([100, 50, 100, 50, 200]); // Vittoria: pattern festivo
-            } else if (matchData.homeScore !== matchData.awayScore) {
-                navigator.vibrate([200]); // Sconfitta: singola vibrazione
+        // Vibrazione haptic per il risultato (wrapped in try-catch per evitare errori browser)
+        try {
+            if (navigator.vibrate) {
+                const iWon = matchData.winnerId === this.myTeamId;
+                if (iWon) {
+                    navigator.vibrate([100, 50, 100, 50, 200]); // Vittoria: pattern festivo
+                } else if (matchData.homeScore !== matchData.awayScore) {
+                    navigator.vibrate([200]); // Sconfitta: singola vibrazione
+                }
             }
+        } catch (e) {
+            // Ignora errori di vibrazione (es. user non ha interagito con la pagina)
         }
 
         // Genera riepilogo marcatori
@@ -2368,6 +2372,58 @@ window.ChallengeMatch = {
             closeBtn.addEventListener('click', () => {
                 this.closeMatch();
             });
+        }
+
+        // Salva nella Hall of Fame
+        this.saveToMatchHistory(matchData);
+
+        // Se ho perso, chiudi automaticamente dopo 5 secondi
+        const iWon = matchData.winnerId === this.myTeamId;
+        const isDraw = matchData.homeScore === matchData.awayScore;
+        if (!iWon && !isDraw) {
+            setTimeout(() => {
+                // Solo se il modal e' ancora aperto
+                if (document.getElementById('interactive-match-modal')) {
+                    this.closeMatch();
+                }
+            }, 5000);
+        }
+    },
+
+    /**
+     * Salva partita nella Hall of Fame
+     */
+    async saveToMatchHistory(matchData) {
+        if (!window.MatchHistory || !this.myTeamId) return;
+
+        try {
+            const isHome = matchData.homeTeamId === this.myTeamId;
+            const iWon = matchData.winnerId === this.myTeamId;
+            const isDraw = matchData.homeScore === matchData.awayScore;
+
+            await window.MatchHistory.saveMatch(this.myTeamId, {
+                type: 'sfida_realtime',
+                homeTeam: {
+                    id: matchData.homeTeamId,
+                    name: matchData.homeTeamName,
+                    logoUrl: ''
+                },
+                awayTeam: {
+                    id: matchData.awayTeamId,
+                    name: matchData.awayTeamName,
+                    logoUrl: ''
+                },
+                homeScore: matchData.homeScore,
+                awayScore: matchData.awayScore,
+                isHome: isHome,
+                result: iWon ? 'win' : (isDraw ? 'draw' : 'loss'),
+                abandoned: matchData.status === 'abandoned',
+                betAmount: matchData.bet?.amount || 0
+            });
+
+            console.log('[ChallengeMatch] Partita salvata nella Hall of Fame');
+        } catch (error) {
+            console.warn('[ChallengeMatch] Errore salvataggio Hall of Fame:', error);
         }
     },
 

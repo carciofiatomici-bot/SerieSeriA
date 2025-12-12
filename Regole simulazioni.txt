@@ -98,3 +98,8 @@ Calcolo Finale (Totale Portiere - Valore Tiro):
    (50% probabilità di GOAL / 50% probabilità di PARATA).
 
 3. Risultato < 0 (Negativo): GOAL.
+
+
+4. FINE DELLA PARTITA
+--------------------------------------------------------------------------------
+Al termine della partita c'è l'1% di possibilità per ogni giocatore in campo e in panchina di infortunarsi (solo se flag infortunio è attivo). Massimo 1 giocatore per squadra può infortunarsi dopo la partita
