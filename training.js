@@ -339,33 +339,58 @@ window.Training = {
      */
     async loadLeagueTeams(selectElement) {
         const myTeamId = window.InterfacciaCore?.currentTeamId;
+        const cache = window.FirestoreCache;
 
         try {
+            // Controlla cache prima (stessa cache usata da challenges)
+            const cachedTeams = cache?.get('teams_list', 'available');
+            if (cachedTeams) {
+                console.log("[Training] Usando lista squadre dalla cache");
+                const filteredTeams = cachedTeams.filter(t => t.id !== myTeamId);
+                if (filteredTeams.length === 0) {
+                    selectElement.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
+                    return;
+                }
+                selectElement.innerHTML = '<option value="">Seleziona squadra...</option>' +
+                    filteredTeams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+                return;
+            }
+
             const { collection, getDocs } = window.firestoreTools;
             const appId = window.firestoreTools?.appId;
             const teamsPath = `artifacts/${appId}/public/data/teams`;
 
+            console.log("[Training] Caricamento squadre da Firestore...");
             const snapshot = await getDocs(collection(window.db, teamsPath));
             const teams = [];
 
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
-                // Escludi la propria squadra
-                if (doc.id !== myTeamId && data.teamName && data.formation?.titolari?.length) {
+                // Salva tutte le squadre con formazione
+                if (data.teamName && data.formation?.titolari?.length) {
                     teams.push({
                         id: doc.id,
-                        teamName: data.teamName
+                        teamName: data.teamName,
+                        formation: data.formation
                     });
                 }
             });
 
-            if (teams.length === 0) {
+            // Salva in cache (TTL 2 minuti)
+            if (cache) {
+                cache.set('teams_list', 'available', teams, cache.TTL.TEAM_LIST);
+            }
+
+            // Filtra la propria squadra
+            const filteredTeams = teams.filter(t => t.id !== myTeamId);
+
+            if (filteredTeams.length === 0) {
                 selectElement.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
                 return;
             }
 
             selectElement.innerHTML = '<option value="">Seleziona squadra...</option>' +
-                teams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+                filteredTeams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
 
         } catch (error) {
             console.error("Errore caricamento squadre lega:", error);
@@ -374,17 +399,30 @@ window.Training = {
     },
 
     /**
-     * Carica i dati completi di una squadra della lega
+     * Carica i dati completi di una squadra della lega (con cache)
      */
     async loadLeagueTeamData(teamId) {
+        const cache = window.FirestoreCache;
+
         try {
+            // Controlla cache prima
+            const cachedTeam = cache?.get('team', teamId);
+            if (cachedTeam) {
+                console.log("[Training] Usando dati squadra dalla cache:", teamId);
+                return { id: teamId, ...cachedTeam };
+            }
+
             const { doc, getDoc } = window.firestoreTools;
             const appId = window.firestoreTools?.appId;
             const teamsPath = `artifacts/${appId}/public/data/teams`;
 
+            console.log("[Training] Caricamento dati squadra da Firestore:", teamId);
             const docSnap = await getDoc(doc(window.db, teamsPath, teamId));
             if (docSnap.exists()) {
-                return { id: docSnap.id, ...docSnap.data() };
+                const data = docSnap.data();
+                // Salva in cache (TTL 1 minuto)
+                cache?.set('team', teamId, data, cache?.TTL?.TEAM_DATA);
+                return { id: docSnap.id, ...data };
             }
             return null;
         } catch (error) {

@@ -24,11 +24,11 @@ window.ChallengeMatch = {
     diceTimeoutTimer: null,
     myTeamId: null,
 
-    // Configurazione
+    // Configurazione (ottimizzata per ridurre scritture Firestore)
     config: {
-        HEARTBEAT_INTERVAL_MS: 5000,        // Heartbeat ogni 5 secondi
+        HEARTBEAT_INTERVAL_MS: 60000,       // Heartbeat ogni 60 secondi (era 5s, -92% scritture)
         DICE_TIMEOUT_MS: 30000,             // 30 secondi per lanciare dado
-        DISCONNECT_THRESHOLD_MS: 15000,     // 15 secondi = disconnessione
+        DISCONNECT_THRESHOLD_MS: 180000,    // 3 minuti = disconnessione
         TOTAL_OCCASIONS: 20,                // 10 per squadra, alternati
         OCCASIONS_PER_TEAM: 10
     },
@@ -245,6 +245,11 @@ window.ChallengeMatch = {
             return;
         }
 
+        // Pausa listener sfide mentre sei in partita (ottimizzazione)
+        if (window.Challenges) {
+            window.Challenges.pauseListeners();
+        }
+
         // Avvia listener
         this.startMatchListener(matchId);
 
@@ -453,10 +458,27 @@ window.ChallengeMatch = {
      * Esegui lancio dado (con transazione per evitare race condition)
      */
     async rollDice() {
-        if (!this.currentMatch) return;
+        console.log("[ChallengeMatch] rollDice chiamato, currentMatch:", this.currentMatch);
+
+        if (!this.currentMatch) {
+            console.error("[ChallengeMatch] Nessuna partita corrente!");
+            return;
+        }
+
+        if (!window.firestoreTools) {
+            console.error("[ChallengeMatch] firestoreTools non disponibile!");
+            return;
+        }
 
         const { doc, runTransaction, Timestamp } = window.firestoreTools;
+
+        if (!runTransaction) {
+            console.error("[ChallengeMatch] runTransaction non disponibile in firestoreTools!");
+            return;
+        }
+
         const matchPath = this.getMatchPath(this.currentMatch.matchId);
+        console.log("[ChallengeMatch] matchPath:", matchPath);
 
         try {
             const result = await runTransaction(window.db, async (transaction) => {
@@ -2448,6 +2470,11 @@ window.ChallengeMatch = {
 
         // Ripristina scroll della pagina
         document.body.style.overflow = '';
+
+        // Riattiva listener sfide (erano pausati durante la partita)
+        if (window.Challenges) {
+            window.Challenges.resumeListeners();
+        }
     },
 
     /**

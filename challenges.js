@@ -297,24 +297,35 @@ window.Challenges = {
 
     /**
      * Carica squadre disponibili per la sfida
+     * Usa cache per ridurre letture Firestore
      */
     async loadAvailableTeams() {
         const select = document.getElementById('challenge-target-team');
         if (!select) return;
 
         const myTeamId = window.InterfacciaCore?.currentTeamId;
+        const cache = window.FirestoreCache;
 
         try {
+            // Controlla cache (TTL 2 minuti per lista squadre)
+            const cachedTeams = cache?.get('teams_list', 'available');
+            if (cachedTeams) {
+                console.log("[Challenges] Usando lista squadre dalla cache");
+                this.populateTeamSelect(cachedTeams, myTeamId, select);
+                return;
+            }
+
             const { collection, getDocs } = window.firestoreTools;
             const teamsPath = this.getTeamsPath();
 
+            console.log("[Challenges] Caricamento squadre da Firestore...");
             const snapshot = await getDocs(collection(window.db, teamsPath));
             const teams = [];
 
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
-                // Escludi la propria squadra e squadre senza formazione
-                if (doc.id !== myTeamId && data.teamName && data.formation?.titolari?.length) {
+                // Salva tutte le squadre con formazione per la cache
+                if (data.teamName && data.formation?.titolari?.length) {
                     teams.push({
                         id: doc.id,
                         teamName: data.teamName,
@@ -323,21 +334,36 @@ window.Challenges = {
                 }
             });
 
-            if (teams.length === 0) {
-                select.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
-                return;
+            // Salva in cache (TTL 2 minuti)
+            if (cache) {
+                cache.set('teams_list', 'available', teams, cache.TTL.TEAM_LIST);
             }
 
-            select.innerHTML = '<option value="">Seleziona squadra...</option>' +
-                teams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
-
-            // Salva dati per info
-            this.availableTeams = teams;
+            this.populateTeamSelect(teams, myTeamId, select);
 
         } catch (error) {
             console.error("Errore caricamento squadre:", error);
             select.innerHTML = '<option value="">Errore caricamento</option>';
         }
+    },
+
+    /**
+     * Helper per popolare il select squadre
+     */
+    populateTeamSelect(teams, myTeamId, select) {
+        // Filtra la propria squadra
+        const filteredTeams = teams.filter(t => t.id !== myTeamId);
+
+        if (filteredTeams.length === 0) {
+            select.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
+            return;
+        }
+
+        select.innerHTML = '<option value="">Seleziona squadra...</option>' +
+            filteredTeams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+
+        // Salva dati per info
+        this.availableTeams = filteredTeams;
     },
 
     /**
@@ -496,7 +522,7 @@ window.Challenges = {
             // Flag per ignorare il primo snapshot (sfide esistenti al refresh)
             let isFirstSnapshot = true;
 
-            this.unsubscribeChallenges = onSnapshot(q, (snapshot) => {
+            const unsubscribe = onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const challenge = { id: change.doc.id, ...change.doc.data() };
@@ -524,6 +550,16 @@ window.Challenges = {
             }, (error) => {
                 console.warn("Errore listener sfide:", error);
             });
+
+            this.unsubscribeChallenges = unsubscribe;
+
+            // Registra nel ListenerManager
+            if (window.ListenerManager) {
+                window.ListenerManager.register('challenges-incoming', unsubscribe, {
+                    priority: 'normal',
+                    pausable: true
+                });
+            }
 
             // NUOVO: Ascolta sfide che ho inviato quando diventano 'in_match'
             // (per unirmi alla partita interattiva quando l'avversario accetta)
@@ -557,7 +593,7 @@ window.Challenges = {
             // Flag per ignorare il primo snapshot (partite esistenti al refresh)
             let isFirstAcceptedSnapshot = true;
 
-            this.unsubscribeMyAcceptedChallenges = onSnapshot(q, (snapshot) => {
+            const unsubscribeAccepted = onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added' || change.type === 'modified') {
                         const challenge = { id: change.doc.id, ...change.doc.data() };
@@ -585,6 +621,16 @@ window.Challenges = {
             }, (error) => {
                 console.warn("Errore listener sfide accettate:", error);
             });
+
+            this.unsubscribeMyAcceptedChallenges = unsubscribeAccepted;
+
+            // Registra nel ListenerManager
+            if (window.ListenerManager) {
+                window.ListenerManager.register('challenges-accepted', unsubscribeAccepted, {
+                    priority: 'normal',
+                    pausable: true
+                });
+            }
 
         } catch (error) {
             console.error("Errore setup listener sfide accettate:", error);
@@ -622,6 +668,114 @@ window.Challenges = {
     },
 
     /**
+     * Carica e genera HTML per preview formazioni
+     */
+    async loadFormationsPreview(fromTeamId, toTeamId) {
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const teamsPath = this.getTeamsPath();
+
+            // Usa cache se disponibile
+            const cache = window.FirestoreCache;
+            let fromTeamDoc, toTeamDoc;
+
+            if (cache) {
+                [fromTeamDoc, toTeamDoc] = await Promise.all([
+                    cache.getDoc(doc(window.db, teamsPath, fromTeamId), 'team', fromTeamId, cache.TTL.SHORT),
+                    cache.getDoc(doc(window.db, teamsPath, toTeamId), 'team', toTeamId, cache.TTL.SHORT)
+                ]);
+            } else {
+                [fromTeamDoc, toTeamDoc] = await Promise.all([
+                    getDoc(doc(window.db, teamsPath, fromTeamId)),
+                    getDoc(doc(window.db, teamsPath, toTeamId))
+                ]);
+            }
+
+            const fromTeam = fromTeamDoc.exists() ? fromTeamDoc.data() : null;
+            const toTeam = toTeamDoc.exists() ? toTeamDoc.data() : null;
+
+            const fromFormation = fromTeam?.formation;
+            const toFormation = toTeam?.formation;
+
+            // Helper per renderizzare una formazione
+            const renderFormation = (formation, teamName, colorClass) => {
+                if (!formation || !formation.titolari || formation.titolari.length === 0) {
+                    return `
+                        <div class="text-center p-2">
+                            <p class="text-xs text-red-400">⚠️ Nessuna formazione</p>
+                        </div>
+                    `;
+                }
+
+                const modulo = formation.modulo || '?';
+                const titolari = formation.titolari || [];
+
+                // Raggruppa per ruolo
+                const byRole = { P: [], D: [], C: [], A: [] };
+                titolari.forEach(p => {
+                    const role = p.assignedPosition || p.role || '?';
+                    if (byRole[role]) byRole[role].push(p);
+                });
+
+                const roleColors = {
+                    P: 'bg-yellow-600',
+                    D: 'bg-blue-600',
+                    C: 'bg-green-600',
+                    A: 'bg-red-600'
+                };
+
+                const renderPlayer = (p) => {
+                    const role = p.assignedPosition || p.role;
+                    const isOutOfPosition = p.role !== p.assignedPosition;
+                    const outOfPosIcon = isOutOfPosition ? '⚠️' : '';
+                    return `
+                        <div class="flex items-center gap-1 text-xs bg-gray-700 rounded px-1.5 py-0.5 ${isOutOfPosition ? 'border border-orange-500' : ''}">
+                            <span class="${roleColors[role] || 'bg-gray-500'} text-white px-1 rounded text-[10px]">${role}</span>
+                            <span class="text-gray-200 truncate max-w-[60px]">${p.name?.split(' ').pop() || '?'}</span>
+                            <span class="text-gray-400 text-[10px]">${p.level || p.currentLevel || '?'}</span>
+                            ${outOfPosIcon}
+                        </div>
+                    `;
+                };
+
+                return `
+                    <div class="text-center">
+                        <p class="text-xs ${colorClass} font-bold mb-1">Modulo: ${modulo}</p>
+                        <div class="space-y-1">
+                            ${byRole.P.length > 0 ? `<div class="flex flex-wrap justify-center gap-1">${byRole.P.map(renderPlayer).join('')}</div>` : ''}
+                            ${byRole.D.length > 0 ? `<div class="flex flex-wrap justify-center gap-1">${byRole.D.map(renderPlayer).join('')}</div>` : ''}
+                            ${byRole.C.length > 0 ? `<div class="flex flex-wrap justify-center gap-1">${byRole.C.map(renderPlayer).join('')}</div>` : ''}
+                            ${byRole.A.length > 0 ? `<div class="flex flex-wrap justify-center gap-1">${byRole.A.map(renderPlayer).join('')}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            return `
+                <div class="bg-gray-900 rounded-lg p-3 mb-4">
+                    <p class="text-center text-xs text-gray-400 mb-2">📋 Formazioni in campo</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="border-r border-gray-700 pr-2">
+                            ${renderFormation(fromFormation, fromTeam?.name, 'text-orange-400')}
+                        </div>
+                        <div class="pl-2">
+                            ${renderFormation(toFormation, toTeam?.name, 'text-cyan-400')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            console.error("[Challenges] Errore caricamento formazioni:", error);
+            return `
+                <div class="bg-gray-900 rounded-lg p-3 mb-4 text-center">
+                    <p class="text-xs text-gray-500">Impossibile caricare le formazioni</p>
+                </div>
+            `;
+        }
+    },
+
+    /**
      * Mostra modal sfida in arrivo
      */
     async showIncomingChallengeModal(challenge) {
@@ -652,6 +806,9 @@ window.Challenges = {
 
         const canAcceptBet = hasBet ? (canAffordBet && betStatus.canBet && canAcceptDaily) : canAcceptDaily;
 
+        // Carica formazioni di entrambe le squadre
+        const formationsHtml = await this.loadFormationsPreview(challenge.fromTeamId, challenge.toTeamId);
+
         const modal = document.createElement('div');
         modal.id = 'incoming-challenge-modal';
         modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4 overflow-y-auto';
@@ -676,6 +833,9 @@ window.Challenges = {
                         </div>
                     </div>
                 </div>
+
+                <!-- Preview Formazioni -->
+                ${formationsHtml}
 
                 ${hasBet ? `
                     <div class="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border-2 border-yellow-500 rounded-lg p-4 mb-4">
@@ -1414,6 +1574,48 @@ window.Challenges = {
     },
 
     /**
+     * Pausa i listener delle sfide (da usare quando si e' in partita)
+     */
+    pauseListeners() {
+        console.log("[Challenges] Pausa listener sfide");
+
+        // Salva stato per ripristino
+        this._listenersPaused = true;
+
+        // Ferma listener sfide in arrivo
+        if (this.unsubscribeChallenges) {
+            this.unsubscribeChallenges();
+            this.unsubscribeChallenges = null;
+        }
+
+        // Ferma listener sfide accettate
+        if (this.unsubscribeMyAcceptedChallenges) {
+            this.unsubscribeMyAcceptedChallenges();
+            this.unsubscribeMyAcceptedChallenges = null;
+        }
+
+        // Deregistra da ListenerManager
+        if (window.ListenerManager) {
+            window.ListenerManager.unregister('challenges-incoming');
+            window.ListenerManager.unregister('challenges-accepted');
+        }
+    },
+
+    /**
+     * Riprende i listener delle sfide (dopo uscita dalla partita)
+     */
+    resumeListeners() {
+        console.log("[Challenges] Ripresa listener sfide");
+
+        this._listenersPaused = false;
+
+        // Riavvia i listener solo se non sono gia' attivi
+        if (!this.unsubscribeChallenges) {
+            this.startListeningForChallenges();
+        }
+    },
+
+    /**
      * Cleanup
      */
     destroy() {
@@ -1425,6 +1627,7 @@ window.Challenges = {
             this.unsubscribeMyAcceptedChallenges();
             this.unsubscribeMyAcceptedChallenges = null;
         }
+        this._listenersPaused = false;
     }
 };
 

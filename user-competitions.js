@@ -12,6 +12,7 @@ window.UserCompetitions = {
 
     /**
      * Carica e renderizza la schermata Campionato utente
+     * Usa cache per ridurre letture Firestore
      */
     async loadCampionatoScreen() {
         const container = document.getElementById('user-campionato-container');
@@ -34,18 +35,27 @@ window.UserCompetitions = {
             const { doc, getDoc, collection, getDocs } = window.firestoreTools;
             const db = window.db;
             const appId = window.firestoreTools.appId;
+            const cache = window.FirestoreCache;
 
-            // Carica calendario
-            const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
-            const scheduleRef = doc(db, schedulePath);
-            const scheduleSnap = await getDoc(scheduleRef);
-            const scheduleData = scheduleSnap.exists() ? scheduleSnap.data().matches : [];
+            // Carica calendario (con cache 5 min)
+            let scheduleData = cache?.get('schedule', 'full');
+            if (!scheduleData) {
+                const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+                const scheduleRef = doc(db, schedulePath);
+                const scheduleSnap = await getDoc(scheduleRef);
+                scheduleData = scheduleSnap.exists() ? scheduleSnap.data().matches : [];
+                cache?.set('schedule', 'full', scheduleData, cache.TTL.SCHEDULE);
+            }
 
-            // Carica classifica
-            const leaderboardPath = `artifacts/${appId}/public/data/leaderboard/standings`;
-            const leaderboardRef = doc(db, leaderboardPath);
-            const leaderboardSnap = await getDoc(leaderboardRef);
-            const standings = leaderboardSnap.exists() ? leaderboardSnap.data().standings : [];
+            // Carica classifica (con cache 2 min)
+            let standings = cache?.get('leaderboard', 'standings');
+            if (!standings) {
+                const leaderboardPath = `artifacts/${appId}/public/data/leaderboard/standings`;
+                const leaderboardRef = doc(db, leaderboardPath);
+                const leaderboardSnap = await getDoc(leaderboardRef);
+                standings = leaderboardSnap.exists() ? leaderboardSnap.data().standings : [];
+                cache?.set('leaderboard', 'standings', standings, cache.TTL.LEADERBOARD);
+            }
 
             // Trova prossima partita
             let nextMatch = null;
@@ -65,19 +75,29 @@ window.UserCompetitions = {
             if (nextMatch) {
                 const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
 
-                // Carica dati squadra casa
-                const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.homeId);
-                const homeTeamSnap = await getDoc(homeTeamRef);
-                if (homeTeamSnap.exists()) {
-                    teamsData[nextMatch.homeId] = homeTeamSnap.data();
+                // Carica dati squadra casa (con cache)
+                let homeTeamData = cache?.get('team', nextMatch.homeId);
+                if (!homeTeamData) {
+                    const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.homeId);
+                    const homeTeamSnap = await getDoc(homeTeamRef);
+                    if (homeTeamSnap.exists()) {
+                        homeTeamData = homeTeamSnap.data();
+                        cache?.set('team', nextMatch.homeId, homeTeamData, cache.TTL.TEAM_DATA);
+                    }
                 }
+                if (homeTeamData) teamsData[nextMatch.homeId] = homeTeamData;
 
-                // Carica dati squadra trasferta
-                const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.awayId);
-                const awayTeamSnap = await getDoc(awayTeamRef);
-                if (awayTeamSnap.exists()) {
-                    teamsData[nextMatch.awayId] = awayTeamSnap.data();
+                // Carica dati squadra trasferta (con cache)
+                let awayTeamData = cache?.get('team', nextMatch.awayId);
+                if (!awayTeamData) {
+                    const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.awayId);
+                    const awayTeamSnap = await getDoc(awayTeamRef);
+                    if (awayTeamSnap.exists()) {
+                        awayTeamData = awayTeamSnap.data();
+                        cache?.set('team', nextMatch.awayId, awayTeamData, cache.TTL.TEAM_DATA);
+                    }
                 }
+                if (awayTeamData) teamsData[nextMatch.awayId] = awayTeamData;
             }
 
             // Renderizza

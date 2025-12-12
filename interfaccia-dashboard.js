@@ -593,8 +593,18 @@ window.InterfacciaDashboard = {
 
         try {
             const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
-            const teamDoc = await getDoc(teamDocRef);
-            
+
+            // Usa cache con TTL breve (dati squadra cambiano spesso)
+            let teamDoc;
+            if (window.FirestoreCache) {
+                teamDoc = await window.FirestoreCache.getDoc(
+                    teamDocRef, 'team', currentTeamId,
+                    window.FirestoreCache.TTL.SHORT
+                );
+            } else {
+                teamDoc = await getDoc(teamDocRef);
+            }
+
             if (teamDoc.exists()) {
                 window.InterfacciaCore.currentTeamData = teamDoc.data();
                 this.updateTeamUI(
@@ -630,8 +640,18 @@ window.InterfacciaDashboard = {
 
         try {
             const scheduleDocRef = doc(window.db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
-            const scheduleDoc = await getDoc(scheduleDocRef);
-            
+
+            // Usa cache se disponibile
+            let scheduleDoc;
+            if (window.FirestoreCache) {
+                scheduleDoc = await window.FirestoreCache.getDoc(
+                    scheduleDocRef, 'schedule', SCHEDULE_DOC_ID,
+                    window.FirestoreCache.TTL.SCHEDULE
+                );
+            } else {
+                scheduleDoc = await getDoc(scheduleDocRef);
+            }
+
             if (!scheduleDoc.exists() || !scheduleDoc.data().matches) {
                 elements.nextMatchPreview.innerHTML = `<p class="text-red-400 font-semibold">Calendario non generato dall'Admin.</p>`;
                 return;
@@ -770,7 +790,7 @@ window.InterfacciaDashboard = {
 
             const configDocRef = doc(window.db, CONFIG_PATH, CONFIG_DOC_ID);
 
-            this._draftAlertUnsubscribe = onSnapshot(configDocRef, (snapshot) => {
+            const unsubscribe = onSnapshot(configDocRef, (snapshot) => {
                 if (!snapshot.exists()) return;
 
                 // Aggiorna l'alert con i nuovi dati
@@ -778,6 +798,17 @@ window.InterfacciaDashboard = {
             }, (error) => {
                 console.error('[DraftAlert] Errore listener:', error);
             });
+
+            this._draftAlertUnsubscribe = unsubscribe;
+
+            // Registra nel ListenerManager (priorita' bassa, pausabile)
+            if (window.ListenerManager) {
+                window.ListenerManager.register('draft-alert', unsubscribe, {
+                    priority: 'low',
+                    pausable: true,
+                    screen: 'dashboard'
+                });
+            }
 
             console.log('[DraftAlert] Listener real-time avviato');
 

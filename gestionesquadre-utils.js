@@ -134,13 +134,49 @@ window.GestioneSquadreUtils = {
 
     /**
      * Pulisce i dati della formazione per il salvataggio (rimuove dati temporanei)
+     * Salva solo i campi essenziali per ridurre dimensione documento Firestore
      * @param {Array} players - Array di giocatori
-     * @returns {Array} Array pulito
+     * @returns {Array} Array pulito (compressi)
      */
     cleanFormationForSave(players) {
-        return players.map(({ id, name, role, age, cost, level, isCaptain, type, abilities, assignedPosition }) =>
-            ({ id, name, role, age, cost, level, isCaptain, type, abilities, assignedPosition })
-        );
+        // Salva solo campi essenziali: id, role, level, type, abilities, assignedPosition, isCaptain
+        // I campi name, age, cost sono ridondanti (presenti nella rosa)
+        return players.map(({ id, role, level, isCaptain, type, abilities, assignedPosition }) => {
+            const compressed = { id, role, level, type, assignedPosition };
+            // Aggiungi solo se presenti per risparmiare spazio
+            if (isCaptain) compressed.isCaptain = true;
+            if (abilities && abilities.length > 0) compressed.abilities = abilities;
+            return compressed;
+        });
+    },
+
+    /**
+     * Espande i dati compressi della formazione recuperando info dalla rosa
+     * @param {Array} compressedPlayers - Array di giocatori compressi
+     * @param {Array} rosaPlayers - Array completo dei giocatori nella rosa
+     * @returns {Array} Array completo con tutti i dati
+     */
+    expandFormationFromRosa(compressedPlayers, rosaPlayers) {
+        if (!compressedPlayers || !Array.isArray(compressedPlayers)) return [];
+        if (!rosaPlayers || !Array.isArray(rosaPlayers)) return compressedPlayers;
+
+        return compressedPlayers.map(compressed => {
+            // Trova il giocatore completo nella rosa
+            const fullPlayer = rosaPlayers.find(p => p.id === compressed.id);
+
+            if (fullPlayer) {
+                // Unisci dati dalla rosa con quelli salvati (assignedPosition)
+                return {
+                    ...fullPlayer,
+                    assignedPosition: compressed.assignedPosition,
+                    // Se il livello salvato e diverso, usa quello salvato
+                    level: compressed.level || fullPlayer.level
+                };
+            }
+
+            // Fallback: restituisci i dati compressi (giocatore non piu in rosa?)
+            return compressed;
+        });
     },
 
     /**
