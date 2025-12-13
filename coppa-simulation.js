@@ -18,6 +18,17 @@ window.CoppaSimulation = {
     },
 
     /**
+     * Simula una partita di coppa con log e matchEvents
+     * @param {Object} homeTeamData - Dati squadra casa
+     * @param {Object} awayTeamData - Dati squadra trasferta
+     * @returns {Object} Risultato {homeGoals, awayGoals, log, simpleLog, matchEvents}
+     */
+    runMatchWithLog(homeTeamData, awayTeamData) {
+        // Riutilizza il motore di simulazione del campionato con log
+        return window.ChampionshipSimulation.runSimulationWithLog(homeTeamData, awayTeamData);
+    },
+
+    /**
      * Simula i rigori tra due squadre
      * Usa il livello del portiere vs livello degli attaccanti
      * @param {Object} homeTeamData - Dati squadra casa
@@ -151,17 +162,23 @@ window.CoppaSimulation = {
      * @param {Object} awayTeamData - Dati squadra trasferta
      * @param {boolean} isSingleMatch - Se e partita secca
      * @param {string} legType - 'leg1' o 'leg2' (per andata/ritorno)
+     * @param {boolean} withLog - Se true, include log e matchEvents
      * @returns {Object} Risultato completo
      */
-    async simulateCupMatch(match, homeTeamData, awayTeamData, isSingleMatch, legType = 'leg1') {
-        const result = this.runMatch(homeTeamData, awayTeamData);
+    async simulateCupMatch(match, homeTeamData, awayTeamData, isSingleMatch, legType = 'leg1', withLog = false) {
+        const result = withLog
+            ? this.runMatchWithLog(homeTeamData, awayTeamData)
+            : this.runMatch(homeTeamData, awayTeamData);
 
         const matchResult = {
             homeGoals: result.homeGoals,
             awayGoals: result.awayGoals,
             resultString: `${result.homeGoals}-${result.awayGoals}`,
             penalties: null,
-            winner: null
+            winner: null,
+            log: result.log || null,
+            simpleLog: result.simpleLog || null,
+            matchEvents: result.matchEvents || null
         };
 
         if (isSingleMatch) {

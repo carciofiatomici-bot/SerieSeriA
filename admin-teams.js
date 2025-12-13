@@ -12,26 +12,26 @@ window.AdminTeams = {
     currentEditingTeamData: null,
     reloadCallback: null,
 
-    // MAPPA COMPLETA abilita (60 abilita!)
+    // MAPPA COMPLETA abilita (75 abilita!)
     ROLE_ABILITIES_MAP: {
         'P': {
-            positive: ['Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico', 'Miracolo', 'Freddezza'],
-            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni'],
+            positive: ['Parata di pugno', 'Responta', 'Colpo d\'anca', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico', 'Miracolo', 'Freddezza', 'Sguardo Intimidatorio', 'Tiro dalla porta', 'Ripresa rapida', 'Forma Smagliante', 'Indistruttibile', 'Multiruolo'],
+            negative: ['Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni', 'Fragile', 'Non Adattabile'],
             unique: ['Icona']
         },
         'D': {
-            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile', 'Salvataggio sulla Linea', 'Freddezza'],
-            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni'],
+            positive: ['Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile', 'Salvataggio sulla Linea', 'Freddezza', 'Tiro dalla distanza', 'Tiro Potente', 'Ripresa rapida', 'Forma Smagliante', 'Raddoppio in difesa', 'Raddoppio in attacco', 'Indistruttibile', 'Multiruolo'],
+            negative: ['Falloso', 'Insicuro', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni', 'Fragile', 'Non Adattabile'],
             unique: ['Icona']
         },
         'C': {
-            positive: ['Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Tiro dalla distanza', 'Cross', 'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Tuttocampista', 'Freddezza'],
-            negative: ['Impreciso', 'Ingabbiato', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni'],
+            positive: ['Tuttocampista', 'Regista', 'Motore', 'Tocco Di Velluto', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Cross', 'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Freddezza', 'Tiro Potente', 'Ripresa rapida', 'Forma Smagliante', 'Raddoppio in difesa', 'Raddoppio in attacco', 'Indistruttibile', 'Multiruolo'],
+            negative: ['Egoista', 'Impreciso', 'Ingabbiato', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni', 'Fragile', 'Non Adattabile'],
             unique: ['Icona']
         },
         'A': {
-            positive: ['Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Opportunista', 'Tiro a Giro', 'Immarcabile', 'Freddezza'],
-            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Fuori Posizione', 'Lento a carburare', 'Egoista', 'Soggetto a infortuni'],
+            positive: ['Opportunista', 'Bomber', 'Doppio Scatto', 'Pivot', 'Effetto Caos', 'Fortunato', 'Bandiera del club', 'Rientro Rapido', 'Tiro Fulmineo', 'Tiro a Giro', 'Immarcabile', 'Freddezza', 'Tiro Potente', 'Ripresa rapida', 'Forma Smagliante', 'Raddoppio in difesa', 'Raddoppio in attacco', 'Indistruttibile', 'Multiruolo'],
+            negative: ['Piedi a banana', 'Eccesso di sicurezza', 'Egoista', 'Fuori Posizione', 'Lento a carburare', 'Soggetto a infortuni', 'Fragile', 'Non Adattabile', 'Titubanza'],
             unique: ['Icona']
         }
     },

@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '1.0.0',
+    currentVersion: '1.1.0',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,29 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '1.1.0',
+            date: '2025-12-13',
+            time: '23:00',
+            title: 'Nuove Abilita + Sistema Eventi Partita + Regole Simulazione V3.3',
+            changes: [
+                { text: 'NUOVE ABILITA: Responta, Colpo d\'anca, Ripresa rapida, Forma Smagliante', adminOnly: false },
+                { text: 'NUOVE ABILITA: Raddoppio in difesa, Raddoppio in attacco', adminOnly: false },
+                { text: 'NUOVE ABILITA NEGATIVE: Fragile, Non Adattabile, Titubanza', adminOnly: false },
+                { text: 'Aggiornata Parata di pugno (ex Pugno di ferro): -1/-2 diventa 0', adminOnly: false },
+                { text: 'Aggiornato Muro Psicologico: ora Leggendaria, dimezza il tiro avversario', adminOnly: false },
+                { text: 'Aggiornato Sguardo Intimidatorio: 1d12 invece di 1d6', adminOnly: false },
+                { text: 'Occasioni per squadra aumentate da 30 a 40', adminOnly: false },
+                { text: 'Penalita tipologia ora variabile tra 5% e 25% (invece di fisso 25%)', adminOnly: false },
+                { text: 'Infortuni post-partita: 1% per giocatore, max 1 per squadra', adminOnly: false },
+                { text: 'NUOVO: Espandi Eventi Partita - visualizza dettagli fasi e abilita attivate', adminOnly: false },
+                { text: 'Sistema matchEvents per tracciamento dettagliato simulazione', adminOnly: true },
+                { text: 'Abilities encyclopedia aggiornata a V3.3 con 75 abilita', adminOnly: true },
+                { text: 'Aggiunti test automatici per matchEvents, regole simulazione e infortuni', adminOnly: true },
+                { text: 'Bottone Espandi Eventi aggiunto ai test admin simulazione', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '1.0.0',
             date: '2025-12-13',

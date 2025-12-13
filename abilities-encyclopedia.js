@@ -16,20 +16,52 @@ window.AbilitiesEncyclopedia = {
         // PORTIERE (11 Abilità)
         // ========================================
         
-        'Pugno di ferro': {
-            name: 'Pugno di ferro',
+        'Parata di pugno': {
+            name: 'Parata di pugno',
             icon: '🥊',
             role: 'P',
             color: 'text-red-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Se il risultato della fase tiro vs portiere e -1 o -2, si comporta come se fosse 0',
+            effect: 'Risultato -1 o -2 in Fase 3 diventa 0 (50% parata)',
+            mechanics: 'Quando il portiere perde con differenza di -1 o -2, il risultato viene considerato come 0, dando comunque una chance di parata del 50%',
+            activation: '100% (Passiva)',
+            example: 'Tiro: 18 vs Parata: 16 → Differenza -2 → Normalmente GOAL, con Parata di pugno diventa 50% parata!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Uscita Kamikaze', 'Parata con i piedi', 'Colpo d\'anca']
+        },
+
+        'Responta': {
+            name: 'Responta',
+            icon: '🔄',
+            role: 'P',
+            color: 'text-blue-500',
             rarity: 'Rara',
             type: 'Positiva',
-            description: 'Il portiere para anche tiri difficili',
-            effect: 'Soglia parata abbassata da 0 a -2',
-            mechanics: 'Normalmente il portiere para se il risultato ≥ 0. Con Pugno di Ferro para se ≥ -2',
-            activation: '100% (Passiva)',
-            example: 'Tiro: 18 vs Parata: 16 → Differenza -2 → Normalmente GOAL, con Pugno di Ferro è PARATA!',
+            description: '10% di far ritirare il d20 all\'avversario se il portiere e stato battuto',
+            effect: '10% ritira dado attacco in Fase 3, tiene obbligatoriamente il secondo risultato',
+            mechanics: 'Se il portiere viene battuto in Fase 3, ha il 10% di probabilita di far ritirare il d20 all\'attaccante, che deve obbligatoriamente usare il secondo risultato',
+            activation: '10% (solo se battuto)',
+            example: 'Tiro 18 vs Portiere 15 → GOAL! → 10% Responta → Attaccante ritira → Tiro 8 → PARATA!',
             phase: 'Fase 3 (Tiro vs Portiere)',
-            synergy: ['Uscita Kamikaze', 'Parata con i piedi']
+            synergy: ['Parata di pugno', 'Miracolo', 'Colpo d\'anca']
+        },
+
+        'Colpo d\'anca': {
+            name: 'Colpo d\'anca',
+            icon: '🦵',
+            role: 'P',
+            color: 'text-amber-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Quando il risultato e 0, la possibilita di parare diventa 75%. Annulla il 5% di successo automatico avversario',
+            effect: 'Su risultato 0: 75% parata invece di 50%. Annulla auto-goal del 5%',
+            mechanics: 'Se la differenza tra Tiro e Portiere e esattamente 0, la probabilita di parata sale dal 50% al 75%. Inoltre, annulla la regola del 5% di successo automatico dell\'attaccante',
+            activation: '100% (condizionale)',
+            example: 'Tiro 15 vs Portiere 15 → Differenza 0 → Normalmente 50%, con Colpo d\'anca 75% parata!',
+            phase: 'Fase 3 (Tiro vs Portiere)',
+            synergy: ['Parata di pugno', 'Responta', 'Miracolo']
         },
         
         'Uscita Kamikaze': {
@@ -56,13 +88,13 @@ window.AbilitiesEncyclopedia = {
             color: 'text-purple-500',
             rarity: 'Leggendaria',
             type: 'Positiva',
-            description: 'Il portiere si teletrasporta e aiuta in costruzione/attacco',
-            effect: '5% di partecipare alle fasi 1 e 2',
-            mechanics: 'In Costruzione e Attacco, 5% di aggiungere il modificatore del portiere',
-            activation: '5% per ogni fase 1 e 2',
-            example: 'Costruzione: 1d20+15 vs 1d20+12 → Con Teletrasporto: 1d20+15+8(portiere) = vantaggio enorme!',
-            phase: 'Fase 1 (Costruzione) e Fase 2 (Attacco)',
-            synergy: ['Icona (+1 mod)', 'Fortunato']
+            description: '10% di partecipare alle fasi 1 o 2 in difesa se il suo mod e maggiore del giocatore scelto',
+            effect: '10% di partecipare alle fasi 1/2 (solo difesa), max 5 volte per partita',
+            mechanics: 'In Fase 1 o 2, se il portiere ha un modificatore maggiore del giocatore difensivo scelto, ha il 10% di probabilita di sostituirlo. Massimo 5 attivazioni per partita',
+            activation: '10% (condizionale, max 5x)',
+            example: 'Fase 1 difesa → Difensore mod +4 → Portiere mod +8 → 10% → Teletrasporto! Usa +8 invece di +4!',
+            phase: 'Fase 1 (Costruzione) e Fase 2 (Attacco) - solo difesa',
+            synergy: ['Icona (+1 mod)', 'Fortunato', 'Freddezza']
         },
         
         'Effetto Caos': {
@@ -223,15 +255,15 @@ window.AbilitiesEncyclopedia = {
             icon: '🧠',
             role: 'P',
             color: 'text-purple-600',
-            rarity: 'Epica',
+            rarity: 'Leggendaria',
             type: 'Positiva',
-            description: '5% di costringere l\'attacco a tirare 1d10 invece di 1d20',
-            effect: '5% l\'attaccante tira 1d10 invece di 1d20 in Fase 3',
-            mechanics: 'In fase tiro, 5% di probabilità che l\'attacco usi un d10 invece del d20',
+            description: '5% di probabilita di dimezzare il valore del tiro durante la Fase 3',
+            effect: '5% il tiro avversario viene dimezzato in Fase 3',
+            mechanics: 'In fase tiro, 5% di probabilita che il risultato del dado dell\'attacco venga dimezzato (arrotondato per difetto)',
             activation: '5%',
-            example: 'Fase 3 → 5% Muro Psicologico → Attacco tira 1d10+mod invece di 1d20+mod!',
+            example: 'Fase 3 → 5% Muro Psicologico → Attacco tira 16 → Diventa 8!',
             phase: 'Fase 3 (Tiro vs Portiere)',
-            synergy: ['Pugno di Ferro', 'Parata con i piedi']
+            synergy: ['Parata di pugno', 'Parata con i piedi', 'Miracolo']
         },
 
         'Miracolo': {
@@ -275,13 +307,13 @@ window.AbilitiesEncyclopedia = {
             color: 'text-red-600',
             rarity: 'Epica',
             type: 'Positiva',
-            description: '5% che l\'avversario usi 1d6 invece di 1d10 in Fase 3',
-            effect: '5% l\'attacco tira 1d6 invece di 1d10 in fase tiro',
-            mechanics: 'In Fase 3, 5% di probabilità che la squadra avversaria usi 1d6 invece di 1d10 per il tiro',
+            description: '5% che l\'avversario usi 1d12 invece di 1d20 in Fase 3',
+            effect: '5% l\'attacco tira 1d12 invece di 1d20 in fase tiro',
+            mechanics: 'In Fase 3, 5% di probabilita che la squadra avversaria usi 1d12 invece di 1d20 per il tiro',
             activation: '5%',
-            example: 'Fase 3 → 5% Sguardo Intimidatorio → Attacco tira 1d6+mod invece di 1d10+mod!',
+            example: 'Fase 3 → 5% Sguardo Intimidatorio → Attacco tira 1d12+mod invece di 1d20+mod!',
             phase: 'Fase 3 (Tiro vs Portiere)',
-            synergy: ['Pugno di Ferro', 'Muro Psicologico', 'Parata con i piedi']
+            synergy: ['Parata di pugno', 'Muro Psicologico', 'Parata con i piedi']
         },
 
         'Tiro dalla porta': {
@@ -1033,6 +1065,74 @@ window.AbilitiesEncyclopedia = {
             warning: '⚠️ ABILITA NEGATIVA - Penalizza costantemente il giocatore!'
         },
 
+        'Ripresa rapida': {
+            name: 'Ripresa rapida',
+            icon: '💊',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-green-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Tempo di guarigione dimezzato, costo cura 75%',
+            effect: 'Infortuni guariscono in meta tempo, costo CS ridotto al 75%',
+            mechanics: 'Il tempo di guarigione dagli infortuni e dimezzato (arrotondato per eccesso). Il costo per curare l\'infortunio in CS e il 75% del valore originale',
+            activation: '100% (passiva)',
+            example: 'Infortunio 4 turni → Con Ripresa rapida: 2 turni! Cura 100 CS → 75 CS!',
+            phase: 'Post-partita / Infermeria',
+            synergy: ['Indistruttibile (opposto)', 'Freddezza']
+        },
+
+        'Forma Smagliante': {
+            name: 'Forma Smagliante',
+            icon: '✨',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-yellow-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se la forma e negativa a inizio partita, diventa +1',
+            effect: 'Forma negativa → +1 a inizio simulazione',
+            mechanics: 'Quando la partita inizia, se il modificatore forma del giocatore e in negativo, viene automaticamente portato a +1',
+            activation: '100% (a inizio partita)',
+            example: 'Forma -2 → Partita inizia → Con Forma Smagliante diventa +1!',
+            phase: 'Inizio partita',
+            synergy: ['Freddezza', 'Icona']
+        },
+
+        'Raddoppio in difesa': {
+            name: 'Raddoppio in difesa',
+            icon: '🛡️',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-blue-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di aggiungere il proprio modificatore a quello del giocatore scelto per la fase (solo in difesa)',
+            effect: '5% raddoppia il contributo difensivo aggiungendo il proprio mod',
+            mechanics: 'In qualsiasi fase difensiva, 5% di probabilita di aggiungere il proprio modificatore a quello del giocatore principale scelto per quella fase',
+            activation: '5% (solo in difesa)',
+            example: 'Fase 2 difesa → Difensore A scelto (mod +8) → 5% → Raddoppio da B (mod +6) → Totale +14!',
+            phase: 'Tutte le fasi (solo in difesa)',
+            synergy: ['Muro', 'Guardia', 'Deviazione']
+        },
+
+        'Raddoppio in attacco': {
+            name: 'Raddoppio in attacco',
+            icon: '⚔️',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-red-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di aggiungere il proprio modificatore a quello del giocatore scelto per la fase (solo in attacco)',
+            effect: '5% raddoppia il contributo offensivo aggiungendo il proprio mod',
+            mechanics: 'In qualsiasi fase offensiva, 5% di probabilita di aggiungere il proprio modificatore a quello del giocatore principale scelto per quella fase',
+            activation: '5% (solo in attacco)',
+            example: 'Fase 2 attacco → Attaccante A scelto (mod +10) → 5% → Raddoppio da C (mod +7) → Totale +17!',
+            phase: 'Tutte le fasi (solo in attacco)',
+            synergy: ['Doppio Scatto', 'Pivot', 'Cross']
+        },
+
         // ========================================
         // ABILITÀ SPECIALE - ICONA (1)
         // ========================================
@@ -1153,4 +1253,4 @@ window.AbilitiesEncyclopedia = {
     }
 };
 
-console.log('✅ Enciclopedia Abilita V3.2 caricata - 69 abilita complete!');
+console.log('✅ Enciclopedia Abilita V3.3 caricata - 75 abilita complete!');

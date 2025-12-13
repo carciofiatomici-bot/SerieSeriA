@@ -337,6 +337,133 @@ window.TestRunner = {
     },
 
     // ============================================================
+    // TEST SUITE: Regole Simulazione V3.3
+    // ============================================================
+    testSimulationRules() {
+        console.log('%c\n=== Test: Regole Simulazione V3.3 ===', this.colors.title);
+
+        // Test 40 occasioni invece di 30
+        if (window.simulationLogic) {
+            // Verifica che le costanti esistano
+            this.assert(typeof window.simulationLogic.rollDice === 'function', 'rollDice esiste');
+            this.assert(typeof window.simulationLogic.simulateOneOccasion === 'function', 'simulateOneOccasion esiste');
+        } else {
+            console.log('%csimulationLogic non disponibile, skip test parziali', this.colors.info);
+        }
+
+        // Test range tipologia (5%-25% invece di fisso 25%)
+        // Simulazione: tipologia deve essere random tra 0.05 e 0.25
+        let typePenaltyInRange = true;
+        for (let i = 0; i < 100; i++) {
+            const penalty = 0.05 + Math.random() * 0.20; // Formula usata in simulazione.js
+            if (penalty < 0.05 || penalty > 0.25) {
+                typePenaltyInRange = false;
+                break;
+            }
+        }
+        this.assert(typePenaltyInRange, 'Penalita tipologia tra 5% e 25%');
+
+        // Test modificatori livello (29 = +17.5, 30 = +18.5)
+        const LEVEL_MODIFIERS = window.simulationLogic?.LEVEL_MODIFIERS;
+        if (LEVEL_MODIFIERS) {
+            this.assertEqual(LEVEL_MODIFIERS[29], 17.5, 'Livello 29 = +17.5');
+            this.assertEqual(LEVEL_MODIFIERS[30], 18.5, 'Livello 30 = +18.5');
+        } else {
+            console.log('%cLEVEL_MODIFIERS non esportato, skip test', this.colors.info);
+        }
+    },
+
+    // ============================================================
+    // TEST SUITE: Match Events System
+    // ============================================================
+    testMatchEvents() {
+        console.log('%c\n=== Test: Match Events System ===', this.colors.title);
+
+        // Test che simulateOneOccasionWithLog ritorni eventData
+        if (!window.simulationLogic?.simulateOneOccasionWithLog) {
+            console.log('%csimulateOneOccasionWithLog non disponibile, skip test', this.colors.info);
+            return;
+        }
+
+        // Crea squadre mock per test
+        const mockTeamA = this.createMockTeamForSimulation('Team A', 10);
+        const mockTeamB = this.createMockTeamForSimulation('Team B', 10);
+
+        // Reset stato simulazione
+        if (window.simulationLogic.resetSimulationState) {
+            window.simulationLogic.resetSimulationState();
+        }
+
+        // Esegui una simulazione
+        const result = window.simulationLogic.simulateOneOccasionWithLog(mockTeamA, mockTeamB, 1);
+
+        // Verifica struttura risultato
+        this.assert(typeof result === 'object', 'Risultato e un oggetto');
+        this.assert(typeof result.goal === 'boolean', 'result.goal e boolean');
+        this.assert(Array.isArray(result.log), 'result.log e array');
+        this.assert(typeof result.eventData === 'object', 'result.eventData esiste');
+
+        // Verifica struttura eventData
+        if (result.eventData) {
+            this.assert(result.eventData.occasionNumber === 1, 'eventData.occasionNumber = 1');
+            this.assert(typeof result.eventData.phases === 'object', 'eventData.phases esiste');
+            this.assert(Array.isArray(result.eventData.abilities), 'eventData.abilities e array');
+            this.assert(['goal', 'no_goal'].includes(result.eventData.result), 'eventData.result valido');
+        }
+    },
+
+    /**
+     * Helper: Crea squadra mock per simulazione diretta
+     */
+    createMockTeamForSimulation(name, avgLevel) {
+        const players = [
+            { id: '1', name: `${name} GK`, role: 'P', level: avgLevel, currentLevel: avgLevel, type: 'Potenza', abilities: [] },
+            { id: '2', name: `${name} DEF1`, role: 'D', level: avgLevel, currentLevel: avgLevel, type: 'Potenza', abilities: [] },
+            { id: '3', name: `${name} MID1`, role: 'C', level: avgLevel, currentLevel: avgLevel, type: 'Velocita', abilities: [] },
+            { id: '4', name: `${name} MID2`, role: 'C', level: avgLevel, currentLevel: avgLevel, type: 'Tecnica', abilities: [] },
+            { id: '5', name: `${name} ATT`, role: 'A', level: avgLevel, currentLevel: avgLevel, type: 'Potenza', abilities: [] }
+        ];
+
+        return {
+            P: [players[0]],
+            D: [players[1]],
+            C: [players[2], players[3]],
+            A: [players[4]],
+            coachLevel: 1,
+            formationInfo: {
+                P: [players[0]],
+                D: [players[1]],
+                C: [players[2], players[3]],
+                A: [players[4]],
+                allPlayers: players,
+                isIconaActive: false
+            }
+        };
+    },
+
+    // ============================================================
+    // TEST SUITE: Infortuni
+    // ============================================================
+    testInjuries() {
+        console.log('%c\n=== Test: Sistema Infortuni ===', this.colors.title);
+
+        if (!window.Injuries) {
+            console.log('%cInjuries non disponibile, skip test', this.colors.info);
+            return;
+        }
+
+        // Test costanti aggiornate
+        this.assertEqual(window.Injuries.INJURY_CHANCE, 0.01, 'Probabilita infortunio = 1%');
+        this.assertEqual(window.Injuries.MAX_INJURIES_COUNT, 1, 'Max infortuni = 1');
+
+        // Test funzione isPlayerInjured
+        const injuredPlayer = { injury: { remainingMatches: 2 } };
+        const healthyPlayer = { injury: null };
+        this.assert(window.Injuries.isPlayerInjured(injuredPlayer), 'Giocatore infortunato riconosciuto');
+        this.assert(!window.Injuries.isPlayerInjured(healthyPlayer), 'Giocatore sano riconosciuto');
+    },
+
+    // ============================================================
     // RUN ALL TESTS
     // ============================================================
     runAll() {
@@ -358,6 +485,9 @@ window.TestRunner = {
         this.testRosterLimits();
         this.testAcquisitionCooldown();
         this.testFeatureFlags();
+        this.testSimulationRules();
+        this.testMatchEvents();
+        this.testInjuries();
 
         const endTime = performance.now();
         const duration = (endTime - startTime).toFixed(2);

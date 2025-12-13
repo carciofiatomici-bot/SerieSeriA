@@ -137,7 +137,7 @@ window.ChampionshipSimulation = {
     },
 
     /**
-     * Simula una singola partita (30 occasioni per squadra).
+     * Simula una singola partita (40 occasioni per squadra).
      */
     runSimulation(homeTeamData, awayTeamData) {
         const { simulateOneOccasion } = window.simulationLogic || {};
@@ -174,16 +174,16 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 30;
+        const totalOccasions = 40; // Aggiornato da 30 a 40 occasioni
 
         for (let i = 0; i < totalOccasions; i++) {
-            if (simulateOneOccasion(teamA, teamB)) {
+            if (simulateOneOccasion(teamA, teamB, i + 1)) {
                 homeGoals++;
             }
         }
 
         for (let i = 0; i < totalOccasions; i++) {
-            if (simulateOneOccasion(teamB, teamA)) {
+            if (simulateOneOccasion(teamB, teamA, i + 1)) {
                 awayGoals++;
             }
         }
@@ -193,6 +193,13 @@ window.ChampionshipSimulation = {
 
     /**
      * Simula una singola partita con log dettagliato per debug.
+     * @param {Object} homeTeamData - Dati squadra casa
+     * @param {Object} awayTeamData - Dati squadra trasferta
+     * @returns {Object} - { homeGoals, awayGoals, log, simpleLog, matchEvents }
+     *   matchEvents: Array di eventi strutturati per ogni occasione con:
+     *   - occasionNumber, attackingTeam, defendingTeam, side, result
+     *   - phases: { construction, attack, shot } con dati dettagliati
+     *   - abilities: array delle abilità attivate
      */
     runSimulationWithLog(homeTeamData, awayTeamData) {
         const { simulateOneOccasionWithLog, resetSimulationState } = window.simulationLogic || {};
@@ -232,8 +239,9 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 30;
+        const totalOccasions = 40; // Aggiornato da 30 a 40 occasioni
         const log = [];
+        const matchEvents = []; // Array per eventi partita strutturati
 
         // Log informazioni squadre
         log.push('='.repeat(70));
@@ -281,7 +289,7 @@ window.ChampionshipSimulation = {
         // ==================== OCCASIONI SQUADRA CASA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${homeTeamData.teamName} (30 occasioni)`);
+        log.push(`# ATTACCO ${homeTeamData.teamName} (40 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {
@@ -292,12 +300,22 @@ window.ChampionshipSimulation = {
             // Aggiungi il log dettagliato di questa occasione
             log.push(...result.log);
             log.push(`  >> Parziale ${homeTeamData.teamName}: ${homeGoals} gol su ${i + 1} occasioni`);
+
+            // Aggiungi evento strutturato
+            if (result.eventData) {
+                matchEvents.push({
+                    ...result.eventData,
+                    attackingTeam: homeTeamData.teamName,
+                    defendingTeam: awayTeamData.teamName,
+                    side: 'home'
+                });
+            }
         }
 
         // ==================== OCCASIONI SQUADRA TRASFERTA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${awayTeamData.teamName} (30 occasioni)`);
+        log.push(`# ATTACCO ${awayTeamData.teamName} (40 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {
@@ -308,6 +326,16 @@ window.ChampionshipSimulation = {
             // Aggiungi il log dettagliato di questa occasione
             log.push(...result.log);
             log.push(`  >> Parziale ${awayTeamData.teamName}: ${awayGoals} gol su ${i + 1} occasioni`);
+
+            // Aggiungi evento strutturato
+            if (result.eventData) {
+                matchEvents.push({
+                    ...result.eventData,
+                    attackingTeam: awayTeamData.teamName,
+                    defendingTeam: homeTeamData.teamName,
+                    side: 'away'
+                });
+            }
         }
 
         // ==================== RISULTATO FINALE ====================
@@ -326,7 +354,7 @@ window.ChampionshipSimulation = {
         // Genera anche un log ristretto (solo risultati per occasione)
         const simpleLog = this.generateSimpleLog(homeTeamData, awayTeamData, teamA, teamB, homeGoals, awayGoals);
 
-        return { homeGoals, awayGoals, log, simpleLog };
+        return { homeGoals, awayGoals, log, simpleLog, matchEvents };
     },
 
     /**
@@ -375,7 +403,7 @@ window.ChampionshipSimulation = {
         if (resetSimulationState) resetSimulationState();
 
         let homeG = 0;
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 40; i++) {
             const goal = simulateOneOccasion(teamA, teamB, i + 1);
             if (goal) {
                 homeG++;
@@ -391,7 +419,7 @@ window.ChampionshipSimulation = {
         log.push('-'.repeat(60));
 
         let awayG = 0;
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 40; i++) {
             const goal = simulateOneOccasion(teamB, teamA, i + 1);
             if (goal) {
                 awayG++;

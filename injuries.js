@@ -4,9 +4,9 @@
 // ====================================================================
 //
 // Gestisce gli infortuni dei giocatori dopo le partite:
-// - 3.5% di probabilita per squadra a fine partita
-// - Se si rientra nel 3.5%: un giocatore random in campo si infortuna
-// - Max infortuni contemporanei: 1/4 della rosa
+// - 1% di probabilita per squadra a fine partita
+// - Se si rientra nell'1%: un giocatore random in campo si infortuna
+// - Max 1 infortunio contemporaneo per squadra
 // - Durata: 1-10 partite
 // - Applica a: Campionato, Coppa, Supercoppa (NON sfide/allenamenti)
 //
@@ -14,10 +14,10 @@
 window.Injuries = {
 
     // Costanti (valori default, sovrascritti da Firestore se disponibili)
-    INJURY_CHANCE: 0.035, // 3.5% per giocatore
+    INJURY_CHANCE: 0.01, // 1% per giocatore
     MIN_INJURY_DURATION: 1,
     MAX_INJURY_DURATION: 10,
-    MAX_INJURIES_RATIO: 0.25, // 1/4 della rosa
+    MAX_INJURIES_COUNT: 1, // Max 1 infortunato per squadra
 
     /**
      * Verifica se il sistema infortuni e' abilitato
@@ -44,7 +44,7 @@ window.Injuries = {
                 if (settings.injuryChance !== undefined) this.INJURY_CHANCE = settings.injuryChance;
                 if (settings.minDuration !== undefined) this.MIN_INJURY_DURATION = settings.minDuration;
                 if (settings.maxDuration !== undefined) this.MAX_INJURY_DURATION = settings.maxDuration;
-                if (settings.maxRatio !== undefined) this.MAX_INJURIES_RATIO = settings.maxRatio;
+                if (settings.maxCount !== undefined) this.MAX_INJURIES_COUNT = settings.maxCount;
                 console.log('[Injuries] Impostazioni caricate da Firestore:', settings);
             }
         } catch (error) {
@@ -85,7 +85,7 @@ window.Injuries = {
                 return null;
             }
 
-            const maxInjuries = Math.floor(rosaSize * this.MAX_INJURIES_RATIO);
+            const maxInjuries = this.MAX_INJURIES_COUNT; // Max 1 infortunato per squadra
             const currentInjuries = this.getInjuredPlayers(teamData).length;
 
             // Se gia al limite, nessun nuovo infortunio
@@ -102,7 +102,7 @@ window.Injuries = {
 
             if (eligiblePlayers.length === 0) return null;
 
-            // Roll singolo per la squadra (3.5% di probabilità)
+            // Roll singolo per la squadra (1% di probabilità)
             let injuredPlayer = null;
 
             if (Math.random() < this.INJURY_CHANCE) {

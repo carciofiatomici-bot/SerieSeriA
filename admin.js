@@ -849,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </ul>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 text-center mt-3">Simulazione basata su 30 occasioni per squadra</p>
+                    <p class="text-xs text-gray-500 text-center mt-3">Simulazione basata su 40 occasioni per squadra</p>
                 `;
 
                 // Gestione bottoni animazione
@@ -903,6 +903,46 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     animationButtonsContainer.classList.add('hidden');
+                }
+
+                // Gestione matchEvents (Espandi Eventi Partita)
+                const eventsSection = document.getElementById('test-simulation-events-section');
+                const btnExpandEvents = document.getElementById('btn-expand-events-test');
+                const eventsContainer = document.getElementById('test-simulation-events-container');
+
+                if (eventsSection && result.matchEvents && result.matchEvents.length > 0) {
+                    eventsSection.classList.remove('hidden');
+
+                    if (btnExpandEvents) {
+                        btnExpandEvents.onclick = () => {
+                            if (eventsContainer.classList.contains('hidden')) {
+                                eventsContainer.classList.remove('hidden');
+                                if (window.MatchReplaySimple) {
+                                    eventsContainer.innerHTML = window.MatchReplaySimple.renderMatchEvents(result.matchEvents);
+                                    // Aggiungi listener per expand/collapse occasioni
+                                    eventsContainer.querySelectorAll('.occasion-header').forEach(header => {
+                                        header.addEventListener('click', () => {
+                                            const details = header.nextElementSibling;
+                                            if (details) {
+                                                details.classList.toggle('hidden');
+                                                const arrow = header.querySelector('.arrow');
+                                                if (arrow) {
+                                                    arrow.textContent = details.classList.contains('hidden') ? '▶' : '▼';
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                                btnExpandEvents.innerHTML = '<span>📊</span> Chiudi Eventi Partita';
+                            } else {
+                                eventsContainer.classList.add('hidden');
+                                eventsContainer.innerHTML = '';
+                                btnExpandEvents.innerHTML = '<span>📊</span> Espandi Eventi Partita';
+                            }
+                        };
+                    }
+                } else if (eventsSection) {
+                    eventsSection.classList.add('hidden');
                 }
 
                 console.log('Test simulazione completato:', {
@@ -1086,6 +1126,45 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         detailedLogContainer.classList.toggle('hidden');
                     };
+                }
+
+                // Gestione matchEvents (Espandi Eventi Partita) - se disponibili
+                const eventsSection = document.getElementById('test-new-simulation-events-section');
+                const btnExpandEvents = document.getElementById('btn-expand-events-new-test');
+                const eventsContainer = document.getElementById('test-new-simulation-events-container');
+
+                if (eventsSection && result.matchEvents && result.matchEvents.length > 0) {
+                    eventsSection.classList.remove('hidden');
+
+                    if (btnExpandEvents) {
+                        btnExpandEvents.onclick = () => {
+                            if (eventsContainer.classList.contains('hidden')) {
+                                eventsContainer.classList.remove('hidden');
+                                if (window.MatchReplaySimple) {
+                                    eventsContainer.innerHTML = window.MatchReplaySimple.renderMatchEvents(result.matchEvents);
+                                    eventsContainer.querySelectorAll('.occasion-header').forEach(header => {
+                                        header.addEventListener('click', () => {
+                                            const details = header.nextElementSibling;
+                                            if (details) {
+                                                details.classList.toggle('hidden');
+                                                const arrow = header.querySelector('.arrow');
+                                                if (arrow) {
+                                                    arrow.textContent = details.classList.contains('hidden') ? '▶' : '▼';
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+                                btnExpandEvents.innerHTML = '<span>📊</span> Chiudi Eventi Partita';
+                            } else {
+                                eventsContainer.classList.add('hidden');
+                                eventsContainer.innerHTML = '';
+                                btnExpandEvents.innerHTML = '<span>📊</span> Espandi Eventi Partita';
+                            }
+                        };
+                    }
+                } else if (eventsSection) {
+                    eventsSection.classList.add('hidden');
                 }
 
                 console.log('Test simulazione NUOVE REGOLE completato:', {
@@ -2677,8 +2756,8 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const teamDocSnap of querySnapshot.docs) {
                 const teamData = teamDocSnap.data();
 
-                // Salta l'account admin
-                if (teamData.teamName?.toLowerCase() === 'serieseria' || teamData.isAdmin) {
+                // Salta solo l'account admin principale (serieseria)
+                if (teamData.teamName?.toLowerCase() === 'serieseria') {
                     continue;
                 }
 

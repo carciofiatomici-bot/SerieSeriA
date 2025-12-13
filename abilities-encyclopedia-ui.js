@@ -251,9 +251,9 @@ window.AbilitiesUI = {
             'Unica': 'text-yellow-400'
         };
         
-        // Crea modal
+        // Crea modal (z-index più alto dell'enciclopedia per apparire sopra)
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4';
         modal.onclick = (e) => {
             if (e.target === modal) modal.remove();
         };

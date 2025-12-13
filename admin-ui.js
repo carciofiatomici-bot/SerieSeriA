@@ -311,6 +311,13 @@ window.AdminUI = {
                             <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
                             <pre id="test-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
+                        <!-- Espandi Eventi Partita -->
+                        <div id="test-simulation-events-section" class="hidden mt-4">
+                            <button id="btn-expand-events-test" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span>📊</span> Espandi Eventi Partita
+                            </button>
+                            <div id="test-simulation-events-container" class="hidden mt-4 max-h-96 overflow-y-auto"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -322,10 +329,11 @@ window.AdminUI = {
                     <div class="bg-purple-900/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
                         <p class="font-bold mb-1">Differenze dalle regole attuali:</p>
                         <ul class="list-disc list-inside text-xs space-y-1">
-                            <li>30 occasioni per squadra</li>
+                            <li>40 occasioni per squadra</li>
                             <li>Sistema a probabilita percentuale per passaggi fase</li>
                             <li>5% di passare comunque alla fase successiva su fallimento</li>
                             <li>Modificatori livello rivisti (Liv 29 = +17.5, Liv 30 = +18.5)</li>
+                            <li>Tipologia: penalita variabile 5-25% (invece di fisso 25%)</li>
                         </ul>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
@@ -368,6 +376,13 @@ window.AdminUI = {
                         <div id="test-new-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
                             <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
                             <pre id="test-new-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                        <!-- Espandi Eventi Partita -->
+                        <div id="test-new-simulation-events-section" class="hidden mt-4">
+                            <button id="btn-expand-events-new-test" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <span>📊</span> Espandi Eventi Partita
+                            </button>
+                            <div id="test-new-simulation-events-container" class="hidden mt-4 max-h-96 overflow-y-auto"></div>
                         </div>
                     </div>
                 </div>
@@ -971,7 +986,8 @@ window.AdminUI = {
             'Mani di burro', 'Respinta Timida', 'Fuori dai pali', 'Lento a carburare', 'Soggetto a infortuni',
             'Falloso', 'Insicuro', 'Fuori Posizione',
             'Egoista', 'Impreciso', 'Ingabbiato',
-            'Piedi a banana', 'Eccesso di sicurezza'
+            'Piedi a banana', 'Eccesso di sicurezza',
+            'Fragile', 'Non Adattabile', 'Titubanza'
         ];
 
         // Funzione per verificare se un'abilita e' negativa

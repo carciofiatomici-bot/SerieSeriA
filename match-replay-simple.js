@@ -498,7 +498,7 @@ window.MatchReplaySimple = {
      */
     randomAbilities(playerAbilities) {
         if (!playerAbilities || playerAbilities.length === 0) return [];
-        
+
         const activated = [];
         for (const ability of playerAbilities) {
             if (Math.random() < 0.1) {
@@ -506,6 +506,271 @@ window.MatchReplaySimple = {
             }
         }
         return activated;
+    },
+
+    // ====================================================================
+    // SEZIONE: Espandi Eventi Partita (matchEvents UI)
+    // ====================================================================
+
+    /**
+     * Genera HTML per il bottone "Espandi Eventi Partita"
+     * @param {string} containerId - ID univoco per il container
+     * @returns {string} HTML del bottone
+     */
+    getExpandEventsButton(containerId = 'match-events-container') {
+        return `
+            <button id="btn-expand-events-${containerId}"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center gap-2 mx-auto mt-4">
+                <span>📊</span> Espandi Eventi Partita
+            </button>
+            <div id="${containerId}" class="match-events-container hidden mt-4 max-h-96 overflow-y-auto"></div>
+        `;
+    },
+
+    /**
+     * Inizializza gli event listener per il bottone espandi eventi
+     * @param {Array} matchEvents - Array degli eventi partita
+     * @param {string} containerId - ID del container
+     */
+    initExpandEventsListener(matchEvents, containerId = 'match-events-container') {
+        const btn = document.getElementById(`btn-expand-events-${containerId}`);
+        const container = document.getElementById(containerId);
+
+        if (!btn || !container) return;
+
+        btn.addEventListener('click', () => {
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                container.innerHTML = this.renderMatchEvents(matchEvents);
+                btn.innerHTML = '<span>📊</span> Chiudi Eventi Partita';
+
+                // Aggiungi listener per expand/collapse occasioni
+                container.querySelectorAll('.occasion-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const details = header.nextElementSibling;
+                        if (details) {
+                            details.classList.toggle('hidden');
+                            const arrow = header.querySelector('.arrow');
+                            if (arrow) {
+                                arrow.textContent = details.classList.contains('hidden') ? '▶' : '▼';
+                            }
+                        }
+                    });
+                });
+            } else {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                btn.innerHTML = '<span>📊</span> Espandi Eventi Partita';
+            }
+        });
+    },
+
+    /**
+     * Renderizza tutti gli eventi partita
+     * @param {Array} matchEvents - Array degli eventi
+     * @returns {string} HTML degli eventi
+     */
+    renderMatchEvents(matchEvents) {
+        if (!matchEvents || matchEvents.length === 0) {
+            return '<p class="text-gray-500 text-center py-4">Nessun evento disponibile</p>';
+        }
+
+        // Raggruppa per squadra attaccante
+        const homeEvents = matchEvents.filter(e => e.side === 'home');
+        const awayEvents = matchEvents.filter(e => e.side === 'away');
+
+        let html = '<div class="space-y-4">';
+
+        // Eventi squadra casa
+        if (homeEvents.length > 0) {
+            html += `
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h4 class="text-green-400 font-bold mb-2">🏠 Attacco ${homeEvents[0].attackingTeam} (${homeEvents.filter(e => e.result === 'goal').length} gol)</h4>
+                    <div class="space-y-2">
+                        ${homeEvents.map(e => this.renderOccasionCard(e)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Eventi squadra trasferta
+        if (awayEvents.length > 0) {
+            html += `
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h4 class="text-blue-400 font-bold mb-2">✈️ Attacco ${awayEvents[0].attackingTeam} (${awayEvents.filter(e => e.result === 'goal').length} gol)</h4>
+                    <div class="space-y-2">
+                        ${awayEvents.map(e => this.renderOccasionCard(e)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        return html;
+    },
+
+    /**
+     * Renderizza una singola occasione
+     * @param {Object} event - Evento occasione
+     * @returns {string} HTML dell'occasione
+     */
+    renderOccasionCard(event) {
+        const isGoal = event.result === 'goal';
+        const bgColor = isGoal ? 'bg-green-900/30 border-green-600' : 'bg-gray-700/30 border-gray-600';
+        const resultIcon = isGoal ? '⚽' : '❌';
+        const resultText = isGoal ? 'GOL' : 'Fallito';
+
+        // Determina a che fase si e fermata l'occasione
+        let stoppedAt = 'Fase 3 (Tiro)';
+        if (event.phases.construction?.result === 'fail') {
+            stoppedAt = 'Fase 1 (Costruzione)';
+        } else if (event.phases.attack?.result === 'fail' || event.phases.attack?.interrupted) {
+            stoppedAt = 'Fase 2 (Attacco)';
+        }
+
+        return `
+            <div class="border rounded-lg ${bgColor}">
+                <div class="occasion-header cursor-pointer p-2 flex items-center justify-between hover:bg-gray-700/50 rounded-t-lg">
+                    <span class="text-sm">
+                        <span class="arrow text-gray-400">▶</span>
+                        <span class="font-bold text-white">Occ. ${event.occasionNumber}</span>
+                        <span class="text-gray-400 mx-1">→</span>
+                        <span class="${isGoal ? 'text-green-400' : 'text-gray-400'}">${resultIcon} ${resultText}</span>
+                        ${!isGoal ? `<span class="text-gray-500 text-xs ml-2">(${stoppedAt})</span>` : ''}
+                    </span>
+                    ${event.abilities?.length > 0 ? `<span class="text-yellow-400 text-xs">✨ ${event.abilities.length} abilità</span>` : ''}
+                </div>
+                <div class="occasion-details hidden p-3 border-t border-gray-600 text-xs space-y-2">
+                    ${this.renderPhaseDetails(event)}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza i dettagli delle fasi
+     * @param {Object} event - Evento occasione
+     * @returns {string} HTML dei dettagli fasi
+     */
+    renderPhaseDetails(event) {
+        let html = '';
+
+        // Fase 1: Costruzione
+        const p1 = event.phases.construction;
+        if (p1) {
+            if (p1.skipped) {
+                html += `
+                    <div class="bg-purple-900/30 p-2 rounded border border-purple-600">
+                        <strong class="text-purple-400">Fase 1 - Costruzione:</strong>
+                        <span class="text-purple-300">SKIP (${p1.reason})</span>
+                    </div>
+                `;
+            } else {
+                const p1Success = p1.result === 'success' || p1.result === 'lucky';
+                html += `
+                    <div class="bg-gray-900/50 p-2 rounded border ${p1Success ? 'border-green-600' : 'border-red-600'}">
+                        <strong class="${p1Success ? 'text-green-400' : 'text-red-400'}">Fase 1 - Costruzione: ${p1.result?.toUpperCase()}</strong>
+                        <div class="mt-1 grid grid-cols-2 gap-2 text-gray-300">
+                            <div>
+                                <span class="text-gray-500">ATT:</span>
+                                dado ${p1.rolls?.attacker} + mod ${p1.modifiers?.attacker?.toFixed(1)} + coach ${p1.coach?.attacker?.toFixed(1)} = <strong>${p1.totals?.attacker?.toFixed(1)}</strong>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">DIF:</span>
+                                dado ${p1.rolls?.defender} + mod ${p1.modifiers?.defender?.toFixed(1)} + coach ${p1.coach?.defender?.toFixed(1)} = <strong>${p1.totals?.defender?.toFixed(1)}</strong>
+                            </div>
+                        </div>
+                        <div class="text-gray-400 mt-1">
+                            Prob: ${p1.successChance}% | Roll: ${p1.roll100}
+                            ${p1.result === 'lucky' ? ` | <span class="text-yellow-400">5% Fortuna (${p1.luckyRoll})</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fase 2: Attacco
+        const p2 = event.phases.attack;
+        if (p2) {
+            if (p2.interrupted) {
+                html += `
+                    <div class="bg-red-900/30 p-2 rounded border border-red-600">
+                        <strong class="text-red-400">Fase 2 - Attacco:</strong>
+                        <span class="text-red-300">INTERROTTO (${p2.reason})</span>
+                    </div>
+                `;
+            } else {
+                const p2Success = p2.result === 'success' || p2.result === 'lucky';
+                html += `
+                    <div class="bg-gray-900/50 p-2 rounded border ${p2Success ? 'border-green-600' : 'border-red-600'}">
+                        <strong class="${p2Success ? 'text-green-400' : 'text-red-400'}">Fase 2 - Attacco: ${p2.result?.toUpperCase()}</strong>
+                        <div class="mt-1 grid grid-cols-2 gap-2 text-gray-300">
+                            <div>
+                                <span class="text-gray-500">ATT:</span>
+                                dado ${p2.rolls?.attacker} + mod ${p2.modifiers?.attacker?.toFixed(1)} + coach ${p2.coach?.attacker?.toFixed(1)} = <strong>${p2.totals?.attacker?.toFixed(1)}</strong>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">DIF:</span>
+                                dado ${p2.rolls?.defender} + mod ${p2.modifiers?.defender?.toFixed(1)} + coach ${p2.coach?.defender?.toFixed(1)} = <strong>${p2.totals?.defender?.toFixed(1)}</strong>
+                            </div>
+                        </div>
+                        <div class="text-gray-400 mt-1">
+                            Risultato: ${p2.attackResult?.toFixed(1)} → Finale: ${p2.finalAttackResult?.toFixed(1)}
+                            ${p2.result === 'lucky' ? ` | <span class="text-yellow-400">5% Fortuna (${p2.luckyRoll})</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fase 3: Tiro
+        const p3 = event.phases.shot;
+        if (p3) {
+            if (p3.noGoalkeeper) {
+                html += `
+                    <div class="bg-green-900/30 p-2 rounded border border-green-600">
+                        <strong class="text-green-400">Fase 3 - Tiro:</strong>
+                        <span class="text-green-300">GOL AUTOMATICO (nessun portiere)</span>
+                    </div>
+                `;
+            } else {
+                const isGoal = ['goal', 'lucky_goal', 'draw_goal'].includes(p3.result);
+                html += `
+                    <div class="bg-gray-900/50 p-2 rounded border ${isGoal ? 'border-yellow-600' : 'border-blue-600'}">
+                        <strong class="${isGoal ? 'text-yellow-400' : 'text-blue-400'}">Fase 3 - Tiro: ${p3.result?.toUpperCase()}</strong>
+                        <div class="mt-1 text-gray-300">
+                            <div>
+                                <span class="text-gray-500">TIRO:</span>
+                                attacco ${p3.attackValue?.toFixed(1)}
+                            </div>
+                            <div>
+                                <span class="text-gray-500">PARATA:</span>
+                                dado ${p3.rolls?.goalkeeper} + mod ${p3.modifiers?.goalkeeper?.toFixed(1)} + coach ${p3.coach?.goalkeeper?.toFixed(1)} = <strong>${p3.totalGoalkeeper?.toFixed(1)}</strong>
+                                ${p3.kamikazeActive ? ' <span class="text-purple-400">(Kamikaze x2)</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="text-gray-400 mt-1">
+                            Differenza: ${p3.saveResult?.toFixed(1)} (soglia: ${p3.saveThreshold})
+                            ${p3.result === 'lucky_goal' ? ` | <span class="text-yellow-400">5% Gol fortunato (${p3.luckyRoll})</span>` : ''}
+                            ${p3.result === 'miracolo_save' ? ` | <span class="text-purple-400">Miracolo! (${p3.miracoloRoll})</span>` : ''}
+                            ${p3.result === 'draw_goal' || p3.result === 'draw_save' ? ` | <span class="text-gray-400">50/50: ${p3.fiftyFiftyRoll} vs ${p3.goalChance}%</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Abilità attivate
+        if (event.abilities?.length > 0) {
+            html += `
+                <div class="bg-yellow-900/30 p-2 rounded border border-yellow-600">
+                    <strong class="text-yellow-400">Abilità attivate:</strong>
+                    <span class="text-yellow-300">${event.abilities.join(', ')}</span>
+                </div>
+            `;
+        }
+
+        return html;
     }
 };
 

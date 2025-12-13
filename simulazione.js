@@ -44,7 +44,16 @@ const TYPE_DISADVANTAGE = {
     'Tecnica': 'Velocita',   // Tecnica subisce -25% da Velocità
     'Velocita': 'Potenza'    // Velocità subisce -25% da Potenza
 };
-const TYPE_PENALTY = 0.25; // 25% di riduzione
+// Range tipologia: da 5% a 25% (randomizzato)
+const TYPE_PENALTY_MIN = 0.05; // 5% minimo
+const TYPE_PENALTY_MAX = 0.25; // 25% massimo
+
+/**
+ * Calcola penalita tipologia randomizzata (5-25%)
+ */
+const getTypePenalty = () => {
+    return TYPE_PENALTY_MIN + Math.random() * (TYPE_PENALTY_MAX - TYPE_PENALTY_MIN);
+};
 
 /**
  * Utility: Roll dice
@@ -77,6 +86,12 @@ let currentOccasionNumber = 0;
 
 // Flag per "Presa Sicura" - skip prossima costruzione
 let skipNextConstruction = false;
+
+// Tracciamento "Teletrasporto" - max 5 attivazioni per partita
+let teletrasportoCount = { teamA: 0, teamB: 0 };
+
+// Flag per "Forma Smagliante" - giocatori già processati
+let formaSmaglianteApplied = new Set();
 
 /**
  * Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente
@@ -120,8 +135,15 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
 
     // Calcola livello effettivo considerando penalita fuori ruolo (-15% arrotondato per difetto)
     let effectiveLevel = player.level || 1;
+    let outOfPositionPenalty = 0.85; // -15% default
+
+    // Non Adattabile: raddoppia il malus fuori ruolo
+    if (player.abilities?.includes('Non Adattabile')) {
+        outOfPositionPenalty = 0.70; // -30% invece di -15%
+    }
+
     if (player.assignedPosition && player.assignedPosition !== player.role) {
-        effectiveLevel = Math.floor(effectiveLevel * 0.85);
+        effectiveLevel = Math.floor(effectiveLevel * outOfPositionPenalty);
     }
 
     // Livello base (limitato a 1-30)
@@ -146,10 +168,24 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
             // Ricalcola senza malus forma (ma con penalita fuori ruolo se applicabile)
             let effectiveLevelForFreddezza = player.level || 1;
             if (player.assignedPosition && player.assignedPosition !== player.role) {
-                effectiveLevelForFreddezza = Math.floor(effectiveLevelForFreddezza * 0.85);
+                effectiveLevelForFreddezza = Math.floor(effectiveLevelForFreddezza * outOfPositionPenalty);
             }
             modifier = LEVEL_MODIFIERS[effectiveLevelForFreddezza] || 1.0;
         }
+    }
+
+    // Forma Smagliante: se forma negativa a inizio partita, diventa +1
+    if (player.abilities?.includes('Forma Smagliante') && !formaSmaglianteApplied.has(player.id)) {
+        const formaDiff = (player.currentLevel || player.level) - (player.level || 1);
+        if (formaDiff < 0) {
+            modifier += 1; // Bonus +1 invece della forma negativa
+            formaSmaglianteApplied.add(player.id);
+        }
+    }
+
+    // Non Adattabile: -2 al modificatore permanente
+    if (player.abilities?.includes('Non Adattabile')) {
+        modifier -= 2;
     }
 
     // Icona: +1 a tutti i modificatori
@@ -173,7 +209,7 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
     }
 
     // Effetto tipologia vs avversari (Regola 5)
-    // -25% se svantaggiato
+    // -5% a -25% se svantaggiato (range randomizzato)
     // Adattabile: ignora il malus tipologia
     if (player.type && opposingPlayers.length > 0 && !player.abilities?.includes('Adattabile')) {
         const disadvantagedAgainst = TYPE_DISADVANTAGE[player.type];
@@ -182,7 +218,7 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         );
 
         if (facingDisadvantage) {
-            modifier *= (1 - TYPE_PENALTY); // -25%
+            modifier *= (1 - getTypePenalty()); // -5% a -25%
         }
     }
 
@@ -581,6 +617,42 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
         const sameRolePlayers = players.filter(p => p.role === role && !p.abilities?.includes('Bandiera del club'));
         totalModifier += sameRolePlayers.length * count; // +1 per ogni Bandiera per compagno
     }
+
+    // Raddoppio in difesa: 5% di aggiungere il proprio mod al giocatore scelto (solo in difesa)
+    if (!isAttacking) {
+        const allTeamPlayers = [...(team.P || []), ...(team.D || []), ...(team.C || []), ...(team.A || [])];
+        const raddoppioDifesaPlayers = allTeamPlayers.filter(p =>
+            p.abilities?.includes('Raddoppio in difesa') &&
+            !nullifiedAbilities.has(p.id) &&
+            !injuredPlayers.has(p.id) &&
+            !players.includes(p) // Non gia' nella fase
+        );
+        for (const player of raddoppioDifesaPlayers) {
+            if (checkChance(5)) {
+                const bonusMod = calculatePlayerModifier(player, hasIcona, []);
+                totalModifier += bonusMod;
+                break; // Solo un raddoppio per fase
+            }
+        }
+    }
+
+    // Raddoppio in attacco: 5% di aggiungere il proprio mod al giocatore scelto (solo in attacco)
+    if (isAttacking) {
+        const allTeamPlayers = [...(team.P || []), ...(team.D || []), ...(team.C || []), ...(team.A || [])];
+        const raddoppioAttaccoPlayers = allTeamPlayers.filter(p =>
+            p.abilities?.includes('Raddoppio in attacco') &&
+            !nullifiedAbilities.has(p.id) &&
+            !injuredPlayers.has(p.id) &&
+            !players.includes(p) // Non gia' nella fase
+        );
+        for (const player of raddoppioAttaccoPlayers) {
+            if (checkChance(5)) {
+                const bonusMod = calculatePlayerModifier(player, hasIcona, []);
+                totalModifier += bonusMod;
+                break; // Solo un raddoppio per fase
+            }
+        }
+    }
     
     // Rientro Rapido (Attaccante): 5% partecipa alla difesa
     if (phase === 'attack' && team.A?.length > 0) {
@@ -836,9 +908,10 @@ const phaseShot = (teamA, teamB, attackResult) => {
         shotDie = 6;
     }
 
-    // Sguardo Intimidatorio (Portiere): 5% che l'attacco usi 1d6 invece di 1d10
+    // Sguardo Intimidatorio (Portiere): 5% che l'attacco usi 1d12 invece di 1d20 (sulla fase tiro)
+    let sguardoIntimidatorioActive = false;
     if (portiere.abilities?.includes('Sguardo Intimidatorio') && !nullifiedAbilities.has(portiere.id) && checkChance(5)) {
-        shotDie = 6;
+        sguardoIntimidatorioActive = true;
     }
 
     // Tiro Potente (Difensore, Centrocampista, Attaccante): 5% di tirare 2d10 e prendere il più alto
@@ -859,6 +932,11 @@ const phaseShot = (teamA, teamB, attackResult) => {
     }
 
     // Roll tiro attaccante (1d10 o 1d6, o 2d10/2d6 se Tiro Potente)
+    // Sguardo Intimidatorio riduce il dado tiro a d6
+    if (sguardoIntimidatorioActive && shotDie > 6) {
+        shotDie = 6;
+    }
+
     let shotRoll = rollDice(1, shotDie);
     if (shotDiceCount === 2) {
         const roll2 = rollDice(1, shotDie);
@@ -906,14 +984,18 @@ const phaseShot = (teamA, teamB, attackResult) => {
     // Formula: Totale Portiere - Totale Tiro
     let saveResult = totalPortiere - totalShot;
 
-    // Pugno di ferro: soglia parata -2 invece di 0
-    let saveThreshold = 0;
-    if (portiere.abilities?.includes('Pugno di ferro') && !nullifiedAbilities.has(portiere.id)) {
-        saveThreshold = -2;
+    // Parata di pugno: se risultato e' -1 o -2, diventa 0 (50% parata)
+    const hasParataDiPugno = portiere.abilities?.includes('Parata di pugno') && !nullifiedAbilities.has(portiere.id);
+    if (hasParataDiPugno && (saveResult === -1 || saveResult === -2)) {
+        saveResult = 0;
     }
 
+    // Colpo d'anca: su risultato 0, 75% parata invece di 50% e annulla 5% auto-goal
+    const hasColpoDAnca = portiere.abilities?.includes('Colpo d\'anca') && !nullifiedAbilities.has(portiere.id);
+
     // Kamikaze fail check: 5% fallisce anche se parata riuscita
-    if (kamikazeActive && saveResult > saveThreshold && checkChance(5)) {
+    // Colpo d'anca annulla questa probabilita
+    if (kamikazeActive && saveResult > 0 && !hasColpoDAnca && checkChance(5)) {
         // Salvataggio sulla Linea può ancora salvare
         if (checkSalvataggioSullaLinea(teamB, totalShot)) {
             return false; // Salvato!
@@ -922,7 +1004,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
     }
 
     // Check risultato
-    if (saveResult > saveThreshold) {
+    if (saveResult > 0) {
         // Parata!
         // Presa Sicura: se differenza > 5, prossima azione skip costruzione
         if (portiere.abilities?.includes('Presa Sicura') && !nullifiedAbilities.has(portiere.id)) {
@@ -930,8 +1012,18 @@ const phaseShot = (teamA, teamB, attackResult) => {
                 skipNextConstruction = true;
             }
         }
-        // 5% di gol comunque
-        if (checkChance(5)) {
+        // 5% di gol comunque (Colpo d'anca annulla questa probabilita)
+        if (!hasColpoDAnca && checkChance(5)) {
+            // Responta: 10% di far ritirare il dado all'attaccante
+            if (portiere.abilities?.includes('Responta') && !nullifiedAbilities.has(portiere.id) && checkChance(10)) {
+                // Attaccante ritira il dado, potrebbe non essere piu goal
+                const newShotRoll = rollDice(1, shotDie);
+                const newTotalShot = newShotRoll + finalAttackResult + homeBonusA;
+                const newSaveResult = totalPortiere - newTotalShot;
+                if (newSaveResult >= 0) {
+                    return false; // Responta ha salvato!
+                }
+            }
             // Salvataggio sulla Linea può ancora salvare
             if (checkSalvataggioSullaLinea(teamB, totalShot)) {
                 return false;
@@ -939,15 +1031,24 @@ const phaseShot = (teamA, teamB, attackResult) => {
             return true;
         }
         return false;
-    } else if (saveResult === saveThreshold) {
-        // 50-50
+    } else if (saveResult === 0) {
+        // 50-50 (o 75-25 con Opportunista/Colpo d'anca)
         // Opportunista (Attaccante): se pareggio, 75% goal invece di 50%
         const hasOpportunista = teamA.A?.some(p =>
             p.abilities?.includes('Opportunista') &&
             !nullifiedAbilities.has(p.id) &&
             !injuredPlayers.has(p.id)
         );
-        const goalChance = hasOpportunista ? 75 : 50;
+
+        // Colpo d'anca: 75% parata invece di 50%
+        let goalChance = 50;
+        if (hasOpportunista && !hasColpoDAnca) {
+            goalChance = 75;
+        } else if (hasColpoDAnca && !hasOpportunista) {
+            goalChance = 25; // 75% parata = 25% goal
+        } else if (hasOpportunista && hasColpoDAnca) {
+            goalChance = 50; // Si annullano
+        }
 
         if (checkChance(goalChance)) {
             // Salvataggio sulla Linea può ancora salvare
@@ -958,7 +1059,17 @@ const phaseShot = (teamA, teamB, attackResult) => {
         }
         return false;
     } else {
-        // Gol!
+        // Gol! (saveResult < 0)
+        // Responta (Portiere): 10% di far ritirare il dado all'attaccante
+        if (portiere.abilities?.includes('Responta') && !nullifiedAbilities.has(portiere.id) && checkChance(10)) {
+            const newShotRoll = rollDice(1, shotDie);
+            const newTotalShot = newShotRoll + finalAttackResult + homeBonusA;
+            const newSaveResult = totalPortiere - newTotalShot;
+            if (newSaveResult >= 0) {
+                return false; // Responta ha salvato!
+            }
+        }
+
         // Miracolo (Portiere): 5% salva se differenza < 3
         if (portiere.abilities?.includes('Miracolo') && !nullifiedAbilities.has(portiere.id)) {
             if (Math.abs(saveResult) < 3 && checkChance(5)) {
@@ -1044,6 +1155,8 @@ const resetSimulationState = () => {
     injuredPlayers.clear();
     currentOccasionNumber = 0;
     skipNextConstruction = false;
+    teletrasportoCount = { teamA: 0, teamB: 0 };
+    formaSmaglianteApplied.clear();
 };
 
 // ====================================================================
@@ -1159,6 +1272,18 @@ const calculatePlayerModifierWithLog = (player, hasIcona, opposingPlayers = []) 
 const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber = 1) => {
     const log = [];
 
+    // Event data per matchEvents system
+    const eventData = {
+        occasionNumber,
+        phases: {
+            construction: null,
+            attack: null,
+            shot: null
+        },
+        result: null,
+        abilities: []
+    };
+
     // Reset abilità nullificate
     nullifiedAbilities.clear();
     contrastoDurisismoUsed.clear();
@@ -1178,6 +1303,11 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     if (preAbilitiesC.skipPhase) {
         log.push(`  SKIP! (Regista/Lancio lungo attivato)`);
         log.push(`  => Passa direttamente a Fase 2`);
+        eventData.phases.construction = {
+            skipped: true,
+            reason: 'Regista/Lancio lungo'
+        };
+        eventData.abilities.push('Regista/Lancio lungo (skip costruzione)');
     } else {
         // Calcola modificatori - ordina per livello decrescente
         const playersA_D = sortPlayersByRoleAndLevel(attackingTeam.D || []);
@@ -1243,16 +1373,38 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
         log.push(`  Differenza: ${(totalA - totalB).toFixed(1)} => ${successChance}% successo`);
         log.push(`  Roll d100: ${roll100} ${success ? '<=' : '>'} ${successChance}`);
 
+        // Raccolta dati evento Fase 1
+        eventData.phases.construction = {
+            skipped: false,
+            players: {
+                attacker: [...playersA_D, ...playersA_C].map(p => ({ name: p.name, role: p.role, level: p.currentLevel, type: p.type })),
+                defender: playersB_C.map(p => ({ name: p.name, role: p.role, level: p.currentLevel, type: p.type }))
+            },
+            rolls: { attacker: rollA, defender: rollB },
+            modifiers: { attacker: modA_D + modA_C, defender: modB_C },
+            coach: { attacker: coachA, defender: coachB },
+            totals: { attacker: totalA, defender: totalB },
+            successChance,
+            roll100,
+            result: null
+        };
+
         if (!success) {
             const luckyRoll = rollPercentage();
             if (luckyRoll <= 5) {
                 log.push(`  FALLITO ma 5% fortuna attivato (roll: ${luckyRoll})`);
+                eventData.phases.construction.result = 'lucky';
+                eventData.phases.construction.luckyRoll = luckyRoll;
+                eventData.abilities.push('5% fortuna (costruzione)');
             } else {
                 log.push(`  => FASE 1 FALLITA - Occasione persa`);
-                return { goal: false, log };
+                eventData.phases.construction.result = 'fail';
+                eventData.result = 'no_goal';
+                return { goal: false, log, eventData };
             }
         } else {
             log.push(`  => FASE 1 SUPERATA`);
+            eventData.phases.construction.result = 'success';
         }
     }
 
@@ -1263,7 +1415,10 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     if (preAbilitiesA.interruptPhase) {
         log.push(`  INTERROTTO! (Antifurto attivato)`);
         log.push(`  => Occasione persa`);
-        return { goal: false, log };
+        eventData.phases.attack = { interrupted: true, reason: 'Antifurto' };
+        eventData.abilities.push('Antifurto (interrupt attacco)');
+        eventData.result = 'no_goal';
+        return { goal: false, log, eventData };
     }
 
     const playersA_C2 = sortPlayersByRoleAndLevel(attackingTeam.C || []);
@@ -1336,19 +1491,41 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     log.push(`  DIF: dado=${rollB2} + difMod=${modB_D.toFixed(1)} + cenMod=${modB_C2.toFixed(1)} + coach=${coachB2.toFixed(1)} = ${totalB2.toFixed(1)}`);
     log.push(`  Risultato attacco: ${attackResult.toFixed(1)}`);
 
+    // Raccolta dati evento Fase 2
+    eventData.phases.attack = {
+        interrupted: false,
+        players: {
+            attacker: [...playersA_C2, ...playersA_A].map(p => ({ name: p.name, role: p.role, level: p.currentLevel, type: p.type })),
+            defender: [...playersB_D, ...playersB_C2].map(p => ({ name: p.name, role: p.role, level: p.currentLevel, type: p.type }))
+        },
+        rolls: { attacker: rollA2, defender: rollB2 },
+        modifiers: { attacker: modA_C2 + modA_A, defender: modB_D + modB_C2 },
+        coach: { attacker: coachA2, defender: coachB2 },
+        totals: { attacker: totalA2, defender: totalB2 },
+        attackResult,
+        result: null
+    };
+
     if (attackResult < 0) {
         const luckyRoll = rollPercentage();
         if (luckyRoll <= 5) {
             log.push(`  FALLITO ma 5% fortuna attivato (roll: ${luckyRoll}) => risultato forzato a 5`);
+            eventData.phases.attack.result = 'lucky';
+            eventData.phases.attack.luckyRoll = luckyRoll;
+            eventData.abilities.push('5% fortuna (attacco)');
         } else {
             log.push(`  => FASE 2 FALLITA - Occasione persa`);
-            return { goal: false, log };
+            eventData.phases.attack.result = 'fail';
+            eventData.result = 'no_goal';
+            return { goal: false, log, eventData };
         }
     } else {
         log.push(`  => FASE 2 SUPERATA (risultato: ${Math.max(1, attackResult).toFixed(1)})`);
+        eventData.phases.attack.result = 'success';
     }
 
     const finalAttackResult = attackResult < 0 ? 5 : Math.max(1, attackResult);
+    eventData.phases.attack.finalAttackResult = finalAttackResult;
 
     // ===== FASE 3: TIRO =====
     log.push(`\n[FASE 3: TIRO vs PORTIERE]`);
@@ -1356,7 +1533,9 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     const portiere = defendingTeam.P?.[0];
     if (!portiere) {
         log.push(`  Nessun portiere! => GOL AUTOMATICO`);
-        return { goal: true, log };
+        eventData.phases.shot = { noGoalkeeper: true };
+        eventData.result = 'goal';
+        return { goal: true, log, eventData };
     }
 
     const { mod: modPortiereBase, details: portiereDetails, abilityBonuses: portiereAbilityBonuses } = calculatePlayerModifierWithLog(portiere, hasIconaB, playersA_A);
@@ -1397,13 +1576,32 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     log.push(`  PARATA: dado=${rollP} + mod=${modPortiere.toFixed(1)} + coach=${coachP.toFixed(1)} = ${totalPortiere.toFixed(1)}`);
     log.push(`  Differenza parata: ${saveResult.toFixed(1)} (soglia: ${saveThreshold})`);
 
+    // Raccolta dati evento Fase 3
+    eventData.phases.shot = {
+        noGoalkeeper: false,
+        goalkeeper: { name: portiere.name, level: portiere.currentLevel, type: portiere.type },
+        attackValue: effectiveAttack,
+        rolls: { goalkeeper: rollP },
+        modifiers: { goalkeeper: modPortiere, attackBonus },
+        coach: { goalkeeper: coachP },
+        totalGoalkeeper: totalPortiere,
+        saveResult,
+        saveThreshold,
+        kamikazeActive,
+        result: null
+    };
+
     let goal = false;
     if (saveResult > saveThreshold) {
         log.push(`  => PARATA! (${saveResult.toFixed(1)} > ${saveThreshold})`);
+        eventData.phases.shot.result = 'save';
         const luckyGoal = rollPercentage();
         if (luckyGoal <= 5) {
             log.push(`  Ma 5% gol fortunato attivato (roll: ${luckyGoal}) => GOL!`);
             goal = true;
+            eventData.phases.shot.result = 'lucky_goal';
+            eventData.phases.shot.luckyRoll = luckyGoal;
+            eventData.abilities.push('5% gol fortunato');
         }
     } else if (saveResult === saveThreshold) {
         const fiftyFifty = rollPercentage();
@@ -1411,9 +1609,16 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
         const goalChance = hasOpportunista ? 75 : 50;
         log.push(`  => 50/50! Roll: ${fiftyFifty} ${fiftyFifty <= goalChance ? '<=' : '>'} ${goalChance}%`);
         goal = fiftyFifty <= goalChance;
+        eventData.phases.shot.result = goal ? 'draw_goal' : 'draw_save';
+        eventData.phases.shot.fiftyFiftyRoll = fiftyFifty;
+        eventData.phases.shot.goalChance = goalChance;
+        if (hasOpportunista) {
+            eventData.abilities.push('Opportunista (75% su pareggio)');
+        }
     } else {
         log.push(`  => GOL! (${saveResult.toFixed(1)} < ${saveThreshold})`);
         goal = true;
+        eventData.phases.shot.result = 'goal';
 
         // Miracolo check
         if (portiere.abilities?.includes('Miracolo') && Math.abs(saveResult) < 3) {
@@ -1421,13 +1626,17 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
             if (miracoloRoll <= 5) {
                 log.push(`  MIRACOLO! (roll: ${miracoloRoll}) => PARATA!`);
                 goal = false;
+                eventData.phases.shot.result = 'miracolo_save';
+                eventData.phases.shot.miracoloRoll = miracoloRoll;
+                eventData.abilities.push('Miracolo');
             }
         }
     }
 
     log.push(`\n  *** RISULTATO: ${goal ? 'GOL!' : 'PARATO/FALLITO'} ***`);
 
-    return { goal, log };
+    eventData.result = goal ? 'goal' : 'no_goal';
+    return { goal, log, eventData };
 };
 
 // ====================================================================

@@ -2519,10 +2519,6 @@ button,
     transition: opacity 0.2s;
 }
 
-.tutorial-close:hover {
-    opacity: 1;
-}
-
 .tutorial-content {
     padding: 20px;
     color: #d1d5db;
@@ -2561,18 +2557,9 @@ button,
     border: 1px solid #4b5563;
 }
 
-.tutorial-btn-skip:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #d1d5db;
-}
-
 .tutorial-btn-prev {
     background: #374151;
     color: white;
-}
-
-.tutorial-btn-prev:hover {
-    background: #4b5563;
 }
 
 .tutorial-btn-next {
@@ -2580,9 +2567,25 @@ button,
     color: white;
 }
 
-.tutorial-btn-next:hover {
-    background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
-    transform: translateY(-1px);
+/* Hover solo su dispositivi con hover reale (mouse/trackpad) */
+@media (hover: hover) and (pointer: fine) {
+    .tutorial-btn-skip:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #d1d5db;
+    }
+
+    .tutorial-btn-prev:hover {
+        background: #4b5563;
+    }
+
+    .tutorial-btn-next:hover {
+        background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+        transform: translateY(-1px);
+    }
+
+    .tutorial-close:hover {
+        opacity: 1;
+    }
 }
 
 /* Responsive tutorial su mobile */
@@ -2814,8 +2817,14 @@ html, body {
 
 /* Draft alert - rispetta safe area */
 #draft-alert-banner {
-    top: max(10px, calc(var(--safe-top, 0px) + 10px));
-    left: max(10px, var(--safe-left, 0px));
+    top: max(10px, calc(var(--safe-top, 0px) + 10px)) !important;
+    left: max(10px, var(--safe-left, 0px)) !important;
+}
+
+/* Match alert - rispetta safe area */
+#match-alert-banner {
+    top: max(10px, calc(var(--safe-top, 0px) + 10px)) !important;
+    right: max(10px, var(--safe-right, 0px)) !important;
 }
 
 /* ===================== KEYBOARD OPEN STATE ===================== */

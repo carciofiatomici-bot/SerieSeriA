@@ -89,6 +89,13 @@
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Dashboard Serie SeriA"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Serie SeriA App"
     }
   ],
   "shortcuts": [
