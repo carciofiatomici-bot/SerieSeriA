@@ -266,6 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Test Simulazione Partita
         setupTestSimulationListeners();
 
+        // Creazione Oggetti
+        setupCreateObjectsListener();
+
         // Test Simulazione Nuove Regole
         setupTestSimulationNewRulesListeners();
 
@@ -917,6 +920,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnRun.innerHTML = 'Simula Partita';
             }
         });
+    };
+
+    /**
+     * Setup listener per creazione oggetti
+     */
+    const setupCreateObjectsListener = () => {
+        const btnCreateObjects = document.getElementById('btn-create-objects');
+        if (btnCreateObjects) {
+            btnCreateObjects.addEventListener('click', () => {
+                if (window.AdminObjects?.showObjectManagerModal) {
+                    window.AdminObjects.showObjectManagerModal();
+                } else {
+                    console.error('[Admin] Modulo AdminObjects non disponibile');
+                    displayMessage('Modulo AdminObjects non caricato', 'error', 'toggle-status-message');
+                }
+            });
+        }
     };
 
     /**

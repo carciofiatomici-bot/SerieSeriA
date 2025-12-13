@@ -93,6 +93,32 @@ window.GestioneSquadreRosa = {
             expBarHtml = `<div class="mt-2 w-full max-w-xs">${window.PlayerExpUI.renderExpBar(player, { showText: true, size: 'small' })}</div>`;
         }
 
+        // Equipaggiamento (solo se feature flag attivo)
+        let equipmentHtml = '';
+        if (window.FeatureFlags?.isEnabled('marketObjects')) {
+            const equipment = player.equipment || {};
+            const slots = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
+            const icons = { cappello: '🧢', maglia: '👕', guanti: '🧤', parastinchi: '🦵', scarpini: '👟' };
+            const equippedCount = slots.filter(s => equipment[s]).length;
+
+            equipmentHtml = `
+                <div class="mt-2 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">Equip:</span>
+                    <div class="flex gap-1">
+                        ${slots.map(slot => `
+                            <span class="text-sm ${equipment[slot] ? 'opacity-100' : 'opacity-30'}" title="${equipment[slot]?.name || 'Nessun ' + slot}">${icons[slot]}</span>
+                        `).join('')}
+                    </div>
+                    <button data-player-id="${player.id}"
+                            data-player-name="${player.name}"
+                            data-action="open-equipment"
+                            class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded transition">
+                        ${equippedCount > 0 ? `Modifica (${equippedCount}/5)` : 'Equipaggia'}
+                    </button>
+                </div>
+            `;
+        }
+
         // Pulsante Capitano
         const captainButton = isCaptain
             ? `<button class="bg-gray-500 text-gray-300 text-sm px-4 py-2 rounded-lg cursor-default shadow-md" disabled>Capitano Attuale</button>`
@@ -135,6 +161,7 @@ window.GestioneSquadreRosa = {
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
                         ${abilitiesHtml}
                         ${expBarHtml}
+                        ${equipmentHtml}
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto items-center">
@@ -160,6 +187,8 @@ window.GestioneSquadreRosa = {
                     this.handleRosaAction(e, context);
                 } else if (target.dataset.action === 'assign-captain') {
                     this.handleCaptainAssignment(target.dataset.playerId, target.dataset.playerName, context);
+                } else if (target.dataset.action === 'open-equipment') {
+                    window.EquipmentUI?.showEquipmentModal(target.dataset.playerId, target.dataset.playerName, context);
                 }
             });
         }

@@ -177,13 +177,16 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 [ ABILITÀ PARTICOLARI (SOLO ICONE) ]
 (Riservate ai capitani scelti alla creazione delle squadre)
 
-- Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni (escluso sé stesso), inoltre la sua forma non può mai essere in negativo, il giocatore non può infortunarsi.
+- Icona (5): A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra in tutte le fasi (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
 """
-- Fatto d'acciaio (5): (solamente giocatore icona Croccante): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs.
-- L'uomo in più (5): (solamente giocatore icona Fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa.
-- Tiro Dritto (5): (solamente giocatore icona Amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), aggiungi 1/5 del suo livello al modificatore.
-- Avanti un altro (5): (solamente giocatore icona Antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 5% (invece che 1%)
+- Fatto d'acciaio (5): (solamente giocatore icona Croccante): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs. Può ottenere l'abilità "regista" anche se non è un centrocampista.
+- L'uomo in più (5): (solamente giocatore icona Fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa (massimo 5 volte in tutta la partita).
+- Tiro Dritto (5): (solamente giocatore icona Amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), aggiungi 1/5 del suo livello al modificatore. Aumenta il range di successo critico (critico anche sul fallimento) da 5% a 6%.
+- Avanti un altro (5): (solamente giocatore icona Antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 7% (invece che 3,5%). Solamente nella fase 2 e solamente se in difesa, se scelto come giocatore della fase il suo mod. aumenta di +2.
 - Contrasto di gomito (5): Solamente giocatore icona Alpakashenka): Quando scelto come giocatore nelle fasi difensive, il suo modificatore aumenta di 1/5 del suo livello. 1% di probabilità di far fallire automaticamente la fase prima di tirare il d20.
+- Calcolo delle probabilità (5): (solamente giocatore icona Il Cap): Quando scelto come giocatore nella fase "costruzione", tira 2d20 e sceglie il più alto invece che tirarne uno solo. Quando scelto come giocatore nella fase "attacco vs difesa" i bonus che avrebbe nella fase di costruzione si applicano anche a questa fase.
+-Amici di panchina (5): (solamente giocatore icona Shikanto): Quando è infortunato può essere comunque schierato in panchina. Quando è in panchina ad ogni fase (sia in attacco che in difesa) le sue abilità, abilità icona esclusa, bengono date al giocatore che viene scelto per la fase. Solamente durante la fase costruzione e solamente in attacco ha +2 al modificatore quando scelto come giocatore della fase.
+
 
 file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'
 with open(file_path, 'w') as f:

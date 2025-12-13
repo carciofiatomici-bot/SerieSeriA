@@ -869,12 +869,23 @@ window.GestioneSquadreFormazione = {
                     : 'bg-gray-600 text-white cursor-grab hover:bg-gray-500';
                 const draggableAttr = isInjured ? 'draggable="false"' : 'draggable="true"';
 
+                // Indicatore equipaggiamento
+                let equipBadge = '';
+                if (window.FeatureFlags?.isEnabled('marketObjects')) {
+                    const equipment = player.equipment || {};
+                    const slots = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
+                    const equippedCount = slots.filter(s => equipment[s]).length;
+                    if (equippedCount > 0) {
+                        equipBadge = `<span class="text-emerald-400 text-xs ml-1" title="${equippedCount} oggetti equipaggiati">🎒${equippedCount}</span>`;
+                    }
+                }
+
                 return `
                     <div ${draggableAttr} data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
                          class="player-card p-2 ${injuredClass} rounded-lg shadow transition duration-100 z-10"
                          ${isInjured ? '' : 'ondragstart="window.handleDragStart(event)" ondragend="window.handleDragEnd(event)"'}
                          ${isInjured ? `title="${player.name} e infortunato per ${window.Injuries.getRemainingMatches(player)} partite"` : ''}>
-                        ${iconaBadge}${player.name} (${player.role}) (Liv: ${player.level || player.currentLevel || 1})${abilitiesSummary}${injuryBadge}
+                        ${iconaBadge}${player.name} (${player.role}) (Liv: ${player.level || player.currentLevel || 1})${abilitiesSummary}${injuryBadge}${equipBadge}
                         <span class="float-right text-xs font-semibold ${playerWithForm.formModifier > 0 ? 'text-green-400' : (playerWithForm.formModifier < 0 ? 'text-red-400' : 'text-gray-400')}">
                             ${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier || 0}
                         </span>
@@ -1139,6 +1150,17 @@ window.GestioneSquadreFormazione = {
                 const typeBadge = window.GestioneSquadreConstants.getTypeBadgeHtml(p.type || 'N/A', 'xs');
                 const isIcona = p.abilities && p.abilities.includes('Icona');
 
+                // Indicatore equipaggiamento
+                let equipBadge = '';
+                if (window.FeatureFlags?.isEnabled('marketObjects')) {
+                    const equipment = p.equipment || {};
+                    const slots = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
+                    const equippedCount = slots.filter(s => equipment[s]).length;
+                    if (equippedCount > 0) {
+                        equipBadge = `<span class="text-emerald-400 text-xs" title="${equippedCount} oggetti">🎒${equippedCount}</span>`;
+                    }
+                }
+
                 const bgClass = isInjured
                     ? 'bg-red-900/50 opacity-50 cursor-not-allowed'
                     : isCompatible
@@ -1158,6 +1180,7 @@ window.GestioneSquadreFormazione = {
                             ${typeBadge}
                             Lv.${p.level || 1}
                         </span>
+                        ${equipBadge}
                         ${isInjured ? '<span class="text-red-400 text-xs" title="Infortunato">🏥</span>' : ''}
                         ${!isCompatible && targetRole !== 'B' ? '<span class="text-yellow-400 text-xs" title="Fuori ruolo">⚠️</span>' : ''}
                     </div>

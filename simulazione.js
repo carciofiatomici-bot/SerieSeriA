@@ -189,7 +189,57 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
     // Tuttocampista: impone sempre il malus -25% agli avversari (gestito nella funzione opposingPlayers)
     // (La logica è invertita: gli avversari subiscono malus vs Tuttocampista)
 
+    // Bonus equipaggiamento (solo oggetti con fase "tutte" o corrispondente)
+    if (window.FeatureFlags?.isEnabled('marketObjects') && player.equipment) {
+        const equipmentBonus = calculateEquipmentBonus(player.equipment);
+        modifier += equipmentBonus;
+    }
+
     return modifier;
+};
+
+/**
+ * Calcola il bonus totale dall'equipaggiamento di un giocatore
+ * @param {Object} equipment - Oggetto equipment del giocatore
+ * @param {string} phase - Fase corrente (opzionale: costruzione, attacco, difesa, portiere, tiro)
+ * @param {boolean} isAttacking - Se la squadra sta attaccando (opzionale)
+ * @param {boolean} excludeTutte - Se true, esclude oggetti con fase "tutte" (default: false)
+ * @returns {number} Bonus totale
+ */
+const calculateEquipmentBonus = (equipment, phase = null, isAttacking = null, excludeTutte = false) => {
+    if (!equipment) return 0;
+
+    const SLOTS = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
+    let totalBonus = 0;
+
+    for (const slot of SLOTS) {
+        const item = equipment[slot];
+        if (!item || !item.bonus) continue;
+
+        // Verifica fase
+        if (phase !== null) {
+            // Se specificata una fase, applica solo se corrisponde o e' "tutte"
+            if (excludeTutte) {
+                // Esclude "tutte" - solo fase specifica
+                if (item.phase !== phase) continue;
+            } else {
+                if (item.phase !== 'tutte' && item.phase !== phase) continue;
+            }
+        } else {
+            // Se non specificata fase, applica solo oggetti con fase "tutte"
+            if (item.phase !== 'tutte') continue;
+        }
+
+        // Verifica attacco/difesa
+        if (isAttacking !== null && item.applyTo !== 'both') {
+            if (item.applyTo === 'attack' && !isAttacking) continue;
+            if (item.applyTo === 'defense' && isAttacking) continue;
+        }
+
+        totalBonus += item.bonus;
+    }
+
+    return totalBonus;
 };
 
 // ====================================================================
@@ -331,16 +381,30 @@ const applyPrePhaseAbilities = (team, opposingTeam, phase) => {
 
 /**
  * Calcola modificatore di gruppo con tutte le abilità
+ * @param {Array} players - Giocatori del gruppo
+ * @param {boolean} isHalf - Se il modificatore va dimezzato
+ * @param {Object} team - Squadra corrente
+ * @param {Array} opposingTeam - Giocatori avversari
+ * @param {string} phase - Fase corrente (construction, attack, shot)
+ * @param {boolean} isAttacking - Se la squadra sta attaccando (default: true)
  */
-const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
+const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAttacking = true) => {
     if (!players || players.length === 0) return 0;
-    
+
     const hasIcona = team.formationInfo?.isIconaActive || false;
     let totalModifier = 0;
-    
+
+    // Mappa fasi simulazione -> fasi equipaggiamento
+    const PHASE_MAP = {
+        'construction': 'costruzione',
+        'attack': isAttacking ? 'attacco' : 'difesa',
+        'shot': isAttacking ? 'tiro' : 'portiere'
+    };
+    const equipmentPhase = PHASE_MAP[phase] || null;
+
     // Conta Bandiera del club per ruolo
     const bandiereCount = {};
-    
+
     for (const player of players) {
         if (nullifiedAbilities.has(player.id)) continue;
 
@@ -370,6 +434,12 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase) => {
         }
 
         let mod = calculatePlayerModifier(player, hasIcona, effectiveOpposingTeam);
+
+        // Bonus equipaggiamento fase-specifico (oltre ai bonus "tutte" già applicati in calculatePlayerModifier)
+        if (window.FeatureFlags?.isEnabled('marketObjects') && player.equipment && equipmentPhase) {
+            const phaseEquipBonus = calculateEquipmentBonus(player.equipment, equipmentPhase, isAttacking, true);
+            mod += phaseEquipBonus;
+        }
 
         // Effetto Caos: modificatore varia da -3 a +3
         if (player.abilities?.includes('Effetto Caos')) {
@@ -539,11 +609,11 @@ const phaseConstruction = (teamA, teamB) => {
     if (preAbilities.interruptPhase) return false;
     
     // Calcola modificatori
-    // Squadra A: 1/2 D + 1 C
-    // Squadra B: 1 C
-    const modA_D = calculateGroupModifier(teamA.D, true, teamA, teamB.C || [], 'construction');
-    const modA_C = calculateGroupModifier(teamA.C, false, teamA, teamB.C || [], 'construction');
-    const modB_C = calculateGroupModifier(teamB.C, false, teamB, [...(teamA.D || []), ...(teamA.C || [])], 'construction');
+    // Squadra A: 1/2 D + 1 C (attacca)
+    // Squadra B: 1 C (difende)
+    const modA_D = calculateGroupModifier(teamA.D, true, teamA, teamB.C || [], 'construction', true);
+    const modA_C = calculateGroupModifier(teamA.C, false, teamA, teamB.C || [], 'construction', true);
+    const modB_C = calculateGroupModifier(teamB.C, false, teamB, [...(teamA.D || []), ...(teamA.C || [])], 'construction', false);
     
     // Teletrasporto portiere?
     if (preAbilities.specialEffects.teletrasporto) {
@@ -602,12 +672,12 @@ const phaseAttack = (teamA, teamB) => {
     }
     
     // Calcola modificatori
-    // Squadra A: 1/2 C + 1 A
-    // Squadra B: 1 D + 1/2 C
-    const modA_C = calculateGroupModifier(teamA.C, true, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack');
-    const modA_A = calculateGroupModifier(teamA.A, false, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack');
-    const modB_D = calculateGroupModifier(teamB.D, false, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack');
-    const modB_C = calculateGroupModifier(teamB.C, true, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack');
+    // Squadra A: 1/2 C + 1 A (attacca)
+    // Squadra B: 1 D + 1/2 C (difende)
+    const modA_C = calculateGroupModifier(teamA.C, true, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack', true);
+    const modA_A = calculateGroupModifier(teamA.A, false, teamA, [...(teamB.D || []), ...(teamB.C || [])], 'attack', true);
+    const modB_D = calculateGroupModifier(teamB.D, false, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack', false);
+    const modB_C = calculateGroupModifier(teamB.C, true, teamB, [...(teamA.C || []), ...(teamA.A || [])], 'attack', false);
     
     // Teletrasporto portiere?
     if (preAbilities.specialEffects.teletrasporto) {
@@ -671,6 +741,11 @@ const phaseShot = (teamA, teamB, attackResult) => {
     // Modificatore portiere
     let modPortiere = calculatePlayerModifier(portiere, teamB.formationInfo?.isIconaActive, teamA.A || []);
 
+    // Bonus equipaggiamento portiere (fase 'portiere', esclude "tutte" già contati)
+    if (window.FeatureFlags?.isEnabled('marketObjects') && portiere.equipment) {
+        modPortiere += calculateEquipmentBonus(portiere.equipment, 'portiere', false, true);
+    }
+
     // Uscita Kamikaze: raddoppia modificatore
     let kamikazeActive = false;
     if (portiere.abilities?.includes('Uscita Kamikaze') && !nullifiedAbilities.has(portiere.id)) {
@@ -704,6 +779,15 @@ const phaseShot = (teamA, teamB, attackResult) => {
     let attackBonus = 0;
     if (teamA.A?.some(p => p.abilities?.includes('Bomber') && !nullifiedAbilities.has(p.id))) {
         attackBonus = 1;
+    }
+
+    // Bonus equipaggiamento attaccanti (fase 'tiro', esclude "tutte" già contati)
+    if (window.FeatureFlags?.isEnabled('marketObjects') && teamA.A?.length > 0) {
+        for (const attacker of teamA.A) {
+            if (attacker.equipment && !nullifiedAbilities.has(attacker.id) && !injuredPlayers.has(attacker.id)) {
+                attackBonus += calculateEquipmentBonus(attacker.equipment, 'tiro', true, true);
+            }
+        }
     }
 
     // Tiro dalla distanza (Centrocampista/Difensore): sostituisce modificatore attaccante più basso

@@ -4,8 +4,8 @@
 // ====================================================================
 //
 // Gestisce gli infortuni dei giocatori dopo le partite:
-// - 1% di probabilita per ogni giocatore schierato
-// - Max 1 infortunio per partita per squadra
+// - 3.5% di probabilita per squadra a fine partita
+// - Se si rientra nel 3.5%: un giocatore random in campo si infortuna
 // - Max infortuni contemporanei: 1/4 della rosa
 // - Durata: 1-10 partite
 // - Applica a: Campionato, Coppa, Supercoppa (NON sfide/allenamenti)
@@ -14,7 +14,7 @@
 window.Injuries = {
 
     // Costanti (valori default, sovrascritti da Firestore se disponibili)
-    INJURY_CHANCE: 0.01, // 1% per giocatore
+    INJURY_CHANCE: 0.035, // 3.5% per giocatore
     MIN_INJURY_DURATION: 1,
     MAX_INJURY_DURATION: 10,
     MAX_INJURIES_RATIO: 0.25, // 1/4 della rosa
@@ -62,8 +62,8 @@ window.Injuries = {
     async processPostMatchInjuries(teamId, playersOnField, matchType) {
         if (!this.isEnabled()) return null;
 
-        // Solo per partite ufficiali
-        const validMatchTypes = ['campionato', 'coppa', 'supercoppa'];
+        // Solo per partite ufficiali (incluse sfide in tempo reale)
+        const validMatchTypes = ['campionato', 'coppa', 'supercoppa', 'sfida'];
         if (!validMatchTypes.includes(matchType?.toLowerCase())) {
             return null;
         }
@@ -78,6 +78,13 @@ window.Injuries = {
             if (!teamData) return null;
 
             const rosaSize = teamData.players?.length || 0;
+
+            // Se rosa <= 5 giocatori, nessun infortunio possibile (protezione rosa minima)
+            if (rosaSize <= 5) {
+                console.log(`[Injuries] Squadra ${teamId} ha solo ${rosaSize} giocatori - protetta da infortuni`);
+                return null;
+            }
+
             const maxInjuries = Math.floor(rosaSize * this.MAX_INJURIES_RATIO);
             const currentInjuries = this.getInjuredPlayers(teamData).length;
 
@@ -95,22 +102,23 @@ window.Injuries = {
 
             if (eligiblePlayers.length === 0) return null;
 
-            // Roll per ogni giocatore (max 1 infortunio per partita)
+            // Roll singolo per la squadra (3.5% di probabilità)
             let injuredPlayer = null;
 
-            for (const player of eligiblePlayers) {
-                if (Math.random() < this.INJURY_CHANCE) {
-                    // Infortunio!
-                    const duration = this.getRandomInt(this.MIN_INJURY_DURATION, this.MAX_INJURY_DURATION);
-                    injuredPlayer = {
-                        playerId: player.id,
-                        playerName: player.name,
-                        duration: duration,
-                        matchType: matchType,
-                        injuredAt: new Date().toISOString()
-                    };
-                    break; // Max 1 per partita
-                }
+            if (Math.random() < this.INJURY_CHANCE) {
+                // La squadra rientra nella probabilità di infortunio!
+                // Seleziona un giocatore random tra quelli in campo
+                const randomIndex = Math.floor(Math.random() * eligiblePlayers.length);
+                const player = eligiblePlayers[randomIndex];
+
+                const duration = this.getRandomInt(this.MIN_INJURY_DURATION, this.MAX_INJURY_DURATION);
+                injuredPlayer = {
+                    playerId: player.id,
+                    playerName: player.name,
+                    duration: duration,
+                    matchType: matchType,
+                    injuredAt: new Date().toISOString()
+                };
             }
 
             if (injuredPlayer) {

@@ -330,6 +330,26 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-green-400">Bonus Casa Massimo: +4.0 (con tutte le strutture)</p>
                 <p class="mt-2 text-yellow-400">Il bonus si applica automaticamente nelle partite in casa!</p>`
+        },
+        marketObjects: {
+            id: 'marketObjects',
+            name: 'Mercato Oggetti',
+            description: 'Sistema di compravendita oggetti equipaggiabili per potenziare i giocatori',
+            icon: '🎒',
+            enabled: false,
+            category: 'economy',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Tab "Oggetti" nel Mercato per acquistare equipaggiamenti</li>
+                    <li>5 slot per giocatore: Cappello, Maglia, Guanti, Parastinchi, Scarpini</li>
+                    <li>Ogni oggetto aumenta i modificatori in fasi specifiche</li>
+                    <li>Fasi bonus: Costruzione, Attacco, Difesa, Portiere, Tiro</li>
+                    <li>Inventario squadra con oggetti acquistati</li>
+                    <li>Equipaggiamento dalla Gestione Rosa o Formazione</li>
+                    <li>Vendita oggetti: ricevi 50% del prezzo di acquisto</li>
+                </ul>
+                <p class="mt-2 text-cyan-400"><strong>Formula costo:</strong> 150 + (100 x bonus)</p>
+                <p class="mt-2 text-yellow-400">Potenzia i tuoi giocatori con l'equipaggiamento giusto!</p>`
         }
     },
 

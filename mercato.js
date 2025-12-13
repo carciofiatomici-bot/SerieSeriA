@@ -45,6 +45,43 @@ document.addEventListener('DOMContentLoaded', () => {
     let availablePlayersCache = [];
     let currentBudgetCache = 0;
 
+    // === SISTEMA OGGETTI ===
+    // Tab attivo: 'players' o 'objects'
+    let activeMarketTab = 'players';
+
+    // Cache oggetti disponibili
+    let availableObjectsCache = [];
+
+    // Costanti oggetti
+    const OBJECT_TYPES = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
+    const TYPE_ICONS = {
+        'cappello': '🧢',
+        'maglia': '👕',
+        'guanti': '🧤',
+        'parastinchi': '🦵',
+        'scarpini': '👟'
+    };
+    const TYPE_LABELS = {
+        'cappello': 'Cappello',
+        'maglia': 'Maglia',
+        'guanti': 'Guanti',
+        'parastinchi': 'Parastinchi',
+        'scarpini': 'Scarpini'
+    };
+    const PHASE_LABELS = {
+        'costruzione': 'Costruzione',
+        'attacco': 'Attacco',
+        'difesa': 'Difesa',
+        'portiere': 'Portiere',
+        'tiro': 'Tiro',
+        'tutte': 'Tutte'
+    };
+    const APPLY_LABELS = {
+        'attack': 'Attacco',
+        'defense': 'Difesa',
+        'both': 'Entrambi'
+    };
+
     /**
      * Resetta i filtri ai valori di default
      */
@@ -502,6 +539,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             // 2. Renderizza il layout base
+            const showObjectsTab = window.FeatureFlags?.isEnabled('marketObjects');
+
             mercatoToolsContainer.innerHTML = `
                 <div class="p-6 bg-gray-800 rounded-lg border-2 border-blue-500 shadow-xl space-y-4">
                     <p class="text-center text-2xl font-extrabold text-white">
@@ -514,9 +553,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p id="user-mercato-message" class="text-center text-red-400"></p>
                 </div>
 
-                <div id="available-market-players-list" class="mt-6 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
-                    <p class="text-gray-500 text-center">Caricamento giocatori...</p>
+                ${showObjectsTab ? `
+                <!-- Tab Selector -->
+                <div id="market-tabs" class="mt-4 flex border-b border-gray-600">
+                    <button id="tab-market-players" onclick="window.MercatoObjects?.switchTab('players')"
+                            class="flex-1 py-3 px-4 text-center font-bold ${activeMarketTab === 'players' ? 'bg-blue-600 text-white border-b-2 border-blue-400' : 'bg-gray-800 text-gray-400 hover:text-white'}">
+                        ⚽ Giocatori
+                    </button>
+                    <button id="tab-market-objects" onclick="window.MercatoObjects?.switchTab('objects')"
+                            class="flex-1 py-3 px-4 text-center font-bold ${activeMarketTab === 'objects' ? 'bg-emerald-600 text-white border-b-2 border-emerald-400' : 'bg-gray-800 text-gray-400 hover:text-white'}">
+                        🎒 Oggetti
+                    </button>
                 </div>
+                ` : ''}
+
+                <!-- Container Giocatori -->
+                <div id="market-players-container" class="${activeMarketTab !== 'players' && showObjectsTab ? 'hidden' : ''}">
+                    <div id="available-market-players-list" class="mt-6 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
+                        <p class="text-gray-500 text-center">Caricamento giocatori...</p>
+                    </div>
+                </div>
+
+                <!-- Container Oggetti (solo se feature flag attivo) -->
+                ${showObjectsTab ? `
+                <div id="market-objects-container" class="${activeMarketTab !== 'objects' ? 'hidden' : ''} mt-6">
+                    <div id="available-market-objects-list" class="space-y-3 p-4 bg-gray-800 rounded-lg">
+                        <p class="text-gray-500 text-center">Caricamento oggetti...</p>
+                    </div>
+                </div>
+                ` : ''}
             `;
 
             const statusBox = document.getElementById('mercato-status-box');
@@ -531,6 +596,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (isCooldownActive) {
                      // Avvia il cronometro
                      startAcquisitionCountdown(lastAcquisitionTimestamp);
+                 }
+
+                 // Carica comunque gli oggetti se il feature flag è attivo
+                 if (showObjectsTab) {
+                     await loadMarketObjects(budgetRimanente, teamData);
                  }
                  return;
             }
@@ -639,6 +709,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  playersListContainer.innerHTML = '<p class="text-center text-gray-400 font-semibold">Nessun calciatore trovato con i filtri selezionati.</p>';
                  // Setup listeners filtri comunque
                  setupMarketFilterListeners();
+            }
+
+            // Carica anche gli oggetti se il feature flag e' attivo
+            if (showObjectsTab) {
+                await loadMarketObjects(budgetRimanente, teamData);
             }
 
         } catch (error) {
@@ -766,6 +841,320 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+
+    // ====================================================================
+    // SISTEMA MERCATO OGGETTI
+    // ====================================================================
+
+    /**
+     * Carica e renderizza gli oggetti disponibili nel mercato
+     */
+    const loadMarketObjects = async (budget, teamData) => {
+        const objectsListContainer = document.getElementById('available-market-objects-list');
+        if (!objectsListContainer) return;
+
+        try {
+            const appId = firestoreTools?.appId;
+            if (!appId) throw new Error('AppId non disponibile');
+
+            const { collection, getDocs } = firestoreTools;
+            const objectsPath = `artifacts/${appId}/public/data/marketObjects`;
+            const objectsRef = collection(db, objectsPath);
+            const snapshot = await getDocs(objectsRef);
+
+            const availableObjects = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                // Filtra solo oggetti disponibili
+                if (data.available === true) {
+                    availableObjects.push({ id: doc.id, ...data });
+                }
+            });
+
+            console.log('[Mercato] Oggetti caricati:', availableObjects.length, 'su', snapshot.size, 'totali');
+
+            // Salva nella cache
+            availableObjectsCache = availableObjects;
+
+            // Ottieni inventario squadra
+            const inventory = teamData?.inventory?.items || [];
+
+            // Renderizza
+            renderObjectsMarket(availableObjects, budget, inventory);
+
+        } catch (error) {
+            console.error('[Mercato] Errore caricamento oggetti:', error);
+            objectsListContainer.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
+        }
+    };
+
+    /**
+     * Renderizza la lista degli oggetti nel mercato
+     */
+    const renderObjectsMarket = (objects, budget, inventory) => {
+        const objectsListContainer = document.getElementById('available-market-objects-list');
+        if (!objectsListContainer) return;
+
+        let html = '';
+
+        // Box Inventario
+        html += `
+            <div class="mb-4 p-4 bg-gray-900 rounded-lg border border-emerald-500">
+                <h3 class="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                    <span>📦</span> Il Mio Inventario (${inventory.length} oggetti)
+                </h3>
+                ${inventory.length > 0 ? `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                        ${inventory.map(item => `
+                            <div class="flex justify-between items-center p-2 bg-gray-800 rounded border border-gray-600">
+                                <div>
+                                    <span class="text-white">${TYPE_ICONS[item.type]} ${item.name}</span>
+                                    <span class="text-xs text-gray-400 ml-2">(+${item.bonus} ${PHASE_LABELS[item.phase]})</span>
+                                </div>
+                                <button onclick="window.MercatoObjects?.sellObject('${item.id}', ${Math.floor(item.purchasePrice / 2)})"
+                                        class="text-xs bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded">
+                                    Vendi (${Math.floor(item.purchasePrice / 2)} CS)
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p class="text-gray-500 text-sm text-center">Nessun oggetto nell\'inventario</p>'}
+            </div>
+        `;
+
+        // Box Oggetti Disponibili
+        html += `
+            <div class="p-4 bg-gray-900 rounded-lg border border-blue-500">
+                <h3 class="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+                    <span>🛒</span> Oggetti Disponibili (${objects.length})
+                </h3>
+        `;
+
+        if (objects.length > 0) {
+            // Raggruppa per tipo
+            const grouped = {};
+            OBJECT_TYPES.forEach(type => grouped[type] = []);
+            objects.forEach(obj => {
+                if (grouped[obj.type]) grouped[obj.type].push(obj);
+            });
+
+            for (const type of OBJECT_TYPES) {
+                const items = grouped[type];
+                if (items.length === 0) continue;
+
+                html += `
+                    <div class="mb-4">
+                        <h4 class="text-sm font-bold text-gray-300 mb-2">${TYPE_ICONS[type]} ${TYPE_LABELS[type]}</h4>
+                        <div class="grid grid-cols-1 gap-2">
+                            ${items.map(obj => {
+                                const canAfford = budget >= obj.cost;
+                                return `
+                                    <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg border ${canAfford ? 'border-emerald-500' : 'border-gray-600'}">
+                                        <div>
+                                            <p class="text-white font-semibold">${obj.name}</p>
+                                            <p class="text-xs text-gray-400">+${obj.bonus} in ${PHASE_LABELS[obj.phase]} (${APPLY_LABELS[obj.applyTo]})</p>
+                                        </div>
+                                        <button onclick="window.MercatoObjects?.buyObject('${obj.id}')"
+                                                ${canAfford ? '' : 'disabled'}
+                                                class="text-sm px-4 py-2 rounded-lg font-bold transition ${canAfford ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'}">
+                                            ${canAfford ? `Acquista (${obj.cost} CS)` : `${obj.cost} CS`}
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            html += '<p class="text-gray-500 text-center">Nessun oggetto disponibile nel mercato</p>';
+        }
+
+        html += '</div>';
+        objectsListContainer.innerHTML = html;
+    };
+
+    /**
+     * Acquista un oggetto
+     */
+    const buyObject = async (objectId) => {
+        try {
+            const appId = firestoreTools?.appId;
+            if (!appId) throw new Error('AppId non disponibile');
+
+            const { doc, getDoc, updateDoc, runTransaction, Timestamp } = firestoreTools;
+            const objectsPath = `artifacts/${appId}/public/data/marketObjects`;
+            const objectDocRef = doc(db, objectsPath, objectId);
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+
+            await runTransaction(db, async (transaction) => {
+                const [objectDoc, teamDoc] = await Promise.all([
+                    transaction.get(objectDocRef),
+                    transaction.get(teamDocRef)
+                ]);
+
+                if (!objectDoc.exists() || !objectDoc.data().available) {
+                    throw new Error('Oggetto non disponibile');
+                }
+
+                const objectData = objectDoc.data();
+                const teamData = teamDoc.data();
+
+                if (teamData.budget < objectData.cost) {
+                    throw new Error('Budget insufficiente');
+                }
+
+                // Aggiorna oggetto
+                transaction.update(objectDocRef, {
+                    available: false,
+                    ownerId: currentTeamId
+                });
+
+                // Aggiorna squadra
+                const inventory = teamData.inventory || { items: [] };
+                const newItem = {
+                    id: objectId,
+                    name: objectData.name,
+                    type: objectData.type,
+                    bonus: objectData.bonus,
+                    phase: objectData.phase,
+                    applyTo: objectData.applyTo,
+                    purchasedAt: Timestamp.now(),
+                    purchasePrice: objectData.cost,
+                    equippedTo: null
+                };
+                inventory.items.push(newItem);
+
+                transaction.update(teamDocRef, {
+                    budget: teamData.budget - objectData.cost,
+                    inventory: inventory
+                });
+            });
+
+            displayMessage(`Oggetto acquistato con successo!`, 'success');
+            renderUserMercatoPanel();
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+
+        } catch (error) {
+            console.error('[Mercato] Errore acquisto oggetto:', error);
+            displayMessage(`Errore: ${error.message}`, 'error');
+        }
+    };
+
+    /**
+     * Vende un oggetto dall'inventario
+     */
+    const sellObject = async (objectId, refundAmount) => {
+        if (!confirm(`Sei sicuro di voler vendere questo oggetto per ${refundAmount} CS?`)) return;
+
+        try {
+            const appId = firestoreTools?.appId;
+            if (!appId) throw new Error('AppId non disponibile');
+
+            const { doc, getDoc, updateDoc, runTransaction, Timestamp } = firestoreTools;
+            const objectsPath = `artifacts/${appId}/public/data/marketObjects`;
+            const objectDocRef = doc(db, objectsPath, objectId);
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+
+            await runTransaction(db, async (transaction) => {
+                const [objectDoc, teamDoc] = await Promise.all([
+                    transaction.get(objectDocRef),
+                    transaction.get(teamDocRef)
+                ]);
+
+                const teamData = teamDoc.data();
+                const inventory = teamData.inventory || { items: [] };
+
+                // Trova e rimuovi l'oggetto dall'inventario
+                const itemIndex = inventory.items.findIndex(i => i.id === objectId);
+                if (itemIndex === -1) {
+                    throw new Error('Oggetto non trovato nell\'inventario');
+                }
+
+                const item = inventory.items[itemIndex];
+
+                // Verifica se e' equipaggiato a un giocatore
+                if (item.equippedTo) {
+                    // Rimuovi dall'equipaggiamento del giocatore
+                    const players = teamData.players || [];
+                    const updatedPlayers = players.map(p => {
+                        if (p.id === item.equippedTo && p.equipment) {
+                            const newEquipment = { ...p.equipment };
+                            if (newEquipment[item.type]?.id === objectId) {
+                                newEquipment[item.type] = null;
+                            }
+                            return { ...p, equipment: newEquipment };
+                        }
+                        return p;
+                    });
+                    transaction.update(teamDocRef, { players: updatedPlayers });
+                }
+
+                // Rimuovi dall'inventario
+                inventory.items.splice(itemIndex, 1);
+
+                // Rimetti nel mercato a meta prezzo originale
+                if (objectDoc.exists()) {
+                    const objData = objectDoc.data();
+                    const newCost = Math.floor(objData.originalCost / 2);
+                    transaction.update(objectDocRef, {
+                        available: true,
+                        ownerId: null,
+                        cost: newCost
+                    });
+                }
+
+                // Aggiorna squadra
+                transaction.update(teamDocRef, {
+                    budget: teamData.budget + refundAmount,
+                    inventory: inventory
+                });
+            });
+
+            displayMessage(`Oggetto venduto per ${refundAmount} CS!`, 'success');
+            renderUserMercatoPanel();
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+
+        } catch (error) {
+            console.error('[Mercato] Errore vendita oggetto:', error);
+            displayMessage(`Errore: ${error.message}`, 'error');
+        }
+    };
+
+    /**
+     * Switch tra tab giocatori e oggetti
+     */
+    const switchMarketTab = (tab) => {
+        activeMarketTab = tab;
+
+        const playersContainer = document.getElementById('market-players-container');
+        const objectsContainer = document.getElementById('market-objects-container');
+        const tabPlayers = document.getElementById('tab-market-players');
+        const tabObjects = document.getElementById('tab-market-objects');
+
+        if (tab === 'players') {
+            playersContainer?.classList.remove('hidden');
+            objectsContainer?.classList.add('hidden');
+            tabPlayers?.classList.add('bg-blue-600', 'text-white', 'border-b-2', 'border-blue-400');
+            tabPlayers?.classList.remove('bg-gray-800', 'text-gray-400');
+            tabObjects?.classList.remove('bg-emerald-600', 'text-white', 'border-b-2', 'border-emerald-400');
+            tabObjects?.classList.add('bg-gray-800', 'text-gray-400');
+        } else {
+            playersContainer?.classList.add('hidden');
+            objectsContainer?.classList.remove('hidden');
+            tabObjects?.classList.add('bg-emerald-600', 'text-white', 'border-b-2', 'border-emerald-400');
+            tabObjects?.classList.remove('bg-gray-800', 'text-gray-400');
+            tabPlayers?.classList.remove('bg-blue-600', 'text-white', 'border-b-2', 'border-blue-400');
+            tabPlayers?.classList.add('bg-gray-800', 'text-gray-400');
+        }
+    };
+
+    // Esponi funzioni globalmente per onclick
+    window.MercatoObjects = {
+        switchTab: switchMarketTab,
+        buyObject: buyObject,
+        sellObject: sellObject
+    };
 
     // GESTIONE NAVIGAZIONE
     // Il bottone di ritorno e' gestito in initializeMercatoPanel

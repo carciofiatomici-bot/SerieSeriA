@@ -1592,6 +1592,25 @@ window.ChallengeMatch = {
         if (matchData.bet?.amount > 0) {
             await this.processBetResult(matchData, winnerId);
         }
+
+        // Processa infortuni per entrambe le squadre
+        if (window.Injuries?.isEnabled()) {
+            const homeTitolari = matchData.homeFormation?.titolari || [];
+            const awayTitolari = matchData.awayFormation?.titolari || [];
+
+            const [homeInjury, awayInjury] = await Promise.all([
+                window.Injuries.processPostMatchInjuries(matchData.homeTeamId, homeTitolari, 'sfida'),
+                window.Injuries.processPostMatchInjuries(matchData.awayTeamId, awayTitolari, 'sfida')
+            ]);
+
+            // Log eventuali infortuni
+            if (homeInjury) {
+                console.log(`[ChallengeMatch] Infortunio ${matchData.homeTeamName}: ${homeInjury.playerName}`);
+            }
+            if (awayInjury) {
+                console.log(`[ChallengeMatch] Infortunio ${matchData.awayTeamName}: ${awayInjury.playerName}`);
+            }
+        }
     },
 
     /**

@@ -725,7 +725,7 @@
             </div>
 
             <!-- PULSANTI DRAFT E MERCATO - Mobile Optimized -->
-            <div id="draft-mercato-container" class="mt-6 sm:mt-8 relative group px-1 sm:px-0">
+            <div id="draft-mercato-container" class="mt-6 sm:mt-8 relative px-1 sm:px-0">
                 <!-- BOX DRAFT/MERCATO/SFIDA/SCAMBI -->
                 <div id="draft-scambi-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
                     <!-- Riga 1: Draft e Mercato -->
@@ -769,25 +769,11 @@
                             <span>🔄</span> Scambi
                         </button>
                     </div>
-                </div>
-                <!-- BOX BUDGET (sempre visibile su mobile, hover su desktop) -->
-                <div class="flex sm:hidden justify-center mt-2">
-                    <div id="team-budget-box-mobile" class="w-2/3 p-2 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border border-yellow-500 text-center shadow-lg">
-                        <p class="text-[10px] text-yellow-200 font-semibold">Budget Disponibile</p>
-                        <p id="team-budget-value-mobile" class="text-base font-extrabold text-yellow-400">-- CS</p>
+                    <!-- Riga 3: Crediti Super Seri -->
+                    <div id="css-dashboard-widget" class="mt-2 sm:mt-3">
+                        <!-- Il widget CSS viene renderizzato qui dinamicamente -->
                     </div>
                 </div>
-                <div class="hidden group-hover:flex justify-center mt-3">
-                    <div id="team-budget-box" class="w-1/2 p-2 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border border-yellow-500 text-center shadow-lg transition-all duration-300">
-                        <p class="text-xs text-yellow-200 font-semibold">Budget Disponibile</p>
-                        <p id="team-budget-value" class="text-xl font-extrabold text-yellow-400">-- CS</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTAINER CREDITI SUPER SERI -->
-            <div id="css-dashboard-widget" class="mt-4">
-                <!-- Il widget CSS viene renderizzato qui dinamicamente -->
             </div>
 
             <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
@@ -1578,6 +1564,8 @@
     <script src="admin-icons.js"></script>
     <script src="admin.js"></script>
     <script src="admin-feature-flags.js"></script>
+    <script src="admin-objects.js"></script>
+    <script src="equipment-ui.js"></script>
 
     <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
     <script src="player-season-stats.js"></script>

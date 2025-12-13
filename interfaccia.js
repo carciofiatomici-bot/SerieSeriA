@@ -199,6 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Aggiorna anche gli alert
         window.InterfacciaDashboard.initDraftAlert();
         window.InterfacciaDashboard.initMatchAlert();
+        // Ricarica stato toggle draft
+        window.InterfacciaNavigation?.loadDraftParticipationState?.();
     });
 
     // Inizializza gli alert all'avvio e quando cambia schermata
@@ -207,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.InterfacciaDashboard.initDraftAlert();
         window.InterfacciaDashboard.initDraftAlertButton();
         window.InterfacciaDashboard.initMatchAlert();
+        // Ricarica stato toggle draft dopo che Firebase è pronto
+        window.InterfacciaNavigation?.loadDraftParticipationState?.();
     }, 2000); // Ritardo per aspettare che Firebase sia pronto
 
     // Aggiorna gli alert quando cambia schermata

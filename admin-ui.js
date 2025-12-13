@@ -231,7 +231,11 @@ window.AdminUI = {
                             🧪 Test Simulazione Partita
                         </button>
                     </div>
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="btn-create-objects"
+                                class="bg-emerald-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-emerald-600 transition duration-150">
+                            🎒 Creazione Oggetti
+                        </button>
                         <button id="btn-test-simulation-new-rules"
                                 class="bg-purple-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-600 transition duration-150">
                             🧪 Test Simulazione Con Regole Nuove

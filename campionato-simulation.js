@@ -147,6 +147,23 @@ window.ChampionshipSimulation = {
             return { homeGoals: 0, awayGoals: 0 };
         }
 
+        // Check forfait: se una squadra ha < 5 titolari reali, perde 3-0
+        const homeTitolari = homeTeamData.formation?.titolari?.length || 0;
+        const awayTitolari = awayTeamData.formation?.titolari?.length || 0;
+
+        if (homeTitolari < 5 && awayTitolari < 5) {
+            console.warn(`[Simulation] Forfait doppio: ${homeTeamData.teamName} (${homeTitolari}) vs ${awayTeamData.teamName} (${awayTitolari})`);
+            return { homeGoals: 0, awayGoals: 0, forfeit: 'both' };
+        }
+        if (homeTitolari < 5) {
+            console.warn(`[Simulation] Forfait: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari - perde 0-3`);
+            return { homeGoals: 0, awayGoals: 3, forfeit: 'home' };
+        }
+        if (awayTitolari < 5) {
+            console.warn(`[Simulation] Forfait: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari - perde 3-0`);
+            return { homeGoals: 3, awayGoals: 0, forfeit: 'away' };
+        }
+
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
@@ -183,6 +200,23 @@ window.ChampionshipSimulation = {
         if (!simulateOneOccasionWithLog) {
             console.error("ERRORE CRITICO: Modulo simulazione.js non caricato correttamente.");
             return { homeGoals: 0, awayGoals: 0, log: ['ERRORE: Modulo simulazione non caricato'] };
+        }
+
+        // Check forfait: se una squadra ha < 5 titolari reali, perde 3-0
+        const homeTitolari = homeTeamData.formation?.titolari?.length || 0;
+        const awayTitolari = awayTeamData.formation?.titolari?.length || 0;
+
+        if (homeTitolari < 5 && awayTitolari < 5) {
+            console.warn(`[Simulation] Forfait doppio: ${homeTeamData.teamName} (${homeTitolari}) vs ${awayTeamData.teamName} (${awayTitolari})`);
+            return { homeGoals: 0, awayGoals: 0, forfeit: 'both', log: [`FORFAIT DOPPIO: Entrambe le squadre hanno meno di 5 titolari`] };
+        }
+        if (homeTitolari < 5) {
+            console.warn(`[Simulation] Forfait: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari - perde 0-3`);
+            return { homeGoals: 0, awayGoals: 3, forfeit: 'home', log: [`FORFAIT: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari - perde 0-3`] };
+        }
+        if (awayTitolari < 5) {
+            console.warn(`[Simulation] Forfait: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari - perde 3-0`);
+            return { homeGoals: 3, awayGoals: 0, forfeit: 'away', log: [`FORFAIT: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari - perde 0-3`] };
         }
 
         // Reset stato simulazione

@@ -24,15 +24,6 @@ window.InterfacciaDashboard = {
         elements.teamDashboardTitle.textContent = teamName.toUpperCase();
         elements.teamFirestoreId.textContent = teamDocId;
 
-        // Aggiorna il box budget (desktop e mobile)
-        const budgetElement = document.getElementById('team-budget-value');
-        const budgetElementMobile = document.getElementById('team-budget-value-mobile');
-        if (budgetElement || budgetElementMobile) {
-            const budget = currentTeamData.budget || 0;
-            if (budgetElement) budgetElement.textContent = `${budget} CS`;
-            if (budgetElementMobile) budgetElementMobile.textContent = `${budget} CS`;
-        }
-
         window.InterfacciaCore.currentTeamId = teamDocId;
         // Sanitizza URL per convertire vecchi formati GitHub
         const sanitizedLogoUrl = window.sanitizeGitHubUrl(logoUrl) || DEFAULT_LOGO_URL;
@@ -812,12 +803,14 @@ window.InterfacciaDashboard = {
             if (teamDoc.exists()) {
                 window.InterfacciaCore.currentTeamData = teamDoc.data();
                 this.updateTeamUI(
-                    window.InterfacciaCore.currentTeamData.teamName, 
-                    teamDocRef.id, 
-                    window.InterfacciaCore.currentTeamData.logoUrl, 
-                    false, 
+                    window.InterfacciaCore.currentTeamData.teamName,
+                    teamDocRef.id,
+                    window.InterfacciaCore.currentTeamData.logoUrl,
+                    false,
                     elements
                 );
+                // Ricarica stato toggle partecipazione draft
+                window.InterfacciaNavigation?.loadDraftParticipationState?.();
             } else {
                 console.error("Errore: Impossibile trovare i dati della squadra corrente per l'aggiornamento.");
             }
