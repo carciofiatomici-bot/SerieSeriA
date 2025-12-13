@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '0.9.99',
+    currentVersion: '1.0.0',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,24 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '1.0.0',
+            date: '2025-12-13',
+            time: '17:00',
+            title: 'Sistema EXP Allenatore + Spogliatoi + Pulizia Codice',
+            changes: [
+                { text: 'NUOVO: Sistema EXP per allenatori - guadagna esperienza vincendo partite', adminOnly: false },
+                { text: 'NUOVO: Spogliatoi - nuova costruzione stadio con bonus EXP (+5% per livello, max +25%)', adminOnly: false },
+                { text: 'Barra EXP allenatore visibile nella schermata Stadio', adminOnly: false },
+                { text: 'Spogliatoi upgradabili da livello 1 a 5 (costi: 1000-5000 CS)', adminOnly: false },
+                { text: 'Rimosso vecchio sistema level-up allenatore casuale (20% a stagione)', adminOnly: false },
+                { text: 'Pulsante "Novita" aggiunto alla dashboard utente', adminOnly: false },
+                { text: 'Pulizia index.html: estratto codice PWA in file separato (pwa-install.js)', adminOnly: true },
+                { text: 'Fix bug: contenuto HTML dopo tag </html> spostato correttamente', adminOnly: true },
+                { text: 'Animazioni replay spostate in style.css (-400 righe da index.html)', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '0.9.99',
             date: '2025-12-12',

@@ -111,8 +111,6 @@ window.ChampionshipRewards = {
         // Applica i premi a tutte le squadre
         const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
         const teamsSnapshot = await getDocs(teamsCollectionRef);
-        
-        let successfulLevelUps = 0;
 
         for (const docSnapshot of teamsSnapshot.docs) {
             const teamData = docSnapshot.data();
@@ -121,28 +119,16 @@ window.ChampionshipRewards = {
             const reward = rewardsMap.get(teamId) || 100; // Default 100 CS se non in classifica
             const currentBudget = teamData.budget || 0;
             const currentCSS = teamData.creditiSuperSeri || 0;
-            const currentCoach = teamData.coach || { name: 'Sconosciuto', level: 0, xp: 0 };
-            
-            let coachLevel = currentCoach.level;
+            const currentCoach = teamData.coach || { name: 'Sconosciuto', level: 1, exp: 0 };
 
-            // 20% di possibilita di salire di livello (solo se l'allenatore è >= 1)
-            if (coachLevel >= 1 && getRandomInt(1, 100) <= 20) {
-                
-                // NUOVO: Impedisce il superamento del livello massimo (Livello 10)
-                if (coachLevel < this.COACH_MAX_LEVEL) {
-                     coachLevel += 1;
-                     successfulLevelUps++;
-                } else {
-                     console.log(`Allenatore ${currentCoach.name} ha raggiunto il livello massimo (${this.COACH_MAX_LEVEL}).`);
-                }
-            }
-            
+            // NOTA: Il level-up dell'allenatore ora avviene tramite il sistema EXP (player-exp.js)
+            // L'allenatore guadagna EXP solo con le vittorie durante le partite
+
             // Prepara l'aggiornamento
             const updateData = {
                 budget: currentBudget + reward,
                 coach: {
                     ...currentCoach,
-                    level: coachLevel,
                 },
                 // Resetta il cooldown acquisto
                 lastAcquisitionTimestamp: 0,
@@ -165,7 +151,6 @@ window.ChampionshipRewards = {
 
         return {
             totalTeams: teamsSnapshot.size,
-            levelUps: successfulLevelUps,
             championId: championTeamId
         };
     }

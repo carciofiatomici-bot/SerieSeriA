@@ -20,7 +20,7 @@ REGOLAMENTO SIMULAZIONE PARTITA
    Liv 08 = 4,5    Liv 18 = 9,5    Liv 27 = 15,0
    Liv 09 = 5,0    Liv 19 = 10,0   Liv 28 = 15,5
    Liv 10 = 5,5    Liv 20 = 11,0   Liv 29 = 17,5
-                                   Liv 30 = 18,5
+                                   Liv 30 = 19,5
 
 3) Forma Fisica:
    Prima delle fasi, applicare ai giocatori il bonus/malus derivante dalla loro 
@@ -48,7 +48,7 @@ B. Bonus Allenatore:
    Aggiungere sempre in tutte le fasi: + (1/2 Livello Allenatore).
 
 C. Bonus Capitano:
-   Il capitano della squadra ha sempre i suoi modificatori aumentati di +1.
+   Il capitano della squadra ha sempre i suoi modificatori aumentati di +1.0
 
 D. Bonus Stadio (solo in casa):
 	Lo stadio ha modificatori variabili in base alle strutture costruite
@@ -65,7 +65,7 @@ Esempio: Squadra A (Attacco) vs Squadra B (Difesa)
 Partecipanti: Difensori e Centrocampisti A vs Centrocampisti B.
 
 Formula:
-[(1d20 + mod. di un difensore o un centrocampista causale della squadra A [dichiarare quale nel log]) vs (1d20 + Mod. di un centrocampista casuale della squadra B [dichiarare quale nel log] )]
+[(1d20 + mod. di un difensore casuale (25% probabilità che sia scelto un difensore invece che un centrocampista) o un centrocampista causale (75% di probabilità che sia scelto un centrocampista invece che un difensore) della squadra A [dichiarare quale nel log]) vs (1d20 + Mod. di un centrocampista casuale (75% di probabilità che sia scelto un centrocampista invece che un attaccante) della squadra B o di un attaccante casuale (25% probabilità che sia scelto un attaccante invece che un centrocampista) della squadra B [dichiarare quale nel log] )]
 
 Esito:
 - Il risultato della formula determina la % di riuscita del passaggio.
@@ -78,9 +78,9 @@ Esito:
 Partecipanti: Attaccanti e Centrocampisti A vs Difensori e Centrocampisti B.
 
 Formula:
-Squadra A: [1d20 + Mod. di un centrocampista casuale o un attaccante causale squadra A]
+Squadra A: [1d20 + Mod. di un centrocampista casuale (25% di possibilità che sia un centrocampista invece che un attaccante) o un attaccante causale (75% di possibilità che sia un attaccante invece che un centrocampista) squadra A]
            VS
-Squadra B: [1d20 + Mod. di un Difensore casuale o un Centrocampista casuale squadra B]
+Squadra B: [1d20 + Mod. di un Difensore casuale (75% di possibilità che sia un difensore invece che un centrocampista) o un Centrocampista casuale (25% di probabilità che sia un centrocampista invece che un difensore) squadra B]
 
 Esito:
 - Se A > B: Si passa alla Fase 3 (mantenere il risultato di A come "Valore Tiro").

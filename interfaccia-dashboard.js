@@ -123,6 +123,9 @@ window.InterfacciaDashboard = {
         // Inizializza il widget Crediti Super Seri
         this.initCreditiSuperSeriWidget();
 
+        // Inizializza il widget giocatori vicini al level-up
+        this.initNearLevelUpWidget();
+
         // Inizializza il countdown per la prossima partita
         this.initNextMatchCountdown();
 
@@ -282,9 +285,21 @@ window.InterfacciaDashboard = {
             });
 
             console.log('[Dashboard] Bottone Admin Panel attivato per squadra admin');
+
+            // Nascondi il pulsante changelog per squadre admin (hanno gia il changelog nel pannello admin)
+            const changelogBtn = document.getElementById('btn-show-changelog-dashboard');
+            if (changelogBtn) {
+                changelogBtn.classList.add('hidden');
+            }
         } else {
             // Nascondi il bottone per squadre non admin
             button.classList.add('hidden');
+
+            // Mostra il pulsante changelog per squadre non admin
+            const changelogBtn = document.getElementById('btn-show-changelog-dashboard');
+            if (changelogBtn) {
+                changelogBtn.classList.remove('hidden');
+            }
         }
     },
 
@@ -948,6 +963,27 @@ window.InterfacciaDashboard = {
         }
     },
 
+    /**
+     * Inizializza il widget giocatori vicini al level-up
+     */
+    async initNearLevelUpWidget() {
+        const container = document.getElementById('near-level-up-widget-container');
+        if (!container) return;
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        if (!currentTeamData || !window.PlayerExp || !window.PlayerExpUI) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Migra tutti i giocatori se necessario
+        window.PlayerExp.migrateTeam(currentTeamData);
+
+        // Renderizza il widget
+        const widgetHtml = window.PlayerExpUI.renderNearLevelUpWidget(currentTeamData, 75);
+        container.innerHTML = widgetHtml;
+    },
+
     // ====================================================================
     // ALERT DRAFT ATTIVO - Sistema Refactored
     // ====================================================================
@@ -1069,6 +1105,12 @@ window.InterfacciaDashboard = {
         }
         const turnExpired = draftTurns.turnExpired || false;
 
+        // Converti turnExpiredAt se e' un Timestamp Firestore
+        let turnExpiredAt = draftTurns.turnExpiredAt;
+        if (turnExpiredAt && typeof turnExpiredAt.toMillis === 'function') {
+            turnExpiredAt = turnExpiredAt.toMillis();
+        }
+
         // CONTROLLO: Valida isStolenTurn per evitare valori inconsistenti
         // Un turno e' considerato "rubato" SOLO se:
         // 1. isStolenTurn e' true in Firestore
@@ -1133,6 +1175,7 @@ window.InterfacciaDashboard = {
             isMyTurn,
             hasDraftedThisRound,
             turnExpired,
+            turnExpiredAt,
             isStolenTurn,
             turnStartTime
         });
@@ -1181,7 +1224,11 @@ window.InterfacciaDashboard = {
      * Applica lo stile e contenuto al banner del draft
      */
     _applyDraftAlertStyle(banner, bannerInner, teamNameEl, countdownEl, stealInfoEl, data) {
-        const { currentTeam, canSteal, isMyTurn, hasDraftedThisRound, turnExpired, isStolenTurn, turnStartTime } = data;
+        const { currentTeam, canSteal, isMyTurn, hasDraftedThisRound, turnExpired, turnExpiredAt, isStolenTurn, turnStartTime } = data;
+
+        // Elementi per auto-assign
+        const autoAssignInfoEl = document.getElementById('draft-alert-autoassign-info');
+        const autoAssignCountdownEl = document.getElementById('draft-alert-autoassign-countdown');
 
         // Reset classi del banner
         if (bannerInner) {
@@ -1211,9 +1258,26 @@ window.InterfacciaDashboard = {
                 stealInfoEl.classList.remove('hidden');
                 stealInfoEl.textContent = `Strikes: ${currentTeam.timeoutStrikes || 0}/3`;
             }
-            // NON avviare countdown - stato statico "SCADUTO"
+
+            // Mostra timer auto-assign se turnExpiredAt e' disponibile
+            if (turnExpiredAt && autoAssignInfoEl && autoAssignCountdownEl) {
+                autoAssignInfoEl.classList.remove('hidden');
+                autoAssignInfoEl.textContent = '⚠️ Auto-assign tra:';
+                autoAssignCountdownEl.classList.remove('hidden');
+
+                // Avvia countdown per auto-assign (1 ora dalla scadenza)
+                this.startAutoAssignCountdown(turnExpiredAt);
+            } else {
+                // Nascondi se non c'e' turnExpiredAt
+                if (autoAssignInfoEl) autoAssignInfoEl.classList.add('hidden');
+                if (autoAssignCountdownEl) autoAssignCountdownEl.classList.add('hidden');
+            }
             return;
         }
+
+        // Nascondi elementi auto-assign per altri stati
+        if (autoAssignInfoEl) autoAssignInfoEl.classList.add('hidden');
+        if (autoAssignCountdownEl) autoAssignCountdownEl.classList.add('hidden');
 
         // STATO 2: Ho gia' draftato in questo round
         if (hasDraftedThisRound) {
@@ -1487,6 +1551,99 @@ window.InterfacciaDashboard = {
             clearInterval(this._draftAlertInterval);
             this._draftAlertInterval = null;
         }
+        // Ferma anche il countdown auto-assign
+        this.stopAutoAssignCountdown();
+    },
+
+    /**
+     * Avvia il countdown per l'auto-assign
+     * Mostra quanto tempo manca prima che il sistema assegni automaticamente un giocatore
+     * @param {number} turnExpiredAt - Timestamp di quando e' scaduto il timer principale
+     */
+    startAutoAssignCountdown(turnExpiredAt) {
+        // Ferma eventuale countdown precedente
+        this.stopAutoAssignCountdown();
+
+        const autoAssignCountdownEl = document.getElementById('draft-alert-autoassign-countdown');
+        const autoAssignInfoEl = document.getElementById('draft-alert-autoassign-info');
+        if (!autoAssignCountdownEl) return;
+
+        // L'auto-assign avviene 1 ora dopo turnExpiredAt (nella finestra 9:00-22:30)
+        const { DRAFT_TURN_TIMEOUT_MS } = window.DraftConstants || { DRAFT_TURN_TIMEOUT_MS: 3600000 };
+        const autoAssignTime = turnExpiredAt + DRAFT_TURN_TIMEOUT_MS;
+
+        const updateCountdown = () => {
+            const now = Date.now();
+            const timeRemaining = Math.max(0, autoAssignTime - now);
+
+            if (timeRemaining <= 0) {
+                // Tempo scaduto - l'auto-assign dovrebbe avvenire
+                autoAssignCountdownEl.textContent = 'IMMINENTE';
+                autoAssignCountdownEl.classList.add('animate-pulse');
+
+                if (autoAssignInfoEl) {
+                    autoAssignInfoEl.textContent = '⚠️ Auto-assign in corso...';
+                }
+
+                // Ferma il countdown
+                this.stopAutoAssignCountdown();
+                return;
+            }
+
+            // Formatta il tempo rimanente
+            const hours = Math.floor(timeRemaining / 3600000);
+            const minutes = Math.floor((timeRemaining % 3600000) / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
+            let timeText;
+            if (hours > 0) {
+                timeText = `${hours}h ${String(minutes).padStart(2, '0')}m`;
+            } else {
+                timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            autoAssignCountdownEl.textContent = timeText;
+
+            // Aggiorna il testo informativo
+            if (autoAssignInfoEl) {
+                if (timeRemaining < 5 * 60 * 1000) {
+                    // Meno di 5 minuti
+                    autoAssignInfoEl.textContent = '⚠️ Auto-assign imminente!';
+                    autoAssignCountdownEl.classList.add('animate-pulse');
+                } else if (timeRemaining < 15 * 60 * 1000) {
+                    // Meno di 15 minuti
+                    autoAssignInfoEl.textContent = '⚠️ Auto-assign tra:';
+                } else {
+                    autoAssignInfoEl.textContent = '⏰ Auto-assign tra:';
+                }
+            }
+
+            // Colore in base al tempo rimanente
+            autoAssignCountdownEl.classList.remove('text-orange-400', 'text-red-400', 'text-yellow-400');
+            if (timeRemaining < 5 * 60 * 1000) {
+                autoAssignCountdownEl.classList.add('text-red-400');
+            } else if (timeRemaining < 15 * 60 * 1000) {
+                autoAssignCountdownEl.classList.add('text-yellow-400');
+            } else {
+                autoAssignCountdownEl.classList.add('text-orange-400');
+            }
+        };
+
+        // Prima chiamata immediata
+        updateCountdown();
+
+        // Aggiorna ogni secondo
+        this._autoAssignCountdownInterval = setInterval(updateCountdown, 1000);
+    },
+
+    /**
+     * Ferma il countdown dell'auto-assign
+     */
+    stopAutoAssignCountdown() {
+        if (this._autoAssignCountdownInterval) {
+            clearInterval(this._autoAssignCountdownInterval);
+            this._autoAssignCountdownInterval = null;
+        }
     },
 
     /**
@@ -1722,6 +1879,223 @@ window.InterfacciaDashboard = {
         messageEl.textContent = text;
         messageEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
         messageEl.classList.add(type === 'success' ? 'text-green-400' : 'text-red-400');
+    },
+
+    // ====================================================================
+    // MATCH ALERT BANNER - Timer Prossima Partita
+    // ====================================================================
+
+    _matchAlertInterval: null,
+    _matchAlertMinimized: false,
+
+    /**
+     * Inizializza il banner del timer prossima partita
+     * Sincronizzato con l'automazione simulazioni
+     */
+    async initMatchAlert() {
+        const banner = document.getElementById('match-alert-banner');
+        if (!banner) return;
+
+        // Nascondi per l'admin
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        const adminUsername = window.InterfacciaConstants?.ADMIN_USERNAME_LOWER || 'serieseria';
+        if (!currentTeamId || currentTeamId === 'admin' || currentTeamId === adminUsername) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // Verifica se campionato o coppa sono attivi
+        const isActive = await this.checkCompetitionsActive();
+        if (!isActive) {
+            banner.classList.add('hidden');
+            this.stopMatchAlert();
+            return;
+        }
+
+        // Mostra il banner e avvia il timer
+        banner.classList.remove('hidden');
+        this.restoreMatchAlertMinimizedState();
+        this.updateMatchAlertInfo();
+        this.startMatchAlertCountdown();
+    },
+
+    /**
+     * Verifica se campionato o coppa sono attivi
+     */
+    async checkCompetitionsActive() {
+        try {
+            const { doc, getDoc, appId } = window.firestoreTools;
+            const configDocRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
+            const configDoc = await getDoc(configDocRef);
+
+            if (!configDoc.exists()) return false;
+
+            const config = configDoc.data();
+            const isChampionshipActive = config.isChampionshipStarted === true;
+            const isCupActive = config.isCoppaStarted === true;
+
+            // Verifica anche se l'automazione e' attiva
+            const automationEnabled = config.automationEnabled === true;
+
+            return (isChampionshipActive || isCupActive) && automationEnabled;
+        } catch (error) {
+            console.error('[MatchAlert] Errore verifica competizioni:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Aggiorna le informazioni nel banner (competizione, avversario)
+     */
+    async updateMatchAlertInfo() {
+        const competitionEl = document.getElementById('match-alert-competition');
+        const infoEl = document.getElementById('match-alert-info');
+        const opponentEl = document.getElementById('match-alert-opponent');
+
+        if (!competitionEl || !infoEl || !opponentEl) return;
+
+        try {
+            // Ottieni info sull'automazione
+            if (window.AutomazioneSimulazioni) {
+                const info = await window.AutomazioneSimulazioni.getAutomationInfo();
+
+                if (info && info.isEnabled) {
+                    // Determina tipo di competizione
+                    const typeLabels = {
+                        'coppa_andata': 'COPPA (Andata)',
+                        'coppa_ritorno': 'COPPA (Ritorno)',
+                        'campionato': 'CAMPIONATO'
+                    };
+
+                    const competitionType = info.nextSimulationType || 'campionato';
+                    competitionEl.textContent = typeLabels[competitionType] || 'PROSSIMA PARTITA';
+
+                    // Info aggiuntive
+                    if (competitionType === 'campionato') {
+                        infoEl.textContent = 'Giornata in arrivo';
+                    } else {
+                        infoEl.textContent = 'Turno in arrivo';
+                    }
+
+                    // Per ora mostriamo un messaggio generico per l'avversario
+                    opponentEl.textContent = 'Simulazione alle 20:30';
+                } else {
+                    competitionEl.textContent = 'COMPETIZIONI';
+                    infoEl.textContent = 'Automazione disattivata';
+                    opponentEl.textContent = '';
+                }
+            }
+        } catch (error) {
+            console.error('[MatchAlert] Errore aggiornamento info:', error);
+        }
+    },
+
+    /**
+     * Avvia il countdown sincronizzato con l'automazione simulazioni
+     */
+    startMatchAlertCountdown() {
+        this.stopMatchAlert();
+
+        const countdownEl = document.getElementById('match-alert-countdown');
+        const countdownMiniEl = document.getElementById('match-alert-countdown-mini');
+
+        if (!countdownEl) return;
+
+        const updateCountdown = () => {
+            if (window.AutomazioneSimulazioni) {
+                const timeUntil = window.AutomazioneSimulazioni.getTimeUntilNextSimulation();
+
+                if (timeUntil && timeUntil.formatted) {
+                    countdownEl.textContent = timeUntil.formatted;
+                    if (countdownMiniEl) {
+                        countdownMiniEl.textContent = timeUntil.formatted;
+                    }
+
+                    // Cambia colore se meno di 1 ora
+                    if (timeUntil.ms < 3600000) {
+                        countdownEl.classList.remove('text-teal-400');
+                        countdownEl.classList.add('text-yellow-400');
+                        countdownMiniEl?.classList.remove('text-teal-400');
+                        countdownMiniEl?.classList.add('text-yellow-400');
+                    } else {
+                        countdownEl.classList.remove('text-yellow-400');
+                        countdownEl.classList.add('text-teal-400');
+                        countdownMiniEl?.classList.remove('text-yellow-400');
+                        countdownMiniEl?.classList.add('text-teal-400');
+                    }
+
+                    // Animazione se meno di 5 minuti
+                    if (timeUntil.ms < 300000) {
+                        countdownEl.classList.add('animate-pulse');
+                        countdownMiniEl?.classList.add('animate-pulse');
+                    } else {
+                        countdownEl.classList.remove('animate-pulse');
+                        countdownMiniEl?.classList.remove('animate-pulse');
+                    }
+                } else {
+                    countdownEl.textContent = '--:--:--';
+                    if (countdownMiniEl) countdownMiniEl.textContent = '--:--:--';
+                }
+            } else {
+                countdownEl.textContent = '--:--:--';
+                if (countdownMiniEl) countdownMiniEl.textContent = '--:--:--';
+            }
+        };
+
+        // Prima chiamata immediata
+        updateCountdown();
+
+        // Aggiorna ogni secondo
+        this._matchAlertInterval = setInterval(updateCountdown, 1000);
+    },
+
+    /**
+     * Ferma il countdown del match alert
+     */
+    stopMatchAlert() {
+        if (this._matchAlertInterval) {
+            clearInterval(this._matchAlertInterval);
+            this._matchAlertInterval = null;
+        }
+    },
+
+    /**
+     * Toggle stato minimizzato del match alert
+     */
+    toggleMatchAlertMinimized(minimized) {
+        this._matchAlertMinimized = minimized;
+
+        try {
+            localStorage.setItem('match_alert_minimized', minimized ? 'true' : 'false');
+        } catch (e) { }
+
+        const expandedEl = document.getElementById('match-alert-expanded');
+        const minimizedEl = document.getElementById('match-alert-minimized');
+
+        if (minimized) {
+            expandedEl?.classList.add('hidden');
+            minimizedEl?.classList.remove('hidden');
+        } else {
+            expandedEl?.classList.remove('hidden');
+            minimizedEl?.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Ripristina stato minimizzato dal localStorage
+     */
+    restoreMatchAlertMinimizedState() {
+        try {
+            const saved = localStorage.getItem('match_alert_minimized');
+            this._matchAlertMinimized = saved === 'true';
+
+            if (this._matchAlertMinimized) {
+                const expandedEl = document.getElementById('match-alert-expanded');
+                const minimizedEl = document.getElementById('match-alert-minimized');
+                expandedEl?.classList.add('hidden');
+                minimizedEl?.classList.remove('hidden');
+            }
+        } catch (e) { }
     }
 };
 

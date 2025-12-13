@@ -83,6 +83,16 @@ window.GestioneSquadreRosa = {
             ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => a === 'Icona' ? '<span class="text-yellow-400 font-bold">Icona</span>' : a).join(', ')}</p>`
             : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
 
+        // Barra EXP
+        let expBarHtml = '';
+        if (window.PlayerExp && window.PlayerExpUI) {
+            // Migra il giocatore se necessario
+            if (player.exp === undefined) {
+                window.PlayerExp.migratePlayer(player);
+            }
+            expBarHtml = `<div class="mt-2 w-full max-w-xs">${window.PlayerExpUI.renderExpBar(player, { showText: true, size: 'small' })}</div>`;
+        }
+
         // Pulsante Capitano
         const captainButton = isCaptain
             ? `<button class="bg-gray-500 text-gray-300 text-sm px-4 py-2 rounded-lg cursor-default shadow-md" disabled>Capitano Attuale</button>`
@@ -124,6 +134,7 @@ window.GestioneSquadreRosa = {
                         </div>
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
                         ${abilitiesHtml}
+                        ${expBarHtml}
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto items-center">

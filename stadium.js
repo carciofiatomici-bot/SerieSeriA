@@ -180,6 +180,29 @@ window.Stadium = {
     },
 
     // ========================================
+    // STRUTTURE MIGLIORABILI (con livelli)
+    // ========================================
+
+    UPGRADEABLE: {
+        locker_room: {
+            id: 'locker_room',
+            name: 'Spogliatoi',
+            type: 'facility',
+            icon: '🚿',
+            maxLevel: 5,
+            // Costi per ogni livello (1000, 2000, 3000, 4000, 5000)
+            costs: [1000, 2000, 3000, 4000, 5000],
+            // Bonus EXP per ogni livello (+5% per livello)
+            expBonus: [0.05, 0.10, 0.15, 0.20, 0.25],
+            description: 'Bonus EXP per giocatori e allenatori',
+            getBonusText(level) {
+                if (level <= 0) return 'Non costruito';
+                return `+${level * 5}% EXP guadagnata`;
+            }
+        }
+    },
+
+    // ========================================
     // STATO LOCALE
     // ========================================
 
@@ -593,6 +616,137 @@ window.Stadium = {
             }
         }
         return totalCost;
+    },
+
+    // ========================================
+    // GESTIONE SPOGLIATOI (Struttura Migliorabile)
+    // ========================================
+
+    /**
+     * Ottiene i dati degli spogliatoi
+     * @param {Object} stadiumData - Dati stadio
+     * @returns {Object} {level, expBonus, nextCost, maxed}
+     */
+    getLockerRoom(stadiumData = null) {
+        const stadium = stadiumData || this._currentStadium || this.getDefaultStadium();
+        const lockerRoom = stadium.lockerRoom || { level: 0 };
+        const config = this.UPGRADEABLE.locker_room;
+
+        const level = lockerRoom.level || 0;
+        const maxed = level >= config.maxLevel;
+        const expBonus = level > 0 ? config.expBonus[level - 1] : 0;
+        const nextCost = maxed ? 0 : config.costs[level];
+
+        return {
+            level: level,
+            expBonus: expBonus,
+            expBonusPercent: Math.round(expBonus * 100),
+            nextCost: nextCost,
+            maxed: maxed,
+            maxLevel: config.maxLevel,
+            config: config
+        };
+    },
+
+    /**
+     * Verifica se si possono migliorare gli spogliatoi
+     * @param {number} currentBudget - Budget disponibile
+     * @param {Object} stadiumData - Dati stadio
+     */
+    canUpgradeLockerRoom(currentBudget, stadiumData = null) {
+        const locker = this.getLockerRoom(stadiumData);
+
+        if (locker.maxed) {
+            return { canUpgrade: false, reason: 'Livello massimo raggiunto' };
+        }
+
+        if (currentBudget < locker.nextCost) {
+            return {
+                canUpgrade: false,
+                reason: `Fondi insufficienti. Richiesti: ${locker.nextCost} CS`
+            };
+        }
+
+        return { canUpgrade: true, reason: null };
+    },
+
+    /**
+     * Migliora gli spogliatoi
+     * @param {string} teamId - ID squadra
+     * @param {number} currentBudget - Budget attuale
+     */
+    async upgradeLockerRoom(teamId, currentBudget) {
+        // Carica stadio se necessario
+        if (!this._currentStadium || this._currentTeamId !== teamId) {
+            await this.loadStadium(teamId);
+        }
+
+        const locker = this.getLockerRoom();
+
+        // Verifica
+        const canUpgrade = this.canUpgradeLockerRoom(currentBudget);
+        if (!canUpgrade.canUpgrade) {
+            return { success: false, error: canUpgrade.reason };
+        }
+
+        const newLevel = locker.level + 1;
+        const cost = locker.nextCost;
+        const config = this.UPGRADEABLE.locker_room;
+        const newExpBonus = config.expBonus[newLevel - 1];
+
+        // Aggiorna dati stadio
+        const newStadiumData = {
+            ...this._currentStadium,
+            lockerRoom: {
+                level: newLevel,
+                expBonus: newExpBonus
+            }
+        };
+
+        // Salva su Firestore
+        const saved = await this.saveStadium(teamId, newStadiumData);
+        if (!saved) {
+            return { success: false, error: 'Errore salvataggio' };
+        }
+
+        // Sottrai costo dal budget
+        try {
+            const { doc, updateDoc, increment } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const teamPath = `artifacts/${appId}/public/data/teams/${teamId}`;
+            const teamRef = doc(window.db, teamPath);
+
+            await updateDoc(teamRef, {
+                budget: increment(-cost)
+            });
+        } catch (error) {
+            console.error('[Stadium] Errore sottrazione budget spogliatoi:', error);
+            // Rollback
+            await this.saveStadium(teamId, this._currentStadium);
+            return { success: false, error: 'Errore sottrazione crediti' };
+        }
+
+        return {
+            success: true,
+            oldLevel: locker.level,
+            newLevel: newLevel,
+            expBonus: newExpBonus,
+            expBonusPercent: Math.round(newExpBonus * 100),
+            costPaid: cost,
+            maxed: newLevel >= config.maxLevel
+        };
+    },
+
+    /**
+     * Ottiene il bonus EXP dagli spogliatoi (per uso in player-exp.js)
+     * @param {Object} teamData - Dati squadra
+     * @returns {number} Moltiplicatore EXP (es. 1.15 per +15%)
+     */
+    getExpBonusMultiplier(teamData) {
+        if (!teamData?.stadium?.lockerRoom) return 1;
+        const level = teamData.stadium.lockerRoom.level || 0;
+        if (level <= 0) return 1;
+        return 1 + (level * 0.05); // +5% per livello
     }
 };
 

@@ -14,11 +14,11 @@ window.SimulazioneNuoveRegole = {
         11: 6.0,  12: 6.5,  13: 7.0,  14: 7.5,  15: 8.0,
         16: 8.5,  17: 9.0,  18: 9.5,  19: 10.0, 20: 11.0,
         21: 11.5, 22: 12.0, 23: 12.5, 24: 13.0, 25: 14.0,
-        26: 14.5, 27: 15.0, 28: 15.5, 29: 17.5, 30: 18.5
+        26: 14.5, 27: 15.0, 28: 15.5, 29: 17.5, 30: 19.5
     },
 
     // Costanti
-    OCCASIONS_PER_TEAM: 30,
+    OCCASIONS_PER_TEAM: 40,
     LUCKY_PASS_CHANCE: 0.05,  // 5% di passare comunque
     LUCKY_GOAL_CHANCE: 0.05,  // 5% di goal su parata
     TYPE_ADVANTAGE_MIN: 0.05, // +5% min
@@ -51,6 +51,52 @@ window.SimulazioneNuoveRegole = {
     getRandomPlayerByRole(players, roles) {
         const eligible = players.filter(p => roles.includes(p.role));
         if (eligible.length === 0) return null;
+        return eligible[Math.floor(Math.random() * eligible.length)];
+    },
+
+    /**
+     * Seleziona un giocatore con probabilita pesate per ruolo
+     * @param {Array} players - Lista giocatori
+     * @param {Object} weights - Oggetto con ruoli e percentuali, es: { 'D': 25, 'C': 75 }
+     * @returns {Object|null} - Giocatore selezionato o null
+     */
+    getWeightedPlayerByRole(players, weights) {
+        // Calcola il totale dei pesi
+        const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+        const roll = Math.random() * totalWeight;
+
+        let cumulative = 0;
+        let selectedRole = null;
+
+        // Determina quale ruolo e stato selezionato
+        for (const [role, weight] of Object.entries(weights)) {
+            cumulative += weight;
+            if (roll <= cumulative) {
+                selectedRole = role;
+                break;
+            }
+        }
+
+        if (!selectedRole) {
+            // Fallback: prendi il primo ruolo disponibile
+            selectedRole = Object.keys(weights)[0];
+        }
+
+        // Trova giocatori con quel ruolo
+        const eligible = players.filter(p => p.role === selectedRole);
+
+        // Se non ci sono giocatori di quel ruolo, prova con gli altri ruoli
+        if (eligible.length === 0) {
+            const allRoles = Object.keys(weights);
+            for (const role of allRoles) {
+                const fallbackPlayers = players.filter(p => p.role === role);
+                if (fallbackPlayers.length > 0) {
+                    return fallbackPlayers[Math.floor(Math.random() * fallbackPlayers.length)];
+                }
+            }
+            return null;
+        }
+
         return eligible[Math.floor(Math.random() * eligible.length)];
     },
 
@@ -198,9 +244,10 @@ window.SimulazioneNuoveRegole = {
     simulateOccasion(attackingTeam, defendingTeam, attackingPlayers, defendingPlayers, attackingCoachBonus, defendingCoachBonus, stadiumBonus, log) {
 
         // === FASE 1: COSTRUZIONE ===
-        // D/C attaccante vs C difensore
-        const phase1Attacker = this.getRandomPlayerByRole(attackingPlayers, ['D', 'C']);
-        const phase1Defender = this.getRandomPlayerByRole(defendingPlayers, ['C']);
+        // Attaccante: D (25%) o C (75%)
+        // Difensore: C (85%) o A (15%)
+        const phase1Attacker = this.getWeightedPlayerByRole(attackingPlayers, { 'D': 25, 'C': 75 });
+        const phase1Defender = this.getWeightedPlayerByRole(defendingPlayers, { 'C': 85, 'A': 15 });
 
         if (!phase1Attacker || !phase1Defender) {
             log.push('  Fase 1: Giocatori insufficienti - azione fallita');
@@ -218,8 +265,9 @@ window.SimulazioneNuoveRegole = {
         const p1DefTotal = p1DefRoll + p1DefMod * (1 + p1TypeMod.defender) + defendingCoachBonus;
 
         // La differenza determina la % di riuscita
+        // Formula: 50 + Totale A - Totale B (range 5-95%)
         const phase1Diff = p1AttTotal - p1DefTotal;
-        const passChance = Math.max(5, Math.min(95, 50 + phase1Diff * 2)); // 5-95% range
+        const passChance = Math.max(5, Math.min(95, 50 + phase1Diff)); // 5-95% range
         const phase1Roll = this.rollPercentage();
         const phase1Success = phase1Roll <= passChance;
 
@@ -245,9 +293,10 @@ window.SimulazioneNuoveRegole = {
         }
 
         // === FASE 2: ATTACCO VS DIFESA ===
-        // A/C attaccante vs D/C difensore
-        const phase2Attacker = this.getRandomPlayerByRole(attackingPlayers, ['A', 'C']);
-        const phase2Defender = this.getRandomPlayerByRole(defendingPlayers, ['D', 'C']);
+        // Attaccante: A (50%) o C (50%)
+        // Difensore: D (50%) o C (50%)
+        const phase2Attacker = this.getWeightedPlayerByRole(attackingPlayers, { 'A': 50, 'C': 50 });
+        const phase2Defender = this.getWeightedPlayerByRole(defendingPlayers, { 'D': 50, 'C': 50 });
 
         if (!phase2Attacker || !phase2Defender) {
             log.push('  Fase 2: Giocatori insufficienti - azione fallita');
@@ -289,7 +338,8 @@ window.SimulazioneNuoveRegole = {
         }
 
         // === FASE 3: TIRO VS PORTIERE ===
-        const shooter = this.getRandomPlayerByRole(attackingPlayers, ['A', 'C']);
+        // Tiratore: A (75%), C (15%), D (5%)
+        const shooter = this.getWeightedPlayerByRole(attackingPlayers, { 'A': 75, 'C': 15, 'D': 5 });
         const goalkeeper = this.getRandomPlayerByRole(defendingPlayers, ['P']);
 
         if (!shooter || !goalkeeper) {

@@ -89,6 +89,9 @@ window.StadiumUI = {
                     </div>
                 </div>
 
+                <!-- Sezione Spogliatoi -->
+                ${this.renderLockerRoomSection()}
+
                 <!-- Campo da Calcio con Strutture -->
                 <div class="bg-gray-900 rounded-xl p-4 md:p-6 border-2 border-gray-700">
                     ${this.renderStadiumField()}
@@ -174,7 +177,7 @@ window.StadiumUI = {
     },
 
     /**
-     * Renderizza il box allenatore centrato
+     * Renderizza il box allenatore centrato con barra EXP
      */
     renderCoachBox() {
         const coach = this._teamData?.coach;
@@ -184,13 +187,125 @@ window.StadiumUI = {
 
         const coachName = coach.name || 'Sconosciuto';
         const coachLevel = coach.level || 1;
+        const maxLevel = window.PlayerExp?.CONFIG?.MAX_LEVEL_COACH || 10;
+
+        // Ottieni progressione EXP
+        let expProgress = { current: 0, needed: 0, percentage: 0, maxed: false };
+        if (window.PlayerExp?.getCoachExpProgress) {
+            expProgress = window.PlayerExp.getCoachExpProgress(coach);
+        }
+
+        const isMaxed = coachLevel >= maxLevel || expProgress.maxed;
 
         return `
             <div class="flex justify-center mb-6">
-                <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg">
+                <div class="p-4 bg-gray-800 rounded-lg border-2 border-orange-500 text-center shadow-lg min-w-64">
                     <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
                     <p class="text-xl font-extrabold text-orange-400 mt-1">${this.escapeHtml(coachName)}</p>
-                    <p class="text-xs text-gray-500">Livello: ${coachLevel}</p>
+                    <p class="text-xs text-gray-500 mb-2">Livello: ${coachLevel} / ${maxLevel}</p>
+
+                    <!-- Barra EXP Allenatore -->
+                    <div class="mt-3">
+                        ${isMaxed ? `
+                            <div class="text-xs text-yellow-400 font-bold mb-1">LIVELLO MASSIMO</div>
+                            <div class="w-full bg-gray-700 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-3 rounded-full" style="width: 100%"></div>
+                            </div>
+                        ` : `
+                            <div class="text-xs text-gray-400 mb-1">
+                                EXP: ${expProgress.current} / ${expProgress.needed}
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-orange-600 to-orange-400 h-3 rounded-full transition-all"
+                                     style="width: ${expProgress.percentage}%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${expProgress.percentage}% verso Lv.${coachLevel + 1}</div>
+                        `}
+                    </div>
+                    <p class="text-xs text-gray-600 mt-2 italic">Guadagna EXP vincendo partite</p>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza la sezione spogliatoi con upgrade
+     */
+    renderLockerRoomSection() {
+        if (!window.Stadium?.getLockerRoom) {
+            return '';
+        }
+
+        const locker = window.Stadium.getLockerRoom(this._stadiumData);
+        const budget = this._teamData?.budget || 0;
+        const canUpgrade = window.Stadium.canUpgradeLockerRoom(budget, this._stadiumData);
+
+        // Colori in base al livello
+        const levelColors = {
+            0: 'border-gray-600',
+            1: 'border-blue-500',
+            2: 'border-green-500',
+            3: 'border-purple-500',
+            4: 'border-orange-500',
+            5: 'border-yellow-500'
+        };
+
+        const borderColor = levelColors[locker.level] || levelColors[0];
+        const isMaxed = locker.maxed;
+
+        return `
+            <div class="mb-6 bg-gray-800 rounded-lg p-4 border-2 ${borderColor}">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <!-- Info Spogliatoi -->
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">${locker.level > 0 ? '🚿' : '🚧'}</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                Spogliatoi
+                                ${isMaxed ? '<span class="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full">MAX</span>' : ''}
+                            </h3>
+                            <p class="text-sm text-gray-400">
+                                ${locker.level === 0 ? 'Non costruito' : `Livello ${locker.level} / 5`}
+                            </p>
+                            <p class="text-sm ${locker.level > 0 ? 'text-green-400' : 'text-gray-500'}">
+                                ${locker.level > 0 ? `Bonus EXP: +${locker.level * 5}%` : 'Nessun bonus'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Barra Livello -->
+                    <div class="flex-1 max-w-xs mx-4">
+                        <div class="flex gap-1">
+                            ${[1, 2, 3, 4, 5].map(lvl => `
+                                <div class="flex-1 h-4 rounded ${lvl <= locker.level ? 'bg-gradient-to-r from-blue-500 to-green-500' : 'bg-gray-700'}"></div>
+                            `).join('')}
+                        </div>
+                        <p class="text-center text-xs text-gray-500 mt-1">
+                            ${isMaxed ? '+25% EXP massimo' : `Prossimo: +${(locker.level + 1) * 5}% EXP`}
+                        </p>
+                    </div>
+
+                    <!-- Pulsante Upgrade -->
+                    <div class="text-center">
+                        ${isMaxed ? `
+                            <div class="text-yellow-400 font-bold text-sm">
+                                Livello Massimo Raggiunto
+                            </div>
+                        ` : `
+                            <button id="btn-upgrade-locker"
+                                    class="${canUpgrade.canUpgrade
+                                        ? 'bg-green-600 hover:bg-green-500 cursor-pointer'
+                                        : 'bg-gray-600 cursor-not-allowed opacity-50'}
+                                    text-white font-bold py-2 px-4 rounded-lg transition flex items-center gap-2"
+                                    ${canUpgrade.canUpgrade ? '' : 'disabled'}>
+                                <span>${locker.level === 0 ? 'Costruisci' : 'Migliora'}</span>
+                                <span class="text-yellow-300">${locker.nextCost} CS</span>
+                            </button>
+                            ${!canUpgrade.canUpgrade && !isMaxed ? `
+                                <p class="text-xs text-red-400 mt-1">${canUpgrade.reason}</p>
+                            ` : ''}
+                        `}
+                    </div>
                 </div>
             </div>
         `;
@@ -339,6 +454,14 @@ window.StadiumUI = {
                 if (window.showScreen) {
                     window.showScreen(document.getElementById('app-content'));
                 }
+            });
+        }
+
+        // Upgrade spogliatoi
+        const btnUpgradeLocker = document.getElementById('btn-upgrade-locker');
+        if (btnUpgradeLocker) {
+            btnUpgradeLocker.addEventListener('click', async () => {
+                await this.handleLockerUpgrade();
             });
         }
 
@@ -592,6 +715,68 @@ window.StadiumUI = {
             errorMsg.textContent = result.error;
             btnConfirm.disabled = false;
             btnConfirm.innerHTML = 'Demolisci';
+        }
+    },
+
+    /**
+     * Gestisce l'upgrade degli spogliatoi
+     */
+    async handleLockerUpgrade() {
+        const btn = document.getElementById('btn-upgrade-locker');
+        if (!btn) return;
+
+        // Verifica possibilita upgrade
+        const budget = this._teamData?.budget || 0;
+        const canUpgrade = window.Stadium.canUpgradeLockerRoom(budget, this._stadiumData);
+
+        if (!canUpgrade.canUpgrade) {
+            this.showMessage(canUpgrade.reason, 'error');
+            return;
+        }
+
+        // Disabilita pulsante
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Costruendo...';
+
+        try {
+            const result = await window.Stadium.upgradeLockerRoom(this._teamId, budget);
+
+            if (result.success) {
+                // Aggiorna dati locali
+                this._stadiumData = window.Stadium._currentStadium;
+                this._teamData.budget -= result.cost;
+
+                // Aggiorna anche il locker room nei dati team per il calcolo EXP
+                if (!this._teamData.stadium) {
+                    this._teamData.stadium = {};
+                }
+                this._teamData.stadium.lockerRoom = {
+                    level: result.newLevel,
+                    expBonus: result.expBonus
+                };
+
+                // Mostra messaggio successo
+                const bonusPercentage = Math.round(result.expBonus * 100);
+                this.showMessage(
+                    `Spogliatoi migliorati al livello ${result.newLevel}! Bonus EXP: +${bonusPercentage}%`,
+                    'success'
+                );
+
+                // Re-render
+                this.render();
+
+            } else {
+                this.showMessage(result.error, 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<span>Migliora</span><span class="text-yellow-300">${window.Stadium.getLockerRoom(this._stadiumData).nextCost} CS</span>`;
+            }
+
+        } catch (error) {
+            console.error('[StadiumUI] Errore upgrade spogliatoi:', error);
+            this.showMessage('Errore durante l\'upgrade', 'error');
+            btn.disabled = false;
+            const locker = window.Stadium.getLockerRoom(this._stadiumData);
+            btn.innerHTML = `<span>${locker.level === 0 ? 'Costruisci' : 'Migliora'}</span><span class="text-yellow-300">${locker.nextCost} CS</span>`;
         }
     },
 

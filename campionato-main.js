@@ -79,6 +79,20 @@ window.ChampionshipMain = {
                 await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
             }
 
+            // 3.6. Processa EXP giocatori
+            if (window.PlayerExp) {
+                const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
+                const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+
+                // Mostra notifiche level-up
+                if (window.PlayerExpUI) {
+                    const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);
+                    if (allLevelUps.length > 0) {
+                        window.PlayerExpUI.showMultipleLevelUpModal(allLevelUps);
+                    }
+                }
+            }
+
             // REPLAY: Mostra replay SOLO se non e admin
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
                 if (window.MatchReplaySimple && !isAdmin) {
@@ -237,6 +251,20 @@ window.ChampionshipMain = {
                 // Registra statistiche stagionali (goal, assist, clean sheets)
                 if (window.PlayerSeasonStats) {
                     await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
+                }
+
+                // Processa EXP giocatori
+                if (window.PlayerExp) {
+                    const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
+                    const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+
+                    // Mostra notifiche level-up
+                    if (window.PlayerExpUI) {
+                        const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);
+                        if (allLevelUps.length > 0) {
+                            window.PlayerExpUI.showMultipleLevelUpModal(allLevelUps);
+                        }
+                    }
                 }
 
                 // REPLAY: Mostra replay SOLO se non e admin

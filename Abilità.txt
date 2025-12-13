@@ -15,9 +15,9 @@ MANUALE DELLE ABILITÀ
 [ PORTIERE ]
 
 >>> Abilità Positive:
-- Pugno di ferro (2): Aumenta il successo della parata (il risultato parte da -2 invece che 0).
+- Responta (2): 10% di probabilità di far tirare un altro d20 alla fase "tiro vs portiere" se il giocaotre avversario ha battuto il portiere e di tenere obbligatoriamente il secondo risultato.
 - Uscita Kamikaze (2): Raddoppia il modificatore durante la fase "tiro vs portiere", ma ha un 5% di possibilità di fallire la parata anche se ha un successo.
-- Teletrasporto (4): 5% di possibilità di partecipare alle fasi di costruzione e attacco (sia in attacco che in difesa).
+- Teletrasporto (4): 10% di possibilità di partecipare alle fase 1 o 2 se il modificatore del portiere > modificatore giocatore scelto (solamente in difesa) max 5 volte in partita.
 - Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
 - Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).
 - Bandiera del club (3): Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
@@ -27,10 +27,14 @@ MANUALE DELLE ABILITÀ
 -Muro Psicologico (4): 5% di probabilità di dimezzare il valore del tiro durante la Fase 3 (Tiro vs Portiere).
 Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differenza tra Portiere e Tiro è < 0) in una "Parata" se la differenza è inferiore a 3 punti.
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
--Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d6 invece che 1d10 nella fase 3 "tiro vs portiere".
+-Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d12 invece che 1d20 nella fase 3 "tiro vs portiere".
 -Tiro dalla porta (3): 5% di probabilità di aggiungere 1/2 del suo modificatore alla fase 3 "tiro vs portiere".
 -Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
+-Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
+- Parata di pugno (1): Se il risultato della fase "tiro vs portiere" è -1 o -2 si comporta come se fosse 0.
+-Colpo d'anca (2): Quando il risultato della fase  "tiro vs portiere" è 0, la sua possibilità di parare diventa 75% invece che 50%. Annulla la possibilità di successo obbligatorio dell'avversario (la regola del 5% di successo automatico).
+-Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
 
 
 
@@ -41,7 +45,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
--Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
+-Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus al modificatore dovuto dai livelli persi raddoppia.
 
 ---------------------------------------------------
 [ DIFENSORE ]
@@ -63,7 +67,11 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
+-Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
+-Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
+-Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
+-Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
 
 
 
@@ -77,6 +85,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 -Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
 -Fragile: Raddoppia la possibilità di infortunio a fine partita.
 -Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
+
 
 
 
@@ -98,7 +107,13 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
+-Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
+-Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
+-Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
+-Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
+
+
 
 
 
@@ -136,7 +151,13 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 -Immarcabile (4): 5% di probabilità di tirare 2d20 nella Fase 2 (Attacco vs Difesa) e scegliere il risultato migliore.
 -Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 -Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche
+-Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
+-Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
+-Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
+-Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
+-Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
+
+
 
 
 >>> Abilità Negative:
@@ -158,6 +179,11 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 
 - Icona (5): Dà +1 ai modificatori di tutti gli altri giocatori della sua squadra nelle simulazioni (escluso sé stesso), inoltre la sua forma non può mai essere in negativo, il giocatore non può infortunarsi.
 """
+- Fatto d'acciaio (5): (solamente giocatore icona Croccante): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs.
+- L'uomo in più (5): (solamente giocatore icona Fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa.
+- Tiro Dritto (5): (solamente giocatore icona Amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), aggiungi 1/5 del suo livello al modificatore.
+- Avanti un altro (5): (solamente giocatore icona Antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 5% (invece che 1%)
+- Contrasto di gomito (5): Solamente giocatore icona Alpakashenka): Quando scelto come giocatore nelle fasi difensive, il suo modificatore aumenta di 1/5 del suo livello. 1% di probabilità di far fallire automaticamente la fase prima di tirare il d20.
 
 file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'
 with open(file_path, 'w') as f:

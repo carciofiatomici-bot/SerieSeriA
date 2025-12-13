@@ -76,10 +76,12 @@
                     <p class="text-purple-300 text-xs font-semibold">DRAFT IN CORSO</p>
                     <p class="text-white font-bold text-sm"><span id="draft-alert-team" class="text-yellow-400">--</span></p>
                     <p id="draft-alert-steal-info" class="hidden text-red-300 text-xs font-semibold"></p>
+                    <p id="draft-alert-autoassign-info" class="hidden text-orange-300 text-xs font-semibold"></p>
                 </div>
                 <div class="text-center">
                     <p class="text-purple-300 text-xs">Tempo</p>
                     <p id="draft-alert-countdown" class="text-xl font-bold text-white">--:--</p>
+                    <p id="draft-alert-autoassign-countdown" class="hidden text-orange-400 text-xs font-semibold"></p>
                 </div>
                 <!-- Bottone minimizza -->
                 <button id="draft-alert-minimize"
@@ -103,6 +105,44 @@
                     title="Espandi alert Draft">
                 <span class="text-xl">🎯</span>
                 <span id="draft-alert-countdown-mini" class="text-sm font-bold text-white">--:--</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MATCH ALERT BANNER - Timer prossima partita (Campionato/Coppa) -->
+    <div id="match-alert-banner" class="hidden"
+         style="position: fixed; top: 10px; right: 10px; z-index: 9998; max-width: 280px;">
+        <!-- Versione espansa -->
+        <div id="match-alert-expanded" class="p-3 bg-gradient-to-r from-teal-900 to-cyan-900 rounded-lg border-2 border-teal-500 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">⚽</span>
+                <div class="flex-1">
+                    <p id="match-alert-competition" class="text-teal-300 text-xs font-semibold">PROSSIMA PARTITA</p>
+                    <p id="match-alert-info" class="text-white font-bold text-sm">--</p>
+                    <p id="match-alert-opponent" class="text-teal-200 text-xs">vs --</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-teal-300 text-xs">Tempo</p>
+                    <p id="match-alert-countdown" class="text-xl font-bold text-teal-400">--:--:--</p>
+                </div>
+                <!-- Bottone minimizza -->
+                <button id="match-alert-minimize"
+                        onclick="window.InterfacciaDashboard?.toggleMatchAlertMinimized(true)"
+                        class="text-teal-300 hover:text-white transition p-1 -mr-1 -mt-6"
+                        title="Minimizza">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Versione minimizzata (icona compatta) -->
+        <div id="match-alert-minimized" class="hidden">
+            <button onclick="window.InterfacciaDashboard?.toggleMatchAlertMinimized(false)"
+                    class="p-2 bg-gradient-to-r from-teal-900 to-cyan-900 rounded-lg border-2 border-teal-500 shadow-2xl flex items-center gap-2 hover:scale-105 transition"
+                    title="Espandi timer partita">
+                <span class="text-xl">⚽</span>
+                <span id="match-alert-countdown-mini" class="text-sm font-bold text-teal-400">--:--:--</span>
             </button>
         </div>
     </div>
@@ -435,7 +475,7 @@
         </div>
     </div>
 
-    <main class="min-h-screen p-4 flex flex-col items-center justify-center">
+    <main class="min-h-screen p-4 flex flex-col items-center" id="main-content">
 
         <!-- 1. BOX GATE - RIMOSSO (accesso diretto al login) -->
         <!-- Il gate con password è stato rimosso per sicurezza -->
@@ -530,7 +570,7 @@
                     <button id="btn-show-changelog"
                             onclick="window.Changelog?.showPlayers()"
                             class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
-                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v0.9.95</span>
+                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v1.0.0</span>
                     </button>
                 </div>
             </div>
@@ -549,20 +589,36 @@
 
             <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
             <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
-                <!-- RIGA NOME SQUADRA + COUNTDOWN -->
+                <!-- RIGA NOME SQUADRA + DIVISA -->
                 <div class="flex justify-center items-stretch mb-3 gap-3 sm:gap-6 md:gap-10">
                     <!-- BOX NOME SQUADRA (sinistra/centro) -->
                     <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center">
                         <h2 id="team-dashboard-title" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
                     </div>
-                    <!-- BOX COUNTDOWN PROSSIMA PARTITA (centro-destra) -->
-                    <div id="next-match-countdown" class="py-2 px-3 bg-gray-800 rounded-lg border-2 border-teal-500 text-center shadow-lg flex items-center justify-center gap-1 w-fit">
-                        <span id="countdown-label-top" class="text-[9px] sm:text-[10px] text-teal-300 font-semibold">Prossima</span>
-                        <span id="countdown-timer" class="text-sm sm:text-base font-extrabold text-teal-400">--:--</span>
-                        <span id="countdown-label-bottom" class="text-[9px] sm:text-[10px] text-gray-500">Partita</span>
+                    <!-- BOX DIVISA SQUADRA (accanto al nome) -->
+                    <div id="team-uniform-box" class="p-1 sm:p-1.5 bg-gray-800 rounded-lg border-2 border-purple-500 text-center shadow-lg flex items-center justify-center gap-1 cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
+                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-10 sm:h-10">
+                            <defs></defs>
+                            <!-- Maglia stile jersey.xml -->
+                            <g id="shirt-preview" transform="translate(0, 5)">
+                                <!-- Corpo maglia con maniche integrate -->
+                                <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Colletto -->
+                                <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino sinistro -->
+                                <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino destro -->
+                                <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                            </g>
+                        </svg>
+                        <span class="text-[9px] sm:text-[10px] text-purple-300 font-semibold">Divisa</span>
                     </div>
                 </div>
-                <!-- SPONSOR, LOGO, ICONA E DIVISA - Tutti centrati su una riga -->
+                <!-- SPONSOR, LOGO, ICONA E MEDIA - Tutti centrati su una riga -->
                 <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-x-auto">
                     <!-- BOX SPONSOR -->
                     <div id="sponsor-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
@@ -595,28 +651,6 @@
                             <p id="icona-tooltip-role">Ruolo: --</p>
                             <p id="icona-tooltip-type">Tipo: --</p>
                         </div>
-                    </div>
-                    <!-- BOX DIVISA SQUADRA -->
-                    <div id="team-uniform-box" class="p-0.5 sm:p-1 bg-gray-800 rounded-full border-2 border-purple-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150 flex-shrink-0" title="Clicca per modificare la divisa">
-                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14">
-                            <defs></defs>
-                            <!-- Maglia stile jersey.xml -->
-                            <g id="shirt-preview" transform="translate(0, 5)">
-                                <!-- Corpo maglia con maniche integrate -->
-                                <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
-                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
-                                <!-- Colletto -->
-                                <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
-                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                                <!-- Polsino sinistro -->
-                                <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
-                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                                <!-- Polsino destro -->
-                                <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
-                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                            </g>
-                        </svg>
-                        <p class="text-[8px] sm:text-[10px] text-purple-300 mt-0 leading-tight">Divisa</p>
                     </div>
                     <!-- BOX MEDIA -->
                     <div id="media-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
@@ -756,6 +790,11 @@
                 <!-- Il widget CSS viene renderizzato qui dinamicamente -->
             </div>
 
+            <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
+            <div id="near-level-up-widget-container" class="mt-4">
+                <!-- Il widget EXP viene renderizzato qui dinamicamente -->
+            </div>
+
             <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
             <div id="toggle-partecipazione-box" class="mt-4 sm:mt-8 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
                 <div class="grid grid-cols-2 gap-2 sm:gap-4">
@@ -817,6 +856,11 @@
                 <button id="btn-goto-admin-panel"
                         class="hidden bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
                     <span>🔧</span> Pannello Admin
+                </button>
+                <button id="btn-show-changelog-dashboard"
+                        onclick="window.Changelog?.showPlayers()"
+                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📋</span> Novita
                 </button>
                 <button id="btn-start-tutorial"
                         onclick="window.Tutorial?.start()"
@@ -1538,6 +1582,8 @@
     <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
     <script src="player-season-stats.js"></script>
     <script src="player-season-stats-ui.js"></script>
+    <script src="player-exp.js"></script>
+    <script src="player-exp-ui.js"></script>
     <script src="campionato-rewards.js"></script>
     <script src="campionato-simulation.js"></script>
     <script src="campionato-schedule.js"></script>
@@ -1586,442 +1632,49 @@
     <script src="version-check.js"></script>
 
     <!-- 16. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->
-    <script>
-        // Sistema di aggiornamento PWA
-        window.PWAUpdater = {
-            registration: null,
-            newWorker: null,
+    <script src="pwa-install.js"></script>
 
-            // Mostra banner di aggiornamento
-            showUpdateBanner: function() {
-                // Rimuovi banner esistente se presente
-                const existingBanner = document.getElementById('pwa-update-banner');
-                if (existingBanner) existingBanner.remove();
+    <!-- MATCH REPLAY OVERLAY (spostato qui da dopo </html>) -->
+    <div id="match-replay-overlay" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden overflow-y-auto">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
 
-                // Crea banner
-                const banner = document.createElement('div');
-                banner.id = 'pwa-update-banner';
-                banner.innerHTML = `
-                    <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                                color: white; padding: 16px 24px; border-radius: 12px;
-                                box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000;
-                                display: flex; align-items: center; gap: 16px; max-width: 90vw;">
-                        <div style="font-size: 28px;">🔄</div>
-                        <div style="flex: 1;">
-                            <div style="font-weight: bold; font-size: 14px;">Nuova versione disponibile!</div>
-                            <div style="font-size: 12px; opacity: 0.9;">Aggiorna per le ultime novita</div>
-                        </div>
-                        <button id="pwa-update-btn" style="background: white; color: #059669; border: none;
-                                padding: 10px 20px; border-radius: 8px; font-weight: bold;
-                                cursor: pointer; font-size: 14px; transition: transform 0.2s;">
-                            Aggiorna Ora
-                        </button>
-                        <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: none;
-                                font-size: 20px; cursor: pointer; padding: 4px 8px; opacity: 0.7;">
-                            ✕
-                        </button>
-                    </div>
-                `;
-                document.body.appendChild(banner);
+            <!-- Header con controlli -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">🎬 Replay Partita</h2>
 
-                // Event listeners
-                document.getElementById('pwa-update-btn').addEventListener('click', () => {
-                    window.PWAUpdater.applyUpdate();
-                });
-                document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
-                    banner.remove();
-                });
-            },
+                <div class="flex gap-3">
+                    <!-- Velocita -->
+                    <button id="replay-speed-btn"
+                            onclick="window.MatchReplay.changeSpeed()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Velocita: 1x
+                    </button>
 
-            // Applica l'aggiornamento - versione robusta
-            applyUpdate: async function() {
-                console.log('[PWA] Applicazione aggiornamento...');
+                    <!-- Chiudi (solo se non in riproduzione) -->
+                    <button id="replay-skip-btn"
+                            onclick="window.MatchReplay.hide()"
+                            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Salta ⏭️
+                    </button>
+                </div>
+            </div>
 
-                try {
-                    // 1. Prima pulisci tutte le cache
-                    if ('caches' in window) {
-                        const names = await caches.keys();
-                        await Promise.all(names.map(name => caches.delete(name)));
-                        console.log('[PWA] Cache cancellate:', names);
-                    }
+            <!-- Contenuto dinamico replay -->
+            <div id="replay-content" class="min-h-[500px] flex items-center justify-center">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mx-auto mb-4"></div>
+                    <p class="text-white text-lg">Caricamento replay...</p>
+                </div>
+            </div>
 
-                    // 2. Attiva il nuovo worker se presente
-                    if (this.newWorker) {
-                        this.newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        console.log('[PWA] SKIP_WAITING inviato al nuovo worker');
-                    }
-
-                    // 3. Aspetta un momento e ricarica
-                    await new Promise(resolve => setTimeout(resolve, 500));
-
-                    // 4. Forza reload con cache-busting
-                    const url = window.location.origin + window.location.pathname + '?_update=' + Date.now();
-                    window.location.replace(url);
-
-                } catch (error) {
-                    console.error('[PWA] Errore applicazione aggiornamento:', error);
-                    location.reload();
-                }
-            },
-
-            // Forza pulizia cache - versione asincrona
-            clearCache: async function() {
-                console.log('[PWA] Pulizia cache in corso...');
-
-                try {
-                    // 1. Invia CLEAR_CACHE al service worker
-                    if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
-                    }
-
-                    // 2. Pulisci cache dal lato client (await!)
-                    if ('caches' in window) {
-                        const names = await caches.keys();
-                        await Promise.all(names.map(name => caches.delete(name)));
-                        console.log('[PWA] Cache client cancellate:', names);
-                    }
-
-                    // 3. Deregistra tutti i service workers
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations.map(r => r.unregister()));
-                    console.log('[PWA] Service workers deregistrati');
-
-                    // 4. Aspetta e ricarica
-                    await new Promise(resolve => setTimeout(resolve, 300));
-
-                    const url = window.location.origin + window.location.pathname + '?_clear=' + Date.now();
-                    window.location.replace(url);
-
-                } catch (error) {
-                    console.error('[PWA] Errore pulizia cache:', error);
-                    location.reload();
-                }
-            },
-
-            // Controlla manualmente se ci sono aggiornamenti
-            checkForUpdates: function() {
-                if (this.registration) {
-                    this.registration.update()
-                        .then(() => console.log('[PWA] Controllo aggiornamenti completato'))
-                        .catch(err => console.warn('[PWA] Errore controllo aggiornamenti:', err));
-                }
-            }
-        };
-
-        // Registra il Service Worker per PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // updateViaCache: 'none' forza il browser a controllare sempre la versione del SW
-                navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
-                    .then((registration) => {
-                        console.log('[PWA] Service Worker registrato:', registration.scope);
-                        window.PWAUpdater.registration = registration;
-
-                        // Controlla aggiornamenti ogni 60 minuti
-                        setInterval(() => {
-                            registration.update();
-                        }, 60 * 60 * 1000);
-
-                        // Gestione nuovo worker trovato
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            console.log('[PWA] Nuova versione in installazione...');
-
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed') {
-                                    if (navigator.serviceWorker.controller) {
-                                        // C'e' gia' un SW attivo = e' un aggiornamento
-                                        console.log('[PWA] Nuova versione pronta!');
-                                        window.PWAUpdater.newWorker = newWorker;
-                                        window.PWAUpdater.showUpdateBanner();
-                                    } else {
-                                        // Prima installazione
-                                        console.log('[PWA] App installata e pronta per uso offline');
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch((error) => {
-                        console.warn('[PWA] Registrazione Service Worker fallita:', error);
-                    });
-            });
-
-            // Ascolta messaggi dal Service Worker
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SW_ACTIVATED') {
-                    console.log('[PWA] Service Worker aggiornato alla versione:', event.data.version);
-                    // Ricarica la pagina per usare la nuova versione
-                    location.reload();
-                }
-            });
-
-            // Gestione cambio controller (quando un nuovo SW prende il controllo)
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                console.log('[PWA] Nuovo Service Worker attivato, ricarico...');
-                location.reload();
-            });
-        }
-
-        // Mostra bottone aggiornamento solo se installata come PWA
-        function setupPWAUpdateButton() {
-            const container = document.getElementById('pwa-update-button-container');
-            const btn = document.getElementById('btn-check-pwa-update');
-
-            if (!container || !btn) return;
-
-            // Controlla se l'app e' in modalita' standalone (installata come PWA)
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                || window.navigator.standalone === true
-                || document.referrer.includes('android-app://');
-
-            if (isStandalone) {
-                // Mostra il bottone
-                container.classList.remove('hidden');
-                console.log('[PWA] App installata, bottone aggiornamento visibile');
-
-                // Gestisci click
-                btn.addEventListener('click', async () => {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span>⏳</span> Controllo in corso...';
-
-                    try {
-                        // Forza controllo aggiornamenti
-                        if (window.PWAUpdater && window.PWAUpdater.registration) {
-                            await window.PWAUpdater.registration.update();
-
-                            // Aspetta un attimo per vedere se c'e' un nuovo worker
-                            setTimeout(() => {
-                                if (window.PWAUpdater.newWorker) {
-                                    // C'e' un aggiornamento
-                                    btn.innerHTML = '<span>✅</span> Aggiornamento trovato!';
-                                    btn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
-                                    btn.classList.add('bg-green-600', 'hover:bg-green-500');
-                                    window.PWAUpdater.showUpdateBanner();
-                                } else {
-                                    // Nessun aggiornamento
-                                    btn.innerHTML = '<span>✅</span> Sei aggiornato!';
-                                    btn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
-                                    btn.classList.add('bg-gray-600');
-                                    setTimeout(() => {
-                                        btn.innerHTML = '<span>🔄</span> Controlla Aggiornamenti';
-                                        btn.classList.remove('bg-gray-600');
-                                        btn.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
-                                        btn.disabled = false;
-                                    }, 3000);
-                                }
-                            }, 2000);
-                        } else {
-                            // Fallback: pulisci cache e ricarica
-                            window.PWAUpdater?.clearCache();
-                        }
-                    } catch (error) {
-                        console.error('[PWA] Errore controllo aggiornamenti:', error);
-                        btn.innerHTML = '<span>❌</span> Errore, riprova';
-                        btn.disabled = false;
-                        setTimeout(() => {
-                            btn.innerHTML = '<span>🔄</span> Controlla Aggiornamenti';
-                        }, 2000);
-                    }
-                });
-            } else {
-                // Non e' una PWA installata, nascondi il bottone
-                container.classList.add('hidden');
-            }
-        }
-
-        // Esegui quando il DOM e' pronto
-        document.addEventListener('DOMContentLoaded', setupPWAUpdateButton);
-
-        // ====================================================================
-        // PWA INSTALL PROMPT - Banner per installare l'app
-        // ====================================================================
-
-        let deferredInstallPrompt = null;
-
-        // Cattura l'evento beforeinstallprompt
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Previeni il prompt automatico del browser
-            e.preventDefault();
-            // Salva l'evento per usarlo dopo
-            deferredInstallPrompt = e;
-            // Mostra il banner di installazione
-            showInstallBanner();
-            console.log('[PWA] App installabile, banner mostrato');
-        });
-
-        // Mostra il banner di installazione
-        function showInstallBanner() {
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) {
-                banner.classList.remove('hidden');
-            }
-        }
-
-        // Nascondi il banner
-        function hideInstallBanner() {
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) {
-                banner.classList.add('hidden');
-            }
-        }
-
-        // Installa l'app
-        async function installPWA() {
-            if (!deferredInstallPrompt) {
-                console.log('[PWA] Nessun prompt disponibile');
-                return;
-            }
-
-            // Mostra il prompt nativo
-            deferredInstallPrompt.prompt();
-
-            // Aspetta la risposta dell'utente
-            const { outcome } = await deferredInstallPrompt.userChoice;
-            console.log('[PWA] Scelta utente:', outcome);
-
-            // Pulisci il prompt salvato
-            deferredInstallPrompt = null;
-
-            // Nascondi il banner
-            hideInstallBanner();
-
-            if (outcome === 'accepted') {
-                console.log('[PWA] App installata con successo!');
-            }
-        }
-
-        // Esponi funzioni globalmente
-        window.installPWA = installPWA;
-        window.hideInstallBanner = hideInstallBanner;
-
-        // Rileva se l'app e' gia' installata
-        window.addEventListener('appinstalled', () => {
-            console.log('[PWA] App installata!');
-            hideInstallBanner();
-            deferredInstallPrompt = null;
-        });
-
-        // Nascondi banner se gia' in modalita' standalone
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-            console.log('[PWA] App gia\' in modalita\' standalone');
-        }
-    </script>
+        </div>
+    </div>
 
 </body>
-</html><!-- ============================================ -->
-<!-- MATCH REPLAY OVERLAY -->
-<!-- ============================================ -->
+</html>
 
-<div id="match-replay-overlay" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden overflow-y-auto">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        
-        <!-- Header con controlli -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white">🎬 Replay Partita</h2>
-            
-            <div class="flex gap-3">
-                <!-- Velocità -->
-                <button id="replay-speed-btn" 
-                        onclick="window.MatchReplay.changeSpeed()"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Velocità: 1x
-                </button>
-                
-                <!-- Chiudi (solo se non in riproduzione) -->
-                <button id="replay-skip-btn" 
-                        onclick="window.MatchReplay.hide()"
-                        class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                    Salta ⏭️
-                </button>
-            </div>
-        </div>
-        
-        <!-- Contenuto dinamico replay -->
-        <div id="replay-content" class="min-h-[500px] flex items-center justify-center">
-            <div class="text-center">
-                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mx-auto mb-4"></div>
-                <p class="text-white text-lg">Caricamento replay...</p>
-            </div>
-        </div>
-        
-    </div>
-</div>
-
-<!-- ============================================ -->
-<!-- ANIMAZIONI CSS PER REPLAY -->
-<!-- ============================================ -->
-
-<style>
-/* Fade In */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-/* Slide In */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-100px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.animate-slide-in {
-    animation: slideIn 0.4s ease-out;
-}
-
-/* Bounce (già  in Tailwind ma ridefinito per sicurezza) */
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-.animate-bounce {
-    animation: bounce 0.6s infinite;
-}
-
-/* Pulse (già  in Tailwind ma ridefinito) */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
-}
-
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Rolling Number (per i dadi) */
-@keyframes roll {
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(720deg); }
-}
-
-.rolling-number {
-    display: inline-block;
-    animation: roll 0.5s ease-out;
-}
-</style>
+<!-- NOTA: Il vecchio codice PWA inline e le animazioni CSS sono stati estratti in:
+     - pwa-install.js (logica PWA)
+     - style.css (animazioni replay)
+     Il contenuto che era dopo </html> e' stato rimosso (era HTML invalido).
+-->
