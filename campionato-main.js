@@ -212,13 +212,27 @@ window.ChampionshipMain = {
                 
                 const homeTeamData = homeTeamDoc.exists() ? homeTeamDoc.data() : null;
                 const awayTeamData = awayTeamDoc.exists() ? awayTeamDoc.data() : null;
-                
+
                 if (!homeTeamData || !awayTeamData) {
                     console.warn(`Dati squadra mancanti per il match ${match.homeName} vs ${match.awayName}. Salto.`);
                     continue;
                 }
 
+                // Espandi formazione per avere nomi giocatori (per telecronaca)
+                const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
+                if (expandFormation) {
+                    homeTeamData.formation.titolari = expandFormation(homeTeamData.formation.titolari || [], homeTeamData.players || []);
+                    awayTeamData.formation.titolari = expandFormation(awayTeamData.formation.titolari || [], awayTeamData.players || []);
+                }
+
                 const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
+
+                // Genera log telecronaca (indipendente dalla simulazione principale)
+                let matchLog = null;
+                if (window.SimulazioneNuoveRegole) {
+                    const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(homeTeamData, awayTeamData);
+                    matchLog = logResult.log;
+                }
 
                 // Registra statistiche stagionali (goal, assist, clean sheets)
                 if (window.PlayerSeasonStats) {
@@ -283,7 +297,8 @@ window.ChampionshipMain = {
                         },
                         homeScore: homeGoals,
                         awayScore: awayGoals,
-                        isHome: true
+                        isHome: true,
+                        details: matchLog ? { matchLog } : null
                     });
 
                     // Salva per squadra ospite
@@ -301,7 +316,8 @@ window.ChampionshipMain = {
                         },
                         homeScore: homeGoals,
                         awayScore: awayGoals,
-                        isHome: false
+                        isHome: false,
+                        details: matchLog ? { matchLog } : null
                     });
                 }
             }

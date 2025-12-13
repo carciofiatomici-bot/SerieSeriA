@@ -154,6 +154,20 @@ window.Supercoppa = {
         const homeTeamData = homeTeamDoc.data();
         const awayTeamData = awayTeamDoc.data();
 
+        // Espandi formazione per avere nomi giocatori (per telecronaca)
+        const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
+        if (expandFormation) {
+            homeTeamData.formation.titolari = expandFormation(homeTeamData.formation?.titolari || [], homeTeamData.players || []);
+            awayTeamData.formation.titolari = expandFormation(awayTeamData.formation?.titolari || [], awayTeamData.players || []);
+        }
+
+        // Genera log telecronaca
+        let matchLog = null;
+        if (window.SimulazioneNuoveRegole) {
+            const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(homeTeamData, awayTeamData);
+            matchLog = logResult.log;
+        }
+
         // Simula la partita
         const matchResult = window.CoppaSimulation.runMatch(homeTeamData, awayTeamData);
 
@@ -192,6 +206,53 @@ window.Supercoppa = {
         ]);
 
         console.log(`Supercoppa completata: ${finalResult}. Vincitore: ${winner.teamName}`);
+
+        // Salva nello storico partite per entrambe le squadre
+        if (window.MatchHistory) {
+            // Salva per squadra di casa
+            await window.MatchHistory.saveMatch(supercoppaBracket.homeTeam.teamId, {
+                type: 'supercoppa',
+                homeTeam: {
+                    id: supercoppaBracket.homeTeam.teamId,
+                    name: supercoppaBracket.homeTeam.teamName,
+                    logoUrl: homeTeamData.logoUrl || ''
+                },
+                awayTeam: {
+                    id: supercoppaBracket.awayTeam.teamId,
+                    name: supercoppaBracket.awayTeam.teamName,
+                    logoUrl: awayTeamData.logoUrl || ''
+                },
+                homeScore: matchResult.homeGoals,
+                awayScore: matchResult.awayGoals,
+                isHome: true,
+                details: {
+                    matchLog: matchLog,
+                    penalties: penalties
+                }
+            });
+
+            // Salva per squadra ospite
+            await window.MatchHistory.saveMatch(supercoppaBracket.awayTeam.teamId, {
+                type: 'supercoppa',
+                homeTeam: {
+                    id: supercoppaBracket.homeTeam.teamId,
+                    name: supercoppaBracket.homeTeam.teamName,
+                    logoUrl: homeTeamData.logoUrl || ''
+                },
+                awayTeam: {
+                    id: supercoppaBracket.awayTeam.teamId,
+                    name: supercoppaBracket.awayTeam.teamName,
+                    logoUrl: awayTeamData.logoUrl || ''
+                },
+                homeScore: matchResult.homeGoals,
+                awayScore: matchResult.awayGoals,
+                isHome: false,
+                details: {
+                    matchLog: matchLog,
+                    penalties: penalties
+                }
+            });
+        }
 
         // AUTOMAZIONE CSS: Attiva automaticamente i CSS se il flag cssAutomation è abilitato
         await this.triggerCSSAutomation();

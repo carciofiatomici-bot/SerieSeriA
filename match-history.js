@@ -403,11 +403,31 @@ window.MatchHistory = {
             </div>
         `;
 
+        // Salva storico per accesso da event listener
+        this.currentHistory = history;
+
         // Event listeners per i filtri
         container.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.currentFilter = e.target.dataset.filter;
                 this.renderUI(container, history);
+            });
+        });
+
+        // Event listeners per bottoni telecronaca
+        container.querySelectorAll('.btn-telecronaca').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const matchId = e.target.dataset.matchId;
+                const match = this.currentHistory.find(m => m.id === matchId);
+                if (match && match.details?.matchLog) {
+                    this.showTelecronacaModal(
+                        match.details.matchLog,
+                        match.homeTeam.name,
+                        match.awayTeam.name,
+                        match.homeScore,
+                        match.awayScore
+                    );
+                }
             });
         });
     },
@@ -441,6 +461,15 @@ window.MatchHistory = {
             abandonedInfo = `<span class="text-orange-400 text-xs ml-2">(Abbandonata)</span>`;
         }
 
+        // Bottone Telecronaca (solo se esiste matchLog)
+        const hasMatchLog = match.details?.matchLog && Array.isArray(match.details.matchLog) && match.details.matchLog.length > 0;
+        const telecronacaBtn = hasMatchLog ? `
+            <button class="btn-telecronaca mt-2 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-1 px-2 rounded transition"
+                    data-match-id="${match.id}">
+                📺 Telecronaca azione per azione
+            </button>
+        ` : '';
+
         return `
             <div class="p-3 bg-gray-700 rounded-lg border-l-4 ${match.result === 'win' ? 'border-green-500' : match.result === 'loss' ? 'border-red-500' : 'border-yellow-500'} hover:bg-gray-600 transition">
                 <div class="flex items-center justify-between">
@@ -463,8 +492,68 @@ window.MatchHistory = {
                         ⚽ Marcatori: ${match.details.scorers.join(', ')}
                     </p>
                 ` : ''}
+                ${telecronacaBtn}
             </div>
         `;
+    },
+
+    /**
+     * Mostra il modal della telecronaca
+     */
+    showTelecronacaModal(matchLog, homeTeam, awayTeam, homeScore, awayScore) {
+        // Rimuovi modal esistente se presente
+        const existingModal = document.getElementById('telecronaca-modal');
+        if (existingModal) existingModal.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'telecronaca-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4';
+
+        const logHtml = matchLog.map(line => {
+            // Colora le linee in base al contenuto
+            if (line.includes('GOL!') || line.includes('GOAL!')) {
+                return `<p class="text-green-400 font-bold">${line}</p>`;
+            } else if (line.includes('OCCASIONE')) {
+                return `<p class="text-yellow-400 font-semibold">${line}</p>`;
+            } else if (line.includes('Fase 1') || line.includes('Fase 2') || line.includes('Fase 3')) {
+                return `<p class="text-cyan-400">${line}</p>`;
+            } else if (line.includes('ATT:') || line.includes('DEF:')) {
+                return `<p class="text-gray-300 text-sm pl-4">${line}</p>`;
+            } else if (line.includes('===')) {
+                return `<p class="text-white font-bold text-center my-2 border-b border-gray-600 pb-2">${line.replace(/=/g, '')}</p>`;
+            } else {
+                return `<p class="text-gray-400">${line}</p>`;
+            }
+        }).join('');
+
+        modal.innerHTML = `
+            <div class="bg-gray-900 rounded-lg border-2 border-cyan-500 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="p-4 bg-gradient-to-r from-cyan-800 to-cyan-600 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">📺 Telecronaca</h3>
+                        <p class="text-cyan-200 text-sm">${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}</p>
+                    </div>
+                    <button id="close-telecronaca-modal" class="text-white hover:text-cyan-200 text-2xl">&times;</button>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 space-y-1 font-mono text-xs">
+                    ${logHtml}
+                </div>
+                <div class="p-3 bg-gray-800 text-center">
+                    <button id="close-telecronaca-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-6 rounded-lg transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Event listeners per chiudere
+        document.getElementById('close-telecronaca-modal').addEventListener('click', () => modal.remove());
+        document.getElementById('close-telecronaca-btn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     },
 
     // Listener real-time per trofei

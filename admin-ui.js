@@ -231,37 +231,21 @@ window.AdminUI = {
                             🧪 Test Simulazione Partita
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4">
+                        <button id="btn-test-simulation-new-rules"
+                                class="bg-purple-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-600 transition duration-150">
+                            🧪 Test Simulazione Con Regole Nuove
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
                         <button id="btn-fix-icone-ability"
                                 class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
                             👑 Fix Abilita Icone
                         </button>
-                        <div id="fix-icone-result" class="flex items-center justify-center text-sm text-gray-400">
-                            Assegna abilita "Icona" a tutte le Icone
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
                         <button id="btn-reset-hall-of-fame"
                                 class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
                             🏛️ Reset Hall of Fame Stats
                         </button>
-                        <div id="reset-hof-result" class="flex items-center justify-center text-sm text-gray-400">
-                            Resetta statistiche di una o tutte le squadre
-                        </div>
-                    </div>
-                    <!-- Accesso rapido dashboard squadre -->
-                    <div class="border-t border-gray-600 pt-4 mt-2">
-                        <p class="text-gray-400 text-sm mb-3">Accesso rapido Dashboard:</p>
-                        <div class="grid grid-cols-2 gap-4">
-                            <button id="btn-dashboard-mucche"
-                                    class="bg-green-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
-                                🐄 Mucche Mannare
-                            </button>
-                            <button id="btn-dashboard-schalke"
-                                    class="bg-blue-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
-                                ⚽ Schalke104
-                            </button>
-                        </div>
                     </div>
                     <div class="text-gray-400 text-sm">
                         Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
@@ -322,6 +306,64 @@ window.AdminUI = {
                         <div id="test-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
                             <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
                             <pre id="test-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL TEST SIMULAZIONE NUOVE REGOLE -->
+            <div id="test-simulation-new-rules-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-purple-500">
+                    <h3 class="text-xl font-bold text-purple-400 mb-4">🧪 Test Simulazione - Nuove Regole</h3>
+                    <div class="bg-purple-900/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
+                        <p class="font-bold mb-1">Differenze dalle regole attuali:</p>
+                        <ul class="list-disc list-inside text-xs space-y-1">
+                            <li>30 occasioni per squadra</li>
+                            <li>Sistema a probabilita percentuale per passaggi fase</li>
+                            <li>5% di passare comunque alla fase successiva su fallimento</li>
+                            <li>Modificatori livello rivisti (Liv 29 = +17.5, Liv 30 = +18.5)</li>
+                        </ul>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">Squadra Casa</label>
+                            <select id="test-new-home-team" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                                <option value="">Seleziona squadra...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2">Squadra Trasferta</label>
+                            <select id="test-new-away-team" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                                <option value="">Seleziona squadra...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-4">
+                        <button id="btn-run-test-new-simulation" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-lg">
+                            Simula Partita
+                        </button>
+                        <button id="btn-close-test-new-simulation" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg">
+                            Chiudi
+                        </button>
+                    </div>
+                    <div id="test-new-simulation-result" class="bg-gray-800 rounded-lg p-4 hidden">
+                        <h4 class="text-lg font-bold text-white mb-2">Risultato</h4>
+                        <div id="test-new-simulation-score" class="text-center text-3xl font-extrabold text-yellow-400 mb-4"></div>
+                        <div class="flex gap-2 mt-4">
+                            <button id="btn-toggle-new-simple-log" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-lg">
+                                Log Ristretto
+                            </button>
+                            <button id="btn-toggle-new-detailed-log" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">
+                                Log Dettagliato
+                            </button>
+                        </div>
+                        <div id="test-new-simulation-simple-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
+                            <h5 class="text-sm font-bold text-blue-400 mb-2">Log Ristretto</h5>
+                            <pre id="test-new-simulation-simple-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
+                        </div>
+                        <div id="test-new-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
+                            <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
+                            <pre id="test-new-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
                     </div>
                 </div>
@@ -1157,6 +1199,22 @@ window.AdminUI = {
                 </button>
             </div>
 
+            <!-- Bottoni Assegna CS/CSS a squadra singola -->
+            <div class="bg-gray-800 rounded-lg border border-green-500 p-4 mb-4">
+                <h4 class="text-lg font-bold text-green-400 mb-3">Assegnazione Crediti Singola Squadra</h4>
+                <p id="single-assign-message" class="text-center text-sm mb-3"></p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-assign-cs-single"
+                            class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
+                        💰 Assegna CS a Squadra
+                    </button>
+                    <button id="btn-assign-css-single"
+                            class="w-full bg-amber-700 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-amber-600 transition duration-150">
+                        ⭐ Assegna CSS a Squadra
+                    </button>
+                </div>
+            </div>
+
             <!-- Bottoni Assegna CS/CSS a tutte le squadre -->
             <div class="bg-gray-800 rounded-lg border border-yellow-500 p-4">
                 <h4 class="text-lg font-bold text-yellow-400 mb-3">Assegnazione Crediti di Massa</h4>
@@ -1170,6 +1228,34 @@ window.AdminUI = {
                             class="w-full bg-amber-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-amber-500 transition duration-150">
                         ⭐ Assegna CSS a Tutte
                     </button>
+                </div>
+            </div>
+
+            <!-- Modal Assegna Crediti a Squadra Singola -->
+            <div id="assign-credits-single-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border-2 border-green-500">
+                    <h3 id="assign-credits-single-title" class="text-xl font-bold text-green-400 mb-4">Assegna Crediti</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">Seleziona Squadra</label>
+                            <select id="assign-credits-team-select" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                                <option value="">Seleziona squadra...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2">Quantita</label>
+                            <input type="number" id="assign-credits-amount" min="1" value="100" class="w-full bg-gray-800 text-white p-2 rounded border border-gray-600">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button id="btn-confirm-assign-single" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg">
+                            Conferma
+                        </button>
+                        <button id="btn-cancel-assign-single" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg">
+                            Annulla
+                        </button>
+                    </div>
+                    <p id="assign-single-error" class="text-center mt-3 text-sm text-red-400"></p>
                 </div>
             </div>
         `;

@@ -547,184 +547,194 @@
                        value="#22c55e">
             </div>
 
-            <!-- BOX NOME SQUADRA -->
-            <div class="flex justify-center mb-4">
-                <div class="py-3 px-8 bg-gray-700 rounded-lg shadow-xl border-2 border-green-500">
-                    <h2 id="team-dashboard-title" class="text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
-                </div>
-            </div>
-
-            <!-- COUNTDOWN, LOGO, ICONA E DIVISA - Tutti centrati su una riga -->
-            <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 mb-4 sm:mb-6 overflow-x-auto">
-                <!-- BOX SPONSOR -->
-                <div id="sponsor-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
-                    <img id="sponsor-image"
-                         src="https://placehold.co/128x128/374151/9ca3af?text=Sponsor"
-                         alt="Sponsor"
-                         class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
-                         style="border-color: #22c55e;"
-                         title="Sponsor">
-                </div>
-                <!-- BOX COUNTDOWN PROSSIMA PARTITA -->
-                <div id="next-match-countdown" class="p-1 bg-gray-800 rounded-full border-2 border-teal-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center flex-shrink-0">
-                    <p id="countdown-label-top" class="text-[8px] sm:text-[10px] text-teal-300 font-semibold leading-tight">Prossima</p>
-                    <p id="countdown-timer" class="text-xs sm:text-sm md:text-base font-extrabold text-teal-400 leading-tight">--:--</p>
-                    <p id="countdown-label-bottom" class="text-[8px] sm:text-[10px] text-gray-500 leading-tight">Partita</p>
-                </div>
-                <!-- LOGO SQUADRA -->
-                <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 flex-shrink-0">
-                    <img id="team-logo"
-                         src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
-                         alt="Logo Squadra Modificabile"
-                         class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
-                         style="border-color: #22c55e;"
-                         title="Clicca per cambiare il logo (Inserisci URL)">
-                </div>
-                <!-- ICONA SQUADRA -->
-                <div class="relative group flex-shrink-0">
-                    <img id="team-icona-avatar"
-                         src="https://placehold.co/128x128/facc15/000?text=?"
-                         alt="Avatar Icona"
-                         class="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 border-yellow-400 shadow-lg object-cover cursor-pointer">
-                    <!-- Tooltip personalizzato -->
-                    <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                        <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
-                        <p id="icona-tooltip-level">Livello: --</p>
-                        <p id="icona-tooltip-role">Ruolo: --</p>
-                        <p id="icona-tooltip-type">Tipo: --</p>
+            <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
+            <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <!-- RIGA NOME SQUADRA + COUNTDOWN -->
+                <div class="flex justify-center items-stretch mb-3 gap-3 sm:gap-6 md:gap-10">
+                    <!-- BOX NOME SQUADRA (sinistra/centro) -->
+                    <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center">
+                        <h2 id="team-dashboard-title" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+                    </div>
+                    <!-- BOX COUNTDOWN PROSSIMA PARTITA (centro-destra) -->
+                    <div id="next-match-countdown" class="py-2 px-3 bg-gray-800 rounded-lg border-2 border-teal-500 text-center shadow-lg flex items-center justify-center gap-1 w-fit">
+                        <span id="countdown-label-top" class="text-[9px] sm:text-[10px] text-teal-300 font-semibold">Prossima</span>
+                        <span id="countdown-timer" class="text-sm sm:text-base font-extrabold text-teal-400">--:--</span>
+                        <span id="countdown-label-bottom" class="text-[9px] sm:text-[10px] text-gray-500">Partita</span>
                     </div>
                 </div>
-                <!-- BOX DIVISA SQUADRA -->
-                <div id="team-uniform-box" class="p-0.5 sm:p-1 bg-gray-800 rounded-full border-2 border-purple-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150 flex-shrink-0" title="Clicca per modificare la divisa">
-                    <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14">
-                        <defs></defs>
-                        <!-- Maglia stile jersey.xml -->
-                        <g id="shirt-preview" transform="translate(0, 5)">
-                            <!-- Corpo maglia con maniche integrate -->
-                            <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
-                                fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
-                            <!-- Colletto -->
-                            <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
-                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                            <!-- Polsino sinistro -->
-                            <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
-                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                            <!-- Polsino destro -->
-                            <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
-                                fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
-                        </g>
-                    </svg>
-                    <p class="text-[8px] sm:text-[10px] text-purple-300 mt-0 leading-tight">Divisa</p>
+                <!-- SPONSOR, LOGO, ICONA E DIVISA - Tutti centrati su una riga -->
+                <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-x-auto">
+                    <!-- BOX SPONSOR -->
+                    <div id="sponsor-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
+                        <img id="sponsor-image"
+                             src="https://placehold.co/128x128/374151/9ca3af?text=Sponsor"
+                             alt="Sponsor"
+                             class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
+                             style="border-color: #22c55e;"
+                             title="Sponsor">
+                    </div>
+                    <!-- LOGO SQUADRA -->
+                    <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 flex-shrink-0">
+                        <img id="team-logo"
+                             src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
+                             alt="Logo Squadra Modificabile"
+                             class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
+                             style="border-color: #22c55e;"
+                             title="Clicca per cambiare il logo (Inserisci URL)">
+                    </div>
+                    <!-- ICONA SQUADRA -->
+                    <div class="relative group flex-shrink-0">
+                        <img id="team-icona-avatar"
+                             src="https://placehold.co/128x128/facc15/000?text=?"
+                             alt="Avatar Icona"
+                             class="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                        <!-- Tooltip personalizzato -->
+                        <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                            <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
+                            <p id="icona-tooltip-level">Livello: --</p>
+                            <p id="icona-tooltip-role">Ruolo: --</p>
+                            <p id="icona-tooltip-type">Tipo: --</p>
+                        </div>
+                    </div>
+                    <!-- BOX DIVISA SQUADRA -->
+                    <div id="team-uniform-box" class="p-0.5 sm:p-1 bg-gray-800 rounded-full border-2 border-purple-500 text-center shadow-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex flex-col justify-center items-center cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150 flex-shrink-0" title="Clicca per modificare la divisa">
+                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14">
+                            <defs></defs>
+                            <!-- Maglia stile jersey.xml -->
+                            <g id="shirt-preview" transform="translate(0, 5)">
+                                <!-- Corpo maglia con maniche integrate -->
+                                <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Colletto -->
+                                <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino sinistro -->
+                                <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino destro -->
+                                <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                            </g>
+                        </svg>
+                        <p class="text-[8px] sm:text-[10px] text-purple-300 mt-0 leading-tight">Divisa</p>
+                    </div>
+                    <!-- BOX MEDIA -->
+                    <div id="media-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
+                        <img id="media-image"
+                             src="https://placehold.co/128x128/374151/9ca3af?text=Media"
+                             alt="Media"
+                             class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
+                             style="border-color: #22c55e;"
+                             title="Media Partner">
+                    </div>
                 </div>
-                <!-- BOX MEDIA -->
-                <div id="media-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
-                    <img id="media-image"
-                         src="https://placehold.co/128x128/374151/9ca3af?text=Media"
-                         alt="Media"
-                         class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
-                         style="border-color: #22c55e;"
-                         title="Media Partner">
+
+                <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO -->
+                <div class="flex justify-center gap-2 sm:gap-4 mt-3">
+                    <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
+                    <button id="btn-stadium"
+                            class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">
+                        <span class="text-base sm:text-lg">🏟️</span>
+                        <span>Stadio</span>
+                    </button>
+                    <!-- Statistica: Livello Medio Rosa -->
+                    <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center min-w-0">
+                        <p class="text-[10px] sm:text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
+                        <p class="mt-0.5"><span id="stat-rosa-level" class="text-base sm:text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[10px] sm:text-xs text-gray-400">(0)</span></p>
+                    </div>
+                    <!-- Bottone Hall of Fame -->
+                    <button id="btn-hall-of-fame"
+                            class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
+                        <span class="text-base sm:text-lg">🏛️</span>
+                        <span>Hall of Fame</span>
+                    </button>
+                    <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
+                    <div class="hidden">
+                        <p id="stat-formazione-level">N/A</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO - Mobile Optimized -->
-            <div class="flex justify-center gap-2 sm:gap-4 mt-4 sm:mt-6 px-1 sm:px-0">
-                <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
-                <button id="btn-stadium"
-                        class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">
-                    <span class="text-base sm:text-lg">🏟️</span>
-                    <span>Stadio</span>
-                </button>
-                <!-- Statistica: Livello Medio Rosa -->
-                <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center min-w-0">
-                    <p class="text-[10px] sm:text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
-                    <p class="mt-0.5"><span id="stat-rosa-level" class="text-base sm:text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[10px] sm:text-xs text-gray-400">(0)</span></p>
-                </div>
-                <!-- Bottone Hall of Fame -->
-                <button id="btn-hall-of-fame"
-                        class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
-                    <span class="text-base sm:text-lg">🏛️</span>
-                    <span>Hall of Fame</span>
-                </button>
-                <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
-                <div class="hidden">
-                    <p id="stat-formazione-level">N/A</p>
+            <!-- BOX GESTIONE ROSA E FORMAZIONE -->
+            <div id="gestione-box" class="mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                    <button id="btn-gestione-rosa"
+                            class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        👥 <span class="hidden sm:inline">Gestione </span>Rosa
+                    </button>
+                    <button id="btn-gestione-formazione"
+                            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        📋 <span class="hidden sm:inline">Gestione </span>Formazione
+                    </button>
                 </div>
             </div>
 
-            <!-- PULSANTI GESTIONE ROSA E FORMAZIONE - Mobile Optimized -->
-            <div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-4 px-1 sm:px-0">
-                <button id="btn-gestione-rosa"
-                        class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                    👥 <span class="hidden sm:inline">Gestione </span>Rosa
-                </button>
-                <button id="btn-gestione-formazione"
-                        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                    📋 <span class="hidden sm:inline">Gestione </span>Formazione
-                </button>
-            </div>
-
-            <!-- PULSANTI COMPETIZIONI - Mobile Optimized -->
-            <div class="mt-3 sm:mt-4 space-y-2 sm:space-y-3 px-1 sm:px-0">
-                <button id="btn-user-campionato"
-                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                    <span class="text-xl sm:text-2xl">🏅</span>
-                    <span class="text-base sm:text-xl">SerieSeriA</span>
-                </button>
-                <button id="btn-user-coppa"
-                        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                    <span class="text-xl sm:text-2xl">🏆</span>
-                    <span class="text-base sm:text-xl">CoppaSeriA</span>
-                </button>
-                <button id="btn-user-supercoppa"
-                        class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                    <span class="text-xl sm:text-2xl">⭐</span>
-                    <span class="text-base sm:text-xl">Super CoppaSeriA</span>
-                </button>
+            <!-- BOX COMPETIZIONI -->
+            <div id="competizioni-box" class="mt-4 sm:mt-6 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="space-y-2 sm:space-y-3">
+                    <button id="btn-user-campionato"
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                        <span class="text-xl sm:text-2xl">🏅</span>
+                        <span class="text-base sm:text-xl">SerieSeriA</span>
+                    </button>
+                    <button id="btn-user-coppa"
+                            class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                        <span class="text-xl sm:text-2xl">🏆</span>
+                        <span class="text-base sm:text-xl">CoppaSeriA</span>
+                    </button>
+                    <button id="btn-user-supercoppa"
+                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
+                        <span class="text-xl sm:text-2xl">⭐</span>
+                        <span class="text-base sm:text-xl">Super CoppaSeriA</span>
+                    </button>
+                </div>
             </div>
 
             <!-- PULSANTI DRAFT E MERCATO - Mobile Optimized -->
-            <div id="draft-mercato-container" class="mt-3 sm:mt-4 relative group px-1 sm:px-0">
-                <!-- Riga 1: Draft e Mercato -->
-                <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-3">
-                    <!-- Contenitore Draft con Toggle -->
-                    <div id="btn-draft-container"
-                         class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
-                        <!-- Parte cliccabile per navigazione -->
-                        <button id="btn-draft-utente"
-                                class="flex-1 py-3 px-2 text-left flex items-center justify-center gap-1 hover:bg-white/10 transition active:scale-95">
-                            📝 Draft
-                        </button>
-                        <!-- Separatore -->
-                        <div class="w-px h-8 bg-yellow-800/50"></div>
-                        <!-- Toggle Switch per partecipazione Draft -->
-                        <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
-                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
-                                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                            after:bg-white after:border-gray-300 after:border after:rounded-full
-                                            after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
-                                            peer-checked:bg-green-500"></div>
-                            </label>
+            <div id="draft-mercato-container" class="mt-6 sm:mt-8 relative group px-1 sm:px-0">
+                <!-- BOX DRAFT/MERCATO/SFIDA/SCAMBI -->
+                <div id="draft-scambi-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                    <!-- Riga 1: Draft e Mercato -->
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-3">
+                        <!-- Contenitore Draft con Toggle -->
+                        <div id="btn-draft-container"
+                             class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
+                            <!-- Parte cliccabile per navigazione -->
+                            <button id="btn-draft-utente"
+                                    class="flex-1 py-3 px-2 text-left flex items-center justify-center gap-1 hover:bg-white/10 transition active:scale-95">
+                                📝 Draft
+                            </button>
+                            <!-- Separatore -->
+                            <div class="w-px h-8 bg-yellow-800/50"></div>
+                            <!-- Toggle Switch per partecipazione Draft -->
+                            <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
+                                    <div class="w-9 h-5 sm:w-11 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
+                                                peer-checked:after:translate-x-full peer-checked:after:border-white
+                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                                after:bg-white after:border-gray-300 after:border after:rounded-full
+                                                after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
+                                                peer-checked:bg-green-500"></div>
+                                </label>
+                            </div>
                         </div>
+                        <button id="btn-mercato-utente"
+                                class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
+                            💰 Mercato
+                        </button>
                     </div>
-                    <button id="btn-mercato-utente"
-                            class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
-                        💰 Mercato
-                    </button>
-                </div>
-                <!-- Riga 2: Sfida e Scambi -->
-                <div class="grid grid-cols-2 gap-2 sm:gap-4">
-                    <button id="btn-challenge"
-                            class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
-                        <span>⚔️</span> Sfida
-                    </button>
-                    <button id="btn-trades"
-                            class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
-                        <span>🔄</span> Scambi
-                    </button>
+                    <!-- Riga 2: Sfida e Scambi -->
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                        <button id="btn-challenge"
+                                class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span>⚔️</span> Sfida
+                        </button>
+                        <button id="btn-trades"
+                                class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span>🔄</span> Scambi
+                        </button>
+                    </div>
                 </div>
                 <!-- BOX BUDGET (sempre visibile su mobile, hover su desktop) -->
                 <div class="flex sm:hidden justify-center mt-2">
@@ -747,33 +757,35 @@
             </div>
 
             <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
-            <div class="mt-4 sm:mt-8 grid grid-cols-2 gap-2 sm:gap-4 px-1 sm:px-0">
-                <!-- Toggle Campionato -->
-                <div class="p-2 sm:p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
-                    <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                        <span class="text-white font-bold text-xs sm:text-base">🏅 <span class="hidden sm:inline">Campionato</span><span class="sm:hidden">Camp.</span></span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                            <div class="w-9 h-5 sm:w-11 sm:h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
+            <div id="toggle-partecipazione-box" class="mt-4 sm:mt-8 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                    <!-- Toggle Campionato -->
+                    <div class="p-3 sm:p-4 bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
+                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                            <span class="text-white font-extrabold text-xs sm:text-base">🏅 <span class="hidden sm:inline">Campionato</span><span class="sm:hidden">Camp.</span></span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-green-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-400"></div>
+                            </label>
+                        </div>
+                        <p id="championship-participation-status" class="text-[10px] sm:text-xs text-green-200/80 truncate">
+                            Caricamento...
+                        </p>
                     </div>
-                    <p id="championship-participation-status" class="text-[10px] sm:text-xs text-gray-400 truncate">
-                        Caricamento...
-                    </p>
-                </div>
 
-                <!-- Toggle CoppaSeriA -->
-                <div class="p-2 sm:p-4 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
-                    <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                        <span class="text-white font-bold text-xs sm:text-base">🏆 <span class="hidden sm:inline">CoppaSeriA</span><span class="sm:hidden">Coppa</span></span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                            <div class="w-9 h-5 sm:w-11 sm:h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                        </label>
+                    <!-- Toggle CoppaSeriA -->
+                    <div class="p-3 sm:p-4 bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
+                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                            <span class="text-white font-extrabold text-xs sm:text-base">🏆 <span class="hidden sm:inline">CoppaSeriA</span><span class="sm:hidden">Coppa</span></span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-purple-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-purple-400"></div>
+                            </label>
+                        </div>
+                        <p id="cup-participation-status" class="text-[10px] sm:text-xs text-purple-200/80 truncate">
+                            Caricamento...
+                        </p>
                     </div>
-                    <p id="cup-participation-status" class="text-[10px] sm:text-xs text-gray-400 truncate">
-                        Caricamento...
-                    </p>
                 </div>
             </div>
 
@@ -1483,7 +1495,8 @@
     <script src="tests.js"></script>
 
     <!-- 2. LOGICA DI SIMULAZIONE (Dipende solo dalle costanti) -->
-    <script src="simulazione.js"></script> 
+    <script src="simulazione.js"></script>
+    <script src="simulazione-nuove-regole.js"></script> 
 
     <!-- 3. MODULI CORE INTERFACCIA (Dipendono da Core) -->
     <script src="interfaccia-auth.js"></script>       

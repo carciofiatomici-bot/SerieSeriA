@@ -490,6 +490,48 @@ window.InterfacciaDashboard = {
             cupBox.style.borderColor = color;
         }
 
+        // Bordo box Gestione Rosa/Formazione
+        const gestioneBox = document.getElementById('gestione-box');
+        if (gestioneBox) {
+            gestioneBox.style.borderColor = color;
+        }
+
+        // Bordo box Competizioni
+        const competizioniBox = document.getElementById('competizioni-box');
+        if (competizioniBox) {
+            competizioniBox.style.borderColor = color;
+        }
+
+        // Bordo box Draft/Scambi
+        const draftScambiBox = document.getElementById('draft-scambi-box');
+        if (draftScambiBox) {
+            draftScambiBox.style.borderColor = color;
+        }
+
+        // Bordo box Toggle Partecipazione
+        const togglePartecipazioneBox = document.getElementById('toggle-partecipazione-box');
+        if (togglePartecipazioneBox) {
+            togglePartecipazioneBox.style.borderColor = color;
+        }
+
+        // Bordo box Sponsor-Media
+        const sponsorMediaBox = document.getElementById('sponsor-media-box');
+        if (sponsorMediaBox) {
+            sponsorMediaBox.style.borderColor = color;
+        }
+
+        // Bordo box Nome Squadra
+        const teamNameBox = document.getElementById('team-name-box');
+        if (teamNameBox) {
+            teamNameBox.style.borderColor = color;
+        }
+
+        // Bordo box Stadio-Hall of Fame
+        const stadioHallBox = document.getElementById('stadio-hall-box');
+        if (stadioHallBox) {
+            stadioHallBox.style.borderColor = color;
+        }
+
         // Aggiorna il color picker
         const colorPicker = document.getElementById('team-color-picker');
         if (colorPicker) {

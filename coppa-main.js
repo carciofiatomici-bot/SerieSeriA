@@ -73,6 +73,13 @@ window.CoppaMain = {
         const homeTeamData = homeTeamDoc.data();
         const awayTeamData = awayTeamDoc.data();
 
+        // Espandi formazione per avere nomi giocatori (per telecronaca)
+        const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
+        if (expandFormation) {
+            homeTeamData.formation.titolari = expandFormation(homeTeamData.formation?.titolari || [], homeTeamData.players || []);
+            awayTeamData.formation.titolari = expandFormation(awayTeamData.formation?.titolari || [], awayTeamData.players || []);
+        }
+
         // Per il ritorno, inverti casa/trasferta
         let actualHome = homeTeamData;
         let actualAway = awayTeamData;
@@ -80,6 +87,13 @@ window.CoppaMain = {
         if (legType === 'leg2') {
             actualHome = awayTeamData;
             actualAway = homeTeamData;
+        }
+
+        // Genera log telecronaca
+        let matchLog = null;
+        if (window.SimulazioneNuoveRegole) {
+            const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(actualHome, actualAway);
+            matchLog = logResult.log;
         }
 
         // Simula la partita
@@ -138,7 +152,8 @@ window.CoppaMain = {
                     isHome: true,
                     details: {
                         round: round.roundName,
-                        leg: legType
+                        leg: legType,
+                        matchLog: matchLog
                     }
                 });
 
@@ -160,7 +175,8 @@ window.CoppaMain = {
                     isHome: false,
                     details: {
                         round: round.roundName,
-                        leg: legType
+                        leg: legType,
+                        matchLog: matchLog
                     }
                 });
             }

@@ -29,8 +29,8 @@ body {
 
 /* 3. Nuovo Stile per i Box (Tema Calcistico/Gaming) */
 .football-box {
-    background-color: #1f2937; /* Grigio scuro (richiama l'ombra dello stadio) */
-    border: 2px solid #34d399; /* Bordo verde campo */
+    background-color: rgba(31, 41, 55, 0.7); /* Grigio scuro con trasparenza 30% */
+    border: 3px solid #34d399; /* Bordo verde campo */
     border-radius: 12px;
     padding: 32px;
     box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); /* Effetto glow verde */

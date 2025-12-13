@@ -266,6 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Test Simulazione Partita
         setupTestSimulationListeners();
 
+        // Test Simulazione Nuove Regole
+        setupTestSimulationNewRulesListeners();
+
         // Fix Abilita Icone
         const btnFixIcone = document.getElementById('btn-fix-icone-ability');
         if (btnFixIcone) {
@@ -907,6 +910,172 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (error) {
                 console.error('Errore nella simulazione test:', error);
+                displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+                resultContainer.classList.add('hidden');
+            } finally {
+                btnRun.disabled = false;
+                btnRun.innerHTML = 'Simula Partita';
+            }
+        });
+    };
+
+    /**
+     * Setup listeners per il test di simulazione con nuove regole
+     */
+    const setupTestSimulationNewRulesListeners = () => {
+        const btnTestSimulation = document.getElementById('btn-test-simulation-new-rules');
+        const modal = document.getElementById('test-simulation-new-rules-modal');
+        const btnClose = document.getElementById('btn-close-test-new-simulation');
+        const btnRun = document.getElementById('btn-run-test-new-simulation');
+        const homeSelect = document.getElementById('test-new-home-team');
+        const awaySelect = document.getElementById('test-new-away-team');
+        const resultContainer = document.getElementById('test-new-simulation-result');
+        const scoreDiv = document.getElementById('test-new-simulation-score');
+
+        if (!btnTestSimulation || !modal) return;
+
+        // Apri modal e carica squadre
+        btnTestSimulation.addEventListener('click', async () => {
+            modal.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            try {
+                const { collection, getDocs } = firestoreTools;
+                const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+                const teams = teamsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })).filter(t => t.teamName);
+
+                const defaultOption = '<option value="">Seleziona squadra...</option>';
+                const teamOptions = teams.map(t =>
+                    `<option value="${t.id}">${t.teamName}</option>`
+                ).join('');
+
+                homeSelect.innerHTML = defaultOption + teamOptions;
+                awaySelect.innerHTML = defaultOption + teamOptions;
+
+            } catch (error) {
+                console.error('Errore caricamento squadre per test nuove regole:', error);
+                displayMessage('Errore nel caricamento delle squadre', 'error', 'toggle-status-message');
+            }
+        });
+
+        // Chiudi modal
+        btnClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Esegui simulazione con nuove regole
+        btnRun.addEventListener('click', async () => {
+            const homeTeamId = homeSelect.value;
+            const awayTeamId = awaySelect.value;
+
+            if (!homeTeamId || !awayTeamId) {
+                displayMessage('Seleziona entrambe le squadre', 'error', 'toggle-status-message');
+                return;
+            }
+
+            if (homeTeamId === awayTeamId) {
+                displayMessage('Seleziona due squadre diverse', 'error', 'toggle-status-message');
+                return;
+            }
+
+            btnRun.disabled = true;
+            btnRun.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Simulazione...';
+
+            try {
+                const { doc, getDoc } = firestoreTools;
+                const [homeDocSnap, awayDocSnap] = await Promise.all([
+                    getDoc(doc(db, TEAMS_COLLECTION_PATH, homeTeamId)),
+                    getDoc(doc(db, TEAMS_COLLECTION_PATH, awayTeamId))
+                ]);
+
+                if (!homeDocSnap.exists() || !awayDocSnap.exists()) {
+                    throw new Error('Una delle squadre non esiste');
+                }
+
+                const homeTeamData = { id: homeDocSnap.id, ...homeDocSnap.data() };
+                const awayTeamData = { id: awayDocSnap.id, ...awayDocSnap.data() };
+
+                if (!homeTeamData.formation?.titolari?.length) {
+                    throw new Error(`${homeTeamData.teamName} non ha una formazione impostata`);
+                }
+                if (!awayTeamData.formation?.titolari?.length) {
+                    throw new Error(`${awayTeamData.teamName} non ha una formazione impostata`);
+                }
+
+                // Espandi i dati della formazione dalla rosa (recupera name, type, etc.)
+                const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
+                if (expandFormation) {
+                    homeTeamData.formation.titolari = expandFormation(homeTeamData.formation.titolari, homeTeamData.players || []);
+                    homeTeamData.formation.panchina = expandFormation(homeTeamData.formation.panchina || [], homeTeamData.players || []);
+                    awayTeamData.formation.titolari = expandFormation(awayTeamData.formation.titolari, awayTeamData.players || []);
+                    awayTeamData.formation.panchina = expandFormation(awayTeamData.formation.panchina || [], awayTeamData.players || []);
+                }
+
+                // Esegui la simulazione con NUOVE REGOLE
+                const result = window.SimulazioneNuoveRegole.runSimulationWithLog(homeTeamData, awayTeamData);
+
+                // Mostra risultato
+                resultContainer.classList.remove('hidden');
+                scoreDiv.textContent = `${homeTeamData.teamName} ${result.homeGoals} - ${result.awayGoals} ${awayTeamData.teamName}`;
+
+                // Popola i log
+                const simpleLogContent = document.getElementById('test-new-simulation-simple-log-content');
+                const simpleLogContainer = document.getElementById('test-new-simulation-simple-log');
+                const detailedLogContent = document.getElementById('test-new-simulation-detailed-log-content');
+                const detailedLogContainer = document.getElementById('test-new-simulation-detailed-log');
+                const btnSimpleLog = document.getElementById('btn-toggle-new-simple-log');
+                const btnDetailedLog = document.getElementById('btn-toggle-new-detailed-log');
+
+                if (simpleLogContent && result.simpleLog) {
+                    simpleLogContent.textContent = result.simpleLog.join('\n');
+                }
+                if (detailedLogContent && result.log) {
+                    detailedLogContent.textContent = result.log.join('\n');
+                }
+
+                // Reset stato log
+                if (simpleLogContainer) simpleLogContainer.classList.add('hidden');
+                if (detailedLogContainer) detailedLogContainer.classList.add('hidden');
+
+                // Handler bottone log ristretto
+                if (btnSimpleLog) {
+                    btnSimpleLog.onclick = () => {
+                        const isHidden = simpleLogContainer.classList.contains('hidden');
+                        if (isHidden && detailedLogContainer) {
+                            detailedLogContainer.classList.add('hidden');
+                        }
+                        simpleLogContainer.classList.toggle('hidden');
+                    };
+                }
+
+                // Handler bottone log dettagliato
+                if (btnDetailedLog) {
+                    btnDetailedLog.onclick = () => {
+                        const isHidden = detailedLogContainer.classList.contains('hidden');
+                        if (isHidden && simpleLogContainer) {
+                            simpleLogContainer.classList.add('hidden');
+                        }
+                        detailedLogContainer.classList.toggle('hidden');
+                    };
+                }
+
+                console.log('Test simulazione NUOVE REGOLE completato:', {
+                    home: homeTeamData.teamName,
+                    away: awayTeamData.teamName,
+                    result: result
+                });
+
+            } catch (error) {
+                console.error('Errore nella simulazione test nuove regole:', error);
                 displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
                 resultContainer.classList.add('hidden');
             } finally {
@@ -2485,13 +2654,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let updatedCount = 0;
 
-            for (const teamDoc of querySnapshot.docs) {
-                const teamData = teamDoc.data();
+            for (const teamDocSnap of querySnapshot.docs) {
+                const teamData = teamDocSnap.data();
+
+                // Salta l'account admin
+                if (teamData.teamName?.toLowerCase() === 'serieseria' || teamData.isAdmin) {
+                    continue;
+                }
+
                 const currentValue = teamData[fieldName] || 0;
                 const newValue = currentValue + amount;
 
-                const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamDoc.id);
+                const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamDocSnap.id);
                 await updateDoc(teamDocRef, { [fieldName]: newValue });
+
+                // Invia notifica alla squadra
+                await sendCreditsNotification(teamDocSnap.id, teamData.teamName, amount, creditType);
+
                 updatedCount++;
             }
 
@@ -2512,6 +2691,167 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Variabile per tracciare il tipo di credito nel modal singola squadra
+    let _assignCreditsSingleType = 'CS';
+
+    /**
+     * Apre il modal per assegnare crediti a squadra singola
+     */
+    const openAssignCreditsSingleModal = async (creditType) => {
+        _assignCreditsSingleType = creditType;
+        const modal = document.getElementById('assign-credits-single-modal');
+        const title = document.getElementById('assign-credits-single-title');
+        const teamSelect = document.getElementById('assign-credits-team-select');
+        const amountInput = document.getElementById('assign-credits-amount');
+        const errorMsg = document.getElementById('assign-single-error');
+
+        if (!modal) return;
+
+        const isCS = creditType === 'CS';
+        title.textContent = isCS ? '💰 Assegna Crediti Seri (CS)' : '⭐ Assegna Crediti Super Seri (CSS)';
+        amountInput.value = isCS ? 100 : 10;
+        errorMsg.textContent = '';
+
+        // Carica squadre
+        try {
+            const { collection, getDocs } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            const teams = teamsSnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(t => t.teamName && t.teamName.toLowerCase() !== 'serieseria');
+
+            const defaultOption = '<option value="">Seleziona squadra...</option>';
+            const teamOptions = teams.map(t =>
+                `<option value="${t.id}">${t.teamName}</option>`
+            ).join('');
+
+            teamSelect.innerHTML = defaultOption + teamOptions;
+        } catch (error) {
+            console.error('Errore caricamento squadre:', error);
+            errorMsg.textContent = 'Errore nel caricamento delle squadre';
+        }
+
+        modal.classList.remove('hidden');
+    };
+
+    /**
+     * Setup del modal assegna crediti singola squadra
+     */
+    const setupAssignCreditsSingleModal = () => {
+        const modal = document.getElementById('assign-credits-single-modal');
+        const btnConfirm = document.getElementById('btn-confirm-assign-single');
+        const btnCancel = document.getElementById('btn-cancel-assign-single');
+
+        if (!modal) return;
+
+        btnCancel?.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        btnConfirm?.addEventListener('click', async () => {
+            const teamSelect = document.getElementById('assign-credits-team-select');
+            const amountInput = document.getElementById('assign-credits-amount');
+            const errorMsg = document.getElementById('assign-single-error');
+            const singleMsg = document.getElementById('single-assign-message');
+
+            const teamId = teamSelect.value;
+            const amount = parseInt(amountInput.value);
+
+            if (!teamId) {
+                errorMsg.textContent = 'Seleziona una squadra';
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                errorMsg.textContent = 'Inserisci una quantita valida';
+                return;
+            }
+
+            btnConfirm.disabled = true;
+            btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Assegnazione...';
+
+            const isCS = _assignCreditsSingleType === 'CS';
+            const fieldName = isCS ? 'budget' : 'creditiSuperSeri';
+            const displayName = isCS ? 'CS' : 'CSS';
+
+            try {
+                const { doc, getDoc, updateDoc } = firestoreTools;
+                const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+                const teamDoc = await getDoc(teamDocRef);
+
+                if (!teamDoc.exists()) {
+                    throw new Error('Squadra non trovata');
+                }
+
+                const teamData = teamDoc.data();
+                const currentValue = teamData[fieldName] || 0;
+                const newValue = currentValue + amount;
+
+                await updateDoc(teamDocRef, { [fieldName]: newValue });
+
+                // Invia notifica alla squadra
+                await sendCreditsNotification(teamId, teamData.teamName, amount, _assignCreditsSingleType);
+
+                modal.classList.add('hidden');
+
+                if (singleMsg) {
+                    singleMsg.textContent = `Assegnati ${amount} ${displayName} a ${teamData.teamName}!`;
+                    singleMsg.className = 'text-center text-sm mb-3 text-green-400';
+                    setTimeout(() => {
+                        singleMsg.textContent = '';
+                    }, 5000);
+                }
+
+                // Ricarica la lista squadre
+                window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
+
+            } catch (error) {
+                console.error('Errore assegnazione crediti:', error);
+                errorMsg.textContent = `Errore: ${error.message}`;
+            } finally {
+                btnConfirm.disabled = false;
+                btnConfirm.innerHTML = 'Conferma';
+            }
+        });
+    };
+
+    /**
+     * Invia una notifica alla squadra per crediti ricevuti
+     */
+    const sendCreditsNotification = async (teamId, teamName, amount, creditType) => {
+        try {
+            const { doc, updateDoc, arrayUnion, Timestamp } = firestoreTools;
+            const isCS = creditType === 'CS';
+            const icon = isCS ? '💰' : '⭐';
+            const displayName = isCS ? 'Crediti Seri' : 'Crediti Super Seri';
+
+            const notification = {
+                id: `credits_${Date.now()}`,
+                type: 'credits_received',
+                title: `${icon} ${displayName} Ricevuti!`,
+                message: `Hai ricevuto ${amount} ${displayName}!`,
+                timestamp: Timestamp.now(),
+                read: false
+            };
+
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+            await updateDoc(teamDocRef, {
+                notifications: arrayUnion(notification)
+            });
+
+            console.log(`[Notifica] Inviata notifica crediti a ${teamName}`);
+        } catch (error) {
+            console.error('Errore invio notifica:', error);
+            // Non bloccare l'operazione se la notifica fallisce
+        }
+    };
+
     /**
      * Renderizza pannello gestione squadre
      */
@@ -2525,6 +2865,16 @@ document.addEventListener('DOMContentLoaded', () => {
             window.AdminTeams.loadTeams(TEAMS_COLLECTION_PATH);
         });
 
+        // Handler Assegna CS a squadra singola
+        document.getElementById('btn-assign-cs-single')?.addEventListener('click', () => {
+            openAssignCreditsSingleModal('CS');
+        });
+
+        // Handler Assegna CSS a squadra singola
+        document.getElementById('btn-assign-css-single')?.addEventListener('click', () => {
+            openAssignCreditsSingleModal('CSS');
+        });
+
         // Handler Assegna CS a tutte le squadre
         document.getElementById('btn-assign-cs-all').addEventListener('click', () => {
             handleAssignCreditsToAll('CS');
@@ -2534,6 +2884,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-assign-css-all').addEventListener('click', () => {
             handleAssignCreditsToAll('CSS');
         });
+
+        // Setup modal assegna crediti singola squadra
+        setupAssignCreditsSingleModal();
 
         // Handler Fix Livelli Tutte le Squadre
         document.getElementById('btn-fix-all-teams-levels').addEventListener('click', () => {
