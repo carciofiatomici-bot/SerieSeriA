@@ -69,8 +69,8 @@ MANUALE DELLE ABILITÀ
 (1) Presa Sicura: Se il portiere effettua una parata e il risultato della formula (Totale Portiere - Totale Tiro) è maggiore di 5, la squadra riparte automaticamente dalla Fase 2 nell'azione successiva.
 (1) Parata di pugno: Se il risultato della fase "tiro vs portiere" è -1 o -2 si comporta come se fosse 0.
 (1) Guerriero: Quando subisce un goal, ottiene +1 al modificatore per le prossime 3 occasioni in cui è chiamato in causa.
-(1) Presenza: Riduce di -1 il "Bonus Allenatore"  della squadra avversaria durante la Fase 3
-(2) Responta: 10% di probabilità di far tirare un altro d20 alla fase "tiro vs portiere" se il giocatore avversario ha battuto il portiere e di tenere obbligatoriamente il secondo risultato.
+(1) Presenza: Riduce di -1 il modificatore del tiratore della squadra avversaria durante la Fase 3
+(2) Respinta: 10% di probabilità di far tirare un altro d20 alla fase "tiro vs portiere" se il giocatore avversario ha battuto il portiere e di tenere obbligatoriamente il secondo risultato.
 (2) Uscita Kamikaze: Aggiunge +5 al modificatore durante la fase "tiro vs portiere", ma ha un 5% di possibilità di fallire la parata anche se ha un successo.
 (2) Parata con i piedi: 5% di probabilità di lanciare un secondo d20 quando para e tenere il più alto.
 (2) Para-Rigori: Annulla il bonus del "5% di probabilità di Goal automatico" degli avversari durante la Fase 3.
@@ -85,13 +85,13 @@ MANUALE DELLE ABILITÀ
 (4) Teletrasporto: 10% di possibilità di partecipare alle fase 1 o 2 se il modificatore del portiere > modificatore giocatore scelto (solamente in difesa) max 5 volte in partita.
 (4) Lancio lungo: 5% di probabilità di saltare la fase "costruzione" e di passare direttamente alla fase "attacco vs difesa".
 (4) Muro Psicologico: 5% di probabilità di costringere l'avversario a tirare 2 volte il d20 nella Fase 3 e tenere il risultato peggiore.
-(4) Miracolo: 5% di probabilità di trasformare un "Goal" subito in una "Parata" se la differenza è inferiore a 3 punti.
+(4) Miracolo: 5% di probabilità di trasformare un "Goal" subito in una "Parata" se la differenza è al massimo -5.
 (4) Regista Difensivo: Se effettua una parata, la squadra salta la Fase 1 dell'azione successiva e inizia direttamente dalla Fase 2 (Attacco vs Difesa) con un bonus di +2 al modificatore del compagno.
 
 >>> Abilità Negative:
 (1) Tuffo Ritardato: Contro attaccanti di tipologia "Velocità", il modificatore del portiere è ridotto di -2.
 (1) Mani di burro: 5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo nella fase di "tiro vs portiere".
-(1) Respinta Timida: 5% di probabilità di dover tirare di nuovo il d20 in fase di "tiro vs portiere" e di usare obbligatoriamente il secondo tiro.
+(1) Respinta Timida: 10% di probabilità di dover tirare di nuovo il d20 in fase di "tiro vs portiere" e di usare obbligatoriamente il secondo tiro.
 (1) Fuori dai pali: 5% di probabilità di non aggiungere il suo modificatore durante la fase "tiro vs portiere".
 (1) Distratto: Se l'azione avversaria ha saltato la Fase 1, il portiere subisce un malus di -2 al primo tiro.
 (1) Statico: Subisce un malus di -1 quando fronteggia attaccanti di tipologia "Velocità".
@@ -109,7 +109,7 @@ MANUALE DELLE ABILITÀ
 (1) Spazzata: 5% di probabilità di aggiungere +1 al proprio modificatore durante la Fase 2 (Attacco vs Difesa).
 (2) Muro: 5% di probabilità di aggiungere +3 al proprio modificatore quando si difende nella fase "attacco vs difesa".
 (2) Antifurto: 5% di interrompere direttamente la fase "attacco vs difesa" della squadra avversaria.
-(2) Guardia: Se è l'unico difensore nella formazione della squadra, aggiunge +4 al suo modificatore quando difende la fase "attacco vs difesa".
+(2) Guardia: Se è l'unico difensore nella formazione della squadra, aggiunge +3 al suo modificatore quando difende la fase "attacco vs difesa".
 (2) Marcatura a Uomo: Contro un ruolo avversario scelto a inizio partita il modificatore aumenta di +1.5, contro gli altri diminuisce di -0.5.
 (2) Trappola del Fuorigioco: Aumenta del 10% la soglia necessaria alla squadra avversaria per superare la Fase 1 col d100. Funziona solo se schierato titolare.
 (2) Deviazione: 5% di probabilità di aggiungere il suo modificatore a quello del portiere nella fase "tiro vs portiere".
@@ -121,7 +121,7 @@ MANUALE DELLE ABILITÀ
 (3) Intercetto: 5% di probabilità di vincere automaticamente la Fase 2 senza tirare i dadi se l'avversario è un Centrocampista.
 (4) Contrasto Durissimo: Ad ogni fase, rende nulla l'abilità di un giocatore nella panchina avversaria.
 (4) Leader Difensivo: Se questo giocatore è in campo, il malus dovuto alla "Tipologia Giocatori" subito dai compagni di reparto è ridotto dal 25% al 10%.
-(4) Tiro dalla distanza: Il giocatore sostituisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase "attacco vs difesa" (se il suo è più alto).
+(4) Tiro dalla distanza: 10% di possibilità che Il giocatore sostituisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase "attacco vs difesa" (se il suo è più alto).
 (4) Svaligiatore: 5% di probabilità di rubare il modificatore di un attaccante avversario e aggiungerlo al proprio.
 (4) Salvataggio sulla Linea: Se il portiere viene battuto (Goal), 5% di probabilità di salvare il goal tirando 1d20 + Mod Difensore vs Totale Attacco.
 (4) Scivolata Disperata: Se perde la Fase 2, 10% di probabilità di annullare l'azione commettendo fallo tattico (salta le successive 2 occasioni).
