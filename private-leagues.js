@@ -334,7 +334,7 @@ window.PrivateLeagues = {
     },
 
     /**
-     * Abbandona la lega (i CS NON vengono rimborsati)
+     * Abbandona la lega (i CS vengono rimborsati se status=waiting)
      */
     async leaveLeague(teamId) {
         try {
@@ -373,8 +373,21 @@ window.PrivateLeagues = {
                 });
             }
 
-            // Rimuovi riferimento dalla squadra (CS NON rimborsati)
+            // Rimuovi riferimento dalla squadra
             const teamUpdate = { privateLeagueId: null };
+
+            // Rimborso 100% se la lega e ancora in attesa (non partita)
+            if (league.status === 'waiting' && league.entryFee > 0) {
+                const teamEntry = league.teams.find(t => t.teamId === teamId);
+                if (teamEntry && teamEntry.feePaid) {
+                    const teamDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/teams`, teamId));
+                    if (teamDoc.exists()) {
+                        const currentBudget = teamDoc.data().budget || 0;
+                        teamUpdate.budget = currentBudget + league.entryFee;
+                        console.log(`PrivateLeagues: Rimborso ${league.entryFee} CS a ${teamId}`);
+                    }
+                }
+            }
 
             // Se la lega era completata, imposta cooldown fino al 1° del mese successivo
             if (league.status === 'completed') {
@@ -1029,24 +1042,19 @@ window.PrivateLeagues = {
                 return { success: false, error: 'Squadra non disponibile per l\'invito' };
             }
 
-            // Invia notifica alla squadra target
-            if (window.Notifications && window.FeatureFlags?.isEnabled('notifications')) {
-                // Aggiungi notifica al sistema (verra salvata localmente per ora)
-                // In un sistema reale, salveresti su Firestore nella collection notifications del team
-                window.Notifications.add({
-                    type: 'league_invite',
-                    title: '👥 Invito Lega Privata',
-                    message: `${senderTeamName} ti invita a "${league.name}"${league.entryFee > 0 ? ` (${league.entryFee} CS)` : ' (Gratis)'}`,
-                    leagueId: league.leagueId,
-                    inviteCode: league.inviteCode,
-                    leagueName: league.name,
-                    entryFee: league.entryFee,
-                    targetTeamId: targetTeamId
-                });
-            }
-
-            // Salva l'invito anche su Firestore per persistenza
+            // Salva l'invito su Firestore per persistenza
             await this.saveInviteToFirestore(leagueId, targetTeamId, league, senderTeamName);
+
+            // Salva la notifica su Firestore per il destinatario (non localmente!)
+            await this.saveNotificationToFirestore(targetTeamId, {
+                type: 'league_invite',
+                title: '👥 Invito Lega Privata',
+                message: `${senderTeamName} ti invita a "${league.name}"${league.entryFee > 0 ? ` (${league.entryFee} CS)` : ' (Gratis)'}`,
+                leagueId: league.leagueId,
+                inviteCode: league.inviteCode,
+                leagueName: league.name,
+                entryFee: league.entryFee
+            });
 
             console.log(`PrivateLeagues: Invito inviato a ${targetTeam.teamName} per la lega "${league.name}"`);
             return { success: true, teamName: targetTeam.teamName };
@@ -1092,6 +1100,33 @@ window.PrivateLeagues = {
             await updateDoc(teamRef, { pendingLeagueInvites: pendingInvites });
         } catch (error) {
             console.error('Errore salvataggio invito:', error);
+        }
+    },
+
+    /**
+     * Salva una notifica su Firestore per il destinatario
+     * @param {string} targetTeamId - ID della squadra destinataria
+     * @param {Object} notificationData - Dati della notifica
+     */
+    async saveNotificationToFirestore(targetTeamId, notificationData) {
+        try {
+            const { doc, setDoc, Timestamp } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
+            const notifId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+            const notifPath = `artifacts/${appId}/public/data/notifications/${notifId}`;
+
+            await setDoc(doc(db, notifPath), {
+                ...notificationData,
+                targetTeamId: targetTeamId,
+                timestamp: Timestamp.now(),
+                read: false
+            });
+
+            console.log(`PrivateLeagues: Notifica salvata su Firestore per ${targetTeamId}`);
+        } catch (error) {
+            console.error('Errore salvataggio notifica su Firestore:', error);
         }
     },
 

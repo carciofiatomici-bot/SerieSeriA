@@ -71,7 +71,7 @@ window.GestioneSquadreUtils = {
 
         const isIcona = player.abilities && player.abilities.includes('Icona');
         if (isIcona) {
-             mod = getRandomInt(0, 6); // ICONA: Range [0, +6]
+             mod = getRandomInt(-2, 4); // ICONA: Range [-2, +4] (possono avere forma negativa)
         } else {
              mod = getRandomInt(-3, 3); // ALTRI: Range [-3, +3]
         }

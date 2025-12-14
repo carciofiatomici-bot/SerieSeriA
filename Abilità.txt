@@ -57,6 +57,10 @@ MANUALE DELLE ABILITÀ
 (1) Demotivato Se la propria squadra sta perdendo (svantaggio di 1 o più goal), il giocatore smette di impegnarsi: subisce un malus di -1.0 a tutte le fasi finché il risultato non torna in parità o vantaggio.
 (1) Portasfortuna Aumenta la probabilità di infortunio di fine partita  per se stesso e per i compagni di reparto (es. se è difensore, per tutti i difensori) dall'1% al 2%.
 (1) Contrattura Cronica Il giocatore è estremamente fragile. Se partecipa a più di 15 occasioni in una singola partita, dalla 16esima in poi il suo modificatore viene dimezzato per la fatica.
+(1) Lento: Se affronta avversari con tipologia "Velocità", il suo modificatore base viene dimezzato (arrotondato per difetto).
+(1) Debole: Se affronta avversari con tipologia "Potenza", il suo modificatore base viene dimezzato (arrotondato per difetto).
+(1) Impreparato: Se affronta avversari con tipologia "Tecnica", il suo modificatore base viene dimezzato (arrotondato per difetto).
+
 
 
 ###################################################
@@ -96,9 +100,6 @@ MANUALE DELLE ABILITÀ
 (1) Distratto: Se l'azione avversaria ha saltato la Fase 1, il portiere subisce un malus di -2 al primo tiro.
 (1) Statico: Subisce un malus di -1 quando fronteggia attaccanti di tipologia "Velocità".
 (1) Battezzata fuori: 5% di probabilità che, se il risultato della formula in Fase 3 è una "Parata" con margine inferiore a 2, diventi un Goal.
-(1) Lento: Se affronta avversari con tipologia "Velocità", il suo modificatore base viene dimezzato (arrotondato per difetto).
-(1) Debole: Se affronta avversari con tipologia "Potenza", il suo modificatore base viene dimezzato (arrotondato per difetto).
-(1) Impreparato: Se affronta avversari con tipologia "Tecnica", il suo modificatore base viene dimezzato (arrotondato per difetto).
 
 ---------------------------------------------------
 [ DIFENSORE ]
@@ -201,7 +202,7 @@ MANUALE DELLE ABILITÀ
 (1) Eccesso di sicurezza: 5% di possibilità di non aggiungere il suo modificatore durante la fase "attacco vs difesa".
 (1) Sprecate: Se arriva alla Fase 3 con un vantaggio di modificatore superiore a +5, subisce -3 al tiro.
 (1) Simulatore: Se perde la Fase 2, 5% di probabilità che provi a simulare. 1=Espulso (Mod 0), 20=Rigore, Altro=Nulla.
-(1) Titubanza: In attacco, il dado del tiro della squadra diventa 1d6 invece che 1d10.
+(1) Titubanza: In attacco, il dado del tiro della squadra diventa 1d12 invece che 1d20.
 (1) Egoista: 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale.
 (1) Allergico ai rigori: Se il risultato della Fase 3 è 0 (Incerto), la probabilità di Goal scende dal 50% al 25%.
 (1) Sprecone: Se il "Valore Tiro" in Fase 3 supera il "Totale Portiere" di oltre 10 punti (tiro troppo potente), il tiro finisce fuori (Goal annullato).

@@ -7,42 +7,157 @@
 // IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const APP_VERSION = '1.3.1'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const APP_VERSION = '1.4.0'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
 const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
 const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
 const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
 
 // File da cachare immediatamente (shell dell'app)
+// IMPORTANTE: Mantenere sincronizzato con i <script> in index.html
 const STATIC_ASSETS = [
+    // Core
     './',
     './index.html',
     './style.css',
     './manifest.json',
-    './interfaccia.js',
+
+    // Foundation
+    './icone.js',
+    './firestore-cache.js',
+    './config-listener.js',
+    './listener-manager.js',
     './interfaccia-core.js',
+
+    // UI Components
+    './toast.js',
+    './confirm-dialog.js',
+    './skeleton-loader.js',
+    './loading-manager.js',
+    './error-handler.js',
+    './form-validator.js',
+    './breadcrumb.js',
+
+    // Features
+    './feature-flags.js',
+    './notifications.js',
+    './player-stats-advanced.js',
+    './chat.js',
+    './trades.js',
+    './achievements.js',
+    './injuries.js',
+    './stadium.js',
+    './stadium-ui.js',
+    './training.js',
+    './match-animations.js',
+    './drag-drop.js',
+    './challenges.js',
+    './challenge-match.js',
+    './dashboard-features.js',
+    './tutorial.js',
+    './match-history.js',
+    './sponsor-system.js',
+    './private-leagues.js',
+    './private-leagues-ui.js',
+    './image-compressor.js',
+    './lazy-loader.js',
+
+    // Simulation
+    './simulazione.js',
+    './simulazione-nuove-regole.js',
+
+    // Interface
     './interfaccia-auth.js',
     './interfaccia-dashboard.js',
     './interfaccia-navigation.js',
-    './simulazione.js',
-    './gestionesquadre.js',
+    './interfaccia-onboarding.js',
+    './interfaccia-team.js',
+    './uniform-editor.js',
+
+    // Squad Management
+    './gestionesquadre-constants.js',
+    './gestionesquadre-utils.js',
+    './gestionesquadre-rosa.js',
     './gestionesquadre-formazione.js',
-    './draft.js',
-    './draft-turns.js',
-    './draft-user-actions.js',
+    './gestionesquadre-icona.js',
+    './gestionesquadre.js',
+
+    // Draft
     './draft-constants.js',
+    './draft-timer-sync.js',
+    './draft-utils.js',
+    './draft-turns.js',
+    './draft-admin-ui.js',
+    './draft-admin-players.js',
+    './draft-user-ui.js',
+    './draft-user-actions.js',
+    './draft-status-box.js',
+    './draft.js',
     './mercato.js',
-    './challenges.js',
-    './challenge-match.js',
-    './training.js',
-    './feature-flags.js',
-    './dashboard-features.js',
-    './icone.js',
-    './abilities-encyclopedia.js',
-    './admin.js',
+
+    // Admin
+    './admin-formulas.js',
+    './admin-rewards.js',
+    './admin-sponsors.js',
+    './admin-media.js',
     './admin-ui.js',
+    './admin-players.js',
+    './admin-teams.js',
+    './admin-icons.js',
+    './admin.js',
     './admin-feature-flags.js',
-    './icons/icon-192.png',
-    './icons/icon-512.png'
+    './admin-objects.js',
+    './equipment-ui.js',
+
+    // Player Stats & Experience
+    './player-season-stats.js',
+    './player-season-stats-ui.js',
+    './player-exp.js',
+    './player-exp-ui.js',
+    './training-exp-minigame.js',
+
+    // Championship
+    './campionato-rewards.js',
+    './campionato-simulation.js',
+    './campionato-schedule.js',
+    './campionato-ui.js',
+    './campionato-main.js',
+    './campionato.js',
+    './automazione-simulazioni.js',
+
+    // Cup
+    './coppa-constants.js',
+    './coppa-brackets.js',
+    './coppa-simulation.js',
+    './coppa-schedule.js',
+    './coppa-ui.js',
+    './coppa-main.js',
+    './supercoppa.js',
+
+    // Main Orchestrator
+    './interfaccia.js',
+
+    // Post-load UI
+    './match-replay-simple.js',
+    './player-stats.js',
+    './player-stats-ui.js',
+    './abilities-encyclopedia.js',
+    './abilities-encyclopedia-ui.js',
+    './rules-panel.js',
+    './sponsor-media.js',
+    './user-championship.js',
+    './user-competitions.js',
+
+    // Credits System
+    './crediti-super-seri.js',
+    './crediti-super-seri-ui.js',
+
+    // PWA & Version
+    './version-check.js',
+    './pwa-install.js',
+
+    // Offline fallback
+    './offline.html'
+    // Nota: le icone PWA sono caricate da CDN esterno (GitHub), non locali
 ];
 
 // Installa il service worker e cacha i file statici
@@ -138,9 +253,9 @@ self.addEventListener('fetch', (event) => {
                         if (cachedResponse) {
                             return cachedResponse;
                         }
-                        // Se e' una pagina HTML, ritorna la pagina principale
+                        // Se e' una pagina HTML, mostra la pagina offline dedicata
                         if (request.headers.get('accept')?.includes('text/html')) {
-                            return caches.match('./index.html');
+                            return caches.match('./offline.html');
                         }
                         return new Response('Offline', { status: 503 });
                     });

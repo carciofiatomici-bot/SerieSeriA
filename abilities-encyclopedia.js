@@ -123,13 +123,13 @@ window.AbilitiesEncyclopedia = {
             color: 'text-green-500',
             rarity: 'Rara',
             type: 'Positiva',
-            description: '5% di raddoppiare il modificatore (negativo diventa 0)',
-            effect: '5% raddoppia mod, se negativo diventa 0',
-            mechanics: 'Ogni fase, 5% di raddoppiare. Se mod negativo, diventa 0 invece',
+            description: '5% di probabilita di aggiungere +3 al proprio modificatore',
+            effect: '5% aggiunge +3 al modificatore',
+            mechanics: 'In ogni fase a cui partecipa, 5% di probabilita di aggiungere +3 al proprio modificatore',
             activation: '5% per ogni fase',
-            example: 'Mod +8 → 5% → Diventa +16 | Mod -3 → 5% → Diventa 0',
+            example: 'Mod +5 → 5% → Diventa +8!',
             phase: 'Tutte le fasi',
-            synergy: ['Effetto Caos (protegge da negativi)', 'Uscita Kamikaze']
+            synergy: ['Effetto Caos', 'Uscita Kamikaze']
         },
 
         'Bandiera del club': {
@@ -273,14 +273,14 @@ window.AbilitiesEncyclopedia = {
             color: 'text-yellow-400',
             rarity: 'Leggendaria',
             type: 'Positiva',
-            description: '5% di trasformare un goal in parata se differenza < 3',
-            effect: '5% se Goal con differenza < 3, diventa Parata',
-            mechanics: 'Se il tiro batte il portiere con differenza < 3 punti, 5% di salvare comunque',
-            activation: '5% (solo se Goal con differenza < 3)',
-            example: 'Tiro 18 vs Portiere 16 → Differenza -2 → 5% → Miracolo! Parata!',
+            description: '5% di trasformare un goal in parata se differenza al massimo -5',
+            effect: '5% se Goal con differenza fino a -5, diventa Parata',
+            mechanics: 'Se il tiro batte il portiere con differenza al massimo -5 punti, 5% di salvare comunque',
+            activation: '5% (solo se Goal con differenza al massimo -5)',
+            example: 'Tiro 20 vs Portiere 16 → Differenza -4 → 5% → Miracolo! Parata!',
             phase: 'Fase 3 (Tiro vs Portiere)',
             synergy: ['Pugno di Ferro', 'Uscita Kamikaze'],
-            warning: 'Funziona solo se la differenza è < 3 punti'
+            warning: 'Funziona solo se la differenza e al massimo -5 punti'
         },
 
         'Freddezza': {
@@ -379,11 +379,11 @@ window.AbilitiesEncyclopedia = {
             color: 'text-blue-600',
             rarity: 'Rara',
             type: 'Positiva',
-            description: 'Il difensore diventa un muro invalicabile',
-            effect: '5% raddoppia modificatore quando difende in Fase 2',
-            mechanics: 'In Fase Attacco vs Difesa, 5% di raddoppiare il modificatore del difensore',
+            description: '5% di probabilita di aggiungere +3 al modificatore in difesa',
+            effect: '5% aggiunge +3 al modificatore quando difende in Fase 2',
+            mechanics: 'In Fase Attacco vs Difesa, 5% di probabilita di aggiungere +3 al modificatore del difensore',
             activation: '5%',
-            example: 'Difensore mod +6 → 5% → Diventa +12! Difesa fortissima',
+            example: 'Difensore mod +6 → 5% → Diventa +9! Difesa fortissima',
             phase: 'Fase 2 (Attacco vs Difesa)',
             synergy: ['Guardia', 'Antifurto']
         },
@@ -978,14 +978,14 @@ window.AbilitiesEncyclopedia = {
             color: 'text-gray-600',
             rarity: 'Comune',
             type: 'Negativa',
-            description: 'In attacco, il dado del tiro diventa 1d6 invece di 1d10',
-            effect: 'In Fase 3, la squadra usa 1d6 invece di 1d10 per il tiro',
-            mechanics: 'In Fase 3 (Tiro vs Portiere), quando l\'attaccante con Titubanza tira, la squadra usa 1d6 invece di 1d10',
+            description: 'In attacco, il dado del tiro diventa 1d12 invece di 1d20',
+            effect: 'In Fase 3, la squadra usa 1d12 invece di 1d20 per il tiro',
+            mechanics: 'In Fase 3 (Tiro vs Portiere), quando l\'attaccante con Titubanza tira, la squadra usa 1d12 invece di 1d20',
             activation: '100% (passiva)',
-            example: 'Fase 3 → Titubanza → Tiro con 1d6+mod invece di 1d10+mod!',
+            example: 'Fase 3 → Titubanza → Tiro con 1d12+mod invece di 1d20+mod!',
             phase: 'Fase 3 (Tiro vs Portiere)',
-            synergy: ['Nessuna (abilità negativa)'],
-            warning: '⚠️ ABILITÀ NEGATIVA - Riduce drasticamente il potenziale di tiro!'
+            synergy: ['Nessuna (abilita negativa)'],
+            warning: '⚠️ ABILITA NEGATIVA - Riduce il potenziale di tiro!'
         },
 
         // Nota: Fuori Posizione è definita come Multi-Ruolo (D, C, A) nella sezione DIFENSORE
@@ -1464,11 +1464,11 @@ window.AbilitiesEncyclopedia = {
             color: 'text-purple-600',
             rarity: 'Comune',
             type: 'Positiva',
-            description: 'Riduce di -1 il Bonus Allenatore avversario in Fase 3',
-            effect: '-1 al bonus allenatore avversario quando tira',
-            mechanics: 'Riduce di -1 il Bonus Allenatore della squadra avversaria durante la Fase 3',
+            description: 'Riduce di -1 il modificatore del tiratore avversario in Fase 3',
+            effect: '-1 al modificatore del tiratore avversario',
+            mechanics: 'Riduce di -1 il modificatore del tiratore della squadra avversaria durante la Fase 3',
             activation: '100% (passiva)',
-            example: 'Allenatore avversario +3 → Con Presenza diventa +2!',
+            example: 'Tiratore avversario mod +8 → Con Presenza diventa +7!',
             phase: 'Fase 3',
             synergy: ['Parata di pugno', 'Muro Psicologico']
         },

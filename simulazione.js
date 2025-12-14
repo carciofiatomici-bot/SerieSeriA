@@ -63,25 +63,25 @@ const TYPE_ADVANTAGE = {
 };
 
 // Bonus/Malus tipologia (valori assoluti, non percentuali)
-const TYPE_ADVANTAGE_BONUS = 1.5;   // Chi vince il confronto tipologia
-const TYPE_ADVANTAGE_MALUS = -1.5;  // Chi perde il confronto tipologia
+const TYPE_ADVANTAGE_BONUS = 3.0;   // Chi vince il confronto tipologia
+const TYPE_ADVANTAGE_MALUS = -3.0;  // Chi perde il confronto tipologia
 
 /**
  * Calcola bonus/malus tipologia per un giocatore
  * @param {string} playerType - Tipologia del giocatore (Potenza/Tecnica/Velocita)
  * @param {string} opponentType - Tipologia dell'avversario
- * @returns {number} Bonus (+1.5), Malus (-1.5) o 0 se stesso tipo
+ * @returns {number} Bonus (+3.0), Malus (-3.0) o 0 se stesso tipo
  */
 const getTypeModifier = (playerType, opponentType) => {
     if (!playerType || !opponentType || playerType === opponentType) return 0;
 
     // Il giocatore batte l'avversario?
     if (TYPE_ADVANTAGE[playerType] === opponentType) {
-        return TYPE_ADVANTAGE_BONUS; // +1.5
+        return TYPE_ADVANTAGE_BONUS; // +3.0
     }
     // L'avversario batte il giocatore?
     if (TYPE_ADVANTAGE[opponentType] === playerType) {
-        return TYPE_ADVANTAGE_MALUS; // -1.5
+        return TYPE_ADVANTAGE_MALUS; // -3.0
     }
     return 0;
 };
@@ -218,8 +218,8 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey
         modifier = LEVEL_MODIFIERS[clampedLevel] || modifier;
     }
 
-    // Freddezza o Icona: la forma non puo mai essere negativa
-    if (player.abilities?.includes('Freddezza') || player.abilities?.includes('Icona')) {
+    // Freddezza: la forma non puo mai essere negativa (solo per abilita Freddezza, NON per Icone)
+    if (player.abilities?.includes('Freddezza')) {
         const formaDiff = (player.currentLevel || player.level) - (player.level || 1);
         if (formaDiff < 0) {
             // Ricalcola senza malus forma (ma con penalita fuori ruolo se applicabile)
@@ -254,8 +254,8 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey
         }
     }
 
-    // Icona: forma mai negativa (gestita sopra in Freddezza/Forma Smagliante)
     // NOTA: L'Icona NON riceve bonus a se stessa, solo ai compagni
+    // Le Icone ora possono avere forma negativa (range -2 a +4)
 
     // Capitano nominato: +1 aggiuntivo (diverso dall'Icona)
     if (player.isCaptain === true) {
@@ -571,9 +571,9 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
             mod += rollDice(-3, 3);
         }
 
-        // Fortunato: 5% raddoppia modificatore (se negativo diventa 0)
+        // Fortunato: 5% aggiunge +3 al modificatore
         if (player.abilities?.includes('Fortunato') && checkChance(5)) {
-            mod = mod < 0 ? 0 : mod * 2;
+            mod += 3;
         }
 
         // ========================================
@@ -686,9 +686,9 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
 
         // Abilità specifiche per fase ATTACCO
         if (phase === 'attack') {
-            // Muro (Difensore): 5% raddoppia quando difende
+            // Muro (Difensore): 5% aggiunge +3 quando difende
             if (player.role === 'D' && player.abilities?.includes('Muro') && checkChance(5)) {
-                mod *= 2;
+                mod += 3;
             }
 
             // Spazzata (Difensore): 5% +1 al modificatore
@@ -1186,18 +1186,18 @@ const phaseShot = (teamA, teamB, attackResult) => {
 
     const finalAttackResult = attackResult + attackBonus;
 
-    // Determina dado tiro attaccante (normalmente 1d10)
-    let shotDie = 10;
+    // Determina dado tiro attaccante (normalmente 1d20)
+    let shotDie = 20;
     let shotDiceCount = 1; // Numero di dadi da tirare (per Tiro Potente)
 
-    // Titubanza (Attaccante negativa): il dado diventa 1d6 invece di 1d10
+    // Titubanza (Attaccante negativa): il dado diventa 1d12 invece di 1d20
     const hasTitubanza = teamA.A?.some(p =>
         p.abilities?.includes('Titubanza') &&
         !nullifiedAbilities.has(p.id) &&
         !injuredPlayers.has(p.id)
     );
     if (hasTitubanza) {
-        shotDie = 6;
+        shotDie = 12;
     }
 
     // Sguardo Intimidatorio (Portiere): 5% che l'attacco usi 1d12 invece di 1d20 (sulla fase tiro)
@@ -1377,9 +1377,9 @@ const phaseShot = (teamA, teamB, attackResult) => {
             }
         }
 
-        // Miracolo (Portiere): 5% salva se differenza < 3
+        // Miracolo (Portiere): 5% salva se differenza al massimo -5
         if (portiere.abilities?.includes('Miracolo') && !nullifiedAbilities.has(portiere.id)) {
-            if (Math.abs(saveResult) < 3 && checkChance(5)) {
+            if (Math.abs(saveResult) <= 5 && checkChance(5)) {
                 return false; // Miracolo! Parata!
             }
         }
@@ -1988,8 +1988,8 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
         goal = true;
         eventData.phases.shot.result = 'goal';
 
-        // Miracolo check
-        if (portiere.abilities?.includes('Miracolo') && Math.abs(saveResult) < 3) {
+        // Miracolo check (differenza al massimo -5)
+        if (portiere.abilities?.includes('Miracolo') && Math.abs(saveResult) <= 5) {
             const miracoloRoll = rollPercentage();
             if (miracoloRoll <= 5) {
                 log.push(`  MIRACOLO! (roll: ${miracoloRoll}) => PARATA!`);

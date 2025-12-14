@@ -82,6 +82,25 @@ window.ChallengeMatch = {
     },
 
     // ====================================================================
+    // TIMEOUT HELPERS (Anti-freeze)
+    // ====================================================================
+
+    /**
+     * Esegue una Promise con timeout per prevenire freeze
+     * @param {Promise} promise - La promise da eseguire
+     * @param {number} timeoutMs - Timeout in millisecondi
+     * @param {string} errorMsg - Messaggio di errore personalizzato
+     */
+    async withTimeout(promise, timeoutMs = 10000, errorMsg = 'Operazione timeout') {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error(errorMsg)), timeoutMs)
+            )
+        ]);
+    },
+
+    // ====================================================================
     // CREAZIONE PARTITA
     // ====================================================================
 
@@ -333,28 +352,36 @@ window.ChallengeMatch = {
     startPresenceHeartbeat(matchId) {
         this.stopPresenceHeartbeat();
 
-        const { doc, updateDoc, Timestamp } = window.firestoreTools;
         const matchPath = this.getMatchPath(matchId);
+        this.presenceUpdating = false; // Flag anti-overlap
 
         // Aggiorna subito
         this.updatePresence(matchPath);
 
-        // Poi ogni 5 secondi
-        this.presenceInterval = setInterval(() => {
-            this.updatePresence(matchPath);
+        // Poi ogni 5 secondi con protezione anti-overlap
+        this.presenceInterval = setInterval(async () => {
+            if (this.presenceUpdating) return; // Skip se update precedente ancora in corso
+            this.presenceUpdating = true;
+            try {
+                await this.withTimeout(
+                    this.updatePresence(matchPath),
+                    3000,
+                    'Presence update timeout'
+                );
+            } catch (err) {
+                console.warn("[ChallengeMatch] Presence heartbeat errore:", err.message);
+            } finally {
+                this.presenceUpdating = false;
+            }
         }, this.config.HEARTBEAT_INTERVAL_MS);
     },
 
     async updatePresence(matchPath) {
-        try {
-            const { doc, updateDoc, Timestamp } = window.firestoreTools;
-            await updateDoc(doc(window.db, matchPath), {
-                [`presence.${this.myTeamId}.lastSeen`]: Timestamp.now(),
-                [`presence.${this.myTeamId}.connected`]: true
-            });
-        } catch (e) {
-            console.warn("[ChallengeMatch] Errore update presenza:", e);
-        }
+        const { doc, updateDoc, Timestamp } = window.firestoreTools;
+        await updateDoc(doc(window.db, matchPath), {
+            [`presence.${this.myTeamId}.lastSeen`]: Timestamp.now(),
+            [`presence.${this.myTeamId}.connected`]: true
+        });
     },
 
     stopPresenceHeartbeat() {
@@ -499,40 +526,45 @@ window.ChallengeMatch = {
         console.log("[ChallengeMatch] matchPath:", matchPath);
 
         try {
-            const result = await runTransaction(window.db, async (transaction) => {
-                const matchRef = doc(window.db, matchPath);
-                const matchSnap = await transaction.get(matchRef);
+            // Transazione con timeout anti-freeze (15 secondi max)
+            const result = await this.withTimeout(
+                runTransaction(window.db, async (transaction) => {
+                    const matchRef = doc(window.db, matchPath);
+                    const matchSnap = await transaction.get(matchRef);
 
-                if (!matchSnap.exists()) {
-                    throw new Error('Partita non trovata');
-                }
+                    if (!matchSnap.exists()) {
+                        throw new Error('Partita non trovata');
+                    }
 
-                const matchData = matchSnap.data();
+                    const matchData = matchSnap.data();
 
-                // Verifica che sia il mio turno
-                if (matchData.diceState.waitingFor !== this.myTeamId) {
-                    throw new Error('Non e\' il tuo turno di lanciare!');
-                }
+                    // Verifica che sia il mio turno
+                    if (matchData.diceState.waitingFor !== this.myTeamId) {
+                        throw new Error('Non e\' il tuo turno di lanciare!');
+                    }
 
-                // Verifica che non sia gia' stato lanciato
-                if (matchData.diceState.result !== null) {
-                    throw new Error('Dado gia\' lanciato!');
-                }
+                    // Verifica che non sia gia' stato lanciato
+                    if (matchData.diceState.result !== null) {
+                        throw new Error('Dado gia\' lanciato!');
+                    }
 
-                // Genera risultato
-                const diceType = matchData.diceState.diceType;
-                const maxValue = parseInt(diceType.replace('d', ''));
-                const diceResult = Math.floor(Math.random() * maxValue) + 1;
+                    // Genera risultato
+                    const diceType = matchData.diceState.diceType;
+                    const maxValue = parseInt(diceType.replace('d', ''));
+                    const diceResult = Math.floor(Math.random() * maxValue) + 1;
 
-                // Aggiorna atomicamente
-                transaction.update(matchRef, {
-                    'diceState.result': diceResult,
-                    'diceState.rolledAt': Timestamp.now(),
-                    'lastActionAt': Timestamp.now()
-                });
+                    // Aggiorna atomicamente
+                    transaction.update(matchRef, {
+                        'diceState.result': diceResult,
+                        'diceState.rolledAt': Timestamp.now(),
+                        'lastActionAt': Timestamp.now()
+                    });
 
-                return { result: diceResult, diceType };
-            });
+                    return { result: diceResult, diceType };
+                }),
+                15000,
+                'Timeout lancio dado - riprova'
+            );
 
             console.log(`[ChallengeMatch] Dado lanciato: ${result.diceType} = ${result.result}`);
 
@@ -557,10 +589,21 @@ window.ChallengeMatch = {
         // Attendi che Firestore aggiorni lo stato locale
         await this.sleep(300);
 
-        // Rileggi lo stato aggiornato
+        // Rileggi lo stato aggiornato (con timeout anti-freeze)
         const { doc, getDoc, updateDoc, Timestamp } = window.firestoreTools;
         const matchPath = this.getMatchPath(this.currentMatch.matchId);
-        const freshSnap = await getDoc(doc(window.db, matchPath));
+        let freshSnap;
+        try {
+            freshSnap = await this.withTimeout(
+                getDoc(doc(window.db, matchPath)),
+                8000,
+                'Timeout lettura stato partita'
+            );
+        } catch (error) {
+            console.error('[ChallengeMatch] processDiceResult timeout:', error);
+            if (window.Toast) window.Toast.error('Errore di connessione. Riprova.');
+            return;
+        }
         if (!freshSnap.exists()) return;
 
         const matchData = freshSnap.data();
