@@ -17,15 +17,20 @@ window.AdminSponsors = {
         'birra del borgo.png',
         'birra grossa.png',
         'birra terzo tempo.png',
-        'birrificio del pareggio.png',
+        'birrificio-del-pareggio.png',
         'MONDO SErrande.png'
     ],
+
+    // Helper per ottenere URL immagine da GitHub
+    getImageUrl(imageName) {
+        return window.SponsorSystem?.getSponsorImageUrl(imageName) || `Immagini/Sponsor/${imageName}`;
+    },
 
     // Default config - ordinati per costo crescente (0-1500 CS)
     // Formula: V + 5*G + 5*A + CS = Tot 5-0
     defaultConfig: {
         sponsors: [
-            { id: 'birrificio_pareggio', name: 'Birrificio del Pareggio', image: 'birrificio del pareggio.png', description: 'Anche il pareggio merita una birra', cost: 0, expBonus: 0, formula: { perWin: 10, perGoal: 4, perDraw: 8, perAssist: 4, cleanSheet: 10 } },
+            { id: 'birrificio_pareggio', name: 'Birrificio del Pareggio', image: 'birrificio-del-pareggio.png', description: 'Anche il pareggio merita una birra', cost: 0, expBonus: 0, formula: { perWin: 10, perGoal: 4, perDraw: 8, perAssist: 4, cleanSheet: 10 } },
             { id: 'bar_sportivo', name: 'Bar Sportivo', image: 'bar sportivo.png', description: 'Dove si festeggia ogni vittoria', cost: 500, expBonus: 0.01, formula: { perWin: 15, perGoal: 5, perDraw: 5, perAssist: 5, cleanSheet: 15 } },
             { id: 'mondo_serrande', name: 'Mondo Serrande', image: 'MONDO SErrande.png', description: 'Chiudiamo la porta agli avversari', cost: 650, expBonus: 0.02, formula: { perWin: 18, perGoal: 6, perDraw: 6, perAssist: 6, cleanSheet: 18 } },
             { id: 'auto_spinta', name: 'Auto Spinta', image: 'auto spinta.png', description: 'Spingiamo la tua squadra al successo', cost: 800, expBonus: 0.03, formula: { perWin: 20, perGoal: 7, perDraw: 6, perAssist: 7, cleanSheet: 20 } },
@@ -94,9 +99,9 @@ window.AdminSponsors = {
             <div class="bg-gray-700 rounded-lg p-4 mb-3 border-l-4 border-yellow-500">
                 <div class="flex items-center gap-4 mb-3">
                     <div class="w-16 h-16 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src="Immagini/Sponsor/${sponsor.image}" alt="${sponsor.name}"
+                        <img src="${this.getImageUrl(sponsor.image)}" alt="${sponsor.name}"
                              class="w-full h-full object-contain p-1"
-                             onerror="this.src='Immagini/placeholder.jpg'"
+                             onerror="this.src='https://placehold.co/64x64/374151/9ca3af?text=?'"
                              id="sponsor-preview-${index}">
                     </div>
                     <div class="flex-1">
@@ -225,7 +230,7 @@ window.AdminSponsors = {
                 const index = e.target.id.replace('sponsor-image-', '');
                 const preview = container.querySelector(`#sponsor-preview-${index}`);
                 if (preview) {
-                    preview.src = `Immagini/Sponsor/${e.target.value}`;
+                    preview.src = this.getImageUrl(e.target.value);
                 }
             });
         });

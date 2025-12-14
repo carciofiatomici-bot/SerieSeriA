@@ -110,7 +110,7 @@ window.DashboardFeatures = {
 
             if (mediaImage) {
                 if (teamMedia && teamMedia.image) {
-                    mediaImage.src = `Immagini/Media/${teamMedia.image}`;
+                    mediaImage.src = window.SponsorSystem.getMediaImageUrl(teamMedia.image);
                     mediaImage.title = teamMedia.name;
                 } else {
                     mediaImage.src = 'https://placehold.co/128x128/831843/f9a8d4?text=📺';
@@ -124,7 +124,7 @@ window.DashboardFeatures = {
 
             if (sponsorImage) {
                 if (teamSponsor && teamSponsor.image) {
-                    sponsorImage.src = `Immagini/Sponsor/${teamSponsor.image}`;
+                    sponsorImage.src = window.SponsorSystem.getSponsorImageUrl(teamSponsor.image);
                     sponsorImage.title = teamSponsor.name;
                 } else {
                     sponsorImage.src = 'https://placehold.co/128x128/78350f/fcd34d?text=🤝';

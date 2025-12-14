@@ -29,6 +29,11 @@ window.AdminMedia = {
         'Tutto Calcio Oggi.png'
     ],
 
+    // Helper per ottenere URL immagine da GitHub
+    getImageUrl(imageName) {
+        return window.SponsorSystem?.getMediaImageUrl(imageName) || `Immagini/Media/${imageName}`;
+    },
+
     // Default config - ordinati per costo crescente (0-1500 CS)
     // Formula: V + 5*G + 5*A + CS = Tot 5-0
     defaultConfig: {
@@ -100,9 +105,9 @@ window.AdminMedia = {
             <div class="bg-gray-700 rounded-lg p-4 mb-3 border-l-4 border-pink-500">
                 <div class="flex items-center gap-4 mb-3">
                     <div class="w-16 h-16 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src="Immagini/Media/${media.image}" alt="${media.name}"
+                        <img src="${this.getImageUrl(media.image)}" alt="${media.name}"
                              class="w-full h-full object-contain p-1"
-                             onerror="this.src='Immagini/placeholder.jpg'"
+                             onerror="this.src='https://placehold.co/64x64/374151/9ca3af?text=?'"
                              id="media-preview-${index}">
                     </div>
                     <div class="flex-1">
@@ -231,7 +236,7 @@ window.AdminMedia = {
                 const index = e.target.id.replace('media-image-', '');
                 const preview = container.querySelector(`#media-preview-${index}`);
                 if (preview) {
-                    preview.src = `Immagini/Media/${e.target.value}`;
+                    preview.src = this.getImageUrl(e.target.value);
                 }
             });
         });

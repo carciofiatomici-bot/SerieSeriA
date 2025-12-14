@@ -10,6 +10,19 @@ window.SponsorSystem = {
     sponsors: [],
     media: [],
 
+    // Base URL per immagini da GitHub
+    imageBaseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main',
+
+    // Helper per ottenere URL immagine sponsor
+    getSponsorImageUrl(imageName) {
+        return `${this.imageBaseUrl}/Sponsor/${encodeURIComponent(imageName)}`;
+    },
+
+    // Helper per ottenere URL immagine media
+    getMediaImageUrl(imageName) {
+        return `${this.imageBaseUrl}/Media/${encodeURIComponent(imageName)}`;
+    },
+
     // Immagini disponibili nelle cartelle
     sponsorImages: [
         'apracadabra.png',
@@ -19,7 +32,7 @@ window.SponsorSystem = {
         'birra del borgo.png',
         'birra grossa.png',
         'birra terzo tempo.png',
-        'birrificio del pareggio.png',
+        'birrificio-del-pareggio.png',
         'MONDO SErrande.png'
     ],
 
@@ -49,7 +62,7 @@ window.SponsorSystem = {
         {
             id: 'birrificio_pareggio',
             name: 'Birrificio del Pareggio',
-            image: 'birrificio del pareggio.png',
+            image: 'birrificio-del-pareggio.png',
             description: 'Anche il pareggio merita una birra',
             cost: 0,
             expBonus: 0,
@@ -742,7 +755,7 @@ window.SponsorSystem = {
     renderSponsorshipModal(type, current, teamId) {
         const isMedia = type === 'media';
         const items = isMedia ? this.media : this.sponsors;
-        const imagePath = isMedia ? 'Immagini/Media' : 'Immagini/Sponsor';
+        const getImageUrl = (imageName) => isMedia ? this.getMediaImageUrl(imageName) : this.getSponsorImageUrl(imageName);
         const color = isMedia ? 'pink' : 'yellow';
         const title = isMedia ? 'Media Partner' : 'Sponsor';
         const icon = isMedia ? '📺' : '🤝';
@@ -770,9 +783,9 @@ window.SponsorSystem = {
 
                         <div class="text-center mb-6">
                             <div class="w-32 h-32 mx-auto bg-gray-800 rounded-xl overflow-hidden mb-4 border-2 border-${color}-500">
-                                <img src="${imagePath}/${current.image}" alt="${current.name}"
+                                <img src="${getImageUrl(current.image)}" alt="${current.name}"
                                      class="w-full h-full object-contain p-2"
-                                     onerror="this.src='Immagini/placeholder.jpg'">
+                                     onerror="this.src='https://placehold.co/128x128/374151/9ca3af?text=?'">
                             </div>
                             <h3 class="text-xl font-bold text-${color}-300">${current.name}</h3>
                             <p class="text-gray-400 text-sm">${currentItem?.description || ''}</p>
@@ -831,9 +844,9 @@ window.SponsorSystem = {
                      data-item-id="${item.id}">
                     <div class="flex gap-3">
                         <div class="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                            <img src="${imagePath}/${item.image}" alt="${item.name}"
+                            <img src="${getImageUrl(item.image)}" alt="${item.name}"
                                  class="w-full h-full object-contain p-1"
-                                 onerror="this.src='Immagini/placeholder.jpg'">
+                                 onerror="this.src='https://placehold.co/64x64/374151/9ca3af?text=?'">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between">
@@ -935,7 +948,7 @@ window.SponsorSystem = {
     renderChangeModal(type, teamId) {
         const isMedia = type === 'media';
         const items = isMedia ? this.media : this.sponsors;
-        const imagePath = isMedia ? 'Immagini/Media' : 'Immagini/Sponsor';
+        const getImageUrl = (imageName) => isMedia ? this.getMediaImageUrl(imageName) : this.getSponsorImageUrl(imageName);
         const color = isMedia ? 'pink' : 'yellow';
         const title = isMedia ? 'Media Partner' : 'Sponsor';
 
@@ -953,9 +966,9 @@ window.SponsorSystem = {
             <div class="bg-gray-800 rounded-lg p-2 flex items-center gap-2 cursor-pointer hover:bg-gray-700 transition change-item"
                  data-item-id="${item.id}">
                 <div class="w-12 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                    <img src="${imagePath}/${item.image}" alt="${item.name}"
+                    <img src="${getImageUrl(item.image)}" alt="${item.name}"
                          class="w-full h-full object-contain"
-                         onerror="this.src='Immagini/placeholder.jpg'">
+                         onerror="this.src='https://placehold.co/48x48/374151/9ca3af?text=?'">
                 </div>
                 <div class="flex-1 min-w-0">
                     <h4 class="font-bold text-white text-sm truncate">${item.name}</h4>
