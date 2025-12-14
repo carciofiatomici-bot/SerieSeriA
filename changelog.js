@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '1.4.0',
+    currentVersion: '1.6.2',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,69 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '1.6.2',
+            date: '2025-12-14',
+            time: '25:00',
+            title: 'Notifiche Push Browser',
+            changes: [
+                { text: 'NUOVO: Notifiche push del browser per eventi importanti', adminOnly: false },
+                { text: 'Push quando e\' il tuo turno nel draft', adminOnly: false },
+                { text: 'Push quando puoi rubare un turno nel draft', adminOnly: false },
+                { text: 'Push quando termina una partita (campionato, coppa, supercoppa)', adminOnly: false },
+                { text: 'Push per notifiche high priority (scambi, sfide)', adminOnly: false },
+                { text: 'Richiesta permesso notifiche all\'avvio dell\'app', adminOnly: false }
+            ],
+            type: 'feature'
+        },
+        {
+            version: '1.6.1',
+            date: '2025-12-14',
+            time: '24:30',
+            title: 'Automazione Scambi + Fix Abilita Uniche',
+            changes: [
+                { text: 'NUOVO: Flag "Automazione Scambi" nel pannello Feature Flags', adminOnly: true },
+                { text: 'Scambi disattivati automaticamente quando inizia la stagione', adminOnly: true },
+                { text: 'Scambi attivati automaticamente quando termina la Supercoppa', adminOnly: true },
+                { text: 'FIX: Notifiche scambi ora arrivano correttamente al destinatario', adminOnly: false },
+                { text: 'FIX: Le abilita Uniche ora sono correttamente escluse dalla rimozione', adminOnly: false },
+                { text: 'FIX: Calcolo costo rimozione abilita positive corretto', adminOnly: false }
+            ],
+            type: 'fix'
+        },
+        {
+            version: '1.6.0',
+            date: '2025-12-14',
+            time: '24:00',
+            title: 'Pannello Admin Configurazione Reward',
+            changes: [
+                { text: 'NUOVO: Pannello "Configurazione Reward" nel menu Utilita Admin', adminOnly: true },
+                { text: 'Reward CS ora configurabili: goal, vittoria, fine stagione', adminOnly: true },
+                { text: 'Reward CSS competizioni ora configurabili: campionato, coppa, supercoppa', adminOnly: true },
+                { text: 'Reward EXP giocatori configurabili: titolare, panchina, goal, assist, clean sheet', adminOnly: true },
+                { text: 'Reward EXP allenatore configurabile: vittoria partita', adminOnly: true },
+                { text: 'Tutti i reward salvati su Firestore e modificabili dall\'app', adminOnly: true }
+            ],
+            type: 'feature',
+            adminOnly: true
+        },
+        {
+            version: '1.5.0',
+            date: '2025-12-14',
+            time: '23:30',
+            title: 'Tab Rimuovi Abilita + Pannello Formule Admin',
+            changes: [
+                { text: 'NUOVO: Tab "Rimuovi Abilita" nel negozio CSS per rimuovere abilita dai giocatori', adminOnly: false },
+                { text: 'Rimozione abilita positive: costo = 5 + (2 x rarita) CSS', adminOnly: false },
+                { text: 'Rimozione abilita negative: costo progressivo 5x(n+1) CSS per giocatore', adminOnly: false },
+                { text: 'Contatore negative rimosse persistente: piu rimuovi, piu costa', adminOnly: false },
+                { text: 'Le abilita Icona e Uniche non possono essere rimosse', adminOnly: false },
+                { text: 'Fix layout box abilita nella creazione giocatori (piu larghi e leggibili)', adminOnly: false },
+                { text: 'Nuova sezione "Rimozione Abilita" nel pannello formule admin', adminOnly: true },
+                { text: 'Formule rimozione configurabili: base, moltiplicatore, progressivo', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '1.4.0',
             date: '2025-12-14',

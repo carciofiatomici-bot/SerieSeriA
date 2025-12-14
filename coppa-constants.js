@@ -12,12 +12,14 @@ window.CoppaConstants = {
     // Documento Firestore per il tabellone coppa
     COPPA_SCHEDULE_DOC_ID: 'coppa_schedule',
 
-    // Premi
-    REWARDS: {
-        WINNER_CSS: 1,           // 1 CSS al vincitore
-        PLACES_2_3_4_CS: 100,    // 100 CS ai posti 2, 3, 4
-        MATCH_WIN_CS: 25,        // 25 CS per vittoria partita
-        GOAL_CS: 5               // 5 CS per gol
+    // Premi (getter dinamici da RewardsConfig)
+    get REWARDS() {
+        return {
+            WINNER_CSS: window.RewardsConfig?.rewardCoppaCSS || 1,
+            PLACES_2_3_4_CS: window.RewardsConfig?.rewardCoppa234CS || 100,
+            MATCH_WIN_CS: window.RewardsConfig?.rewardVittoriaCS || 25,
+            GOAL_CS: window.RewardsConfig?.rewardGoalCS || 5
+        };
     },
 
     // Risultato bye (vittoria a tavolino)

@@ -7,6 +7,16 @@
 
 window.CreditiSuperSeriUI = {
 
+    // Mappatura rarità stringa -> valore numerico per calcolo costi rimozione
+    // Formula: 5 + (2 × valore) → Comune: 7, Rara: 8, Epica: 9, Leggendaria: 10
+    RARITY_TO_VALUE: {
+        'Comune': 1.0,
+        'Rara': 1.5,
+        'Epica': 2.0,
+        'Leggendaria': 2.5,
+        'Unica': 5  // Per filtro, non usato nel calcolo costi
+    },
+
     /**
      * Renderizza il widget saldo CSS nella dashboard
      * @param {HTMLElement} container
@@ -71,14 +81,17 @@ window.CreditiSuperSeriUI = {
                 </div>
 
                 <!-- Tabs -->
-                <div class="flex gap-2 mb-6">
-                    <button id="tab-potenziamento" class="tab-btn active bg-amber-600 text-white font-bold py-2 px-6 rounded-lg">
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button id="tab-potenziamento" class="tab-btn active bg-amber-600 text-white font-bold py-2 px-4 rounded-lg">
                         Potenzia Livello
                     </button>
-                    <button id="tab-abilita" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-6 rounded-lg hover:bg-gray-600">
+                    <button id="tab-abilita" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
                         Assegna Abilita
                     </button>
-                    <button id="tab-servizi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-6 rounded-lg hover:bg-gray-600">
+                    <button id="tab-rimuovi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
+                        Rimuovi Abilita
+                    </button>
+                    <button id="tab-servizi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
                         Servizi
                     </button>
                 </div>
@@ -113,6 +126,11 @@ window.CreditiSuperSeriUI = {
         document.getElementById('tab-servizi').addEventListener('click', () => {
             this.setActiveTab('servizi');
             this.renderServiziContent(saldo);
+        });
+
+        document.getElementById('tab-rimuovi').addEventListener('click', () => {
+            this.setActiveTab('rimuovi');
+            this.renderRimuoviAbilitaContent(rosa, saldo);
         });
 
         // Renderizza contenuto iniziale
@@ -433,6 +451,233 @@ window.CreditiSuperSeriUI = {
             btnAcquistaCS.addEventListener('click', async () => {
                 await this.handleAcquistaCS();
             });
+        }
+    },
+
+    /**
+     * Renderizza il contenuto del tab Rimuovi Abilita
+     * Mostra giocatori con abilità rimuovibili (escluse Icona e Uniche)
+     */
+    renderRimuoviAbilitaContent(rosa, saldo) {
+        const container = document.getElementById('css-panel-content');
+        if (!container) return;
+
+        const CSS = window.CreditiSuperSeri;
+        const Encyclopedia = window.AbilitiesEncyclopedia;
+        if (!CSS || !Encyclopedia) {
+            container.innerHTML = '<p class="text-red-400 text-center">Sistema non disponibile</p>';
+            return;
+        }
+
+        // Filtra giocatori con abilità rimuovibili (escluse Icona e Uniche)
+        const giocatoriConAbilita = rosa.filter(player => {
+            const abilities = player.abilities || [];
+            // Escludi abilità Icona e Uniche
+            const rimuovibili = abilities.filter(a => {
+                if (a === 'Icona') return false;
+                const data = Encyclopedia.getAbility(a);
+                return data && data.rarity !== 'Unica'; // Non Uniche
+            });
+            return rimuovibili.length > 0;
+        });
+
+        if (giocatoriConAbilita.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="text-6xl">🎯</span>
+                    <p class="text-gray-400 mt-4">Nessun giocatore ha abilita rimuovibili.</p>
+                    <p class="text-gray-500 text-sm mt-2">Le abilita Icona e Uniche non possono essere rimosse.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Ordina per ruolo
+        const ordineRuoli = ['P', 'D', 'C', 'A'];
+        const rosaSorted = [...giocatoriConAbilita].sort((a, b) => {
+            return ordineRuoli.indexOf(a.role) - ordineRuoli.indexOf(b.role);
+        });
+
+        let html = `
+            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+                <p class="text-gray-300 text-sm">
+                    <span class="text-green-400 font-bold">Positive:</span> Costo = 5 + (2 × rarita) CSS
+                    <span class="mx-2">|</span>
+                    <span class="text-red-400 font-bold">Negative:</span> Costo progressivo = 5 × (n° rimossi + 1) CSS
+                </p>
+            </div>
+            <div class="space-y-4">
+        `;
+
+        rosaSorted.forEach(player => {
+            const abilities = player.abilities || [];
+            const negativeRemovedCount = player.negativeRemovedCount || 0;
+
+            // Separa positive e negative, escludi Icona e Uniche
+            const positive = [];
+            const negative = [];
+
+            abilities.forEach(abilityName => {
+                if (abilityName === 'Icona') return;
+                const data = Encyclopedia.getAbility(abilityName);
+                if (!data || data.rarity === 'Unica') return; // Escludi Uniche
+
+                if (data.isNegative) {
+                    negative.push({ name: abilityName, data });
+                } else {
+                    positive.push({ name: abilityName, data });
+                }
+            });
+
+            if (positive.length === 0 && negative.length === 0) return;
+
+            const roleColors = {
+                'P': 'border-yellow-500',
+                'D': 'border-blue-500',
+                'C': 'border-green-500',
+                'A': 'border-red-500'
+            };
+
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 border-l-4 ${roleColors[player.role]}">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-white text-lg">${player.name}</span>
+                            <span class="text-gray-400 text-sm">(${player.role})</span>
+                        </div>
+                        ${negativeRemovedCount > 0 ? `
+                            <span class="text-xs text-red-400 bg-red-900 px-2 py-1 rounded">
+                                Negative rimosse: ${negativeRemovedCount}
+                            </span>
+                        ` : ''}
+                    </div>
+
+                    <div class="space-y-2">
+            `;
+
+            // Abilità Positive
+            positive.forEach(({ name, data }) => {
+                const rarityValue = this.RARITY_TO_VALUE[data.rarity] || 1;
+                const costo = CSS.getCostoRimozionePositiva(rarityValue);
+                const canAfford = saldo >= costo;
+                const rarityColors = {
+                    'Comune': 'text-gray-400',
+                    'Rara': 'text-blue-400',
+                    'Epica': 'text-purple-400',
+                    'Leggendaria': 'text-yellow-400'
+                };
+
+                html += `
+                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-400">➕</span>
+                            <span class="text-white">${data.icon || ''} ${name}</span>
+                            <span class="${rarityColors[data.rarity] || 'text-gray-400'} text-xs">(${data.rarity})</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-sm font-bold">${costo} CSS</span>
+                            <button class="btn-rimuovi-abilita ${canAfford
+                                ? 'bg-red-600 hover:bg-red-500 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'}
+                                text-xs font-bold py-1 px-2 rounded transition"
+                                data-player-id="${player.id}"
+                                data-ability-name="${name}"
+                                data-is-negative="false"
+                                ${canAfford ? '' : 'disabled'}>
+                                Rimuovi
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Abilità Negative
+            negative.forEach(({ name, data }) => {
+                const costo = CSS.getCostoRimozioneNegativa(negativeRemovedCount);
+                const canAfford = saldo >= costo;
+
+                html += `
+                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded border border-red-900">
+                        <div class="flex items-center gap-2">
+                            <span class="text-red-400">➖</span>
+                            <span class="text-white">${data.icon || ''} ${name}</span>
+                            <span class="text-red-400 text-xs">(Negativa)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-sm font-bold">${costo} CSS</span>
+                            <button class="btn-rimuovi-abilita ${canAfford
+                                ? 'bg-red-600 hover:bg-red-500 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'}
+                                text-xs font-bold py-1 px-2 rounded transition"
+                                data-player-id="${player.id}"
+                                data-ability-name="${name}"
+                                data-is-negative="true"
+                                ${canAfford ? '' : 'disabled'}>
+                                Rimuovi
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Collega eventi rimozione
+        container.querySelectorAll('.btn-rimuovi-abilita').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const playerId = e.target.dataset.playerId;
+                const abilityName = e.target.dataset.abilityName;
+                const isNegative = e.target.dataset.isNegative === 'true';
+                await this.handleRimuoviAbilita(playerId, abilityName, isNegative);
+            });
+        });
+    },
+
+    /**
+     * Gestisce la rimozione di un'abilita
+     */
+    async handleRimuoviAbilita(playerId, abilityName, isNegative) {
+        const CSS = window.CreditiSuperSeri;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!CSS || !teamId) {
+            this.showMessage('Errore: sistema non disponibile', 'error');
+            return;
+        }
+
+        // Conferma rimozione
+        const tipoAbilita = isNegative ? 'negativa' : 'positiva';
+        if (!confirm(`Vuoi rimuovere l'abilita ${tipoAbilita} "${abilityName}"?`)) {
+            return;
+        }
+
+        this.showMessage('Rimozione in corso...', 'info');
+
+        const result = await CSS.rimuoviAbilita(teamId, playerId, abilityName, isNegative);
+
+        if (result.success) {
+            this.showMessage(
+                `Abilita "${abilityName}" rimossa da ${result.playerName}! Saldo: ${result.nuovoSaldo} CSS`,
+                'success'
+            );
+
+            // Aggiorna saldo nella UI
+            const saldoDisplay = document.getElementById('css-saldo-display');
+            if (saldoDisplay) {
+                saldoDisplay.textContent = `${result.nuovoSaldo} CSS`;
+            }
+
+            // Ricarica la rosa e aggiorna il pannello
+            await this.refreshPanel();
+        } else {
+            this.showMessage(result.error || 'Errore durante la rimozione', 'error');
         }
     },
 
@@ -760,11 +1005,14 @@ window.CreditiSuperSeriUI = {
         const tabPotenziamento = document.getElementById('tab-potenziamento');
         const tabAbilita = document.getElementById('tab-abilita');
         const tabServizi = document.getElementById('tab-servizi');
+        const tabRimuovi = document.getElementById('tab-rimuovi');
 
         if (tabPotenziamento?.classList.contains('active')) {
             this.renderPotenziamentoContent(rosa, saldo);
         } else if (tabServizi?.classList.contains('active')) {
             this.renderServiziContent(saldo);
+        } else if (tabRimuovi?.classList.contains('active')) {
+            this.renderRimuoviAbilitaContent(rosa, saldo);
         } else {
             this.renderAbilitaContent(rosa, saldo);
         }

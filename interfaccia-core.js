@@ -377,15 +377,25 @@ window.ABILITY_RARITY_LEVELS = ABILITY_RARITY_LEVELS;
 
 /**
  * Calcola il costo di un giocatore in base al livello e alle abilità.
- * Formula: 100 + (level * 10) + (levelAbilità * 50)
+ * Formula: base + (level * molt) + (rarità * ab) - (neg * negative)
+ * I parametri sono configurabili da Admin > Formule Costi
  *
  * @param {number} level - Livello del giocatore (1-20)
  * @param {Array<string>} abilities - Array dei nomi delle abilità del giocatore
  * @returns {number} - Costo in CS
  */
 const calculatePlayerCost = (level, abilities = []) => {
+    // Leggi configurazione (o usa default)
+    const config = window.FormulasConfig || {
+        baseCostoGiocatore: 100,
+        moltiplicatoreLivello: 10,
+        moltiplicatoreAbilita: 50,
+        penalitaNegativa: 25
+    };
+
     // Costo base + bonus livello
-    let cost = 100 + (level * 10);
+    let cost = config.baseCostoGiocatore + (level * config.moltiplicatoreLivello);
+    let negativeCount = 0;
 
     // Aggiungi costo abilità
     if (abilities && abilities.length > 0 && window.AbilitiesEncyclopedia) {
@@ -394,14 +404,23 @@ const calculatePlayerCost = (level, abilities = []) => {
             if (abilityName === 'Icona') return;
 
             const abilityData = window.AbilitiesEncyclopedia.getAbility(abilityName);
-            if (abilityData && abilityData.rarity) {
-                const rarityLevel = ABILITY_RARITY_LEVELS[abilityData.rarity] || 1;
-                cost += rarityLevel * 50;
+            if (abilityData) {
+                // Controlla se e' negativa
+                if (abilityData.isNegative) {
+                    negativeCount++;
+                } else if (abilityData.rarity) {
+                    const rarityLevel = ABILITY_RARITY_LEVELS[abilityData.rarity] || 1;
+                    cost += rarityLevel * config.moltiplicatoreAbilita;
+                }
             }
         });
     }
 
-    return cost;
+    // Sottrai penalita per abilita negative
+    cost -= negativeCount * config.penalitaNegativa;
+
+    // Minimo 100 CS
+    return Math.max(100, cost);
 };
 window.calculatePlayerCost = calculatePlayerCost;
 

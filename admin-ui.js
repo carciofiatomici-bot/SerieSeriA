@@ -234,22 +234,54 @@ window.AdminUI = {
                         </button>
                         <button id="btn-test-simulation-new-rules"
                                 class="bg-purple-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-600 transition duration-150">
-                            🧪 Test Simulazione Con Regole Nuove
+                            🧪 Test Simulazione
                         </button>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mt-4">
                         <button id="btn-fix-icone-ability"
                                 class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
-                            👑 Fix Abilita Icone
+                            👑 Fix Icone
                         </button>
                         <button id="btn-reset-hall-of-fame"
                                 class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
-                            🏛️ Reset Hall of Fame Stats
+                            🏛️ Reset HoF Stats
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <button id="btn-formulas-config"
+                                class="bg-gradient-to-r from-cyan-700 to-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-cyan-600 hover:to-blue-500 transition duration-150">
+                            📐 Formule Costi
+                        </button>
+                        <button id="btn-rewards-config"
+                                class="bg-gradient-to-r from-emerald-700 to-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-emerald-600 hover:to-green-500 transition duration-150">
+                            🏆 Configurazione Reward
                         </button>
                     </div>
                     <div class="text-gray-400 text-sm">
                         Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- PANNELLO FORMULE COSTI (inizialmente nascosto) -->
+            <div id="formulas-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-cyan-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-cyan-400">📐 Configurazione Formule Costi</h3>
+                    <button id="btn-close-formulas-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="formulas-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE REWARD (inizialmente nascosto) -->
+            <div id="rewards-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-emerald-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-emerald-400">🏆 Configurazione Reward</h3>
+                    <button id="btn-close-rewards-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="rewards-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>
 

@@ -48,9 +48,10 @@ window.DraftTurns = {
                 const data = docSnap.data();
                 const teamName = data.teamName || docSnap.id;
 
-                // Escludi account admin dal draft
-                if (teamName.toLowerCase() === 'serieseria' || data.isAdmin === true) {
-                    console.log(`[Draft] Squadra admin "${teamName}" esclusa dall'ordine draft.`);
+                // Escludi solo l'account admin puro "serieseria" dal draft
+                // Le squadre con isAdmin=true possono comunque partecipare se sono squadre reali
+                if (teamName.toLowerCase() === 'serieseria') {
+                    console.log(`[Draft] Account admin puro "${teamName}" escluso dall'ordine draft.`);
                     return; // skip this team
                 }
 
@@ -1786,15 +1787,22 @@ window.DraftTurns = {
         // Notifica in-app
         if (window.Notifications && window.Notifications.add) {
             window.Notifications.add({
-                type: 'draft_turn',
-                title: 'Turno Disponibile!',
+                type: 'draft_steal',
+                title: 'Puoi Rubare il Turno!',
                 message: `Il turno di ${victimTeamName} e' scaduto! Puoi rubarlo cliccando "Ruba Turno".`,
-                action: 'draft'
+                action: { type: 'navigate', target: 'draft-content' }
             });
         }
 
-        // Push notification a tutti gli utenti che non hanno ancora draftato
-        // (questo viene fatto lato client quando ricevono l'evento)
+        // Push browser notification (solo se l'utente corrente non e' la vittima)
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (currentTeamId && currentTeamId !== victimTeamId && currentTeamId !== 'admin') {
+            this.sendBrowserPushNotification(
+                '🏴‍☠️ Puoi rubare il turno!',
+                `${victimTeamName} non ha scelto in tempo. Ruba il suo turno!`,
+                'draft_steal'
+            );
+        }
     },
 
     /**

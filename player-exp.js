@@ -16,6 +16,21 @@
     // COSTANTI
     // ========================================
 
+    // Funzione per ottenere valori EXP dinamici da RewardsConfig
+    function getExpValues() {
+        return {
+            MATCH_STARTER: window.RewardsConfig?.expPartitaTitolare || 50,
+            MATCH_BENCH: window.RewardsConfig?.expPartitaPanchina || 10,
+            GOAL: window.RewardsConfig?.expGoal || 30,
+            ASSIST: window.RewardsConfig?.expAssist || 20,
+            CLEAN_SHEET_GK: window.RewardsConfig?.expCleanSheetGK || 40,
+            CLEAN_SHEET_DEF: window.RewardsConfig?.expCleanSheetDEF || 25,
+            VICTORY: window.RewardsConfig?.expVittoria || 20,
+            DRAW: window.RewardsConfig?.expPareggio || 10,
+            COACH_WIN: window.RewardsConfig?.expCoachVittoria || 100
+        };
+    }
+
     const EXP_CONFIG = {
         // Formula: Math.floor(BASE * Math.pow(level, EXPONENT) * MULTIPLIER)
         BASE: 100,
@@ -27,17 +42,9 @@
         MAX_LEVEL_ICON: 25,
         MAX_LEVEL_COACH: 10,        // Livello max allenatore
 
-        // EXP per azioni
-        VALUES: {
-            MATCH_STARTER: 50,      // Partita come titolare
-            MATCH_BENCH: 10,        // Partita in panchina
-            GOAL: 30,               // Goal segnato
-            ASSIST: 20,             // Assist
-            CLEAN_SHEET_GK: 40,     // Clean sheet portiere
-            CLEAN_SHEET_DEF: 25,    // Clean sheet difensore
-            VICTORY: 20,            // Vittoria
-            DRAW: 10,               // Pareggio
-            COACH_WIN: 100          // EXP allenatore per vittoria
+        // EXP per azioni - getter dinamico
+        get VALUES() {
+            return getExpValues();
         },
 
         // Moltiplicatori

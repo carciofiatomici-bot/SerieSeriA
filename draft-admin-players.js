@@ -268,7 +268,7 @@ window.DraftAdminPlayers = {
         // Aspetta che le checkbox siano renderizzate, poi seleziona casualmente
         setTimeout(() => {
             this.selectRandomAbilities(randomRole);
-        }, 50);
+        }, 100);
 
         displayMessage("Campi riempiti con valori casuali. Inserisci il Nome e aggiungi al Draft.", 'info', 'player-creation-message');
     },
@@ -305,12 +305,21 @@ window.DraftAdminPlayers = {
         }
 
         // Seleziona casualmente: 0 o 1 abilità per ogni rarità
+        // Probabilità differenziate: più rare = meno probabili
+        const rarityProbabilities = {
+            'Comune': 0.6,      // 60%
+            'Rara': 0.5,        // 50%
+            'Epica': 0.4,       // 40%
+            'Leggendaria': 0.3  // 30%
+        };
+
         const selectedPositive = [];
         let autoNegativeCount = 0;
 
         for (const rarity of ['Comune', 'Rara', 'Epica', 'Leggendaria']) {
             const pool = abilitiesByRarity[rarity];
-            if (pool.length > 0 && Math.random() < 0.5) { // 50% di probabilità
+            const probability = rarityProbabilities[rarity] || 0.5;
+            if (pool.length > 0 && Math.random() < probability) {
                 const shuffled = [...pool].sort(() => Math.random() - 0.5);
                 selectedPositive.push(shuffled[0]);
 
@@ -323,6 +332,12 @@ window.DraftAdminPlayers = {
         // Seleziona abilità negative automatiche random
         const shuffledNegative = [...negativeAbilities].sort(() => Math.random() - 0.5);
         const selectedNegative = shuffledNegative.slice(0, Math.min(autoNegativeCount, shuffledNegative.length));
+
+        // Debug log
+        console.log(`[RandomAbilities] Ruolo: ${role}`);
+        console.log(`[RandomAbilities] Selezionate ${selectedPositive.length} positive, ${autoNegativeCount} negative auto`);
+        console.log(`[RandomAbilities] Positive: ${selectedPositive.join(', ') || 'nessuna'}`);
+        console.log(`[RandomAbilities] Negative da aggiungere: ${selectedNegative.join(', ') || 'nessuna'}`);
 
         // Deseleziona tutte le checkbox
         document.querySelectorAll('.ability-positive-check').forEach(cb => {

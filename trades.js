@@ -417,11 +417,12 @@ window.Trades = {
             this.teamsCache = [];
 
             snapshot.docs.forEach(doc => {
-                // Escludi la propria squadra e squadre admin
+                // Escludi la propria squadra e l'account admin puro
                 if (doc.id !== myTeamId) {
                     const data = doc.data();
-                    // Escludi squadre admin (serieseria o isAdmin)
-                    if (data.teamName?.toLowerCase() !== 'serieseria' && !data.isAdmin) {
+                    // Escludi solo l'account admin puro "serieseria"
+                    // Le squadre con isAdmin=true sono squadre normali con accesso admin
+                    if (data.teamName?.toLowerCase() !== 'serieseria') {
                         this.teamsCache.push({
                             id: doc.id,
                             teamName: data.teamName || doc.id,
@@ -790,17 +791,21 @@ window.Trades = {
                 const notificationsPath = `artifacts/${appId}/public/data/notifications`;
 
                 await addDoc(collection(window.db, notificationsPath), {
-                    teamId: trade.toTeamId,
+                    targetTeamId: trade.toTeamId,  // Campo corretto per il sistema notifiche
                     type: 'trade_request',
                     title: 'Proposta di scambio',
                     message: `${trade.fromTeamName} ti propone uno scambio per ${trade.requestedPlayer.name}`,
                     read: false,
                     timestamp: Timestamp.now(),
+                    action: { type: 'openTrades' },  // Azione per aprire il pannello scambi
                     data: {
                         tradeFromTeam: trade.fromTeamId,
-                        tradeFromTeamName: trade.fromTeamName
+                        tradeFromTeamName: trade.fromTeamName,
+                        requestedPlayerName: trade.requestedPlayer.name,
+                        offeredPlayerName: trade.offeredPlayer?.name
                     }
                 });
+                console.log('[Trades] Notifica scambio inviata a:', trade.toTeamId);
             } catch (error) {
                 console.warn('[Trades] Errore invio notifica:', error);
             }

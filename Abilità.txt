@@ -94,7 +94,7 @@ Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differ
 
 >>> Abilità Positive:
 - Regista (4): 5% di probabilità che si salti la fase "costruzione" e si passi direttamente alla fase "attacco vs difesa" (non cumulabile con altre abilità con lo stesso nome).
-- Motore (3): Utilizza il suo modificatore intero, invece che 1/2, sia quando attacca che quando difende nella fase "attacco vs difesa".
+- Motore (3): Quando partecipa ad una fase di costruzione (attacco o difesa), ha un bonus al modificatore di 1.5x alla prossima fase a cui partecipa che sia in attacco o difesa
 - Tocco Di Velluto (2): 5% di probabilità di raddoppiare il suo modificatore durante la fase di costruzione.
 - Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
 - Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).

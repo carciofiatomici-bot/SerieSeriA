@@ -75,6 +75,22 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-yellow-400">Gli scambi completati trasferiscono immediatamente i giocatori.</p>`
         },
+        tradesAutomation: {
+            id: 'tradesAutomation',
+            name: 'Automazione Scambi',
+            description: 'Attiva/disattiva automaticamente gli scambi in base alle competizioni',
+            icon: '🔀',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Disattivazione automatica scambi quando inizia una nuova stagione</li>
+                    <li>Attivazione automatica scambi quando tutte le competizioni sono terminate</li>
+                    <li>Competizioni considerate: Campionato, Coppa, Supercoppa</li>
+                    <li>Permette ai manager di scambiare giocatori solo nella finestra di mercato</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Richiede che il flag "Scambi Giocatori" sia disponibile.</p>`
+        },
         achievements: {
             id: 'achievements',
             name: 'Achievements',

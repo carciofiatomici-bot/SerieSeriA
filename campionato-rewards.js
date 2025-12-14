@@ -9,9 +9,22 @@ window.ChampionshipRewards = {
     // Costante per il livello massimo dell'allenatore
     COACH_MAX_LEVEL: 10,
 
-    // Costanti reward
-    GOAL_CS: 5,        // 5 CS per gol segnato
-    WIN_CS: 25,        // 25 CS per vittoria
+    // Getter per reward dinamici da RewardsConfig
+    get GOAL_CS() {
+        return window.RewardsConfig?.rewardGoalCS || 5;
+    },
+    get WIN_CS() {
+        return window.RewardsConfig?.rewardVittoriaCS || 25;
+    },
+    get REWARD_TOP3() {
+        return window.RewardsConfig?.rewardTop3CS || 150;
+    },
+    get REWARD_ULTIMI3() {
+        return window.RewardsConfig?.rewardUltimi3CS || 200;
+    },
+    get REWARD_ALTRI() {
+        return window.RewardsConfig?.rewardAltriCS || 100;
+    },
 
     /**
      * Calcola e assegna i crediti durante una partita.
@@ -71,20 +84,20 @@ window.ChampionshipRewards = {
 
         standings.forEach((team, index) => {
             let reward;
-            
-            // Prime 3 squadre <-’ 150 CS
-            if (index < 3) { 
-                reward = 150;
-            } 
-            // Ultime 3 squadre <-’ 200 CS
-            else if (index >= numTeams - 3) { 
-                reward = 200;
+
+            // Prime 3 squadre
+            if (index < 3) {
+                reward = this.REWARD_TOP3;
             }
-            // Tutte le altre squadre partecipanti <-’ 100 CS
+            // Ultime 3 squadre
+            else if (index >= numTeams - 3) {
+                reward = this.REWARD_ULTIMI3;
+            }
+            // Tutte le altre squadre partecipanti
             else {
-                reward = 100;
+                reward = this.REWARD_ALTRI;
             }
-            
+
             rewardsMap.set(team.teamId, reward);
         });
 
@@ -116,7 +129,7 @@ window.ChampionshipRewards = {
             const teamData = docSnapshot.data();
             const teamId = docSnapshot.id;
             
-            const reward = rewardsMap.get(teamId) || 100; // Default 100 CS se non in classifica
+            const reward = rewardsMap.get(teamId) || this.REWARD_ALTRI; // Default se non in classifica
             const currentBudget = teamData.budget || 0;
             const currentCSS = teamData.creditiSuperSeri || 0;
             const currentCoach = teamData.coach || { name: 'Sconosciuto', level: 1, exp: 0 };

@@ -148,7 +148,17 @@ window.ChampionshipMain = {
             await setDoc(scheduleDocRef, { matches: schedule }, { merge: true });
             await setDoc(leaderboardDocRef, { standings: updatedStandings, lastUpdated: new Date().toISOString() });
 
-            // 8. Ricarica UI
+            // 8. Dispatch evento matchSimulated per notifiche push
+            document.dispatchEvent(new CustomEvent('matchSimulated', {
+                detail: {
+                    homeTeam: { id: match.homeId, name: homeTeamName },
+                    awayTeam: { id: match.awayId, name: awayTeamName },
+                    result: resultString,
+                    type: 'Campionato'
+                }
+            }));
+
+            // 9. Ricarica UI
             if (renderCallback) {
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);
                 const reloadedSchedule = reloadedScheduleDoc.exists() ? reloadedScheduleDoc.data().matches : [];
@@ -348,8 +358,18 @@ window.ChampionshipMain = {
                         details: matchLog ? { matchLog } : null
                     });
                 }
+
+                // Dispatch evento matchSimulated per notifiche push
+                document.dispatchEvent(new CustomEvent('matchSimulated', {
+                    detail: {
+                        homeTeam: { id: match.homeId, name: homeTeamName },
+                        awayTeam: { id: match.awayId, name: awayTeamName },
+                        result: resultString,
+                        type: 'Campionato'
+                    }
+                }));
             }
-            
+
             // 6. Resetta lo stato della forma dopo la simulazione per TUTTE le squadre coinvolte
             const resetPromises = Array.from(teamsInRound).map(teamId => this.resetPlayersFormStatus(teamId));
             await Promise.all(resetPromises);

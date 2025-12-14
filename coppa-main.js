@@ -179,6 +179,16 @@ window.CoppaMain = {
                         matchLog: matchLog
                     }
                 });
+
+                // Dispatch evento matchSimulated per notifiche push
+                document.dispatchEvent(new CustomEvent('matchSimulated', {
+                    detail: {
+                        homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName },
+                        awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName },
+                        result: `${homeGoals}-${awayGoals}`,
+                        type: 'Coppa'
+                    }
+                }));
             }
         }
 

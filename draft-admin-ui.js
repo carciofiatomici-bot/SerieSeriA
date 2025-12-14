@@ -452,42 +452,44 @@ window.DraftAdminUI = {
         const negativeAbilities = roleAbilities.negative || [];
 
         container.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Abilità Positive -->
-                <div>
-                    <p class="text-green-400 font-bold mb-2">Positive (Max 3)</p>
-                    <div class="space-y-1 max-h-48 overflow-y-auto">
+            <div class="space-y-3">
+                <!-- Abilita Positive -->
+                <div class="bg-gray-800 p-3 rounded-lg border border-green-500">
+                    <p class="text-green-400 font-bold mb-2">Abilita Positive (Max 3)</p>
+                    <div class="grid grid-cols-2 gap-1 max-h-36 overflow-y-auto pr-1">
                         ${positiveAbilities.map(ability => {
                             const abilityData = window.AbilitiesEncyclopedia?.getAbility(ability);
                             const icon = abilityData?.icon || '⚡';
                             const rarity = abilityData?.rarity || 'Comune';
                             const rarityColor = rarity === 'Leggendaria' ? 'text-yellow-400' : rarity === 'Epica' ? 'text-purple-400' : rarity === 'Rara' ? 'text-blue-400' : 'text-gray-400';
+                            const rarityShort = rarity === 'Leggendaria' ? 'L' : rarity === 'Epica' ? 'E' : rarity === 'Rara' ? 'R' : 'C';
                             return `
-                                <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-600 p-1 rounded">
-                                    <input type="checkbox" class="ability-positive-check" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
-                                    <span>${icon}</span>
-                                    <span class="text-white">${ability}</span>
-                                    <span class="${rarityColor} text-xs">(${rarity})</span>
+                                <label class="flex items-center gap-1 text-xs cursor-pointer hover:bg-gray-600 p-1 rounded overflow-hidden" title="${ability} (${rarity})">
+                                    <input type="checkbox" class="ability-positive-check flex-shrink-0" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
+                                    <span class="flex-shrink-0">${icon}</span>
+                                    <span class="text-white truncate">${ability}</span>
+                                    <span class="${rarityColor} flex-shrink-0">${rarityShort}</span>
                                 </label>
                             `;
                         }).join('')}
                     </div>
                 </div>
-                <!-- Abilità Negative -->
-                <div>
-                    <p class="text-red-400 font-bold mb-2">Negative (Max 2)</p>
-                    <div class="space-y-1 max-h-48 overflow-y-auto">
+                <!-- Abilita Negative -->
+                <div class="bg-gray-800 p-3 rounded-lg border border-red-500">
+                    <p class="text-red-400 font-bold mb-2">Abilita Negative (Max 2)</p>
+                    <div class="grid grid-cols-2 gap-1 max-h-28 overflow-y-auto pr-1">
                         ${negativeAbilities.map(ability => {
                             const abilityData = window.AbilitiesEncyclopedia?.getAbility(ability);
                             const icon = abilityData?.icon || '💀';
                             const rarity = abilityData?.rarity || 'Comune';
                             const rarityColor = rarity === 'Epica' ? 'text-purple-400' : rarity === 'Rara' ? 'text-blue-400' : 'text-gray-400';
+                            const rarityShort = rarity === 'Epica' ? 'E' : rarity === 'Rara' ? 'R' : 'C';
                             return `
-                                <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-600 p-1 rounded">
-                                    <input type="checkbox" class="ability-negative-check" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
-                                    <span>${icon}</span>
-                                    <span class="text-white">${ability}</span>
-                                    <span class="${rarityColor} text-xs">(${rarity})</span>
+                                <label class="flex items-center gap-1 text-xs cursor-pointer hover:bg-gray-600 p-1 rounded overflow-hidden" title="${ability} (${rarity})">
+                                    <input type="checkbox" class="ability-negative-check flex-shrink-0" value="${ability}" onchange="window.DraftAdminUI.validateAbilitySelection()">
+                                    <span class="flex-shrink-0">${icon}</span>
+                                    <span class="text-white truncate">${ability}</span>
+                                    <span class="${rarityColor} flex-shrink-0">${rarityShort}</span>
                                 </label>
                             `;
                         }).join('')}

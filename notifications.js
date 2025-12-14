@@ -56,7 +56,71 @@ window.Notifications = {
         this.setupListeners();
         this.startPolling();
 
+        // Richiedi permesso push dopo un breve delay
+        this.requestPushPermission();
+
         console.log("Sistema Notifiche inizializzato");
+    },
+
+    /**
+     * Richiede il permesso per le notifiche push del browser
+     */
+    async requestPushPermission() {
+        if (!('Notification' in window)) {
+            console.log('[Push] Browser non supporta notifiche');
+            return;
+        }
+
+        if (Notification.permission === 'default') {
+            // Richiedi dopo un breve delay per non essere invasivi
+            setTimeout(async () => {
+                const permission = await Notification.requestPermission();
+                console.log('[Push] Permesso notifiche:', permission);
+            }, 5000);
+        }
+    },
+
+    /**
+     * Invia una notifica push del browser
+     * @param {string} title - Titolo della notifica
+     * @param {string} body - Corpo del messaggio
+     * @param {string} tag - Tag per deduplicazione (evita notifiche duplicate)
+     */
+    async sendBrowserPush(title, body, tag) {
+        // Verifica supporto
+        if (!('Notification' in window)) {
+            console.log('[Push] Browser non supporta notifiche');
+            return;
+        }
+
+        // Richiedi permesso se necessario
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+        }
+
+        if (Notification.permission !== 'granted') return;
+
+        // Crea notifica
+        try {
+            const notification = new Notification(title, {
+                body: body,
+                icon: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/logo.png',
+                badge: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/logo.png',
+                tag: tag,  // Evita duplicati dello stesso tipo
+                requireInteraction: false,
+                vibrate: [200, 100, 200]
+            });
+
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+
+            console.log('[Push] Notifica inviata:', title);
+        } catch (error) {
+            console.warn('[Push] Errore invio notifica:', error);
+        }
     },
 
     /**
@@ -239,17 +303,21 @@ window.Notifications = {
 
             this._unsubscribe = onSnapshot(q, (snapshot) => {
                 let newCount = 0;
+                const newNotifications = [];
+
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const doc = change.doc;
                         const data = doc.data();
                         const existing = this.notifications.find(n => n.id === doc.id);
                         if (!existing) {
-                            this.notifications.unshift({
+                            const notif = {
                                 id: doc.id,
                                 ...data,
                                 timestamp: data.timestamp?.toMillis?.() || Date.now()
-                            });
+                            };
+                            this.notifications.unshift(notif);
+                            newNotifications.push(notif);
                             newCount++;
                         }
                     }
@@ -258,6 +326,18 @@ window.Notifications = {
                 if (newCount > 0) {
                     this.saveToLocalStorage();
                     this.updateUI();
+
+                    // Invia push browser per notifiche high priority
+                    newNotifications.forEach(notif => {
+                        const typeConfig = this.types[notif.type] || this.types.system;
+                        if (typeConfig.priority === 'high') {
+                            this.sendBrowserPush(
+                                `${typeConfig.icon} ${notif.title}`,
+                                notif.message,
+                                notif.type
+                            );
+                        }
+                    });
                 }
             }, (error) => {
                 console.warn('[Notifiche] Errore listener:', error);
@@ -722,14 +802,24 @@ window.Notifications = {
         });
 
         document.addEventListener('matchSimulated', (e) => {
-            const { homeTeam, awayTeam, result } = e.detail || {};
+            const { homeTeam, awayTeam, result, type } = e.detail || {};
             const myTeamId = window.InterfacciaCore?.currentTeamId;
             if (homeTeam?.id === myTeamId || awayTeam?.id === myTeamId) {
                 const opponent = homeTeam?.id === myTeamId ? awayTeam?.name : homeTeam?.name;
-                const won = homeTeam?.id === myTeamId ?
-                    parseInt(result?.split('-')[0]) > parseInt(result?.split('-')[1]) :
-                    parseInt(result?.split('-')[1]) > parseInt(result?.split('-')[0]);
+                const [homeScore, awayScore] = (result || '0-0').split('-').map(s => parseInt(s));
+                const myScore = homeTeam?.id === myTeamId ? homeScore : awayScore;
+                const oppScore = homeTeam?.id === myTeamId ? awayScore : homeScore;
+                const won = myScore > oppScore;
+                const draw = myScore === oppScore;
+
+                // Notifica in-app
                 this.notify.matchResult(opponent, result, won);
+
+                // Push browser
+                const matchType = type || 'Partita';
+                const title = won ? '⚽ Vittoria!' : (draw ? '⚽ Pareggio' : '⚽ Sconfitta');
+                const body = `${matchType}: ${result} vs ${opponent}`;
+                this.sendBrowserPush(title, body, 'match_result');
             }
         });
 

@@ -8,27 +8,30 @@
 window.CreditiSuperSeri = {
 
     // ========================================
-    // COSTANTI
+    // COSTANTI (con fallback a FormulasConfig)
     // ========================================
 
-    // Limiti di livello
-    MAX_LEVEL_GIOCATORE: 20,
-    MAX_LEVEL_ICONA: 25,
+    // Getter per leggere da FormulasConfig o usare default
+    get MAX_LEVEL_GIOCATORE() {
+        return window.FormulasConfig?.maxLevelGiocatore || 20;
+    },
+    get MAX_LEVEL_ICONA() {
+        return window.FormulasConfig?.maxLevelIcona || 25;
+    },
+    get COSTO_BASE_ICONA() {
+        return window.FormulasConfig?.costoBaseIcona || 5;
+    },
 
-    // Costi potenziamento: costo = livello raggiunto
-    // Es: da 5 a 6 costa 6 CSS, da 10 a 11 costa 11 CSS
-
-    // Costo potenziamento icona: 5 + livello attuale
-    COSTO_BASE_ICONA: 5,
-
-    // Costi abilità per rarità: 2 × livello rarità
-    // Comune (lvl 1) = 2, Rara (lvl 2) = 4, Epica (lvl 3) = 6, Leggendaria (lvl 4) = 8
-    COSTO_ABILITA: {
-        'Comune': 2,       // 2 × 1
-        'Rara': 4,         // 2 × 2
-        'Epica': 6,        // 2 × 3, +1 abilità negativa automatica
-        'Leggendaria': 8,  // 2 × 4, +2 abilità negative automatiche
-        'Unica': Infinity  // Non acquistabile
+    // Costi abilità per rarità (getter dinamici)
+    get COSTO_ABILITA() {
+        const config = window.FormulasConfig || {};
+        return {
+            'Comune': config.costoAbilitaComune || 2,
+            'Rara': config.costoAbilitaRara || 4,
+            'Epica': config.costoAbilitaEpica || 6,
+            'Leggendaria': config.costoAbilitaLeggendaria || 8,
+            'Unica': Infinity
+        };
     },
 
     // Numero di abilità negative AUTOMATICHE per rarità (assegnate random)
@@ -46,6 +49,16 @@ window.CreditiSuperSeri = {
         'Rara': 1,
         'Epica': 1,
         'Leggendaria': 1
+    },
+
+    // Mappatura rarità stringa -> valore numerico per calcolo costi rimozione
+    // Formula: 5 + (2 × valore) → Comune: 7, Rara: 8, Epica: 9, Leggendaria: 10
+    RARITY_TO_VALUE: {
+        'Comune': 1.0,
+        'Rara': 1.5,
+        'Epica': 2.0,
+        'Leggendaria': 2.5,
+        'Unica': 5  // Per filtro, non usato nel calcolo costi
     },
 
     // Abilità consentite per ogni Icona (non possono averne altre)
@@ -72,15 +85,32 @@ window.CreditiSuperSeri = {
     // Costo servizio sostituzione icona
     COSTO_SOSTITUZIONE_ICONA: 5,
 
-    // Conversione CSS -> CS
-    CSS_TO_CS_RATE: 1000, // 1 CSS = 1000 CS
-    COSTO_CONVERSIONE_CS: 1, // Costa 1 CSS
+    // Conversione CSS -> CS (getter dinamici)
+    get CSS_TO_CS_RATE() {
+        return window.FormulasConfig?.cssToCsRate || 1000;
+    },
+    get COSTO_CONVERSIONE_CS() {
+        return window.FormulasConfig?.costoConversione || 1;
+    },
 
-    // Premi per vittorie (predisposizione)
-    PREMI: {
-        CAMPIONATO: 500,
-        COPPA: 300,      // Futuro
-        SUPERCOPPA: 200  // Futuro
+    // Premi per vittorie (getter dinamici da RewardsConfig)
+    get PREMI() {
+        return {
+            CAMPIONATO: window.RewardsConfig?.rewardCampionatoCSS || 1,
+            COPPA: window.RewardsConfig?.rewardCoppaCSS || 1,
+            SUPERCOPPA: window.RewardsConfig?.rewardSupercoppaCSS || 1
+        };
+    },
+
+    // Costi rimozione abilità (getter dinamici)
+    get COSTO_BASE_RIMOZIONE_POSITIVA() {
+        return window.FormulasConfig?.costoBaseRimozionePositiva || 5;
+    },
+    get MOLTIPLICATORE_RARITA_RIMOZIONE() {
+        return window.FormulasConfig?.moltiplicatoreRaritaRimozione || 2;
+    },
+    get COSTO_BASE_RIMOZIONE_NEGATIVA() {
+        return window.FormulasConfig?.costoBaseRimozioneNegativa || 5;
     },
 
     // ========================================
@@ -640,6 +670,189 @@ window.CreditiSuperSeri = {
      */
     getAbilitaNegativeDisponibili(role, currentAbilities = []) {
         return this.getAbilitaDisponibili(role, currentAbilities, true);
+    },
+
+    // ========================================
+    // METODI RIMOZIONE ABILITA'
+    // ========================================
+
+    /**
+     * Calcola il costo per rimuovere un'abilità positiva
+     * Formula: 5 + (2 × rarityValue)
+     * - Comune (1.0): 5 + 2 = 7 CSS
+     * - Rara (1.5): 5 + 3 = 8 CSS
+     * - Epica (2.0): 5 + 4 = 9 CSS
+     * - Leggendaria (2.5): 5 + 5 = 10 CSS
+     * @param {number} rarityValue - Valore rarità (1, 1.5, 2, 2.5)
+     * @returns {number}
+     */
+    getCostoRimozionePositiva(rarityValue) {
+        const base = this.COSTO_BASE_RIMOZIONE_POSITIVA;
+        const moltiplicatore = this.MOLTIPLICATORE_RARITA_RIMOZIONE;
+        return Math.round(base + (moltiplicatore * rarityValue));
+    },
+
+    /**
+     * Calcola il costo per rimuovere un'abilità negativa
+     * Formula progressiva: 5 × (n + 1) dove n = numero di negative già rimosse
+     * - Prima: 5 × 1 = 5 CSS
+     * - Seconda: 5 × 2 = 10 CSS
+     * - Terza: 5 × 3 = 15 CSS
+     * @param {number} negativeRemovedCount - Numero di negative già rimosse dal giocatore
+     * @returns {number}
+     */
+    getCostoRimozioneNegativa(negativeRemovedCount) {
+        const base = this.COSTO_BASE_RIMOZIONE_NEGATIVA;
+        return base * (negativeRemovedCount + 1);
+    },
+
+    /**
+     * Rimuove un'abilità da un giocatore
+     * - Non si possono rimuovere Icona o abilità Uniche
+     * - Il costo dipende dal tipo (positiva/negativa)
+     * - Per le negative, il contatore viene incrementato e persiste su Firestore
+     * @param {string} teamId
+     * @param {string} playerId
+     * @param {string} abilityName
+     * @param {boolean} isNegative
+     * @returns {Promise<{success: boolean, nuovoSaldo?: number, playerName?: string, error?: string}>}
+     */
+    async rimuoviAbilita(teamId, playerId, abilityName, isNegative = false) {
+        try {
+            // Verifica che il sistema sia abilitato
+            const enabled = await this.isEnabled();
+            if (!enabled) {
+                return { success: false, error: 'Sistema Crediti Super Seri non attivo' };
+            }
+
+            // Non può rimuovere l'abilità Icona
+            if (abilityName === 'Icona') {
+                return { success: false, error: 'L\'abilità Icona non può essere rimossa' };
+            }
+
+            // Verifica che non sia un'abilità Unica
+            if (window.AbilitiesEncyclopedia) {
+                const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
+                if (ability && ability.rarity === 'Unica') {
+                    return { success: false, error: 'Le abilità Uniche non possono essere rimosse' };
+                }
+            }
+
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            // Carica dati squadra
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, error: 'Squadra non trovata' };
+            }
+
+            const teamData = teamDoc.data();
+            const rosa = teamData.rosa || [];
+
+            // Trova il giocatore
+            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            if (playerIndex === -1) {
+                return { success: false, error: 'Giocatore non trovato nella rosa' };
+            }
+
+            const player = rosa[playerIndex];
+            const currentAbilities = player.abilities || [];
+
+            // Verifica che il giocatore abbia questa abilità
+            if (!currentAbilities.includes(abilityName)) {
+                return { success: false, error: `${player.name} non possiede l'abilità "${abilityName}"` };
+            }
+
+            // Le Icone non possono rimuovere le loro abilità fisse
+            if (this.isIcona(player)) {
+                const iconaId = player.id || player.iconaId;
+                const consentite = this.getAbilitaConsentiteIcona(iconaId);
+                if (consentite.includes(abilityName)) {
+                    return { success: false, error: 'Le Icone non possono rimuovere le loro abilità fisse' };
+                }
+            }
+
+            // Calcola costo rimozione
+            let costo;
+            const negativeRemovedCount = player.negativeRemovedCount || 0;
+
+            if (isNegative) {
+                costo = this.getCostoRimozioneNegativa(negativeRemovedCount);
+            } else {
+                // Per le positive, usa il valore rarità dell'abilità
+                const abilityData = window.AbilitiesEncyclopedia?.getAbility(abilityName);
+                const rarityValue = this.RARITY_TO_VALUE[abilityData?.rarity] || 1;
+                costo = this.getCostoRimozionePositiva(rarityValue);
+            }
+
+            // Verifica saldo
+            const saldoAttuale = teamData.creditiSuperSeri || 0;
+            if (saldoAttuale < costo) {
+                return {
+                    success: false,
+                    error: `Crediti insufficienti. Hai ${saldoAttuale} CSS, servono ${costo} CSS`
+                };
+            }
+
+            // Esegui rimozione
+            const nuoveAbilita = currentAbilities.filter(a => a !== abilityName);
+            const nuovoSaldo = saldoAttuale - costo;
+
+            // Prepara update
+            const updateData = {
+                creditiSuperSeri: nuovoSaldo
+            };
+
+            // Se è negativa, incrementa il contatore
+            rosa[playerIndex] = {
+                ...player,
+                abilities: nuoveAbilita
+            };
+
+            if (isNegative) {
+                rosa[playerIndex].negativeRemovedCount = negativeRemovedCount + 1;
+            }
+
+            updateData.rosa = rosa;
+
+            await updateDoc(teamDocRef, updateData);
+
+            // Aggiorna anche la formazione se il giocatore è titolare
+            if (teamData.formation && teamData.formation.titolari) {
+                const titolari = teamData.formation.titolari;
+                const titolareIndex = titolari.findIndex(t => t.id === playerId);
+                if (titolareIndex !== -1) {
+                    titolari[titolareIndex] = {
+                        ...titolari[titolareIndex],
+                        abilities: nuoveAbilita
+                    };
+                    if (isNegative) {
+                        titolari[titolareIndex].negativeRemovedCount = negativeRemovedCount + 1;
+                    }
+                    await updateDoc(teamDocRef, {
+                        'formation.titolari': titolari
+                    });
+                }
+            }
+
+            const tipoAbilita = isNegative ? 'negativa' : 'positiva';
+            console.log(`Rimossa abilità ${tipoAbilita} "${abilityName}" da ${player.name}. Costo: ${costo} CSS`);
+
+            return {
+                success: true,
+                nuovoSaldo,
+                playerName: player.name
+            };
+
+        } catch (error) {
+            console.error('Errore rimozione abilità:', error);
+            return { success: false, error: error.message };
+        }
     },
 
     /**

@@ -15,7 +15,11 @@
 window.Supercoppa = {
 
     SUPERCOPPA_DOC_ID: 'supercoppa_match',
-    REWARD_CSS: 1,
+
+    // Getter dinamico per premio CSS
+    get REWARD_CSS() {
+        return window.RewardsConfig?.rewardSupercoppaCSS || 1;
+    },
 
     /**
      * Verifica se le condizioni per la Supercoppa sono soddisfatte
@@ -252,10 +256,23 @@ window.Supercoppa = {
                     penalties: penalties
                 }
             });
+
+            // Dispatch evento matchSimulated per notifiche push
+            document.dispatchEvent(new CustomEvent('matchSimulated', {
+                detail: {
+                    homeTeam: { id: supercoppaBracket.homeTeam.teamId, name: supercoppaBracket.homeTeam.teamName },
+                    awayTeam: { id: supercoppaBracket.awayTeam.teamId, name: supercoppaBracket.awayTeam.teamName },
+                    result: `${matchResult.homeGoals}-${matchResult.awayGoals}`,
+                    type: 'Supercoppa'
+                }
+            }));
         }
 
         // AUTOMAZIONE CSS: Attiva automaticamente i CSS se il flag cssAutomation è abilitato
         await this.triggerCSSAutomation();
+
+        // AUTOMAZIONE SCAMBI: Attiva automaticamente gli scambi se il flag tradesAutomation è abilitato
+        await this.triggerTradesAutomation();
 
         return supercoppaBracket;
     },
@@ -290,6 +307,39 @@ window.Supercoppa = {
             }
         } catch (error) {
             console.error('Errore attivazione automatica CSS:', error);
+        }
+    },
+
+    /**
+     * Attiva automaticamente gli Scambi se l'automazione è abilitata
+     * (da chiamare quando la supercoppa è terminata = fine stagione completa)
+     */
+    async triggerTradesAutomation() {
+        if (!window.FeatureFlags) return;
+
+        const tradesAutomationEnabled = window.FeatureFlags.isEnabled('tradesAutomation');
+        if (!tradesAutomationEnabled) {
+            console.log('Automazione Scambi disabilitata - Scambi non attivati automaticamente');
+            return;
+        }
+
+        // Verifica che il flag trades esista
+        if (!window.FeatureFlags.flags.trades) {
+            console.log('Flag trades non trovato');
+            return;
+        }
+
+        // Attiva gli Scambi
+        try {
+            await window.FeatureFlags.enable('trades', true);
+            console.log('AUTOMAZIONE SCAMBI: Scambi Giocatori ATTIVATI automaticamente (fine stagione)');
+
+            // Notifica se disponibile
+            if (window.Toast) {
+                window.Toast.success('Gli Scambi Giocatori sono ora disponibili!');
+            }
+        } catch (error) {
+            console.error('Errore attivazione automatica Scambi:', error);
         }
     },
 

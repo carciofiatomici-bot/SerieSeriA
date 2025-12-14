@@ -152,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // AUTOMAZIONE CSS: Disattiva automaticamente i CSS se il flag cssAutomation è abilitato
             await disableCSSAutomation();
 
+            // AUTOMAZIONE SCAMBI: Disattiva automaticamente gli scambi se il flag tradesAutomation è abilitato
+            await disableTradesAutomation();
+
             displayConfigMessage(
                 `Calendario di ${result.totalRounds} giornate (Andata/Ritorno) generato e salvato per ${result.numTeams} squadre flaggate! Classifica azzerata.`,
                 'success'
@@ -196,6 +199,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Errore disattivazione automatica CSS:', error);
+        }
+    };
+
+    /**
+     * Disattiva automaticamente gli Scambi se l'automazione è abilitata
+     * (da chiamare quando inizia il nuovo campionato)
+     */
+    const disableTradesAutomation = async () => {
+        if (!window.FeatureFlags) return;
+
+        const tradesAutomationEnabled = window.FeatureFlags.isEnabled('tradesAutomation');
+        if (!tradesAutomationEnabled) {
+            console.log('Automazione Scambi disabilitata - Scambi non disattivati automaticamente');
+            return;
+        }
+
+        // Verifica che il flag trades esista
+        if (!window.FeatureFlags.flags.trades) {
+            console.log('Flag trades non trovato');
+            return;
+        }
+
+        // Disattiva gli Scambi
+        try {
+            await window.FeatureFlags.disable('trades', true);
+            console.log('AUTOMAZIONE SCAMBI: Scambi Giocatori DISATTIVATI automaticamente (inizio stagione)');
+
+            // Notifica se disponibile
+            if (window.Toast) {
+                window.Toast.info('Gli Scambi Giocatori sono stati disattivati per la nuova stagione.');
+            }
+        } catch (error) {
+            console.error('Errore disattivazione automatica Scambi:', error);
         }
     };
 

@@ -284,6 +284,58 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetHoF.addEventListener('click', handleResetHallOfFame);
         }
 
+        // Configurazione Formule Costi
+        const btnFormulasConfig = document.getElementById('btn-formulas-config');
+        const formulasPanelContainer = document.getElementById('formulas-panel-container');
+        const formulasPanelContent = document.getElementById('formulas-panel-content');
+        const btnCloseFormulasPanel = document.getElementById('btn-close-formulas-panel');
+        let formulasLoaded = false;
+
+        if (btnFormulasConfig && formulasPanelContainer) {
+            btnFormulasConfig.addEventListener('click', async () => {
+                formulasPanelContainer.classList.remove('hidden');
+
+                // Carica configurazione e renderizza pannello solo la prima volta
+                if (!formulasLoaded && window.AdminFormulas) {
+                    await window.AdminFormulas.loadConfig();
+                    window.AdminFormulas.renderPanel(formulasPanelContent);
+                    formulasLoaded = true;
+                }
+            });
+        }
+
+        if (btnCloseFormulasPanel && formulasPanelContainer) {
+            btnCloseFormulasPanel.addEventListener('click', () => {
+                formulasPanelContainer.classList.add('hidden');
+            });
+        }
+
+        // Configurazione Reward
+        const btnRewardsConfig = document.getElementById('btn-rewards-config');
+        const rewardsPanelContainer = document.getElementById('rewards-panel-container');
+        const rewardsPanelContent = document.getElementById('rewards-panel-content');
+        const btnCloseRewardsPanel = document.getElementById('btn-close-rewards-panel');
+        let rewardsLoaded = false;
+
+        if (btnRewardsConfig && rewardsPanelContainer) {
+            btnRewardsConfig.addEventListener('click', async () => {
+                rewardsPanelContainer.classList.remove('hidden');
+
+                // Carica configurazione e renderizza pannello solo la prima volta
+                if (!rewardsLoaded && window.AdminRewards) {
+                    await window.AdminRewards.loadConfig();
+                    window.AdminRewards.renderPanel(rewardsPanelContent);
+                    rewardsLoaded = true;
+                }
+            });
+        }
+
+        if (btnCloseRewardsPanel && rewardsPanelContainer) {
+            btnCloseRewardsPanel.addEventListener('click', () => {
+                rewardsPanelContainer.classList.add('hidden');
+            });
+        }
+
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {
