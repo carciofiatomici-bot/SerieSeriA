@@ -1,0 +1,1056 @@
+/*
+====================================================================
+STYLE.CSS OTTIMIZZATO - Serie SeriA
+====================================================================
+Revisione: Dicembre 2024
+Miglioramenti:
+- CSS Custom Properties per colori centralizzati
+- Media queries consolidate
+- Riduzione uso !important
+- Migliore contrasto accessibilità
+- Fix proprietà deprecate
+====================================================================
+*/
+
+/* ===================== CSS CUSTOM PROPERTIES ===================== */
+:root {
+    /* === COLORI PRIMARI === */
+    --color-primary: #34d399;          /* Verde principale */
+    --color-primary-light: #4ade80;
+    --color-primary-dark: #10b981;
+
+    /* === COLORI SFONDO === */
+    --color-bg-darkest: #0d1b2a;       /* Sfondo body */
+    --color-bg-dark: #1f2937;          /* Card/Box */
+    --color-bg-medium: #374151;        /* Elementi secondari */
+    --color-bg-light: #4b5563;         /* Hover states */
+
+    /* === COLORI TESTO === */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #d1d5db;   /* Migliorato da #9ca3af per contrasto */
+    --color-text-muted: #9ca3af;       /* Migliorato da #6b7280 */
+
+    /* === COLORI ACCENT === */
+    --color-accent-yellow: #fbbf24;
+    --color-accent-red: #f87171;
+    --color-accent-blue: #60a5fa;
+    --color-accent-purple: #a78bfa;
+    --color-accent-amber: #f59e0b;
+
+    /* === SPACING === */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* === BORDER RADIUS === */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* === TRANSIZIONI === */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+    --transition-slow: 300ms ease;
+
+    /* === VIEWPORT SAFE AREAS === */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+
+    /* === TOUCH TARGETS === */
+    --touch-target-min: 44px;
+    --touch-target-comfortable: 48px;
+
+    /* === Z-INDEX SCALE === */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+    --z-alert: 9999;
+}
+
+/* Supporto per dvh dove disponibile */
+@supports (height: 100dvh) {
+    :root {
+        --vh-full: 100dvh;
+        --vh-unit: 1dvh;
+    }
+}
+
+@supports not (height: 100dvh) {
+    :root {
+        --vh-full: 100vh;
+        --vh-unit: 1vh;
+    }
+}
+
+/* ===================== RESET E BASE ===================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    /* Touch action solo su elementi interattivi, non globale */
+}
+
+/* Touch action specifico per elementi interattivi */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+.clickable {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(52, 211, 153, 0.2);
+}
+
+html {
+    overflow-x: hidden;
+    min-height: var(--vh-full);
+    background-color: var(--color-bg-darkest);
+    scroll-behavior: smooth;
+    /* RIMOSSO: -webkit-overflow-scrolling: touch (deprecato) */
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-image: url('https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/sfondo%20app.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center center;
+    min-height: var(--vh-full);
+    margin: 0;
+    overflow-x: hidden;
+    max-width: 100vw;
+    color: var(--color-text-primary);
+    /* Previeni pull-to-refresh accidentale */
+    overscroll-behavior-y: contain;
+}
+
+/* ===================== MAIN CONTAINER ===================== */
+main {
+    min-height: var(--vh-full);
+    justify-content: flex-start;
+    padding-top: max(var(--spacing-md), var(--safe-top));
+    padding-bottom: max(var(--spacing-md), var(--safe-bottom));
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+/* ===================== FOOTBALL BOX (Card Principale) ===================== */
+.football-box {
+    background-color: rgba(31, 41, 55, 0.7);
+    border: 3px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: 0 0 30px rgba(52, 211, 153, 0.4);
+    max-width: calc(100vw - var(--spacing-md));
+    box-sizing: border-box;
+}
+
+/* ===================== BOTTONI E LINK ===================== */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+.btn,
+a.btn {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: transform var(--transition-fast),
+                opacity var(--transition-fast),
+                background-color var(--transition-normal);
+    /* Migliore feedback touch */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Focus states per accessibilità */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Active state per touch feedback */
+@media (hover: none) and (pointer: coarse) {
+    button:active,
+    .btn:active,
+    [role="button"]:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+    }
+}
+
+/* ===================== FORM ELEMENTS ===================== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
+    min-height: var(--touch-target-min);
+    padding: 12px;
+    font-size: 16px; /* Previene zoom su iOS */
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-bg-light);
+    transition: border-color var(--transition-normal);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+/* Checkbox e Radio */
+input[type="checkbox"],
+input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+/* ===================== SCROLLBAR STYLING ===================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-bg-light);
+    border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+/* Scrollbar più sottile su mobile */
+@media (max-width: 639px) {
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+}
+
+/* ===================== UTILITY CLASSES ===================== */
+
+/* Testo troncato */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Centratura */
+.center-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container scrollabile con momentum nativo */
+.scroll-container {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Nota: -webkit-overflow-scrolling: touch non più necessario nei browser moderni */
+}
+
+/* Previeni selezione su elementi interattivi */
+button,
+.cursor-pointer,
+.no-select {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* ===================== ACCESSIBILITÀ ===================== */
+
+/* Contrasto migliorato per testi grigi */
+.text-gray-400 {
+    color: #9ca3af; /* Ratio 4.6:1 su #1f2937 */
+}
+
+.text-gray-500 {
+    color: #9ca3af; /* Aumentato da #6b7280 per contrasto WCAG AA */
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .football-box {
+        border-width: 3px;
+    }
+
+    button {
+        border: 2px solid currentColor;
+    }
+
+    .text-gray-400,
+    .text-gray-500 {
+        color: #d1d5db;
+    }
+}
+
+/* Dark Mode (già dark, ma per input) */
+@media (prefers-color-scheme: dark) {
+    input,
+    select,
+    textarea {
+        color-scheme: dark;
+    }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN - MOBILE FIRST
+   ========================================================================== */
+
+/* ===================== EXTRA SMALL (< 360px) ===================== */
+@media (max-width: 359px) {
+    body {
+        min-width: 320px;
+    }
+
+    .football-box {
+        padding: var(--spacing-sm);
+        margin: var(--spacing-xs);
+        width: calc(100% - 8px);
+    }
+
+    h2 { font-size: 1.2rem; }
+    h3 { font-size: 1rem; }
+
+    button {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+        min-height: 40px;
+    }
+
+    /* Grid sempre 1 colonna */
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .text-sm { font-size: 0.75rem; }
+    .text-xs { font-size: 0.65rem; }
+
+    #team-logo-container > * {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+    }
+}
+
+/* ===================== MOBILE (< 640px) ===================== */
+@media (max-width: 639px) {
+    /* Performance: scroll invece di fixed per sfondo */
+    body {
+        background-attachment: scroll;
+    }
+
+    main {
+        padding: var(--spacing-sm);
+        padding-bottom: 80px; /* Spazio per bottone regole */
+    }
+
+    .football-box {
+        padding: var(--spacing-md);
+        margin: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        max-width: 100%;
+        width: calc(100% - 16px);
+    }
+
+    /* Titoli */
+    h2 { font-size: 1.5rem; line-height: 1.3; }
+    h3 { font-size: 1.25rem; }
+
+    /* Bottone Regole */
+    #rules-global-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+        bottom: max(12px, calc(var(--safe-bottom) + 12px));
+        right: max(12px, var(--safe-right));
+    }
+
+    /* Footer logo */
+    #footer-logo {
+        max-width: 180px;
+        margin: 24px auto;
+    }
+
+    /* Grid responsive */
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Gap ridotto */
+    .gap-4 { gap: 0.75rem; }
+    .gap-6 { gap: 1rem; }
+
+    /* Dashboard logo container */
+    #team-logo-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        justify-content: center;
+        align-items: center;
+        padding: 0 var(--spacing-sm);
+    }
+
+    #team-logo-container > * {
+        flex-shrink: 0;
+    }
+
+    #next-match-countdown,
+    #team-uniform-box {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+    }
+
+    #sponsor-box,
+    #media-box,
+    #team-logo-wrapper,
+    #team-logo-container .relative.group {
+        width: 64px;
+        height: 64px;
+        min-width: 64px;
+    }
+
+    #team-logo,
+    #team-icona-avatar {
+        width: 64px;
+        height: 64px;
+        object-fit: cover;
+    }
+
+    /* Bottoni touch-friendly */
+    button {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        font-size: 0.875rem;
+        min-height: var(--touch-target-min);
+    }
+
+    /* Text sizing */
+    .text-xl { font-size: 1rem; }
+    .text-2xl { font-size: 1.25rem; }
+    .text-3xl { font-size: 1.5rem; }
+    .text-4xl { font-size: 1.5rem; }
+
+    /* Modal padding */
+    .fixed.inset-0 > div {
+        padding: 12px;
+    }
+
+    /* Lista icone - 2 colonne */
+    #lista-icone-container,
+    #captain-candidates-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Input font size (previene zoom iOS) */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    /* Max width override */
+    .max-w-sm,
+    .max-w-md,
+    .max-w-lg,
+    .max-w-xl,
+    .max-w-2xl,
+    .max-w-3xl,
+    .max-w-4xl,
+    .max-w-5xl {
+        max-width: 100%;
+    }
+
+    /* Campo di gioco */
+    #field-area {
+        height: 450px;
+        min-height: 400px;
+    }
+
+    .jersey-container {
+        width: 64px;
+        height: 64px;
+        padding: 0.125rem;
+    }
+
+    .jersey-inner { font-size: 0.55rem; }
+    .jersey-name { font-size: 0.5rem; }
+    .jersey-role,
+    .jersey-base-level { font-size: 0.45rem; }
+    .level-text { font-size: 1rem; }
+    .mod-text { font-size: 0.45rem; }
+
+    /* Panchina */
+    #panchina-slots {
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+    }
+
+    #bench-container {
+        height: auto;
+        min-height: 100px;
+    }
+
+    /* Toggle switches - dimensioni fisse */
+    label.relative.inline-flex.items-center.cursor-pointer > div {
+        flex-shrink: 0;
+        width: 44px;
+        height: 24px;
+        min-width: 44px;
+    }
+
+    /* Modali adattivi */
+    .fixed.inset-0 .football-box {
+        margin: var(--spacing-sm);
+        padding: 12px;
+        max-height: 95vh;
+        max-height: 95dvh;
+        height: auto;
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        border-radius: var(--radius-lg);
+        overflow-y: auto;
+    }
+
+    /* Tabelle compatte */
+    table th,
+    table td {
+        padding: 6px 8px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    table th {
+        background-color: var(--color-bg-medium);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.65rem;
+    }
+
+    /* Animazioni ridotte per performance */
+    .transition,
+    .transition-all,
+    .transition-colors,
+    .transition-opacity,
+    .transition-transform {
+        transition-duration: var(--transition-fast);
+    }
+}
+
+/* ===================== TABLET (640px - 1024px) ===================== */
+@media (min-width: 640px) and (max-width: 1023px) {
+    main {
+        padding: var(--spacing-md);
+    }
+
+    .football-box {
+        padding: var(--spacing-lg);
+        max-width: 90%;
+    }
+
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #team-logo-container > * {
+        width: 100px;
+        height: 100px;
+    }
+
+    #lista-icone-container,
+    #captain-candidates-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    #footer-logo {
+        max-width: 220px;
+    }
+
+    .max-w-4xl,
+    .max-w-5xl {
+        max-width: 95%;
+    }
+}
+
+/* ===================== DESKTOP (>= 1024px) ===================== */
+@media (min-width: 1024px) {
+    main {
+        justify-content: center;
+    }
+}
+
+/* ===================== LANDSCAPE MOBILE ===================== */
+@media (max-width: 896px) and (orientation: landscape) {
+    .football-box {
+        padding: 12px;
+    }
+
+    #field-area {
+        height: 350px;
+    }
+
+    .fixed.inset-0 .football-box {
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    #footer-logo {
+        display: none;
+    }
+}
+
+/* ===================== KEYBOARD OPEN STATE ===================== */
+@media (max-height: 500px) and (pointer: coarse) {
+    #footer-logo,
+    #rules-global-btn,
+    #pwa-install-banner {
+        display: none;
+    }
+
+    .fixed.inset-0 > div {
+        max-height: 90vh;
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+}
+
+/* ==========================================================================
+   SAFE AREA SUPPORT (Notch / Dynamic Island)
+   ========================================================================== */
+@supports (padding: max(0px)) {
+    body {
+        padding-top: var(--safe-top);
+        padding-left: max(8px, var(--safe-left));
+        padding-right: max(8px, var(--safe-right));
+        padding-bottom: max(8px, var(--safe-bottom));
+    }
+
+    #rules-global-btn {
+        bottom: max(20px, calc(var(--safe-bottom) + 12px));
+        right: max(12px, var(--safe-right));
+    }
+
+    #draft-alert-banner {
+        top: max(10px, calc(var(--safe-top) + 10px));
+        left: max(10px, var(--safe-left));
+    }
+
+    #match-alert-banner {
+        top: max(10px, calc(var(--safe-top) + 10px));
+        right: max(10px, var(--safe-right));
+    }
+
+    .fixed.inset-0 {
+        padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+    }
+}
+
+/* iPhone 14 Pro/15 Pro/16 Pro con Dynamic Island */
+@media only screen
+    and (device-width: 393px)
+    and (device-height: 852px)
+    and (-webkit-device-pixel-ratio: 3) {
+    body {
+        padding-top: max(59px, var(--safe-top));
+    }
+
+    #draft-alert-banner {
+        top: max(65px, calc(var(--safe-top) + 10px));
+    }
+}
+
+@media only screen
+    and (device-width: 430px)
+    and (device-height: 932px)
+    and (-webkit-device-pixel-ratio: 3) {
+    body {
+        padding-top: max(59px, var(--safe-top));
+    }
+}
+
+/* ==========================================================================
+   PWA STANDALONE MODE
+   ========================================================================== */
+@media (display-mode: standalone) {
+    .pwa-hide {
+        display: none;
+    }
+
+    body {
+        padding-top: max(var(--safe-top), 20px);
+    }
+
+    #app-status-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--safe-top);
+        background: linear-gradient(to bottom, rgba(13, 27, 42, 0.95), transparent);
+        z-index: var(--z-alert);
+        pointer-events: none;
+    }
+}
+
+/* ==========================================================================
+   iOS SAFARI SPECIFIC FIXES
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
+    body {
+        min-height: -webkit-fill-available;
+    }
+
+    main {
+        min-height: -webkit-fill-available;
+    }
+
+    .fixed.inset-0 {
+        height: -webkit-fill-available;
+    }
+}
+
+/* ==========================================================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ========================================================================== */
+@media (pointer: coarse) {
+    button,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"],
+    a.btn,
+    .clickable {
+        min-height: var(--touch-target-min);
+        min-width: var(--touch-target-min);
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* Visual feedback su touch */
+    button:active,
+    [role="button"]:active,
+    a:active,
+    .clickable:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+        transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+}
+
+/* Rimuovi focus ring su touch */
+@media (hover: none) {
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+    }
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+@media print {
+    body {
+        background: white;
+    }
+
+    .football-box {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    #rules-global-btn,
+    button,
+    .hide-print {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   ANIMAZIONI
+   ========================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+.animate-slide-in { animation: slideIn 0.4s ease-out; }
+.animate-bounce { animation: bounce 0.6s infinite; }
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* ==========================================================================
+   FIX OVERFLOW GLOBALE
+   ========================================================================== */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+}
+
+img,
+video,
+iframe,
+svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ==========================================================================
+   TUTORIAL INTERATTIVO
+   ========================================================================== */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+.tutorial-spotlight {
+    position: absolute;
+    z-index: 10001;
+    border-radius: var(--radius-md);
+    box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.85),
+        0 0 20px 5px rgba(52, 211, 153, 0.6);
+    pointer-events: none;
+    transition: all var(--transition-slow);
+}
+
+.tutorial-tooltip {
+    position: absolute;
+    z-index: 10002;
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(52, 211, 153, 0.3);
+}
+
+.tutorial-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border-radius: 10px 10px 0 0;
+}
+
+.tutorial-step-indicator {
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+.tutorial-title {
+    flex: 1;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.tutorial-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.tutorial-content {
+    padding: 20px;
+    color: var(--color-text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.tutorial-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 10px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.tutorial-btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+}
+
+.tutorial-btn-skip {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-bg-light);
+}
+
+.tutorial-btn-prev {
+    background: var(--color-bg-medium);
+    color: white;
+}
+
+.tutorial-btn-next {
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+}
+
+/* Hover solo su dispositivi con mouse */
+@media (hover: hover) and (pointer: fine) {
+    .tutorial-btn-skip:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-text-secondary);
+    }
+
+    .tutorial-btn-prev:hover {
+        background: var(--color-bg-light);
+    }
+
+    .tutorial-btn-next:hover {
+        background: linear-gradient(90deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+        transform: translateY(-1px);
+    }
+
+    .tutorial-close:hover {
+        opacity: 1;
+    }
+}
+
+/* Tutorial responsive */
+@media (max-width: 639px) {
+    .tutorial-tooltip {
+        min-width: auto;
+        max-width: calc(100vw - 30px);
+        left: 15px;
+        right: 15px;
+        width: auto;
+    }
+
+    .tutorial-tooltip-header {
+        padding: 12px 15px;
+    }
+
+    .tutorial-title {
+        font-size: 16px;
+    }
+
+    .tutorial-content {
+        padding: 15px;
+        font-size: 14px;
+    }
+
+    .tutorial-footer {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .tutorial-btn-skip {
+        order: 2;
+        width: 100%;
+        text-align: center;
+    }
+
+    .tutorial-nav {
+        order: 1;
+        width: 100%;
+    }
+
+    .tutorial-nav .tutorial-btn {
+        flex: 1;
+    }
+}

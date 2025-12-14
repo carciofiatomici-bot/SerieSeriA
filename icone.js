@@ -42,7 +42,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Croccante.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Fatto d\'acciaio']
     }, 
     
     // 2. Shikanto: C, Tecnico
@@ -57,7 +57,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/shikanto.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Amici di panchina']
     },
     
     // 3. Il Cap: C, Tecnico
@@ -72,7 +72,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cap.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Calcolo delle probabilita']
     },
     
     // 4. Simone: P, Velocita
@@ -87,7 +87,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/simone.jpg',
         type: TYPE_VELOCITA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Parata Efficiente']
     },
     
     // 5. Dappino: C, Tecnico
@@ -105,11 +105,11 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         abilities: ['Icona']
     }, 
     
-    // 6. Blatta: D, Velocita
+    // 6. Bemolle: D, Velocita
     {
         id: 'blatta',
         role: 'D',
-        name: 'Blatta',
+        name: 'Bemolle',
         levelRange: [12, 18],
         age: 27,
         cost: 0,
@@ -117,7 +117,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/blatta.jpg',
         type: TYPE_VELOCITA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Scheggia impazzita']
     },
     
     // 7. Antony: D, Potente
@@ -132,7 +132,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/antony.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Avanti un altro']
     },
     
     // 8. Gladio: D, Potente
@@ -147,7 +147,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/gladio.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Continua a provare']
     },
     
     // 9. Amedemo: A, Potente
@@ -162,7 +162,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/amedemo.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Tiro Dritto']
     },
     
     // 10. Flavio El Ficario: D, Tecnico
@@ -192,7 +192,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/luca.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Contrasto di gomito']
     },
 
     // 12. Meliodas: C, Tecnico
@@ -207,7 +207,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mel.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Assist-man']
     },
     
     // 13. Mark Falco: P, Potente
@@ -222,14 +222,14 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mark%20Falco.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Osservatore']
     },
     
-    // 14. Sandro: C, Tecnico
+    // 14. Sandro Diaz: C, Tecnico
     {
         id: 'sandro',
         role: 'C',
-        name: 'Sandro',
+        name: 'Sandro Diaz',
         levelRange: [12, 18],
         age: 29,
         cost: 0,
@@ -237,7 +237,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/sandro.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Relax']
     },
 
     // 15. Fosco: P, Tecnico
@@ -252,7 +252,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Fosco.jpg',
         type: TYPE_TECNICA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'L\'uomo in piu']
     },
 
     // 16. Cocco: C, Potente
@@ -267,7 +267,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         level: 12,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cocco.jpg',
         type: TYPE_POTENZA,
-        abilities: ['Icona']
+        abilities: ['Icona', 'Stazionario']
     },
 ];
 

@@ -23,6 +23,7 @@ window.AdminIcons = {
 
     /**
      * Carica le icone da Firestore (se esistono) e le mergia con quelle di default
+     * Auto-sincronizza se rileva differenze in nome o abilita
      */
     async loadIconsFromFirestore() {
         const { collection, getDocs } = window.firestoreTools;
@@ -33,6 +34,9 @@ window.AdminIcons = {
             const iconsCollectionRef = collection(db, iconsPath);
             const querySnapshot = await getDocs(iconsCollectionRef);
 
+            // Salva una copia delle icone originali da icone.js PRIMA di qualsiasi merge
+            const originalIcons = JSON.parse(JSON.stringify(window.CAPTAIN_CANDIDATES_TEMPLATES || []));
+
             if (!querySnapshot.empty) {
                 // Carica le icone da Firestore
                 const firestoreIconsMap = {};
@@ -41,15 +45,49 @@ window.AdminIcons = {
                     firestoreIconsMap[data.id] = { ...data, firestoreId: doc.id };
                 });
 
-                // Mergia le icone di Firestore con quelle di default
-                // Le icone di Firestore sovrascrivono quelle di default con lo stesso ID
-                const currentIcons = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+                // Controlla se ci sono differenze e aggiorna Firestore se necessario
+                const iconsToUpdate = [];
+                for (const localIcon of originalIcons) {
+                    const firestoreIcon = firestoreIconsMap[localIcon.id];
+                    if (firestoreIcon) {
+                        // Confronta nome e abilita
+                        const nameChanged = firestoreIcon.name !== localIcon.name;
+                        const abilitiesChanged = JSON.stringify(firestoreIcon.abilities || []) !== JSON.stringify(localIcon.abilities || []);
 
+                        if (nameChanged || abilitiesChanged) {
+                            console.log(`🔄 Differenza rilevata per ${localIcon.id}: ` +
+                                (nameChanged ? `nome "${firestoreIcon.name}" -> "${localIcon.name}" ` : '') +
+                                (abilitiesChanged ? `abilita aggiornate` : ''));
+                            iconsToUpdate.push(localIcon);
+                        }
+                    }
+                }
+
+                // Auto-aggiorna Firestore se ci sono differenze
+                if (iconsToUpdate.length > 0) {
+                    console.log(`🔄 Auto-sincronizzazione: ${iconsToUpdate.length} icone da aggiornare su Firestore...`);
+                    for (const icon of iconsToUpdate) {
+                        try {
+                            await this.saveIconToFirestore(icon);
+                        } catch (e) {
+                            console.error(`Errore aggiornamento ${icon.name}:`, e);
+                        }
+                    }
+                    console.log(`✅ Icone aggiornate su Firestore!`);
+                }
+
+                // Mergia le icone - USA I VALORI LOCALI per nome e abilita
+                const currentIcons = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
                 for (let i = 0; i < currentIcons.length; i++) {
                     const iconId = currentIcons[i].id;
+                    const localIcon = originalIcons.find(ic => ic.id === iconId);
                     if (firestoreIconsMap[iconId]) {
-                        // Sovrascrivi con i dati di Firestore
-                        currentIcons[i] = firestoreIconsMap[iconId];
+                        // Prendi i dati da Firestore MA sovrascrivi nome e abilita con quelli locali
+                        currentIcons[i] = {
+                            ...firestoreIconsMap[iconId],
+                            name: localIcon?.name || firestoreIconsMap[iconId].name,
+                            abilities: localIcon?.abilities || firestoreIconsMap[iconId].abilities
+                        };
                     }
                 }
 
@@ -233,17 +271,10 @@ window.AdminIcons = {
             { value: 'A', label: 'A (Attaccante)' }
         ];
 
-        // Abilita disponibili per icone
-        const availableAbilities = [
-            'Icona', 'Pugno di ferro', 'Uscita Kamikaze', 'Teletrasporto', 'Effetto Caos', 'Fortunato',
-            'Bandiera del club', 'Parata con i piedi', 'Lancio lungo', 'Presa Sicura', 'Muro Psicologico',
-            'Miracolo', 'Freddezza', 'Muro', 'Contrasto Durissimo', 'Antifurto', 'Guardia',
-            'Tiro dalla distanza', 'Deviazione', 'Svaligiatore', 'Spazzata', 'Adattabile',
-            'Salvataggio sulla Linea', 'Regista', 'Motore', 'Tocco Di Velluto', 'Cross',
-            'Mago del pallone', 'Passaggio Corto', 'Visione di Gioco', 'Tuttocampista',
-            'Bomber', 'Doppio Scatto', 'Pivot', 'Rientro Rapido', 'Tiro Fulmineo',
-            'Opportunista', 'Tiro a Giro', 'Immarcabile'
-        ];
+        // Abilita disponibili per questa icona specifica (da CreditiSuperSeri)
+        // Le Icone possono avere SOLO le abilità consentite dalla loro passiva unica
+        const CSS = window.CreditiSuperSeri;
+        const availableAbilities = CSS?.getAbilitaConsentiteIcona(icona.id) || ['Icona'];
 
         const modalHtml = `
             <div id="edit-icon-modal" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4 z-[60]">
@@ -298,9 +329,9 @@ window.AdminIcons = {
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-gray-300 block mb-2 font-bold">Abilita</label>
-                        <p class="text-xs text-yellow-300 mb-2">Seleziona le abilita per questa icona (l'abilita "Icona" e obbligatoria)</p>
-                        <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded border border-gray-600">
+                        <label class="text-gray-300 block mb-2 font-bold">Abilita Consentite</label>
+                        <p class="text-xs text-yellow-300 mb-2">Le Icone possono avere solo le abilità specificate nella loro passiva unica</p>
+                        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded border border-gray-600">
                             ${availableAbilities.map(ability => {
                                 const isChecked = icona.abilities?.includes(ability) ? 'checked' : '';
                                 const isIconaAbility = ability === 'Icona';

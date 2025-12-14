@@ -167,6 +167,14 @@ window.SimulazioneNuoveRegole = {
         let homeGoals = 0;
         let awayGoals = 0;
 
+        // Statistiche per log ristretto
+        const stats = {
+            homeShots: 0, awayShots: 0,           // Tiri (Fase 3 raggiunta)
+            homeSaves: 0, awaySaves: 0,           // Parate
+            homePhase1Fail: 0, awayPhase1Fail: 0, // Fallimenti Fase 1
+            homePhase2Fail: 0, awayPhase2Fail: 0  // Fallimenti Fase 2
+        };
+
         const homePlayers = homeTeamData.formation?.titolari || [];
         const awayPlayers = awayTeamData.formation?.titolari || [];
 
@@ -186,6 +194,7 @@ window.SimulazioneNuoveRegole = {
         log.push('');
 
         simpleLog.push(`${homeTeamData.teamName} vs ${awayTeamData.teamName}`);
+        simpleLog.push(`Coach: +${homeCoachBonus.toFixed(1)} vs +${awayCoachBonus.toFixed(1)}${homeStadiumBonus > 0 ? ` | Stadio: +${homeStadiumBonus.toFixed(1)}` : ''}`);
         simpleLog.push('-'.repeat(40));
 
         // 30 occasioni per squadra (alternando)
@@ -210,14 +219,40 @@ window.SimulazioneNuoveRegole = {
                 stadiumBonus, log
             );
 
+            // Aggiorna statistiche
+            if (occasionResult.reachedPhase3) {
+                if (isHomeAttacking) stats.homeShots++;
+                else stats.awayShots++;
+            }
+            if (occasionResult.saved) {
+                if (isHomeAttacking) stats.awaySaves++;
+                else stats.homeSaves++;
+            }
+            if (occasionResult.failedPhase === 1) {
+                if (isHomeAttacking) stats.homePhase1Fail++;
+                else stats.awayPhase1Fail++;
+            }
+            if (occasionResult.failedPhase === 2) {
+                if (isHomeAttacking) stats.homePhase2Fail++;
+                else stats.awayPhase2Fail++;
+            }
+
+            // Log ristretto con più dettagli
+            const teamAbbr = isHomeAttacking ? '🏠' : '✈️';
             if (occasionResult.goal) {
                 if (isHomeAttacking) {
                     homeGoals++;
-                    simpleLog.push(`⚽ ${occasionNumber}' GOAL ${homeTeamData.teamName}! (${occasionResult.scorer})`);
+                    simpleLog.push(`${teamAbbr} ${occasionNumber}' ⚽ GOAL! ${occasionResult.scorer} (${homeGoals}-${awayGoals})`);
                 } else {
                     awayGoals++;
-                    simpleLog.push(`⚽ ${occasionNumber}' GOAL ${awayTeamData.teamName}! (${occasionResult.scorer})`);
+                    simpleLog.push(`${teamAbbr} ${occasionNumber}' ⚽ GOAL! ${occasionResult.scorer} (${homeGoals}-${awayGoals})`);
                 }
+            } else if (occasionResult.saved) {
+                simpleLog.push(`${teamAbbr} ${occasionNumber}' 🧤 Parata di ${occasionResult.goalkeeper} su ${occasionResult.shooter}`);
+            } else if (occasionResult.failedPhase === 1) {
+                simpleLog.push(`${teamAbbr} ${occasionNumber}' ❌ Costruzione fallita (${occasionResult.failedBy || 'N/A'})`);
+            } else if (occasionResult.failedPhase === 2) {
+                simpleLog.push(`${teamAbbr} ${occasionNumber}' 🛡️ Difesa recupera (${occasionResult.defender || 'N/A'})`);
             }
 
             log.push('');
@@ -228,7 +263,12 @@ window.SimulazioneNuoveRegole = {
         log.push('='.repeat(60));
 
         simpleLog.push('-'.repeat(40));
-        simpleLog.push(`FINALE: ${homeGoals} - ${awayGoals}`);
+        simpleLog.push(`FINALE: ${homeTeamData.teamName} ${homeGoals} - ${awayGoals} ${awayTeamData.teamName}`);
+        simpleLog.push('');
+        simpleLog.push(`📊 STATISTICHE:`);
+        simpleLog.push(`   Tiri: ${stats.homeShots} - ${stats.awayShots}`);
+        simpleLog.push(`   Parate: ${stats.homeSaves} - ${stats.awaySaves}`);
+        simpleLog.push(`   Azioni perse: ${stats.homePhase1Fail + stats.homePhase2Fail} - ${stats.awayPhase1Fail + stats.awayPhase2Fail}`);
 
         return {
             homeGoals,
@@ -251,7 +291,7 @@ window.SimulazioneNuoveRegole = {
 
         if (!phase1Attacker || !phase1Defender) {
             log.push('  Fase 1: Giocatori insufficienti - azione fallita');
-            return { goal: false };
+            return { goal: false, failedPhase: 1, failedBy: 'N/A', reachedPhase3: false, saved: false };
         }
 
         const p1AttMod = this.calculatePlayerModifier(phase1Attacker, attackingTeam);
@@ -286,7 +326,7 @@ window.SimulazioneNuoveRegole = {
                 log.push(`    FALLIMENTO ma passaggio fortunato! (5% chance)`);
             } else {
                 log.push(`    FALLIMENTO - Azione interrotta`);
-                return { goal: false };
+                return { goal: false, failedPhase: 1, failedBy: phase1Attacker.name, reachedPhase3: false, saved: false };
             }
         } else {
             log.push(`    SUCCESSO - Si passa alla Fase 2`);
@@ -300,7 +340,7 @@ window.SimulazioneNuoveRegole = {
 
         if (!phase2Attacker || !phase2Defender) {
             log.push('  Fase 2: Giocatori insufficienti - azione fallita');
-            return { goal: false };
+            return { goal: false, failedPhase: 2, defender: 'N/A', reachedPhase3: false, saved: false };
         }
 
         const p2AttMod = this.calculatePlayerModifier(phase2Attacker, attackingTeam);
@@ -331,7 +371,7 @@ window.SimulazioneNuoveRegole = {
                 shotValue = 5;
             } else {
                 log.push(`    FALLIMENTO - Difesa recupera palla`);
-                return { goal: false };
+                return { goal: false, failedPhase: 2, defender: phase2Defender.name, reachedPhase3: false, saved: false };
             }
         } else {
             log.push(`    SUCCESSO - Valore Tiro: ${shotValue.toFixed(1)}`);
@@ -344,7 +384,7 @@ window.SimulazioneNuoveRegole = {
 
         if (!shooter || !goalkeeper) {
             log.push('  Fase 3: Giocatori insufficienti - azione fallita');
-            return { goal: false };
+            return { goal: false, reachedPhase3: true, saved: false, shooter: 'N/A', goalkeeper: 'N/A' };
         }
 
         const shooterMod = this.calculatePlayerModifier(shooter, attackingTeam);
@@ -368,6 +408,7 @@ window.SimulazioneNuoveRegole = {
         log.push(`    Differenza (PORT - TIRO): ${phase3Diff.toFixed(1)}`);
 
         let isGoal = false;
+        let saved = false;
         let scorer = shooter.name;
 
         if (phase3Diff > 0) {
@@ -377,10 +418,12 @@ window.SimulazioneNuoveRegole = {
                 isGoal = true;
             } else {
                 log.push(`    PARATA di ${goalkeeper.name}!`);
+                saved = true;
             }
         } else if (phase3Diff === 0) {
             // 50/50
             isGoal = Math.random() < 0.5;
+            saved = !isGoal;
             log.push(`    INCERTO (50/50) -> ${isGoal ? 'GOAL!' : 'PARATA!'}`);
         } else {
             // Goal
@@ -388,7 +431,14 @@ window.SimulazioneNuoveRegole = {
             isGoal = true;
         }
 
-        return { goal: isGoal, scorer };
+        return {
+            goal: isGoal,
+            scorer,
+            reachedPhase3: true,
+            saved,
+            shooter: shooter.name,
+            goalkeeper: goalkeeper.name
+        };
     }
 };
 

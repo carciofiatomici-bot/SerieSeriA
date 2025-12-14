@@ -274,7 +274,9 @@ window.DraftAdminPlayers = {
     },
 
     /**
-     * Seleziona abilità casuali per il ruolo dato (max 3 positive + 2 negative)
+     * Seleziona abilità casuali per il ruolo dato
+     * NUOVA LOGICA: max 1 per rarità (1 Comune, 1 Rara, 1 Epica, 1 Leggendaria)
+     * + abilità negative automatiche: Epica +1, Leggendaria +2
      * @param {string} role - Il ruolo del giocatore
      */
     selectRandomAbilities(role) {
@@ -286,18 +288,41 @@ window.DraftAdminPlayers = {
         const positiveAbilities = roleAbilities.positive || [];
         const negativeAbilities = roleAbilities.negative || [];
 
-        // Quante abilità positive selezionare (0-3)
-        const numPositive = getRandomInt(0, Math.min(3, positiveAbilities.length));
-        // Quante abilità negative selezionare (0-2)
-        const numNegative = getRandomInt(0, Math.min(2, negativeAbilities.length));
+        // Raggruppa abilità positive per rarità
+        const abilitiesByRarity = {
+            'Comune': [],
+            'Rara': [],
+            'Epica': [],
+            'Leggendaria': []
+        };
 
-        // Seleziona casualmente le abilità positive
-        const shuffledPositive = [...positiveAbilities].sort(() => Math.random() - 0.5);
-        const selectedPositive = shuffledPositive.slice(0, numPositive);
+        // Usa AbilitiesEncyclopedia per ottenere la rarità
+        for (const abilityName of positiveAbilities) {
+            const ability = window.AbilitiesEncyclopedia?.getAbility(abilityName);
+            if (ability && abilitiesByRarity[ability.rarity]) {
+                abilitiesByRarity[ability.rarity].push(abilityName);
+            }
+        }
 
-        // Seleziona casualmente le abilità negative
+        // Seleziona casualmente: 0 o 1 abilità per ogni rarità
+        const selectedPositive = [];
+        let autoNegativeCount = 0;
+
+        for (const rarity of ['Comune', 'Rara', 'Epica', 'Leggendaria']) {
+            const pool = abilitiesByRarity[rarity];
+            if (pool.length > 0 && Math.random() < 0.5) { // 50% di probabilità
+                const shuffled = [...pool].sort(() => Math.random() - 0.5);
+                selectedPositive.push(shuffled[0]);
+
+                // Conta abilità negative automatiche
+                if (rarity === 'Epica') autoNegativeCount += 1;
+                if (rarity === 'Leggendaria') autoNegativeCount += 2;
+            }
+        }
+
+        // Seleziona abilità negative automatiche random
         const shuffledNegative = [...negativeAbilities].sort(() => Math.random() - 0.5);
-        const selectedNegative = shuffledNegative.slice(0, numNegative);
+        const selectedNegative = shuffledNegative.slice(0, Math.min(autoNegativeCount, shuffledNegative.length));
 
         // Deseleziona tutte le checkbox
         document.querySelectorAll('.ability-positive-check').forEach(cb => {

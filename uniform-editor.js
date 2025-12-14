@@ -583,6 +583,89 @@ window.UniformEditor = {
     },
 
     /**
+     * Genera un SVG compatto della maglia per le card formazione
+     * @param {Object} uniform - Oggetto uniform con shirt config
+     * @returns {string} - SVG string inline (senza tag <svg> esterno per uso come background)
+     */
+    generateMiniJerseySVG(uniform) {
+        // Usa default se uniform non valido
+        let u = uniform;
+        if (!u || !u.shirt || !u.shirt.primaryColor) {
+            u = this.defaultUniform;
+        }
+
+        const shirt = {
+            primaryColor: u.shirt?.primaryColor || this.defaultUniform.shirt.primaryColor,
+            secondaryColor: u.shirt?.secondaryColor || this.defaultUniform.shirt.secondaryColor,
+            collarColor: u.shirt?.collarColor || u.shirt?.secondaryColor || this.defaultUniform.shirt.collarColor,
+            pattern: u.shirt?.pattern || 'solid'
+        };
+
+        // Genera pattern inline se necessario
+        const patternId = `mini-shirt-${Math.random().toString(36).substr(2, 9)}`;
+        let patternDef = '';
+        let fillValue = shirt.primaryColor;
+
+        if (shirt.pattern !== 'solid' && shirt.pattern !== 'shoulders' && shirt.pattern !== 'sleeves') {
+            patternDef = this.createPatternDef(patternId.replace('pattern-', ''), shirt).replace(
+                new RegExp(`pattern-[^"]+`, 'g'),
+                patternId
+            );
+            if (patternDef) {
+                fillValue = `url(#${patternId})`;
+            }
+        }
+
+        // SVG compatto per card 96x96
+        return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+                <defs>${patternDef}</defs>
+                <!-- Sfondo scuro arrotondato -->
+                <rect width="96" height="96" rx="8" fill="#1f2937"/>
+                <!-- Corpo maglia centrato -->
+                <path d="M20,25 L20,85 L76,85 L76,25 L66,25 L66,35 L58,35 L58,25 L38,25 L38,35 L30,35 L30,25 Z"
+                      fill="${fillValue}" stroke="#111827" stroke-width="1.5"/>
+                <!-- Colletto -->
+                <path d="M38,25 L48,30 L58,25 L54,22 L48,27 L42,22 Z"
+                      fill="${shirt.collarColor}" stroke="#111827" stroke-width="1"/>
+                <!-- Polsino sinistro -->
+                <rect x="20" y="33" width="10" height="4" rx="1" fill="${shirt.collarColor}" stroke="#111827" stroke-width="0.5"/>
+                <!-- Polsino destro -->
+                <rect x="66" y="33" width="10" height="4" rx="1" fill="${shirt.collarColor}" stroke="#111827" stroke-width="0.5"/>
+            </svg>
+        `;
+    },
+
+    /**
+     * Genera un data URL per usare l'SVG come background-image CSS
+     * @param {Object} uniform - Oggetto uniform
+     * @returns {string} - data:image/svg+xml URL
+     */
+    getMiniJerseyDataUrl(uniform) {
+        const svg = this.generateMiniJerseySVG(uniform);
+        // Encoding per uso in CSS url()
+        const encoded = encodeURIComponent(svg)
+            .replace(/'/g, '%27')
+            .replace(/"/g, '%22');
+        return `data:image/svg+xml,${encoded}`;
+    },
+
+    /**
+     * Calcola se un colore è chiaro o scuro per il contrasto del testo
+     * @param {string} hexColor - Colore in formato #RRGGBB
+     * @returns {boolean} - true se il colore è chiaro
+     */
+    isLightColor(hexColor) {
+        const hex = hexColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        // Formula luminanza percepita
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5;
+    },
+
+    /**
      * Genera HTML della maglia per una squadra data (cerca nei dati cached o carica)
      * @param {string} teamId - ID della squadra
      * @param {number} size - Dimensione in pixel

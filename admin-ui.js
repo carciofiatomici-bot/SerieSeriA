@@ -221,14 +221,10 @@ window.AdminUI = {
 
                 <!-- Contenuto a scomparsa -->
                 <div id="admin-utils-content" class="hidden mt-4 space-y-4 transition-all duration-300">
-                    <div class="grid grid-cols-2 gap-4">
-                         <button id="btn-sync-data"
-                                class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
-                            Sincronizza Dati Calciatori (Mock)
-                        </button>
-                        <button id="btn-test-simulation"
-                                class="bg-blue-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-blue-600 transition duration-150">
-                            🧪 Test Simulazione Partita
+                    <div class="grid grid-cols-1 gap-4">
+                        <button id="btn-avvia-stagione"
+                                class="bg-gradient-to-r from-green-600 to-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-teal-400 transition duration-150">
+                            🚀 Avvia Stagione
                         </button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">

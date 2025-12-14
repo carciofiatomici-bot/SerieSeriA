@@ -808,8 +808,8 @@ window.InterfacciaAuth = {
 
         if (!modal || !container) return;
 
-        // Ottieni le icone dal template
-        const icone = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+        // Ottieni le icone dal template (escludi Flavio El Ficario)
+        const icone = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).filter(i => i.id !== 'flavio');
 
         // Ordina le icone per ruolo (P, D, C, A)
         const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
@@ -819,22 +819,112 @@ window.InterfacciaAuth = {
             return orderA - orderB;
         });
 
-        // Popola il container
-        container.innerHTML = iconeOrdinate.map(icona => `
-            <div class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 text-center shadow-lg">
-                <img src="${window.sanitizeGitHubUrl(icona.photoUrl)}"
-                     alt="${icona.name}"
-                     class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400">
-                <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
-                <p class="text-sm text-yellow-400">${icona.role} - ${icona.type}</p>
-                <p class="text-xs text-gray-400">Livello: ${icona.level}</p>
-                <p class="text-xs text-green-400 mt-1">Abilità: ICONA</p>
-            </div>
-        `).join('');
+        // Popola il container con card cliccabili
+        container.innerHTML = iconeOrdinate.map(icona => {
+            // Ottieni tutte le abilita dell'icona
+            const abilities = icona.abilities || ['Icona'];
+            const uniqueAbility = abilities.find(a => a !== 'Icona') || null;
+
+            return `
+                <div class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 text-center shadow-lg cursor-pointer hover:bg-gray-600 hover:border-yellow-400 transition-all duration-200"
+                     onclick="window.InterfacciaAuth.showIconaDetails('${icona.id}')">
+                    <img src="${window.sanitizeGitHubUrl(icona.photoUrl)}"
+                         alt="${icona.name}"
+                         class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400">
+                    <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
+                    <p class="text-sm text-yellow-400">${icona.role} - ${icona.type}</p>
+                    <p class="text-xs text-gray-400">Livello: ${icona.levelRange ? icona.levelRange[0] + '-' + icona.levelRange[1] : icona.level}</p>
+                    <div class="mt-2 space-y-1">
+                        <p class="text-xs text-amber-400 font-semibold">Icona</p>
+                        ${uniqueAbility ? `<p class="text-xs text-amber-300 font-bold">${uniqueAbility}</p>` : ''}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 italic">Clicca per dettagli</p>
+                </div>
+            `;
+        }).join('');
 
         // Mostra il modal
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+    },
+
+    /**
+     * Mostra i dettagli di un'icona specifica con le sue abilita
+     */
+    showIconaDetails(iconaId) {
+        const icone = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+        const icona = icone.find(i => i.id === iconaId);
+        if (!icona) return;
+
+        const abilities = icona.abilities || ['Icona'];
+        const abilitiesData = window.AbilitiesEncyclopedia?.abilities || {};
+
+        // Costruisci HTML per ogni abilita
+        const abilitiesHtml = abilities.map(abilityName => {
+            const abilityData = abilitiesData[abilityName];
+            if (!abilityData) {
+                return `<div class="p-3 bg-gray-700 rounded-lg border border-gray-600">
+                    <p class="font-bold text-amber-400">${abilityName}</p>
+                    <p class="text-sm text-gray-400">Descrizione non disponibile</p>
+                </div>`;
+            }
+
+            const isUniqueAbility = abilityData.rarity === 'Unica' && abilityName !== 'Icona';
+            const borderColor = isUniqueAbility ? 'border-amber-500' : 'border-yellow-600';
+            const bgColor = isUniqueAbility ? 'bg-amber-900/30' : 'bg-gray-700';
+
+            return `
+                <div class="p-3 ${bgColor} rounded-lg border ${borderColor}">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xl">${abilityData.icon || '⭐'}</span>
+                        <span class="font-bold ${isUniqueAbility ? 'text-amber-300' : 'text-yellow-400'}">${abilityName}</span>
+                        ${isUniqueAbility ? '<span class="text-xs bg-amber-600 text-white px-2 py-0.5 rounded">UNICA</span>' : ''}
+                    </div>
+                    <p class="text-sm text-gray-300 mb-2">${abilityData.description || ''}</p>
+                    ${abilityData.effect ? `<p class="text-xs text-green-400"><strong>Effetto:</strong> ${abilityData.effect}</p>` : ''}
+                    ${abilityData.activation ? `<p class="text-xs text-blue-400 mt-1"><strong>Attivazione:</strong> ${abilityData.activation}</p>` : ''}
+                    ${abilityData.example ? `<p class="text-xs text-gray-400 mt-1 italic">${abilityData.example}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Crea e mostra il modal dei dettagli
+        const existingModal = document.getElementById('icona-details-modal');
+        if (existingModal) existingModal.remove();
+
+        const detailsModal = document.createElement('div');
+        detailsModal.id = 'icona-details-modal';
+        detailsModal.className = 'fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4 z-[60] overflow-y-auto';
+        detailsModal.innerHTML = `
+            <div class="bg-gray-800 rounded-xl border-2 border-yellow-500 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-gray-800 p-4 border-b border-yellow-600 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="${window.sanitizeGitHubUrl(icona.photoUrl)}"
+                             alt="${icona.name}"
+                             class="w-16 h-16 rounded-full object-cover border-3 border-yellow-400">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">${icona.name} 👑</h3>
+                            <p class="text-sm text-yellow-400">${icona.role} - ${icona.type} - Lv.${icona.levelRange ? icona.levelRange[0] + '-' + icona.levelRange[1] : icona.level}</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('icona-details-modal').remove()"
+                            class="text-white hover:text-red-400 text-2xl font-bold">✕</button>
+                </div>
+                <div class="p-4 space-y-3">
+                    <h4 class="text-lg font-bold text-yellow-400 mb-3">Abilita</h4>
+                    ${abilitiesHtml}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(detailsModal);
+
+        // Chiudi cliccando fuori
+        detailsModal.addEventListener('click', (e) => {
+            if (e.target === detailsModal) {
+                detailsModal.remove();
+            }
+        });
     },
 
     /**

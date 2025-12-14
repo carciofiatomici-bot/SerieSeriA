@@ -15,31 +15,66 @@ window.CreditiSuperSeri = {
     MAX_LEVEL_GIOCATORE: 20,
     MAX_LEVEL_ICONA: 25,
 
-    // Costi potenziamento (placeholder - configurabili)
-    // Costo per salire AL livello indicato
-    COSTI_POTENZIAMENTO: {
-        // Livelli 1-5: costo basso
-        2: 10, 3: 15, 4: 20, 5: 25,
-        // Livelli 6-10: costo medio
-        6: 35, 7: 45, 8: 55, 9: 70, 10: 85,
-        // Livelli 11-15: costo alto
-        11: 100, 12: 120, 13: 140, 14: 165, 15: 190,
-        // Livelli 16-20: costo molto alto
-        16: 220, 17: 255, 18: 295, 19: 340, 20: 400,
-        // Livelli 21-25 (solo Icone): costo premium
-        21: 500, 22: 600, 23: 750, 24: 900, 25: 1100
+    // Costi potenziamento: costo = livello raggiunto
+    // Es: da 5 a 6 costa 6 CSS, da 10 a 11 costa 11 CSS
+
+    // Costo potenziamento icona: 5 + livello attuale
+    COSTO_BASE_ICONA: 5,
+
+    // Costi abilità per rarità: 2 × livello rarità
+    // Comune (lvl 1) = 2, Rara (lvl 2) = 4, Epica (lvl 3) = 6, Leggendaria (lvl 4) = 8
+    COSTO_ABILITA: {
+        'Comune': 2,       // 2 × 1
+        'Rara': 4,         // 2 × 2
+        'Epica': 6,        // 2 × 3, +1 abilità negativa automatica
+        'Leggendaria': 8,  // 2 × 4, +2 abilità negative automatiche
+        'Unica': Infinity  // Non acquistabile
     },
 
-    // Costo base per assegnare un'abilità
-    COSTO_ABILITA_BASE: 150,
-
-    // Moltiplicatore per rarità abilità
-    MOLTIPLICATORE_RARITA: {
-        'Comune': 0.5,
-        'Rara': 1.0,
-        'Epica': 1.5,
-        'Leggendaria': 2.5
+    // Numero di abilità negative AUTOMATICHE per rarità (assegnate random)
+    ABILITA_NEGATIVE_AUTOMATICHE: {
+        'Comune': 0,
+        'Rara': 0,
+        'Epica': 1,      // +1 negativa random
+        'Leggendaria': 2, // +2 negative random
+        'Unica': 0
     },
+
+    // Limite abilità per rarità (1 per ogni rarità) - max 4 abilità positive totali
+    MAX_ABILITA_PER_RARITA: {
+        'Comune': 1,
+        'Rara': 1,
+        'Epica': 1,
+        'Leggendaria': 1
+    },
+
+    // Abilità consentite per ogni Icona (non possono averne altre)
+    // Croccante può avere Regista grazie a "Fatto d'acciaio"
+    ICONE_ALLOWED_ABILITIES: {
+        'croc': ['Icona', "Fatto d'acciaio", 'Regista'],
+        'shik': ['Icona', 'Amici di panchina'],
+        'ilcap': ['Icona', 'Calcolo delle probabilita'],
+        'simo': ['Icona', 'Parata Efficiente'],
+        'dappi': ['Icona'],
+        'blatta': ['Icona', 'Scheggia impazzita'],
+        'antony': ['Icona', 'Avanti un altro'],
+        'gladio': ['Icona', 'Continua a provare'],
+        'amedemo': ['Icona', 'Tiro Dritto'],
+        'flavio': ['Icona'],
+        'luka': ['Icona', 'Contrasto di gomito'],
+        'melio': ['Icona', 'Assist-man'],
+        'markf': ['Icona', 'Osservatore'],
+        'sandro': ['Icona', 'Relax'],
+        'fosco': ['Icona', "L'uomo in piu"],
+        'cocco': ['Icona', 'Stazionario']
+    },
+
+    // Costo servizio sostituzione icona
+    COSTO_SOSTITUZIONE_ICONA: 5,
+
+    // Conversione CSS -> CS
+    CSS_TO_CS_RATE: 1000, // 1 CSS = 1000 CS
+    COSTO_CONVERSIONE_CS: 1, // Costa 1 CSS
 
     // Premi per vittorie (predisposizione)
     PREMI: {
@@ -243,6 +278,8 @@ window.CreditiSuperSeri = {
 
     /**
      * Calcola il costo per potenziare un giocatore dal livello attuale al prossimo
+     * Giocatori normali: costo = livello raggiunto (es: 5→6 costa 6 CSS)
+     * Icone: costo = 5 + livello attuale (es: lv 12 costa 17 CSS)
      * @param {number} livelloAttuale
      * @param {boolean} isIcona
      * @returns {number|null} - null se non può essere potenziato
@@ -254,8 +291,13 @@ window.CreditiSuperSeri = {
             return null; // Già al massimo
         }
 
-        const prossimoLivello = livelloAttuale + 1;
-        return this.COSTI_POTENZIAMENTO[prossimoLivello] || null;
+        if (isIcona) {
+            // Icone: costo = 5 + livello attuale
+            return this.COSTO_BASE_ICONA + livelloAttuale;
+        } else {
+            // Giocatori normali: costo = livello raggiunto
+            return livelloAttuale + 1;
+        }
     },
 
     /**
@@ -272,8 +314,8 @@ window.CreditiSuperSeri = {
         if (livelloDa >= livelloA) return 0;
 
         let costoTotale = 0;
-        for (let lv = livelloDa + 1; lv <= livelloA; lv++) {
-            costoTotale += this.COSTI_POTENZIAMENTO[lv] || 0;
+        for (let lv = livelloDa; lv < livelloA; lv++) {
+            costoTotale += this.getCostoPotenziamento(lv, isIcona) || 0;
         }
         return costoTotale;
     },
@@ -393,50 +435,222 @@ window.CreditiSuperSeri = {
     // ========================================
 
     /**
-     * Calcola il costo per assegnare un'abilità
+     * Calcola il costo per assegnare un'abilità (costo fisso per rarità)
      * @param {string} abilityName
      * @returns {number}
      */
     getCostoAbilita(abilityName) {
-        if (!window.AbilitiesEncyclopedia) return this.COSTO_ABILITA_BASE;
+        if (!window.AbilitiesEncyclopedia) return this.COSTO_ABILITA['Comune'];
 
         const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
-        if (!ability) return this.COSTO_ABILITA_BASE;
+        if (!ability) return this.COSTO_ABILITA['Comune'];
 
-        const moltiplicatore = this.MOLTIPLICATORE_RARITA[ability.rarity] || 1.0;
-        return Math.round(this.COSTO_ABILITA_BASE * moltiplicatore);
+        return this.COSTO_ABILITA[ability.rarity] || this.COSTO_ABILITA['Comune'];
     },
 
     /**
-     * Ottiene le abilità disponibili per un ruolo (escludendo quelle già possedute)
+     * Ottiene il numero di abilità negative automatiche per una rarità
+     * @param {string} rarity
+     * @returns {number}
+     */
+    getAbilitaNegativeAutomatiche(rarity) {
+        return this.ABILITA_NEGATIVE_AUTOMATICHE[rarity] || 0;
+    },
+
+    /**
+     * Conta quante abilità di ogni rarità ha un giocatore
+     * @param {Array<string>} abilities - Lista abilità del giocatore
+     * @returns {Object} - {Comune: n, Rara: n, Epica: n, Leggendaria: n}
+     */
+    contaAbilitaPerRarita(abilities) {
+        const count = { 'Comune': 0, 'Rara': 0, 'Epica': 0, 'Leggendaria': 0 };
+        if (!abilities || !window.AbilitiesEncyclopedia) return count;
+
+        for (const abilityName of abilities) {
+            const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
+            if (ability && ability.type !== 'Negativa' && count[ability.rarity] !== undefined) {
+                count[ability.rarity]++;
+            }
+        }
+        return count;
+    },
+
+    /**
+     * Verifica se un giocatore può acquisire un'abilità di una certa rarità
+     * @param {Array<string>} currentAbilities
+     * @param {string} rarity
+     * @returns {boolean}
+     */
+    puoAcquisireRarita(currentAbilities, rarity) {
+        const count = this.contaAbilitaPerRarita(currentAbilities);
+        const max = this.MAX_ABILITA_PER_RARITA[rarity] || 1;
+        return count[rarity] < max;
+    },
+
+    /**
+     * Seleziona abilità negative random compatibili con il ruolo
+     * @param {string} role - Ruolo del giocatore
+     * @param {Array<string>} currentAbilities - Abilità già possedute
+     * @param {number} count - Numero di negative da selezionare
+     * @returns {Array<string>} - Abilità negative selezionate
+     */
+    selezionaAbilitaNegativeRandom(role, currentAbilities, count) {
+        if (count <= 0) return [];
+
+        // Ottieni abilità negative disponibili per il ruolo
+        const roleAbilities = window.DraftConstants?.ROLE_ABILITIES_MAP?.[role];
+        if (!roleAbilities || !roleAbilities.negative) return [];
+
+        // Filtra quelle già possedute
+        const disponibili = roleAbilities.negative.filter(a => !currentAbilities.includes(a));
+
+        // Mischia e prendi le prime 'count'
+        const shuffled = [...disponibili].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, Math.min(count, shuffled.length));
+    },
+
+    /**
+     * Verifica se un'abilità può essere acquistata
+     * @param {string} abilityName
+     * @returns {boolean}
+     */
+    canPurchaseAbility(abilityName) {
+        if (abilityName === 'Icona') return false;
+
+        if (!window.AbilitiesEncyclopedia) return true;
+
+        const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
+        if (!ability) return false;
+
+        // Le abilità Uniche non possono essere acquistate
+        return ability.rarity !== 'Unica';
+    },
+
+    /**
+     * Verifica se un giocatore è un'Icona
+     * @param {Object} player
+     * @returns {boolean}
+     */
+    isIcona(player) {
+        return player?.abilities?.includes('Icona') || player?.isCaptain === true;
+    },
+
+    /**
+     * Ottiene le abilità consentite per un'Icona specifica
+     * @param {string} iconaId - ID dell'icona (es: 'croc', 'shik')
+     * @returns {Array<string>}
+     */
+    getAbilitaConsentiteIcona(iconaId) {
+        return this.ICONE_ALLOWED_ABILITIES[iconaId] || ['Icona'];
+    },
+
+    /**
+     * Verifica se un'abilità è consentita per un'Icona
+     * @param {string} iconaId
+     * @param {string} abilityName
+     * @returns {boolean}
+     */
+    isAbilitaConsentitaPerIcona(iconaId, abilityName) {
+        const consentite = this.getAbilitaConsentiteIcona(iconaId);
+        return consentite.includes(abilityName);
+    },
+
+    /**
+     * Ottiene le abilità che un'Icona può ancora acquisire
+     * @param {string} iconaId
+     * @param {Array<string>} currentAbilities
+     * @returns {Array<string>}
+     */
+    getAbilitaDisponibiliPerIcona(iconaId, currentAbilities = []) {
+        const consentite = this.getAbilitaConsentiteIcona(iconaId);
+        return consentite.filter(a => !currentAbilities.includes(a));
+    },
+
+    /**
+     * Ottiene le abilità disponibili per un ruolo (escludendo quelle già possedute e oltre il limite)
+     * Per le Icone, restituisce solo le abilità consentite dalla loro passiva unica
      * @param {string} role
      * @param {Array<string>} currentAbilities
+     * @param {boolean} onlyNegative - Se true, restituisce solo abilità negative
+     * @param {string|null} iconaId - ID dell'icona (se è un'Icona)
      * @returns {Array<Object>}
      */
-    getAbilitaDisponibili(role, currentAbilities = []) {
+    getAbilitaDisponibili(role, currentAbilities = [], onlyNegative = false, iconaId = null) {
         if (!window.AbilitiesEncyclopedia) return [];
+
+        // Se è un'Icona, restituisce solo le abilità consentite non ancora possedute
+        if (iconaId && this.ICONE_ALLOWED_ABILITIES[iconaId]) {
+            const consentite = this.getAbilitaConsentiteIcona(iconaId);
+            const disponibili = consentite.filter(a =>
+                !currentAbilities.includes(a) && a !== 'Icona'
+            );
+
+            // Per le Icone, non ci sono abilità negative e non serve il costo (già hanno le loro)
+            // Solo Croccante può acquisire Regista (costo 4 CSS - Rara)
+            return disponibili.map(abilityName => {
+                const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
+                return {
+                    name: abilityName,
+                    rarity: ability?.rarity || 'Rara',
+                    type: ability?.type || 'Positiva',
+                    icon: ability?.icon || '',
+                    description: ability?.description || '',
+                    costo: this.getCostoAbilita(abilityName),
+                    negativeAutomatiche: 0 // Icone non prendono negative automatiche
+                };
+            });
+        }
 
         const tutteAbilita = window.AbilitiesEncyclopedia.getAbilitiesByRole(role);
 
-        // Filtra le abilità già possedute e quelle non assegnabili (Icona)
+        // Conta abilità per rarità già possedute
+        const countPerRarita = this.contaAbilitaPerRarita(currentAbilities);
+
+        // Filtra le abilità
         return tutteAbilita.filter(a => {
             // Non può assegnare Icona tramite CSS
             if (a.name === 'Icona') return false;
+            // Non può assegnare abilità Uniche
+            if (a.rarity === 'Unica') return false;
             // Non può assegnare abilità già possedute
             if (currentAbilities.includes(a.name)) return false;
+            // Se richieste solo negative, filtra
+            if (onlyNegative && a.type !== 'Negativa') return false;
+            // Se non richieste negative, escludi le negative dalla lista principale
+            if (!onlyNegative && a.type === 'Negativa') return false;
+            // Verifica limite per rarità (1 per ogni rarità = max 4 positive)
+            if (!onlyNegative && this.MAX_ABILITA_PER_RARITA[a.rarity]) {
+                if (countPerRarita[a.rarity] >= this.MAX_ABILITA_PER_RARITA[a.rarity]) {
+                    return false;
+                }
+            }
             return true;
         }).map(a => ({
             ...a,
-            costo: this.getCostoAbilita(a.name)
+            costo: this.getCostoAbilita(a.name),
+            negativeAutomatiche: this.getAbilitaNegativeAutomatiche(a.rarity)
         }));
     },
 
     /**
+     * Ottiene le abilità negative disponibili per un ruolo
+     * @param {string} role
+     * @param {Array<string>} currentAbilities
+     * @returns {Array<Object>}
+     */
+    getAbilitaNegativeDisponibili(role, currentAbilities = []) {
+        return this.getAbilitaDisponibili(role, currentAbilities, true);
+    },
+
+    /**
      * Assegna un'abilità a un giocatore
+     * - Limite: 1 abilità per rarità (1 Comune, 1 Rara, 1 Epica, 1 Leggendaria)
+     * - Epica: +1 abilità negativa random automatica
+     * - Leggendaria: +2 abilità negative random automatiche
      * @param {string} teamId
      * @param {string} playerId
-     * @param {string} abilityName
-     * @returns {Promise<{success: boolean, nuovoSaldo?: number, error?: string}>}
+     * @param {string} abilityName - Abilità positiva da assegnare
+     * @returns {Promise<{success: boolean, nuovoSaldo?: number, negativeAssegnate?: Array, error?: string}>}
      */
     async assegnaAbilita(teamId, playerId, abilityName) {
         try {
@@ -449,6 +663,11 @@ window.CreditiSuperSeri = {
             // Non può assegnare l'abilità Icona
             if (abilityName === 'Icona') {
                 return { success: false, error: 'L\'abilità Icona non può essere assegnata' };
+            }
+
+            // Verifica che l'abilità non sia Unica
+            if (!this.canPurchaseAbility(abilityName)) {
+                return { success: false, error: 'Le abilità Uniche non possono essere acquistate' };
             }
 
             const { doc, getDoc, updateDoc } = window.firestoreTools;
@@ -481,20 +700,53 @@ window.CreditiSuperSeri = {
                 return { success: false, error: `${player.name} possiede già l'abilità "${abilityName}"` };
             }
 
-            // Verifica limite abilità (max 3, escluso Icona)
-            const abilitiesCount = currentAbilities.filter(a => a !== 'Icona').length;
-            if (abilitiesCount >= 3) {
-                return { success: false, error: `${player.name} ha già il massimo di 3 abilità` };
+            // ICONE: Possono avere solo le abilità consentite dalla loro passiva unica
+            if (this.isIcona(player)) {
+                const iconaId = player.id || player.iconaId;
+                if (!this.isAbilitaConsentitaPerIcona(iconaId, abilityName)) {
+                    return {
+                        success: false,
+                        error: `Le Icone possono avere solo le abilità specificate nella loro passiva unica. "${abilityName}" non è consentita per ${player.name}.`
+                    };
+                }
             }
 
             // Verifica che l'abilità sia valida per il ruolo
+            let ability = null;
             if (window.AbilitiesEncyclopedia) {
-                const ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
+                ability = window.AbilitiesEncyclopedia.getAbility(abilityName);
                 if (!ability) {
                     return { success: false, error: `Abilità "${abilityName}" non trovata` };
                 }
-                if (ability.role !== player.role && ability.role !== 'Tutti') {
+                // Verifica compatibilità ruolo (considera anche role='Multi' con array roles)
+                const isCompatible = ability.role === player.role ||
+                                    ability.role === 'Tutti' ||
+                                    (ability.role === 'Multi' && ability.roles && ability.roles.includes(player.role));
+                if (!isCompatible) {
                     return { success: false, error: `L'abilità "${abilityName}" non è compatibile con il ruolo ${player.role}` };
+                }
+
+                // Verifica limite 1 abilità per rarità (solo per giocatori normali, non Icone)
+                if (!this.isIcona(player) && !this.puoAcquisireRarita(currentAbilities, ability.rarity)) {
+                    return {
+                        success: false,
+                        error: `${player.name} ha già un'abilità ${ability.rarity}. Limite: 1 per rarità`
+                    };
+                }
+            }
+
+            // Seleziona automaticamente abilità negative random se necessario (solo per giocatori normali)
+            let negativeAbilities = [];
+            if (!this.isIcona(player)) {
+                const negativeCount = ability ? this.getAbilitaNegativeAutomatiche(ability.rarity) : 0;
+                negativeAbilities = this.selezionaAbilitaNegativeRandom(player.role, currentAbilities, negativeCount);
+
+                // Verifica che ci siano abbastanza negative disponibili
+                if (negativeCount > 0 && negativeAbilities.length < negativeCount) {
+                    return {
+                        success: false,
+                        error: `Non ci sono abbastanza abilità negative disponibili per il ruolo ${player.role}`
+                    };
                 }
             }
 
@@ -510,8 +762,8 @@ window.CreditiSuperSeri = {
                 };
             }
 
-            // Esegui assegnazione
-            const nuoveAbilita = [...currentAbilities, abilityName];
+            // Esegui assegnazione (abilità positiva + negative automatiche)
+            const nuoveAbilita = [...currentAbilities, abilityName, ...negativeAbilities];
             rosa[playerIndex] = {
                 ...player,
                 abilities: nuoveAbilita
@@ -539,13 +791,18 @@ window.CreditiSuperSeri = {
                 }
             }
 
-            console.log(`Assegnata abilità "${abilityName}" a ${player.name}. Costo: ${costo} CSS`);
+            let logMsg = `Assegnata abilità "${abilityName}" a ${player.name}. Costo: ${costo} CSS`;
+            if (negativeAbilities.length > 0) {
+                logMsg += `. Negative automatiche: ${negativeAbilities.join(', ')}`;
+            }
+            console.log(logMsg);
 
             return {
                 success: true,
                 nuovoSaldo,
                 playerName: player.name,
-                abilityName
+                abilityName,
+                negativeAssegnate: negativeAbilities
             };
 
         } catch (error) {
@@ -617,6 +874,215 @@ window.CreditiSuperSeri = {
             return { success: true, premio, nuovoSaldo: result.nuovoSaldo };
         }
         return { success: false, error: result.error };
+    },
+
+    // ========================================
+    // METODI SERVIZI
+    // ========================================
+
+    /**
+     * Acquista CS (Crediti Seri) con CSS
+     * @param {string} teamId
+     * @returns {Promise<{success: boolean, csOttenuti?: number, nuovoSaldoCSS?: number, nuovoBudget?: number, error?: string}>}
+     */
+    async acquistaCS(teamId) {
+        try {
+            const enabled = await this.isEnabled();
+            if (!enabled) {
+                return { success: false, error: 'Sistema CSS non attivo' };
+            }
+
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            // Carica dati squadra
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, error: 'Squadra non trovata' };
+            }
+
+            const teamData = teamDoc.data();
+            const saldoCSS = teamData.creditiSuperSeri || 0;
+            const budgetAttuale = teamData.budget || 0;
+
+            // Verifica saldo CSS
+            if (saldoCSS < this.COSTO_CONVERSIONE_CS) {
+                return {
+                    success: false,
+                    error: `Crediti insufficienti. Hai ${saldoCSS} CSS, servono ${this.COSTO_CONVERSIONE_CS} CSS`
+                };
+            }
+
+            // Esegui conversione
+            const nuovoSaldoCSS = saldoCSS - this.COSTO_CONVERSIONE_CS;
+            const nuovoBudget = budgetAttuale + this.CSS_TO_CS_RATE;
+
+            await updateDoc(teamDocRef, {
+                creditiSuperSeri: nuovoSaldoCSS,
+                budget: nuovoBudget
+            });
+
+            console.log(`Acquistati ${this.CSS_TO_CS_RATE} CS per ${this.COSTO_CONVERSIONE_CS} CSS. Nuovo saldo: ${nuovoSaldoCSS} CSS, Budget: ${nuovoBudget} CS`);
+
+            return {
+                success: true,
+                csOttenuti: this.CSS_TO_CS_RATE,
+                nuovoSaldoCSS,
+                nuovoBudget
+            };
+
+        } catch (error) {
+            console.error('Errore acquisto CS:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // ========================================
+    // METODI PULIZIA ICONE
+    // ========================================
+
+    /**
+     * Pulisce le abilità non consentite da un'Icona specifica
+     * @param {string} teamId
+     * @param {string} playerId
+     * @returns {Promise<{success: boolean, abilitaRimosse?: Array, error?: string}>}
+     */
+    async pulisciAbilitaIcona(teamId, playerId) {
+        try {
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, error: 'Squadra non trovata' };
+            }
+
+            const teamData = teamDoc.data();
+            const rosa = teamData.rosa || [];
+
+            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            if (playerIndex === -1) {
+                return { success: false, error: 'Giocatore non trovato' };
+            }
+
+            const player = rosa[playerIndex];
+
+            // Solo per Icone
+            if (!this.isIcona(player)) {
+                return { success: false, error: 'Il giocatore non è un\'Icona' };
+            }
+
+            const iconaId = player.id || player.iconaId;
+            const consentite = this.getAbilitaConsentiteIcona(iconaId);
+            const currentAbilities = player.abilities || [];
+
+            // Filtra solo le abilità consentite
+            const nuoveAbilita = currentAbilities.filter(a => consentite.includes(a));
+            const rimosse = currentAbilities.filter(a => !consentite.includes(a));
+
+            if (rimosse.length === 0) {
+                return { success: true, abilitaRimosse: [], message: 'Nessuna abilità da rimuovere' };
+            }
+
+            rosa[playerIndex] = {
+                ...player,
+                abilities: nuoveAbilita
+            };
+
+            await updateDoc(teamDocRef, { rosa: rosa });
+
+            // Aggiorna anche la formazione
+            if (teamData.formation?.titolari) {
+                const titolari = teamData.formation.titolari;
+                const titolareIndex = titolari.findIndex(t => t.id === playerId);
+                if (titolareIndex !== -1) {
+                    titolari[titolareIndex] = { ...titolari[titolareIndex], abilities: nuoveAbilita };
+                    await updateDoc(teamDocRef, { 'formation.titolari': titolari });
+                }
+            }
+
+            console.log(`Pulita Icona ${player.name}: rimosse ${rimosse.join(', ')}`);
+            return { success: true, abilitaRimosse: rimosse };
+
+        } catch (error) {
+            console.error('Errore pulizia Icona:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Pulisce le abilità non consentite da TUTTE le Icone di TUTTI i team (Admin)
+     * @returns {Promise<{success: boolean, teamsProcessati: number, iconeProcessate: number, abilitaRimosse: number}>}
+     */
+    async pulisciTutteIcone() {
+        try {
+            const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_PATH));
+            let teamsProcessati = 0;
+            let iconeProcessate = 0;
+            let abilitaRimosseTotali = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const rosa = teamData.rosa || [];
+                let modificato = false;
+
+                for (let i = 0; i < rosa.length; i++) {
+                    const player = rosa[i];
+
+                    if (this.isIcona(player)) {
+                        const iconaId = player.id || player.iconaId;
+                        const consentite = this.getAbilitaConsentiteIcona(iconaId);
+                        const currentAbilities = player.abilities || [];
+
+                        const nuoveAbilita = currentAbilities.filter(a => consentite.includes(a));
+                        const rimosse = currentAbilities.filter(a => !consentite.includes(a));
+
+                        if (rimosse.length > 0) {
+                            rosa[i] = { ...player, abilities: nuoveAbilita };
+                            modificato = true;
+                            abilitaRimosseTotali += rimosse.length;
+                            console.log(`[${teamData.teamName}] Icona ${player.name}: rimosse ${rimosse.join(', ')}`);
+                        }
+                        iconeProcessate++;
+                    }
+                }
+
+                if (modificato) {
+                    const teamDocRef = doc(db, TEAMS_PATH, teamDoc.id);
+                    await updateDoc(teamDocRef, { rosa: rosa });
+
+                    // Aggiorna anche formazione
+                    if (teamData.formation?.titolari) {
+                        const titolari = teamData.formation.titolari.map(t => {
+                            const rosaPlayer = rosa.find(r => r.id === t.id);
+                            return rosaPlayer ? { ...t, abilities: rosaPlayer.abilities } : t;
+                        });
+                        await updateDoc(teamDocRef, { 'formation.titolari': titolari });
+                    }
+                }
+                teamsProcessati++;
+            }
+
+            console.log(`Pulizia completata: ${teamsProcessati} team, ${iconeProcessate} icone, ${abilitaRimosseTotali} abilità rimosse`);
+            return { success: true, teamsProcessati, iconeProcessate, abilitaRimosse: abilitaRimosseTotali };
+
+        } catch (error) {
+            console.error('Errore pulizia tutte Icone:', error);
+            return { success: false, error: error.message };
+        }
     }
 };
 

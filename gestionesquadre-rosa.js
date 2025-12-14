@@ -77,10 +77,11 @@ window.GestioneSquadreRosa = {
         const playerType = player.type || 'N/A';
         const typeBadgeHtml = window.GestioneSquadreConstants.getTypeBadgeHtml(playerType, 'sm');
 
-        // Abilita (mostra tutte, inclusa Icona)
+        // Abilita (mostra tutte, inclusa Icona e abilita uniche in dorato)
         const playerAbilities = player.abilities || [];
+        const UNIQUE_ABILITIES = ['Icona', "Fatto d'acciaio", "L'uomo in piu", 'Tiro Dritto', 'Avanti un altro', 'Contrasto di gomito', 'Calcolo delle probabilita', 'Amici di panchina', 'Continua a provare', 'Stazionario', 'Osservatore', 'Relax', 'Scheggia impazzita', 'Assist-man'];
         const abilitiesHtml = playerAbilities.length > 0
-            ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => a === 'Icona' ? '<span class="text-yellow-400 font-bold">Icona</span>' : a).join(', ')}</p>`
+            ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => UNIQUE_ABILITIES.includes(a) ? `<span class="text-yellow-400 font-bold">${a}</span>` : a).join(', ')}</p>`
             : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
 
         // Barra EXP

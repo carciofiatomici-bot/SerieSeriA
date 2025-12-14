@@ -232,6 +232,8 @@ window.CreditiSuperSeriUI = {
 
     /**
      * Renderizza il contenuto del tab Abilita
+     * - Icone: mostrano abilità fisse, possono acquisire solo quelle consentite (es: Croccante + Regista)
+     * - Giocatori normali: max 4 abilità positive (1 per rarità)
      */
     renderAbilitaContent(rosa, saldo) {
         const container = document.getElementById('css-panel-content');
@@ -252,10 +254,29 @@ window.CreditiSuperSeriUI = {
         let html = '<div class="space-y-6">';
 
         rosaSorted.forEach(player => {
-            const isIcona = player.abilities && player.abilities.includes('Icona');
+            const isIcona = CSS.isIcona(player);
             const currentAbilities = player.abilities || [];
-            const abilitiesCount = currentAbilities.filter(a => a !== 'Icona').length;
-            const canAddAbility = abilitiesCount < 3;
+            const iconaId = player.id || player.iconaId;
+
+            // Per Icone: verifica se possono ancora acquisire abilità
+            // Per normali: conta abilità positive (1 per rarità = max 4)
+            let canAddAbility = false;
+            let abilityStatusText = '';
+
+            if (isIcona) {
+                // Icone: possono acquisire solo le abilità consentite non ancora possedute
+                const disponibiliIcona = CSS.getAbilitaDisponibiliPerIcona(iconaId, currentAbilities);
+                canAddAbility = disponibiliIcona.length > 0;
+                abilityStatusText = canAddAbility
+                    ? `<span class="text-yellow-400">Abilità disponibili: ${disponibiliIcona.join(', ')}</span>`
+                    : '<span class="text-gray-500">Abilità fisse</span>';
+            } else {
+                // Giocatori normali: conta abilità per rarità
+                const countRarita = CSS.contaAbilitaPerRarita(currentAbilities);
+                const totalPositive = countRarita['Comune'] + countRarita['Rara'] + countRarita['Epica'] + countRarita['Leggendaria'];
+                canAddAbility = totalPositive < 4;
+                abilityStatusText = `<span class="${canAddAbility ? 'text-gray-400' : 'text-green-400'}">Abilità: ${totalPositive}/4</span>`;
+            }
 
             const roleColors = {
                 'P': 'border-yellow-500',
@@ -272,8 +293,8 @@ window.CreditiSuperSeriUI = {
                             ${isIcona ? '<span title="Icona">👑</span>' : ''}
                             <span class="text-gray-400 text-sm">(${player.role})</span>
                         </div>
-                        <span class="text-sm ${canAddAbility ? 'text-gray-400' : 'text-red-400'}">
-                            Abilita: ${abilitiesCount}/3
+                        <span class="text-sm">
+                            ${abilityStatusText}
                         </span>
                     </div>
 
@@ -296,7 +317,7 @@ window.CreditiSuperSeriUI = {
                                 <select id="select-ability-${player.id}"
                                         class="flex-1 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm">
                                     <option value="">-- Seleziona abilita --</option>
-                                    ${this.getAbilitaOptions(player.role, currentAbilities, saldo)}
+                                    ${this.getAbilitaOptions(player.role, currentAbilities, saldo, isIcona ? iconaId : null)}
                                 </select>
                                 <button class="btn-assegna-abilita bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-lg text-sm transition"
                                         data-player-id="${player.id}">
@@ -336,8 +357,13 @@ window.CreditiSuperSeriUI = {
         const container = document.getElementById('css-panel-content');
         if (!container) return;
 
-        const costoSostituzioneIcona = 1;
+        const CSS = window.CreditiSuperSeri;
+        const costoSostituzioneIcona = CSS?.COSTO_SOSTITUZIONE_ICONA || 5;
+        const costoAcquistoCS = CSS?.COSTO_CONVERSIONE_CS || 1;
+        const csOttenuti = CSS?.CSS_TO_CS_RATE || 1000;
+
         const canAffordIcona = saldo >= costoSostituzioneIcona;
+        const canAffordCS = saldo >= costoAcquistoCS;
 
         container.innerHTML = `
             <div class="space-y-4">
@@ -367,17 +393,27 @@ window.CreditiSuperSeriUI = {
                     </div>
                 </div>
 
-                <!-- Placeholder per futuri servizi -->
-                <div class="bg-gray-700 rounded-lg p-4 border border-gray-600 opacity-50">
+                <!-- Servizio: Acquista CS -->
+                <div class="bg-gray-700 rounded-lg p-4 border border-green-500">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <span class="text-3xl">🔮</span>
+                            <span class="text-3xl">💰</span>
                             <div>
-                                <p class="text-white font-bold text-lg">Altri Servizi</p>
-                                <p class="text-gray-400 text-sm">Prossimamente...</p>
+                                <p class="text-white font-bold text-lg">Acquista ${csOttenuti} CS</p>
+                                <p class="text-gray-400 text-sm">Converti CSS in Crediti Seri per il mercato</p>
                             </div>
                         </div>
-                        <span class="text-gray-500 font-bold">Coming Soon</span>
+                        <div class="flex items-center gap-3">
+                            <span class="${canAffordCS ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${costoAcquistoCS} CSS</span>
+                            <button id="btn-acquista-cs"
+                                    class="${canAffordCS
+                                        ? 'bg-green-600 hover:bg-green-500 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    ${canAffordCS ? '' : 'disabled'}>
+                                Acquista
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -388,6 +424,14 @@ window.CreditiSuperSeriUI = {
         if (btnSostituisci && canAffordIcona) {
             btnSostituisci.addEventListener('click', async () => {
                 await this.handleSostituisciIcona();
+            });
+        }
+
+        // Event listener per Acquista CS
+        const btnAcquistaCS = document.getElementById('btn-acquista-cs');
+        if (btnAcquistaCS && canAffordCS) {
+            btnAcquistaCS.addEventListener('click', async () => {
+                await this.handleAcquistaCS();
             });
         }
     },
@@ -404,10 +448,12 @@ window.CreditiSuperSeriUI = {
             return;
         }
 
+        const costoIcona = CSS.COSTO_SOSTITUZIONE_ICONA || 5;
+
         // Verifica saldo
         const saldo = await CSS.getSaldo(teamId);
-        if (saldo < 1) {
-            this.showMessage('CSS insufficienti per questo servizio', 'error');
+        if (saldo < costoIcona) {
+            this.showMessage(`CSS insufficienti. Servono ${costoIcona} CSS`, 'error');
             return;
         }
 
@@ -430,18 +476,82 @@ window.CreditiSuperSeriUI = {
     },
 
     /**
-     * Genera le opzioni per il select abilita
+     * Gestisce l'acquisto di CS con CSS
      */
-    getAbilitaOptions(role, currentAbilities, saldo) {
+    async handleAcquistaCS() {
+        const CSS = window.CreditiSuperSeri;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!CSS || !teamId) {
+            this.showMessage('Errore: sistema non disponibile', 'error');
+            return;
+        }
+
+        this.showMessage('Acquisto in corso...', 'info');
+
+        const result = await CSS.acquistaCS(teamId);
+
+        if (result.success) {
+            this.showMessage(
+                `Acquistati ${result.csOttenuti} CS! Saldo: ${result.nuovoSaldoCSS} CSS, Budget: ${result.nuovoBudget} CS`,
+                'success'
+            );
+
+            // Aggiorna saldo nella UI
+            const saldoDisplay = document.getElementById('css-saldo-display');
+            if (saldoDisplay) {
+                saldoDisplay.textContent = `${result.nuovoSaldoCSS} CSS`;
+            }
+
+            // Aggiorna il tab servizi
+            this.renderServiziContent(result.nuovoSaldoCSS);
+        } else {
+            this.showMessage(result.error || 'Errore durante l\'acquisto', 'error');
+        }
+    },
+
+    /**
+     * Genera le opzioni per il select abilita
+     * Ordinate per rarità (Comune → Rara → Epica → Leggendaria)
+     * Nasconde automaticamente le abilità non acquistabili (già filtrate da getAbilitaDisponibili)
+     * @param {string} role - Ruolo del giocatore
+     * @param {Array} currentAbilities - Abilità attuali
+     * @param {number} saldo - Saldo CSS
+     * @param {string|null} iconaId - ID dell'icona (se è un'Icona)
+     */
+    getAbilitaOptions(role, currentAbilities, saldo, iconaId = null) {
         const CSS = window.CreditiSuperSeri;
         if (!CSS) return '';
 
-        const disponibili = CSS.getAbilitaDisponibili(role, currentAbilities);
+        // Passa iconaId a getAbilitaDisponibili per filtrare correttamente per Icone
+        const disponibili = CSS.getAbilitaDisponibili(role, currentAbilities, false, iconaId);
 
-        return disponibili.map(a => {
+        // Ordine rarità per sorting
+        const rarityOrder = { 'Comune': 1, 'Rara': 2, 'Epica': 3, 'Leggendaria': 4 };
+
+        // Ordina per rarità
+        const sorted = [...disponibili].sort((a, b) => {
+            return (rarityOrder[a.rarity] || 99) - (rarityOrder[b.rarity] || 99);
+        });
+
+        // Icone per rarità
+        const rarityIcons = {
+            'Comune': '⚪',
+            'Rara': '🔵',
+            'Epica': '🟣',
+            'Leggendaria': '🟡'
+        };
+
+        return sorted.map(a => {
             const canAfford = saldo >= a.costo;
-            return `<option value="${a.name}" ${canAfford ? '' : 'disabled'}>
-                ${a.icon || ''} ${a.name} - ${a.costo} CSS ${canAfford ? '' : '(insufficiente)'}
+            const negAuto = a.negativeAutomatiche || 0;
+            const negText = negAuto > 0 ? ` [+${negAuto} neg]` : '';
+            const rarityIcon = rarityIcons[a.rarity] || '';
+            return `<option value="${a.name}"
+                            data-rarity="${a.rarity}"
+                            data-negative-auto="${negAuto}"
+                            ${canAfford ? '' : 'disabled'}>
+                ${rarityIcon} ${a.name} (${a.rarity}) - ${a.costo} CSS${negText}${canAfford ? '' : ' ❌'}
             </option>`;
         }).join('');
     },
@@ -483,6 +593,7 @@ window.CreditiSuperSeriUI = {
 
     /**
      * Gestisce l'assegnazione di un'abilita
+     * Le abilità negative vengono assegnate AUTOMATICAMENTE per Epiche (+1) e Leggendarie (+2)
      */
     async handleAssegnaAbilita(playerId, abilityName) {
         const CSS = window.CreditiSuperSeri;
@@ -495,11 +606,16 @@ window.CreditiSuperSeriUI = {
 
         this.showMessage('Assegnazione in corso...', 'info');
 
+        // Le abilità negative vengono assegnate automaticamente dalla funzione assegnaAbilita
         const result = await CSS.assegnaAbilita(teamId, playerId, abilityName);
 
         if (result.success) {
+            // Mostra le negative assegnate automaticamente se presenti
+            const negText = result.negativeAssegnate?.length > 0
+                ? ` (+ ${result.negativeAssegnate.join(', ')} automatiche)`
+                : '';
             this.showMessage(
-                `Abilita "${result.abilityName}" assegnata a ${result.playerName}! Saldo: ${result.nuovoSaldo} CSS`,
+                `Abilita "${result.abilityName}"${negText} assegnata a ${result.playerName}! Saldo: ${result.nuovoSaldo} CSS`,
                 'success'
             );
 
@@ -514,6 +630,105 @@ window.CreditiSuperSeriUI = {
         } else {
             this.showMessage(result.error || 'Errore durante l\'assegnazione', 'error');
         }
+    },
+
+    /**
+     * Apre il modal per selezionare le abilità negative
+     */
+    openNegativeAbilityModal(playerId, positiveAbilityName, negativeCount) {
+        const CSS = window.CreditiSuperSeri;
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        if (!CSS || !teamData) return;
+
+        // Trova il giocatore
+        const player = teamData.rosa?.find(p => p.id === playerId);
+        if (!player) return;
+
+        const currentAbilities = player.abilities || [];
+        const negativeAbilities = CSS.getAbilitaNegativeDisponibili(player.role, currentAbilities);
+
+        if (negativeAbilities.length < negativeCount) {
+            this.showMessage(`Non ci sono abbastanza abilita negative disponibili per il ruolo ${player.role}`, 'error');
+            return;
+        }
+
+        // Crea modal
+        const modal = document.createElement('div');
+        modal.id = 'negative-ability-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4';
+
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full border-2 border-red-500 shadow-2xl">
+                <h3 class="text-xl font-bold text-red-400 mb-2">Seleziona Abilita Negative</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    Per acquistare <span class="text-purple-400 font-bold">${positiveAbilityName}</span>
+                    devi assegnare <span class="text-red-400 font-bold">${negativeCount}</span> abilita negativa/e
+                    a <span class="text-white font-bold">${player.name}</span>.
+                </p>
+
+                <div class="space-y-2 max-h-60 overflow-y-auto mb-4">
+                    ${negativeAbilities.map(neg => `
+                        <label class="flex items-center gap-3 p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600 transition">
+                            <input type="checkbox" name="negative-ability" value="${neg.name}"
+                                   class="w-5 h-5 text-red-600 bg-gray-600 border-gray-500 rounded focus:ring-red-500">
+                            <div>
+                                <span class="text-white font-semibold">${neg.icon || ''} ${neg.name}</span>
+                                <p class="text-gray-400 text-xs">${neg.description || ''}</p>
+                            </div>
+                        </label>
+                    `).join('')}
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="btn-cancel-negative" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Annulla
+                    </button>
+                    <button id="btn-confirm-negative" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition" disabled>
+                        Conferma (0/${negativeCount})
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Handler per checkbox
+        const checkboxes = modal.querySelectorAll('input[name="negative-ability"]');
+        const confirmBtn = modal.querySelector('#btn-confirm-negative');
+
+        const updateConfirmButton = () => {
+            const selected = modal.querySelectorAll('input[name="negative-ability"]:checked').length;
+            confirmBtn.textContent = `Conferma (${selected}/${negativeCount})`;
+            confirmBtn.disabled = selected !== negativeCount;
+        };
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                // Limita selezione al numero richiesto
+                const selected = modal.querySelectorAll('input[name="negative-ability"]:checked');
+                if (selected.length > negativeCount) {
+                    cb.checked = false;
+                }
+                updateConfirmButton();
+            });
+        });
+
+        // Handler annulla
+        modal.querySelector('#btn-cancel-negative').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // Handler conferma
+        confirmBtn.addEventListener('click', async () => {
+            const selectedNegatives = Array.from(
+                modal.querySelectorAll('input[name="negative-ability"]:checked')
+            ).map(cb => cb.value);
+
+            if (selectedNegatives.length === negativeCount) {
+                modal.remove();
+                await this.handleAssegnaAbilita(playerId, positiveAbilityName, selectedNegatives);
+            }
+        });
     },
 
     /**
@@ -543,8 +758,13 @@ window.CreditiSuperSeriUI = {
 
         // Determina quale tab e' attiva e renderizza
         const tabPotenziamento = document.getElementById('tab-potenziamento');
+        const tabAbilita = document.getElementById('tab-abilita');
+        const tabServizi = document.getElementById('tab-servizi');
+
         if (tabPotenziamento?.classList.contains('active')) {
             this.renderPotenziamentoContent(rosa, saldo);
+        } else if (tabServizi?.classList.contains('active')) {
+            this.renderServiziContent(saldo);
         } else {
             this.renderAbilitaContent(rosa, saldo);
         }
@@ -610,7 +830,7 @@ window.CreditiSuperSeriUI = {
         if (btnOpen) {
             btnOpen.addEventListener('click', async () => {
                 const teamData = window.InterfacciaCore?.currentTeamData;
-                const rosa = teamData?.rosa || [];
+                const rosa = teamData?.players || [];
                 const currentSaldo = await CSS.getSaldo(teamId);
                 this.openPotenziamentoPanel(rosa, currentSaldo);
             });

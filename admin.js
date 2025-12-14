@@ -257,11 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        const btnSyncData = document.getElementById('btn-sync-data');
-        if (btnSyncData) btnSyncData.addEventListener('click', () => {
-             displayMessage("Sincronizzazione dati in corso... (Mock)", 'info', 'toggle-status-message');
-             setTimeout(() => displayMessage("Dati sincronizzati.", 'success', 'toggle-status-message'), 1500);
-        });
+        // Avvia Stagione (genera calendari + attiva automazione)
+        const btnAvviaStagione = document.getElementById('btn-avvia-stagione');
+        if (btnAvviaStagione) {
+            btnAvviaStagione.addEventListener('click', handleAvviaStagione);
+        }
 
         // Test Simulazione Partita
         setupTestSimulationListeners();
@@ -372,18 +372,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Fix abilita "Icona" per tutte le Icone in tutte le squadre
+     * Fix abilita "Icona" e abilita uniche per tutte le Icone in tutte le squadre
      */
     const handleFixIconeAbility = async () => {
-        const resultDiv = document.getElementById('fix-icone-result');
         const btn = document.getElementById('btn-fix-icone-ability');
 
-        if (!resultDiv || !btn) return;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Fixing...';
+        }
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Fixing...';
-        resultDiv.textContent = 'Analisi squadre in corso...';
-        resultDiv.className = 'flex items-center justify-center text-sm text-yellow-400';
+        console.log('🔄 Inizio fix abilita icone...');
+
+        // Mappa delle abilita uniche per ogni icona
+        const ICONE_ABILITIES = {
+            'croc': ['Icona', 'Fatto d\'acciaio'],
+            'shik': ['Icona', 'Amici di panchina'],
+            'ilcap': ['Icona', 'Calcolo delle probabilita'],
+            'simo': ['Icona'],
+            'dappi': ['Icona'],
+            'blatta': ['Icona', 'Scheggia impazzita'],
+            'antony': ['Icona', 'Avanti un altro'],
+            'gladio': ['Icona', 'Continua a provare'],
+            'amedemo': ['Icona', 'Tiro Dritto'],
+            'flavio': ['Icona'],
+            'luka': ['Icona', 'Contrasto di gomito'],
+            'melio': ['Icona', 'Assist-man'],
+            'markf': ['Icona', 'Osservatore'],
+            'sandro': ['Icona', 'Relax'],
+            'fosco': ['Icona', 'L\'uomo in piu'],
+            'cocco': ['Icona', 'Stazionario']
+        };
 
         try {
             const { collection, getDocs, doc, updateDoc } = firestoreTools;
@@ -409,17 +428,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isIcona = iconeIds.has(player.id) || player.id === team.iconaId;
 
                     if (isIcona) {
-                        const abilities = Array.isArray(player.abilities) ? [...player.abilities] : [];
+                        // Usa le abilita definite nella mappa, o solo ['Icona'] se non trovato
+                        const newAbilities = ICONE_ABILITIES[player.id] || ['Icona'];
+                        const currentAbilities = Array.isArray(player.abilities) ? player.abilities : [];
 
-                        // Aggiungi "Icona" se non presente
-                        if (!abilities.includes('Icona')) {
-                            abilities.push('Icona');
+                        // Controlla se le abilita sono diverse
+                        const currentSorted = [...currentAbilities].sort().join(',');
+                        const newSorted = [...newAbilities].sort().join(',');
+
+                        if (currentSorted !== newSorted) {
                             needsUpdate = true;
                             playersFixed++;
-                            console.log(`Fix: ${player.name} in ${team.teamName} - aggiunta abilita Icona`);
+                            console.log(`Fix: ${player.name} in ${team.teamName} - abilita: ${currentAbilities.join(', ')} -> ${newAbilities.join(', ')}`);
+                            return { ...player, abilities: newAbilities };
                         }
-
-                        return { ...player, abilities };
                     }
 
                     return player;
@@ -457,19 +479,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (playersFixed > 0) {
-                resultDiv.textContent = `Fixate ${playersFixed} Icone in ${teamsFixed} squadre!`;
-                resultDiv.className = 'flex items-center justify-center text-sm text-green-400 font-bold';
+                console.log(`✅ Fix completato: ${playersFixed} icone aggiornate in ${teamsFixed} squadre`);
+                alert(`✅ Aggiornate ${playersFixed} Icone in ${teamsFixed} squadre con abilita uniche!`);
             } else {
-                resultDiv.textContent = 'Tutte le Icone hanno gia l\'abilita "Icona"';
-                resultDiv.className = 'flex items-center justify-center text-sm text-green-400';
+                console.log('✅ Tutte le Icone hanno gia le abilita uniche corrette');
+                alert('✅ Tutte le Icone hanno gia le abilita uniche corrette');
             }
 
-            console.log(`Fix completato: ${playersFixed} icone fixate in ${teamsFixed} squadre`);
-
         } catch (error) {
-            console.error('Errore fix icone:', error);
-            resultDiv.textContent = `Errore: ${error.message}`;
-            resultDiv.className = 'flex items-center justify-center text-sm text-red-400';
+            console.error('❌ Errore fix icone:', error);
+            alert(`❌ Errore: ${error.message}`);
         } finally {
             btn.disabled = false;
             btn.innerHTML = '👑 Fix Abilita Icone';
@@ -1274,6 +1293,105 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa';
+        }
+    };
+
+    /**
+     * Avvia una nuova stagione: genera calendari campionato e coppa, poi attiva automazione
+     */
+    const handleAvviaStagione = async () => {
+        const btn = document.getElementById('btn-avvia-stagione');
+        if (!btn) return;
+
+        // Conferma dall'utente
+        const conferma = confirm(
+            '🚀 AVVIA NUOVA STAGIONE\n\n' +
+            'Questa azione:\n' +
+            '1. Genera il calendario del Campionato\n' +
+            '2. Genera il tabellone della Coppa\n' +
+            '3. Attiva la simulazione automatica alle 20:30\n\n' +
+            'Continuare?'
+        );
+
+        if (!conferma) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Avvio in corso...';
+
+        try {
+            const steps = [];
+
+            // Step 1: Carica le squadre partecipanti
+            displayMessage('Caricamento squadre partecipanti...', 'info', 'toggle-status-message');
+            const { collection, getDocs } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+            const allTeams = teamsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                name: doc.data().teamName,
+                ...doc.data()
+            }));
+            const participatingTeams = allTeams.filter(t => t.isParticipating);
+
+            if (participatingTeams.length < 2) {
+                throw new Error(`Servono almeno 2 squadre partecipanti. Attualmente: ${participatingTeams.length}`);
+            }
+
+            // Step 2: Genera calendario campionato
+            displayMessage('Generazione calendario campionato...', 'info', 'toggle-status-message');
+            if (window.ChampionshipSchedule) {
+                const schedule = window.ChampionshipSchedule.generateRoundRobinSchedule(participatingTeams);
+                await window.ChampionshipSchedule.saveScheduleAndInitialize(participatingTeams, schedule);
+
+                // Imposta la data corrente per il countdown auto-sim
+                if (window.ChampionshipMain) {
+                    await window.ChampionshipMain.updateLastAutoSimulatedDate(Date.now());
+                }
+                steps.push('Calendario Campionato generato');
+            } else {
+                throw new Error('Modulo ChampionshipSchedule non disponibile');
+            }
+
+            // Step 3: Genera calendario coppa
+            displayMessage('Generazione tabellone coppa...', 'info', 'toggle-status-message');
+            if (window.CoppaMain) {
+                await window.CoppaMain.generateCupSchedule();
+                steps.push('Tabellone Coppa generato');
+            } else {
+                throw new Error('Modulo CoppaMain non disponibile');
+            }
+
+            // Step 4: Attiva automazione simulazioni
+            displayMessage('Attivazione simulazione automatica...', 'info', 'toggle-status-message');
+            if (window.AutomazioneSimulazioni) {
+                await window.AutomazioneSimulazioni.enableAutomation();
+                steps.push('Automazione attivata (20:30)');
+            } else {
+                console.warn('Modulo AutomazioneSimulazioni non disponibile');
+                steps.push('Automazione: modulo non disponibile');
+            }
+
+            // Successo!
+            displayMessage(
+                `🚀 Stagione avviata con successo!\n${steps.join(' | ')}`,
+                'success',
+                'toggle-status-message'
+            );
+
+            // Aggiorna gli stati nella UI
+            loadSerieSeriaStatus();
+            loadCupStatus();
+
+            // Se il pannello automazione e' aperto, aggiornalo
+            if (window.loadAutomationPanel) {
+                window.loadAutomationPanel();
+            }
+
+        } catch (error) {
+            console.error('Errore avvio stagione:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🚀 Avvia Stagione';
         }
     };
 

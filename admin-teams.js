@@ -88,6 +88,9 @@ window.AdminTeams = {
 
                 const logoUrl = teamData.logoUrl || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
 
+                const isDraftEnabled = teamData.draft_enabled || false;
+                const draftCheckboxColorClasses = isDraftEnabled ? 'bg-green-500 border-green-500' : 'bg-gray-700 border-gray-500';
+
                 teamsHtml += `
                     <div class="team-item flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-500 transition duration-150">
                         <div class="flex flex-col space-y-2 mb-2 sm:mb-0">
@@ -103,6 +106,12 @@ window.AdminTeams = {
                                        ${isCupParticipating ? 'checked' : ''}>
                                 <label for="cup-participating-${teamId}" class="text-gray-300 font-bold">🏆 CoppaSeriA</label>
                             </div>
+                            <div class="flex items-center space-x-4">
+                                <input type="checkbox" id="draft-enabled-${teamId}" data-team-id="${teamId}" data-action="toggle-draft-enabled"
+                                       class="form-checkbox h-5 w-5 rounded transition duration-150 ease-in-out ${draftCheckboxColorClasses}"
+                                       ${isDraftEnabled ? 'checked' : ''}>
+                                <label for="draft-enabled-${teamId}" class="text-gray-300 font-bold">📝 Draft</label>
+                            </div>
                         </div>
 
                         <div class="flex items-center w-full sm:w-auto mb-2 sm:mb-0">
@@ -113,7 +122,7 @@ window.AdminTeams = {
                                  class="w-16 h-16 rounded-full border-2 border-yellow-500 mr-4 cursor-pointer hover:border-yellow-300 hover:scale-110 transition object-cover"
                                  title="Clicca per cambiare il logo">
                             <div>
-                                <p class="text-lg font-bold text-white">${teamData.teamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}</p>
+                                <p class="text-lg font-bold text-white">${teamData.teamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}${teamData.draft_enabled ? ' <span class="text-green-400" title="Partecipa al Draft">📝</span>' : ''}</p>
                                 <p class="text-xs text-gray-400">ID: ${teamId}</p>
                                 <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
                                 <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
@@ -167,6 +176,11 @@ window.AdminTeams = {
 
         if (action === 'toggle-cup-participation') {
             this.handleToggleCupParticipation(teamId, target.checked, target, TEAMS_COLLECTION_PATH);
+            return;
+        }
+
+        if (action === 'toggle-draft-enabled') {
+            this.handleToggleDraftEnabled(teamId, target.checked, target, TEAMS_COLLECTION_PATH);
             return;
         }
 
@@ -289,6 +303,43 @@ window.AdminTeams = {
 
         } catch (error) {
             console.error(`Errore nell'aggiornamento partecipazione coppa per ${teamId}:`, error);
+            checkboxElement.checked = !isChecked;
+            label.textContent = 'Errore di salvataggio!';
+        } finally {
+            checkboxElement.disabled = false;
+        }
+    },
+
+    /**
+     * Aggiorna lo stato di partecipazione al draft
+     */
+    async handleToggleDraftEnabled(teamId, isChecked, checkboxElement, TEAMS_COLLECTION_PATH) {
+        const { doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+
+        const label = checkboxElement.closest('.team-item').querySelector(`label[for="draft-enabled-${teamId}"]`);
+
+        checkboxElement.disabled = true;
+        label.textContent = 'Salvando...';
+
+        try {
+            await updateDoc(teamDocRef, {
+                draft_enabled: isChecked
+            });
+
+            if (isChecked) {
+                checkboxElement.classList.remove('bg-gray-700', 'border-gray-500');
+                checkboxElement.classList.add('bg-green-500', 'border-green-500');
+            } else {
+                checkboxElement.classList.remove('bg-green-500', 'border-green-500');
+                checkboxElement.classList.add('bg-gray-700', 'border-gray-500');
+            }
+
+            label.textContent = '📝 Draft';
+
+        } catch (error) {
+            console.error(`Errore nell'aggiornamento partecipazione draft per ${teamId}:`, error);
             checkboxElement.checked = !isChecked;
             label.textContent = 'Errore di salvataggio!';
         } finally {
@@ -642,6 +693,22 @@ window.AdminTeams = {
                             </div>
                         </div>
 
+                        <!-- Sezione Partecipazione Draft -->
+                        <div class="mt-6 p-4 bg-green-900 rounded-lg border border-green-500">
+                            <h4 class="text-lg font-bold text-green-400 mb-2">📝 Partecipazione Draft</h4>
+                            <p class="text-sm text-gray-300 mb-3">Indica se questa squadra partecipa al draft.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white font-semibold">Partecipa al Draft</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="edit-draft-enabled" class="sr-only peer" ${teamData.draft_enabled ? 'checked' : ''}>
+                                    <div class="w-14 h-7 bg-gray-600 peer-focus:ring-4 peer-focus:ring-green-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <p id="draft-status-text" class="text-xs mt-2 ${teamData.draft_enabled ? 'text-green-400' : 'text-gray-500'}">
+                                ${teamData.draft_enabled ? 'Questa squadra partecipa al draft' : 'Non partecipa al draft'}
+                            </p>
+                        </div>
+
                         <!-- Sezione Permessi Admin -->
                         <div class="mt-6 p-4 bg-red-900 rounded-lg border border-red-500">
                             <h4 class="text-lg font-bold text-red-400 mb-2">🔐 Permessi Amministratore</h4>
@@ -707,6 +774,7 @@ window.AdminTeams = {
         mainElement.insertAdjacentHTML('beforeend', modalHtml);
         this.modalInstance = document.getElementById('edit-team-modal');
         this.initAdminToggleListener();
+        this.initDraftToggleListener();
     },
 
     /**
@@ -767,6 +835,25 @@ window.AdminTeams = {
                 statusText.className = 'text-xs mt-2 text-red-400';
             } else {
                 statusText.textContent = 'Squadra normale senza permessi admin';
+                statusText.className = 'text-xs mt-2 text-gray-500';
+            }
+        });
+    },
+
+    /**
+     * Inizializza il listener per il toggle partecipazione draft
+     */
+    initDraftToggleListener() {
+        const toggle = document.getElementById('edit-draft-enabled');
+        const statusText = document.getElementById('draft-status-text');
+        if (!toggle) return;
+
+        toggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                statusText.textContent = 'Questa squadra partecipa al draft';
+                statusText.className = 'text-xs mt-2 text-green-400';
+            } else {
+                statusText.textContent = 'Non partecipa al draft';
                 statusText.className = 'text-xs mt-2 text-gray-500';
             }
         });
@@ -1225,6 +1312,7 @@ window.AdminTeams = {
         const budget = parseInt(document.getElementById('edit-budget').value);
         const creditiSuperSeri = parseInt(document.getElementById('edit-css').value) || 0;
         const isAdmin = document.getElementById('edit-is-admin')?.checked || false;
+        const draft_enabled = document.getElementById('edit-draft-enabled')?.checked || false;
 
         if (!teamName || teamName.length < 3) {
             alert('Il nome squadra deve avere almeno 3 caratteri!');
@@ -1257,6 +1345,7 @@ window.AdminTeams = {
                 budget,
                 creditiSuperSeri,
                 isAdmin,
+                draft_enabled,
                 players: this.currentEditingPlayers,
                 formation: updatedFormation,
                 playersFormStatus: updatedFormStatus
@@ -1716,8 +1805,104 @@ window.AdminTeams = {
                 button.textContent = '🔧 Fix Livelli Tutte le Squadre';
             }
         }
+    },
+
+    /**
+     * Aggiorna le abilita delle icone esistenti con le nuove abilita uniche
+     * da icone.js
+     */
+    async updateIconeAbilities() {
+        const TEAMS_COLLECTION_PATH = window.AdminTeams?.TEAMS_COLLECTION_PATH ||
+            `artifacts/${window.currentAppId || 'default'}/public/data/teams`;
+
+        const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+
+        // Mappa delle abilita uniche per ogni icona (da icone.js)
+        const ICONE_ABILITIES = {
+            'croc': ['Icona', 'Fatto d\'acciaio'],
+            'shik': ['Icona', 'Amici di panchina'],
+            'ilcap': ['Icona', 'Calcolo delle probabilita'],
+            'simo': ['Icona'],
+            'dappi': ['Icona'],
+            'blatta': ['Icona', 'Scheggia impazzita'],
+            'antony': ['Icona', 'Avanti un altro'],
+            'gladio': ['Icona', 'Continua a provare'],
+            'amedemo': ['Icona', 'Tiro Dritto'],
+            'flavio': ['Icona'],
+            'luka': ['Icona', 'Contrasto di gomito'],
+            'melio': ['Icona', 'Assist-man'],
+            'markf': ['Icona', 'Osservatore'],
+            'sandro': ['Icona', 'Relax'],
+            'fosco': ['Icona', 'L\'uomo in piu'],
+            'cocco': ['Icona', 'Stazionario']
+        };
+
+        let updatedCount = 0;
+        let teamsUpdated = [];
+
+        try {
+            console.log('🔄 Inizio aggiornamento abilita icone...');
+
+            const teamsRef = collection(db, TEAMS_COLLECTION_PATH);
+            const querySnapshot = await getDocs(teamsRef);
+
+            for (const docSnap of querySnapshot.docs) {
+                const teamId = docSnap.id;
+                const teamData = docSnap.data();
+
+                if (!teamData.players || !Array.isArray(teamData.players)) continue;
+
+                // Trova il giocatore icona
+                let iconaUpdated = false;
+                const updatedPlayers = teamData.players.map(player => {
+                    // Controlla se e un'icona
+                    if (player.abilities && player.abilities.includes('Icona')) {
+                        // Trova l'id dell'icona
+                        const iconaId = player.id;
+                        if (ICONE_ABILITIES[iconaId]) {
+                            const newAbilities = ICONE_ABILITIES[iconaId];
+                            // Controlla se le abilita sono diverse
+                            const currentAbilities = player.abilities || [];
+                            if (JSON.stringify(currentAbilities.sort()) !== JSON.stringify(newAbilities.sort())) {
+                                console.log(`  Aggiornando ${player.name} (${iconaId}): ${currentAbilities.join(', ')} -> ${newAbilities.join(', ')}`);
+                                iconaUpdated = true;
+                                return { ...player, abilities: newAbilities };
+                            }
+                        }
+                    }
+                    return player;
+                });
+
+                if (iconaUpdated) {
+                    const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+                    await updateDoc(teamDocRef, { players: updatedPlayers });
+                    updatedCount++;
+                    teamsUpdated.push(teamData.teamName);
+                }
+            }
+
+            console.log(`✅ Aggiornamento completato! ${updatedCount} squadre aggiornate.`);
+            if (teamsUpdated.length > 0) {
+                console.log(`   Squadre: ${teamsUpdated.join(', ')}`);
+            }
+
+            alert(`✅ Aggiornamento abilita icone completato!\n\n${updatedCount} squadre aggiornate:\n${teamsUpdated.join('\n') || 'Nessuna'}`);
+
+            // Ricarica la lista
+            if (this.teamsListContainer) {
+                this.loadTeams(TEAMS_COLLECTION_PATH);
+            }
+
+        } catch (error) {
+            console.error('❌ Errore aggiornamento abilita icone:', error);
+            alert(`❌ Errore: ${error.message}`);
+        }
     }
 };
+
+// Esponi la funzione globalmente per poterla chiamare dalla console
+window.updateIconeAbilities = () => window.AdminTeams.updateIconeAbilities();
 
 console.log(' AdminTeams V2.0 caricato - UI migliorata con form per giocatori!');
 

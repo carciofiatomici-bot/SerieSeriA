@@ -232,6 +232,14 @@ window.ChampionshipSimulation = {
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
+        // Inizializza bonus Icona (50% per ogni team con Icona)
+        const { initIconaBonusForMatch } = window.simulationLogic || {};
+        if (initIconaBonusForMatch) {
+            const teamAHasIcona = teamA.formationInfo?.isIconaActive || false;
+            const teamBHasIcona = teamB.formationInfo?.isIconaActive || false;
+            initIconaBonusForMatch(teamAHasIcona, teamBHasIcona);
+        }
+
         // Applica bonus casa dalla struttura stadio (se feature abilitata)
         if (window.Stadium?.isEnabled() && homeTeamData.stadium?.totalBonus) {
             teamA.homeBonus = homeTeamData.stadium.totalBonus;

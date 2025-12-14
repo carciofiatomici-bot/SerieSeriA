@@ -339,9 +339,10 @@ window.invalidateTeamLogosCache = function() {
  * @returns {Array<Object>}
  */
 const generateCaptainCandidates = () => {
-    const CAPTAIN_CANDIDATES_TEMPLATES = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+    // Escludi Flavio El Ficario dalla selezione
+    const CAPTAIN_CANDIDATES_TEMPLATES = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).filter(t => t.id !== 'flavio');
     const CAPTAIN_PLACEHOLDER_URL = window.CAPTAIN_PLACEHOLDER_URL || "https://placehold.co/100x100/A0522D/ffffff?text=Icona";
-    
+
     return CAPTAIN_CANDIDATES_TEMPLATES.map(template => {
         // Usa il livello base specificato nel template (ora 12)
         const finalLevel = template.level || 12;

@@ -113,29 +113,33 @@ window.AbilitiesUI = {
                     
                     <!-- Role Filters -->
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="window.AbilitiesUI.filter('all')" 
+                        <button onclick="window.AbilitiesUI.filter('all')"
                                 class="filter-btn ${this.currentFilter === 'all' ? 'bg-purple-600' : 'bg-gray-700'} hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
                             Tutte (${stats.total})
                         </button>
-                        <button onclick="window.AbilitiesUI.filter('P')" 
+                        <button onclick="window.AbilitiesUI.filter('P')"
                                 class="filter-btn ${this.currentFilter === 'P' ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             🧤 Portieri (${stats.byRole.P})
                         </button>
-                        <button onclick="window.AbilitiesUI.filter('D')" 
+                        <button onclick="window.AbilitiesUI.filter('D')"
                                 class="filter-btn ${this.currentFilter === 'D' ? 'bg-indigo-600' : 'bg-gray-700'} hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                             🛡️ Difensori (${stats.byRole.D})
                         </button>
-                        <button onclick="window.AbilitiesUI.filter('C')" 
+                        <button onclick="window.AbilitiesUI.filter('C')"
                                 class="filter-btn ${this.currentFilter === 'C' ? 'bg-green-600' : 'bg-gray-700'} hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                             ⚙️ Centrocampisti (${stats.byRole.C})
                         </button>
-                        <button onclick="window.AbilitiesUI.filter('A')" 
+                        <button onclick="window.AbilitiesUI.filter('A')"
                                 class="filter-btn ${this.currentFilter === 'A' ? 'bg-red-600' : 'bg-gray-700'} hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                             ⚡ Attaccanti (${stats.byRole.A})
                         </button>
-                        <button onclick="window.AbilitiesUI.filter('Universal')" 
-                                class="filter-btn ${this.currentFilter === 'Universal' ? 'bg-pink-600' : 'bg-gray-700'} hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
-                            🌟 Universali (${stats.byRole.Universal})
+                        <button onclick="window.AbilitiesUI.filter('Multi')"
+                                class="filter-btn ${this.currentFilter === 'Multi' ? 'bg-pink-600' : 'bg-gray-700'} hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
+                            🌟 Multiruolo (${stats.byRole.Multi})
+                        </button>
+                        <button onclick="window.AbilitiesUI.filter('Icone')"
+                                class="filter-btn ${this.currentFilter === 'Icone' ? 'bg-yellow-600' : 'bg-gray-700'} hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                            👑 Abilita Icone (${stats.byRarity.Unica})
                         </button>
                     </div>
                 </div>
@@ -251,9 +255,9 @@ window.AbilitiesUI = {
             'Unica': 'text-yellow-400'
         };
         
-        // Crea modal (z-index più alto dell'enciclopedia per apparire sopra)
+        // Crea modal (z-index più alto del rules-panel z-[9999] per apparire sopra)
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-95 z-[10000] flex items-center justify-center p-4';
         modal.onclick = (e) => {
             if (e.target === modal) modal.remove();
         };
@@ -383,17 +387,22 @@ window.AbilitiesUI = {
      */
     getFilteredAbilities() {
         let abilities = [];
-        
+
         // Filtro ruolo
         if (this.currentFilter === 'all') {
             abilities = Object.values(window.AbilitiesEncyclopedia.abilities);
-        } else if (this.currentFilter === 'Universal') {
+        } else if (this.currentFilter === 'Multi') {
+            // Mostra solo abilità Multi-ruolo (non Uniche)
             abilities = Object.values(window.AbilitiesEncyclopedia.abilities)
-                .filter(a => a.role === 'Tutti' || a.role === 'Speciale');
+                .filter(a => a.role === 'Multi' && a.rarity !== 'Unica');
+        } else if (this.currentFilter === 'Icone') {
+            // Mostra solo abilità Uniche (Abilità Icone)
+            abilities = Object.values(window.AbilitiesEncyclopedia.abilities)
+                .filter(a => a.rarity === 'Unica');
         } else {
             abilities = window.AbilitiesEncyclopedia.getAbilitiesByRole(this.currentFilter);
         }
-        
+
         // Filtro ricerca
         if (this.currentSearch) {
             abilities = abilities.filter(a =>
@@ -402,7 +411,7 @@ window.AbilitiesUI = {
                 a.effect.toLowerCase().includes(this.currentSearch.toLowerCase())
             );
         }
-        
+
         return abilities;
     },
     
@@ -428,14 +437,38 @@ window.AbilitiesUI = {
     },
 
     renderAbilitiesByType(abilities) {
-        const positive = abilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
-        const negative = abilities.filter(a => a.type === 'Negativa');
+        // Separa abilita uniche dalle altre
+        const unique = abilities.filter(a => a.rarity === 'Unica');
+        const normalAbilities = abilities.filter(a => a.rarity !== 'Unica');
+
+        const positive = normalAbilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
+        const negative = normalAbilities.filter(a => a.type === 'Negativa');
 
         // Ordina per rarità
         const sortedPositive = this.sortByRarity(positive);
         const sortedNegative = this.sortByRarity(negative);
 
         let html = '';
+
+        // Sezione Abilita Uniche (ICONE) - mostra solo se non siamo già nel filtro Icone
+        if (unique.length > 0) {
+            const isIconeFilter = this.currentFilter === 'Icone';
+            html += `
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-yellow-500">
+                        <span class="text-3xl">👑</span>
+                        <h3 class="text-2xl font-bold text-yellow-400">${isIconeFilter ? 'Abilita Icone' : 'Abilita Uniche - Icone'} (${unique.length})</h3>
+                    </div>
+                    <div class="bg-yellow-900 bg-opacity-20 rounded-lg p-4 mb-4 border-2 border-yellow-700">
+                        <p class="text-yellow-300 font-bold">✨ Abilita Esclusive!</p>
+                        <p class="text-gray-300 text-sm mt-1">Queste abilita sono riservate esclusivamente ai giocatori Icona. Ogni Icona ha la propria abilita unica oltre all'abilita base "Icona". Le Icone non possono acquisire altre abilita.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${unique.map(ability => this.renderAbilityCard(ability)).join('')}
+                    </div>
+                </div>
+            `;
+        }
         
         // Sezione Abilita  Positive
         if (positive.length > 0) {

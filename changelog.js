@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '1.1.0',
+    currentVersion: '1.4.0',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,69 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '1.4.0',
+            date: '2025-12-14',
+            time: '22:00',
+            title: 'Avvia Stagione + Miglioramenti Icone + Ottimizzazioni CSS',
+            changes: [
+                { text: 'NUOVO: Bottone "Avvia Stagione" nel pannello admin - genera calendari e attiva automazione', adminOnly: true },
+                { text: 'Avvia Stagione: genera calendario campionato + tabellone coppa + attiva auto-sim alle 20:30', adminOnly: true },
+                { text: 'Lista Icone nella homepage ora mostra le abilita uniche di ogni Icona', adminOnly: false },
+                { text: 'Cliccando su un\'Icona si apre un dettaglio con tutte le informazioni e abilita', adminOnly: false },
+                { text: 'Aggiunta abilita "Parata Efficiente" per Simone', adminOnly: false },
+                { text: 'Corretta abilita "Relax" per Sandro Diaz', adminOnly: false },
+                { text: 'Flavio El Ficario nascosto dalla lista Icone e dalla selezione squadra', adminOnly: true },
+                { text: 'Auto-sync: le Icone in Firestore si aggiornano automaticamente da icone.js', adminOnly: true },
+                { text: 'Ottimizzazioni CSS per miglior compatibilita mobile e accessibilita', adminOnly: true },
+                { text: 'Rimosso bottone "Test Simulazione Partita" dal pannello admin', adminOnly: true }
+            ],
+            type: 'feature'
+        },
+        {
+            version: '1.3.0',
+            date: '2025-12-14',
+            time: '18:00',
+            title: 'Nuovo Sistema Abilita - 1 per Rarita + Negative Automatiche',
+            changes: [
+                { text: 'NUOVO: Limite 1 abilita per rarita (max 1 Comune, 1 Rara, 1 Epica, 1 Leggendaria)', adminOnly: false },
+                { text: 'NUOVO: Abilita negative automatiche per Epiche e Leggendarie', adminOnly: false },
+                { text: 'Acquisto abilita Epica: +1 abilita negativa random assegnata automaticamente', adminOnly: false },
+                { text: 'Acquisto abilita Leggendaria: +2 abilita negative random assegnate automaticamente', adminOnly: false },
+                { text: 'Generatore random giocatori Draft aggiornato con la nuova logica', adminOnly: false },
+                { text: 'UI Crediti Super Seri aggiornata per mostrare negative automatiche', adminOnly: false },
+                { text: 'Le abilita Uniche rimangono non acquistabili (solo Icone)', adminOnly: false },
+                { text: 'Rimosso modal selezione abilita negative (ora automatico)', adminOnly: true }
+            ],
+            type: 'feature'
+        },
+        {
+            version: '1.2.0',
+            date: '2025-12-14',
+            time: '15:00',
+            title: 'Abilita Uniche delle Icone + Simulazione V3.1',
+            changes: [
+                { text: 'NUOVO: 13 Abilita Uniche per le Icone implementate nella simulazione', adminOnly: false },
+                { text: 'Fatto d\'acciaio (Croccante): immune agli infortuni, cura gratuita', adminOnly: false },
+                { text: 'L\'uomo in piu (Fosco): salva fasi perse aggiungendo 1/2 mod (max 5x)', adminOnly: false },
+                { text: 'Tiro Dritto (Amedemo): se unico A: +1/5 lv, critico 6%', adminOnly: false },
+                { text: 'Avanti un altro (Antony): +2 in difesa Fase 2', adminOnly: false },
+                { text: 'Contrasto di gomito (Luka): +1/5 lv difesa, 1% fail automatico', adminOnly: false },
+                { text: 'Calcolo delle probabilita (Il Cap): 2d20 in Fase 1, prende il migliore', adminOnly: false },
+                { text: 'Continua a provare (Gladio): media 2d20, mod x0.5 attacco, x1.5 difesa, no critico', adminOnly: false },
+                { text: 'Stazionario (Cocco): accumula +0.5 per fase saltata', adminOnly: false },
+                { text: 'Osservatore (Mark Falco): annulla abilita piu rara avversario, bonus rarita', adminOnly: false },
+                { text: 'Relax (Sandro): mod dinamico +1 attacco/-1 difesa (range -5 a +5)', adminOnly: false },
+                { text: 'Scheggia impazzita (Bemolle): +0.2 per ogni Fase 2 (max +5)', adminOnly: false },
+                { text: 'Assist-man (Meliodas): +1 mod per ogni assist fatto', adminOnly: false },
+                { text: 'Abilita Icona modificata: 50% di attivarsi a inizio partita', adminOnly: false },
+                { text: 'Sezione Abilita Uniche aggiunta all\'Enciclopedia Abilita', adminOnly: false },
+                { text: 'Tutte le abilita uniche ora con colore dorato nell\'enciclopedia', adminOnly: false },
+                { text: 'Fix Abilita Icone: bottone admin per aggiungere abilita uniche alle Icone esistenti', adminOnly: true },
+                { text: 'Simulazione.js aggiornato a V3.1 con tracking abilita uniche', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '1.1.0',
             date: '2025-12-13',

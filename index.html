@@ -615,7 +615,6 @@
                                     fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
                             </g>
                         </svg>
-                        <span class="text-[9px] sm:text-[10px] text-purple-300 font-semibold">Divisa</span>
                     </div>
                 </div>
                 <!-- SPONSOR, LOGO, ICONA E MEDIA - Tutti centrati su una riga -->
@@ -1486,7 +1485,7 @@
     <!-- Collega gli script JavaScript esterni - DEVE ESSERE DOPO GLI SCRIPT FIREBASE -->
     
     <!-- 1. DEFINIZIONI BASE (Icone, Costanti, Variabili Globali) -->
-    <script src="icone.js"></script>
+    <script src="icone.js?v=3"></script>
     <script src="firestore-cache.js"></script>
     <script src="config-listener.js"></script>
     <script src="listener-manager.js"></script>
@@ -1536,6 +1535,9 @@
     <script src="interfaccia-navigation.js"></script>
     <script src="interfaccia-onboarding.js"></script>
     <script src="interfaccia-team.js"></script>
+
+    <!-- UNIFORM EDITOR (serve a gestionesquadre-formazione) -->
+    <script src="uniform-editor.js"></script>
 
     <!-- MODULI GESTIONE SQUADRE (in ordine di dipendenza) -->
     <script src="gestionesquadre-constants.js"></script>
@@ -1615,10 +1617,7 @@
     <script src="crediti-super-seri.js"></script>
     <script src="crediti-super-seri-ui.js"></script>
 
-    <!-- 14. UNIFORM EDITOR (Editor Divisa Squadra) -->
-    <script src="uniform-editor.js"></script>
-
-    <!-- 15. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
+    <!-- 14. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
     <script src="version-check.js"></script>
 
     <!-- 16. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->

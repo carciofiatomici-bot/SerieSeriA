@@ -177,16 +177,35 @@ Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (P
 [ ABILITÀ PARTICOLARI (SOLO ICONE) ]
 (Riservate ai capitani scelti alla creazione delle squadre)
 
-- Icona (5): A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra in tutte le fasi (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
+- Icona (5): (tutti i giocatori icona): A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra in tutte le fasi (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
 """
-- Fatto d'acciaio (5): (solamente giocatore icona Croccante): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs. Può ottenere l'abilità "regista" anche se non è un centrocampista.
-- L'uomo in più (5): (solamente giocatore icona Fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa (massimo 5 volte in tutta la partita).
-- Tiro Dritto (5): (solamente giocatore icona Amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), aggiungi 1/5 del suo livello al modificatore. Aumenta il range di successo critico (critico anche sul fallimento) da 5% a 6%.
-- Avanti un altro (5): (solamente giocatore icona Antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 7% (invece che 3,5%). Solamente nella fase 2 e solamente se in difesa, se scelto come giocatore della fase il suo mod. aumenta di +2.
-- Contrasto di gomito (5): Solamente giocatore icona Alpakashenka): Quando scelto come giocatore nelle fasi difensive, il suo modificatore aumenta di 1/5 del suo livello. 1% di probabilità di far fallire automaticamente la fase prima di tirare il d20.
-- Calcolo delle probabilità (5): (solamente giocatore icona Il Cap): Quando scelto come giocatore nella fase "costruzione", tira 2d20 e sceglie il più alto invece che tirarne uno solo. Quando scelto come giocatore nella fase "attacco vs difesa" i bonus che avrebbe nella fase di costruzione si applicano anche a questa fase.
--Amici di panchina (5): (solamente giocatore icona Shikanto): Quando è infortunato può essere comunque schierato in panchina. Quando è in panchina ad ogni fase (sia in attacco che in difesa) le sue abilità, abilità icona esclusa, bengono date al giocatore che viene scelto per la fase. Solamente durante la fase costruzione e solamente in attacco ha +2 al modificatore quando scelto come giocatore della fase.
+- Fatto d'acciaio (5): (solamente giocatore icona Croccante ID: croc): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs. Può ottenere l'abilità "regista" anche se non è un centrocampista.
 
+- L'uomo in più (5): (solamente giocatore icona Fosco ID: fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa (massimo 5 volte in tutta la partita).
+
+- Tiro Dritto (5): (solamente giocatore icona Amedemo ID:amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), il suo modificatore ha un bonus di +3.5, diminuisce di 0.5 ogni volta che segna perché diventa sempre più prevedibile. Aumenta il range di successo critico (critico anche sul fallimento) da 5% a 6%.
+
+- Avanti un altro (5): (solamente giocatore icona Antony ID: antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 7% (invece che 3,5%). Solamente nella fase 2 e solamente se in difesa, se scelto come giocatore della fase il suo mod. aumenta di +2.
+
+- Contrasto di gomito (5): Solamente giocatore icona Alpakashenka ID: luka): Quando scelto come giocatore nelle fasi difensive, il suo modificatore aumenta di 1/5 del suo livello. 1% di probabilità di far fallire automaticamente la fase prima di tirare il d20.
+
+- Calcolo delle probabilità (5): (solamente giocatore icona Il Cap ID: il cap): Quando scelto come giocatore nella fase "costruzione", tira 2d20 e sceglie il più alto invece che tirarne uno solo. Quando scelto come giocatore nella fase "attacco vs difesa" i bonus che avrebbe nella fase di costruzione si applicano anche a questa fase.
+
+-Amici di panchina (5): (solamente giocatore icona Shikanto ID: shik): Quando è infortunato può essere comunque schierato in panchina. Quando è in panchina ad ogni fase (sia in attacco che in difesa) le sue abilità, abilità icona esclusa, bengono date al giocatore che viene scelto per la fase. Solamente durante la fase costruzione e solamente in attacco ha +2 al modificatore quando scelto come giocatore della fase.
+
+-Continua a provare (5): (solamente giocatore icona Gladio ID: Gladio): Ogni volta che partecipa ad una qualsiasi fase invece che 1d20 tira 2d20 e fa la media, quello è il suo risultato. Il suo modificatore nelle fasi di attacco è x0.5. Non può avere successo critico (da 5% a 0%). Il suo modificatore nelle fasi di difesa è x1.5.
+
+-Stazionario (5): (solamente giocatore icona Cocco ID: cocco): per ogni fase a cui non partecipa accumula +0.5 al suo modificatore (max 3.0), quando il modificatore arriva a 5.0 partecipa obbligatoriamente lui alla prossima fase qualsiasi essa sia. Quando partecipa ad una fase che il suo modificatore bonus sia pieno o no si resetta e torna a +0.0.
+
+-Osservatore (5): (solamente il giocatore icona Mark Falco ID: markf): Quando è nella fase "tiro vs portiere" ed è il portiere, scansiona l'avversario e anulla l'abilità di rarità più alta che ha, il livello dell'abilità annullata si aggiunge al suo modificatore per la parata (+1 comune, +2 rara, +3 epica, +4 leggendaria). I malus al modificatore che gli verrebbero applicati sono efficaci la metà.
+
+-Relax (5): (solamente il giocatore icona Sandro Diaz ID: sandro): Questo giocatore ha un secondo modificatore chiamato Relax. Quando partecipa ad una fase come difensore il suo Relax riceve un malus al modificatore di -1.0. Quando partecipa ad una fase come attaccante il suo Relax riceve un bonus al suo modificatore di +1.0. Questo modificatore si aggiunge al suo modificatore base. Quando il modificatore raggiunge -5.0 o +5.0 rimane così per il resto della partita.
+
+-Scheggia impazzita (5): (solamente il giocatore icona Bemolle ID: blatta): Quando è l'unico difensore in campo ha il 100% di possibilità di partecipare alla fase "attacco vs difesa" (invece che del solito 75%). Per ogni fase "attacco vs difesa" a cui partecipa aggiunge +0.2 al suo modificatore (massimo +5.0). 
+
+-Assist-man (5): (solamente il giocatore icona Meliodas ID: melio): Quando partecipa alla fase costruzione come attaccante e riesce nell'attacco, continua l'azione partecipando lui il 100% delle volte alla fase "attacco vs difesa" come attaccante. Se la fase riesce non può mai essere lui ad effettuare la fase "tiro vs portiere", se il giocatore che partecipa a quest'ultima fase segna, l'assist sarà sempre di Meliodas. Ottiene un bonus di +1.0 al suo modificatore per ogni assist fatto in quella partita.
+
+-Parata Efficiente (5): (solamete il giocatore icona Simone ID:simo): Quando il giocatore è nella fase "tiro vs portiere" ed è il portiere e para con una differenza di +1 o superiore. Aggiunge un modificatore alla fase di costruzione successiva pari alla metà della differenza tra parata e tiro. La percentuale di successo critico dell'attaccante in fase "tiro vs portiere" si abbassa a 1% da 5% 
 
 file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'
 with open(file_path, 'w') as f:

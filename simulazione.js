@@ -1,20 +1,24 @@
 //
 // ====================================================================
-// MODULO SIMULAZIONE.JS (Motore Completo - Versione 3.0)
+// MODULO SIMULAZIONE.JS (Motore Completo - Versione 3.1)
 // ====================================================================
 //
 // Implementa:
 // - Modificatori livello (1-30)
 // - Sistema forma giocatori
 // - Bonus/malus tipologie (Potenza -25% Tecnica, ecc.)
-// - 60 abilità complete
+// - 60+ abilità complete
 // - Livello allenatore (+1/2 in tutte le fasi)
-// - Icona (+1 a tutti, forma sempre positiva)
+// - Icona (+1 a tutti 50%, forma sempre positiva)
 // - Nuove abilità v3.0: Presa Sicura, Muro Psicologico, Miracolo,
 //   Freddezza, Lento a carburare, Soggetto a infortuni, Spazzata,
 //   Adattabile, Salvataggio sulla Linea, Passaggio Corto,
 //   Visione di Gioco, Tuttocampista, Egoista, Opportunista,
 //   Tiro a Giro, Immarcabile
+// - Abilità Uniche Icone v3.1: Fatto d'acciaio, L'uomo in più,
+//   Tiro Dritto, Avanti un altro, Contrasto di gomito,
+//   Calcolo delle probabilità, Continua a provare, Stazionario,
+//   Osservatore, Relax, Scheggia impazzita, Assist-man
 //
 // ====================================================================
 
@@ -93,6 +97,31 @@ let teletrasportoCount = { teamA: 0, teamB: 0 };
 // Flag per "Forma Smagliante" - giocatori già processati
 let formaSmaglianteApplied = new Set();
 
+// ========================================
+// TRACCIAMENTO ABILITÀ UNICHE ICONE
+// ========================================
+
+// "Icona" - 50% bonus attivo per partita (determinato a inizio partita)
+let iconaBonusActive = { teamA: false, teamB: false };
+
+// "L'uomo in più" (Fosco) - max 5 attivazioni per partita
+let uomoInPiuCount = { teamA: 0, teamB: 0 };
+
+// "Stazionario" (Cocco) - bonus accumulato per fase saltata
+let stazionarioBonus = {}; // { odine: 0.0 }
+
+// "Relax" (Sandro) - modificatore dinamico
+let relaxModifier = {}; // { odine: 0 }
+
+// "Scheggia impazzita" (Bemolle) - bonus accumulato per Fase 2
+let scheggiaBonus = {}; // { odine: 0.0 }
+
+// "Assist-man" (Meliodas) - assist fatti in partita
+let assistManCount = {}; // { odine: 0 }
+
+// "Assist-man" - flag per catena fasi
+let assistManChain = { active: false, odine: null };
+
 /**
  * Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente
  */
@@ -114,15 +143,16 @@ const sortPlayersByRoleAndLevel = (players) => {
  * Calcola il modificatore base di un giocatore considerando:
  * - Livello base
  * - Forma (bonus/malus)
- * - Icona (+1 se c'è l'Icona in squadra)
+ * - Icona (+1 se c'è l'Icona in squadra E il 50% è passato)
  * - Tipologia vs avversari (-25% se svantaggiato)
- * 
+ *
  * @param {Object} player - Giocatore
  * @param {boolean} hasIcona - Se la squadra ha l'Icona
  * @param {Array} opposingPlayers - Giocatori avversari in questa fase
+ * @param {string} teamKey - 'teamA' o 'teamB' (opzionale, per bonus Icona 50%)
  * @returns {number} Modificatore finale
  */
-const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
+const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey = null) => {
     // Abilità nullificata?
     if (nullifiedAbilities.has(player.id)) {
         return 0;
@@ -161,8 +191,8 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         modifier = LEVEL_MODIFIERS[clampedLevel] || modifier;
     }
 
-    // Freddezza: la forma non puo mai essere negativa
-    if (player.abilities?.includes('Freddezza')) {
+    // Freddezza o Icona: la forma non puo mai essere negativa
+    if (player.abilities?.includes('Freddezza') || player.abilities?.includes('Icona')) {
         const formaDiff = (player.currentLevel || player.level) - (player.level || 1);
         if (formaDiff < 0) {
             // Ricalcola senza malus forma (ma con penalita fuori ruolo se applicabile)
@@ -188,15 +218,17 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = []) => {
         modifier -= 2;
     }
 
-    // Icona: +1 a tutti i modificatori
+    // Icona: +1 a tutti i modificatori (se il 50% è passato a inizio partita)
+    // Se teamKey è fornito, controlla iconaBonusActive; altrimenti usa hasIcona per retrocompatibilità
     if (hasIcona && !player.abilities?.includes('Icona')) {
-        modifier += 1.0;
+        const iconaBonusEnabled = teamKey ? iconaBonusActive[teamKey] : hasIcona;
+        if (iconaBonusEnabled) {
+            modifier += 1.0;
+        }
     }
 
-    // Icona: +1 aggiuntivo per il giocatore Icona stesso
-    if (player.abilities?.includes('Icona')) {
-        modifier += 1.0;
-    }
+    // Icona: forma mai negativa (gestita sopra in Freddezza/Forma Smagliante)
+    // NOTA: L'Icona NON riceve bonus a se stessa, solo ai compagni
 
     // Capitano nominato: +1 aggiuntivo (diverso dall'Icona)
     if (player.isCaptain === true) {
@@ -343,8 +375,8 @@ const applyPrePhaseAbilities = (team, opposingTeam, phase) => {
     
     // Antifurto (Difensore): 5% interrompe attacco
     if (phase === 'attack') {
-        const hasAntifurto = opposingTeam.D?.some(p => 
-            p.abilities?.includes('Antifurto') && 
+        const hasAntifurto = opposingTeam.D?.some(p =>
+            p.abilities?.includes('Antifurto') &&
             !nullifiedAbilities.has(p.id)
         );
         if (hasAntifurto && checkChance(5)) {
@@ -352,7 +384,20 @@ const applyPrePhaseAbilities = (team, opposingTeam, phase) => {
             return modifiers;
         }
     }
-    
+
+    // CONTRASTO DI GOMITO (Luka): 1% fail automatico fase avversaria (solo difesa)
+    if ((phase === 'construction' || phase === 'attack')) {
+        const allDefenders = [...(opposingTeam.D || []), ...(opposingTeam.C || []), ...(opposingTeam.P || [])];
+        const hasContrastoGomito = allDefenders.some(p =>
+            p.abilities?.includes('Contrasto di gomito') &&
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasContrastoGomito && checkChance(1)) {
+            modifiers.interruptPhase = true;
+            return modifiers;
+        }
+    }
+
     // Mago del pallone (Centrocampista): 5% ignora un centrocampista avversario
     if (phase === 'construction') {
         const hasMago = team.C?.some(p => 
@@ -445,7 +490,10 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
         if (nullifiedAbilities.has(player.id)) continue;
 
         // Soggetto a infortuni: 2.5% di infortunarsi per ogni fase
-        if (player.abilities?.includes('Soggetto a infortuni') && !injuredPlayers.has(player.id)) {
+        // FATTO D'ACCIAIO: immune agli infortuni
+        if (player.abilities?.includes('Soggetto a infortuni') &&
+            !injuredPlayers.has(player.id) &&
+            !player.abilities?.includes("Fatto d'acciaio")) {
             if (checkChance(2.5)) {
                 injuredPlayers.add(player.id);
                 continue; // Questo giocatore non contribuisce più
@@ -485,6 +533,83 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
         // Fortunato: 5% raddoppia modificatore (se negativo diventa 0)
         if (player.abilities?.includes('Fortunato') && checkChance(5)) {
             mod = mod < 0 ? 0 : mod * 2;
+        }
+
+        // ========================================
+        // ABILITÀ UNICHE ICONE
+        // ========================================
+
+        // AVANTI UN ALTRO (Antony): +2 in difesa Fase 2
+        if (player.abilities?.includes('Avanti un altro') && phase === 'attack' && !isAttacking) {
+            mod += 2;
+        }
+
+        // CONTRASTO DI GOMITO (Luka): +1/5 livello in difesa
+        if (player.abilities?.includes('Contrasto di gomito') && !isAttacking) {
+            const levelBonus = Math.floor((player.currentLevel || player.level || 1) / 5);
+            mod += levelBonus;
+        }
+
+        // CONTINUA A PROVARE (Gladio): mod x0.5 in attacco, x1.5 in difesa
+        if (player.abilities?.includes('Continua a provare')) {
+            if (isAttacking) {
+                mod *= 0.5;
+            } else {
+                mod *= 1.5;
+            }
+        }
+
+        // RELAX (Sandro): secondo modificatore dinamico
+        if (player.abilities?.includes('Relax')) {
+            const playerId = player.id || player.odine;
+            if (relaxModifier[playerId] === undefined) {
+                relaxModifier[playerId] = 0;
+            }
+            // Applica il bonus/malus accumulato
+            mod += relaxModifier[playerId];
+            // Aggiorna il modificatore per la prossima fase
+            if (isAttacking) {
+                relaxModifier[playerId] = Math.min(5, relaxModifier[playerId] + 1);
+            } else {
+                relaxModifier[playerId] = Math.max(-5, relaxModifier[playerId] - 1);
+            }
+        }
+
+        // SCHEGGIA IMPAZZITA (Bemolle): +0.2 per ogni Fase 2 (max +5)
+        if (player.abilities?.includes('Scheggia impazzita') && phase === 'attack') {
+            const playerId = player.id || player.odine;
+            if (scheggiaBonus[playerId] === undefined) {
+                scheggiaBonus[playerId] = 0;
+            }
+            mod += scheggiaBonus[playerId];
+            // Accumula bonus per prossima volta
+            scheggiaBonus[playerId] = Math.min(5, scheggiaBonus[playerId] + 0.2);
+        }
+
+        // STAZIONARIO (Cocco): bonus accumulato per fasi saltate
+        if (player.abilities?.includes('Stazionario')) {
+            const playerId = player.id || player.odine;
+            if (stazionarioBonus[playerId] === undefined) {
+                stazionarioBonus[playerId] = 0;
+            }
+            // Applica bonus accumulato
+            mod += stazionarioBonus[playerId];
+            // Reset bonus quando partecipa
+            stazionarioBonus[playerId] = 0;
+        }
+
+        // TIRO DRITTO (Amedemo): +1/5 livello se unico attaccante
+        if (player.abilities?.includes('Tiro Dritto') && player.role === 'A' && team.A?.length === 1) {
+            const levelBonus = Math.floor((player.currentLevel || player.level || 1) / 5);
+            mod += levelBonus;
+        }
+
+        // ASSIST-MAN (Meliodas): +1 per ogni assist fatto
+        if (player.abilities?.includes('Assist-man')) {
+            const playerId = player.id || player.odine;
+            if (assistManCount[playerId]) {
+                mod += assistManCount[playerId];
+            }
         }
 
         // Bandiera del club: +1 ai compagni dello stesso ruolo (per ogni Bandiera)
@@ -694,8 +819,39 @@ const phaseConstruction = (teamA, teamB) => {
     }
     
     // Roll + coach bonus (Regola 6: +1/2 livello allenatore)
-    const rollA = rollDice(1, 20);
-    const rollB = rollDice(1, 20);
+    let rollA = rollDice(1, 20);
+    let rollB = rollDice(1, 20);
+
+    // CALCOLO DELLE PROBABILITÀ (Il Cap): 2d20 e prende il migliore in Fase 1
+    const allPlayersA = [...(teamA.D || []), ...(teamA.C || [])];
+    const hasCalcoloProbabilita = allPlayersA.some(p =>
+        p.abilities?.includes('Calcolo delle probabilita') &&
+        !nullifiedAbilities.has(p.id)
+    );
+    if (hasCalcoloProbabilita) {
+        const roll2 = rollDice(1, 20);
+        rollA = Math.max(rollA, roll2);
+    }
+
+    // CONTINUA A PROVARE (Gladio): tira 2d20 e fa la media
+    const hasContinuaProvareA = allPlayersA.some(p =>
+        p.abilities?.includes('Continua a provare') &&
+        !nullifiedAbilities.has(p.id)
+    );
+    if (hasContinuaProvareA && !hasCalcoloProbabilita) {
+        const roll2 = rollDice(1, 20);
+        rollA = Math.round((rollA + roll2) / 2);
+    }
+
+    const allPlayersB = [...(teamB.C || [])];
+    const hasContinuaProvareB = allPlayersB.some(p =>
+        p.abilities?.includes('Continua a provare') &&
+        !nullifiedAbilities.has(p.id)
+    );
+    if (hasContinuaProvareB) {
+        const roll2 = rollDice(1, 20);
+        rollB = Math.round((rollB + roll2) / 2);
+    }
 
     const coachA = (teamA.coachLevel || 1) / 2;
     const coachB = (teamB.coachLevel || 1) / 2;
@@ -709,13 +865,32 @@ const phaseConstruction = (teamA, teamB) => {
     
     // Calcola % successo
     const successChance = Math.max(5, Math.min(95, totalA - totalB + 50)); // Centrato a 50%
-    
+
     // Roll 1d100
-    const success = checkChance(successChance);
-    
+    let success = checkChance(successChance);
+
+    // L'UOMO IN PIÙ (Fosco): se fase fallisce, aggiungi 1/2 mod e ricontrolla (max 5x per partita)
+    if (!success) {
+        const teamKey = 'teamA'; // Sempre teamA attacca in questa funzione
+        const allPlayers = [...(teamA.D || []), ...(teamA.C || []), ...(teamA.A || [])];
+        const uomoInPiuPlayer = allPlayers.find(p =>
+            p.abilities?.includes("L'uomo in piu") &&
+            !nullifiedAbilities.has(p.id)
+        );
+
+        if (uomoInPiuPlayer && uomoInPiuCount[teamKey] < 5) {
+            const playerMod = calculatePlayerModifier(uomoInPiuPlayer, teamA.formationInfo?.isIconaActive, []);
+            const bonusMod = playerMod / 2;
+            const newTotalA = totalA + bonusMod;
+            const newSuccessChance = Math.max(5, Math.min(95, newTotalA - totalB + 50));
+            success = checkChance(newSuccessChance);
+            uomoInPiuCount[teamKey]++;
+        }
+    }
+
     // 5% di passare comunque
     if (!success && checkChance(5)) return true;
-    
+
     return success;
 };
 
@@ -771,7 +946,28 @@ const phaseAttack = (teamA, teamB) => {
         rollA = Math.max(rollA, roll2);
     }
 
-    const rollB = rollDice(1, 20);
+    // CONTINUA A PROVARE (Gladio): tira 2d20 e fa la media
+    const allPlayersA2 = [...(teamA.C || []), ...(teamA.A || [])];
+    const hasContinuaProvareA2 = allPlayersA2.some(p =>
+        p.abilities?.includes('Continua a provare') &&
+        !nullifiedAbilities.has(p.id)
+    );
+    if (hasContinuaProvareA2 && !hasImmarcabile) {
+        const roll2 = rollDice(1, 20);
+        rollA = Math.round((rollA + roll2) / 2);
+    }
+
+    let rollB = rollDice(1, 20);
+
+    const allPlayersB2 = [...(teamB.D || []), ...(teamB.C || [])];
+    const hasContinuaProvareB2 = allPlayersB2.some(p =>
+        p.abilities?.includes('Continua a provare') &&
+        !nullifiedAbilities.has(p.id)
+    );
+    if (hasContinuaProvareB2) {
+        const roll2 = rollDice(1, 20);
+        rollB = Math.round((rollB + roll2) / 2);
+    }
 
     const coachA = (teamA.coachLevel || 1) / 2;
     const coachB = (teamB.coachLevel || 1) / 2;
@@ -783,10 +979,29 @@ const phaseAttack = (teamA, teamB) => {
     const totalA = rollA + modA_C + modA_A + coachA + homeBonusA;
     const totalB = rollB + modB_D + modB_C + coachB + homeBonusB;
 
-    const result = totalA - totalB;
+    let result = totalA - totalB;
 
     // Se >= 0 passa
     if (result >= 0) return Math.max(1, result);
+
+    // L'UOMO IN PIÙ (Fosco): se fase fallisce, aggiungi 1/2 mod e ricontrolla (max 5x per partita)
+    const teamKey = 'teamA';
+    const allPlayersUomo = [...(teamA.C || []), ...(teamA.A || [])];
+    const uomoInPiuPlayer = allPlayersUomo.find(p =>
+        p.abilities?.includes("L'uomo in piu") &&
+        !nullifiedAbilities.has(p.id)
+    );
+
+    if (uomoInPiuPlayer && uomoInPiuCount[teamKey] < 5) {
+        const playerMod = calculatePlayerModifier(uomoInPiuPlayer, teamA.formationInfo?.isIconaActive, []);
+        const bonusMod = playerMod / 2;
+        const newResult = result + bonusMod;
+        if (newResult >= 0) {
+            uomoInPiuCount[teamKey]++;
+            return Math.max(1, newResult);
+        }
+        uomoInPiuCount[teamKey]++;
+    }
 
     // Se < 0, 5% di passare comunque con risultato 5
     if (checkChance(5)) return 5;
@@ -810,8 +1025,44 @@ const phaseShot = (teamA, teamB, attackResult) => {
         nullifiedAbilities.add(portiere.id);
     }
 
+    // OSSERVATORE (Mark Falco): annulla abilità più rara dell'attaccante, guadagna bonus
+    let osservatoreBonus = 0;
+    if (portiere.abilities?.includes('Osservatore') && !nullifiedAbilities.has(portiere.id)) {
+        const RARITY_VALUES = { 'Comune': 1, 'Rara': 2, 'Epica': 3, 'Leggendaria': 4, 'Unica': 5 };
+        let highestRarity = 0;
+        let highestAbilityOwner = null;
+
+        // Trova abilità più rara tra gli attaccanti
+        for (const attacker of (teamA.A || [])) {
+            if (nullifiedAbilities.has(attacker.id)) continue;
+            for (const ability of (attacker.abilities || [])) {
+                const abilityData = window.AbilitiesEncyclopedia?.abilities?.[ability];
+                if (abilityData) {
+                    const rarityValue = RARITY_VALUES[abilityData.rarity] || 0;
+                    if (rarityValue > highestRarity) {
+                        highestRarity = rarityValue;
+                        highestAbilityOwner = attacker;
+                    }
+                }
+            }
+        }
+
+        if (highestAbilityOwner && highestRarity > 0) {
+            nullifiedAbilities.add(highestAbilityOwner.id);
+            osservatoreBonus = highestRarity; // +1 comune, +2 rara, +3 epica, +4 leggendaria, +5 unica
+        }
+    }
+
     // Modificatore portiere
     let modPortiere = calculatePlayerModifier(portiere, teamB.formationInfo?.isIconaActive, teamA.A || []);
+
+    // Applica bonus Osservatore
+    modPortiere += osservatoreBonus;
+
+    // OSSERVATORE: malus dimezzati
+    if (portiere.abilities?.includes('Osservatore') && !nullifiedAbilities.has(portiere.id) && modPortiere < 0) {
+        modPortiere = Math.floor(modPortiere / 2);
+    }
 
     // Bonus equipaggiamento portiere (fase 'portiere', esclude "tutte" già contati)
     if (window.FeatureFlags?.isEnabled('marketObjects') && portiere.equipment) {
@@ -1012,8 +1263,23 @@ const phaseShot = (teamA, teamB, attackResult) => {
                 skipNextConstruction = true;
             }
         }
-        // 5% di gol comunque (Colpo d'anca annulla questa probabilita)
-        if (!hasColpoDAnca && checkChance(5)) {
+        // 5% di gol comunque (critico) - modificato da abilità uniche
+        // TIRO DRITTO (Amedemo): 6% se unico attaccante
+        // CONTINUA A PROVARE (Gladio): 0% (no critico)
+        let criticoChance = 5;
+        const hasTiroDritto = teamA.A?.length === 1 && teamA.A[0]?.abilities?.includes('Tiro Dritto');
+        const hasContinuaProvareCritico = teamA.A?.some(p =>
+            p.abilities?.includes('Continua a provare') &&
+            !nullifiedAbilities.has(p.id)
+        );
+        if (hasContinuaProvareCritico) {
+            criticoChance = 0; // No critico
+        } else if (hasTiroDritto) {
+            criticoChance = 6; // Critico aumentato
+        }
+
+        // Colpo d'anca annulla questa probabilita
+        if (!hasColpoDAnca && checkChance(criticoChance)) {
             // Responta: 10% di far ritirare il dado all'attaccante
             if (portiere.abilities?.includes('Responta') && !nullifiedAbilities.has(portiere.id) && checkChance(10)) {
                 // Attaccante ritira il dado, potrebbe non essere piu goal
@@ -1157,6 +1423,50 @@ const resetSimulationState = () => {
     skipNextConstruction = false;
     teletrasportoCount = { teamA: 0, teamB: 0 };
     formaSmaglianteApplied.clear();
+
+    // Reset abilità uniche Icone
+    iconaBonusActive = { teamA: false, teamB: false };
+    uomoInPiuCount = { teamA: 0, teamB: 0 };
+    stazionarioBonus = {};
+    relaxModifier = {};
+    scheggiaBonus = {};
+    assistManCount = {};
+    assistManChain = { active: false, playerId: null };
+};
+
+/**
+ * Inizializza il bonus Icona per la partita (50% per ogni team con Icona)
+ * Chiamare DOPO resetSimulationState e PRIMA della prima occasione
+ * @param {boolean} teamAHasIcona - Se teamA ha l'Icona
+ * @param {boolean} teamBHasIcona - Se teamB ha l'Icona
+ */
+const initIconaBonusForMatch = (teamAHasIcona, teamBHasIcona) => {
+    // 50% di probabilità per ogni team con Icona
+    if (teamAHasIcona) {
+        iconaBonusActive.teamA = checkChance(50);
+        if (iconaBonusActive.teamA) {
+            console.log('⭐ Icona TeamA: bonus +1 ATTIVO per questa partita!');
+        } else {
+            console.log('⭐ Icona TeamA: bonus +1 NON attivato (50% fallito)');
+        }
+    }
+    if (teamBHasIcona) {
+        iconaBonusActive.teamB = checkChance(50);
+        if (iconaBonusActive.teamB) {
+            console.log('⭐ Icona TeamB: bonus +1 ATTIVO per questa partita!');
+        } else {
+            console.log('⭐ Icona TeamB: bonus +1 NON attivato (50% fallito)');
+        }
+    }
+};
+
+/**
+ * Controlla se il bonus Icona è attivo per un team
+ * @param {string} teamKey - 'teamA' o 'teamB'
+ * @returns {boolean}
+ */
+const isIconaBonusActive = (teamKey) => {
+    return iconaBonusActive[teamKey] || false;
 };
 
 // ====================================================================
@@ -1647,10 +1957,12 @@ window.simulationLogic = {
     simulateOneOccasion,
     simulateOneOccasionWithLog,
     resetSimulationState,
+    initIconaBonusForMatch,
+    isIconaBonusActive,
     calculatePlayerModifier,
     calculateGroupModifier,
     rollDice,
     LEVEL_MODIFIERS
 };
 
-console.log("Simulazione.js v3.1 caricato - 60 abilita + log dettagliato");
+console.log("Simulazione.js v3.1 caricato - 60+ abilita + Abilita Uniche Icone + log dettagliato");
