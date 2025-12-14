@@ -14,10 +14,17 @@ window.Notifications = {
     notifications: [],
     unreadCount: 0,
 
+    // Listener Firestore
+    _unsubscribe: null,
+    _lastServerFetch: 0,
+    _serverNotificationsLoaded: false,
+
     // Configurazione
     config: {
         maxNotifications: 50,
-        persistDays: 7
+        persistDays: 7,
+        cacheDurationMs: 5 * 60 * 1000, // 5 minuti di cache
+        lazyLoad: true // Carica da server solo al click
     },
 
     // Tipi di notifica
@@ -115,11 +122,13 @@ window.Notifications = {
     },
 
     /**
-     * Carica notifiche da localStorage e Firestore
+     * Carica notifiche da localStorage (e opzionalmente Firestore)
      */
     async loadNotifications() {
         // Carica da localStorage
         const saved = localStorage.getItem('fanta_notifications');
+        const lastFetch = parseInt(localStorage.getItem('fanta_notifications_fetch') || '0');
+
         if (saved) {
             try {
                 this.notifications = JSON.parse(saved);
@@ -131,34 +140,54 @@ window.Notifications = {
             }
         }
 
-        // Carica da Firestore (notifiche server-side)
-        await this.fetchServerNotifications();
+        this._lastServerFetch = lastFetch;
+
+        // Se lazyLoad e' attivo, NON caricare da server all'avvio
+        // Le notifiche server verranno caricate al primo click sulla campanella
+        if (!this.config.lazyLoad) {
+            // Carica da Firestore solo se cache scaduta
+            const cacheExpired = Date.now() - lastFetch > this.config.cacheDurationMs;
+            if (cacheExpired) {
+                await this.fetchServerNotifications();
+            }
+        }
 
         this.updateUI();
     },
 
     /**
-     * Recupera notifiche dal server
+     * Recupera notifiche dal server (con cache check)
      */
-    async fetchServerNotifications() {
+    async fetchServerNotifications(forceRefresh = false) {
         if (!window.db || !window.firestoreTools) return;
 
         const teamId = window.InterfacciaCore?.currentTeamId;
         if (!teamId) return;
+
+        // Controlla se la cache e' ancora valida
+        const cacheExpired = Date.now() - this._lastServerFetch > this.config.cacheDurationMs;
+        if (!forceRefresh && !cacheExpired && this._serverNotificationsLoaded) {
+            console.log('[Notifiche] Usando cache locale (valida per altri ' +
+                Math.round((this.config.cacheDurationMs - (Date.now() - this._lastServerFetch)) / 1000) + 's)');
+            return;
+        }
 
         try {
             const { collection, query, where, getDocs, orderBy, limit } = window.firestoreTools;
             const appId = window.firestoreTools.appId;
             const notifPath = `artifacts/${appId}/public/data/notifications`;
 
+            // Query semplificata: solo per questo team (evita 'in' che richiede indice)
             const q = query(
                 collection(window.db, notifPath),
-                where('targetTeamId', 'in', [teamId, 'all']),
+                where('targetTeamId', '==', teamId),
                 orderBy('timestamp', 'desc'),
-                limit(20)
+                limit(15)
             );
 
             const snapshot = await getDocs(q);
+            let newCount = 0;
+
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const existing = this.notifications.find(n => n.id === doc.id);
@@ -168,12 +197,86 @@ window.Notifications = {
                         ...data,
                         timestamp: data.timestamp?.toMillis?.() || Date.now()
                     });
+                    newCount++;
                 }
             });
+
+            // Aggiorna timestamp fetch
+            this._lastServerFetch = Date.now();
+            this._serverNotificationsLoaded = true;
+            localStorage.setItem('fanta_notifications_fetch', this._lastServerFetch.toString());
+
+            if (newCount > 0) {
+                console.log(`[Notifiche] Caricate ${newCount} nuove notifiche dal server`);
+            }
 
             this.saveToLocalStorage();
         } catch (error) {
             console.warn("Errore caricamento notifiche server:", error);
+        }
+    },
+
+    /**
+     * Avvia listener realtime per nuove notifiche (usa meno letture del polling)
+     */
+    startRealtimeListener() {
+        if (this._unsubscribe) return; // Gia' attivo
+
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId || !window.db || !window.firestoreTools) return;
+
+        try {
+            const { collection, query, where, orderBy, limit, onSnapshot } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const notifPath = `artifacts/${appId}/public/data/notifications`;
+
+            const q = query(
+                collection(window.db, notifPath),
+                where('targetTeamId', '==', teamId),
+                orderBy('timestamp', 'desc'),
+                limit(10)
+            );
+
+            this._unsubscribe = onSnapshot(q, (snapshot) => {
+                let newCount = 0;
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const doc = change.doc;
+                        const data = doc.data();
+                        const existing = this.notifications.find(n => n.id === doc.id);
+                        if (!existing) {
+                            this.notifications.unshift({
+                                id: doc.id,
+                                ...data,
+                                timestamp: data.timestamp?.toMillis?.() || Date.now()
+                            });
+                            newCount++;
+                        }
+                    }
+                });
+
+                if (newCount > 0) {
+                    this.saveToLocalStorage();
+                    this.updateUI();
+                }
+            }, (error) => {
+                console.warn('[Notifiche] Errore listener:', error);
+            });
+
+            console.log('[Notifiche] Listener realtime avviato');
+        } catch (error) {
+            console.warn('[Notifiche] Impossibile avviare listener:', error);
+        }
+    },
+
+    /**
+     * Ferma listener realtime
+     */
+    stopRealtimeListener() {
+        if (this._unsubscribe) {
+            this._unsubscribe();
+            this._unsubscribe = null;
+            console.log('[Notifiche] Listener realtime fermato');
         }
     },
 
@@ -492,8 +595,17 @@ window.Notifications = {
     /**
      * Toggle dropdown
      */
-    toggleDropdown() {
+    async toggleDropdown() {
+        const wasHidden = this.dropdown.classList.contains('hidden');
         this.dropdown.classList.toggle('hidden');
+
+        // Lazy load: carica notifiche server al primo click
+        if (wasHidden && this.config.lazyLoad && !this._serverNotificationsLoaded) {
+            await this.fetchServerNotifications();
+            this.updateUI();
+            // Dopo il primo caricamento, avvia il listener realtime
+            this.startRealtimeListener();
+        }
     },
 
     /**
@@ -659,22 +771,32 @@ window.Notifications = {
     },
 
     /**
-     * Polling per nuove notifiche
+     * Polling per nuove notifiche (fallback se listener non disponibile)
+     * Con lazyLoad attivo, il polling parte solo dopo il primo click
      */
     startPolling() {
-        // Poll ogni 2 minuti
+        // Se lazyLoad e' attivo, non avviare polling automatico
+        // Il listener verra' avviato al primo click sulla campanella
+        if (this.config.lazyLoad) {
+            console.log('[Notifiche] LazyLoad attivo - polling disabilitato, listener partira al primo click');
+            return;
+        }
+
+        // Poll ogni 5 minuti (invece di 2) per risparmiare letture
         this.pollingInterval = setInterval(() => {
             this.fetchServerNotifications().then(() => this.updateUI());
-        }, 120000);
+        }, 300000); // 5 minuti
     },
 
     /**
      * Distruggi sistema notifiche
      */
     destroy() {
+        this.stopRealtimeListener();
         if (this.bellButton) this.bellButton.remove();
         if (this.dropdown) this.dropdown.remove();
         if (this.pollingInterval) clearInterval(this.pollingInterval);
+        this._serverNotificationsLoaded = false;
     }
 };
 
