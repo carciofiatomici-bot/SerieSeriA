@@ -220,11 +220,11 @@ window.checkCurrentTeamIsAdmin = async function() {
 
 // --- ROSA INIZIALE (5 GIOCATORI: P, D, C, C, A) ---
 window.INITIAL_SQUAD = [
-    { id: 'p001', name: 'Portiere Base', role: 'P', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
-    { id: 'd001', name: 'Difensore Base', role: 'D', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
-    { id: 'c001', name: 'Centrocampista Base 1', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, type: window.TYPE_TECNICA || 'Tecnica', abilities: [] },
-    { id: 'c002', name: 'Centrocampista Base 2', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, type: window.TYPE_VELOCITA || 'Velocita', abilities: [] },
-    { id: 'a001', name: 'Attaccante Base', role: 'A', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, type: window.TYPE_POTENZA || 'Potenza', abilities: [] }
+    { id: 'p001', name: 'Portiere Base', role: 'P', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
+    { id: 'd001', name: 'Difensore Base', role: 'D', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
+    { id: 'c001', name: 'Centrocampista Base 1', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_TECNICA || 'Tecnica', abilities: [] },
+    { id: 'c002', name: 'Centrocampista Base 2', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_VELOCITA || 'Velocita', abilities: [] },
+    { id: 'a001', name: 'Attaccante Base', role: 'A', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] }
 ];
 
 // --- HELPER GLOBALE PER NUMERI CASUALI ---

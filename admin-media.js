@@ -29,21 +29,22 @@ window.AdminMedia = {
         'Tutto Calcio Oggi.png'
     ],
 
-    // Default config
+    // Default config - ordinati per costo crescente (0-1500 CS)
+    // Formula: V + 5*G + 5*A + CS = Tot 5-0
     defaultConfig: {
         media: [
-            { id: '90plus', name: '90+', image: '90+.png', description: 'Emozioni fino all\'ultimo minuto', formula: { perWin: 25, perGoal: 20, perDraw: 5 } },
-            { id: 'assist_lab', name: 'Assist Lab', image: 'assist lab.png', description: 'L\'arte dell\'assist', formula: { perWin: 20, perGoal: 10, perDraw: 10, perAssist: 25 } },
-            { id: 'calcio_24', name: 'Calcio 24', image: 'calcio 24.png', description: 'Calcio 24 ore su 24', formula: { perWin: 30, perGoal: 15, perDraw: 10 } },
-            { id: 'calcio_totale', name: 'Calcio Totale', image: 'Calcio Totale.png', description: 'Copertura totale del calcio', formula: { perWin: 35, perGoal: 15, perDraw: 10 } },
-            { id: 'calcio_cuore', name: 'Calcio Cuore', image: 'calcio cuore.png', description: 'Il calcio con il cuore', formula: { perWin: 20, perGoal: 25, perDraw: 15 } },
-            { id: 'corner_club', name: 'Corner Club', image: 'corner club.png', description: 'Ogni angolo conta', formula: { perWin: 25, perGoal: 20, perDraw: 10 } },
-            { id: 'curva_podcast', name: 'Curva Podcast', image: 'curva podcast.png', description: 'Le voci dalla curva', formula: { perWin: 30, perGoal: 10, perDraw: 15 } },
-            { id: 'diretta_stadio', name: 'Diretta Stadio Net', image: 'Diretta stadio net.png', description: 'In diretta dallo stadio', formula: { perWin: 40, perGoal: 10, perDraw: 5 } },
-            { id: 'pallone_quartiere', name: 'Il Pallone Di Quartiere', image: 'Il Pallone Di Quartiere.png', description: 'Il calcio di quartiere', formula: { perWin: 20, perGoal: 15, perDraw: 20 } },
-            { id: 'panchina_aperta', name: 'Panchina Aperta', image: 'PANCHINA APERTA.png', description: 'Dalla panchina al campo', formula: { perWin: 25, perGoal: 20, perDraw: 15 } },
-            { id: 'tele_sport', name: 'Tele Sport Dragoncello', image: 'Tele Sport Dragoncello.png', description: 'La TV dello sport locale', formula: { perWin: 35, perGoal: 15, perDraw: 10 } },
-            { id: 'tutto_calcio', name: 'Tutto Calcio Oggi', image: 'Tutto Calcio Oggi.png', description: 'Tutto il calcio in un giorno', formula: { perWin: 30, perGoal: 20, perDraw: 10 } }
+            { id: 'pallone_quartiere', name: 'Il Pallone Di Quartiere', image: 'Il Pallone Di Quartiere.png', description: 'Il calcio di quartiere', cost: 0, expBonus: 0, formula: { perWin: 10, perGoal: 4, perDraw: 8, perAssist: 4, cleanSheet: 10 } },
+            { id: 'corner_club', name: 'Corner Club', image: 'corner club.png', description: 'Ogni angolo conta', cost: 500, expBonus: 0.0075, formula: { perWin: 12, perGoal: 5, perDraw: 6, perAssist: 4, cleanSheet: 13 } },
+            { id: 'panchina_aperta', name: 'Panchina Aperta', image: 'PANCHINA APERTA.png', description: 'Dalla panchina al campo', cost: 600, expBonus: 0.015, formula: { perWin: 15, perGoal: 5, perDraw: 7, perAssist: 5, cleanSheet: 15 } },
+            { id: '90plus', name: '90+', image: '90+.png', description: 'Emozioni fino all\'ultimo minuto', cost: 700, expBonus: 0.02, formula: { perWin: 17, perGoal: 6, perDraw: 6, perAssist: 5, cleanSheet: 17 } },
+            { id: 'calcio_cuore', name: 'Calcio Cuore', image: 'calcio cuore.png', description: 'Il calcio con il cuore', cost: 800, expBonus: 0.025, formula: { perWin: 18, perGoal: 6, perDraw: 8, perAssist: 6, cleanSheet: 18 } },
+            { id: 'calcio_24', name: 'Calcio 24', image: 'calcio 24.png', description: 'Calcio 24 ore su 24', cost: 900, expBonus: 0.035, formula: { perWin: 20, perGoal: 7, perDraw: 6, perAssist: 6, cleanSheet: 20 } },
+            { id: 'tele_sport', name: 'Tele Sport Dragoncello', image: 'Tele Sport Dragoncello.png', description: 'La TV dello sport locale', cost: 1000, expBonus: 0.045, formula: { perWin: 22, perGoal: 7, perDraw: 7, perAssist: 7, cleanSheet: 22 } },
+            { id: 'curva_podcast', name: 'Curva Podcast', image: 'curva podcast.png', description: 'Le voci dalla curva', cost: 1100, expBonus: 0.05, formula: { perWin: 24, perGoal: 7, perDraw: 8, perAssist: 8, cleanSheet: 22 } },
+            { id: 'diretta_stadio', name: 'Diretta Stadio Net', image: 'Diretta stadio net.png', description: 'In diretta dallo stadio', cost: 1200, expBonus: 0.055, formula: { perWin: 26, perGoal: 8, perDraw: 6, perAssist: 8, cleanSheet: 24 } },
+            { id: 'tutto_calcio', name: 'Tutto Calcio Oggi', image: 'Tutto Calcio Oggi.png', description: 'Tutto il calcio in un giorno', cost: 1300, expBonus: 0.06, formula: { perWin: 28, perGoal: 8, perDraw: 8, perAssist: 9, cleanSheet: 26 } },
+            { id: 'calcio_totale', name: 'Calcio Totale', image: 'Calcio Totale.png', description: 'Copertura totale del calcio', cost: 1400, expBonus: 0.07, formula: { perWin: 32, perGoal: 9, perDraw: 6, perAssist: 9, cleanSheet: 28 } },
+            { id: 'assist_lab', name: 'Assist Lab', image: 'assist lab.png', description: 'L\'arte dell\'assist', cost: 1500, expBonus: 0.075, formula: { perWin: 35, perGoal: 10, perDraw: 10, perAssist: 9, cleanSheet: 30 } }
         ],
         penaltyCost: 50,
         enabled: true

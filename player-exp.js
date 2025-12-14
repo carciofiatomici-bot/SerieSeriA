@@ -40,6 +40,7 @@
         // Limiti livello
         MAX_LEVEL_NORMAL: 20,
         MAX_LEVEL_ICON: 25,
+        MAX_LEVEL_BASE: 5,          // Livello max giocatori base (iniziali)
         MAX_LEVEL_COACH: 10,        // Livello max allenatore
 
         // EXP per azioni - getter dinamico
@@ -84,12 +85,23 @@
     /**
      * Restituisce il livello massimo per un giocatore
      * @param {Object} player - Oggetto giocatore
-     * @returns {number} Livello massimo (20 o 25)
+     * @returns {number} Livello massimo (5 per base, 20 normale, 25 icone)
      */
     function getMaxLevel(player) {
         // Verifica se il giocatore e un'icona
         const isIcon = player.isIcon || player.icon || player.tipo === 'icona';
-        return isIcon ? EXP_CONFIG.MAX_LEVEL_ICON : EXP_CONFIG.MAX_LEVEL_NORMAL;
+        if (isIcon) return EXP_CONFIG.MAX_LEVEL_ICON;
+
+        // Verifica se e un giocatore base (iniziale)
+        // Base players hanno: isBase=true, o nome che contiene "Base", o ID tipo p001/d001/c001/a001
+        const isBase = player.isBase ||
+                       (player.nome && player.nome.includes('Base')) ||
+                       (player.name && player.name.includes('Base')) ||
+                       (player.id && /^[pdca]00[1-9]$/.test(player.id));
+
+        if (isBase) return EXP_CONFIG.MAX_LEVEL_BASE;
+
+        return EXP_CONFIG.MAX_LEVEL_NORMAL;
     }
 
     /**

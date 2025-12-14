@@ -21,18 +21,19 @@ window.AdminSponsors = {
         'MONDO SErrande.png'
     ],
 
-    // Default config
+    // Default config - ordinati per costo crescente (0-1500 CS)
+    // Formula: V + 5*G + 5*A + CS = Tot 5-0
     defaultConfig: {
         sponsors: [
-            { id: 'apracadabra', name: 'Apracadabra', image: 'apracadabra.png', description: 'Magia nei risultati!', formula: { perWin: 40, perGoal: 15, perDraw: 10 } },
-            { id: 'assicurazioni_fortuna', name: 'Assicurazioni Fortuna', image: 'assicurazioni fortuna.png', description: 'La fortuna protegge i vincitori', formula: { perWin: 60, perGoal: 5, perDraw: 15 } },
-            { id: 'auto_spinta', name: 'Auto Spinta', image: 'auto spinta.png', description: 'Spingiamo la tua squadra al successo', formula: { perWin: 50, perGoal: 10, perDraw: 10 } },
-            { id: 'bar_sportivo', name: 'Bar Sportivo', image: 'bar sportivo.png', description: 'Dove si festeggia ogni vittoria', formula: { perWin: 35, perGoal: 20, perDraw: 15 } },
-            { id: 'birra_del_borgo', name: 'Birra del Borgo', image: 'birra del borgo.png', description: 'La birra dei campioni locali', formula: { perWin: 45, perGoal: 10, perDraw: 20 } },
-            { id: 'birra_grossa', name: 'Birra Grossa', image: 'birra grossa.png', description: 'Grande birra, grandi risultati', formula: { perWin: 30, perGoal: 25, perDraw: 10 } },
-            { id: 'birra_terzo_tempo', name: 'Birra Terzo Tempo', image: 'birra terzo tempo.png', description: 'Il terzo tempo inizia qui', formula: { perWin: 40, perGoal: 15, perDraw: 15 } },
-            { id: 'birrificio_pareggio', name: 'Birrificio del Pareggio', image: 'birrificio del pareggio.png', description: 'Anche il pareggio merita una birra', formula: { perWin: 25, perGoal: 10, perDraw: 40 } },
-            { id: 'mondo_serrande', name: 'Mondo Serrande', image: 'MONDO SErrande.png', description: 'Chiudiamo la porta agli avversari', formula: { perWin: 55, perGoal: 5, perDraw: 10, cleanSheet: 30 } }
+            { id: 'birrificio_pareggio', name: 'Birrificio del Pareggio', image: 'birrificio del pareggio.png', description: 'Anche il pareggio merita una birra', cost: 0, expBonus: 0, formula: { perWin: 10, perGoal: 4, perDraw: 8, perAssist: 4, cleanSheet: 10 } },
+            { id: 'bar_sportivo', name: 'Bar Sportivo', image: 'bar sportivo.png', description: 'Dove si festeggia ogni vittoria', cost: 500, expBonus: 0.01, formula: { perWin: 15, perGoal: 5, perDraw: 5, perAssist: 5, cleanSheet: 15 } },
+            { id: 'mondo_serrande', name: 'Mondo Serrande', image: 'MONDO SErrande.png', description: 'Chiudiamo la porta agli avversari', cost: 650, expBonus: 0.02, formula: { perWin: 18, perGoal: 6, perDraw: 6, perAssist: 6, cleanSheet: 18 } },
+            { id: 'auto_spinta', name: 'Auto Spinta', image: 'auto spinta.png', description: 'Spingiamo la tua squadra al successo', cost: 800, expBonus: 0.03, formula: { perWin: 20, perGoal: 7, perDraw: 6, perAssist: 7, cleanSheet: 20 } },
+            { id: 'birra_terzo_tempo', name: 'Birra Terzo Tempo', image: 'birra terzo tempo.png', description: 'Il terzo tempo inizia qui', cost: 950, expBonus: 0.04, formula: { perWin: 22, perGoal: 7, perDraw: 8, perAssist: 7, cleanSheet: 22 } },
+            { id: 'birra_del_borgo', name: 'Birra del Borgo', image: 'birra del borgo.png', description: 'La birra dei campioni locali', cost: 1100, expBonus: 0.05, formula: { perWin: 24, perGoal: 8, perDraw: 6, perAssist: 8, cleanSheet: 24 } },
+            { id: 'apracadabra', name: 'Apracadabra', image: 'apracadabra.png', description: 'Magia nei risultati!', cost: 1250, expBonus: 0.06, formula: { perWin: 28, perGoal: 8, perDraw: 8, perAssist: 8, cleanSheet: 26 } },
+            { id: 'birra_grossa', name: 'Birra Grossa', image: 'birra grossa.png', description: 'Grande birra, grandi risultati', cost: 1400, expBonus: 0.07, formula: { perWin: 32, perGoal: 9, perDraw: 6, perAssist: 9, cleanSheet: 28 } },
+            { id: 'assicurazioni_fortuna', name: 'Assicurazioni Fortuna', image: 'assicurazioni fortuna.png', description: 'La fortuna protegge i vincitori', cost: 1500, expBonus: 0.075, formula: { perWin: 35, perGoal: 10, perDraw: 10, perAssist: 9, cleanSheet: 30 } }
         ],
         penaltyCost: 50,
         enabled: true
