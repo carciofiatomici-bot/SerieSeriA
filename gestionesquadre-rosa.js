@@ -29,8 +29,13 @@ window.GestioneSquadreRosa = {
                 </button>
             </div>
 
-            <div class="bg-gray-700 p-6 rounded-lg border border-green-500">
-                <h3 class="text-2xl font-bold text-green-400 mb-4">I Tuoi Calciatori (Ordinati per Icona, Ruolo e Livello)</h3>
+            <div class="bg-gray-700 p-6 rounded-lg border border-green-500 relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-green-400">I Tuoi Calciatori (Ordinati per Icona, Ruolo e Livello)</h3>
+                    <button id="btn-toggle-licenzia"
+                            class="text-gray-400 hover:text-white hover:bg-gray-600 px-2 py-1 rounded transition text-xl"
+                            title="Mostra/Nascondi opzioni licenziamento">⚙️</button>
+                </div>
                 <div id="player-list-message" class="text-center mb-4 text-green-500"></div>
 
                 <div id="player-list" class="space-y-3">
@@ -54,7 +59,7 @@ window.GestioneSquadreRosa = {
         // Verifica se è Icona: tramite abilities OPPURE tramite iconaId nel teamData
         const isIcona = (player.abilities && player.abilities.includes('Icona')) ||
                         (teamData.iconaId && player.id === teamData.iconaId);
-        const captainMarker = isCaptain ? ' (CAPITANO)' : '';
+        const captainMarker = isCaptain ? ' Ⓒ' : '';
 
         // Marker Icona
         let iconaMarker = '';
@@ -130,7 +135,7 @@ window.GestioneSquadreRosa = {
                 Nomina Capitano
             </button>`;
 
-        // Bottone Licenziamento
+        // Bottone Licenziamento (nascosto di default, visibile tramite toggle ⚙️)
         const isLicenziabile = !isIcona;
         const licenziaButton = `
             <button data-player-id="${player.id}"
@@ -138,7 +143,7 @@ window.GestioneSquadreRosa = {
                     data-refund-cost="${refundCost}"
                     data-player-name="${player.name}"
                     data-action="licenzia"
-                    class="bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition duration-150 shadow-md
+                    class="licenzia-btn hidden bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition duration-150 shadow-md
                     ${isLicenziabile ? 'hover:bg-red-700' : 'opacity-50 cursor-not-allowed'}"
                     ${isLicenziabile ? '' : 'disabled'}>
                 Licenzia (Rimborso: ${refundCost} CS)
@@ -175,18 +180,20 @@ window.GestioneSquadreRosa = {
         // Border rosso se infortunato
         const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
 
-        // Indicatore statistiche (se feature attiva)
-        const statsIndicator = window.FeatureFlags?.isEnabled('playerStats')
-            ? '<span class="text-xs text-blue-400 ml-2" title="Clicca per vedere statistiche">📊</span>'
+        // Bottone statistiche (se feature attiva)
+        const statsButton = window.FeatureFlags?.isEnabled('playerStats')
+            ? `<button data-action="view-player-stats"
+                       data-player-id="${player.id}"
+                       data-player-name="${player.name}"
+                       data-player-role="${player.role}"
+                       class="absolute top-2 right-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900 hover:bg-opacity-30 px-1.5 py-1 rounded transition text-lg"
+                       title="Statistiche ${player.name}">📊</button>`
             : '';
 
         return `
-            <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
-                <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2 ${window.FeatureFlags?.isEnabled('playerStats') ? 'cursor-pointer hover:bg-gray-700 rounded p-2 -m-2 transition' : ''}"
-                     data-action="view-player-stats"
-                     data-player-id="${player.id}"
-                     data-player-name="${player.name}"
-                     data-player-role="${player.role}">
+            <div class="relative flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
+                ${statsButton}
+                <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
@@ -194,7 +201,6 @@ window.GestioneSquadreRosa = {
                             ${injuryMarker}
                             <span class="text-yellow-400">(${player.role})</span>
                             ${typeBadgeHtml}
-                            ${statsIndicator}
                         </div>
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
                         ${abilitiesHtml}
@@ -257,6 +263,32 @@ window.GestioneSquadreRosa = {
                     window.Training.openPanel();
                 } else {
                     if (window.Toast) window.Toast.error("Sistema Allenamento non disponibile");
+                }
+            });
+        }
+
+        // Bottone Toggle Licenziamento (⚙️)
+        const btnToggleLicenzia = document.getElementById('btn-toggle-licenzia');
+        if (btnToggleLicenzia) {
+            btnToggleLicenzia.addEventListener('click', () => {
+                const licenziaButtons = document.querySelectorAll('.licenzia-btn');
+                const isHidden = licenziaButtons[0]?.classList.contains('hidden');
+
+                licenziaButtons.forEach(btn => {
+                    if (isHidden) {
+                        btn.classList.remove('hidden');
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+                });
+
+                // Cambia aspetto del bottone toggle per indicare stato
+                if (isHidden) {
+                    btnToggleLicenzia.classList.add('text-red-400', 'bg-red-900', 'bg-opacity-30');
+                    btnToggleLicenzia.classList.remove('text-gray-400');
+                } else {
+                    btnToggleLicenzia.classList.remove('text-red-400', 'bg-red-900', 'bg-opacity-30');
+                    btnToggleLicenzia.classList.add('text-gray-400');
                 }
             });
         }

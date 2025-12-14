@@ -34,7 +34,7 @@ MANUALE DELLE ABILITÀ
 (3) Specialista Costruzione: Fase 1 (in attacco). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
 (3) Specialista Tiro: Fase 3 (in attacco). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
 (4) Multiruolo: Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
-(4) Tiro Potente: (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
+(4) Tiro Potente: (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di tirare 2d10 invece che 1d20 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
 (4) Veterano: Nelle ultime 5 occasioni della partita (dal 35 al 40), il giocatore aggiunge +1.5 al suo modificatore.
 (4) Talento Precoce: Aggiunge un bonus fisso di +1.5 al modificatore base, simulando un potenziale maggiore del livello attuale. (il livello massimo del giocatore scende a 18).
 (4) Jolly Tattico: A inizio partita, il giocatore può scegliere di cambiare la sua "Tipologia" (Potenza/Tecnica/Velocità)  per adattarsi a più avversari possibile. La scelta è definitiva per tutto il match.
@@ -213,17 +213,17 @@ MANUALE DELLE ABILITÀ
 (Riservate ai capitani scelti alla creazione delle squadre - Rarità 5)
 
 (5) Icona: A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra.
-(5) Fatto d'acciaio: (Croc): Non può infortunarsi, costo cure 0. Può avere "regista" anche se non è centrocampista.
-(5) L'uomo in più: (Fosco): Quando una fase in attacco verrebbe interrotta, aggiungi +3 al modificatore e ricontrolla (max 5 volte).
-(5) Tiro Dritto: (Amedemo): Se unico attaccante, Fase 3 assegnata a lui (100%). Mod +3.5, cala di 0.5 per ogni goal. Critico 1-6%.
-(5) Avanti un altro: (Antony): Probabilità infortunio avversari 7%. In difesa Fase 2, mod +2.
+(5) Fatto d'acciaio: (Croccante): Non può infortunarsi, costo cure infortunio 0. Può avere "regista" anche se non è centrocampista. +2 modificatore in difesa.
+(5) L'uomo in più: (Fosco): Quando una fase in attacco verrebbe interrotta, aggiungi +3 al modificatore e ricontrolla (max 5 volte a partita).
+(5) Tiro Dritto: (Amedemo): Se unico attaccante, Fase 3 assegnata a lui (100%). Mod +3.5, cala di 0.5 per ogni goal realizzato grazie a questa abilità. Critico 1-6%.
+(5) Avanti un altro: (Antony): A fine partita la probabilità di infortunio degli avversari è di 7%. In difesa Fase 2, mod +2.
 (5) Contrasto di gomito: (Luka): In fasi difensive mod +2. 1% di far fallire automaticamente la fase avversaria.
-(5) Calcolo delle probabilità: (Il Cap): Fase Costruzione tira 2d20 (sceglie alto). Bonus costruzione applicati anche in attacco.
-(5) Amici di panchina: (Shikanto): Gioca anche se infortunato. Dalla panchina passa le abilità al giocatore attivo. In attacco costruzione +2.
-(5) Continua a provare: (Gladio): Tira sempre 2d20 e fa la media. Attacco -2 mod, Difesa +2 mod.
-(5) Stazionario: (Cocco): Se non partecipa accumula +0.5 (max +3.0). A +5.0 gioca obbligatoriamente e resetta.
-(5) Osservatore: (Mark Falco): Se portiere in Fase 3, annulla abilità avversaria e aggiunge il livello al proprio mod. Riduce i malus subiti di 1.
-(5) Relax: (Sandro Diaz): Modificatore "Relax". Difesa -1, Attacco +1. Si somma al base. Cap a +/- 5.0.
-(5) Scheggia impazzita: (Blatta): Se unico difensore, partecipa al 100% alla Fase 2. Ogni partecipazione da +0.2 (max +5.0).
-(5) Assist-man: (Meliodas): Se vince costruzione attacco, partecipa 100% a Fase 2. Non tira mai in Fase 3 (sempre assist). +1.0 mod per ogni assist.
-(5) Parata Laser: (solamente giocatore icona Simone ID: simo): In Fase 3, il Valore Tiro avversario è ridotto di -1 cumulativo per ogni parata effettuata in precedenza (max -5). La probabilità di critico dell'attaccante scende all'1%.
+(5) Calcolo delle probabilità: (Il Cap): Fase Costruzione tira 2d20 (sceglie il più alto). Bonus costruzione applicati anche in fase 2 in attacco.
+(5) Amici di panchina: (Shikanto): Può essere messo in panchina anche se infortunato. Dalla panchina passa le abilità al giocatore attivo. In attacco costruzione +2. Può imparare tutte le abilità dei centrocampisti.
+(5) Continua a provare: (Gladio): Tira sempre 2d20 e fa la media. Ogni folta che fallisce in una fase guadagna +0.5 al modificatore (max 6.0)
+(5) Stazionario: (Cocco): Se non partecipa accumula bonus al modificatore pari a +0.5 per ogni fase a cui non partecipa (max +5.0). A +5.0 qualsiasi fase si sta giocando lui partecipa e poi resetta il modificatore.
+(5) Osservatore: (Mark Falco): Se portiere in Fase 3, annulla un'abilità avversaria e aggiunge il livello dell'abilità rimossa al proprio mod (comune +1, rara+2, epica+3, leggendaria +4), se non toglie nessuna abilità considera comunque +1. Riduce i malus al modificatore subiti di 1.
+(5) Relax: (Sandro Diaz): Modificatore aggiuntivo chiamato "Relax".se gioca fasi in Difesa: modificatore relax -1,se gioca fasi in Attacco: modificatore relax +1. Si somma al modificatore base. Quando +/- 5.0 il modificatore non cambia più.
+(5) Scheggia impazzita: (Blatta): Se unico difensore, partecipa al 100% alla Fase 2 (come difensore). Ogni partecipazione da +0.2 (max +5.0).
+(5) Assist-man: (Meliodas): Se vince fase costruzione in attacco, partecipa 100% a Fase 2 in attacco. Non partecipa mai in Fase 3 (sempre assist). +1.0 mod per ogni assist.
+(5) Parata Laser: (Simone): In Fase 3, il Valore Tiro avversario è ridotto di -1 cumulativo per ogni parata effettuata in precedenza (max -5), quando prende un goal perde il bonus. La probabilità di critico dell'attaccante scende all'1%.

@@ -576,13 +576,18 @@
 
             <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
             <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20" style="padding-top: calc(0.5rem + 1.5px); padding-bottom: calc(0.5rem + 1.5px);">
-                <!-- RIGA NOME SQUADRA + DIVISA -->
-                <div class="flex justify-center items-stretch mb-3 gap-3 sm:gap-6 md:gap-10">
-                    <!-- BOX NOME SQUADRA (sinistra/centro) -->
+                <!-- RIGA LIVELLO ROSA + NOME SQUADRA + DIVISA -->
+                <div class="flex justify-center items-stretch mb-3 gap-2 sm:gap-4 md:gap-6">
+                    <!-- BOX LIVELLO MEDIO ROSA (sinistra) -->
+                    <div class="py-1 px-2 sm:px-3 bg-gray-700 rounded-lg border border-green-500 flex flex-col items-center justify-center min-w-0">
+                        <p class="text-[9px] sm:text-[10px] text-gray-300 font-semibold">📈 Lv. Rosa</p>
+                        <p class="leading-tight"><span id="stat-rosa-level" class="text-sm sm:text-base font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[8px] sm:text-[10px] text-gray-400">(0)</span></p>
+                    </div>
+                    <!-- BOX NOME SQUADRA (centro) -->
                     <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center">
                         <h2 id="team-dashboard-title" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
                     </div>
-                    <!-- BOX DIVISA SQUADRA (accanto al nome) -->
+                    <!-- BOX DIVISA SQUADRA (destra) -->
                     <div id="team-uniform-box" class="p-1 sm:p-1.5 bg-gray-800 rounded-lg border-2 border-purple-500 text-center shadow-lg flex items-center justify-center gap-1 cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
                         <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-10 sm:h-10">
                             <defs></defs>
@@ -655,11 +660,6 @@
                         <span class="text-base sm:text-lg">🏟️</span>
                         <span>Stadio</span>
                     </button>
-                    <!-- Statistica: Livello Medio Rosa -->
-                    <div class="flex-1 py-2 px-2 bg-gray-700 rounded-lg shadow-xl text-center min-w-0">
-                        <p class="text-[10px] sm:text-xs text-gray-300 font-semibold">📈 Livello Rosa</p>
-                        <p class="mt-0.5"><span id="stat-rosa-level" class="text-base sm:text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[10px] sm:text-xs text-gray-400">(0)</span></p>
-                    </div>
                     <!-- Bottone Hall of Fame -->
                     <button id="btn-hall-of-fame"
                             class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
@@ -891,12 +891,12 @@
         <!-- 5. CONTENUTO AREA DRAFT (Utente) - NASCOSTO -->
         <div id="draft-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Draft Calciatori</h2>
-             <div id="draft-tools-container" class="mt-6">
-                <p class="text-center text-gray-400">Strumenti di gestione Draft in caricamento...</p>
-             </div>
-             <!-- CONTAINER DRAFT STATUS BOX (giocatori disponibili e ordine draft) - SOTTO il box dei round -->
-             <div id="draft-status-box-container" class="mt-4 hidden">
+             <!-- CONTAINER DRAFT STATUS BOX (giocatori disponibili e ordine draft) - SOPRA il box turno -->
+             <div id="draft-status-box-container" class="mt-6 hidden">
                  <!-- Il box stato draft viene renderizzato qui dinamicamente da draft-status-box.js -->
+             </div>
+             <div id="draft-tools-container" class="mt-4">
+                <p class="text-center text-gray-400">Strumenti di gestione Draft in caricamento...</p>
              </div>
              <button id="draft-back-button"
                     class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
