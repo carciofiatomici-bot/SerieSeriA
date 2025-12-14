@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allenamento Calciatore Pro V3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a202c;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #4ade80;
+            cursor: none;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .menu-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+            pointer-events: auto;
+            max-width: 500px;
+            width: 90%;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn:hover { transform: scale(1.02); }
+        .btn-role { background: #059669; }
+        
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        #feedback {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 4rem;
+            font-weight: 800;
+            color: yellow;
+            text-shadow: 3px 3px 0 #000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud" style="display: none;">
+        <div>Ruolo: <span id="hud-role"></span></div>
+        <div>Tentativo: <span id="hud-attempt">1</span>/3</div>
+        <div>Punteggio: <span id="hud-score">0</span></div>
+    </div>
+
+    <div id="feedback">GOL!</div>
+
+    <div id="ui-layer">
+        <div id="main-menu" class="menu-card">
+            <h1 class="text-3xl font-bold mb-4 text-gray-800">⚽ Training Camp</h1>
+            <p class="text-gray-600 mb-6">Seleziona il tuo ruolo:</p>
+            <button class="btn btn-role" onclick="startGame('gk')">🧤 Portiere (Para)</button>
+            <button class="btn btn-role" onclick="startGame('def')">🛡️ Difensore (Intercetta)</button>
+            <button class="btn btn-role" onclick="startGame('mid')">👟 Centrocampista (Passa)</button>
+            <button class="btn btn-role" onclick="startGame('fwd')">⚡ Attaccante (Segna)</button>
+        </div>
+
+        <div id="game-over" class="menu-card" style="display: none;">
+            <h2 class="text-3xl font-bold mb-2">Fine Sessione!</h2>
+            <p class="text-xl mb-4">Punteggio: <span id="final-score" class="font-bold text-blue-600"></span>/3</p>
+            <button class="btn" onclick="showMenu()">Menu Principale</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const mainMenu = document.getElementById('main-menu');
+    const gameOverScreen = document.getElementById('game-over');
+    const hud = document.getElementById('hud');
+    const feedbackEl = document.getElementById('feedback');
+    
+    // Game State
+    let gameState = 'MENU';
+    let role = ''; 
+    let score = 0;
+    let attempts = 0;
+    let frameId;
+    let mouse = { x: 0, y: 0 };
+    
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Input Handling
+    window.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+    });
+    
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.touches[0].clientX - rect.left;
+        mouse.y = e.touches[0].clientY - rect.top;
+    }, {passive: false});
+
+    canvas.addEventListener('mousedown', () => handleInput());
+    canvas.addEventListener('touchstart', (e) => { handleInput(); });
+
+    // Objects
+    let player = { x: 0, y: 0, radius: 25, color: '#2563eb' };
+    let ball = { x: 0, y: 0, radius: 12, vx: 0, vy: 0, active: false };
+    let targets = [];
+
+    // --- LOGICA DI GIOCO ---
+
+    function startGame(selectedRole) {
+        role = selectedRole;
+        gameState = 'PLAYING';
+        score = 0;
+        attempts = 0;
+        
+        mainMenu.style.display = 'none';
+        gameOverScreen.style.display = 'none';
+        hud.style.display = 'block';
+        canvas.style.cursor = (role === 'mid' || role === 'fwd') ? 'crosshair' : 'none';
+
+        updateHud();
+        resetRound();
+        gameLoop();
+    }
+
+    function resetRound() {
+        if (attempts >= 3) {
+            endGame();
+            return;
+        }
+
+        if (role === 'gk') setupGoalkeeper();
+        else if (role === 'def') setupDefender();
+        else if (role === 'mid') setupMidfielder();
+        else if (role === 'fwd') setupStriker();
+        
+        updateHud();
+    }
+
+    // --- SETUP RUOLI ---
+
+    function setupGoalkeeper() {
+        // Portiere fisso sulla linea di porta in basso
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 80; 
+        player.radius = 40; // Hitbox più grande per facilitare
+        
+        ball.active = true;
+        ball.x = canvas.width / 2;
+        ball.y = 50; // Parte dall'alto
+        
+        // Traiettoria verso la porta (random X)
+        const targetX = (canvas.width / 2 - 200) + Math.random() * 400;
+        const targetY = canvas.height + 50; // Oltre il fondo
+        
+        const angle = Math.atan2(targetY - ball.y, targetX - ball.x);
+        const speed = 7; // Velocità moderata
+        
+        ball.vx = Math.cos(angle) * speed;
+        ball.vy = Math.sin(angle) * speed;
+    }
+
+    function setupDefender() {
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 150;
+        player.radius = 20;
+
+        // Nemico parte dall'alto
+        targets = [{
+            x: Math.random() * (canvas.width - 200) + 100,
+            y: -60,
+            radius: 30, // Corpo nemico
+            speed: 3,   // Lento
+            hasBall: true
+        }];
+    }
+
+    function setupMidfielder() {
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 100;
+        
+        ball.x = player.x;
+        ball.y = player.y;
+        ball.active = false;
+        
+        targets = [];
+        for(let i=0; i<3; i++) {
+            targets.push({
+                x: Math.random() * (canvas.width - 100) + 50,
+                y: Math.random() * (canvas.height * 0.5) + 50,
+                radius: 25,
+                vx: (Math.random() > 0.5 ? 1 : -1) * 3, // Destra o sinistra
+                vy: 0, // Moto orizzontale più prevedibile
+                type: 'teammate'
+            });
+        }
+    }
+
+    function setupStriker() {
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 100;
+        
+        ball.x = player.x;
+        ball.y = player.y;
+        ball.active = false;
+        
+        // Portiere nemico
+        targets = [{
+            x: canvas.width / 2,
+            y: 80,
+            width: 80,  // Hitbox larga
+            height: 30,
+            vx: 4,
+            type: 'gk_enemy'
+        }];
+    }
+
+    // --- INPUT ---
+
+    function handleInput() {
+        if (gameState !== 'PLAYING') return;
+
+        if (role === 'mid' && !ball.active) {
+            const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+            const speed = 12;
+            ball.vx = Math.cos(angle) * speed;
+            ball.vy = Math.sin(angle) * speed;
+            ball.active = true;
+        } else if (role === 'fwd' && !ball.active) {
+            const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+            const speed = 18;
+            ball.vx = Math.cos(angle) * speed;
+            ball.vy = Math.sin(angle) * speed;
+            ball.active = true;
+        }
+    }
+
+    // --- UPDATE ---
+
+    function update() {
+        if (role === 'gk') updateGK();
+        if (role === 'def') updateDef();
+        if (role === 'mid') updateMid();
+        if (role === 'fwd') updateFwd();
+    }
+
+    function updateGK() {
+        // Il portiere si muove SOLO orizzontalmente sulla linea
+        player.x = mouse.x;
+        // Limita ai bordi
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        // Collisione Semplificata (Cerchio vs Cerchio) con tolleranza alta
+        const dx = ball.x - player.x;
+        const dy = ball.y - player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        // Somma raggi + margine di 10px
+        if (dist < (player.radius + ball.radius + 10)) {
+            showFeedback("PARATA!", "green");
+            score++;
+            nextAttempt();
+        } else if (ball.y > canvas.height) {
+            showFeedback("GOL SUBITO!", "red");
+            nextAttempt();
+        }
+    }
+
+    function updateDef() {
+        player.x = mouse.x;
+        player.y = mouse.y;
+
+        const enemy = targets[0];
+        if (!enemy) return;
+
+        enemy.y += enemy.speed;
+
+        // Posizione palla MOLTO distinta dal corpo
+        // Il corpo è a enemy.y
+        // La palla è molto più avanti (verso il giocatore)
+        const ballDistFromFeet = 50; 
+        const enemyBallX = enemy.x;
+        const enemyBallY = enemy.y + ballDistFromFeet;
+        const enemyBallRadius = 18;
+
+        // Distanza Player -> Corpo Nemico (FALLO)
+        // Raggio collisione corpo ridotto leggermente per essere meno punitivo
+        const distBody = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+        
+        // Distanza Player -> Palla (RECUPERO)
+        // Raggio collisione palla aumentato per essere più facile
+        const distBall = Math.hypot(player.x - enemyBallX, player.y - enemyBallY);
+
+        // Logica prioritaria: se tocco la palla è ok, anche se sono vicino al corpo
+        // Ma se tocco TROPPO il corpo prima della palla è fallo.
+        
+        if (distBall < (player.radius + enemyBallRadius + 5)) {
+            showFeedback("PRESA!", "green");
+            score++;
+            nextAttempt();
+        } else if (distBody < (player.radius + enemy.radius - 5)) { 
+            // -5 rende il corpo leggermente più piccolo della grafica
+            showFeedback("FALLO!", "red");
+            nextAttempt();
+        } else if (enemy.y > canvas.height) {
+            showFeedback("PERSO!", "orange");
+            nextAttempt();
+        }
+    }
+
+    function updateMid() {
+        targets.forEach(t => {
+            t.x += t.vx;
+            if (t.x < 50 || t.x > canvas.width - 50) t.vx *= -1;
+        });
+
+        if (ball.active) {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            let hit = false;
+            targets.forEach((t, index) => {
+                const dist = Math.hypot(ball.x - t.x, ball.y - t.y);
+                if (dist < (ball.radius + t.radius + 5)) {
+                    showFeedback("ASSIST!", "green");
+                    score++;
+                    hit = true;
+                    targets.splice(index, 1); // Rimuovi
+                }
+            });
+
+            if (hit) nextAttempt();
+            else if (ball.x < 0 || ball.x > canvas.width || ball.y < 0 || ball.y > canvas.height) {
+                showFeedback("FUORI!", "orange");
+                nextAttempt();
+            }
+        }
+    }
+
+    function updateFwd() {
+        const gk = targets[0];
+        
+        // Movimento Portiere nemico
+        gk.x += gk.vx;
+        const goalCenter = canvas.width / 2;
+        if (gk.x < goalCenter - 120 || gk.x > goalCenter + 120) {
+            gk.vx *= -1;
+        }
+
+        if (ball.active) {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Collisione Portiere Nemico (Rettangolo AABB)
+            // Hitbox generosa
+            if (ball.x > gk.x - (gk.width/2 + 10) && 
+                ball.x < gk.x + (gk.width/2 + 10) &&
+                ball.y > gk.y - (gk.height/2 + 10) && 
+                ball.y < gk.y + (gk.height/2 + 15)) {
+                
+                showFeedback("PARATA DEL PORTIERE!", "red");
+                nextAttempt();
+                return;
+            }
+
+            // GOL
+            if (ball.y < 60) {
+                // Larghezza porta circa 300px
+                if (ball.x > goalCenter - 150 && ball.x < goalCenter + 150) {
+                    showFeedback("GOOOOL!", "green");
+                    score++;
+                } else {
+                    showFeedback("FUORI!", "orange");
+                }
+                nextAttempt();
+            }
+        }
+    }
+
+    function nextAttempt() {
+        ball.active = false;
+        attempts++;
+        setTimeout(() => {
+            if (gameState === 'PLAYING') resetRound();
+        }, 1500);
+    }
+
+    function endGame() {
+        gameState = 'GAMEOVER';
+        canvas.style.cursor = 'default';
+        hud.style.display = 'none';
+        gameOverScreen.style.display = 'block';
+        document.getElementById('final-score').innerText = score;
+    }
+
+    function showMenu() {
+        gameOverScreen.style.display = 'none';
+        mainMenu.style.display = 'block';
+        gameState = 'MENU';
+        ctx.fillStyle = '#4ade80';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function showFeedback(text, color) {
+        feedbackEl.innerText = text;
+        feedbackEl.style.color = color === 'green' ? '#bbf7d0' : (color === 'red' ? '#fecaca' : '#fde047');
+        feedbackEl.style.opacity = 1;
+        feedbackEl.style.top = "50%"; // Centrato
+        
+        setTimeout(() => {
+            feedbackEl.style.opacity = 0;
+            feedbackEl.style.top = "40%";
+        }, 800);
+    }
+
+    function updateHud() {
+        const roles = { 'gk': 'Portiere', 'def': 'Difensore', 'mid': 'Centrocampista', 'fwd': 'Attaccante' };
+        document.getElementById('hud-role').innerText = roles[role];
+        document.getElementById('hud-attempt').innerText = Math.min(attempts + 1, 3);
+        document.getElementById('hud-score').innerText = score;
+    }
+
+    // --- DRAW ---
+
+    function draw() {
+        ctx.fillStyle = '#4ade80';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Righe Campo
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 4;
+        
+        if (role === 'gk' || role === 'fwd') {
+            // Porta e area
+            ctx.strokeRect(canvas.width/2 - 250, role === 'gk' ? canvas.height - 200 : 0, 500, 200);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            // Disegna la linea di porta
+            const goalY = role === 'gk' ? canvas.height - 10 : 10;
+            ctx.fillRect(canvas.width/2 - 150, goalY, 300, 5);
+        } else {
+            // Centrocampo
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, 80, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height/2);
+            ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.stroke();
+        }
+
+        if (gameState !== 'PLAYING') return;
+
+        // Disegna Noi (Player)
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = player.color;
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // Guanti per il portiere (visual)
+        if (role === 'gk') {
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(player.x - 25, player.y, 10, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(player.x + 25, player.y, 10, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Targets / Nemici
+        if (role === 'def') {
+            const enemy = targets[0];
+            if (enemy) {
+                // Corpo Nemico
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#ef4444'; // Rosso
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('AVV', enemy.x, enemy.y + 5);
+
+                // Palla Nemica (Ben separata)
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y + 50, 15, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.strokeStyle = 'black';
+                ctx.stroke();
+                
+                // Linea tratteggiata che collega nemico e palla (per far capire che sono uniti)
+                ctx.beginPath();
+                ctx.moveTo(enemy.x, enemy.y + enemy.radius);
+                ctx.lineTo(enemy.x, enemy.y + 35);
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        } else if (role === 'fwd') {
+            const gk = targets[0];
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(gk.x - gk.width/2, gk.y - gk.height/2, gk.width, gk.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PORTIERE', gk.x, gk.y + 4);
+        } else if (role === 'mid') {
+            targets.forEach(t => {
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#fde047'; // Bordo Giallo
+                ctx.stroke();
+            });
+        }
+
+        // Palla Libera
+        if (role !== 'def') {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Mirino
+        if ((role === 'mid' || role === 'fwd') && !ball.active) {
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Cursore mira
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI*2);
+            ctx.fillStyle = 'yellow';
+            ctx.fill();
+        }
+    }
+
+    function gameLoop() {
+        if (gameState === 'PLAYING') {
+            update();
+            draw();
+            frameId = requestAnimationFrame(gameLoop);
+        }
+    }
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+</script>
+</body>
+</html>

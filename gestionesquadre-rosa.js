@@ -145,6 +145,33 @@ window.GestioneSquadreRosa = {
             </button>
         `;
 
+        // Bottone Allenamento EXP (se feature abilitata) - cooldown per ruolo
+        let trainingExpButton = '';
+        if (window.FeatureFlags?.isEnabled('trainingExp')) {
+            const isInCooldown = window.TrainingExpMinigame?.isInCooldown(player.role);
+            const testMode = window.FeatureFlags?.isEnabled('trainingExpTestMode');
+
+            if (isInCooldown && !testMode) {
+                // Mostra countdown invece del bottone (per questo ruolo)
+                const countdown = window.TrainingExpMinigame?.getCooldownCountdown() || '...';
+                trainingExpButton = `
+                    <div class="text-xs text-orange-400 bg-orange-900 bg-opacity-30 px-3 py-2 rounded-lg border border-orange-600 flex items-center gap-1">
+                        <span>⏳</span> ${player.role} gia allenato (${countdown})
+                    </div>
+                `;
+            } else {
+                trainingExpButton = `
+                    <button data-player-id="${player.id}"
+                            data-player-name="${player.name}"
+                            data-player-role="${player.role}"
+                            data-action="training-exp"
+                            class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-sm px-3 py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition duration-150 shadow-md flex items-center gap-1">
+                        <span>🎮</span> Allenamento EXP${testMode ? ' (Test)' : ''}
+                    </button>
+                `;
+            }
+        }
+
         // Border rosso se infortunato
         const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
 
@@ -166,6 +193,7 @@ window.GestioneSquadreRosa = {
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto items-center">
+                    ${trainingExpButton}
                     ${captainButton}
                     ${licenziaButton}
                 </div>
@@ -190,6 +218,8 @@ window.GestioneSquadreRosa = {
                     this.handleCaptainAssignment(target.dataset.playerId, target.dataset.playerName, context);
                 } else if (target.dataset.action === 'open-equipment') {
                     window.EquipmentUI?.showEquipmentModal(target.dataset.playerId, target.dataset.playerName, context);
+                } else if (target.dataset.action === 'training-exp') {
+                    this.handleTrainingExp(target.dataset.playerId, target.dataset.playerName, target.dataset.playerRole, context);
                 }
             });
         }
@@ -260,6 +290,117 @@ window.GestioneSquadreRosa = {
         } catch (error) {
             console.error("Errore nell'assegnazione del Capitano:", error);
             displayMessage(msgContainerId, `Errore: Impossibile nominare ${newCaptainName} Capitano. ${error.message}`, 'error');
+        }
+    },
+
+    /**
+     * Gestisce il click sul bottone Allenamento EXP
+     */
+    async handleTrainingExp(playerId, playerName, playerRole, context) {
+        const { currentTeamId, currentTeamData, loadTeamDataFromFirestore } = context;
+        const { displayMessage } = window.GestioneSquadreUtils;
+        const msgContainerId = 'player-list-message';
+
+        // Trova giocatore nella rosa
+        const player = currentTeamData.players.find(p => p.id === playerId);
+        if (!player) {
+            displayMessage(msgContainerId, 'Giocatore non trovato!', 'error');
+            return;
+        }
+
+        // Verifica cooldown per questo ruolo (tranne se in test mode)
+        const testMode = window.FeatureFlags?.isEnabled('trainingExpTestMode');
+        if (!testMode && window.TrainingExpMinigame?.isInCooldown(player.role)) {
+            displayMessage(msgContainerId, `Ruolo ${player.role} gia allenato oggi! Aspetta fino a mezzanotte.`, 'warning');
+            return;
+        }
+
+        // Apri minigioco con callback
+        window.TrainingExpMinigame?.open(player, async (score) => {
+            // score = -1 significa annullato, 0-3 significa completato
+            if (score < 0) {
+                displayMessage(msgContainerId, 'Allenamento annullato', 'info');
+                return; // Non impostare cooldown se annullato
+            }
+
+            // Calcola XP (0 se test mode, usa valori da RewardsConfig)
+            const xpPerSuccess = player.role === 'P'
+                ? (window.RewardsConfig?.expTrainingGK || 20)
+                : (window.RewardsConfig?.expTrainingField || 40);
+            const xpGained = testMode ? 0 : score * xpPerSuccess;
+
+            if (xpGained > 0) {
+                // Applica XP al giocatore
+                if (window.PlayerExp) {
+                    // Migra giocatore se necessario
+                    if (player.exp === undefined) {
+                        window.PlayerExp.migratePlayer(player);
+                    }
+
+                    const oldLevel = player.level;
+                    player.exp = (player.exp || 0) + xpGained;
+
+                    // Verifica level up
+                    const result = window.PlayerExp.checkLevelUp(player);
+
+                    // Salva su Firestore
+                    await this.savePlayerExpToFirestore(player, context);
+
+                    // Mostra feedback
+                    let message = `${playerName} ha guadagnato ${xpGained} EXP!`;
+                    if (result && result.levelsGained > 0) {
+                        message += ` LEVEL UP! Ora e livello ${player.level}!`;
+                        if (window.PlayerExpUI?.showLevelUpNotification) {
+                            window.PlayerExpUI.showLevelUpNotification(player, oldLevel, player.level);
+                        }
+                    }
+                    displayMessage(msgContainerId, message, 'success');
+                }
+            } else if (testMode) {
+                displayMessage(msgContainerId, `Modalita test: ${score}/3 successi (0 EXP assegnati)`, 'info');
+            } else if (score === 0) {
+                displayMessage(msgContainerId, `${playerName}: nessun successo, niente EXP guadagnati`, 'info');
+            }
+
+            // Imposta cooldown per questo ruolo (tranne se test mode)
+            // A questo punto score >= 0 (annullato gestito sopra con return)
+            if (!testMode) {
+                await window.TrainingExpMinigame?.setCooldown(currentTeamId, player.role);
+            }
+
+            // Aggiorna vista rosa
+            loadTeamDataFromFirestore(currentTeamId, 'rosa');
+        });
+    },
+
+    /**
+     * Salva l'EXP del giocatore su Firestore
+     */
+    async savePlayerExpToFirestore(player, context) {
+        const { db, firestoreTools, TEAMS_COLLECTION_PATH, currentTeamId, currentTeamData } = context;
+
+        try {
+            const { doc, updateDoc } = firestoreTools;
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+
+            // Aggiorna il giocatore nell'array players
+            const updatedPlayers = currentTeamData.players.map(p =>
+                p.id === player.id
+                    ? { ...p, exp: player.exp, level: player.level, expToNextLevel: player.expToNextLevel }
+                    : p
+            );
+
+            await updateDoc(teamDocRef, { players: updatedPlayers });
+
+            // Aggiorna anche in memoria
+            currentTeamData.players = updatedPlayers;
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.players = updatedPlayers;
+            }
+
+            console.log(`[GestioneSquadreRosa] EXP salvato per ${player.name}: ${player.exp} XP, Livello ${player.level}`);
+        } catch (error) {
+            console.error('[GestioneSquadreRosa] Errore salvataggio EXP:', error);
         }
     },
 

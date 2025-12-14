@@ -366,6 +366,38 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-cyan-400"><strong>Formula costo:</strong> 150 + (100 x bonus)</p>
                 <p class="mt-2 text-yellow-400">Potenzia i tuoi giocatori con l'equipaggiamento giusto!</p>`
+        },
+        trainingExp: {
+            id: 'trainingExp',
+            name: 'Allenamento EXP (Minigioco)',
+            description: 'Minigioco interattivo per guadagnare EXP allenando i giocatori',
+            icon: '🎮',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Bottone "Allenamento EXP" accanto a ogni giocatore nella rosa</li>
+                    <li>Minigioco basato sul ruolo del giocatore (P/D/C/A)</li>
+                    <li>3 tentativi per sessione, 50 XP per successo (max 150 XP)</li>
+                    <li>Cooldown giornaliero: dopo un allenamento, aspetta fino a mezzanotte</li>
+                    <li>Portiere: para i tiri; Difensore: intercetta; Centrocampista: passa; Attaccante: segna</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Il cooldown si applica a TUTTA la squadra, non al singolo giocatore.</p>`
+        },
+        trainingExpTestMode: {
+            id: 'trainingExpTestMode',
+            name: 'Allenamento EXP - Modalita Test',
+            description: 'Rimuove il limite giornaliero ma imposta XP a 0 (per testing)',
+            icon: '🧪',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Disabilita il cooldown giornaliero</li>
+                    <li>Imposta automaticamente XP guadagnato a 0</li>
+                    <li>Permette di testare il minigioco illimitatamente</li>
+                </ul>
+                <p class="mt-2 text-red-400">ATTENZIONE: Solo per testing! Non assegna XP.</p>`
         }
     },
 

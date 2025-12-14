@@ -41,7 +41,11 @@ window.AdminRewards = {
         expPareggio: 10,
 
         // Reward EXP - Allenatore
-        expCoachVittoria: 100
+        expCoachVittoria: 100,
+
+        // Reward EXP - Allenamento Minigioco
+        expTrainingField: 40,   // EXP per successo (D, C, A)
+        expTrainingGK: 20       // EXP per successo (P)
     },
 
     // Cache della configurazione corrente
@@ -291,6 +295,26 @@ window.AdminRewards = {
                     </div>
                 </div>
 
+                <!-- Sezione: Reward EXP Allenamento Minigioco -->
+                <div class="bg-gray-700 p-4 rounded-lg border border-purple-500">
+                    <h4 class="text-lg font-bold text-purple-400 mb-3">Reward EXP - Allenamento Minigioco</h4>
+                    <p class="text-sm text-gray-400 mb-4">
+                        Esperienza guadagnata tramite il minigioco di allenamento (per successo)
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">EXP Giocatori Campo (D, C, A)</label>
+                            <input type="number" id="reward-expTrainingField" value="${config.expTrainingField}"
+                                   class="w-full bg-gray-800 text-white px-3 py-2 rounded border border-gray-600 focus:border-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">EXP Portiere (P)</label>
+                            <input type="number" id="reward-expTrainingGK" value="${config.expTrainingGK}"
+                                   class="w-full bg-gray-800 text-white px-3 py-2 rounded border border-gray-600 focus:border-purple-500">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Info ultimo aggiornamento -->
                 ${config.lastUpdated ? `
                     <p class="text-xs text-gray-500 text-right">
@@ -323,7 +347,8 @@ window.AdminRewards = {
             'rewardCampionatoCSS', 'rewardCoppaCSS', 'rewardSupercoppaCSS',
             'expPartitaTitolare', 'expPartitaPanchina', 'expGoal', 'expAssist',
             'expCleanSheetGK', 'expCleanSheetDEF', 'expVittoria', 'expPareggio',
-            'expCoachVittoria'
+            'expCoachVittoria',
+            'expTrainingField', 'expTrainingGK'
         ];
 
         const config = {};
