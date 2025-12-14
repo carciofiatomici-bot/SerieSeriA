@@ -398,6 +398,24 @@ window.FeatureFlags = {
                     <li>Permette di testare il minigioco illimitatamente</li>
                 </ul>
                 <p class="mt-2 text-red-400">ATTENZIONE: Solo per testing! Non assegna XP.</p>`
+        },
+        sponsors: {
+            id: 'sponsors',
+            name: 'Sistema Sponsorship',
+            description: 'Contratti Sponsor e Media Partner che pagano bonus CS',
+            icon: '🤝',
+            enabled: false,
+            category: 'economy',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><span class="text-yellow-400">9 Sponsor</span> disponibili (Apracadabra, Birra Grossa, Mondo Serrande...)</li>
+                    <li><span class="text-pink-400">12 Media Partner</span> disponibili (90+, Calcio Totale, Curva Podcast...)</li>
+                    <li>Bonus per: Vittoria, Gol, Pareggio, Clean Sheet, Assist</li>
+                    <li>Pagamento automatico dopo ogni partita</li>
+                    <li>Cambio contratto con penale di 50 CS</li>
+                    <li>Configurazione valori da pannello Admin</li>
+                </ul>
+                <p class="mt-2 text-green-400">Combina Sponsor + Media per massimizzare i guadagni!</p>`
         }
     },
 

@@ -32,6 +32,9 @@ window.DashboardFeatures = {
         // Bottone Stadio
         this.updateStadiumButton();
 
+        // Box Sponsorship (Media + Sponsor)
+        this.updateSponsorshipBoxes();
+
         // Aggiorna il layout della griglia in base ai bottoni visibili
         this.updateGridLayout();
     },
@@ -59,6 +62,77 @@ window.DashboardFeatures = {
                 btnStadium.classList.add('hidden');
                 btnStadium.classList.remove('flex');
             }
+        }
+    },
+
+    /**
+     * Aggiorna la visibilita' dei box Sponsorship (Media + Sponsor nella riga logo)
+     */
+    updateSponsorshipBoxes() {
+        const mediaBox = document.getElementById('media-box');
+        const sponsorBox = document.getElementById('sponsor-box');
+        const isEnabled = window.FeatureFlags?.isEnabled?.('sponsors') || false;
+
+        // Mostra/nascondi i box nella riga del logo
+        if (mediaBox) {
+            if (isEnabled) {
+                mediaBox.classList.remove('hidden');
+            } else {
+                mediaBox.classList.add('hidden');
+            }
+        }
+
+        if (sponsorBox) {
+            if (isEnabled) {
+                sponsorBox.classList.remove('hidden');
+            } else {
+                sponsorBox.classList.add('hidden');
+            }
+        }
+
+        // Aggiorna lo stato/immagini dei box
+        if (isEnabled) {
+            this.updateSponsorshipStatus();
+        }
+    },
+
+    /**
+     * Aggiorna le immagini nei box Media/Sponsor nella riga logo
+     */
+    async updateSponsorshipStatus() {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId || !window.SponsorSystem) return;
+
+        try {
+            // Aggiorna immagine Media
+            const mediaImage = document.getElementById('media-image');
+            const teamMedia = await window.SponsorSystem.getTeamMedia(teamId);
+
+            if (mediaImage) {
+                if (teamMedia && teamMedia.image) {
+                    mediaImage.src = `Immagini/Media/${teamMedia.image}`;
+                    mediaImage.title = teamMedia.name;
+                } else {
+                    mediaImage.src = 'https://placehold.co/128x128/831843/f9a8d4?text=📺';
+                    mediaImage.title = 'Media Partner - Clicca per scegliere';
+                }
+            }
+
+            // Aggiorna immagine Sponsor
+            const sponsorImage = document.getElementById('sponsor-image');
+            const teamSponsor = await window.SponsorSystem.getTeamSponsor(teamId);
+
+            if (sponsorImage) {
+                if (teamSponsor && teamSponsor.image) {
+                    sponsorImage.src = `Immagini/Sponsor/${teamSponsor.image}`;
+                    sponsorImage.title = teamSponsor.name;
+                } else {
+                    sponsorImage.src = 'https://placehold.co/128x128/78350f/fcd34d?text=🤝';
+                    sponsorImage.title = 'Sponsor - Clicca per scegliere';
+                }
+            }
+        } catch (error) {
+            console.error('Errore aggiornamento status sponsorship:', error);
         }
     },
 
@@ -157,6 +231,44 @@ window.DashboardFeatures = {
         }
 
         // Nota: il bottone Sfida e' gia' gestito in interfaccia-navigation.js
+
+        // Box Media (nella riga logo)
+        const mediaBox = document.getElementById('media-box');
+        if (mediaBox) {
+            mediaBox.addEventListener('click', () => {
+                if (!window.FeatureFlags?.isEnabled('sponsors')) {
+                    if (window.Toast) window.Toast.info("Sistema Sponsorship non disponibile");
+                    return;
+                }
+                if (window.SponsorSystem) {
+                    const teamId = window.InterfacciaCore?.currentTeamId;
+                    if (teamId) {
+                        window.SponsorSystem.openMediaPanel(teamId);
+                    } else {
+                        if (window.Toast) window.Toast.error("Seleziona una squadra");
+                    }
+                }
+            });
+        }
+
+        // Box Sponsor (nella riga logo)
+        const sponsorBox = document.getElementById('sponsor-box');
+        if (sponsorBox) {
+            sponsorBox.addEventListener('click', () => {
+                if (!window.FeatureFlags?.isEnabled('sponsors')) {
+                    if (window.Toast) window.Toast.info("Sistema Sponsorship non disponibile");
+                    return;
+                }
+                if (window.SponsorSystem) {
+                    const teamId = window.InterfacciaCore?.currentTeamId;
+                    if (teamId) {
+                        window.SponsorSystem.openSponsorPanel(teamId);
+                    } else {
+                        if (window.Toast) window.Toast.error("Seleziona una squadra");
+                    }
+                }
+            });
+        }
 
         // Bottone Stadio
         const btnStadium = document.getElementById('btn-stadium');
@@ -295,6 +407,15 @@ window.DashboardFeatures = {
                 case 'stadium':
                     // Aggiorna visibilita' bottone stadio
                     this.updateStadiumButton();
+                    break;
+
+                case 'sponsors':
+                    // Aggiorna visibilita' box sponsorship
+                    this.updateSponsorshipBoxes();
+                    // Inizializza sistema sponsor se attivato
+                    if (enabled && window.SponsorSystem) {
+                        window.SponsorSystem.init();
+                    }
                     break;
             }
 

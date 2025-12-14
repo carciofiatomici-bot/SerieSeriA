@@ -588,7 +588,7 @@
             </div>
 
             <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
-            <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+            <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20" style="padding-top: calc(0.5rem + 1.5px); padding-bottom: calc(0.5rem + 1.5px);">
                 <!-- RIGA NOME SQUADRA + DIVISA -->
                 <div class="flex justify-center items-stretch mb-3 gap-3 sm:gap-6 md:gap-10">
                     <!-- BOX NOME SQUADRA (sinistra/centro) -->
@@ -617,16 +617,15 @@
                         </svg>
                     </div>
                 </div>
-                <!-- SPONSOR, LOGO, ICONA E MEDIA - Tutti centrati su una riga -->
-                <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-x-auto">
-                    <!-- BOX SPONSOR -->
-                    <div id="sponsor-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
-                        <img id="sponsor-image"
-                             src="https://placehold.co/128x128/374151/9ca3af?text=Sponsor"
-                             alt="Sponsor"
-                             class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
-                             style="border-color: #22c55e;"
-                             title="Sponsor">
+                <!-- MEDIA, LOGO, ICONA E SPONSOR - Tutti centrati su una riga -->
+                <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-visible">
+                    <!-- BOX MEDIA (sinistra del logo) -->
+                    <div id="media-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
+                        <img id="media-image"
+                             src="https://placehold.co/128x128/831843/f9a8d4?text=📺"
+                             alt="Media Partner"
+                             class="w-full h-full rounded-lg border-2 border-pink-500 shadow-lg object-contain bg-gray-800 p-1 hover:border-pink-400"
+                             title="Media Partner">
                     </div>
                     <!-- LOGO SQUADRA -->
                     <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 flex-shrink-0">
@@ -651,14 +650,13 @@
                             <p id="icona-tooltip-type">Tipo: --</p>
                         </div>
                     </div>
-                    <!-- BOX MEDIA -->
-                    <div id="media-box" class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
-                        <img id="media-image"
-                             src="https://placehold.co/128x128/374151/9ca3af?text=Media"
-                             alt="Media"
-                             class="w-full h-full rounded-lg border-2 shadow-lg object-cover bg-gray-800"
-                             style="border-color: #22c55e;"
-                             title="Media Partner">
+                    <!-- BOX SPONSOR (destra dell'icona) -->
+                    <div id="sponsor-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
+                        <img id="sponsor-image"
+                             src="https://placehold.co/128x128/78350f/fcd34d?text=🤝"
+                             alt="Sponsor"
+                             class="w-full h-full rounded-lg border-2 border-yellow-500 shadow-lg object-contain bg-gray-800 p-1 hover:border-yellow-400"
+                             title="Sponsor">
                     </div>
                 </div>
 
@@ -758,7 +756,7 @@
                         </button>
                     </div>
                     <!-- Riga 2: Sfida e Scambi -->
-                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                    <div id="actions-buttons-grid" class="grid grid-cols-2 gap-2 sm:gap-4">
                         <button id="btn-challenge"
                                 class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
                             <span>⚔️</span> Sfida
@@ -1521,6 +1519,7 @@
     <script src="tutorial.js"></script>
     <script src="changelog.js"></script>
     <script src="match-history.js"></script>
+    <script src="sponsor-system.js"></script>
     <script src="image-compressor.js"></script>
     <script src="lazy-loader.js"></script>
     <script src="tests.js"></script>
@@ -1564,6 +1563,8 @@
     <!-- 5. LOGICHE ADMIN (Dipendono da Core, Admin-UI/Players/Teams) -->
     <script src="admin-formulas.js"></script>
     <script src="admin-rewards.js"></script>
+    <script src="admin-sponsors.js"></script>
+    <script src="admin-media.js"></script>
     <script src="admin-ui.js"></script>
     <script src="admin-players.js"></script>
     <script src="admin-teams.js"></script>

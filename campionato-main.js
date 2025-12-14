@@ -146,11 +146,37 @@ window.ChampionshipMain = {
             
             // 5. Applica i crediti per gol e vittoria
             await window.ChampionshipRewards.applyMatchRewards(
-                homeGoals, awayGoals, 
-                homeTeamData, awayTeamData, 
+                homeGoals, awayGoals,
+                homeTeamData, awayTeamData,
                 match.homeId, match.awayId
             );
-            
+
+            // 5.5 Applica bonus sponsor (se feature attiva)
+            if (window.FeatureFlags?.isEnabled('sponsors') && window.SponsorSystem) {
+                const standings = Array.from(standingsMap.values()).sort((a, b) => {
+                    if (b.points !== a.points) return b.points - a.points;
+                    return (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst);
+                });
+
+                // Bonus per squadra di casa
+                await window.SponsorSystem.processSingleMatchBonus(match.homeId, {
+                    won: homeGoals > awayGoals,
+                    drew: homeGoals === awayGoals,
+                    lost: homeGoals < awayGoals,
+                    goalsScored: homeGoals,
+                    matchday: roundIndex + 1
+                }, standings);
+
+                // Bonus per squadra ospite
+                await window.SponsorSystem.processSingleMatchBonus(match.awayId, {
+                    won: awayGoals > homeGoals,
+                    drew: homeGoals === awayGoals,
+                    lost: awayGoals < homeGoals,
+                    goalsScored: awayGoals,
+                    matchday: roundIndex + 1
+                }, standings);
+            }
+
             // 6. Resetta lo stato della forma dopo la simulazione per la prossima giornata
             await this.resetPlayersFormStatus(match.homeId);
             await this.resetPlayersFormStatus(match.awayId);
@@ -357,6 +383,30 @@ window.ChampionshipMain = {
                     homeTeamData, awayTeamData,
                     match.homeId, match.awayId
                 );
+
+                // Applica bonus sponsor (se feature attiva)
+                if (window.FeatureFlags?.isEnabled('sponsors') && window.SponsorSystem) {
+                    const currentStandings = Array.from(standingsMap.values()).sort((a, b) => {
+                        if (b.points !== a.points) return b.points - a.points;
+                        return (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst);
+                    });
+
+                    await window.SponsorSystem.processSingleMatchBonus(match.homeId, {
+                        won: homeGoals > awayGoals,
+                        drew: homeGoals === awayGoals,
+                        lost: homeGoals < awayGoals,
+                        goalsScored: homeGoals,
+                        matchday: round.round
+                    }, currentStandings);
+
+                    await window.SponsorSystem.processSingleMatchBonus(match.awayId, {
+                        won: awayGoals > homeGoals,
+                        drew: homeGoals === awayGoals,
+                        lost: awayGoals < homeGoals,
+                        goalsScored: awayGoals,
+                        matchday: round.round
+                    }, currentStandings);
+                }
 
                 // Salva nello storico partite per entrambe le squadre
                 if (window.MatchHistory) {

@@ -257,6 +257,16 @@ window.AdminUI = {
                             🏆 Configurazione Reward
                         </button>
                     </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <button id="btn-sponsors-config"
+                                class="bg-gradient-to-r from-yellow-700 to-amber-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-yellow-600 hover:to-amber-500 transition duration-150">
+                            🤝 Configurazione Sponsor
+                        </button>
+                        <button id="btn-media-config"
+                                class="bg-gradient-to-r from-pink-700 to-rose-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-pink-600 hover:to-rose-500 transition duration-150">
+                            📺 Configurazione Media
+                        </button>
+                    </div>
                     <div class="text-gray-400 text-sm">
                         Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
                     </div>
@@ -281,6 +291,28 @@ window.AdminUI = {
                     <button id="btn-close-rewards-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
                 <div id="rewards-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE SPONSOR (inizialmente nascosto) -->
+            <div id="sponsors-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-yellow-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-yellow-400">🤝 Configurazione Sponsor</h3>
+                    <button id="btn-close-sponsors-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="sponsors-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE MEDIA (inizialmente nascosto) -->
+            <div id="media-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-pink-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-pink-400">📺 Configurazione Media</h3>
+                    <button id="btn-close-media-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="media-panel-content">
                     <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>

@@ -336,6 +336,58 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Configurazione Sponsor
+        const btnSponsorsConfig = document.getElementById('btn-sponsors-config');
+        const sponsorsPanelContainer = document.getElementById('sponsors-panel-container');
+        const sponsorsPanelContent = document.getElementById('sponsors-panel-content');
+        const btnCloseSponsorsPanel = document.getElementById('btn-close-sponsors-panel');
+        let sponsorsLoaded = false;
+
+        if (btnSponsorsConfig && sponsorsPanelContainer) {
+            btnSponsorsConfig.addEventListener('click', async () => {
+                sponsorsPanelContainer.classList.remove('hidden');
+
+                // Carica configurazione e renderizza pannello solo la prima volta
+                if (!sponsorsLoaded && window.AdminSponsors) {
+                    await window.AdminSponsors.loadConfig();
+                    window.AdminSponsors.renderPanel(sponsorsPanelContent);
+                    sponsorsLoaded = true;
+                }
+            });
+        }
+
+        if (btnCloseSponsorsPanel && sponsorsPanelContainer) {
+            btnCloseSponsorsPanel.addEventListener('click', () => {
+                sponsorsPanelContainer.classList.add('hidden');
+            });
+        }
+
+        // Configurazione Media
+        const btnMediaConfig = document.getElementById('btn-media-config');
+        const mediaPanelContainer = document.getElementById('media-panel-container');
+        const mediaPanelContent = document.getElementById('media-panel-content');
+        const btnCloseMediaPanel = document.getElementById('btn-close-media-panel');
+        let mediaLoaded = false;
+
+        if (btnMediaConfig && mediaPanelContainer) {
+            btnMediaConfig.addEventListener('click', async () => {
+                mediaPanelContainer.classList.remove('hidden');
+
+                // Carica configurazione e renderizza pannello solo la prima volta
+                if (!mediaLoaded && window.AdminMedia) {
+                    await window.AdminMedia.loadConfig();
+                    window.AdminMedia.renderPanel(mediaPanelContent);
+                    mediaLoaded = true;
+                }
+            });
+        }
+
+        if (btnCloseMediaPanel && mediaPanelContainer) {
+            btnCloseMediaPanel.addEventListener('click', () => {
+                mediaPanelContainer.classList.add('hidden');
+            });
+        }
+
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {

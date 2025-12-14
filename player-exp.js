@@ -320,7 +320,27 @@
 
         // Calcola bonus spogliatoi (+5% per livello)
         const lockerRoomLevel = teamData.stadium?.lockerRoom?.level || 0;
-        const expBonusMultiplier = 1 + (lockerRoomLevel * 0.05);
+        let expBonusMultiplier = 1 + (lockerRoomLevel * 0.05);
+
+        // Bonus EXP progressivo da sponsor/media (dal contratto salvato)
+        // Sponsor/Media costosi danno bonus EXP maggiore (0% - 7.5%)
+        const sponsorExpBonus = teamData.sponsor?.expBonus || 0;
+        const mediaExpBonus = teamData.media?.expBonus || 0;
+
+        // Bonus passivo per avere sponsor/media (max 2.5% totale)
+        // Con spogliatoi: +1.25% ciascuno
+        // Senza spogliatoi: +0.625% ciascuno (max 1.25% insieme)
+        const hasSponsor = teamData.sponsor && teamData.sponsor.id;
+        const hasMedia = teamData.media && teamData.media.id;
+        let passiveBonus = 0;
+        if (lockerRoomLevel > 0) {
+            passiveBonus = (hasSponsor ? 0.0125 : 0) + (hasMedia ? 0.0125 : 0);
+        } else {
+            passiveBonus = (hasSponsor ? 0.00625 : 0) + (hasMedia ? 0.00625 : 0);
+        }
+
+        // Totale: bonus progressivo (dal contratto) + bonus passivo
+        expBonusMultiplier += sponsorExpBonus + mediaExpBonus + passiveBonus;
 
         // Determina risultato partita
         const teamGoals = matchResult.isHome ? matchResult.homeGoals : matchResult.awayGoals;
