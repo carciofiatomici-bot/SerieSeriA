@@ -127,7 +127,7 @@ window.PlayerStatsAdvanced = {
     },
 
     /**
-     * Carica statistiche giocatore
+     * Carica statistiche giocatore da Firestore
      */
     async loadPlayerStats(player, teamId) {
         const cacheKey = `${player.id || player.name}_${teamId}`;
@@ -137,13 +137,112 @@ window.PlayerStatsAdvanced = {
             return this.statsCache.get(cacheKey);
         }
 
-        // Genera statistiche simulate (in produzione caricheresti da Firestore)
-        const stats = this.generateMockStats(player);
+        // Prova a caricare da Firestore
+        let stats = null;
+        if (teamId && player.id && window.firestoreTools) {
+            try {
+                const { doc, getDoc } = window.firestoreTools;
+                const db = window.db;
+                const appId = window.firestoreTools.appId;
+
+                const statsPath = `artifacts/${appId}/public/data/teams/${teamId}/playerStats/${player.id}`;
+                const statsDoc = await getDoc(doc(db, statsPath));
+
+                if (statsDoc.exists()) {
+                    const data = statsDoc.data();
+                    // Trasforma i dati Firestore nel formato display
+                    stats = this.transformFirestoreStats(data, player);
+                    console.log(`[PlayerStatsAdvanced] Stats caricate da Firestore per ${player.name}`);
+                }
+            } catch (error) {
+                console.error('[PlayerStatsAdvanced] Errore caricamento Firestore:', error);
+            }
+        }
+
+        // Se non ci sono dati Firestore, mostra stats vuote (non mock)
+        if (!stats) {
+            stats = this.getEmptyStats(player);
+            console.log(`[PlayerStatsAdvanced] Nessuna statistica disponibile per ${player.name}`);
+        }
 
         // Salva in cache
         this.statsCache.set(cacheKey, stats);
 
         return stats;
+    },
+
+    /**
+     * Trasforma dati Firestore nel formato per la UI
+     */
+    transformFirestoreStats(data, player) {
+        const matchHistory = data.matchHistory || [];
+
+        return {
+            general: {
+                matchesPlayed: data.matchesPlayed || 0,
+                minutesPlayed: (data.matchesStarting || 0) * 90 + (data.matchesBench || 0) * 30,
+                rating: (data.avgPerformance || 5).toFixed(1)
+            },
+            offensive: {
+                goals: data.goalsScored || 0,
+                assists: data.assists || 0,
+                shots: Math.floor((data.goalsScored || 0) * 2.5),
+                shotsOnTarget: Math.floor((data.goalsScored || 0) * 1.5),
+                keyPasses: Math.floor((data.assists || 0) * 2)
+            },
+            defensive: {
+                tackles: Math.floor((data.successfulPasses || 0) * 0.3),
+                interceptions: data.interceptions || Math.floor((data.successfulPasses || 0) * 0.2),
+                blocks: 0,
+                clearances: 0,
+                saves: data.saves || 0
+            },
+            passing: {
+                totalPasses: (data.successfulPasses || 0) + (data.failedPasses || 0),
+                passAccuracy: data.successfulPasses + data.failedPasses > 0
+                    ? Math.round((data.successfulPasses / (data.successfulPasses + data.failedPasses)) * 100)
+                    : 0,
+                longPasses: 0,
+                throughBalls: 0
+            },
+            discipline: {
+                yellowCards: 0,
+                redCards: 0,
+                fouls: 0,
+                offsides: 0
+            },
+            history: matchHistory.slice(0, 10).map((m, i) => ({
+                matchday: matchHistory.length - i,
+                opponent: m.opponent?.name || 'Avversario',
+                rating: (m.performance?.rating || 5).toFixed(1),
+                goals: m.performance?.goalsScored || 0,
+                assists: m.performance?.assists || 0,
+                minutesPlayed: m.performance?.isStarting ? 90 : 30
+            })),
+            // Extra data
+            mvpCount: data.mvpCount || 0,
+            cleanSheets: data.cleanSheets || 0
+        };
+    },
+
+    /**
+     * Restituisce statistiche vuote per giocatori senza dati
+     */
+    getEmptyStats(player) {
+        return {
+            general: {
+                matchesPlayed: 0,
+                minutesPlayed: 0,
+                rating: '-'
+            },
+            offensive: { goals: 0, assists: 0, shots: 0, shotsOnTarget: 0, keyPasses: 0 },
+            defensive: { tackles: 0, interceptions: 0, blocks: 0, clearances: 0, saves: 0 },
+            passing: { totalPasses: 0, passAccuracy: 0, longPasses: 0, throughBalls: 0 },
+            discipline: { yellowCards: 0, redCards: 0, fouls: 0, offsides: 0 },
+            history: [],
+            mvpCount: 0,
+            cleanSheets: 0
+        };
     },
 
     /**

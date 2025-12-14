@@ -175,9 +175,18 @@ window.GestioneSquadreRosa = {
         // Border rosso se infortunato
         const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
 
+        // Indicatore statistiche (se feature attiva)
+        const statsIndicator = window.FeatureFlags?.isEnabled('playerStats')
+            ? '<span class="text-xs text-blue-400 ml-2" title="Clicca per vedere statistiche">📊</span>'
+            : '';
+
         return `
             <div class="flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
-                <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
+                <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2 ${window.FeatureFlags?.isEnabled('playerStats') ? 'cursor-pointer hover:bg-gray-700 rounded p-2 -m-2 transition' : ''}"
+                     data-action="view-player-stats"
+                     data-player-id="${player.id}"
+                     data-player-name="${player.name}"
+                     data-player-role="${player.role}">
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
@@ -185,6 +194,7 @@ window.GestioneSquadreRosa = {
                             ${injuryMarker}
                             <span class="text-yellow-400">(${player.role})</span>
                             ${typeBadgeHtml}
+                            ${statsIndicator}
                         </div>
                         <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
                         ${abilitiesHtml}
@@ -220,6 +230,16 @@ window.GestioneSquadreRosa = {
                     window.EquipmentUI?.showEquipmentModal(target.dataset.playerId, target.dataset.playerName, context);
                 } else if (target.dataset.action === 'training-exp') {
                     this.handleTrainingExp(target.dataset.playerId, target.dataset.playerName, target.dataset.playerRole, context);
+                } else if (target.closest('[data-action="view-player-stats"]')) {
+                    const container = target.closest('[data-action="view-player-stats"]');
+                    if (container && window.FeatureFlags?.isEnabled('playerStats')) {
+                        const playerId = container.dataset.playerId;
+                        const playerName = container.dataset.playerName;
+                        const player = currentTeamData.players.find(p => p.id === playerId);
+                        if (player && window.PlayerStatsAdvanced) {
+                            window.PlayerStatsAdvanced.open(player, currentTeamId);
+                        }
+                    }
                 }
             });
         }

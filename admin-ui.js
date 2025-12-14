@@ -959,6 +959,20 @@ window.AdminUI = {
                             </div>
                         </div>
 
+                        <!-- EXP -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">EXP Attuale</label>
+                                <input type="number" id="edit-player-exp" value="${player.exp || 0}" min="0"
+                                       class="w-full p-2 rounded bg-gray-700 border border-purple-600 text-purple-300">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">EXP per Prossimo Lv</label>
+                                <input type="number" id="edit-player-exp-next" value="${player.expToNextLevel || 100}" min="1" readonly disabled
+                                       class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-gray-400">
+                            </div>
+                        </div>
+
                         <!-- Abilita attuali -->
                         <div>
                             <label class="block text-gray-300 mb-2 font-semibold">Abilita attuali</label>
@@ -1194,7 +1208,8 @@ window.AdminUI = {
                     parseInt(document.getElementById('edit-player-level-min').value),
                     parseInt(document.getElementById('edit-player-level-max').value)
                 ],
-                abilities: currentAbilities
+                abilities: currentAbilities,
+                exp: parseInt(document.getElementById('edit-player-exp').value) || 0
             };
 
             // Calcola nuovo costo

@@ -1031,6 +1031,21 @@ window.AdminTeams = {
                         <p class="text-xs text-yellow-400 -mt-2">Range per giocatori da assegnare (1-20)</p>
                         `}
 
+                        <!-- EXP -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-gray-300 block mb-1 font-bold">EXP Attuale</label>
+                                <input type="number" id="player-exp-input" value="${player.exp || 0}" min="0"
+                                       class="w-full p-2 bg-gray-700 border border-purple-600 rounded text-purple-300 focus:border-purple-400">
+                            </div>
+                            <div>
+                                <label class="text-gray-300 block mb-1 font-bold">EXP per Prossimo Lv</label>
+                                <input type="number" id="player-expnext-input" value="${player.expToNextLevel || 100}" readonly disabled
+                                       class="w-full p-2 bg-gray-600 border border-gray-500 rounded text-gray-400">
+                            </div>
+                        </div>
+                        <p class="text-xs text-purple-400 -mt-2">L'EXP viene usato per il sistema di progressione</p>
+
                         <div>
                             <label class="text-gray-300 block mb-2 font-bold">Abilita</label>
                             <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
@@ -1265,6 +1280,10 @@ window.AdminTeams = {
             return;
         }
 
+        // Leggi EXP dal form
+        const expInput = document.getElementById('player-exp-input');
+        const exp = expInput ? parseInt(expInput.value) || 0 : (originalPlayer.exp || 0);
+
         const playerData = {
             id: index === -1 ? `player_${Date.now()}` : (originalPlayer.id || `player_${Date.now()}`),
             name,
@@ -1274,7 +1293,9 @@ window.AdminTeams = {
             level, // Sempre usa level singolo
             abilities,
             cost: originalPlayer.cost || 0,
-            isCaptain: originalPlayer.isCaptain || false
+            isCaptain: originalPlayer.isCaptain || false,
+            exp: exp,
+            expToNextLevel: originalPlayer.expToNextLevel || 100
         };
 
         // Mantieni photoUrl se presente (per Icone)

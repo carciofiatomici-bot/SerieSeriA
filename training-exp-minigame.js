@@ -170,6 +170,21 @@ window.TrainingExpMinigame = {
             return;
         }
 
+        // Previeni apertura multipla
+        if (this.isOpen) {
+            console.warn('[TrainingExpMinigame] Minigioco gia aperto');
+            return;
+        }
+
+        // Verifica cooldown prima di aprire (double-check)
+        if (this.isInCooldown(player.role) && !window.FeatureFlags?.isEnabled('trainingExpTestMode')) {
+            console.warn(`[TrainingExpMinigame] Cooldown attivo per ruolo ${player.role}`);
+            if (window.Toast) {
+                window.Toast.warning(`Hai gia allenato un ${this.getRoleNameItalian(player.role)} oggi!`);
+            }
+            return;
+        }
+
         this.init();
 
         // Mappa ruolo giocatore a ruolo minigioco
@@ -272,6 +287,19 @@ window.TrainingExpMinigame = {
     },
 
     /**
+     * Restituisce il nome italiano del ruolo
+     */
+    getRoleNameItalian(role) {
+        const names = {
+            'P': 'Portiere',
+            'D': 'Difensore',
+            'C': 'Centrocampista',
+            'A': 'Attaccante'
+        };
+        return names[role] || 'giocatore';
+    },
+
+    /**
      * Imposta il cooldown per un ruolo specifico
      * @param {string} teamId - ID della squadra
      * @param {string} role - Ruolo del giocatore (P, D, C, A)
@@ -284,7 +312,7 @@ window.TrainingExpMinigame = {
 
         try {
             const { doc, updateDoc } = window.firestoreTools;
-            const appId = window.InterfacciaConstants?.APP_ID || 'default';
+            const appId = window.firestoreTools.appId;
             const teamDocRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
 
             // Ottieni i cooldown esistenti o crea nuovo oggetto
@@ -330,8 +358,8 @@ window.TrainingExpMinigame = {
 
         const angle = Math.atan2(targetY - this.ball.y, targetX - this.ball.x);
 
-        // Difficolta ESPONENZIALE: livello 3 e brutale
-        const speedLevels = [6, 10, 16]; // Facile, Medio, DIFFICILE
+        // Difficolta progressiva
+        const speedLevels = [6, 9, 12]; // Facile, Medio, Difficile
         const speed = speedLevels[this.attempts] || speedLevels[2];
 
         this.ball.vx = Math.cos(angle) * speed;
@@ -343,8 +371,8 @@ window.TrainingExpMinigame = {
         this.player.y = this.canvas.height - 150;
         this.player.radius = 20;
 
-        // Difficolta ESPONENZIALE: livello 3 e brutale
-        const speedLevels = [2.5, 4.5, 8]; // Facile, Medio, DIFFICILE
+        // Difficolta progressiva
+        const speedLevels = [2.5, 4, 6]; // Facile, Medio, Difficile
         const enemySpeed = speedLevels[this.attempts] || speedLevels[2];
 
         // Nemico parte dall'alto
@@ -365,9 +393,9 @@ window.TrainingExpMinigame = {
         this.ball.y = this.player.y;
         this.ball.active = false;
 
-        // Difficolta ESPONENZIALE: livello 3 e brutale
-        const speedLevels = [2, 4, 8];      // Facile, Medio, DIFFICILE
-        const radiusLevels = [28, 20, 12];  // Grande, Medio, PICCOLO
+        // Difficolta progressiva
+        const speedLevels = [2, 3.5, 5.5];  // Facile, Medio, Difficile
+        const radiusLevels = [28, 22, 16];  // Grande, Medio, Piccolo
         const teammateSpeed = speedLevels[this.attempts] || speedLevels[2];
         const teammateRadius = radiusLevels[this.attempts] || radiusLevels[2];
 
@@ -392,9 +420,9 @@ window.TrainingExpMinigame = {
         this.ball.y = this.player.y;
         this.ball.active = false;
 
-        // Difficolta ESPONENZIALE: livello 3 e brutale
-        const speedLevels = [3, 6, 12];     // Facile, Medio, DIFFICILE
-        const widthLevels = [60, 100, 160]; // Stretto, Medio, ENORME
+        // Difficolta progressiva
+        const speedLevels = [3, 5, 8];      // Facile, Medio, Difficile
+        const widthLevels = [60, 90, 130];  // Stretto, Medio, Largo
         const gkSpeed = speedLevels[this.attempts] || speedLevels[2];
         const gkWidth = widthLevels[this.attempts] || widthLevels[2];
 

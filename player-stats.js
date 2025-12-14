@@ -484,7 +484,212 @@ window.PlayerStats = {
             caos: '🎲 Effetto Caos'
         };
         return labels[key] || key;
+    },
+
+    // ====================================================================
+    // METODO PER REGISTRARE STATS DI SQUADRA DOPO PARTITA
+    // ====================================================================
+
+    /**
+     * Registra statistiche per tutti i giocatori di una squadra dopo una partita.
+     * @param {string} teamId - ID squadra
+     * @param {Object} teamData - Dati squadra (con formation.titolari)
+     * @param {Object} matchInfo - Info partita { opponentId, opponentName, goalsFor, goalsAgainst, isHome, matchType }
+     */
+    async recordTeamMatchStats(teamId, teamData, matchInfo) {
+        const { doc, getDoc, setDoc, writeBatch } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+
+        const titolari = teamData.formation?.titolari || [];
+        const panchina = teamData.formation?.panchina || [];
+
+        if (titolari.length === 0) {
+            console.warn('[PlayerStats] Nessun titolare, skip registrazione stats');
+            return;
+        }
+
+        // Determina risultato
+        const goalsFor = matchInfo.goalsFor;
+        const goalsAgainst = matchInfo.goalsAgainst;
+        const outcome = goalsFor > goalsAgainst ? 'win' : goalsFor < goalsAgainst ? 'loss' : 'draw';
+        const cleanSheet = goalsAgainst === 0;
+
+        // Assegna gol e assist usando logica pesata (come PlayerSeasonStats)
+        const goalAssignments = this.assignGoalsAndAssists(titolari, goalsFor, teamData.teamName, teamId);
+
+        // Crea batch per ottimizzare scritture
+        const batch = writeBatch(db);
+        const statsBasePath = `artifacts/${appId}/public/data/teams/${teamId}/playerStats`;
+
+        // Calcola rating base per risultato
+        const baseRating = outcome === 'win' ? 6.5 : outcome === 'draw' ? 6.0 : 5.5;
+
+        for (const player of titolari) {
+            const statsPath = `${statsBasePath}/${player.id}`;
+            const statsRef = doc(db, statsPath);
+
+            // Carica stats esistenti
+            const statsDoc = await getDoc(statsRef);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(player.id, player.name, player.role);
+
+            // Aggiungi matchHistory se non esiste
+            if (!stats.matchHistory) {
+                stats.matchHistory = [];
+            }
+
+            // Trova gol/assist assegnati a questo giocatore
+            const playerGoals = goalAssignments.filter(g => g.scorerId === player.id).length;
+            const playerAssists = goalAssignments.filter(g => g.assisterId === player.id).length;
+
+            // Calcola rating individuale
+            let playerRating = baseRating;
+            playerRating += playerGoals * 1.0;  // +1 per gol
+            playerRating += playerAssists * 0.5; // +0.5 per assist
+            if (player.role === 'P' && cleanSheet) playerRating += 1.0; // +1 per clean sheet
+            playerRating = Math.max(4.0, Math.min(10.0, playerRating + (Math.random() - 0.5))); // Variazione
+
+            // Aggiorna stats cumulative
+            stats.matchesPlayed = (stats.matchesPlayed || 0) + 1;
+            stats.matchesStarting = (stats.matchesStarting || 0) + 1;
+            stats.goalsScored = (stats.goalsScored || 0) + playerGoals;
+            stats.assists = (stats.assists || 0) + playerAssists;
+
+            if (player.role === 'P') {
+                if (cleanSheet) stats.cleanSheets = (stats.cleanSheets || 0) + 1;
+                // Stima parate: gol subiti +2 random se non clean sheet
+                if (!cleanSheet) stats.saves = (stats.saves || 0) + goalsAgainst + Math.floor(Math.random() * 3);
+            }
+
+            // Performance media
+            stats.totalContribution = (stats.totalContribution || 0) + playerRating;
+            stats.avgPerformance = stats.totalContribution / stats.matchesPlayed;
+
+            // Determina MVP (il giocatore con rating piu alto)
+            // Per ora semplificato: chi ha fatto piu gol e' MVP
+            const isMVP = playerGoals > 0 && playerGoals === Math.max(...goalAssignments.map(g =>
+                goalAssignments.filter(x => x.scorerId === g.scorerId).length));
+            if (isMVP) stats.mvpCount = (stats.mvpCount || 0) + 1;
+
+            // Aggiungi a storico partite (max 30)
+            const matchRecord = {
+                matchId: `${matchInfo.matchType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                date: new Date().toISOString(),
+                type: matchInfo.matchType || 'campionato',
+                opponent: {
+                    id: matchInfo.opponentId,
+                    name: matchInfo.opponentName
+                },
+                result: {
+                    goalsFor,
+                    goalsAgainst,
+                    isHome: matchInfo.isHome,
+                    outcome
+                },
+                performance: {
+                    isStarting: true,
+                    rating: parseFloat(playerRating.toFixed(1)),
+                    goalsScored: playerGoals,
+                    assists: playerAssists,
+                    cleanSheet: player.role === 'P' ? cleanSheet : undefined,
+                    isMVP
+                }
+            };
+
+            stats.matchHistory.unshift(matchRecord);
+            if (stats.matchHistory.length > 30) {
+                stats.matchHistory = stats.matchHistory.slice(0, 30);
+            }
+
+            stats.lastUpdated = Date.now();
+
+            batch.set(statsRef, stats);
+        }
+
+        // Registra anche i panchinari (con stats ridotte)
+        for (const player of panchina) {
+            const statsPath = `${statsBasePath}/${player.id}`;
+            const statsRef = doc(db, statsPath);
+
+            const statsDoc = await getDoc(statsRef);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(player.id, player.name, player.role);
+
+            if (!stats.matchHistory) stats.matchHistory = [];
+
+            stats.matchesPlayed = (stats.matchesPlayed || 0) + 1;
+            stats.matchesBench = (stats.matchesBench || 0) + 1;
+            stats.lastUpdated = Date.now();
+
+            batch.set(statsRef, stats);
+        }
+
+        try {
+            await batch.commit();
+            console.log(`[PlayerStats] Stats registrate per ${titolari.length} titolari + ${panchina.length} panchinari`);
+        } catch (error) {
+            console.error('[PlayerStats] Errore batch commit:', error);
+        }
+    },
+
+    /**
+     * Assegna gol e assist ai giocatori con probabilita pesate.
+     * @returns {Array} Array di { scorerId, scorerName, assisterId, assisterName }
+     */
+    assignGoalsAndAssists(titolari, numGoals, teamName, teamId) {
+        const assignments = [];
+
+        const attaccanti = titolari.filter(p => p.role === 'A');
+        const centrocampisti = titolari.filter(p => p.role === 'C');
+        const difensori = titolari.filter(p => p.role === 'D');
+        const portieri = titolari.filter(p => p.role === 'P');
+
+        for (let i = 0; i < numGoals; i++) {
+            let scorer = null;
+            let assister = null;
+
+            // Selezione marcatore: 70% A, 25% C, 4% D, 1% P
+            const scorerRoll = Math.random() * 100;
+            if (scorerRoll < 70 && attaccanti.length > 0) {
+                scorer = attaccanti[Math.floor(Math.random() * attaccanti.length)];
+            } else if (scorerRoll < 95 && centrocampisti.length > 0) {
+                scorer = centrocampisti[Math.floor(Math.random() * centrocampisti.length)];
+            } else if (scorerRoll < 99 && difensori.length > 0) {
+                scorer = difensori[Math.floor(Math.random() * difensori.length)];
+            } else if (portieri.length > 0) {
+                scorer = portieri[Math.floor(Math.random() * portieri.length)];
+            } else {
+                scorer = titolari[Math.floor(Math.random() * titolari.length)];
+            }
+
+            // Selezione assistman: 60% C, 30% A, 10% D (mai P, mai stesso del scorer)
+            const possibleAssisters = titolari.filter(p => p.id !== scorer?.id && p.role !== 'P');
+            if (possibleAssisters.length > 0 && Math.random() > 0.2) { // 80% ha assist
+                const assisterRoll = Math.random() * 100;
+                const cList = possibleAssisters.filter(p => p.role === 'C');
+                const aList = possibleAssisters.filter(p => p.role === 'A');
+                const dList = possibleAssisters.filter(p => p.role === 'D');
+
+                if (assisterRoll < 60 && cList.length > 0) {
+                    assister = cList[Math.floor(Math.random() * cList.length)];
+                } else if (assisterRoll < 90 && aList.length > 0) {
+                    assister = aList[Math.floor(Math.random() * aList.length)];
+                } else if (dList.length > 0) {
+                    assister = dList[Math.floor(Math.random() * dList.length)];
+                }
+            }
+
+            if (scorer) {
+                assignments.push({
+                    scorerId: scorer.id,
+                    scorerName: scorer.name,
+                    assisterId: assister?.id || null,
+                    assisterName: assister?.name || null
+                });
+            }
+        }
+
+        return assignments;
     }
 };
 
-console.log("✅ Player Stats caricato.");
+console.log("Player Stats caricato.");

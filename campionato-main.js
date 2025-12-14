@@ -79,6 +79,26 @@ window.ChampionshipMain = {
                 await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
             }
 
+            // 3.5b. Registra statistiche avanzate giocatori (se feature attiva)
+            if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats) {
+                await window.PlayerStats.recordTeamMatchStats(match.homeId, homeTeamData, {
+                    opponentId: match.awayId,
+                    opponentName: awayTeamData.teamName,
+                    goalsFor: homeGoals,
+                    goalsAgainst: awayGoals,
+                    isHome: true,
+                    matchType: 'campionato'
+                });
+                await window.PlayerStats.recordTeamMatchStats(match.awayId, awayTeamData, {
+                    opponentId: match.homeId,
+                    opponentName: homeTeamData.teamName,
+                    goalsFor: awayGoals,
+                    goalsAgainst: homeGoals,
+                    isHome: false,
+                    matchType: 'campionato'
+                });
+            }
+
             // 3.6. Processa EXP giocatori
             if (window.PlayerExp) {
                 const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
@@ -261,6 +281,26 @@ window.ChampionshipMain = {
                 // Registra statistiche stagionali (goal, assist, clean sheets)
                 if (window.PlayerSeasonStats) {
                     await window.PlayerSeasonStats.recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals);
+                }
+
+                // Registra statistiche avanzate giocatori (se feature attiva)
+                if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats) {
+                    await window.PlayerStats.recordTeamMatchStats(match.homeId, homeTeamData, {
+                        opponentId: match.awayId,
+                        opponentName: awayTeamData.teamName,
+                        goalsFor: homeGoals,
+                        goalsAgainst: awayGoals,
+                        isHome: true,
+                        matchType: 'campionato'
+                    });
+                    await window.PlayerStats.recordTeamMatchStats(match.awayId, awayTeamData, {
+                        opponentId: match.homeId,
+                        opponentName: homeTeamData.teamName,
+                        goalsFor: awayGoals,
+                        goalsAgainst: homeGoals,
+                        isHome: false,
+                        matchType: 'campionato'
+                    });
                 }
 
                 // Processa EXP giocatori
