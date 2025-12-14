@@ -8,7 +8,7 @@
 // - Lanci di dado in tempo reale con animazioni
 // - Sincronizzazione via Firestore onSnapshot
 // - Sistema presenza/heartbeat per rilevare disconnessioni
-// - 20 occasioni (10 per squadra) con 3 fasi ciascuna
+// - 10 occasioni totali con confronto allenatori per determinare chi attacca (v4.0)
 //
 
 window.ChallengeMatch = {
@@ -25,29 +25,42 @@ window.ChallengeMatch = {
     myTeamId: null,
 
     // Configurazione (ottimizzata per ridurre scritture Firestore)
+    // AGGIORNATA v4.0: 10 occasioni totali, confronto allenatori per determinare chi attacca
     config: {
         HEARTBEAT_INTERVAL_MS: 60000,       // Heartbeat ogni 60 secondi (era 5s, -92% scritture)
         DICE_TIMEOUT_MS: 30000,             // 30 secondi per lanciare dado
         DISCONNECT_THRESHOLD_MS: 180000,    // 3 minuti = disconnessione
-        TOTAL_OCCASIONS: 20,                // 10 per squadra, alternati
-        OCCASIONS_PER_TEAM: 10
+        TOTAL_OCCASIONS: 10,                // 10 occasioni totali (v4.0)
+        CRITICAL_SUCCESS_CHANCE: 15         // 15% successo critico (v4.0, era 5%)
     },
 
-    // Mappa modificatori livello (da simulazione.js)
+    // Mappa modificatori livello (da simulazione.js - AGGIORNATA v4.0)
     LEVEL_MODIFIERS: {
-        1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5, 5: 3.0, 6: 3.5, 7: 4.0, 8: 4.5, 9: 5.0, 10: 5.5,
-        11: 6.0, 12: 6.5, 13: 7.0, 14: 7.5, 15: 8.0, 16: 8.5, 17: 9.0, 18: 9.5, 19: 10.0,
-        20: 11.0, 21: 11.5, 22: 12.0, 23: 12.5, 24: 13.0, 25: 14.0, 26: 14.5, 27: 15.0,
-        28: 15.5, 29: 17.5, 30: 18.5
+        1: 0.5, 2: 0.5,
+        3: 1.0, 4: 1.0,
+        5: 1.5, 6: 1.5,
+        7: 2.0, 8: 2.0,
+        9: 2.5, 10: 2.5,
+        11: 3.0, 12: 3.0,
+        13: 3.5, 14: 3.5,
+        15: 4.0, 16: 4.0,
+        17: 4.5, 18: 4.5,
+        19: 5.0, 20: 5.0,
+        21: 5.5, 22: 5.5,
+        23: 6.0, 24: 6.0,
+        25: 6.5, 26: 6.5,
+        27: 7.0, 28: 7.0,
+        29: 8.0, 30: 9.0
     },
 
-    // Sistema sasso-carta-forbice
-    TYPE_DISADVANTAGE: {
-        'Potenza': 'Tecnica',
-        'Tecnica': 'Velocita',
-        'Velocita': 'Potenza'
+    // Sistema sasso-carta-forbice (AGGIORNATO v4.0 - bonus/malus fisso ±3)
+    TYPE_ADVANTAGE: {
+        'Potenza': 'Tecnica',    // Potenza batte Tecnica
+        'Tecnica': 'Velocita',   // Tecnica batte Velocità
+        'Velocita': 'Potenza'    // Velocità batte Potenza
     },
-    TYPE_PENALTY: 0.25,
+    TYPE_ADVANTAGE_BONUS: 3.0,   // Chi vince il confronto tipologia
+    TYPE_ADVANTAGE_MALUS: -3.0,  // Chi perde il confronto tipologia
 
     // ====================================================================
     // PATH HELPERS
@@ -108,7 +121,7 @@ window.ChallengeMatch = {
 
             // Turno corrente
             currentOccasion: 1,
-            currentPhase: 'waiting_start', // waiting_start, construction, attack, shot, result
+            currentPhase: 'waiting_start', // waiting_start, coach_confrontation, construction, attack, shot, result
             attackingTeamId: challengeData.fromTeamId, // Casa inizia
 
             // Dado
@@ -117,7 +130,7 @@ window.ChallengeMatch = {
                 diceType: null,
                 result: null,
                 rolledAt: null,
-                purpose: null, // construction_att, construction_def, attack_att, attack_def, shot_gk
+                purpose: null, // coach_home, coach_away, construction_att, construction_def, attack_att, attack_def, shot_att, shot_gk
                 pendingRolls: [] // Per fasi che richiedono piu' lanci
             },
 
@@ -421,6 +434,7 @@ window.ChallengeMatch = {
 
     /**
      * Avvia la partita (quando entrambi sono connessi)
+     * v4.0: Inizia con fase confronto allenatori per determinare chi attacca
      */
     async startMatch() {
         if (!this.currentMatch || this.currentMatch.status !== 'waiting') return;
@@ -432,16 +446,20 @@ window.ChallengeMatch = {
             await updateDoc(doc(window.db, matchPath), {
                 status: 'inProgress',
                 startedAt: Timestamp.now(),
-                currentPhase: 'construction',
+                currentPhase: 'coach_confrontation',
+                // Inizia con confronto allenatori: casa tira per primo
                 'diceState.waitingFor': this.currentMatch.homeTeamId,
                 'diceState.diceType': 'd20',
-                'diceState.purpose': 'construction_att',
+                'diceState.purpose': 'coach_home',
                 'diceState.result': null,
+                // Reset phaseData per il confronto allenatori
+                'phaseData.coachHomeRoll': null,
+                'phaseData.coachAwayRoll': null,
                 eventLog: [...(this.currentMatch.eventLog || []), {
                     timestamp: Timestamp.now(),
                     occasion: 1,
                     phase: 'start',
-                    message: `INIZIA LA PARTITA! Occasione 1 - ${this.currentMatch.homeTeamName} attacca`,
+                    message: `INIZIA LA PARTITA! Occasione 1 - Confronto Allenatori`,
                     type: 'action'
                 }]
             });
@@ -553,6 +571,22 @@ window.ChallengeMatch = {
 
         // Determina prossimo passo in base alla fase
         switch (purpose) {
+            case 'coach_home':
+                // Casa ha lanciato per confronto allenatori, ora tocca alla trasferta
+                await updateDoc(doc(window.db, matchPath), {
+                    'phaseData.coachHomeRoll': diceState.result,
+                    'diceState.waitingFor': matchData.awayTeamId,
+                    'diceState.purpose': 'coach_away',
+                    'diceState.result': null,
+                    'diceState.rolledAt': null
+                });
+                break;
+
+            case 'coach_away':
+                // Trasferta ha lanciato, risolvi confronto allenatori
+                await this.resolveCoachConfrontation();
+                break;
+
             case 'construction_att':
                 // Attaccante ha lanciato, ora tocca al difensore
                 await updateDoc(doc(window.db, matchPath), {
@@ -617,6 +651,26 @@ window.ChallengeMatch = {
     // ====================================================================
 
     /**
+     * Calcola bonus/malus tipologia per un giocatore (v4.0 - ±3)
+     * @param {string} playerType - Tipologia del giocatore
+     * @param {string} opponentType - Tipologia dell'avversario
+     * @returns {number} Bonus (+3), Malus (-3) o 0
+     */
+    getTypeModifier(playerType, opponentType) {
+        if (!playerType || !opponentType || playerType === opponentType) return 0;
+
+        // Il giocatore batte l'avversario?
+        if (this.TYPE_ADVANTAGE[playerType] === opponentType) {
+            return this.TYPE_ADVANTAGE_BONUS; // +3
+        }
+        // L'avversario batte il giocatore?
+        if (this.TYPE_ADVANTAGE[opponentType] === playerType) {
+            return this.TYPE_ADVANTAGE_MALUS; // -3
+        }
+        return 0;
+    },
+
+    /**
      * Calcola modificatore di un giocatore
      */
     calculatePlayerModifier(player, hasIcona, opposingPlayers = []) {
@@ -642,12 +696,28 @@ window.ChallengeMatch = {
             modifier += 1.0;
         }
 
-        // Tipologia
-        if (player.type && opposingPlayers.length > 0 && !player.abilities?.includes('Adattabile')) {
-            const disadvantagedAgainst = this.TYPE_DISADVANTAGE[player.type];
-            const facingDisadvantage = opposingPlayers.some(opp => opp.type === disadvantagedAgainst);
-            if (facingDisadvantage) {
-                modifier *= (1 - this.TYPE_PENALTY);
+        // Tipologia (AGGIORNATO v4.0 - bonus/malus fisso ±3)
+        if (player.type && opposingPlayers.length > 0) {
+            const mainOpponent = opposingPlayers.find(opp => opp.type);
+            if (mainOpponent) {
+                let typeBonus = this.getTypeModifier(player.type, mainOpponent.type);
+
+                // Adattabile: ignora solo il malus
+                if (player.abilities?.includes('Adattabile') && typeBonus < 0) {
+                    typeBonus = 0;
+                }
+
+                // Camaleonte: inverte l'esito
+                if (player.abilities?.includes('Camaleonte') && typeBonus !== 0) {
+                    typeBonus = -typeBonus;
+                }
+
+                // Prevedibile: malus aumentato a -4.5 (1.5x del normale -3)
+                if (player.abilities?.includes('Prevedibile') && typeBonus < 0) {
+                    typeBonus = -4.5;
+                }
+
+                modifier += typeBonus;
             }
         }
 
@@ -730,6 +800,57 @@ window.ChallengeMatch = {
         }
 
         return { activated };
+    },
+
+    /**
+     * Risolvi confronto allenatori (v4.0)
+     * Determina chi attacca l'occasione: 1d20 + mod allenatore
+     */
+    async resolveCoachConfrontation() {
+        const matchData = this.currentMatch;
+        const { doc, updateDoc, Timestamp } = window.firestoreTools;
+        const matchPath = this.getMatchPath(matchData.matchId);
+
+        // Recupera i tiri e i modificatori allenatore
+        const homeRoll = matchData.phaseData.coachHomeRoll || 0;
+        const awayRoll = matchData.diceState.result || 0;
+
+        const homeCoachMod = (matchData.homeFormation.coachLevel || 1) / 2;
+        const awayCoachMod = (matchData.awayFormation.coachLevel || 1) / 2;
+
+        const homeTotal = homeRoll + homeCoachMod;
+        const awayTotal = awayRoll + awayCoachMod;
+
+        // Chi vince attacca (in caso di parita', vince la casa)
+        const attackerId = homeTotal >= awayTotal ? matchData.homeTeamId : matchData.awayTeamId;
+        const attackerName = attackerId === matchData.homeTeamId ? matchData.homeTeamName : matchData.awayTeamName;
+
+        const eventLog = [...(matchData.eventLog || [])];
+        eventLog.push({
+            timestamp: Timestamp.now(),
+            occasion: matchData.currentOccasion,
+            phase: 'coach_confrontation',
+            message: `Confronto Allenatori: ${matchData.homeTeamName} (${homeRoll}+${homeCoachMod.toFixed(1)}=${homeTotal.toFixed(1)}) vs ${matchData.awayTeamName} (${awayRoll}+${awayCoachMod.toFixed(1)}=${awayTotal.toFixed(1)}) → ${attackerName} attacca!`,
+            type: 'action'
+        });
+
+        // Passa alla fase costruzione con l'attaccante determinato
+        await updateDoc(doc(window.db, matchPath), {
+            currentPhase: 'construction',
+            attackingTeamId: attackerId,
+            'phaseData.attackRoll': null,
+            'phaseData.defenseRoll': null,
+            'phaseData.attackResult': null,
+            'phaseData.successChance': null,
+            'phaseData.coachHomeRoll': null,
+            'phaseData.coachAwayRoll': null,
+            'diceState.waitingFor': attackerId,
+            'diceState.diceType': 'd20',
+            'diceState.purpose': 'construction_att',
+            'diceState.result': null,
+            'diceState.rolledAt': null,
+            eventLog: eventLog
+        });
     },
 
     /**
@@ -865,9 +986,10 @@ window.ChallengeMatch = {
                 }]
             });
         } else {
-            // 5% di passare comunque
+            // Critico: probabilità di passare comunque (15% in sfide)
             const luckyRoll = Math.floor(Math.random() * 100) + 1;
-            if (luckyRoll <= 5) {
+            const criticalChance = this.config.CRITICAL_SUCCESS_CHANCE;
+            if (luckyRoll <= criticalChance) {
                 await updateDoc(doc(window.db, matchPath), {
                     currentPhase: 'attack',
                     'diceState.waitingFor': matchData.attackingTeamId,
@@ -879,7 +1001,7 @@ window.ChallengeMatch = {
                         timestamp: Timestamp.now(),
                         occasion: matchData.currentOccasion,
                         phase: 'construction',
-                        message: `Costruzione fallita ma 5% fortuna! (${roll100} > ${successChance}%, lucky ${luckyRoll})`,
+                        message: `Costruzione fallita ma ${criticalChance}% fortuna! (${roll100} > ${successChance}%, lucky ${luckyRoll})`,
                         type: 'action'
                     }]
                 });
@@ -1025,9 +1147,10 @@ window.ChallengeMatch = {
                 eventLog: eventLogs
             });
         } else {
-            // 5% di passare comunque con risultato 5
+            // Critico: probabilità di passare comunque con risultato 5 (15% in sfide)
             const luckyRoll = Math.floor(Math.random() * 100) + 1;
-            if (luckyRoll <= 5) {
+            const criticalChance = this.config.CRITICAL_SUCCESS_CHANCE;
+            if (luckyRoll <= criticalChance) {
                 // Determina dado tiro anche nel caso fortuna
                 let shotDieLucky = 'd10';
                 const hasTitubanzaLucky = attFormation.A?.some(p => p.abilities?.includes('Titubanza'));
@@ -1043,7 +1166,7 @@ window.ChallengeMatch = {
                     timestamp: Timestamp.now(),
                     occasion: matchData.currentOccasion,
                     phase: 'attack',
-                    message: `Attacco respinto ma ⭐ 5% fortuna! (${totalA.toFixed(1)} < ${totalB.toFixed(1)}) → Valore base 5`,
+                    message: `Attacco respinto ma ⭐ ${criticalChance}% fortuna! (${totalA.toFixed(1)} < ${totalB.toFixed(1)}) → Valore base 5`,
                     type: 'action'
                 });
                 eventLogs.push({
@@ -1226,11 +1349,12 @@ window.ChallengeMatch = {
             // Parata!
             message = `🧤 PARATA di ${portiere.name}! (${totalPortiere.toFixed(1)} > ${totalShot.toFixed(1)})`;
 
-            // 5% di gol comunque
+            // Critico: probabilità di gol comunque (15% in sfide)
+            const criticalChance = this.config.CRITICAL_SUCCESS_CHANCE;
             const luckyGoal = Math.floor(Math.random() * 100) + 1;
-            if (luckyGoal <= 5) {
+            if (luckyGoal <= criticalChance) {
                 goal = true;
-                message = `⭐ Parata bucata! 5% fortuna (roll: ${luckyGoal})`;
+                message = `⭐ Parata bucata! ${criticalChance}% fortuna (roll: ${luckyGoal})`;
                 eventLogs.push({
                     timestamp: Timestamp.now(),
                     occasion: matchData.currentOccasion,
@@ -1493,7 +1617,8 @@ window.ChallengeMatch = {
     },
 
     /**
-     * Avanza alla prossima occasione
+     * Avanza alla prossima occasione (v4.0)
+     * Inizia con confronto allenatori per determinare chi attacca
      */
     async advanceToNextOccasion(message = null) {
         const matchData = this.currentMatch;
@@ -1508,15 +1633,6 @@ window.ChallengeMatch = {
             return;
         }
 
-        // Alterna squadra attaccante
-        const nextAttacker = matchData.attackingTeamId === matchData.homeTeamId
-            ? matchData.awayTeamId
-            : matchData.homeTeamId;
-
-        const nextAttackerName = nextAttacker === matchData.homeTeamId
-            ? matchData.homeTeamName
-            : matchData.awayTeamName;
-
         const eventLog = [...(matchData.eventLog || [])];
         if (message) {
             eventLog.push({
@@ -1528,25 +1644,29 @@ window.ChallengeMatch = {
             });
         }
 
+        // v4.0: Inizia con confronto allenatori invece di alternare
         eventLog.push({
             timestamp: Timestamp.now(),
             occasion: nextOccasion,
             phase: 'start',
-            message: `Occasione ${nextOccasion} - ${nextAttackerName} attacca`,
+            message: `Occasione ${nextOccasion} - Confronto Allenatori`,
             type: 'action'
         });
 
         await updateDoc(doc(window.db, matchPath), {
             currentOccasion: nextOccasion,
-            currentPhase: 'construction',
-            attackingTeamId: nextAttacker,
+            currentPhase: 'coach_confrontation',
+            // Reset phaseData
             'phaseData.attackRoll': null,
             'phaseData.defenseRoll': null,
             'phaseData.attackResult': null,
             'phaseData.successChance': null,
-            'diceState.waitingFor': nextAttacker,
+            'phaseData.coachHomeRoll': null,
+            'phaseData.coachAwayRoll': null,
+            // Confronto allenatori: casa tira per primo
+            'diceState.waitingFor': matchData.homeTeamId,
             'diceState.diceType': 'd20',
-            'diceState.purpose': 'construction_att',
+            'diceState.purpose': 'coach_home',
             'diceState.result': null,
             'diceState.rolledAt': null,
             eventLog: eventLog
@@ -1865,6 +1985,7 @@ window.ChallengeMatch = {
         // Fase
         const phaseNames = {
             'waiting_start': 'In attesa di iniziare',
+            'coach_confrontation': 'Confronto Allenatori',
             'construction': 'Fase Costruzione',
             'attack': 'Fase Attacco',
             'shot': 'Fase Tiro',
@@ -1940,6 +2061,21 @@ window.ChallengeMatch = {
                 `;
                 break;
 
+            case 'coach_confrontation':
+                const homeCoachLevel = matchData.homeFormation?.coachLevel || 1;
+                const awayCoachLevel = matchData.awayFormation?.coachLevel || 1;
+                html = `
+                    <p class="text-xl text-purple-400 font-bold mb-2">🎯 CONFRONTO ALLENATORI</p>
+                    <p class="text-gray-300 mb-2">Chi vince determina chi attacca!</p>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span style="color: ${homeColor}">${matchData.homeTeamName}: Lv.${homeCoachLevel} (+${(homeCoachLevel/2).toFixed(1)})</span>
+                        <span style="color: ${awayColor}">${matchData.awayTeamName}: Lv.${awayCoachLevel} (+${(awayCoachLevel/2).toFixed(1)})</span>
+                    </div>
+                    <p class="text-xs text-gray-500">1d20 + Modificatore Allenatore</p>
+                    ${turnIndicator}
+                `;
+                break;
+
             case 'construction':
                 html = `
                     <p class="text-xl text-cyan-400 font-bold mb-2">⚙️ FASE COSTRUZIONE</p>
@@ -1985,6 +2121,8 @@ window.ChallengeMatch = {
      */
     getPurposeDescription(purpose) {
         const descriptions = {
+            'coach_home': 'Confronto allenatori (squadra casa)',
+            'coach_away': 'Confronto allenatori (squadra trasferta)',
             'construction_att': 'Lancio costruzione (attaccante)',
             'construction_def': 'Lancio costruzione (difensore)',
             'construction_d100': 'Verifica costruzione (d100)',
@@ -2023,6 +2161,8 @@ window.ChallengeMatch = {
             waitingArea.classList.add('hidden');
 
             const purposeNames = {
+                'coach_home': 'Confronto Allenatori (Casa)',
+                'coach_away': 'Confronto Allenatori (Trasferta)',
                 'construction_att': 'Costruzione (Attacco)',
                 'construction_def': 'Costruzione (Difesa)',
                 'construction_d100': 'Verifica Costruzione',

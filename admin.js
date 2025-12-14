@@ -674,6 +674,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const confirmBtn = document.getElementById('btn-confirm-reset-hof');
                 const selectedValue = select.value;
 
+                // Conferma extra per reset di TUTTE le squadre
+                if (selectedValue === '__ALL__') {
+                    const confirmAll = confirm('⚠️ ATTENZIONE!\n\nStai per cancellare TUTTE le statistiche Hall of Fame di TUTTE le squadre.\n\nQuesta azione è IRREVERSIBILE!\n\nSei sicuro di voler procedere?');
+                    if (!confirmAll) {
+                        return;
+                    }
+                }
+
                 confirmBtn.disabled = true;
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Reset in corso...';
                 msgEl.textContent = '';

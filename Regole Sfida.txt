@@ -93,7 +93,10 @@ La squadra che gioca in casa beneficia dei modificatori forniti dallo stadio, in
 
 ## 3. SVOLGIMENTO DELLA PARTITA
 
-La simulazione è composta da 5 occasioni per squadra.
+La simulazione è composta da 10 occasioni per determinare quale squadra giocherà l'occasione si usa:
+1d20 + modificatore livello allenatore squadra A vs 1d20 + modificatore livello allenatore squadra.
+Chi fa il tiro più alto ha 1 occasione da giocare. Si continua così fino ad aver esaurito tutte le occasioni.
+
 Ogni occasione è suddivisa in 3 fasi sequenziali.
 
 Esempio: Squadra A (attacco) vs Squadra B (difesa)

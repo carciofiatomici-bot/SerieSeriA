@@ -137,7 +137,7 @@ window.ChampionshipSimulation = {
     },
 
     /**
-     * Simula una singola partita (40 occasioni per squadra).
+     * Simula una singola partita (50 occasioni per squadra).
      */
     runSimulation(homeTeamData, awayTeamData) {
         const { simulateOneOccasion } = window.simulationLogic || {};
@@ -174,7 +174,7 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 40; // Aggiornato da 30 a 40 occasioni
+        const totalOccasions = 50; // Aggiornato v4.0: da 40 a 50 occasioni
 
         for (let i = 0; i < totalOccasions; i++) {
             if (simulateOneOccasion(teamA, teamB, i + 1)) {
@@ -247,7 +247,7 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 40; // Aggiornato da 30 a 40 occasioni
+        const totalOccasions = 50; // Aggiornato v4.0: da 40 a 50 occasioni
         const log = [];
         const matchEvents = []; // Array per eventi partita strutturati
 
@@ -297,7 +297,7 @@ window.ChampionshipSimulation = {
         // ==================== OCCASIONI SQUADRA CASA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${homeTeamData.teamName} (40 occasioni)`);
+        log.push(`# ATTACCO ${homeTeamData.teamName} (50 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {
@@ -323,7 +323,7 @@ window.ChampionshipSimulation = {
         // ==================== OCCASIONI SQUADRA TRASFERTA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${awayTeamData.teamName} (40 occasioni)`);
+        log.push(`# ATTACCO ${awayTeamData.teamName} (50 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {
@@ -411,7 +411,7 @@ window.ChampionshipSimulation = {
         if (resetSimulationState) resetSimulationState();
 
         let homeG = 0;
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 50; i++) {
             const goal = simulateOneOccasion(teamA, teamB, i + 1);
             if (goal) {
                 homeG++;
@@ -427,7 +427,7 @@ window.ChampionshipSimulation = {
         log.push('-'.repeat(60));
 
         let awayG = 0;
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 50; i++) {
             const goal = simulateOneOccasion(teamB, teamA, i + 1);
             if (goal) {
                 awayG++;

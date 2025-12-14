@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '1.6.2',
+    currentVersion: '2.0.0',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,29 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.0.0',
+            date: '2025-12-14',
+            time: '26:00',
+            title: 'Aggiornamento Regole Simulazione v4.0',
+            changes: [
+                { text: 'NUOVO: Nuovi modificatori livello (da 0.5 a 9.0 invece di 1.0-18.5)', adminOnly: false },
+                { text: 'NUOVO: Sistema tipologia sasso-carta-forbice: +1.5 per chi vince, -1.5 per chi perde', adminOnly: false },
+                { text: 'NUOVO: Simulazione campionato, coppa, supercoppa: 50 occasioni per squadra', adminOnly: false },
+                { text: 'NUOVO: Sfide interattive: 10 occasioni totali con confronto allenatori', adminOnly: false },
+                { text: 'NUOVO: Nelle sfide, ogni occasione inizia con 1d20+mod allenatore vs 1d20+mod allenatore', adminOnly: false },
+                { text: 'NUOVO: Sfide hanno tipologia potenziata (±3) e 15% successo critico', adminOnly: false },
+                { text: 'NUOVO: 40+ nuove abilita aggiunte all\'enciclopedia', adminOnly: false },
+                { text: 'NUOVA ABILITA: Cuore Impavido (+1.5 fuori casa)', adminOnly: false },
+                { text: 'NUOVA ABILITA: Camaleonte (inverte tipologia)', adminOnly: false },
+                { text: 'NUOVA ABILITA: Specialisti (Difesa/Costruzione/Tiro)', adminOnly: false },
+                { text: 'NUOVA ABILITA: Veterano (+1.5 ultime 5 occasioni)', adminOnly: false },
+                { text: 'NUOVA ABILITA: Dribbling Ubriacante (critico vs difensori)', adminOnly: false },
+                { text: 'NUOVA ABILITA: Parata Laser per Simone (cumula -1 per parata)', adminOnly: false },
+                { text: 'Enciclopedia abilita aggiornata a V4.0 con 120+ abilita', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '1.6.2',
             date: '2025-12-14',

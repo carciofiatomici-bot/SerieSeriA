@@ -100,13 +100,13 @@ Esempio: Squadra A (attacco) vs Squadra B (difesa)
 
 ---
 
-### FASE 1 – COSTRUZIONE
+### FASE 1 – COSTRUZIONE (ATTACCO (A) VS DIFESA (B))
 
 Partecipanti:
- Squadra A:
+ Squadra A (attacco):
    Difensore (25%) oppure
    Centrocampista (75%)
- Squadra B:
+ Squadra B (difesa):
    Centrocampista (85%) oppure
    Attaccante (15%)
 
@@ -128,8 +128,8 @@ Esito:
 (Solo se la Fase 1 è superata)
 
 Partecipanti:
- Squadra A: Attaccante (50%) o Centrocampista (50%)
- Squadra B: Difensore (50%) o Centrocampista (50%)
+ Squadra A (attacco): Attaccante (50%) o Centrocampista (50%)
+ Squadra B (difesa): Difensore (50%) o Centrocampista (50%)
 
 Formula:
 

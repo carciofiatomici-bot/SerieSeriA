@@ -1,8 +1,8 @@
 //
 // ====================================================================
-// ABILITIES-ENCYCLOPEDIA.JS - Enciclopedia Abilità Completa V3.0
+// ABILITIES-ENCYCLOPEDIA.JS - Enciclopedia Abilità Completa V4.0
 // ====================================================================
-// Aggiornato con tutte le 60 abilità del nuovo motore di simulazione
+// Aggiornato con le nuove abilità v4.0 - Sistema tipologia ±1.5/±3
 //
 
 window.AbilitiesEncyclopedia = {
@@ -1134,6 +1134,766 @@ window.AbilitiesEncyclopedia = {
         },
 
         // ========================================
+        // NUOVE ABILITÀ V4.0 - GENERALI
+        // ========================================
+
+        'Cuore Impavido': {
+            name: 'Cuore Impavido',
+            icon: '💪',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-red-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Se la squadra gioca Fuori Casa, il giocatore ottiene +1.5 al modificatore',
+            effect: '+1.5 mod quando si gioca fuori casa (senza bonus stadio)',
+            mechanics: 'Se la squadra non beneficia del Bonus Stadio (gioca in trasferta), questo giocatore riceve un bonus fisso di +1.5 al modificatore',
+            activation: '100% (condizionale)',
+            example: 'Partita fuori casa → Cuore Impavido attivo → +1.5 al modificatore!',
+            phase: 'Tutte le fasi',
+            synergy: ['Freddezza', 'Icona']
+        },
+
+        'Uomo Spogliatoio': {
+            name: 'Uomo Spogliatoio',
+            icon: '🤝',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-blue-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Dalla panchina, riduce il Malus Forma di tutti i titolari di 1',
+            effect: 'Se in panchina: malus forma titolari ridotto di 1 (es. -2 diventa -1)',
+            mechanics: 'Se questo giocatore è in panchina, il malus derivante dalla forma fisica negativa di tutti i titolari viene ridotto di 1 punto',
+            activation: '100% (se in panchina)',
+            example: 'Titolare con forma -3 → Con Uomo Spogliatoio in panchina → forma -2!',
+            phase: 'Pre-partita',
+            synergy: ['Freddezza', 'Forma Smagliante']
+        },
+
+        'Rivalsa': {
+            name: 'Rivalsa',
+            icon: '🔥',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-orange-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Se in svantaggio di 2+ goal, ottiene +2 al modificatore',
+            effect: '+2 mod quando la squadra perde di 2 o più goal',
+            mechanics: 'Se la propria squadra è in svantaggio di 2 o più goal, il giocatore ottiene +2 al modificatore in tutte le fasi',
+            activation: '100% (condizionale)',
+            example: 'Risultato 0-2 → Rivalsa attivo → +2 al modificatore!',
+            phase: 'Tutte le fasi',
+            synergy: ['Bomber', 'Doppio Scatto']
+        },
+
+        'Talismano': {
+            name: 'Talismano',
+            icon: '🍀',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-green-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'La probabilità di infortunio della squadra scende dallo 1% allo 0.5%',
+            effect: 'Dimezza la probabilità di infortunio di fine partita per la squadra',
+            mechanics: 'Se il giocatore è in campo, la probabilità di infortunio di fine partita per tutta la squadra scende dall\'1% allo 0.5%',
+            activation: '100% (passiva)',
+            example: 'Fine partita → Probabilità infortunio 0.5% invece di 1%!',
+            phase: 'Post-partita',
+            synergy: ['Indistruttibile', 'Ripresa rapida']
+        },
+
+        'Camaleonte': {
+            name: 'Camaleonte',
+            icon: '🦎',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-green-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Inverte l\'esito della Tipologia Giocatori (malus diventa bonus e viceversa)',
+            effect: 'Se avrebbe -1.5, ottiene +1.5. Se avrebbe +1.5, subisce -1.5',
+            mechanics: 'L\'esito del sistema sasso-carta-forbice viene invertito per questo giocatore. Se perderebbe il confronto, lo vince invece, e viceversa',
+            activation: '100% (passiva)',
+            example: 'Potenza vs Velocità → Normalmente -1.5 → Con Camaleonte +1.5!',
+            phase: 'Tutte le fasi',
+            synergy: ['Adattabile', 'Tuttocampista']
+        },
+
+        'Specialista Difesa': {
+            name: 'Specialista Difesa',
+            icon: '🛡️',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-blue-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '+1 in Fase 2 difesa, -0.5 nelle altre fasi',
+            effect: 'Bonus +1 in Fase 2 (difesa), malus -0.5 in altre fasi',
+            mechanics: 'Il giocatore ottiene +1 fisso al modificatore quando partecipa alla Fase 2 in difesa, ma -0.5 nelle altre fasi',
+            activation: '100% (passiva)',
+            example: 'Fase 2 difesa → +1 mod! Fase 1 o Fase 3 → -0.5 mod',
+            phase: 'Tutte le fasi',
+            synergy: ['Muro', 'Guardia']
+        },
+
+        'Specialista Costruzione': {
+            name: 'Specialista Costruzione',
+            icon: '⚙️',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-cyan-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '+1 in Fase 1, -0.5 nelle altre fasi',
+            effect: 'Bonus +1 in Fase 1 (costruzione), malus -0.5 in altre fasi',
+            mechanics: 'Il giocatore ottiene +1 fisso al modificatore quando partecipa alla Fase 1, ma -0.5 nelle altre fasi',
+            activation: '100% (passiva)',
+            example: 'Fase 1 → +1 mod! Fase 2 o Fase 3 → -0.5 mod',
+            phase: 'Tutte le fasi',
+            synergy: ['Regista', 'Tocco Di Velluto']
+        },
+
+        'Specialista Tiro': {
+            name: 'Specialista Tiro',
+            icon: '🎯',
+            role: 'Multi',
+            roles: ['D', 'C', 'A'],
+            color: 'text-red-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '+1 in Fase 3, -0.5 nelle altre fasi',
+            effect: 'Bonus +1 in Fase 3 (tiro), malus -0.5 in altre fasi',
+            mechanics: 'Il giocatore ottiene +1 fisso al modificatore quando partecipa alla Fase 3, ma -0.5 nelle altre fasi',
+            activation: '100% (passiva)',
+            example: 'Fase 3 → +1 mod! Fase 1 o Fase 2 → -0.5 mod',
+            phase: 'Tutte le fasi',
+            synergy: ['Bomber', 'Tiro Fulmineo']
+        },
+
+        'Veterano': {
+            name: 'Veterano',
+            icon: '🎖️',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-amber-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Nelle ultime 5 occasioni (35-40), ottiene +1.5 al modificatore',
+            effect: '+1.5 mod nelle occasioni dalla 35 alla 40',
+            mechanics: 'Durante le ultime 5 occasioni della partita (dalla 35 alla 40), il giocatore aggiunge +1.5 al suo modificatore',
+            activation: '100% (ultime 5 occasioni)',
+            example: 'Occasione 36 → Veterano attivo → +1.5 mod!',
+            phase: 'Tutte le fasi (occasioni 35-40)',
+            synergy: ['Icona', 'Freddezza']
+        },
+
+        'Talento Precoce': {
+            name: 'Talento Precoce',
+            icon: '⭐',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-yellow-500',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '+1.5 fisso al modificatore, ma livello massimo 18',
+            effect: 'Bonus permanente +1.5, cap livello a 18',
+            mechanics: 'Aggiunge un bonus fisso di +1.5 al modificatore base, simulando un potenziale maggiore del livello attuale. Il livello massimo del giocatore scende a 18',
+            activation: '100% (passiva)',
+            example: 'Giocatore Lv10 (mod 2.5) → Con Talento Precoce: 2.5+1.5 = 4.0!',
+            phase: 'Tutte le fasi',
+            synergy: ['Icona', 'Fortunato'],
+            warning: 'Il livello massimo è ridotto a 18!'
+        },
+
+        'Jolly Tattico': {
+            name: 'Jolly Tattico',
+            icon: '🃏',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-purple-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'A inizio partita può cambiare la sua Tipologia per tutto il match',
+            effect: 'Scelta tipologia a inizio partita (definitiva)',
+            mechanics: 'A inizio partita, il giocatore può scegliere di cambiare la sua Tipologia (Potenza/Tecnica/Velocità) per adattarsi agli avversari. La scelta è definitiva per tutto il match',
+            activation: '100% (a inizio partita)',
+            example: 'Avversario pieno di Tecnica → Jolly sceglie Potenza → +1.5 su tutti!',
+            phase: 'Pre-partita',
+            synergy: ['Camaleonte', 'Tuttocampista']
+        },
+
+        // ========================================
+        // NUOVE ABILITÀ V4.0 - NEGATIVE GENERALI
+        // ========================================
+
+        'Meteoropatico': {
+            name: 'Meteoropatico',
+            icon: '🌧️',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-gray-600',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Se gioca Fuori Casa, subisce -1 a tutti i modificatori',
+            effect: '-1 mod quando si gioca fuori casa',
+            mechanics: 'Se la squadra gioca Fuori Casa (senza Bonus Stadio), il giocatore subisce -1 a tutti i modificatori',
+            activation: '100% (condizionale)',
+            example: 'Partita fuori casa → -1 al modificatore!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        'Scaramantico': {
+            name: 'Scaramantico',
+            icon: '🪬',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-purple-700',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Nelle occasioni 13-17, il modificatore diventa automaticamente 0',
+            effect: 'Mod = 0 nelle occasioni dalla 13 alla 17',
+            mechanics: 'Nelle occasioni dalla 13 alla 17, se partecipa, il suo modificatore diventa automaticamente 0',
+            activation: '100% (occasioni 13-17)',
+            example: 'Occasione 15 → Modificatore = 0!',
+            phase: 'Tutte le fasi (occasioni 13-17)',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        'Prevedibile': {
+            name: 'Prevedibile',
+            icon: '📖',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-orange-700',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Il malus da tipologia è -2.5 invece di -1.5',
+            effect: 'Malus sasso-carta-forbice aumentato a -2.5',
+            mechanics: 'Quando perde il confronto Tipologia dei Giocatori (sasso-carta-forbice), il malus applicato è -2.5 invece che il normale -1.5',
+            activation: '100% (passiva)',
+            example: 'Potenza vs Velocità → Normalmente -1.5 → Con Prevedibile -2.5!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        'Sudditanza Psicologica': {
+            name: 'Sudditanza Psicologica',
+            icon: '😰',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-red-700',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: '-1 se allenatore avversario è superiore, -0.5 se pari/inferiore',
+            effect: 'Malus basato sul confronto livello allenatori',
+            mechanics: 'Se la squadra avversaria ha un Livello Allenatore superiore, subisce -1 al modificatore per tutta la partita. Se pari o inferiore, il malus è -0.5',
+            activation: '100% (passiva)',
+            example: 'Allenatore avversario Lv15 vs Lv10 → -1 mod per tutta la partita!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        'Demotivato': {
+            name: 'Demotivato',
+            icon: '😞',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-gray-700',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: '-1 se la squadra è in svantaggio',
+            effect: '-1 mod quando si perde (anche di 1 solo goal)',
+            mechanics: 'Se la propria squadra sta perdendo (svantaggio di 1 o più goal), subisce -1 a tutte le fasi finché il risultato non torna in parità o vantaggio',
+            activation: '100% (condizionale)',
+            example: 'Risultato 0-1 → -1 al modificatore!',
+            phase: 'Tutte le fasi',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        'Contrattura Cronica': {
+            name: 'Contrattura Cronica',
+            icon: '🦵',
+            role: 'Multi',
+            roles: ['P', 'D', 'C', 'A'],
+            color: 'text-red-800',
+            rarity: 'Comune',
+            type: 'Negativa',
+            description: 'Dopo 15 occasioni, il modificatore viene dimezzato',
+            effect: 'Mod /2 dalla 16esima occasione in poi',
+            mechanics: 'Se partecipa a più di 15 occasioni, dalla 16esima in poi il suo modificatore viene dimezzato per la fatica',
+            activation: '100% (dopo occ. 15)',
+            example: 'Occasione 20 → Mod +8 diventa +4!',
+            phase: 'Tutte le fasi (da occ. 16)',
+            synergy: ['Nessuna (negativa)'],
+            warning: '⚠️ NEGATIVA!'
+        },
+
+        // ========================================
+        // NUOVE ABILITÀ V4.0 - PORTIERE
+        // ========================================
+
+        'Guerriero': {
+            name: 'Guerriero',
+            icon: '⚔️',
+            role: 'P',
+            color: 'text-red-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Quando subisce un goal, ottiene +1 per le prossime 3 occasioni',
+            effect: '+1 mod per 3 occasioni dopo aver subito goal',
+            mechanics: 'Quando subisce un goal, ottiene +1 al modificatore per le prossime 3 occasioni in cui è chiamato in causa',
+            activation: '100% (dopo goal subito)',
+            example: 'Subisce goal → +1 mod per 3 occasioni!',
+            phase: 'Fase 3 (post-goal)',
+            synergy: ['Parata di pugno', 'Miracolo']
+        },
+
+        'Presenza': {
+            name: 'Presenza',
+            icon: '👤',
+            role: 'P',
+            color: 'text-purple-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Riduce di -1 il Bonus Allenatore avversario in Fase 3',
+            effect: '-1 al bonus allenatore avversario quando tira',
+            mechanics: 'Riduce di -1 il Bonus Allenatore della squadra avversaria durante la Fase 3',
+            activation: '100% (passiva)',
+            example: 'Allenatore avversario +3 → Con Presenza diventa +2!',
+            phase: 'Fase 3',
+            synergy: ['Parata di pugno', 'Muro Psicologico']
+        },
+
+        'Rilancio Laser': {
+            name: 'Rilancio Laser',
+            icon: '🚀',
+            role: 'P',
+            color: 'text-cyan-600',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Dopo una parata, la squadra ottiene +2 alla Fase 1 successiva',
+            effect: '+2 alla Fase 1 successiva dopo una parata',
+            mechanics: 'Se il portiere effettua una parata, la sua squadra ottiene un bonus di +2 al modificatore nella Fase 1 successiva',
+            activation: '100% (dopo parata)',
+            example: 'Parata! → Prossima Fase 1: +2 bonus!',
+            phase: 'Fase 1 (post-parata)',
+            synergy: ['Presa Sicura', 'Regista']
+        },
+
+        'Saracinesca': {
+            name: 'Saracinesca',
+            icon: '🚧',
+            role: 'P',
+            color: 'text-gray-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se subisce goal, il critico avversario scende allo 0% per il resto della partita',
+            effect: 'Dopo goal subito: critico avversario = 0%',
+            mechanics: 'Se subisce un Goal, la probabilità che l\'avversario faccia un Successo Critico (Goal su parata) scende allo 0% per il resto della partita',
+            activation: '100% (dopo goal subito)',
+            example: 'Subisce goal → Critico avversario 0% per sempre!',
+            phase: 'Fase 3',
+            synergy: ['Miracolo', 'Parata di pugno']
+        },
+
+        'Gatto': {
+            name: 'Gatto',
+            icon: '🐱',
+            role: 'P',
+            color: 'text-orange-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se la differenza è esattamente -1, il goal viene annullato (parata)',
+            effect: 'Differenza -1 = parata invece di goal',
+            mechanics: 'Se il portiere subisce un Goal ma la differenza è esattamente -1, il goal viene annullato e considerato parata',
+            activation: '100% (condizionale)',
+            example: 'Tiro 16 vs Parata 15 → Diff -1 → Con Gatto: PARATA!',
+            phase: 'Fase 3',
+            synergy: ['Parata di pugno', 'Miracolo']
+        },
+
+        'Regista Difensivo': {
+            name: 'Regista Difensivo',
+            icon: '🎬',
+            role: 'P',
+            color: 'text-gold-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Dopo parata, la squadra salta la Fase 1 e inizia dalla Fase 2 con +2',
+            effect: 'Parata → Skip Fase 1, Fase 2 con +2',
+            mechanics: 'Se effettua una parata, la squadra salta la Fase 1 dell\'azione successiva e inizia direttamente dalla Fase 2 (Attacco vs Difesa) con un bonus di +2',
+            activation: '100% (dopo parata)',
+            example: 'Parata! → Prossima azione: Skip Fase 1, +2 in Fase 2!',
+            phase: 'Fase 2 (post-parata)',
+            synergy: ['Rilancio Laser', 'Presa Sicura']
+        },
+
+        // ========================================
+        // NUOVE ABILITÀ V4.0 - DIFENSORE
+        // ========================================
+
+        'Spallata': {
+            name: 'Spallata',
+            icon: '💪',
+            role: 'D',
+            color: 'text-orange-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'Contro Tecnica, bonus tipologia aumentato a +2.5 (invece di +1.5)',
+            effect: '+2.5 invece di +1.5 vs Tecnica',
+            mechanics: 'Se partecipa alla Fase 2 contro un attaccante di tipologia Tecnica, aggiunge +1 extra al bonus di tipologia (totale +2.5 invece di +1.5)',
+            activation: '100% (vs Tecnica)',
+            example: 'Vs Attaccante Tecnica → +2.5 invece di +1.5!',
+            phase: 'Fase 2',
+            synergy: ['Muro', 'Guardia']
+        },
+
+        'Blocco Fisico': {
+            name: 'Blocco Fisico',
+            icon: '🧱',
+            role: 'D',
+            color: 'text-blue-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: '+1 in Fase 2 contro attaccanti di tipologia Velocità',
+            effect: '+1 mod vs Velocità in Fase 2',
+            mechanics: 'Quando partecipa alla Fase 2 contro un attaccante di tipologia Velocità, il difensore ottiene +1 al modificatore',
+            activation: '100% (vs Velocità)',
+            example: 'Vs Attaccante Velocità → +1 mod!',
+            phase: 'Fase 2',
+            synergy: ['Muro', 'Spallata']
+        },
+
+        'Anticipo Secco': {
+            name: 'Anticipo Secco',
+            icon: '⚡',
+            role: 'D',
+            color: 'text-yellow-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se vince Fase 2, la squadra salta Fase 1 nell\'azione successiva',
+            effect: 'Vittoria Fase 2 → Skip Fase 1 prossima azione',
+            mechanics: 'Se vince la Fase 2 (Attacco vs Difesa), la sua squadra salta la Fase 1 nell\'azione successiva e parte direttamente dalla Fase 2 in attacco',
+            activation: '100% (se vince Fase 2)',
+            example: 'Vince Fase 2 → Prossima azione: Skip Fase 1!',
+            phase: 'Fase 2 → Fase 1 successiva',
+            synergy: ['Muro', 'Antifurto']
+        },
+
+        'Intercetto': {
+            name: 'Intercetto',
+            icon: '🤚',
+            role: 'D',
+            color: 'text-green-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '5% di vincere automaticamente la Fase 2 se avversario è Centrocampista',
+            effect: '5% auto-vittoria Fase 2 vs Centrocampista',
+            mechanics: '5% di probabilità di vincere automaticamente la Fase 2 senza tirare i dadi se l\'avversario è un Centrocampista',
+            activation: '5% (vs Centrocampista)',
+            example: 'Vs Centrocampista → 5% → Fase 2 vinta automaticamente!',
+            phase: 'Fase 2',
+            synergy: ['Antifurto', 'Muro']
+        },
+
+        'Muro di Gomma': {
+            name: 'Muro di Gomma',
+            icon: '🏐',
+            role: 'D',
+            color: 'text-purple-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Se perde Fase 2, sottrae comunque 3 punti al Valore Tiro avversario',
+            effect: 'Sconfitta Fase 2 → -3 al Valore Tiro avversario',
+            mechanics: 'Se il difensore perde il confronto in Fase 2, sottrae comunque 3 punti al Valore Tiro dell\'attaccante che passa alla Fase 3',
+            activation: '100% (se perde Fase 2)',
+            example: 'Perde Fase 2 → Valore Tiro avversario -3!',
+            phase: 'Fase 2 → Fase 3',
+            synergy: ['Muro', 'Deviazione']
+        },
+
+        'Mastino': {
+            name: 'Mastino',
+            icon: '🐕',
+            role: 'D',
+            color: 'text-amber-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Copia il bonus abilità dell\'avversario in Fase 2',
+            effect: 'Copia bonus abilità avversario',
+            mechanics: 'Se l\'avversario in Fase 2 ottiene un bonus da un\'abilità, il difensore ottiene lo stesso identico bonus al proprio modificatore',
+            activation: '100% (se avversario ha bonus)',
+            example: 'Avversario attiva Doppio Scatto (+3) → Mastino ottiene +3!',
+            phase: 'Fase 2',
+            synergy: ['Muro', 'Guardia']
+        },
+
+        'Scivolata Disperata': {
+            name: 'Scivolata Disperata',
+            icon: '🦵',
+            role: 'D',
+            color: 'text-red-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'Se perde Fase 2, 10% di annullare l\'azione (salta 2 occasioni)',
+            effect: '10% annulla azione se perde, ma skip 2 occasioni',
+            mechanics: 'Se perde la Fase 2, 10% di probabilità di annullare l\'azione commettendo fallo tattico (salta le successive 2 occasioni)',
+            activation: '10% (se perde Fase 2)',
+            example: 'Perde Fase 2 → 10% → Azione annullata! Skip 2 occasioni',
+            phase: 'Fase 2',
+            synergy: ['Muro', 'Antifurto'],
+            warning: 'Salta 2 occasioni se attivata!'
+        },
+
+        // ========================================
+        // NUOVE ABILITÀ V4.0 - CENTROCAMPISTA
+        // ========================================
+
+        'Geometra': {
+            name: 'Geometra',
+            icon: '📐',
+            role: 'C',
+            color: 'text-blue-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'In Fase 1, se il d20 è pari, aggiunge +1 al totale',
+            effect: '+1 se d20 pari in Fase 1',
+            mechanics: 'Nella Fase 1 (Costruzione), se il risultato naturale del suo d20 è un numero pari, aggiunge +1 al totale',
+            activation: '50% (d20 pari)',
+            example: 'Tira 14 (pari) → +1 bonus! Tira 13 (dispari) → niente',
+            phase: 'Fase 1',
+            synergy: ['Tocco Di Velluto', 'Passaggio Corto']
+        },
+
+        'Pressing Alto': {
+            name: 'Pressing Alto',
+            icon: '⬆️',
+            role: 'C',
+            color: 'text-red-500',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: 'In Fase 1 difesa, -1 al modificatore avversario',
+            effect: '-1 mod avversario in Fase 1 difesa',
+            mechanics: 'Quando partecipa alla Fase 1 in difesa, impone un malus di -1 al modificatore dell\'avversario',
+            activation: '100% (in Fase 1 difesa)',
+            example: 'Avversario in Fase 1 con mod +8 → Con Pressing Alto: +7!',
+            phase: 'Fase 1 (difesa)',
+            synergy: ['Mago del pallone', 'Regista']
+        },
+
+        'Diga': {
+            name: 'Diga',
+            icon: '🌊',
+            role: 'C',
+            color: 'text-cyan-600',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'In Fase 2 difesa, annulla bonus tipologia avversario',
+            effect: 'Annulla bonus +1.5 tipologia avversario in Fase 2',
+            mechanics: 'Quando partecipa alla Fase 2 in difesa, annulla eventuali bonus di Tipologia dell\'avversario',
+            activation: '100% (in Fase 2 difesa)',
+            example: 'Avversario avrebbe +1.5 da tipologia → Con Diga: +0!',
+            phase: 'Fase 2 (difesa)',
+            synergy: ['Motore', 'Antifurto']
+        },
+
+        'Metronomo': {
+            name: 'Metronomo',
+            icon: '🎵',
+            role: 'C',
+            color: 'text-purple-500',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'In Fase 1, se d20 < 8, diventa automaticamente 8',
+            effect: 'd20 minimo 8 in Fase 1',
+            mechanics: 'Se il risultato del suo d20 in Fase 1 è inferiore a 8, lo considera automaticamente come 8',
+            activation: '100% (se d20 < 8)',
+            example: 'Tira 4 → Con Metronomo diventa 8!',
+            phase: 'Fase 1',
+            synergy: ['Tocco Di Velluto', 'Regista']
+        },
+
+        'Illuminante': {
+            name: 'Illuminante',
+            icon: '💡',
+            role: 'C',
+            color: 'text-yellow-500',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se vince Fase 1 con differenza > 10, salta il d100',
+            effect: 'Differenza > 10 in Fase 1 = skip d100',
+            mechanics: 'Se vince la Fase 1 con una differenza di punteggio superiore a 10, la squadra passa automaticamente alla Fase 2 senza tirare il d100',
+            activation: '100% (se differenza > 10)',
+            example: 'Vince Fase 1: 25 vs 12 → Differenza 13 → Skip d100!',
+            phase: 'Fase 1 → Fase 2',
+            synergy: ['Tocco Di Velluto', 'Regista']
+        },
+
+        'Box-to-Box': {
+            name: 'Box-to-Box',
+            icon: '🏃',
+            role: 'C',
+            color: 'text-green-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Se vince Fase 1, partecipa anche a Fase 2 con +1',
+            effect: 'Vittoria Fase 1 → Partecipa a Fase 2 con +1',
+            mechanics: 'Se partecipa alla Fase 1 e la squadra vince, partecipa automaticamente anche alla Fase 2 con un bonus di +1',
+            activation: '100% (se vince Fase 1)',
+            example: 'Vince Fase 1 → Partecipa anche a Fase 2 con +1!',
+            phase: 'Fase 1 → Fase 2',
+            synergy: ['Motore', 'Incursore']
+        },
+
+        'Onnipresente': {
+            name: 'Onnipresente',
+            icon: '👥',
+            role: 'C',
+            color: 'text-indigo-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: '10% di supportare Fase 2 con metà modificatore',
+            effect: '10% aggiunge 1/2 mod in Fase 2',
+            mechanics: 'Ha il 10% di probabilità di partecipare alla Fase 2 in supporto (sia attacco che difesa) aggiungendo metà del suo modificatore a quello del compagno titolare',
+            activation: '10%',
+            example: 'Fase 2 → 10% → Compagno +4 (metà di 8)!',
+            phase: 'Fase 2',
+            synergy: ['Motore', 'Box-to-Box']
+        },
+
+        // ========================================
+        // NUOVE ABILITÀ V4.0 - ATTACCANTE
+        // ========================================
+
+        'Rapinatore': {
+            name: 'Rapinatore',
+            icon: '🦝',
+            role: 'A',
+            color: 'text-gray-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: '5% di segnare su ribattuta dopo parata stretta (differenza < 3)',
+            effect: '5% goal su ribattuta se parata con diff < 3',
+            mechanics: 'Se il portiere effettua una parata ma il risultato è inferiore a 3 (parata per poco), c\'è un 5% di probabilità di segnare sulla ribattuta',
+            activation: '5% (se parata con diff < 3)',
+            example: 'Parata con diff +2 → 5% → GOAL su ribattuta!',
+            phase: 'Fase 3 (post-parata)',
+            synergy: ['Bomber', 'Opportunista']
+        },
+
+        'Tiro della Domenica': {
+            name: 'Tiro della Domenica',
+            icon: '🎰',
+            role: 'A',
+            color: 'text-purple-600',
+            rarity: 'Comune',
+            type: 'Positiva',
+            description: '5% di +5 mod in Fase 3, ma se fallisce -1 alla forma',
+            effect: '5% +5 mod in Fase 3, rischio -1 forma',
+            mechanics: '5% di probabilità di aggiungere +5 al modificatore in Fase 3, ma se fallisce (non segna) subisce -1 alla forma',
+            activation: '5%',
+            example: '5% attivo → +5 mod! Se non segna → -1 forma',
+            phase: 'Fase 3',
+            synergy: ['Bomber', 'Opportunista'],
+            warning: 'Rischio -1 forma se non segna!'
+        },
+
+        'Potenza Pura': {
+            name: 'Potenza Pura',
+            icon: '💥',
+            role: 'A',
+            color: 'text-red-600',
+            rarity: 'Rara',
+            type: 'Positiva',
+            description: 'Se di tipologia Potenza, metà margine vittoria Fase 2 come bonus Fase 3',
+            effect: 'Tipologia Potenza: 1/2 margine Fase 2 → bonus Fase 3',
+            mechanics: 'Se è di tipologia Potenza, quando vince la Fase 2 trasmette metà del margine di vittoria come bonus al tiro in Fase 3',
+            activation: '100% (se Potenza e vince Fase 2)',
+            example: 'Vince Fase 2: 20 vs 14 (margine 6) → +3 in Fase 3!',
+            phase: 'Fase 2 → Fase 3',
+            synergy: ['Doppio Scatto', 'Bomber']
+        },
+
+        'Specialista del Cucchiaio': {
+            name: 'Specialista del Cucchiaio',
+            icon: '🥄',
+            role: 'A',
+            color: 'text-amber-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: 'Ignora abilità del portiere in Fase 3',
+            effect: 'Annulla tutte le abilità del portiere',
+            mechanics: 'Se il portiere ha un\'abilità che aumenta il proprio modificatore in Fase 3, quella specifica abilità viene ignorata',
+            activation: '100% (passiva)',
+            example: 'Portiere con Uscita Kamikaze → Ignorata!',
+            phase: 'Fase 3',
+            synergy: ['Tiro Fulmineo', 'Bomber']
+        },
+
+        'Sangue Freddo': {
+            name: 'Sangue Freddo',
+            icon: '❄️',
+            role: 'A',
+            color: 'text-blue-600',
+            rarity: 'Epica',
+            type: 'Positiva',
+            description: '10% di ignorare critico/abilità difensiva del portiere',
+            effect: '10% ignora critico e abilità difensive portiere',
+            mechanics: 'Se il portiere avversario ottiene un successo critico o attiva un\'abilità difensiva, 10% di probabilità di ignorarla',
+            activation: '10%',
+            example: 'Portiere attiva Miracolo → 10% → Ignorato!',
+            phase: 'Fase 3',
+            synergy: ['Tiro Fulmineo', 'Specialista del Cucchiaio']
+        },
+
+        'Dribbling Ubriacante': {
+            name: 'Dribbling Ubriacante',
+            icon: '🌀',
+            role: 'A',
+            color: 'text-purple-600',
+            rarity: 'Leggendaria',
+            type: 'Positiva',
+            description: 'vs Difensore, se d20 = 19-20 → Fase 3 con Valore Tiro 35',
+            effect: '19-20 su d20 vs Difensore = critico 35 diretto',
+            mechanics: 'In Fase 2, se l\'avversario è un Difensore, tira 1d20. Se esce 19 o 20, passa direttamente alla Fase 3 con un Valore Tiro di 35 (Critico automatico)',
+            activation: '10% (19-20 su d20)',
+            example: 'Vs Difensore → Tira 19 → Skip a Fase 3 con Valore Tiro 35!',
+            phase: 'Fase 2 → Fase 3',
+            synergy: ['Doppio Scatto', 'Bomber']
+        },
+
+        // ========================================
+        // NUOVA ABILITÀ ICONA V4.0
+        // ========================================
+
+        'Parata Laser': {
+            name: 'Parata Laser',
+            icon: '⚡',
+            role: 'Speciale',
+            color: 'text-gold-500',
+            rarity: 'Unica',
+            type: 'Positiva',
+            description: 'Valore Tiro avversario -1 per ogni parata (max -5). Critico avversario 1%',
+            effect: '-1 cumulativo al Valore Tiro per parata (max -5), critico 1%',
+            mechanics: 'In Fase 3, il Valore Tiro avversario è ridotto di -1 cumulativo per ogni parata effettuata in precedenza (max -5). La probabilità di critico dell\'attaccante scende all\'1%',
+            activation: '100% (passiva)',
+            example: '3 parate fatte → Valore Tiro avversario -3! Critico solo 1%',
+            phase: 'Fase 3',
+            synergy: ['Parata di pugno', 'Miracolo'],
+            warning: '⚠️ ESCLUSIVA: Solo Simone',
+            special: 'Abilita unica di Simone (aggiornata v4.0)'
+        },
+
+        // ========================================
         // ABILITÀ SPECIALE - ICONA (1)
         // ========================================
 
@@ -1509,4 +2269,4 @@ window.AbilitiesEncyclopedia = {
     }
 };
 
-console.log('✅ Enciclopedia Abilita V3.3 caricata - 75 abilita complete!');
+console.log('✅ Enciclopedia Abilita V4.0 caricata - 120+ abilita complete!');

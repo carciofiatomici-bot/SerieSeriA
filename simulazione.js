@@ -30,33 +30,60 @@ if (typeof window !== "undefined") { window.replayActions = []; }
 // ====================================================================
 
 /**
- * Mappa modificatori per livello (Regola 2 - AGGIORNATA fino a Livello 30)
+ * Mappa modificatori per livello (Regola 2 - AGGIORNATA v4.0)
+ * Progressione: +0.5 ogni 2 livelli, bonus finale al livello 29-30
  */
 const LEVEL_MODIFIERS = {
-    1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5, 5: 3.0, 6: 3.5, 7: 4.0, 8: 4.5, 9: 5.0, 10: 5.5,
-    11: 6.0, 12: 6.5, 13: 7.0, 14: 7.5, 15: 8.0, 16: 8.5, 17: 9.0, 18: 9.5, 19: 10.0,
-    20: 11.0, 21: 11.5, 22: 12.0, 23: 12.5, 24: 13.0, 25: 14.0, 26: 14.5, 27: 15.0,
-    28: 15.5, 29: 17.5, 30: 18.5
+    1: 0.5, 2: 0.5,
+    3: 1.0, 4: 1.0,
+    5: 1.5, 6: 1.5,
+    7: 2.0, 8: 2.0,
+    9: 2.5, 10: 2.5,
+    11: 3.0, 12: 3.0,
+    13: 3.5, 14: 3.5,
+    15: 4.0, 16: 4.0,
+    17: 4.5, 18: 4.5,
+    19: 5.0, 20: 5.0,
+    21: 5.5, 22: 5.5,
+    23: 6.0, 24: 6.0,
+    25: 6.5, 26: 6.5,
+    27: 7.0, 28: 7.0,
+    29: 8.0, 30: 9.0
 };
 
 /**
- * Vantaggi tipologia (Regola 5)
- * Potenza batte Tecnica, Tecnica batte Velocità, Velocità batte Potenza
+ * Vantaggi tipologia (Regola 5 - AGGIORNATA v4.0)
+ * Sistema Sasso-Carta-Forbice con bonus/malus fisso
+ * Potenza > Tecnica > Velocita > Potenza
  */
-const TYPE_DISADVANTAGE = {
-    'Potenza': 'Tecnica',    // Potenza subisce -25% da Tecnica
-    'Tecnica': 'Velocita',   // Tecnica subisce -25% da Velocità
-    'Velocita': 'Potenza'    // Velocità subisce -25% da Potenza
+const TYPE_ADVANTAGE = {
+    'Potenza': 'Tecnica',    // Potenza batte Tecnica
+    'Tecnica': 'Velocita',   // Tecnica batte Velocità
+    'Velocita': 'Potenza'    // Velocità batte Potenza
 };
-// Range tipologia: da 5% a 25% (randomizzato)
-const TYPE_PENALTY_MIN = 0.05; // 5% minimo
-const TYPE_PENALTY_MAX = 0.25; // 25% massimo
+
+// Bonus/Malus tipologia (valori assoluti, non percentuali)
+const TYPE_ADVANTAGE_BONUS = 1.5;   // Chi vince il confronto tipologia
+const TYPE_ADVANTAGE_MALUS = -1.5;  // Chi perde il confronto tipologia
 
 /**
- * Calcola penalita tipologia randomizzata (5-25%)
+ * Calcola bonus/malus tipologia per un giocatore
+ * @param {string} playerType - Tipologia del giocatore (Potenza/Tecnica/Velocita)
+ * @param {string} opponentType - Tipologia dell'avversario
+ * @returns {number} Bonus (+1.5), Malus (-1.5) o 0 se stesso tipo
  */
-const getTypePenalty = () => {
-    return TYPE_PENALTY_MIN + Math.random() * (TYPE_PENALTY_MAX - TYPE_PENALTY_MIN);
+const getTypeModifier = (playerType, opponentType) => {
+    if (!playerType || !opponentType || playerType === opponentType) return 0;
+
+    // Il giocatore batte l'avversario?
+    if (TYPE_ADVANTAGE[playerType] === opponentType) {
+        return TYPE_ADVANTAGE_BONUS; // +1.5
+    }
+    // L'avversario batte il giocatore?
+    if (TYPE_ADVANTAGE[opponentType] === playerType) {
+        return TYPE_ADVANTAGE_MALUS; // -1.5
+    }
+    return 0;
 };
 
 /**
@@ -240,22 +267,36 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey
         modifier /= 2;
     }
 
-    // Effetto tipologia vs avversari (Regola 5)
-    // -5% a -25% se svantaggiato (range randomizzato)
+    // Effetto tipologia vs avversari (Regola 5 - AGGIORNATA v4.0)
+    // Bonus/Malus fisso: +1.5 se vince, -1.5 se perde il confronto tipologia
     // Adattabile: ignora il malus tipologia
-    if (player.type && opposingPlayers.length > 0 && !player.abilities?.includes('Adattabile')) {
-        const disadvantagedAgainst = TYPE_DISADVANTAGE[player.type];
-        const facingDisadvantage = opposingPlayers.some(opp =>
-            opp.type === disadvantagedAgainst
-        );
+    if (player.type && opposingPlayers.length > 0) {
+        // Trova l'avversario principale (primo con tipo definito)
+        const mainOpponent = opposingPlayers.find(opp => opp.type);
+        if (mainOpponent) {
+            let typeBonus = getTypeModifier(player.type, mainOpponent.type);
 
-        if (facingDisadvantage) {
-            modifier *= (1 - getTypePenalty()); // -5% a -25%
+            // Adattabile: ignora solo il malus, tiene il bonus
+            if (player.abilities?.includes('Adattabile') && typeBonus < 0) {
+                typeBonus = 0;
+            }
+
+            // Camaleonte: inverte l'esito del confronto tipologia
+            if (player.abilities?.includes('Camaleonte') && typeBonus !== 0) {
+                typeBonus = -typeBonus;
+            }
+
+            // Prevedibile: malus aumentato a -2.5 invece di -1.5
+            if (player.abilities?.includes('Prevedibile') && typeBonus < 0) {
+                typeBonus = -2.5;
+            }
+
+            modifier += typeBonus;
         }
     }
 
-    // Tuttocampista: impone sempre il malus -25% agli avversari (gestito nella funzione opposingPlayers)
-    // (La logica è invertita: gli avversari subiscono malus vs Tuttocampista)
+    // Tuttocampista: conta come tutte le tipologie, quindi gli avversari subiscono sempre -1.5
+    // (La logica è gestita nella funzione opposingPlayers)
 
     // Bonus equipaggiamento (solo oggetti con fase "tutte" o corrispondente)
     if (window.FeatureFlags?.isEnabled('marketObjects') && player.equipment) {
@@ -503,17 +544,17 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
         // Check if already injured
         if (injuredPlayers.has(player.id)) continue;
 
-        // Tuttocampista: impone sempre il malus -25% agli avversari
+        // Tuttocampista: conta come tutte le tipologie, impone sempre -1.5 agli avversari
         // LOGICA: Se un avversario ha Tuttocampista, forziamo il malus tipologia creando
         // un "avversario virtuale" con la tipologia che batte quella del giocatore corrente.
-        // Esempio: se il giocatore e' Potenza e l'avversario ha Tuttocampista,
-        // creiamo un avversario virtuale "Tecnica" che impone -25% a Potenza.
+        // Esempio: se il giocatore e' Potenza (battuto da Velocita), creiamo avversario "Velocita"
         let effectiveOpposingTeam = opposingTeam;
         const hasTuttocampista = opposingTeam?.some(p => p.abilities?.includes('Tuttocampista'));
         if (hasTuttocampista && player.type) {
-            const disadvantagedType = TYPE_DISADVANTAGE[player.type];
-            if (disadvantagedType) {
-                effectiveOpposingTeam = [{ type: disadvantagedType }];
+            // Trova chi batte questo tipo (inversione di TYPE_ADVANTAGE)
+            const beatenBy = Object.keys(TYPE_ADVANTAGE).find(t => TYPE_ADVANTAGE[t] === player.type);
+            if (beatenBy) {
+                effectiveOpposingTeam = [{ type: beatenBy }];
             }
         }
 
@@ -1560,19 +1601,36 @@ const calculatePlayerModifierWithLog = (player, hasIcona, opposingPlayers = []) 
         abilityBonuses.push({ ability: 'Lento a carburare', effect: `/2 (occ.${currentOccasionNumber}/5)` });
     }
 
-    // Adattabile: ignora il malus tipologia
-    if (player.abilities?.includes('Adattabile')) {
-        abilityBonuses.push({ ability: 'Adattabile', effect: 'ignora malus tipo' });
-    }
+    // Tipologia (v4.0 - bonus/malus fisso)
+    if (player.type && opposingPlayers.length > 0) {
+        const mainOpponent = opposingPlayers.find(opp => opp.type);
+        if (mainOpponent) {
+            let typeBonus = getTypeModifier(player.type, mainOpponent.type);
 
-    // Tipologia
-    if (player.type && opposingPlayers.length > 0 && !player.abilities?.includes('Adattabile')) {
-        const disadvantagedAgainst = TYPE_DISADVANTAGE[player.type];
-        const facingDisadvantage = opposingPlayers.some(opp => opp.type === disadvantagedAgainst);
-        if (facingDisadvantage) {
-            const oldMod = modifier;
-            modifier *= (1 - TYPE_PENALTY);
-            details.push(`${player.type} vs ${disadvantagedAgainst} -25%: ${oldMod.toFixed(1)}=>${modifier.toFixed(1)}`);
+            // Adattabile: ignora solo il malus
+            if (player.abilities?.includes('Adattabile') && typeBonus < 0) {
+                abilityBonuses.push({ ability: 'Adattabile', effect: 'ignora malus tipo' });
+                typeBonus = 0;
+            }
+
+            // Camaleonte: inverte l'esito
+            if (player.abilities?.includes('Camaleonte') && typeBonus !== 0) {
+                abilityBonuses.push({ ability: 'Camaleonte', effect: 'inverte tipologia' });
+                typeBonus = -typeBonus;
+            }
+
+            // Prevedibile: malus aumentato
+            if (player.abilities?.includes('Prevedibile') && typeBonus < 0) {
+                abilityBonuses.push({ ability: 'Prevedibile', effect: 'malus tipo -2.5' });
+                typeBonus = -2.5;
+            }
+
+            if (typeBonus !== 0) {
+                const oldMod = modifier;
+                modifier += typeBonus;
+                const sign = typeBonus > 0 ? '+' : '';
+                details.push(`${player.type} vs ${mainOpponent.type} ${sign}${typeBonus}: ${oldMod.toFixed(1)}=>${modifier.toFixed(1)}`);
+            }
         }
     }
 
