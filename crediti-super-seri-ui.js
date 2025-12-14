@@ -123,9 +123,9 @@ window.CreditiSuperSeriUI = {
             this.renderAbilitaContent(rosa, saldo);
         });
 
-        document.getElementById('tab-servizi').addEventListener('click', () => {
+        document.getElementById('tab-servizi').addEventListener('click', async () => {
             this.setActiveTab('servizi');
-            this.renderServiziContent(saldo);
+            await this.renderServiziContent(saldo);
         });
 
         document.getElementById('tab-rimuovi').addEventListener('click', () => {
@@ -371,7 +371,7 @@ window.CreditiSuperSeriUI = {
     /**
      * Renderizza il contenuto del tab Servizi
      */
-    renderServiziContent(saldo) {
+    async renderServiziContent(saldo) {
         const container = document.getElementById('css-panel-content');
         if (!container) return;
 
@@ -379,9 +379,26 @@ window.CreditiSuperSeriUI = {
         const costoSostituzioneIcona = CSS?.COSTO_SOSTITUZIONE_ICONA || 5;
         const costoAcquistoCS = CSS?.COSTO_CONVERSIONE_CS || 1;
         const csOttenuti = CSS?.CSS_TO_CS_RATE || 1000;
+        const costoSbloccoLega = CSS?.COSTO_SBLOCCO_LEGA || 1;
 
         const canAffordIcona = saldo >= costoSostituzioneIcona;
         const canAffordCS = saldo >= costoAcquistoCS;
+        const canAffordSblocco = saldo >= costoSbloccoLega;
+
+        // Verifica se la squadra e' in cooldown per le leghe private
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        let isInCooldown = false;
+        let cooldownDateStr = '';
+        if (teamId && window.PrivateLeagues) {
+            const cooldownCheck = await window.PrivateLeagues.isTeamInCooldown(teamId);
+            isInCooldown = cooldownCheck.inCooldown;
+            if (isInCooldown) {
+                cooldownDateStr = window.PrivateLeagues.formatCooldownDate(cooldownCheck.cooldownUntil);
+            }
+        }
+
+        // Il servizio sblocco lega e' disponibile solo se in cooldown
+        const sbloccoLegaDisponibile = isInCooldown && canAffordSblocco;
 
         container.innerHTML = `
             <div class="space-y-4">
@@ -434,6 +451,35 @@ window.CreditiSuperSeriUI = {
                         </div>
                     </div>
                 </div>
+
+                <!-- Servizio: Sblocco Lega Privata -->
+                <div class="bg-gray-700 rounded-lg p-4 border ${isInCooldown ? 'border-purple-500' : 'border-gray-600'}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🏠</span>
+                            <div>
+                                <p class="text-white font-bold text-lg">Sblocco Lega Privata</p>
+                                <p class="text-gray-400 text-sm">
+                                    ${isInCooldown
+                                        ? `Sblocca ora (in cooldown fino al ${cooldownDateStr})`
+                                        : 'Puoi gia partecipare alle leghe private'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="${sbloccoLegaDisponibile ? 'text-amber-400' : 'text-gray-500'} font-bold text-lg">${costoSbloccoLega} CSS</span>
+                            <button id="btn-sblocco-lega"
+                                    class="${sbloccoLegaDisponibile
+                                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    ${sbloccoLegaDisponibile ? '' : 'disabled'}>
+                                ${isInCooldown ? 'Sblocca' : 'Non necessario'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -450,6 +496,14 @@ window.CreditiSuperSeriUI = {
         if (btnAcquistaCS && canAffordCS) {
             btnAcquistaCS.addEventListener('click', async () => {
                 await this.handleAcquistaCS();
+            });
+        }
+
+        // Event listener per Sblocco Lega
+        const btnSbloccoLega = document.getElementById('btn-sblocco-lega');
+        if (btnSbloccoLega && sbloccoLegaDisponibile) {
+            btnSbloccoLega.addEventListener('click', async () => {
+                await this.handleSbloccoLega();
             });
         }
     },
@@ -749,7 +803,53 @@ window.CreditiSuperSeriUI = {
             }
 
             // Aggiorna il tab servizi
-            this.renderServiziContent(result.nuovoSaldoCSS);
+            await this.renderServiziContent(result.nuovoSaldoCSS);
+        } else {
+            this.showMessage(result.error || 'Errore durante l\'acquisto', 'error');
+        }
+    },
+
+    /**
+     * Gestisce l'acquisto dello sblocco lega privata
+     */
+    async handleSbloccoLega() {
+        const CSS = window.CreditiSuperSeri;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!CSS || !teamId) {
+            this.showMessage('Errore: sistema non disponibile', 'error');
+            return;
+        }
+
+        // Mostra messaggio di conferma
+        const confirmed = confirm(
+            'Una lega di 6 giocatori dura 10 giorni, il 1° del mese potrai partecipare di nuovo ad una lega privata, vuoi acquistare comunque?'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.showMessage('Acquisto in corso...', 'info');
+
+        const result = await CSS.acquistaSbloccoLega(teamId);
+
+        if (result.success) {
+            this.showMessage('Sblocco lega acquistato! Ora puoi partecipare a una nuova lega privata.', 'success');
+
+            // Aggiorna saldo nella UI
+            const saldoDisplay = document.getElementById('css-saldo-display');
+            if (saldoDisplay) {
+                saldoDisplay.textContent = `${result.nuovoSaldoCSS} CSS`;
+            }
+
+            // Aggiorna il tab servizi
+            await this.renderServiziContent(result.nuovoSaldoCSS);
+
+            // Notifica toast
+            if (window.Toast) {
+                window.Toast.success('Cooldown lega rimosso!');
+            }
         } else {
             this.showMessage(result.error || 'Errore durante l\'acquisto', 'error');
         }
@@ -1010,7 +1110,7 @@ window.CreditiSuperSeriUI = {
         if (tabPotenziamento?.classList.contains('active')) {
             this.renderPotenziamentoContent(rosa, saldo);
         } else if (tabServizi?.classList.contains('active')) {
-            this.renderServiziContent(saldo);
+            await this.renderServiziContent(saldo);
         } else if (tabRimuovi?.classList.contains('active')) {
             this.renderRimuoviAbilitaContent(rosa, saldo);
         } else {

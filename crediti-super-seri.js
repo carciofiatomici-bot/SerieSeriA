@@ -85,6 +85,9 @@ window.CreditiSuperSeri = {
     // Costo servizio sostituzione icona
     COSTO_SOSTITUZIONE_ICONA: 5,
 
+    // Costo servizio sblocco lega privata (rimuove cooldown mensile)
+    COSTO_SBLOCCO_LEGA: 1,
+
     // Conversione CSS -> CS (getter dinamici)
     get CSS_TO_CS_RATE() {
         return window.FormulasConfig?.cssToCsRate || 1000;
@@ -1150,6 +1153,81 @@ window.CreditiSuperSeri = {
 
         } catch (error) {
             console.error('Errore acquisto CS:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Acquista sblocco lega privata (rimuove cooldown mensile)
+     * @param {string} teamId
+     * @returns {Promise<{success: boolean, nuovoSaldoCSS?: number, error?: string}>}
+     */
+    async acquistaSbloccoLega(teamId) {
+        try {
+            const enabled = await this.isEnabled();
+            if (!enabled) {
+                return { success: false, error: 'Sistema CSS non attivo' };
+            }
+
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            // Carica dati squadra
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, error: 'Squadra non trovata' };
+            }
+
+            const teamData = teamDoc.data();
+            const saldoCSS = teamData.creditiSuperSeri || 0;
+
+            // Verifica saldo CSS
+            if (saldoCSS < this.COSTO_SBLOCCO_LEGA) {
+                return {
+                    success: false,
+                    error: `Crediti insufficienti. Hai ${saldoCSS} CSS, servono ${this.COSTO_SBLOCCO_LEGA} CSS`
+                };
+            }
+
+            // Verifica se la squadra e' effettivamente in cooldown
+            if (!window.PrivateLeagues) {
+                return { success: false, error: 'Sistema Leghe Private non disponibile' };
+            }
+
+            const cooldownCheck = await window.PrivateLeagues.isTeamInCooldown(teamId);
+            if (!cooldownCheck.inCooldown) {
+                return { success: false, error: 'Non sei in cooldown, puoi gia partecipare alle leghe!' };
+            }
+
+            // Scala CSS
+            const nuovoSaldoCSS = saldoCSS - this.COSTO_SBLOCCO_LEGA;
+            await updateDoc(teamDocRef, {
+                creditiSuperSeri: nuovoSaldoCSS
+            });
+
+            // Rimuovi cooldown
+            const clearResult = await window.PrivateLeagues.clearCooldown(teamId);
+            if (!clearResult.success) {
+                // Rimborsa CSS se fallisce
+                await updateDoc(teamDocRef, {
+                    creditiSuperSeri: saldoCSS
+                });
+                return { success: false, error: 'Errore rimozione cooldown: ' + clearResult.error };
+            }
+
+            console.log(`Sblocco lega acquistato per ${this.COSTO_SBLOCCO_LEGA} CSS. Nuovo saldo: ${nuovoSaldoCSS} CSS`);
+
+            return {
+                success: true,
+                nuovoSaldoCSS
+            };
+
+        } catch (error) {
+            console.error('Errore acquisto sblocco lega:', error);
             return { success: false, error: error.message };
         }
     },

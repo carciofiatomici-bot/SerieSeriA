@@ -679,6 +679,12 @@
                         <span class="text-base sm:text-lg">🏛️</span>
                         <span>Hall of Fame</span>
                     </button>
+                    <!-- Bottone Leghe Private (visibile solo se feature flag attivo) -->
+                    <button id="btn-private-leagues"
+                            class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-purple-500 hover:via-violet-400 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-purple-300 min-w-0">
+                        <span class="text-base sm:text-lg">👥</span>
+                        <span>Lega Privata</span>
+                    </button>
                     <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
                     <div class="hidden">
                         <p id="stat-formazione-level">N/A</p>
@@ -781,10 +787,10 @@
             <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
             <div id="toggle-partecipazione-box" class="mt-4 sm:mt-8 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
                 <div class="grid grid-cols-2 gap-2 sm:gap-4">
-                    <!-- Toggle Campionato -->
+                    <!-- Toggle SerieSeriA -->
                     <div class="p-3 sm:p-4 bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
                         <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <span class="text-white font-extrabold text-xs sm:text-base">🏅 <span class="hidden sm:inline">Campionato</span><span class="sm:hidden">Camp.</span></span>
+                            <span class="text-white font-extrabold text-xs sm:text-base">🏅 <span class="hidden sm:inline">SerieSeriA</span><span class="sm:hidden">SeriA</span></span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
                                 <div class="w-9 h-5 sm:w-11 sm:h-6 bg-green-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-400"></div>
@@ -1045,6 +1051,23 @@
         <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
             <!-- Il contenuto e' iniettato da stadium-ui.js -->
             <p class="text-center text-gray-400 p-8">Caricamento stadio...</p>
+        </div>
+
+        <!-- 10d. CONTENUTO LEGHE PRIVATE - NASCOSTO -->
+        <div id="private-leagues-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <h2 class="text-2xl font-bold text-purple-400">
+                    <i class="fas fa-users mr-2"></i>Leghe Private
+                </h2>
+                <button id="private-leagues-back-button"
+                        class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Indietro
+                </button>
+            </div>
+            <!-- Il contenuto e' iniettato da private-leagues-ui.js -->
+            <div id="private-leagues-panel">
+                <p class="text-center text-gray-400 p-8">Caricamento...</p>
+            </div>
         </div>
 
         <!-- 11. CONTENUTO: GESTIONE GIOCATORI ADMIN -->
@@ -1442,7 +1465,8 @@
                 document.getElementById('user-campionato-content'), // SerieSeriA Utente
                 document.getElementById('user-coppa-content'), // CoppaSeriA Utente
                 document.getElementById('user-supercoppa-content'), // Super CoppaSeriA Utente
-                document.getElementById('stadium-content') // Stadio
+                document.getElementById('stadium-content'), // Stadio
+                document.getElementById('private-leagues-content') // Leghe Private
             ];
             boxes.forEach(box => {
                 if (box) {
@@ -1520,6 +1544,8 @@
     <script src="changelog.js"></script>
     <script src="match-history.js"></script>
     <script src="sponsor-system.js"></script>
+    <script src="private-leagues.js"></script>
+    <script src="private-leagues-ui.js"></script>
     <script src="image-compressor.js"></script>
     <script src="lazy-loader.js"></script>
     <script src="tests.js"></script>

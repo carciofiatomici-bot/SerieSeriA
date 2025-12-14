@@ -32,6 +32,9 @@ window.DashboardFeatures = {
         // Bottone Stadio
         this.updateStadiumButton();
 
+        // Bottone Leghe Private
+        this.updatePrivateLeaguesButton();
+
         // Box Sponsorship (Media + Sponsor)
         this.updateSponsorshipBoxes();
 
@@ -61,6 +64,23 @@ window.DashboardFeatures = {
             } else {
                 btnStadium.classList.add('hidden');
                 btnStadium.classList.remove('flex');
+            }
+        }
+    },
+
+    /**
+     * Aggiorna la visibilita' del bottone Leghe Private
+     */
+    updatePrivateLeaguesButton() {
+        const btnPrivateLeagues = document.getElementById('btn-private-leagues');
+        if (btnPrivateLeagues) {
+            const isEnabled = window.FeatureFlags?.isEnabled?.('privateLeagues') || false;
+            if (isEnabled) {
+                btnPrivateLeagues.classList.remove('hidden');
+                btnPrivateLeagues.classList.add('flex');
+            } else {
+                btnPrivateLeagues.classList.add('hidden');
+                btnPrivateLeagues.classList.remove('flex');
             }
         }
     },
@@ -299,6 +319,37 @@ window.DashboardFeatures = {
                 }
             });
         }
+
+        // Bottone Leghe Private
+        const btnPrivateLeagues = document.getElementById('btn-private-leagues');
+        const privateLeaguesContent = document.getElementById('private-leagues-content');
+        const privateLeaguesBackButton = document.getElementById('private-leagues-back-button');
+        // appContent già dichiarato sopra
+
+        if (btnPrivateLeagues) {
+            btnPrivateLeagues.addEventListener('click', async () => {
+                if (window.PrivateLeaguesUI && privateLeaguesContent) {
+                    const teamId = window.InterfacciaCore?.currentTeamId;
+                    const teamData = window.InterfacciaCore?.currentTeamData;
+
+                    if (!teamId || !teamData) {
+                        if (window.Toast) window.Toast.error("Dati squadra non disponibili");
+                        return;
+                    }
+
+                    window.showScreen(privateLeaguesContent);
+                    await window.PrivateLeaguesUI.init(teamId, teamData);
+                } else {
+                    if (window.Toast) window.Toast.error("Sistema Leghe Private non disponibile");
+                }
+            });
+        }
+
+        if (privateLeaguesBackButton && appContent) {
+            privateLeaguesBackButton.addEventListener('click', () => {
+                window.showScreen(appContent);
+            });
+        }
     },
 
     /**
@@ -416,6 +467,11 @@ window.DashboardFeatures = {
                     if (enabled && window.SponsorSystem) {
                         window.SponsorSystem.init();
                     }
+                    break;
+
+                case 'privateLeagues':
+                    // Aggiorna visibilita' bottone leghe private
+                    this.updatePrivateLeaguesButton();
                     break;
             }
 

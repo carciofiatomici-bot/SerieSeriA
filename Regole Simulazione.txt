@@ -56,16 +56,16 @@ Tutti i seguenti modificatori vengono applicati prima dell’inizio delle fasi d
 Il confronto tra tipologie genera bonus e penalità fissi al modificatore:
 
  Potenza vs Tecnica
-  Potenza: +3 al modificatore
-  Tecnica: -3 al modificatore
+  Potenza: +1,5 al modificatore
+  Tecnica: -1,5 al modificatore
 
  Tecnica vs Velocità
-  Tecnica: +3 al modificatore
-  Velocità: -3 al modificatore
+  Tecnica: +1,5 al modificatore
+  Velocità: -1,5 al modificatore
 
  Velocità vs Potenza
-  Velocità: +3 al modificatore
-  Potenza: -3 al modificatore
+  Velocità: +1,5 al modificatore
+  Potenza: -1,5 al modificatore
 
 Gerarchia: Potenza > Tecnica > Velocità > Potenza
 
@@ -93,7 +93,7 @@ La squadra che gioca in casa beneficia dei modificatori forniti dallo stadio, in
 
 ## 3. SVOLGIMENTO DELLA PARTITA
 
-La simulazione è composta da 5 occasioni per squadra.
+La simulazione è composta da 50 occasioni per squadra.
 Ogni occasione è suddivisa in 3 fasi sequenziali.
 
 Esempio: Squadra A (attacco) vs Squadra B (difesa)
@@ -119,7 +119,7 @@ Esito:
  Tira 1d100:
    se il risultato è ≤ della percentuale → si passa alla Fase 2;
    in caso di fallimento l’azione termina.
- In caso di fallimento, esiste comunque un 15% di probabilità di passare alla Fase 2. (si chiama successo critico)
+ In caso di fallimento, esiste comunque un 5% di probabilità di passare alla Fase 2. (si chiama successo critico)
 
 ---
 
@@ -138,7 +138,7 @@ Formula:
 Esito:
  Se A > B → si passa alla Fase 3 e il risultato di A diventa il Valore Tiro.
  Se B > A → l’azione termina.
- In caso di fallimento, esiste un 15% di probabilità di accedere comunque alla Fase 3. (si chiama successo critico)
+ In caso di fallimento, esiste un 5% di probabilità di accedere comunque alla Fase 3. (si chiama successo critico)
 ---
 
 ### FASE 3 – TIRO VS PORTIERE
@@ -159,7 +159,7 @@ Formula:
 Calcolo Finale (Totale Portiere − Valore Tiro):
 
  Risultato > 0 → PARATA
-  C’è comunque un 15% di probabilità che l’azione si trasformi in GOAL. (si chiama successo critico)
+  C’è comunque un 5% di probabilità che l’azione si trasformi in GOAL. (si chiama successo critico)
 
  Risultato = 0 → INCERTO
   50% GOAL / 50% PARATA.

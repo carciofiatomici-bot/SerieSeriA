@@ -737,6 +737,7 @@ window.DraftTurns = {
     /**
      * Gestisce l'assegnazione automatica o lo skip del turno.
      * Assegna un giocatore random se c'e' budget sufficiente, altrimenti salta il turno.
+     * Gestisce anche l'avanzamento al prossimo turno/round internamente.
      * @param {Object} context - Contesto
      * @param {Array} currentOrder - Ordine corrente del draft
      * @param {number} currentIndex - Indice del giocatore corrente
@@ -748,6 +749,7 @@ window.DraftTurns = {
     async handleAutoAssignOrSkip(context, currentOrder, currentIndex, currentTeamName, draftTurns, orderKey, configDocRef) {
         const { db, firestoreTools, paths } = context;
         const { setDoc } = firestoreTools;
+        const { DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
 
         // Controlla se siamo nella finestra oraria consentita
         if (!this.isWithinAllowedTimeWindow()) {
@@ -756,6 +758,7 @@ window.DraftTurns = {
         }
 
         const teamId = currentOrder[currentIndex].teamId;
+        const currentRound = draftTurns.currentRound;
 
         // Prova ad assegnare un giocatore random
         const assignResult = await this.assignRandomCheapestPlayer(context, teamId);
@@ -785,18 +788,87 @@ window.DraftTurns = {
             currentOrder[currentIndex].skipReason = 'error';
         }
 
-        // Aggiorna Firestore
-        await setDoc(configDocRef, {
-            draftTurns: {
-                ...draftTurns,
-                [orderKey]: currentOrder,
-                turnExpired: false,
-                turnExpiredAt: null
-            }
-        }, { merge: true });
+        // Trova il prossimo team che non ha ancora draftato
+        let nextIndex = currentIndex + 1;
+        while (nextIndex < currentOrder.length && currentOrder[nextIndex].hasDrafted) {
+            nextIndex++;
+        }
 
-        // Avanza al prossimo turno/round
-        await this.advanceToNextTurn(context, true);
+        // Controlla se il round corrente e' finito
+        if (nextIndex >= currentOrder.length || currentOrder.every(t => t.hasDrafted)) {
+            // Round completato
+            if (currentRound < DRAFT_TOTAL_ROUNDS) {
+                // Passa al round successivo
+                const nextRound = currentRound + 1;
+                const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
+                const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+
+                // Reset hasDrafted e timeoutStrikes per il nuovo round
+                nextOrder.forEach(t => {
+                    t.hasDrafted = false;
+                    t.timeoutStrikes = 0;
+                    t.excludedFromRound = false;
+                    t.skippedTurn = false;
+                    t.skipReason = null;
+                });
+
+                await setDoc(configDocRef, {
+                    draftTurns: {
+                        ...draftTurns,
+                        [orderKey]: currentOrder,
+                        [nextOrderKey]: nextOrder,
+                        currentRound: nextRound,
+                        currentTurnIndex: 0,
+                        currentTeamId: nextOrder[0].teamId,
+                        turnStartTime: Date.now(),
+                        turnExpired: false,
+                        turnExpiredAt: null,
+                        isStolenTurn: false,
+                        stolenFrom: null,
+                        stolenBy: null
+                    }
+                }, { merge: true });
+
+                console.log(`[AUTO-ASSIGN] Round ${currentRound} completato. Inizia Round ${nextRound}.`);
+                this.sendTurnNotification(nextOrder[0].teamId, nextOrder[0].teamName);
+
+            } else {
+                // Draft completato - salva prima l'ultimo stato
+                await setDoc(configDocRef, {
+                    draftTurns: {
+                        ...draftTurns,
+                        [orderKey]: currentOrder,
+                        turnExpired: false,
+                        turnExpiredAt: null
+                    }
+                }, { merge: true });
+
+                await this.stopDraftTurns(context);
+                console.log("[AUTO-ASSIGN] Draft completato! Tutti i round sono stati eseguiti.");
+            }
+
+        } else {
+            // Continua con il prossimo team
+            const nextTeam = currentOrder[nextIndex];
+
+            await setDoc(configDocRef, {
+                draftTurns: {
+                    ...draftTurns,
+                    [orderKey]: currentOrder,
+                    currentTurnIndex: nextIndex,
+                    currentTeamId: nextTeam.teamId,
+                    turnStartTime: Date.now(),
+                    turnExpired: false,
+                    turnExpiredAt: null,
+                    isStolenTurn: false,
+                    stolenFrom: null,
+                    stolenBy: null
+                }
+            }, { merge: true });
+
+            console.log(`[AUTO-ASSIGN] Turno passato a: ${nextTeam.teamName}`);
+            this.sendTurnNotification(nextTeam.teamId, nextTeam.teamName);
+        }
     },
 
     /**

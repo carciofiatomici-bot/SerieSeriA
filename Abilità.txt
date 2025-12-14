@@ -9,206 +9,220 @@ MANUALE DELLE ABILITÀ
 (2) = Rara
 (3) = Epica
 (4) = Leggendaria
-(5) = Unica
+(5) = Unica (Icona)
+
+###################################################
+### SEZIONE 1: ABILITÀ GENERALI E CONDIVISE ###
+(Queste abilità possono essere assegnate a qualsiasi ruolo, salvo diversa specifica)
+
+>>> POSITIVE (Generali)
+(2) Cuore Impavido: Se la squadra gioca "Fuori Casa" (quindi non beneficia del Bonus Stadio ), il giocatore ottiene un bonus di +1.5 al modificatore.
+(2) Freddezza : Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
+(2) Fortunato: 5% di probabilità di aggiungere +3 al proprio modificatore in ogni fase in cui partecipa.
+(2) Uomo Spogliatoio: Se questo giocatore è in panchina, il "Malus Forma" di tutti i titolari viene ridotto di 1 (es. un -2 diventa -1).
+(2) Ripresa rapida: Il tempo di guarigione dagli infortuni è ridotto di 1 giornata (minimo 1), il costo di cura per l'infortunio in CS è ridotto del 25%.
+(2) Rivalsa: Se la propria squadra è in svantaggio di 2 o più goal, il giocatore ottiene +2 al modificatore in tutte le fasi.
+(3) Effetto Caos: Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
+(3) Bandiera del club: Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
+(3) Talismano: Se il giocatore è in campo, la probabilità di infortunio di fine partita per la sua squadra scende dall'1% allo 0,5%.
+(3) Indistruttibile: Il giocatore non può essere infortunato.
+(3) Forma Smagliante: Quando la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
+(3) Raddoppio in difesa (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
+(3) Raddoppio in attacco: (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
+(3) Camaleonte: Inverte l'esito della "Tipologia Giocatori". Se il giocatore avrebbe un malus di -1,5 contro l'avversario, ottiene invece un bonus di +1,5 (e viceversa)
+(3) Specialista Difesa: Fase 2 (in difesa). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
+(3) Specialista Costruzione: Fase 1 (in attacco). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
+(3) Specialista Tiro: Fase 3 (in attacco). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
+(4) Multiruolo: Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
+(4) Tiro Potente: (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
+(4) Veterano: Nelle ultime 5 occasioni della partita (dal 35 al 40), il giocatore aggiunge +1.5 al suo modificatore.
+(4) Talento Precoce: Aggiunge un bonus fisso di +1.5 al modificatore base, simulando un potenziale maggiore del livello attuale. (il livello massimo del giocatore scende a 18).
+(4) Jolly Tattico: A inizio partita, il giocatore può scegliere di cambiare la sua "Tipologia" (Potenza/Tecnica/Velocità)  per adattarsi a più avversari possibile. La scelta è definitiva per tutto il match.
+
+>>> NEGATIVE (Generali)
+(1) Lento a carburare: Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore subisce un malus di -3 (sostituisce il dimezzamento).
+(1) Fuori Posizione: (Solo Difensori, Centrocampisti, Attaccanti). 2,5% di probabilità di regalare un bonus di +2 alla squadra avversaria durante ogni fase (ad eccezione di fase "tiro vs portiere").
+(1) Soggetto a infortuni: 0.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
+(1) Lunatico: A inizio partita si tira 1d6. Se esce 1, ha un malus di -1 a tutte le fasi. Se esce 6, ha un bonus di +1.
+(1) Senza Fiato: Dopo la 30esima occasione, il modificatore del giocatore diminuisce di -1.
+(1) Fragile: Raddoppia la possibilità di infortunio a fine partita.
+(1) Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli aumenta di un ulteriore -2.
+(1) Meteoropatico: Se la squadra gioca "Fuori Casa" (senza Bonus Stadio ), il giocatore subisce -1 a tutti i modificatori.
+(1) Scaramantico: Nelle occasioni dalla 13 alla 17 (se partecipa), il suo modificatore diventa automaticamente 0.
+(1) Prevedibile Il giocatore è tatticamente rigido. Quando perde il confronto "Sasso-Carta-Forbice" (Tipologia dei Giocatori), il malus applicato è -2.5 invece che il normale -1.5.
+(1) Sudditanza Psicologica Se la squadra avversaria ha un Livello Allenatore superiore a quello della propria squadra, questo giocatore si demoralizza e subisce -1.0 al modificatore per tutta la partita. (Si contrappone al Bonus Allenatore) Se il livello è pari o inferiore il malus è di -0,5.
+(1) Vita Notturna Il giocatore è poco professionale. Il suo Modificatore Forma  non può mai essere positivo. Se la forma sarebbe positiva (es. +1), viene considerata 0. Se la forma è negativa, il malus rimane invariato.
+(1) Piantagrane La presenza di questo giocatore crea disarmonia. A inizio partita, il sistema sceglie casualmente un altro compagno di squadra titolare: quel compagno subisce un malus di -1.0 al modificatore a causa del nervosismo creato dal Piantagrane.
+(1) Nervoso Ogni volta che il giocatore perde un confronto diretto (in Fase 1 o Fase 2), c'è un 1% di probabilità che venga espulso per proteste. Se espulso: il suo modificatore diventa 0 per il resto della partita.
+(1) Demotivato Se la propria squadra sta perdendo (svantaggio di 1 o più goal), il giocatore smette di impegnarsi: subisce un malus di -1.0 a tutte le fasi finché il risultato non torna in parità o vantaggio.
+(1) Portasfortuna Aumenta la probabilità di infortunio di fine partita  per se stesso e per i compagni di reparto (es. se è difensore, per tutti i difensori) dall'1% al 2%.
+(1) Contrattura Cronica Il giocatore è estremamente fragile. Se partecipa a più di 15 occasioni in una singola partita, dalla 16esima in poi il suo modificatore viene dimezzato per la fatica.
+
+
+###################################################
+### SEZIONE 2: ABILITÀ DI RUOLO ###
 
 ---------------------------------------------------
 [ PORTIERE ]
 
 >>> Abilità Positive:
-- Responta (2): 10% di probabilità di far tirare un altro d20 alla fase "tiro vs portiere" se il giocaotre avversario ha battuto il portiere e di tenere obbligatoriamente il secondo risultato.
-- Uscita Kamikaze (2): Raddoppia il modificatore durante la fase "tiro vs portiere", ma ha un 5% di possibilità di fallire la parata anche se ha un successo.
-- Teletrasporto (4): 10% di possibilità di partecipare alle fase 1 o 2 se il modificatore del portiere > modificatore giocatore scelto (solamente in difesa) max 5 volte in partita.
-- Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
-- Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).
-- Bandiera del club (3): Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
-- Parata con i piedi (2): 5% di probabilità di lanciare un secondo d20 quando para e tenere il più alto.
-- Lancio lungo (4): 5% di probabilità di saltare la fase "costruzione" e di passare direttamente alla fase "attacco vs difesa".
--Presa Sicura (1): Se il portiere effettua una parata e il risultato della formula (Totale Portiere - Totale Tiro) è maggiore di 5, la squadra riparte automaticamente dalla Fase 2 nell'azione successiva (saltando la fase di costruzione).
--Muro Psicologico (4): 5% di probabilità di dimezzare il valore del tiro durante la Fase 3 (Tiro vs Portiere).
-Miracolo (4): 5% di probabilità di trasformare un "Goal" subito (dove la differenza tra Portiere e Tiro è < 0) in una "Parata" se la differenza è inferiore a 3 punti.
--Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
--Sguardo Intimidatorio (3): 5% di possibilità che la squadra avversaria usi 1d12 invece che 1d20 nella fase 3 "tiro vs portiere".
--Tiro dalla porta (3): 5% di probabilità di aggiungere 1/2 del suo modificatore alla fase 3 "tiro vs portiere".
--Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
--Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
-- Parata di pugno (1): Se il risultato della fase "tiro vs portiere" è -1 o -2 si comporta come se fosse 0.
--Colpo d'anca (2): Quando il risultato della fase  "tiro vs portiere" è 0, la sua possibilità di parare diventa 75% invece che 50%. Annulla la possibilità di successo obbligatorio dell'avversario (la regola del 5% di successo automatico).
--Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
-
-
+(1) Presa Sicura: Se il portiere effettua una parata e il risultato della formula (Totale Portiere - Totale Tiro) è maggiore di 5, la squadra riparte automaticamente dalla Fase 2 nell'azione successiva.
+(1) Parata di pugno: Se il risultato della fase "tiro vs portiere" è -1 o -2 si comporta come se fosse 0.
+(1) Guerriero: Quando subisce un goal, ottiene +1 al modificatore per le prossime 3 occasioni in cui è chiamato in causa.
+(1) Presenza: Riduce di -1 il "Bonus Allenatore"  della squadra avversaria durante la Fase 3
+(2) Responta: 10% di probabilità di far tirare un altro d20 alla fase "tiro vs portiere" se il giocatore avversario ha battuto il portiere e di tenere obbligatoriamente il secondo risultato.
+(2) Uscita Kamikaze: Aggiunge +5 al modificatore durante la fase "tiro vs portiere", ma ha un 5% di possibilità di fallire la parata anche se ha un successo.
+(2) Parata con i piedi: 5% di probabilità di lanciare un secondo d20 quando para e tenere il più alto.
+(2) Para-Rigori: Annulla il bonus del "5% di probabilità di Goal automatico" degli avversari durante la Fase 3.
+(2) Colpo d'anca: Quando il risultato della fase "tiro vs portiere" è 0, la sua possibilità di parare diventa 75% invece che 50%.
+(2) Rilancio Laser: Se il portiere effettua una parata, la sua squadra ottiene un bonus di +2 al modificatore nella Fase 1 successiva.
+(2) Para-Rigori (Specialista): Se la Fase 3 finisce con risultato 0 (Incerto), il portiere vince automaticamente la contesa (senza il 50/50).
+(3) Saracinesca: Se subisce un Goal, la probabilità che l'avversario faccia un "Successo Critico" (Goal su parata) scende allo 0% per il resto della partita.
+(3) Sguardo Intimidatorio: 5% di possibilità che la squadra avversaria usi 1d12 invece che 1d20 nella fase 3 "tiro vs portiere".
+(3) Tiro dalla porta: 5% di probabilità di aggiungere +2 al modificatore del compagno nella fase 3 "tiro vs portiere".
+(3) Gatto: Se il portiere subisce un "Goal" ma la differenza è esattamente -1, il goal viene annullato e considerato parata.
+(3) Para-Rigori (Versione Epica): Se la Fase 3 finisce esattamente con una differenza di 0 (Incerto), il portiere vince automaticamente la contesa.
+(4) Teletrasporto: 10% di possibilità di partecipare alle fase 1 o 2 se il modificatore del portiere > modificatore giocatore scelto (solamente in difesa) max 5 volte in partita.
+(4) Lancio lungo: 5% di probabilità di saltare la fase "costruzione" e di passare direttamente alla fase "attacco vs difesa".
+(4) Muro Psicologico: 5% di probabilità di costringere l'avversario a tirare 2 volte il d20 nella Fase 3 e tenere il risultato peggiore.
+(4) Miracolo: 5% di probabilità di trasformare un "Goal" subito in una "Parata" se la differenza è inferiore a 3 punti.
+(4) Regista Difensivo: Se effettua una parata, la squadra salta la Fase 1 dell'azione successiva e inizia direttamente dalla Fase 2 (Attacco vs Difesa) con un bonus di +2 al modificatore del compagno.
 
 >>> Abilità Negative:
-- Mani di burro (1): 5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo nella fase di "tiro vs portiere".
-- Respinta Timida (1): 5% di probabilità di dover tirare di nuovo il d20 in fase di "tiro vs portiere" e di usare obbligatoriamente il secondo tiro.
-- Fuori dai pali (1): 5% di probabilità di non aggiungere il suo modificatore durante la fase "tiro vs portiere".
--Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
--Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
--Fragile: Raddoppia la possibilità di infortunio a fine partita.
--Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus al modificatore dovuto dai livelli persi raddoppia.
+(1) Tuffo Ritardato: Contro attaccanti di tipologia "Velocità", il modificatore del portiere è ridotto di -2.
+(1) Mani di burro: 5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo nella fase di "tiro vs portiere".
+(1) Respinta Timida: 5% di probabilità di dover tirare di nuovo il d20 in fase di "tiro vs portiere" e di usare obbligatoriamente il secondo tiro.
+(1) Fuori dai pali: 5% di probabilità di non aggiungere il suo modificatore durante la fase "tiro vs portiere".
+(1) Distratto: Se l'azione avversaria ha saltato la Fase 1, il portiere subisce un malus di -2 al primo tiro.
+(1) Statico: Subisce un malus di -1 quando fronteggia attaccanti di tipologia "Velocità".
+(1) Battezzata fuori: 5% di probabilità che, se il risultato della formula in Fase 3 è una "Parata" con margine inferiore a 2, diventi un Goal.
+(1) Lento: Se affronta avversari con tipologia "Velocità", il suo modificatore base viene dimezzato (arrotondato per difetto).
+(1) Debole: Se affronta avversari con tipologia "Potenza", il suo modificatore base viene dimezzato (arrotondato per difetto).
+(1) Impreparato: Se affronta avversari con tipologia "Tecnica", il suo modificatore base viene dimezzato (arrotondato per difetto).
 
 ---------------------------------------------------
 [ DIFENSORE ]
 
 >>> Abilità Positive:
-- Muro (2): 5% di probabilità di raddoppiare il proprio modificatore quando si difende nella fase "attacco vs difesa".
-- Contrasto Durissimo (4): Ad ogni fase, rende nulla l'abilità di un giocatore nella panchina avversaria.
-- Antifurto (2): 5% di interrompere direttamente la fase "attacco vs difesa" della squadra avversaria (non cumulabile con altre abilità con lo stesso nome).
-- Guardia (2): Se è l'unico difensore nella formazione della squadra, raddoppia il suo modificatore quando difende la fase "attacco vs difesa" della squadra avversaria.
-- Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
-- Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).
-- Bandiera del club (3): Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
-- Tiro dalla distanza (4): Il giocatore sostituisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase "attacco vs difesa" (se il suo modificatore è più alto di quello dell'attaccante).
-- Deviazione (2): 5% di probabilità di aggiungere il suo modificatore a quello del portiere nella fase "tiro vs portiere".
-- Svaligiatore (4): 5% di probabilità di rubare il modificatore di un attaccante avversario e aggiungerlo al proprio.
--Spazzata (1): 5% di probabilità di aggiungere +1 al proprio modificatore durante la Fase 2 (Attacco vs Difesa).
--Adattabile (2): Il giocatore ignora il malus del -25% dovuto alla tipologia avversaria (es. se è un difensore "Potenza" non subisce il malus contro attaccanti "Velocità").
--Salvataggio sulla Linea (4): Se il portiere viene battuto (Goal), questo difensore ha un 5% di probabilità di intervenire all'ultimo istante. Si lancia 1d20 + Modificatore del Difensore: se il risultato batte il totale dell'attacco avversario, il goal è salvato.
--Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
--Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
--Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
--Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
--Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
--Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
--Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
-
-
-
-
+(1) Spallata: Se partecipa alla Fase 2 contro un attaccante di tipologia "Tecnica", aggiunge +1 extra al bonus di tipologia (totale +2.5 invece di +1.5).
+(1) Blocco Fisico: Quando partecipa alla Fase 2 contro un attaccante di tipologia "Velocità", il difensore ottiene +1 al modificatore.
+(1) Spazzata: 5% di probabilità di aggiungere +1 al proprio modificatore durante la Fase 2 (Attacco vs Difesa).
+(2) Muro: 5% di probabilità di aggiungere +3 al proprio modificatore quando si difende nella fase "attacco vs difesa".
+(2) Antifurto: 5% di interrompere direttamente la fase "attacco vs difesa" della squadra avversaria.
+(2) Guardia: Se è l'unico difensore nella formazione della squadra, aggiunge +4 al suo modificatore quando difende la fase "attacco vs difesa".
+(2) Marcatura a Uomo: Contro un ruolo avversario scelto a inizio partita il modificatore aumenta di +1.5, contro gli altri diminuisce di -0.5.
+(2) Trappola del Fuorigioco: Aumenta del 10% la soglia necessaria alla squadra avversaria per superare la Fase 1 col d100. Funziona solo se schierato titolare.
+(2) Deviazione: 5% di probabilità di aggiungere il suo modificatore a quello del portiere nella fase "tiro vs portiere".
+(2) Adattabile: Il giocatore ignora il malus del -25% dovuto alla tipologia avversaria.
+(2) Regista Arretrato: Quando partecipa alla Fase 1, se fallisce il tiro del dado, può ritirarlo una volta se il risultato del d20 era inferiore a 5.
+(3) Fuorigioco: Se la squadra avversaria vince la Fase 1, il difensore ha un 5% di probabilità di annullare immediatamente l'azione.
+(3) Anticipo Secco: Se vince la Fase 2 (Attacco vs Difesa), la sua squadra salta la Fase 1 nell'azione successiva e parte direttamente dalla Fase 2 in attacco.
+(3) Torre: Può partecipare alla Fase 2 come attaccante, aggiunge +2 al suo modificatore. Se vince, partecipa lui con il 100% delle probabilità alla Fase 3.
+(3) Intercetto: 5% di probabilità di vincere automaticamente la Fase 2 senza tirare i dadi se l'avversario è un Centrocampista.
+(4) Contrasto Durissimo: Ad ogni fase, rende nulla l'abilità di un giocatore nella panchina avversaria.
+(4) Leader Difensivo: Se questo giocatore è in campo, il malus dovuto alla "Tipologia Giocatori" subito dai compagni di reparto è ridotto dal 25% al 10%.
+(4) Tiro dalla distanza: Il giocatore sostituisce il suo modificatore a quello dell'attaccante con modificatore più basso in fase "attacco vs difesa" (se il suo è più alto).
+(4) Svaligiatore: 5% di probabilità di rubare il modificatore di un attaccante avversario e aggiungerlo al proprio.
+(4) Salvataggio sulla Linea: Se il portiere viene battuto (Goal), 5% di probabilità di salvare il goal tirando 1d20 + Mod Difensore vs Totale Attacco.
+(4) Scivolata Disperata: Se perde la Fase 2, 10% di probabilità di annullare l'azione commettendo fallo tattico (salta le successive 2 occasioni).
+(4) Muro di Gomma: Se il difensore perde il confronto in Fase 2, sottrae comunque 3 punti al "Valore Tiro" dell'attaccante che passa alla Fase 3.
+(4) Mastino: Se l'avversario in Fase 2 ottiene un bonus da un'abilità, il difensore ottiene lo stesso identico bonus al proprio modificatore.
 
 >>> Abilità Negative:
-- Falloso (1): 5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo in fase "attacco vs difesa" quando partecipa come difensore.
-- Insicuro (1): 5% di probabilità di non aggiungere il suo modificatore nella fase "attacco vs difesa" quando partecipa come difensore.
-- Fuori Posizione (1): 2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase (ad eccezione di fase "tiro vs portiere").
--Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
--Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
--Fragile: Raddoppia la possibilità di infortunio a fine partita.
--Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
-
-
-
+(1) Falloso: 5% di probabilità di sottrarre il suo modificatore invece che aggiungerlo in fase "attacco vs difesa".
+(1) Insicuro: 5% di probabilità di non aggiungere il suo modificatore nella fase "attacco vs difesa".
+(1) Irruento: Quando vince un contrasto in Fase 2, c'è un 5% di probabilità che venga fischiato fallo contro.
+(1) Bucato: Se l'avversario usa un'abilità che aumenta il proprio modificatore di almeno +3, questo difensore subisce -3 al proprio modificatore.
+(1) Lento nel rientro: Se partecipa alla Fase 1 in attacco e l'azione fallisce, subisce -2 al modificatore se viene chiamato a difendere nella prossima Fase 2 a cui partecipa come difensore.
+(1) Gamba Tesa: Ogni volta che vince un contrasto in Fase 2, c'è un 1% di probabilità di causare un rigore per la squadra avversaria (salta direttamente a Fase 3 come "Tiro vs Portiere").
 
 ---------------------------------------------------
 [ CENTROCAMPISTA ]
 
 >>> Abilità Positive:
-- Regista (4): 5% di probabilità che si salti la fase "costruzione" e si passi direttamente alla fase "attacco vs difesa" (non cumulabile con altre abilità con lo stesso nome).
-- Motore (3): Quando partecipa ad una fase di costruzione (attacco o difesa), ha un bonus al modificatore di 1.5x alla prossima fase a cui partecipa che sia in attacco o difesa
-- Tocco Di Velluto (2): 5% di probabilità di raddoppiare il suo modificatore durante la fase di costruzione.
-- Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
-- Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).
-- Bandiera del club (3): Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
-- Cross (4): 5% di probabilità di passare direttamente alla fase di tiro contro il portiere usando 1d20 + modificatore dell'attaccante con il modificatore più alto.
-- Mago del pallone (2): 5% di probabilità di ignorare il modificatore di uno dei centrocampisti avversari durante la fase "costruzione".
--Passaggio Corto (1): +1 al risultato della squadra nella Fase 1 (Costruzione).
--Visione di Gioco (3): 5% di probabilità nella Fase 1 (Costruzione) di sostituire il modificatore di un altro giocatore alleato nella fase con il proprio se maggiore.
-Tuttocampista (4): Il giocatore conta come se avesse tutte e tre le tipologie (Potenza, Tecnica, Velocità) contemporaneamente. Questo significa che impone sempre il malus del -25% agli avversari diretti, indipendentemente dalla loro tipologia.
--Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
--Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
--Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
--Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
--Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
--Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
--Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
-
-
-
-
-
-
+(1) Filtrante: In Fase 1, se il d20 dà un risultato superiore a 15, il compagno che riceve palla in Fase 2 ottiene +1 al modificatore.
+(1) Geometra: Nella Fase 1 (Costruzione), se il risultato naturale del suo d20 è un numero pari, aggiunge +1 al totale.
+(1) Pressing Alto: Quando partecipa alla Fase 1 in difesa, impone un malus di -1 al modificatore dell'avversario.
+(1) Passaggio Corto: +1 al risultato della squadra nella Fase 1.
+(2) Intercettatore: Quando partecipa alla Fase 2 in difesa contro un Centrocampista avversario, ottiene +2 al modificatore.
+(2) Tocco Di Velluto: 5% di probabilità di aggiungere +3 al suo modificatore durante la fase di costruzione.
+(2) Polmoni d'Acciaio: Nelle ultime 10 occasioni della partita, il modificatore aumenta di +2.0.
+(2) Mago del pallone: 5% di probabilità di ignorare il modificatore di uno dei centrocampisti avversari durante la fase "costruzione".
+(2) Trequartista: Può partecipare alla Fase 3 (Tiro) con una probabilità del 30% invece che del 15%, rubando la percentuale all'attaccante.
+(2) Diga: Quando partecipa alla Fase 2 in difesa, annulla eventuali bonus di "Tipologia" dell'avversario.
+(2) Metronomo: Se il risultato del suo d20 in Fase 1 è inferiore a 8, lo considera automaticamente come 8.
+(3) Motore: Quando partecipa ad una fase di costruzione, ha un bonus al modificatore di +2 alla prossima fase a cui partecipa.
+(3) Incursore: Se vince la Fase 2, 10% di sostituirsi all'attaccante nella Fase 3 mantenendo il proprio modificatore + bonus di +2.
+(3) Geometrie: Se la squadra vince la Fase 1, tira 1d100 extra. Se il risultato è < 5, la squadra segna un Goal automatico senza giocare le fasi successive (tiro da fuori o azione corale perfetta).
+(3) Visione di Gioco: 5% di probabilità nella Fase 1 di sostituire il modificatore di un altro giocatore alleato con il proprio se maggiore.
+(3) Illuminante: Se vince la Fase 1 con una differenza di punteggio superiore a 10, la squadra passa automaticamente alla Fase 2 senza tirare il d100.
+(3) Box-to-Box: Se partecipa alla Fase 1 e la squadra vince, partecipa automaticamente anche alla Fase 2 con un bonus di +1.
+(4) Regista: 5% di probabilità di saltare la fase "costruzione". Il giocatore che riceve palla ottiene +2 al modificatore.
+(4) Cross: 5% di probabilità di passare direttamente alla fase di tiro usando 1d20 + modificatore dell'attaccante migliore.
+(4) Tuttocampista: Il giocatore conta come se avesse tutte e tre le tipologie (Potenza, Tecnica, Velocità) contemporaneamente.
+(4) Onnipresente: Ha il 10% di probabilità di partecipare alla Fase 2 in supporto (sia attacco che difesa) aggiungendo metà del suo modificatore a quello del compagno titolare di quella fase.
 
 >>> Abilità Negative:
-- Impreciso (1): 5% di possibilità di sottrarre il suo modificatore invece che aggiungerlo in fase "costruzione".
-- Ingabbiato (1): 5% di possibilità di non aggiungere il suo modificatore nella fase "costruzione".
-- Fuori Posizione (1): 2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase (ad eccezione di fase "tiro vs portiere").
--Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
--Egoista (2): 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale, invece di sommarlo (vuole fare tutto da solo).
--Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
--Fragile: Raddoppia la possibilità di infortunio a fine partita.
--Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
-
-
-
-
+(1) Impreciso: 5% di possibilità di sottrarre il suo modificatore invece che aggiungerlo in fase "costruzione".
+(1) Ingabbiato: 5% di possibilità di non aggiungere il suo modificatore nella fase "costruzione".
+(1) Fantasma: Contro squadre con livello medio superiore, il suo modificatore base è ridotto di 1.
+(1) Egoista: 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale.
+(1) Innamorato della palla: Se vince la Fase 1, 5% di probabilità che non passi la palla in tempo e l'azione termini.
+(1) Passaggio Telefonato: In Fase 1, l'avversario ottiene un bonus di +1 al proprio tiro di dado contro questo giocatore.
 
 ---------------------------------------------------
 [ ATTACCANTE ]
 
 >>> Abilità Positive:
-- Bomber (3): +1 al risultato se nella fase del "tiro vs portiere".
-- Doppio Scatto (2): 5% di probabilità di mettere 2 volte il proprio modificatore nella fase "attacco vs difesa".
-- Pivot (3): Se è l'unico attaccante nella formazione della sua squadra, raddoppia il suo modificatore nella fase di "attacco vs difesa" dalla parte dell'attacco.
-- Effetto Caos (3): Ad ogni fase il suo modificatore può variare in un range che va da -3 a +3.
-- Fortunato (2): 5% di probabilità di raddoppiare il proprio modificatore in ogni fase in cui partecipa (in caso di modificatore negativo, diventa 0).
-- Bandiera del club (3): Il giocatore dà +1 ai modificatori dei compagni di squadra del suo stesso ruolo (non cumulabile con altre abilità con lo stesso nome).
-- Rientro Rapido (2): Il giocatore ha il 5% di probabilità di partecipare alla difesa durante la fase "attacco vs difesa".
-- Tiro Fulmineo (4): 5% di probabilità di annullare tutte le abilità del portiere in fase "tiro vs portiere".
--Opportunista (1): Se il risultato della Fase 3 (Tiro vs Portiere) è esattamente 0 (50% goal/50% parata), la probabilità di goal diventa 75%.
--Freddezza (2): Il giocatore non subisce mai malus alla forma. Se il suo modificatore forma sarebbe negativo, viene considerato 0.
--Tiro a Giro (3): 5% di probabilità di ignorare il modificatore di un difensore avversario nel calcolo della Fase 2, rendendo più facile arrivare alla Fase 3.
--Immarcabile (4): 5% di probabilità di tirare 2d20 nella Fase 2 (Attacco vs Difesa) e scegliere il risultato migliore.
--Tiro Potente (4): 5% di probabilità di tirare 2d10 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
--Indistruttibile (3): Il giocatore non può essere infortunato.
--Multiruolo (4): Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
--Forma Smagliante (3): Quanto la partita inizia, se il modificatore forma del giocatore è in negativo, diventa +1.
--Raddoppio in difesa (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in difesa).
--Raddoppio in attacco (3): 5% di probabilità di aggiungere il suo modificatore a quello del giocatore scelto per la fase (solamente in attacco).
--Ripresa rapida (2): il tempo di guarigione dagli infortuni è dimezzato (arrotondato per eccesso), il costo di cura per l'infortunio in CS è del 75% rispetto al valore originale.
-
-
-
+(1) Rapinatore: Se il portiere avversario effettua una parata ma il risultato della formula è inferiore a 3 (es. parata per poco), tira 1d100 c'è un 5% di probabilità di segnare sulla ribattuta (Goal).
+(1) Tiro della Domenica: 5% di probabilità di aggiungere +5 al modificatore in Fase 3, ma se fallisce subisce -1 alla forma.
+(1) Opportunista: Se il risultato della Fase 3 è esattamente 0, la probabilità di goal diventa 75%.
+(2) Finalizzatore: Ottiene un bonus di +2 al modificatore in Fase 3 se l'azione è arrivata direttamente da un "Lancio Lungo" o abilità simile che ha saltato le fasi precedenti.
+(2) Doppio Scatto: 5% di probabilità di aggiungere +3 al proprio modificatore nella fase "attacco vs difesa".
+(2) Rapace d'Area: Se il tiro in Fase 3 finisce con risultato 0, la probabilità di GOAL diventa 80%.
+(2) Rientro Rapido: 5% di probabilità di partecipare alla difesa durante la fase "attacco vs difesa".
+(2) Sponda: In Fase 2, può non tirare e sommare il suo modificatore a quello di un centrocampista che tirerà subito in Fase 3.
+(2) Cecchino: Nella Fase 3, se il d20 esce con un risultato tra 18 e 20, il valore del tiro viene raddoppiato.
+(2) Potenza Pura: Se di tipologia "Potenza", quando vince la Fase 2 trasmette metà del margine di vittoria come bonus al tiro in Fase 3.
+(3) Bomber: +1 al risultato se nella fase del "tiro vs portiere".
+(3) Pivot: Se è l'unico attaccante nella formazione della sua squadra, aggiunge +3 al suo modificatore nella fase di "attacco vs difesa" dalla parte dell'attacco.
+(3) Specialista del Cucchiaio: Se il portiere ha un'abilità che aumenta il proprio modificatore in Fase 3, quella specifica abilità viene ignorata.
+(3) Falso Nueve: Quando selezionato per la Fase 2, può passare la palla. L'azione passa a un Centrocampista che tirerà in Fase 3 con +3 al modificatore.
+(3) Caldo: Ignora i malus derivanti dalla "Forma Fisica" negativa durante la Fase 3.
+(3) Tiro a Giro: 5% di probabilità di ignorare il modificatore di un difensore avversario nel calcolo della Fase 2.
+(3) Sangue Freddo: Se il portiere avversario ottiene un successo critico o attiva un'abilità difensiva, 10% di probabilità di ignorarla.
+(4) Tiro Fulmineo: 5% di probabilità di ignorare i bonus al modificatore del portiere derivanti dalle sue abilità attive per questa fase.
+(4) Immarcabile: 5% di probabilità di tirare 2d20 nella Fase 2 e scegliere il risultato migliore.
+(4) Dribbling Ubriacante: In Fase 2, se l'avversario è un Difensore, tira 1d20. Se esce 19 o 20, passa direttamente alla Fase 3 con un "Valore Tiro" di 35 (Critico automatico).
+(4) Fenomeno: Se tira un 1 naturale sul d20 in Fase 3 (normalmente un fallimento grave), lo trasforma in un 10.
 
 >>> Abilità Negative:
-- Piedi a banana (1): 5% di possibilità di sottrarre il suo modificatore durante fase "attacco vs difesa" quando partecipa come attaccante.
-- Eccesso di sicurezza (1): 5% di possibilità di non aggiungere il suo modificatore durante la fase "attacco vs difesa" quando partecipa come attaccante.
-- Fuori Posizione (1): 2,5% di probabilità di dare 1/2 del suo modificatore alla squadra avversaria durante ogni fase (ad eccezione di fase "tiro vs portiere").
--Lento a carburare (1): Nelle prime 5 occasioni (su 30) della partita, il modificatore del giocatore è dimezzato.
--Egoista (2): 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale, invece di sommarlo (vuole fare tutto da solo).
--Soggetto a infortuni (3): 2.5% di probabilità ad ogni fase a cui partecipa che il suo modificatore scenda a 0 per il resto della simulazione.
--Titubanza(1): In attacco, il dado del tiro della squadra diventa 1d6 invece che 1d10.
--Fragile: Raddoppia la possibilità di infortunio a fine partita.
--Non Adattabile: Il suo modificatore è -2. Quando gioca fuori ruolo il suo malus ai livelli raddoppia.
+(1) Piedi a banana: 5% di possibilità di sottrarre il suo modificatore durante fase "attacco vs difesa".
+(1) Eccesso di sicurezza: 5% di possibilità di non aggiungere il suo modificatore durante la fase "attacco vs difesa".
+(1) Sprecate: Se arriva alla Fase 3 con un vantaggio di modificatore superiore a +5, subisce -3 al tiro.
+(1) Simulatore: Se perde la Fase 2, 5% di probabilità che provi a simulare. 1=Espulso (Mod 0), 20=Rigore, Altro=Nulla.
+(1) Titubanza: In attacco, il dado del tiro della squadra diventa 1d6 invece che 1d10.
+(1) Egoista: 5% di probabilità di sottrarre il modificatore di un compagno di reparto dal totale.
+(1) Allergico ai rigori: Se il risultato della Fase 3 è 0 (Incerto), la probabilità di Goal scende dal 50% al 25%.
+(1) Sprecone: Se il "Valore Tiro" in Fase 3 supera il "Totale Portiere" di oltre 10 punti (tiro troppo potente), il tiro finisce fuori (Goal annullato).
+(1) Solista: Il suo tasso di partecipazione in fase 2 è di 75%, quando partecipa alla Fase 2 come attaccante subisce -2 al modificatore.
 
+###################################################
+### SEZIONE 3: ABILITÀ UNICHE (SOLO ICONE) ###
+(Riservate ai capitani scelti alla creazione delle squadre - Rarità 5)
 
-
----------------------------------------------------
-[ ABILITÀ PARTICOLARI (SOLO ICONE) ]
-(Riservate ai capitani scelti alla creazione delle squadre)
-
-- Icona (5): (tutti i giocatori icona): A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra in tutte le fasi (escluso sé stesso), inoltre la sua forma non può mai essere in negativo.
-"""
-- Fatto d'acciaio (5): (solamente giocatore icona Croccante ID: croc): Il giocatore non può infortunarsi. Se viene infortunato il costo per curarlo diventa 0cs. Può ottenere l'abilità "regista" anche se non è un centrocampista.
-
-- L'uomo in più (5): (solamente giocatore icona Fosco ID: fosco): Quando una qualsiasi fase in attacco verrebbe interrotta, aggiungi metà del modificatore del giocatore al risultato e ricontrolla se la fase viene vinta invece che persa (massimo 5 volte in tutta la partita).
-
-- Tiro Dritto (5): (solamente giocatore icona Amedemo ID:amedemo): Se è l'unico attaccante della formazione, la fase del "tiro vs portiere" è assegnata automaticamente a lui (100% di probabilità), il suo modificatore ha un bonus di +3.5, diminuisce di 0.5 ogni volta che segna perché diventa sempre più prevedibile. Aumenta il range di successo critico (critico anche sul fallimento) da 5% a 6%.
-
-- Avanti un altro (5): (solamente giocatore icona Antony ID: antony): La probabilità di infortunio dei giocatori avversari dopo una partita diventa 7% (invece che 3,5%). Solamente nella fase 2 e solamente se in difesa, se scelto come giocatore della fase il suo mod. aumenta di +2.
-
-- Contrasto di gomito (5): Solamente giocatore icona Alpakashenka ID: luka): Quando scelto come giocatore nelle fasi difensive, il suo modificatore aumenta di 1/5 del suo livello. 1% di probabilità di far fallire automaticamente la fase prima di tirare il d20.
-
-- Calcolo delle probabilità (5): (solamente giocatore icona Il Cap ID: il cap): Quando scelto come giocatore nella fase "costruzione", tira 2d20 e sceglie il più alto invece che tirarne uno solo. Quando scelto come giocatore nella fase "attacco vs difesa" i bonus che avrebbe nella fase di costruzione si applicano anche a questa fase.
-
--Amici di panchina (5): (solamente giocatore icona Shikanto ID: shik): Quando è infortunato può essere comunque schierato in panchina. Quando è in panchina ad ogni fase (sia in attacco che in difesa) le sue abilità, abilità icona esclusa, bengono date al giocatore che viene scelto per la fase. Solamente durante la fase costruzione e solamente in attacco ha +2 al modificatore quando scelto come giocatore della fase.
-
--Continua a provare (5): (solamente giocatore icona Gladio ID: Gladio): Ogni volta che partecipa ad una qualsiasi fase invece che 1d20 tira 2d20 e fa la media, quello è il suo risultato. Il suo modificatore nelle fasi di attacco è x0.5. Non può avere successo critico (da 5% a 0%). Il suo modificatore nelle fasi di difesa è x1.5.
-
--Stazionario (5): (solamente giocatore icona Cocco ID: cocco): per ogni fase a cui non partecipa accumula +0.5 al suo modificatore (max 3.0), quando il modificatore arriva a 5.0 partecipa obbligatoriamente lui alla prossima fase qualsiasi essa sia. Quando partecipa ad una fase che il suo modificatore bonus sia pieno o no si resetta e torna a +0.0.
-
--Osservatore (5): (solamente il giocatore icona Mark Falco ID: markf): Quando è nella fase "tiro vs portiere" ed è il portiere, scansiona l'avversario e anulla l'abilità di rarità più alta che ha, il livello dell'abilità annullata si aggiunge al suo modificatore per la parata (+1 comune, +2 rara, +3 epica, +4 leggendaria). I malus al modificatore che gli verrebbero applicati sono efficaci la metà.
-
--Relax (5): (solamente il giocatore icona Sandro Diaz ID: sandro): Questo giocatore ha un secondo modificatore chiamato Relax. Quando partecipa ad una fase come difensore il suo Relax riceve un malus al modificatore di -1.0. Quando partecipa ad una fase come attaccante il suo Relax riceve un bonus al suo modificatore di +1.0. Questo modificatore si aggiunge al suo modificatore base. Quando il modificatore raggiunge -5.0 o +5.0 rimane così per il resto della partita.
-
--Scheggia impazzita (5): (solamente il giocatore icona Bemolle ID: blatta): Quando è l'unico difensore in campo ha il 100% di possibilità di partecipare alla fase "attacco vs difesa" (invece che del solito 75%). Per ogni fase "attacco vs difesa" a cui partecipa aggiunge +0.2 al suo modificatore (massimo +5.0). 
-
--Assist-man (5): (solamente il giocatore icona Meliodas ID: melio): Quando partecipa alla fase costruzione come attaccante e riesce nell'attacco, continua l'azione partecipando lui il 100% delle volte alla fase "attacco vs difesa" come attaccante. Se la fase riesce non può mai essere lui ad effettuare la fase "tiro vs portiere", se il giocatore che partecipa a quest'ultima fase segna, l'assist sarà sempre di Meliodas. Ottiene un bonus di +1.0 al suo modificatore per ogni assist fatto in quella partita.
-
--Parata Efficiente (5): (solamete il giocatore icona Simone ID:simo): Quando il giocatore è nella fase "tiro vs portiere" ed è il portiere e para con una differenza di +1 o superiore. Aggiunge un modificatore alla fase di costruzione successiva pari alla metà della differenza tra parata e tiro. La percentuale di successo critico dell'attaccante in fase "tiro vs portiere" si abbassa a 1% da 5% 
-
-file_path = '/mnt/data/Manuale_Abilita_Riscritto.txt'
-with open(file_path, 'w') as f:
-    f.write(file_content)
-
-file_path
+(5) Icona: A inizio partita c'è il 50% di probabilità di dare +1 ai modificatori di tutti gli altri giocatori della sua squadra.
+(5) Fatto d'acciaio: (Croc): Non può infortunarsi, costo cure 0. Può avere "regista" anche se non è centrocampista.
+(5) L'uomo in più: (Fosco): Quando una fase in attacco verrebbe interrotta, aggiungi +3 al modificatore e ricontrolla (max 5 volte).
+(5) Tiro Dritto: (Amedemo): Se unico attaccante, Fase 3 assegnata a lui (100%). Mod +3.5, cala di 0.5 per ogni goal. Critico 1-6%.
+(5) Avanti un altro: (Antony): Probabilità infortunio avversari 7%. In difesa Fase 2, mod +2.
+(5) Contrasto di gomito: (Luka): In fasi difensive mod +2. 1% di far fallire automaticamente la fase avversaria.
+(5) Calcolo delle probabilità: (Il Cap): Fase Costruzione tira 2d20 (sceglie alto). Bonus costruzione applicati anche in attacco.
+(5) Amici di panchina: (Shikanto): Gioca anche se infortunato. Dalla panchina passa le abilità al giocatore attivo. In attacco costruzione +2.
+(5) Continua a provare: (Gladio): Tira sempre 2d20 e fa la media. Attacco -2 mod, Difesa +2 mod.
+(5) Stazionario: (Cocco): Se non partecipa accumula +0.5 (max +3.0). A +5.0 gioca obbligatoriamente e resetta.
+(5) Osservatore: (Mark Falco): Se portiere in Fase 3, annulla abilità avversaria e aggiunge il livello al proprio mod. Riduce i malus subiti di 1.
+(5) Relax: (Sandro Diaz): Modificatore "Relax". Difesa -1, Attacco +1. Si somma al base. Cap a +/- 5.0.
+(5) Scheggia impazzita: (Blatta): Se unico difensore, partecipa al 100% alla Fase 2. Ogni partecipazione da +0.2 (max +5.0).
+(5) Assist-man: (Meliodas): Se vince costruzione attacco, partecipa 100% a Fase 2. Non tira mai in Fase 3 (sempre assist). +1.0 mod per ogni assist.
+(5) Parata Laser: (solamente giocatore icona Simone ID: simo): In Fase 3, il Valore Tiro avversario è ridotto di -1 cumulativo per ogni parata effettuata in precedenza (max -5). La probabilità di critico dell'attaccante scende all'1%.

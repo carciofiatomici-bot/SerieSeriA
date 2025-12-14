@@ -416,6 +416,25 @@ window.FeatureFlags = {
                     <li>Configurazione valori da pannello Admin</li>
                 </ul>
                 <p class="mt-2 text-green-400">Combina Sponsor + Media per massimizzare i guadagni!</p>`
+        },
+        privateLeagues: {
+            id: 'privateLeagues',
+            name: 'Leghe Private',
+            description: 'Mini-campionati privati tra amici con max 4 squadre',
+            icon: '👥',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Crea una lega privata con nome personalizzato</li>
+                    <li>Codice invito per far unire gli amici (es. ABC123)</li>
+                    <li>Max 4 squadre per lega (campionato 6 giornate)</li>
+                    <li>Costo d'ingresso opzionale (0-500 CS)</li>
+                    <li>Distribuzione premi: 1° 40%, 2° 30%, 3° 20%, 4° 10%</li>
+                    <li>Classifica e calendario dedicati</li>
+                    <li>Solo il creatore puo simulare le partite</li>
+                </ul>
+                <p class="mt-2 text-purple-400">Sfida i tuoi amici in un mini-campionato esclusivo!</p>`
         }
     },
 

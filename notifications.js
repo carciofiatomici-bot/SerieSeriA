@@ -39,7 +39,8 @@ window.Notifications = {
         chat: { icon: '💬', color: 'cyan', priority: 'medium' },
         challenge: { icon: '⚔️', color: 'orange', priority: 'high' },
         out_of_position: { icon: '⚠️', color: 'orange', priority: 'medium' },
-        credits_received: { icon: '💎', color: 'emerald', priority: 'high' }
+        credits_received: { icon: '💎', color: 'emerald', priority: 'high' },
+        league_invite: { icon: '👥', color: 'purple', priority: 'high' }
     },
 
     /**
@@ -596,6 +597,22 @@ window.Notifications = {
                 `;
             }
 
+            // Bottoni azione per inviti lega privata
+            if (notif.type === 'league_invite' && notif.leagueId && !notif.responded) {
+                actionButtons = `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="event.stopPropagation(); window.Notifications.acceptLeagueInvite('${notif.id}', '${notif.leagueId}', '${notif.inviteCode}')"
+                                class="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            ✅ Accetta
+                        </button>
+                        <button onclick="event.stopPropagation(); window.Notifications.declineLeagueInvite('${notif.id}')"
+                                class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            ❌ Rifiuta
+                        </button>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="p-3 border-b border-gray-700 hover:bg-gray-700 ${unreadClass} group relative">
                     <div class="flex gap-3 cursor-pointer" onclick="window.Notifications.handleClick('${notif.id}')">
@@ -787,6 +804,68 @@ window.Notifications = {
             }
         }
 
+        this.updateUI();
+    },
+
+    /**
+     * Accetta invito lega privata dalla notifica
+     */
+    async acceptLeagueInvite(notifId, leagueId, inviteCode) {
+        // Marca la notifica come risposta
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+        }
+
+        // Chiudi dropdown notifiche
+        this.closeDropdown();
+
+        // Accetta invito tramite PrivateLeagues
+        if (window.PrivateLeagues) {
+            try {
+                const teamId = window.InterfacciaCore?.currentTeamId;
+                const teamName = window.InterfacciaCore?.currentTeamData?.teamName;
+
+                if (!teamId || !teamName) {
+                    if (window.Toast) window.Toast.error('Dati squadra non disponibili');
+                    return;
+                }
+
+                const result = await window.PrivateLeagues.joinLeague(inviteCode, teamId, teamName);
+
+                if (result.success) {
+                    if (result.leagueStarted) {
+                        if (window.Toast) window.Toast.success('Invito accettato! Lega al completo, campionato iniziato!');
+                    } else {
+                        if (window.Toast) window.Toast.success('Invito accettato! Ti sei unito alla lega.');
+                    }
+                } else {
+                    if (window.Toast) window.Toast.error(result.error || 'Errore nell\'accettare l\'invito');
+                }
+            } catch (error) {
+                console.error('Errore accettazione invito lega:', error);
+                if (window.Toast) window.Toast.error('Errore nell\'accettare l\'invito');
+            }
+        }
+
+        this.updateUI();
+    },
+
+    /**
+     * Rifiuta invito lega privata dalla notifica
+     */
+    async declineLeagueInvite(notifId) {
+        // Marca la notifica come risposta
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+        }
+
+        if (window.Toast) window.Toast.info('Invito rifiutato');
         this.updateUI();
     },
 
