@@ -1001,9 +1001,9 @@ window.DraftUserUI = {
             <div class="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
                 <p class="text-sm text-gray-400 mb-2">Non vuoi draftare in questo round?</p>
                 <button id="btn-skip-turn" class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-500 transition border border-gray-500">
-                    ↪ Rinuncia al Pick
+                    ↪ Rinuncia al Pick (+150 CS)
                 </button>
-                <p class="text-xs text-gray-500 mt-1 text-center">Salta questo turno senza draftare nessun giocatore</p>
+                <p class="text-xs text-gray-500 mt-1 text-center">Salta questo turno e ricevi 150 CS come compensazione</p>
             </div>
 
             <!-- Lista giocatori -->
@@ -1076,7 +1076,7 @@ window.DraftUserUI = {
         if (skipTurnBtn) {
             skipTurnBtn.addEventListener('click', async () => {
                 // Conferma rinuncia
-                const confirmed = confirm('Sei sicuro di voler rinunciare al pick?\n\nSalterai questo turno senza draftare nessun giocatore.');
+                const confirmed = confirm('Sei sicuro di voler rinunciare al pick?\n\nSalterai questo turno senza draftare nessun giocatore.\nRiceverai 150 CS come compensazione.');
                 if (!confirmed) return;
 
                 skipTurnBtn.disabled = true;

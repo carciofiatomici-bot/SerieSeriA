@@ -646,16 +646,15 @@ window.DraftTurns = {
                 // In questo caso il turno torna aperto per essere rubato da qualcun altro
                 if (draftTurns.isStolenTurn) {
                     console.log(`[TIMEOUT FURTO] Il ladro ${currentTeamName} non ha draftato in tempo!`);
-                    // Resetta lo stato del furto - il turno torna alla vittima originale
-                    // ma rimane aperto per essere rubato di nuovo
-                    await setDoc(configDocRef, {
-                        draftTurns: {
-                            ...draftTurns,
-                            isStolenTurn: false,
-                            turnExpired: true, // Rimane rubabile
-                            turnStartTime: Date.now() // Reset del timer per la vittima
-                        }
-                    }, { merge: true });
+                    // BUGFIX: Usa updateDoc con dot notation per evitare di sovrascrivere
+                    // dati modificati nel frattempo da altri processi
+                    const { updateDoc } = firestoreTools;
+                    await updateDoc(configDocRef, {
+                        'draftTurns.isStolenTurn': false,
+                        'draftTurns.turnExpired': true,
+                        'draftTurns.turnStartTime': Date.now(),
+                        'draftTurns.turnExpiredAt': Date.now()
+                    });
                     return;
                 }
 
@@ -673,13 +672,13 @@ window.DraftTurns = {
                         return;
                     }
 
-                    await setDoc(configDocRef, {
-                        draftTurns: {
-                            ...draftTurns,
-                            turnExpired: true, // Flag che indica che il turno puo' essere rubato
-                            turnExpiredAt: Date.now() // Timestamp per il timer secondario
-                        }
-                    }, { merge: true });
+                    // BUGFIX: Usa updateDoc con dot notation per evitare di sovrascrivere
+                    // dati modificati nel frattempo da altri processi
+                    const { updateDoc } = firestoreTools;
+                    await updateDoc(configDocRef, {
+                        'draftTurns.turnExpired': true,
+                        'draftTurns.turnExpiredAt': Date.now()
+                    });
 
                     // Notifica che il turno e' disponibile per il furto
                     this.sendStealAvailableNotification(currentOrder[currentIndex]?.teamId, currentTeamName);
@@ -748,8 +747,8 @@ window.DraftTurns = {
      */
     async handleAutoAssignOrSkip(context, currentOrder, currentIndex, currentTeamName, draftTurns, orderKey, configDocRef) {
         const { db, firestoreTools, paths } = context;
-        const { setDoc } = firestoreTools;
-        const { DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
+        const { doc, getDoc, setDoc, updateDoc } = firestoreTools;
+        const { DRAFT_TOTAL_ROUNDS, DRAFT_SKIP_TURN_BONUS_CS } = window.DraftConstants;
 
         // Controlla se siamo nella finestra oraria consentita
         if (!this.isWithinAllowedTimeWindow()) {
@@ -771,16 +770,38 @@ window.DraftTurns = {
             currentOrder[currentIndex].hasDrafted = true;
             currentOrder[currentIndex].autoAssigned = true;
         } else if (assignResult.insufficientBudget) {
-            // Budget insufficiente - salta il turno (rinuncia forzata)
+            // Budget insufficiente - salta il turno (rinuncia forzata) e assegna bonus CS
             console.log(`[BUDGET INSUFFICIENTE] ${currentTeamName} non ha budget sufficiente. Turno saltato.`);
+
+            // Assegna bonus CS per il turno saltato
+            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                const newBudget = (teamData.budget || 0) + DRAFT_SKIP_TURN_BONUS_CS;
+                await updateDoc(teamDocRef, { budget: newBudget });
+                console.log(`[BUDGET INSUFFICIENTE] ${currentTeamName} riceve ${DRAFT_SKIP_TURN_BONUS_CS} CS (nuovo budget: ${newBudget})`);
+            }
+
             this.sendSkipTurnNotification(teamId, currentTeamName, 'budget_insufficient');
 
             currentOrder[currentIndex].hasDrafted = true;
             currentOrder[currentIndex].skippedTurn = true;
             currentOrder[currentIndex].skipReason = 'budget_insufficient';
         } else {
-            // Altro errore - salta comunque il turno
+            // Altro errore - salta comunque il turno e assegna bonus CS
             console.log(`[ERRORE ASSEGNAZIONE] Errore per ${currentTeamName}: ${assignResult.message}. Turno saltato.`);
+
+            // Assegna bonus CS per il turno saltato
+            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                const newBudget = (teamData.budget || 0) + DRAFT_SKIP_TURN_BONUS_CS;
+                await updateDoc(teamDocRef, { budget: newBudget });
+                console.log(`[ERRORE ASSEGNAZIONE] ${currentTeamName} riceve ${DRAFT_SKIP_TURN_BONUS_CS} CS (nuovo budget: ${newBudget})`);
+            }
+
             this.sendSkipTurnNotification(teamId, currentTeamName, 'error');
 
             currentOrder[currentIndex].hasDrafted = true;
@@ -878,22 +899,23 @@ window.DraftTurns = {
      * @param {string} reason - Motivo dello skip ('budget_insufficient', 'voluntary', 'error')
      */
     sendSkipTurnNotification(teamId, teamName, reason) {
+        const { DRAFT_SKIP_TURN_BONUS_CS } = window.DraftConstants;
         let message = '';
         let title = '';
 
         switch (reason) {
             case 'budget_insufficient':
                 title = 'Turno Saltato - Budget Insufficiente';
-                message = `Non hai abbastanza CS per draftare nessun giocatore. Il tuo turno e' stato saltato.`;
+                message = `Non hai abbastanza CS per draftare nessun giocatore. Il tuo turno e' stato saltato. Hai ricevuto ${DRAFT_SKIP_TURN_BONUS_CS} CS come compensazione.`;
                 break;
             case 'voluntary':
                 title = 'Rinuncia al Pick Confermata';
-                message = `Hai rinunciato al pick per questo round.`;
+                message = `Hai rinunciato al pick per questo round. Hai ricevuto ${DRAFT_SKIP_TURN_BONUS_CS} CS come compensazione.`;
                 break;
             case 'error':
             default:
                 title = 'Turno Saltato';
-                message = `Il tuo turno e' stato saltato a causa di un errore.`;
+                message = `Il tuo turno e' stato saltato a causa di un errore. Hai ricevuto ${DRAFT_SKIP_TURN_BONUS_CS} CS come compensazione.`;
                 break;
         }
 
@@ -1472,14 +1494,15 @@ window.DraftTurns = {
     /**
      * Rinuncia volontaria al pick del turno corrente.
      * L'utente decide di non draftare nessun giocatore in questo turno.
+     * Riceve un bonus di 150 CS come compensazione.
      * @param {Object} context - Contesto con db e firestoreTools
      * @param {string} teamId - ID della squadra che rinuncia
      * @returns {Promise<Object>} - { success, message }
      */
     async skipTurn(context, teamId) {
         const { db, firestoreTools, paths } = context;
-        const { doc, getDoc, setDoc } = firestoreTools;
-        const { CONFIG_DOC_ID, DRAFT_TOTAL_ROUNDS } = window.DraftConstants;
+        const { doc, getDoc, setDoc, updateDoc } = firestoreTools;
+        const { CONFIG_DOC_ID, DRAFT_TOTAL_ROUNDS, DRAFT_SKIP_TURN_BONUS_CS } = window.DraftConstants;
 
         try {
             const configDocRef = doc(db, paths.CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
@@ -1514,6 +1537,16 @@ window.DraftTurns = {
             currentTeam.timeoutStrikes = 0; // Reset strikes per rinuncia volontaria
 
             console.log(`[RINUNCIA] ${currentTeam.teamName} ha rinunciato al pick nel round ${currentRound}`);
+
+            // Assegna bonus CS per la rinuncia
+            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                const newBudget = (teamData.budget || 0) + DRAFT_SKIP_TURN_BONUS_CS;
+                await updateDoc(teamDocRef, { budget: newBudget });
+                console.log(`[RINUNCIA] ${currentTeam.teamName} riceve ${DRAFT_SKIP_TURN_BONUS_CS} CS (nuovo budget: ${newBudget})`);
+            }
 
             // Invia notifica
             this.sendSkipTurnNotification(teamId, currentTeam.teamName, 'voluntary');
@@ -1600,7 +1633,7 @@ window.DraftTurns = {
 
             return {
                 success: true,
-                message: 'Hai rinunciato al pick per questo round.'
+                message: `Hai rinunciato al pick per questo round. Hai ricevuto ${DRAFT_SKIP_TURN_BONUS_CS} CS come compensazione.`
             };
 
         } catch (error) {

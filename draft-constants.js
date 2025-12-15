@@ -141,6 +141,9 @@ window.DraftConstants = {
     // Intervallo di controllo timeout (ogni 30 secondi)
     DRAFT_TIMEOUT_CHECK_INTERVAL_MS: 30 * 1000,
 
+    // Bonus CS quando si salta il turno del draft (rinuncia volontaria o budget insufficiente)
+    DRAFT_SKIP_TURN_BONUS_CS: 150,
+
     // ====================================================================
     // PAUSA NOTTURNA DRAFT
     // ====================================================================
