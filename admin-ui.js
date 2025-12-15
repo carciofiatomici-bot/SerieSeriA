@@ -267,7 +267,20 @@ window.AdminUI = {
                             📺 Configurazione Media
                         </button>
                     </div>
-                    <div class="text-gray-400 text-sm">
+
+                    <!-- BOTTONE EMERGENZA -->
+                    <div class="mt-6 p-4 bg-red-900/30 rounded-lg border-2 border-red-600">
+                        <h4 class="text-lg font-bold text-red-400 mb-2 flex items-center">
+                            <span class="mr-2">⚠️</span> Emergenza
+                        </h4>
+                        <p class="text-xs text-gray-400 mb-3">Annulla completamente Campionato e Coppa senza assegnare premi. Usa solo in caso di errore nella creazione.</p>
+                        <button id="btn-emergency-cancel-competitions"
+                                class="w-full bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150 border border-red-500">
+                            🚨 ANNULLA CAMPIONATO E COPPA
+                        </button>
+                    </div>
+
+                    <div class="text-gray-400 text-sm mt-4">
                         Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
                     </div>
                 </div>

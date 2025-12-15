@@ -284,6 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetHoF.addEventListener('click', handleResetHallOfFame);
         }
 
+        // Bottone Emergenza - Annulla Campionato e Coppa
+        const btnEmergencyCancel = document.getElementById('btn-emergency-cancel-competitions');
+        if (btnEmergencyCancel) {
+            btnEmergencyCancel.addEventListener('click', handleEmergencyCancelCompetitions);
+        }
+
         // Configurazione Formule Costi
         const btnFormulasConfig = document.getElementById('btn-formulas-config');
         const formulasPanelContainer = document.getElementById('formulas-panel-container');
@@ -748,6 +754,137 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultDiv.textContent = `Errore: ${error.message}`;
                 resultDiv.className = 'flex items-center justify-center text-sm text-red-400';
             }
+        }
+    };
+
+    /**
+     * Gestisce l'annullamento di emergenza di Campionato e Coppa
+     * Cancella calendario, classifica e tabellone coppa SENZA assegnare premi
+     */
+    const handleEmergencyCancelCompetitions = async () => {
+        // Prima conferma
+        const confirm1 = confirm(
+            '⚠️ EMERGENZA - ANNULLAMENTO COMPETIZIONI\n\n' +
+            'Questa azione cancellera:\n' +
+            '- Calendario del Campionato\n' +
+            '- Classifica del Campionato\n' +
+            '- Tabellone della Coppa\n\n' +
+            'NESSUN PREMIO VERRA ASSEGNATO!\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+        if (!confirm1) return;
+
+        // Seconda conferma di sicurezza
+        const confirm2 = confirm(
+            '🚨 CONFERMA FINALE\n\n' +
+            'Stai per ANNULLARE completamente:\n' +
+            '- SerieSeriA (Campionato)\n' +
+            '- CoppaSeriA\n\n' +
+            'Questa azione e IRREVERSIBILE!\n\n' +
+            'Digita "ANNULLA" per confermare.'
+        );
+        if (!confirm2) return;
+
+        const userInput = prompt('Digita "ANNULLA" per confermare l\'operazione:');
+        if (userInput !== 'ANNULLA') {
+            alert('Operazione annullata. Input non corretto.');
+            return;
+        }
+
+        const btn = document.getElementById('btn-emergency-cancel-competitions');
+        const originalText = btn.innerHTML;
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Annullamento in corso...';
+
+            const { doc, deleteDoc, setDoc, getDoc } = firestoreTools;
+
+            // 1. Cancella calendario Campionato
+            const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, 'full_schedule');
+            try {
+                await deleteDoc(scheduleDocRef);
+                console.log('[EMERGENZA] Calendario campionato cancellato');
+            } catch (e) {
+                console.warn('[EMERGENZA] Errore cancellazione calendario:', e.message);
+            }
+
+            // 2. Cancella classifica Campionato
+            const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, 'standings');
+            try {
+                await deleteDoc(leaderboardDocRef);
+                console.log('[EMERGENZA] Classifica campionato cancellata');
+            } catch (e) {
+                console.warn('[EMERGENZA] Errore cancellazione classifica:', e.message);
+            }
+
+            // 3. Cancella tabellone Coppa (usando CoppaSchedule se disponibile)
+            if (window.CoppaSchedule && window.CoppaSchedule.deleteCupSchedule) {
+                try {
+                    await window.CoppaSchedule.deleteCupSchedule();
+                    console.log('[EMERGENZA] Tabellone coppa cancellato');
+                } catch (e) {
+                    console.warn('[EMERGENZA] Errore cancellazione tabellone coppa:', e.message);
+                }
+            } else {
+                // Fallback manuale
+                const cupDocRef = doc(db, `artifacts/${firestoreTools.appId}/public/data/cup`, 'bracket');
+                try {
+                    await deleteDoc(cupDocRef);
+                    console.log('[EMERGENZA] Tabellone coppa cancellato (fallback)');
+                } catch (e) {
+                    console.warn('[EMERGENZA] Errore cancellazione tabellone coppa (fallback):', e.message);
+                }
+            }
+
+            // 4. Aggiorna config per segnalare che le competizioni sono terminate
+            const configDocRef = doc(db, CONFIG_COLLECTION_PATH, 'settings');
+            try {
+                const configDoc = await getDoc(configDocRef);
+                const currentConfig = configDoc.exists() ? configDoc.data() : {};
+                await setDoc(configDocRef, {
+                    ...currentConfig,
+                    isCupOver: true,
+                    cupWinner: null,
+                    isChampionshipOver: true,
+                    championshipWinner: null,
+                    competitionsCancelledAt: new Date().toISOString(),
+                    competitionsCancelledReason: 'emergency'
+                });
+                console.log('[EMERGENZA] Config aggiornata');
+            } catch (e) {
+                console.warn('[EMERGENZA] Errore aggiornamento config:', e.message);
+            }
+
+            // 5. Disattiva automazione simulazioni se attiva
+            if (window.AutoSimulation && window.AutoSimulation.disable) {
+                try {
+                    await window.AutoSimulation.disable();
+                    console.log('[EMERGENZA] Automazione simulazioni disattivata');
+                } catch (e) {
+                    console.warn('[EMERGENZA] Errore disattivazione automazione:', e.message);
+                }
+            }
+
+            alert(
+                '✅ ANNULLAMENTO COMPLETATO\n\n' +
+                'Sono stati cancellati:\n' +
+                '- Calendario Campionato\n' +
+                '- Classifica Campionato\n' +
+                '- Tabellone Coppa\n\n' +
+                'Nessun premio e stato assegnato.\n' +
+                'Ricarica la pagina per vedere le modifiche.'
+            );
+
+            // Ricarica la pagina dopo 1 secondo
+            setTimeout(() => location.reload(), 1000);
+
+        } catch (error) {
+            console.error('[EMERGENZA] Errore durante annullamento:', error);
+            alert('❌ Errore durante l\'annullamento: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     };
 
