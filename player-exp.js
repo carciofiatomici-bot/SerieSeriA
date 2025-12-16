@@ -38,10 +38,10 @@
         MULTIPLIER: 1.15,
 
         // Limiti livello
-        MAX_LEVEL_NORMAL: 20,
+        MAX_LEVEL_NORMAL: 25,
         MAX_LEVEL_ICON: 30,
-        MAX_LEVEL_BASE: 25,         // Livello max giocatori base (iniziali)
-        MAX_LEVEL_COACH: 10,        // Livello max allenatore
+        MAX_LEVEL_BASE: 5,          // Livello max giocatori base (iniziali)
+        MAX_LEVEL_COACH: 20,        // Livello max allenatore
 
         // Livello massimo segreto (per giocatori normali)
         SECRET_MAX_LEVEL_MIN: 10,   // Minimo livello segreto
