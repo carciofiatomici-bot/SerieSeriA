@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3 class="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
                     <span>🆓</span> Giocatori Base Gratuiti
                 </h3>
-                <p class="text-xs text-gray-400 mb-3">Acquista giocatori di livello 1 senza costo. Nessun cooldown.</p>
+                <p class="text-xs text-gray-400 mb-3">Acquista giocatori di livello 5 senza costo. Nessun cooldown.</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     ${roles.map(role => {
                         const colorClass = ROLE_COLORS[role];
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     role: role,
                     age: playerAge,
                     cost: 0,
-                    level: 1,
+                    level: 5,
                     type: playerType,
                     abilities: [],
                     isCaptain: false,
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Genera secretMaxLevel per giocatori base (sistema livello massimo segreto)
                 if (window.PlayerExp?.isSubjectToSecretMaxLevel(playerForSquad)) {
-                    playerForSquad.secretMaxLevel = window.PlayerExp.generateSecretMaxLevel(1);
+                    playerForSquad.secretMaxLevel = window.PlayerExp.generateSecretMaxLevel(5);
                 }
 
                 // Aggiorna la squadra (SENZA toccare il cooldown - i giocatori base non hanno cooldown)
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { playerName, playerType } = result;
 
-            displayMessage(`${playerName} (${roleName} Lv.1, ${playerType}) aggiunto alla rosa!`, 'success');
+            displayMessage(`${playerName} (${roleName} Lv.5, ${playerType}) aggiunto alla rosa!`, 'success');
 
             // Ricarica il pannello
             renderUserMercatoPanel();
