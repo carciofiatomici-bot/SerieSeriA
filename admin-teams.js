@@ -1046,6 +1046,18 @@ window.AdminTeams = {
                         </div>
                         <p class="text-xs text-purple-400 -mt-2">L'EXP viene usato per il sistema di progressione</p>
 
+                        <!-- Giocatore Serio -->
+                        <div class="bg-gray-900 p-3 rounded border border-orange-500">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="player-serious-check" ${player.isSeriousPlayer ? 'checked' : ''}
+                                       class="form-checkbox h-5 w-5 text-orange-500 rounded">
+                                <div>
+                                    <span class="text-orange-400 font-bold">Giocatore Serio</span>
+                                    <p class="text-xs text-gray-400 mt-1">Se attivo, il livello massimo del giocatore e' limitato a 10 (indipendentemente dal tipo)</p>
+                                </div>
+                            </label>
+                        </div>
+
                         <div>
                             <label class="text-gray-300 block mb-2 font-bold">Abilita</label>
                             <p class="text-xs text-yellow-300 mb-2">Max 3 positive + 2 negative</p>
@@ -1284,6 +1296,10 @@ window.AdminTeams = {
         const expInput = document.getElementById('player-exp-input');
         const exp = expInput ? parseInt(expInput.value) || 0 : (originalPlayer.exp || 0);
 
+        // Leggi flag Giocatore Serio
+        const seriousCheck = document.getElementById('player-serious-check');
+        const isSeriousPlayer = seriousCheck ? seriousCheck.checked : false;
+
         const playerData = {
             id: index === -1 ? `player_${Date.now()}` : (originalPlayer.id || `player_${Date.now()}`),
             name,
@@ -1295,7 +1311,8 @@ window.AdminTeams = {
             cost: originalPlayer.cost || 0,
             isCaptain: originalPlayer.isCaptain || false,
             exp: exp,
-            expToNextLevel: originalPlayer.expToNextLevel || 100
+            expToNextLevel: originalPlayer.expToNextLevel || 100,
+            isSeriousPlayer: isSeriousPlayer
         };
 
         // Mantieni photoUrl se presente (per Icone)

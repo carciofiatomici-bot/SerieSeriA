@@ -26,7 +26,7 @@ window.Contracts = {
 
     /**
      * Verifica se un giocatore e' soggetto a contratto
-     * Esclude: Icone e giocatori Base (livello 1 con costo 0)
+     * Esclude: Icone, Giocatori Base, Giocatori Seri
      */
     isSubjectToContract(player, teamData = null) {
         if (!player) return false;
@@ -36,8 +36,14 @@ window.Contracts = {
                         (teamData?.iconaId && player.id === teamData.iconaId);
         if (isIcona) return false;
 
-        // Escludi giocatori Base (livello 1 con costo 0)
-        const isBase = (player.level || 1) === 1 && (player.cost || 0) === 0;
+        // Escludi Giocatori Seri (livello max 10, non lasciano mai la squadra)
+        if (player.isSeriousPlayer) return false;
+
+        // Escludi giocatori Base (non lasciano mai la squadra)
+        const isBase = player.isBase ||
+                       player.isBasePlayer ||
+                       (player.name?.includes('Base')) ||
+                       ((player.level || 1) === 1 && (player.cost || 0) === 0);
         if (isBase) return false;
 
         return true;

@@ -92,6 +92,11 @@
      * @returns {number} Livello massimo (25 per base, secretMaxLevel per normali, 30 icone)
      */
     function getMaxLevel(player) {
+        // PRIORITA 1: Giocatore Serio - livello massimo fisso a 10
+        if (player.isSeriousPlayer) {
+            return 10;
+        }
+
         // Verifica se il giocatore e un'icona
         const isIcon = player.isIcon || player.icon || player.tipo === 'icona' ||
                        (player.abilities && player.abilities.includes('Icona'));

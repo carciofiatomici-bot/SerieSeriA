@@ -129,10 +129,26 @@ window.GestioneSquadreRosa = {
             basePlayerMarker = ' <span class="bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Base - immune agli infortuni">🌱</span>';
         }
 
+        // Marker Giocatore Serio (livello massimo 10)
+        let seriousPlayerMarker = '';
+        if (player.isSeriousPlayer) {
+            seriousPlayerMarker = ' <span class="bg-orange-700 text-orange-200 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Serio - livello massimo 10">🎯</span>';
+        }
+
         // Marker Contratto
         const contractBadge = window.Contracts?.renderContractBadge(player, teamData) || '';
 
-        const isCaptainClass = isCaptain ? 'text-orange-400 font-extrabold' : 'text-white font-semibold';
+        // Colore nome basato sulla forma del giocatore
+        const formData = teamData.playersFormStatus?.[player.id];
+        const formModifier = formData?.mod ?? 0;
+        let formColorClass = 'text-white'; // neutro
+        if (formModifier > 0) {
+            formColorClass = 'text-green-400'; // in forma
+        } else if (formModifier < 0) {
+            formColorClass = 'text-red-400'; // fuori forma
+        }
+        // Il capitano ha sempre il colore arancione che sovrascrive la forma
+        const nameColorClass = isCaptain ? 'text-orange-400 font-extrabold' : `${formColorClass} font-semibold`;
 
         // Badge tipologia (PlayerTypeBadge)
         const playerType = player.type || 'N/A';
@@ -145,32 +161,49 @@ window.GestioneSquadreRosa = {
             ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => UNIQUE_ABILITIES.includes(a) ? `<span class="text-yellow-400 font-bold">${a}</span>` : a).join(', ')}</p>`
             : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
 
-        // Potenziale basato su secretMaxLevel (solo per giocatori normali, non icone)
+        // Potenziale basato su secretMaxLevel o tipo giocatore (solo per giocatori normali, non icone)
         let potenzialHtml = '';
-        if (!isIcona && player.secretMaxLevel !== undefined && player.secretMaxLevel !== null) {
-            const maxLvl = player.secretMaxLevel;
-            let potenziale = '';
-            let potenzialColor = '';
-            if (maxLvl <= 10) {
-                potenziale = 'Dilettante';
-                potenzialColor = 'text-gray-400';
-            } else if (maxLvl <= 15) {
-                potenziale = 'Professionista';
-                potenzialColor = 'text-green-400';
-            } else if (maxLvl <= 19) {
-                potenziale = 'Fuoriclasse';
-                potenzialColor = 'text-blue-400';
-            } else if (maxLvl <= 24) {
-                potenziale = 'Leggenda';
-                potenzialColor = 'text-purple-400';
-            } else {
-                potenziale = 'GOAT';
-                potenzialColor = 'text-yellow-400';
+        if (!isIcona) {
+            // Determina il livello massimo effettivo
+            let maxLvl = null;
+
+            // Giocatore Serio: max 10
+            if (player.isSeriousPlayer) {
+                maxLvl = 10;
             }
-            // Mostra livello max segreto se admin ha il flag attivo
-            const showSecretLevel = window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');
-            const secretLevelText = showSecretLevel ? ` <span class="text-purple-300">(Max: ${maxLvl})</span>` : '';
-            potenzialHtml = `<p class="text-xs mt-1">Potenziale: <span class="${potenzialColor} font-semibold">${potenziale}</span>${secretLevelText}</p>`;
+            // Giocatore Base: max 5
+            else if (isBasePlayer) {
+                maxLvl = 5;
+            }
+            // Giocatore normale con secretMaxLevel
+            else if (player.secretMaxLevel !== undefined && player.secretMaxLevel !== null) {
+                maxLvl = player.secretMaxLevel;
+            }
+
+            if (maxLvl !== null) {
+                let potenziale = '';
+                let potenzialColor = '';
+                if (maxLvl <= 10) {
+                    potenziale = 'Dilettante';
+                    potenzialColor = 'text-gray-400';
+                } else if (maxLvl <= 15) {
+                    potenziale = 'Professionista';
+                    potenzialColor = 'text-green-400';
+                } else if (maxLvl <= 19) {
+                    potenziale = 'Fuoriclasse';
+                    potenzialColor = 'text-blue-400';
+                } else if (maxLvl <= 24) {
+                    potenziale = 'Leggenda';
+                    potenzialColor = 'text-purple-400';
+                } else {
+                    potenziale = 'GOAT';
+                    potenzialColor = 'text-yellow-400';
+                }
+                // Mostra livello max segreto se admin ha il flag attivo
+                const showSecretLevel = window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');
+                const secretLevelText = showSecretLevel ? ` <span class="text-purple-300">(Max: ${maxLvl})</span>` : '';
+                potenzialHtml = `<p class="text-xs mt-1">Potenziale: <span class="${potenzialColor} font-semibold">${potenziale}</span>${secretLevelText}</p>`;
+            }
         }
 
         // Barra EXP
@@ -300,9 +333,10 @@ window.GestioneSquadreRosa = {
                      data-player-id="${player.id}">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                        <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
+                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}
                         ${basePlayerMarker}
+                        ${seriousPlayerMarker}
                         ${injuryMarker}
                         <span class="text-yellow-400">(${player.role})</span>
                         ${typeBadgeHtml}
