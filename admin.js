@@ -1149,6 +1149,84 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Reset dell'XP di tutti i giocatori a 0 mantenendo il livello attuale
+     * @param {string} teamsCollectionPath - Path della collection squadre
+     */
+    const resetAllPlayersExp = async (teamsCollectionPath) => {
+        // Conferma
+        const confirmed = confirm(
+            '🔄 RESET XP GIOCATORI\n\n' +
+            'Questa azione resettera l\'XP di TUTTI i giocatori a 0.\n' +
+            'Il livello attuale verra mantenuto.\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+
+            // Carica tutte le squadre
+            const teamsSnapshot = await getDocs(collection(db, teamsCollectionPath));
+            let totalPlayers = 0;
+            let totalTeams = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                let teamModified = false;
+                const updates = {};
+
+                // Reset XP di tutti i giocatori
+                if (teamData.players && Array.isArray(teamData.players)) {
+                    const updatedPlayers = teamData.players.map(player => {
+                        const level = player.level || 1;
+                        const expToNext = window.PlayerExp?.expForLevel(level) || Math.floor(100 * Math.pow(level, 1.5) * 1.15);
+                        totalPlayers++;
+                        return {
+                            ...player,
+                            exp: 0,
+                            expToNextLevel: expToNext
+                        };
+                    });
+                    updates.players = updatedPlayers;
+                    teamModified = true;
+                }
+
+                // Reset XP del coach se presente
+                if (teamData.coach) {
+                    const coachLevel = teamData.coach.level || 1;
+                    const coachExpToNext = window.PlayerExp?.expForLevel(coachLevel) || Math.floor(100 * Math.pow(coachLevel, 1.5) * 1.15);
+                    updates.coach = {
+                        ...teamData.coach,
+                        exp: 0,
+                        expToNextLevel: coachExpToNext
+                    };
+                    teamModified = true;
+                }
+
+                // Salva le modifiche
+                if (teamModified) {
+                    await updateDoc(doc(db, teamsCollectionPath, teamDoc.id), updates);
+                    totalTeams++;
+                }
+            }
+
+            alert(
+                `🔄 Reset XP completato!\n\n` +
+                `Squadre processate: ${totalTeams}\n` +
+                `Giocatori resettati: ${totalPlayers}\n\n` +
+                `Tutti i giocatori hanno ora 0 XP con il loro livello invariato.`
+            );
+
+            console.log(`[Admin] Reset XP completato: ${totalPlayers} giocatori in ${totalTeams} squadre`);
+
+        } catch (error) {
+            console.error('[Admin] Errore reset XP:', error);
+            alert(`Errore durante il reset XP: ${error.message}`);
+        }
+    };
+
+    /**
      * Gestisce l'aggiunta di +1 anno di contratto a tutti i giocatori in squadra
      */
     const handleAddContractsAll = async () => {
@@ -4236,6 +4314,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handler Fix Livelli Tutte le Squadre
         document.getElementById('btn-fix-all-teams-levels').addEventListener('click', () => {
             window.AdminTeams.fixAllTeamsLevels(TEAMS_COLLECTION_PATH);
+        });
+
+        // Handler Reset XP Tutti i Giocatori
+        document.getElementById('btn-reset-all-players-exp').addEventListener('click', () => {
+            resetAllPlayersExp(TEAMS_COLLECTION_PATH);
         });
 
         if (window.AdminTeams.teamsListContainer) {
