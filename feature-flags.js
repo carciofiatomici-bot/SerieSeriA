@@ -507,6 +507,25 @@ window.FeatureFlags = {
                     <li>Storico premi vinti</li>
                 </ul>
                 <p class="mt-2 text-yellow-400">Gira la ruota ogni giorno per vincere premi!</p>`
+        },
+        formationXp: {
+            id: 'formationXp',
+            name: 'Esperienza Formazioni',
+            description: 'Le formazioni guadagnano XP e salgono di livello (1-5) aumentando bonus/malus',
+            icon: '📈',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Ogni formazione parte dal livello 1</li>
+                    <li>Guadagni 25 XP per ogni partita giocata con quella formazione</li>
+                    <li>100 XP per salire di livello (max livello 5)</li>
+                    <li>Bonus per ruoli extra: da +0.1 (lv1) a +0.5 (lv5) per fase</li>
+                    <li>Malus per ruoli assenti: da -0.1 (lv1) a -0.5 (lv5) per fase</li>
+                    <li>Barra EXP visibile nella selezione formazione</li>
+                </ul>
+                <p class="mt-2 text-cyan-400"><strong>Fasi bonus:</strong> Centrocampisti in Costruzione, Difensori in Difesa, Attaccanti in Tiro</p>
+                <p class="mt-2 text-yellow-400">Usa la stessa formazione per potenziarla!</p>`
         }
     },
 

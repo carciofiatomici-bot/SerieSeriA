@@ -75,7 +75,80 @@ window.GestioneSquadreConstants = {
     },
 
     // Costo sostituzione Icona (in CSS - Crediti Super Seri)
-    ICONA_REPLACEMENT_COST: 1
+    ICONA_REPLACEMENT_COST: 1,
+
+    // ====================================================================
+    // SISTEMA BONUS/MALUS FORMAZIONI CON ESPERIENZA
+    // ====================================================================
+    // Ogni formazione guadagna XP quando viene usata in partita.
+    // Livelli: 1-10, ogni livello aumenta i modificatori.
+    // Bonus: applicati per ogni ruolo extra oltre il primo
+    // Malus: applicati per ogni ruolo completamente assente
+    // ====================================================================
+    FORMATION_MODIFIERS: {
+        // XP System
+        XP_PER_MATCH: 25,           // XP guadagnata per partita giocata
+        XP_PER_LEVEL: 100,          // XP necessaria per salire di livello
+        MAX_LEVEL: 10,              // Livello massimo raggiungibile
+
+        // Valori per livello (da 1 a 10)
+        // Level 1: 0.1, Level 2: 0.2, ..., Level 10: 1.0
+        BONUS_PER_LEVEL: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        MALUS_PER_LEVEL: [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0],
+
+        /**
+         * Calcola i bonus/malus per una formazione a un certo livello
+         * @param {string} modulo - Es: '1-1-2-1'
+         * @param {number} level - Livello formazione (1-10)
+         * @returns {Object} { fase1, fase2Dif, fase3 }
+         */
+        getModifiers(modulo, level = 1) {
+            const config = window.GestioneSquadreConstants.MODULI[modulo];
+            if (!config) return { fase1: 0, fase2Dif: 0, fase3: 0 };
+
+            // Clamp level
+            level = Math.max(1, Math.min(this.MAX_LEVEL, level));
+            const bonusValue = this.BONUS_PER_LEVEL[level - 1];
+            const malusValue = this.MALUS_PER_LEVEL[level - 1];
+
+            const D = config.D || 0;
+            const C = config.C || 0;
+            const A = config.A || 0;
+
+            // Fase 1 (Costruzione): bonus da C extra, malus se C = 0
+            const fase1 = C > 1 ? (C - 1) * bonusValue : (C === 0 ? malusValue : 0);
+
+            // Fase 2 Difesa: bonus da D extra, malus se D = 0
+            const fase2Dif = D > 1 ? (D - 1) * bonusValue : (D === 0 ? malusValue : 0);
+
+            // Fase 3 (Tiro): bonus da A extra, malus se A = 0
+            const fase3 = A > 1 ? (A - 1) * bonusValue : (A === 0 ? malusValue : 0);
+
+            return { fase1, fase2Dif, fase3 };
+        },
+
+        /**
+         * Calcola il livello da XP
+         * @param {number} xp - XP accumulata
+         * @returns {number} Livello (1-5)
+         */
+        getLevelFromXP(xp) {
+            const level = Math.floor(xp / this.XP_PER_LEVEL) + 1;
+            return Math.min(level, this.MAX_LEVEL);
+        },
+
+        /**
+         * Calcola la percentuale di progresso verso il prossimo livello
+         * @param {number} xp - XP accumulata
+         * @returns {number} Percentuale (0-100)
+         */
+        getProgressPercent(xp) {
+            const level = this.getLevelFromXP(xp);
+            if (level >= this.MAX_LEVEL) return 100;
+            const xpInCurrentLevel = xp % this.XP_PER_LEVEL;
+            return Math.floor((xpInCurrentLevel / this.XP_PER_LEVEL) * 100);
+        }
+    }
 };
 
 console.log("Modulo GestioneSquadre-Constants caricato.");

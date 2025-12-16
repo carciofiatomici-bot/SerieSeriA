@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnAdminSchedule) {
             btnAdminSchedule.addEventListener('click', () => {
                  window.showScreen(scheduleContent);
-                 if (window.loadSchedule) window.loadSchedule();
+                 if (window.InterfacciaDashboard?.loadSchedule) window.InterfacciaDashboard.loadSchedule();
                  document.getElementById('schedule-back-button').onclick = () => window.showScreen(adminContent);
             });
         }

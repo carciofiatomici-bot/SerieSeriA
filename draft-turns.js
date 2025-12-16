@@ -1752,7 +1752,11 @@ window.DraftTurns = {
 
         // 1. Notifica in-app tramite sistema Notifications
         if (window.Notifications && window.Notifications.notify) {
-            window.Notifications.notify.draftTurn(teamName);
+            // Invia notifica SOLO all'utente il cui turno e' iniziato
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            if (currentTeamId === teamId) {
+                window.Notifications.notify.draftTurn(teamName);
+            }
         }
 
         // 2. Dispatch evento custom per aggiornare UI in tempo reale
@@ -1761,8 +1765,7 @@ window.DraftTurns = {
         }));
 
         // 3. Push notification del browser (se l'utente e' quello corrente)
-        const currentTeamId = window.InterfacciaCore?.currentTeamId;
-        if (currentTeamId === teamId) {
+        if (window.InterfacciaCore?.currentTeamId === teamId) {
             this.sendBrowserPushNotification(
                 'E\' il tuo turno nel Draft!',
                 `Tocca a te scegliere un giocatore. Hai 1 ora di tempo.`,

@@ -188,8 +188,8 @@ window.UserCompetitions = {
             `;
         } else {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
-                    <table class="w-full text-sm">
+                <div class="bg-black bg-opacity-30 rounded-lg overflow-x-auto">
+                    <table class="w-full text-sm min-w-[400px]">
                         <thead class="bg-gray-800">
                             <tr>
                                 <th class="py-2 px-3 text-left text-gray-400">#</th>
@@ -268,8 +268,8 @@ window.UserCompetitions = {
                 const roundComplete = round.matches.every(m => m.result !== null);
                 const statusIcon = roundComplete ? '✅' : '⏳';
                 const hasMyMatch = round.matches.some(m => m.homeId === currentTeamId || m.awayId === currentTeamId);
-                // Apri di default solo la giornata corrente
-                const isOpen = index === currentRoundIndex;
+                // Sempre chiuso di default
+                const isOpen = false;
 
                 html += `
                     <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">

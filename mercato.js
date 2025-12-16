@@ -166,6 +166,73 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Mostra il modal per selezionare la tipologia del giocatore base
+     */
+    const showTypeSelectionModal = (role, roleName) => {
+        return new Promise((resolve, reject) => {
+            // Rimuovi modal esistente se presente
+            const existingModal = document.getElementById('type-selection-modal');
+            if (existingModal) existingModal.remove();
+
+            // Badge per tipologie
+            const typeBadges = {
+                'Potenza': { bg: 'bg-red-600', text: 'text-white', icon: 'fas fa-hand-rock' },
+                'Tecnica': { bg: 'bg-blue-600', text: 'text-white', icon: 'fas fa-brain' },
+                'Velocita': { bg: 'bg-yellow-500', text: 'text-gray-900', icon: 'fas fa-bolt' }
+            };
+
+            const modal = document.createElement('div');
+            modal.id = 'type-selection-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 border-2 border-indigo-500 shadow-2xl">
+                    <h3 class="text-xl font-bold text-indigo-400 mb-4 text-center">Scegli Tipologia</h3>
+                    <p class="text-gray-300 text-sm mb-4 text-center">Seleziona la tipologia per il tuo nuovo <span class="font-bold text-${ROLE_COLORS[role]}-400">${roleName}</span></p>
+                    <div class="space-y-3">
+                        ${PLAYER_TYPES.map(type => {
+                            const badge = typeBadges[type];
+                            return `
+                                <button data-type="${type}" class="w-full p-4 ${badge.bg} ${badge.text} rounded-lg font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3 shadow-lg">
+                                    <i class="${badge.icon}"></i>
+                                    <span>${type}</span>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                    <button id="type-modal-cancel" class="w-full mt-4 p-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">
+                        Annulla
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Event listeners per selezione tipologia
+            modal.querySelectorAll('[data-type]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const selectedType = btn.dataset.type;
+                    modal.remove();
+                    resolve(selectedType);
+                });
+            });
+
+            // Annulla
+            modal.querySelector('#type-modal-cancel').addEventListener('click', () => {
+                modal.remove();
+                reject(new Error('Operazione annullata'));
+            });
+
+            // Click fuori dal modal per chiudere
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    reject(new Error('Operazione annullata'));
+                }
+            });
+        });
+    };
+
+    /**
      * Gestisce l'acquisto di un giocatore base gratuito
      */
     const handleBuyBasePlayer = async (event) => {
@@ -175,7 +242,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const role = target.dataset.role;
         const roleName = ROLE_LABELS[role];
 
-        displayMessage(`Acquisto ${roleName} Base in corso...`, 'info');
+        // Mostra modal per selezionare la tipologia
+        let selectedType;
+        try {
+            selectedType = await showTypeSelectionModal(role, roleName);
+        } catch (e) {
+            // Utente ha annullato
+            return;
+        }
+
+        displayMessage(`Acquisto ${roleName} Base (${selectedType}) in corso...`, 'info');
         target.disabled = true;
 
         try {
@@ -198,10 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto.`);
                 }
 
-                // Genera giocatore base
+                // Genera giocatore base con tipologia selezionata dall'utente
                 const playerId = `base_${role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const playerName = generateBasePlayerName();
-                const playerType = generateBasePlayerType();
+                const playerType = selectedType; // Usa la tipologia scelta dall'utente
                 const playerAge = generateBasePlayerAge();
 
                 let playerForSquad = {

@@ -7,10 +7,12 @@
 // IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const APP_VERSION = '1.4.0'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const APP_VERSION = '1.5.0'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
 const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
 const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
 const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
+const IMAGE_CACHE = `serie-seria-images-v${APP_VERSION}`;
+const MAX_IMAGE_CACHE_SIZE = 100; // Limite massimo immagini in cache
 
 // File da cachare immediatamente (shell dell'app)
 // IMPORTANTE: Mantenere sincronizzato con i <script> in index.html
@@ -27,6 +29,7 @@ const STATIC_ASSETS = [
     './config-listener.js',
     './listener-manager.js',
     './interfaccia-core.js',
+    './responsive-images.js',
 
     // UI Components
     './toast.js',
@@ -179,6 +182,8 @@ self.addEventListener('install', (event) => {
             })
             .then(() => {
                 console.log('[Service Worker] Installazione completata');
+                // Precache immagini critiche
+                precacheCriticalImages();
                 return self.skipWaiting();
             })
     );
@@ -208,9 +213,39 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Ignora richieste a CDN esterni (Tailwind, Font Awesome, etc.)
+    // Gestione speciale per immagini esterne (GitHub, etc.)
+    const isImage = request.destination === 'image' ||
+                    url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+
     if (url.hostname !== location.hostname) {
-        // Per CDN esterni, usa cache-first
+        // Per immagini esterne: Cache-First con cache dedicata
+        if (isImage) {
+            event.respondWith(
+                caches.match(request)
+                    .then((cachedResponse) => {
+                        if (cachedResponse) {
+                            return cachedResponse;
+                        }
+                        return fetch(request)
+                            .then((response) => {
+                                if (!response || response.status !== 200) {
+                                    return response;
+                                }
+                                const responseClone = response.clone();
+                                caches.open(IMAGE_CACHE)
+                                    .then((cache) => {
+                                        cache.put(request, responseClone);
+                                        // Limita dimensione cache immagini
+                                        trimImageCache();
+                                    });
+                                return response;
+                            });
+                    })
+            );
+            return;
+        }
+
+        // Per altri CDN esterni (Tailwind, Font Awesome): cache-first
         event.respondWith(
             caches.match(request)
                 .then((cachedResponse) => {
@@ -300,7 +335,7 @@ self.addEventListener('activate', (event) => {
             .then((cacheNames) => {
                 return Promise.all(
                     cacheNames
-                        .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+                        .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE && name !== IMAGE_CACHE)
                         .map((name) => {
                             console.log(`[Service Worker] Eliminazione vecchia cache: ${name}`);
                             return caches.delete(name);
@@ -324,3 +359,59 @@ self.addEventListener('activate', (event) => {
 });
 
 console.log(`[Service Worker] Script caricato - Versione ${APP_VERSION}`);
+
+// ====================================================================
+// GESTIONE CACHE IMMAGINI
+// ====================================================================
+
+/**
+ * Limita la dimensione della cache immagini
+ * Rimuove le immagini piu' vecchie quando supera il limite
+ */
+async function trimImageCache() {
+    try {
+        const cache = await caches.open(IMAGE_CACHE);
+        const keys = await cache.keys();
+
+        if (keys.length > MAX_IMAGE_CACHE_SIZE) {
+            // Rimuovi le prime (piu' vecchie) per stare sotto il limite
+            const toDelete = keys.length - MAX_IMAGE_CACHE_SIZE;
+            console.log(`[Service Worker] Pulizia cache immagini: rimozione ${toDelete} elementi`);
+
+            for (let i = 0; i < toDelete; i++) {
+                await cache.delete(keys[i]);
+            }
+        }
+    } catch (error) {
+        console.warn('[Service Worker] Errore pulizia cache immagini:', error);
+    }
+}
+
+/**
+ * Precache immagini critiche (chiamare all'installazione)
+ */
+const CRITICAL_IMAGES = [
+    'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg',
+    'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png'
+];
+
+async function precacheCriticalImages() {
+    try {
+        const cache = await caches.open(IMAGE_CACHE);
+        console.log('[Service Worker] Precaching immagini critiche...');
+
+        await Promise.allSettled(
+            CRITICAL_IMAGES.map(url =>
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            return cache.put(url, response);
+                        }
+                    })
+                    .catch(err => console.warn(`[Service Worker] Impossibile precachare: ${url}`, err))
+            )
+        );
+    } catch (error) {
+        console.warn('[Service Worker] Errore precache immagini:', error);
+    }
+}

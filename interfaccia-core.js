@@ -273,10 +273,18 @@ window.getPlayerCountExcludingIcona = getPlayerCountExcludingIcona;
 
 /**
  * Helper per generare l'HTML del logo.
+ * Usa ResponsiveImages se disponibile per lazy loading
  */
-const getLogoHtml = (teamId) => {
+const getLogoHtml = (teamId, size = 'sm') => {
     const url = teamLogosMap[teamId] || window.InterfacciaConstants.DEFAULT_LOGO_URL;
-    return `<img src="${url}" alt="Logo" class="w-6 h-6 rounded-full border border-gray-500 inline-block align-middle">`;
+
+    // Usa helper responsive se disponibile
+    if (window.ResponsiveImages) {
+        return window.ResponsiveImages.getTeamLogo(url, 'Team', size);
+    }
+
+    // Fallback con lazy loading nativo
+    return `<img src="${url}" alt="Logo" class="w-6 h-6 rounded-full border border-gray-500 inline-block align-middle object-cover" loading="lazy" decoding="async">`;
 };
 window.getLogoHtml = getLogoHtml;
 
@@ -344,8 +352,8 @@ const generateCaptainCandidates = () => {
     const CAPTAIN_PLACEHOLDER_URL = window.CAPTAIN_PLACEHOLDER_URL || "https://placehold.co/100x100/A0522D/ffffff?text=Icona";
 
     return CAPTAIN_CANDIDATES_TEMPLATES.map(template => {
-        // Usa il livello base specificato nel template (ora 12)
-        const finalLevel = template.level || 12;
+        // Usa il livello base specificato nel template (default 5 per nuove squadre)
+        const finalLevel = template.level || 5;
         
         const finalPhotoUrl = template.photoUrl && template.photoUrl.includes('http')
                               ? template.photoUrl 

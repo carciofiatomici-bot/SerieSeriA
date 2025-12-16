@@ -67,7 +67,7 @@
 
     <!-- ALERT DRAFT ATTIVO - Flottante in alto a sinistra, sempre visibile quando c'è un draft -->
     <div id="draft-alert-banner" class="hidden"
-         style="position: fixed; top: 10px; left: 10px; z-index: 9999; max-width: 320px;">
+         style="position: fixed; top: 10px; left: 10px; z-index: 9999; max-width: min(320px, calc(100vw - 20px));">
         <!-- Versione espansa -->
         <div id="draft-alert-expanded" class="p-3 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg border-2 border-purple-500 shadow-2xl">
             <div class="flex items-center gap-3">
@@ -687,36 +687,36 @@
             </div>
 
             <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-            <div id="gestione-box" class="mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+            <div id="gestione-box" class="mt-2 sm:mt-4 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
                 <div class="grid grid-cols-2 gap-2 sm:gap-4">
                     <button id="btn-gestione-rosa"
-                            class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2 sm:py-6 text-xs sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
                         👥 <span class="hidden sm:inline">Gestione </span>Rosa
                     </button>
                     <button id="btn-gestione-formazione"
-                            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-4 sm:py-6 text-sm sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-2 sm:py-6 text-xs sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
                         📋 <span class="hidden sm:inline">Gestione </span>Formazione
                     </button>
                 </div>
             </div>
 
             <!-- BOX COMPETIZIONI -->
-            <div id="competizioni-box" class="mt-4 sm:mt-6 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
-                <div class="space-y-2 sm:space-y-3">
+            <div id="competizioni-box" class="mt-2 sm:mt-6 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="space-y-1 sm:space-y-3">
                     <button id="btn-user-campionato"
-                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                        <span class="text-xl sm:text-2xl">🏅</span>
-                        <span class="text-base sm:text-xl">SerieSeriA</span>
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">🏅</span>
+                        <span class="text-sm sm:text-xl">SerieSeriA</span>
                     </button>
                     <button id="btn-user-coppa"
-                            class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                        <span class="text-xl sm:text-2xl">🏆</span>
-                        <span class="text-base sm:text-xl">CoppaSeriA</span>
+                            class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">🏆</span>
+                        <span class="text-sm sm:text-xl">CoppaSeriA</span>
                     </button>
                     <button id="btn-user-supercoppa"
-                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-3 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 sm:gap-3">
-                        <span class="text-xl sm:text-2xl">⭐</span>
-                        <span class="text-base sm:text-xl">Super CoppaSeriA</span>
+                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">⭐</span>
+                        <span class="text-sm sm:text-xl">Super CoppaSeriA</span>
                     </button>
                 </div>
             </div>
@@ -1370,8 +1370,8 @@
         </div>
 
         <!-- MODAL CHANGELOG -->
-        <div id="changelog-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-4">
-            <div class="bg-gray-800 rounded-xl border-2 border-indigo-500 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div id="changelog-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-gray-800 rounded-xl border-2 border-indigo-500 shadow-2xl w-full max-w-[calc(100%-1rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
                     <h3 id="changelog-title" class="text-xl font-bold text-white flex items-center gap-2">
                         <span>📋</span> Novita per i Giocatori
@@ -1506,6 +1506,7 @@
     <script src="config-listener.js"></script>
     <script src="listener-manager.js"></script>
     <script src="interfaccia-core.js"></script>
+    <script src="responsive-images.js"></script>
 
     <!-- 1.5 UTILITY UI (Toast, Dialogs, Loading, Validazione) -->
     <script src="toast.js"></script>

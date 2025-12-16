@@ -200,6 +200,12 @@ window.Supercoppa = {
         // Applica premio al vincitore (1 CSS)
         await this.applyReward(winner.teamId);
 
+        // Processa XP formazione (se feature attiva)
+        if (window.FeatureFlags?.isEnabled('formationXp') && window.ChampionshipMain?.addFormationXp) {
+            await window.ChampionshipMain.addFormationXp(supercoppaBracket.homeTeam.teamId, homeTeamData.formation?.modulo);
+            await window.ChampionshipMain.addFormationXp(supercoppaBracket.awayTeam.teamId, awayTeamData.formation?.modulo);
+        }
+
         // Salva
         await this.saveSupercoppa(supercoppaBracket);
 

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator - Serie SeriA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+            min-height: 100vh;
+        }
+        .icon-preview {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body class="text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-green-400 mb-2 text-center">PWA Icon Generator</h1>
+        <p class="text-gray-400 text-center mb-8">Genera tutte le icone PWA necessarie da un'immagine sorgente</p>
+
+        <!-- Upload Section -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-8 border-2 border-dashed border-gray-600 text-center"
+             id="dropZone">
+            <input type="file" id="imageInput" accept="image/*" class="hidden">
+            <div id="uploadPrompt">
+                <p class="text-xl mb-4">Trascina un'immagine qui o</p>
+                <button onclick="document.getElementById('imageInput').click()"
+                        class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition">
+                    Seleziona Immagine
+                </button>
+                <p class="text-gray-500 text-sm mt-4">Consigliato: immagine quadrata almeno 512x512px</p>
+            </div>
+            <div id="previewSection" class="hidden">
+                <img id="sourcePreview" class="max-w-64 max-h-64 mx-auto rounded-lg border-2 border-green-500 mb-4">
+                <p id="imageDimensions" class="text-gray-400 mb-4"></p>
+                <button onclick="document.getElementById('imageInput').click()"
+                        class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded transition text-sm">
+                    Cambia Immagine
+                </button>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-8">
+            <h2 class="text-xl font-bold text-green-400 mb-4">Opzioni</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-400 mb-2">Colore sfondo maskable</label>
+                    <input type="color" id="maskableColor" value="#0d1b2a"
+                           class="w-full h-10 rounded cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Padding maskable (%)</label>
+                    <input type="range" id="maskablePadding" min="5" max="20" value="10"
+                           class="w-full">
+                    <span id="paddingValue" class="text-gray-500 text-sm">10%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="text-center mb-8">
+            <button id="generateBtn" disabled
+                    onclick="generateAllIcons()"
+                    class="bg-gradient-to-r from-green-600 to-green-500 disabled:from-gray-600 disabled:to-gray-500
+                           text-white font-bold py-4 px-8 rounded-xl text-xl transition transform hover:scale-105 disabled:hover:scale-100">
+                Genera Icone PWA
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="bg-gray-800 rounded-xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-green-400">Icone Generate</h2>
+                    <button onclick="downloadAllAsZip()"
+                            class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Scarica Tutto (ZIP)
+                    </button>
+                </div>
+                <div id="iconsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Icons will be generated here -->
+                </div>
+            </div>
+
+            <!-- Manifest Snippet -->
+            <div class="bg-gray-800 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-green-400">Snippet manifest.json</h2>
+                    <button onclick="copyManifest()"
+                            class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Copia
+                    </button>
+                </div>
+                <pre id="manifestSnippet" class="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm text-gray-300"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSZip Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        // Rimosso 48px (può causare falsi positivi antivirus)
+        // Dimensioni essenziali per PWA: 72, 96, 128, 144, 152, 192, 256, 384, 512
+        const ICON_SIZES = [72, 96, 128, 144, 152, 192, 256, 384, 512];
+        let sourceImage = null;
+        let generatedIcons = [];
+
+        // Drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const imageInput = document.getElementById('imageInput');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-green-500');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-green-500');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-green-500');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadImage(file);
+        });
+
+        // Padding slider
+        document.getElementById('maskablePadding').addEventListener('input', (e) => {
+            document.getElementById('paddingValue').textContent = e.target.value + '%';
+        });
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    sourceImage = img;
+                    document.getElementById('sourcePreview').src = e.target.result;
+                    document.getElementById('imageDimensions').textContent =
+                        `Dimensioni: ${img.width} x ${img.height}px`;
+                    document.getElementById('uploadPrompt').classList.add('hidden');
+                    document.getElementById('previewSection').classList.remove('hidden');
+                    document.getElementById('generateBtn').disabled = false;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function generateAllIcons() {
+            if (!sourceImage) return;
+
+            generatedIcons = [];
+            const bgColor = document.getElementById('maskableColor').value;
+            const paddingPercent = parseInt(document.getElementById('maskablePadding').value);
+
+            // Generate standard icons
+            for (const size of ICON_SIZES) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                // Smooth scaling
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                ctx.drawImage(sourceImage, 0, 0, size, size);
+
+                generatedIcons.push({
+                    size,
+                    filename: `icon-${size}.png`,
+                    dataUrl: canvas.toDataURL('image/png'),
+                    purpose: 'any'
+                });
+            }
+
+            // Generate maskable icon (512px with padding)
+            const maskableCanvas = document.createElement('canvas');
+            maskableCanvas.width = 512;
+            maskableCanvas.height = 512;
+            const mCtx = maskableCanvas.getContext('2d');
+
+            // Fill background
+            mCtx.fillStyle = bgColor;
+            mCtx.fillRect(0, 0, 512, 512);
+
+            // Draw icon with padding (safe zone)
+            const padding = Math.round(512 * (paddingPercent / 100));
+            const iconSize = 512 - (padding * 2);
+
+            mCtx.imageSmoothingEnabled = true;
+            mCtx.imageSmoothingQuality = 'high';
+            mCtx.drawImage(sourceImage, padding, padding, iconSize, iconSize);
+
+            generatedIcons.push({
+                size: 512,
+                filename: 'icon-512-maskable.png',
+                dataUrl: maskableCanvas.toDataURL('image/png'),
+                purpose: 'maskable'
+            });
+
+            displayResults();
+        }
+
+        function displayResults() {
+            const grid = document.getElementById('iconsGrid');
+            grid.innerHTML = '';
+
+            generatedIcons.forEach(icon => {
+                const div = document.createElement('div');
+                div.className = 'text-center';
+                div.innerHTML = `
+                    <div class="bg-gray-700 rounded-lg p-2 mb-2 inline-block">
+                        <img src="${icon.dataUrl}"
+                             class="icon-preview mx-auto"
+                             style="width: ${Math.min(icon.size, 64)}px; height: ${Math.min(icon.size, 64)}px;">
+                    </div>
+                    <p class="text-xs text-gray-400">${icon.size}x${icon.size}</p>
+                    <p class="text-xs ${icon.purpose === 'maskable' ? 'text-purple-400' : 'text-gray-500'}">${icon.purpose}</p>
+                    <a href="${icon.dataUrl}" download="${icon.filename}"
+                       class="text-xs text-green-400 hover:text-green-300">Download</a>
+                `;
+                grid.appendChild(div);
+            });
+
+            // Generate manifest snippet
+            const baseUrl = 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/icons/';
+            const iconsArray = generatedIcons.map(icon => ({
+                src: baseUrl + icon.filename,
+                sizes: `${icon.size}x${icon.size}`,
+                type: 'image/png',
+                ...(icon.purpose === 'maskable' ? { purpose: 'maskable' } : {})
+            }));
+
+            document.getElementById('manifestSnippet').textContent =
+                '"icons": ' + JSON.stringify(iconsArray, null, 2);
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        async function downloadAllAsZip() {
+            const zip = new JSZip();
+            const folder = zip.folder('pwa-icons');
+
+            for (const icon of generatedIcons) {
+                // Convert dataUrl to blob
+                const response = await fetch(icon.dataUrl);
+                const blob = await response.blob();
+                folder.file(icon.filename, blob);
+            }
+
+            // Add manifest snippet
+            const manifestContent = generatedIcons.map(icon => ({
+                src: `./icons/${icon.filename}`,
+                sizes: `${icon.size}x${icon.size}`,
+                type: 'image/png',
+                ...(icon.purpose === 'maskable' ? { purpose: 'maskable' } : {})
+            }));
+            folder.file('manifest-icons.json', JSON.stringify({ icons: manifestContent }, null, 2));
+
+            const content = await zip.generateAsync({ type: 'blob' });
+
+            // Download
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'pwa-icons.zip';
+            link.click();
+        }
+
+        function copyManifest() {
+            const text = document.getElementById('manifestSnippet').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Snippet copiato negli appunti!');
+            });
+        }
+    </script>
+</body>
+</html>

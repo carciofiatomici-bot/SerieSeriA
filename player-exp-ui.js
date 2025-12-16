@@ -41,7 +41,7 @@
         const notification = document.createElement('div');
         notification.className = 'exp-level-up-notification pointer-events-auto transform translate-x-full opacity-0 transition-all duration-300';
         notification.innerHTML = `
-            <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[280px]">
+            <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 sm:gap-3 min-w-[200px] max-w-[calc(100vw-2rem)]">
                 <div class="flex-shrink-0">
                     <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
                         <i class="fas fa-arrow-up text-yellow-800 text-lg"></i>

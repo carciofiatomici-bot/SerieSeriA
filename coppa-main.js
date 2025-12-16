@@ -142,6 +142,12 @@ window.CoppaMain = {
             // Applica i crediti per gol
             await this.applyMatchCredits(match.homeTeam.teamId, match.awayTeam.teamId, result);
 
+            // Processa XP formazione (se feature attiva)
+            if (window.FeatureFlags?.isEnabled('formationXp') && window.ChampionshipMain?.addFormationXp) {
+                await window.ChampionshipMain.addFormationXp(match.homeTeam.teamId, homeTeamData.formation?.modulo);
+                await window.ChampionshipMain.addFormationXp(match.awayTeam.teamId, awayTeamData.formation?.modulo);
+            }
+
             // Salva nello storico partite per entrambe le squadre
             if (window.MatchHistory && result.resultString) {
                 const parts = result.resultString.split(' ')[0].split('-');

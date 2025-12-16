@@ -1242,6 +1242,9 @@ window.InterfacciaDashboard = {
 
         // STATO 1: Turno rubabile (SCADUTO e posso rubare)
         if (canSteal) {
+            // Auto-espandi l'alert quando si puo' rubare
+            this.toggleDraftAlertMinimized(false);
+
             if (bannerInner) {
                 bannerInner.classList.add('from-red-900', 'to-rose-900', 'border-red-500');
             }
@@ -1307,6 +1310,9 @@ window.InterfacciaDashboard = {
 
         // STATO 3: E' il mio turno
         if (isMyTurn) {
+            // Auto-espandi l'alert quando e' il mio turno
+            this.toggleDraftAlertMinimized(false);
+
             if (bannerInner) {
                 bannerInner.classList.add('from-green-900', 'to-emerald-900', 'border-green-500');
             }
@@ -1678,12 +1684,13 @@ window.InterfacciaDashboard = {
     },
 
     /**
-     * Ripristina stato minimizzato dal localStorage
+     * Ripristina stato minimizzato dal localStorage (default: minimizzato)
      */
     restoreDraftAlertMinimizedState() {
         try {
             const saved = localStorage.getItem('draft_alert_minimized');
-            this._draftAlertMinimized = saved === 'true';
+            // Default a minimizzato se non c'e' stato salvato
+            this._draftAlertMinimized = saved !== 'false';
 
             if (this._draftAlertMinimized) {
                 const expandedEl = document.getElementById('draft-alert-expanded');

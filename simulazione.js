@@ -103,6 +103,34 @@ const rollPercentage = () => rollDice(1, 100);
  */
 const checkChance = (percentage) => rollPercentage() <= percentage;
 
+/**
+ * Ottieni bonus/malus formazione per una specifica fase
+ * @param {Object} teamData - Dati della squadra (con formation.modulo e formationXp)
+ * @param {string} fase - 'costruzione', 'difesa', o 'tiro'
+ * @returns {number} Bonus/malus da applicare
+ */
+const getFormationBonus = (teamData, fase) => {
+    // Controlla se il feature flag e' abilitato
+    if (!window.FeatureFlags?.isEnabled('formationXp')) return 0;
+
+    const modulo = teamData?.formation?.modulo || '1-1-2-1';
+    const formationXp = teamData?.formationXp || {};
+    const xp = formationXp[modulo] || 0;
+
+    const modifiers = window.GestioneSquadreConstants?.FORMATION_MODIFIERS;
+    if (!modifiers) return 0;
+
+    const level = modifiers.getLevelFromXP(xp);
+    const bonuses = modifiers.getModifiers(modulo, level);
+
+    switch(fase) {
+        case 'costruzione': return bonuses.fase1 || 0;
+        case 'difesa': return bonuses.fase2Dif || 0;
+        case 'tiro': return bonuses.fase3 || 0;
+        default: return 0;
+    }
+};
+
 // Tracciamento abilità nullificate per questa occasione
 let nullifiedAbilities = new Set();
 
@@ -1268,9 +1296,12 @@ const phaseConstruction = (teamA, teamB) => {
         rilancioLaserActive[teamAKey] = false;
     }
 
-    const totalA = rollA + modA_D + modA_C + coachA + homeBonusA + rilancioBonus;
+    // Bonus formazione (Fase 1: Costruzione)
+    const formationBonusA = getFormationBonus(teamA, 'costruzione');
+
+    const totalA = rollA + modA_D + modA_C + coachA + homeBonusA + rilancioBonus + formationBonusA;
     const totalB = rollB + modB_C + coachB + homeBonusB;
-    
+
     // Calcola % successo
     const successChance = Math.max(5, Math.min(95, totalA - totalB + 50)); // Centrato a 50%
 
@@ -1391,8 +1422,12 @@ const phaseAttack = (teamA, teamB) => {
     const homeBonusA = teamA.homeBonus || 0;
     const homeBonusB = teamB.homeBonus || 0;
 
+    // Bonus formazione (Fase 2: Attacco/Difesa)
+    const formationBonusA = getFormationBonus(teamA, 'costruzione'); // Attaccanti usano bonus costruzione in attacco
+    const formationBonusB = getFormationBonus(teamB, 'difesa');
+
     const totalA = rollA + modA_C + modA_A + coachA + homeBonusA + registaBonus;
-    const totalB = rollB + modB_D + modB_C + coachB + homeBonusB;
+    const totalB = rollB + modB_D + modB_C + coachB + homeBonusB + formationBonusB;
 
     let result = totalA - totalB;
 
@@ -1674,8 +1709,11 @@ const phaseShot = (teamA, teamB, attackResult) => {
 
     const totalPortiere = rollP + modPortiere + coachB + homeBonusB;
 
+    // Bonus formazione (Fase 3: Tiro)
+    const formationBonusTiro = getFormationBonus(teamA, 'tiro');
+
     // Calcola totale tiro: 1d10 (o 1d6) + Valore Tiro Fase 2 + bonus
-    let totalShot = shotRoll + finalAttackResult + homeBonusA;
+    let totalShot = shotRoll + finalAttackResult + homeBonusA + formationBonusTiro;
 
     // Tiro dalla porta (Portiere attaccante): 5% di aggiungere +2 al tiro del compagno
     const portiereAttaccante = teamA.P?.[0];

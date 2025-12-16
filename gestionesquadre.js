@@ -204,6 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ascolta l'evento di caricamento del pannello squadra
     document.addEventListener('squadraPanelLoaded', initializeSquadraPanel);
 
+    // Espone globalmente la funzione per il caricamento squadra (usato da CSS per icona-swap)
+    window.GestioneSquadre = window.GestioneSquadre || {};
+    window.GestioneSquadre.loadTeamDataFromFirestore = loadTeamDataFromFirestore;
+
     // Espone i riferimenti ai caricamenti delle liste Admin
     window.loadDraftPlayersAdmin = window.loadDraftPlayersAdmin || (() => console.log('loadDraftPlayersAdmin non disponibile.'));
     window.loadMarketPlayersAdmin = window.loadMarketPlayersAdmin || (() => console.log('loadMarketPlayersAdmin non disponibile.'));

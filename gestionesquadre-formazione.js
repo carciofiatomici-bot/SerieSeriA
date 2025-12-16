@@ -131,28 +131,42 @@ window.GestioneSquadreFormazione = {
 
             <div id="formation-message" class="text-center mb-4 text-red-400"></div>
 
-            <div class="flex flex-col lg:flex-row gap-6">
-                <div class="lg:w-1/3 p-4 bg-gray-800 rounded-lg border border-indigo-500 space-y-4">
-                    <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2">Seleziona Modulo</h3>
-                    <select id="formation-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-indigo-600">
-                        ${Object.keys(MODULI).map(mod => {
-                            const m = MODULI[mod];
-                            const rolesStr = ['P', 'D', 'C', 'A'].filter(r => m[r] > 0).map(r => r.repeat(m[r])).join('-');
-                            return `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod} (${rolesStr})</option>`;
-                        }).join('')}
-                    </select>
-                    <p id="module-description" class="text-sm text-gray-400">${MODULI[teamData.formation.modulo].description}</p>
+            <!-- Riga superiore: Seleziona Modulo (con XP) -->
+            <div class="mb-4">
+                <div class="p-3 bg-gray-800 rounded-lg border border-indigo-500">
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <div class="lg:flex-1">
+                            <h3 class="text-lg font-bold text-indigo-400 border-b border-gray-600 pb-2 mb-2">Seleziona Modulo</h3>
+                            <select id="formation-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-indigo-600 text-sm">
+                                ${Object.keys(MODULI).map(mod => {
+                                    const m = MODULI[mod];
+                                    const rolesStr = ['P', 'D', 'C', 'A'].filter(r => m[r] > 0).map(r => r.repeat(m[r])).join('-');
+                                    return `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod} (${rolesStr})</option>`;
+                                }).join('')}
+                            </select>
+                            <p id="module-description" class="text-xs text-gray-400 mt-2">${MODULI[teamData.formation.modulo].description}</p>
+                        </div>
+                        <div class="lg:w-1/3">
+                            ${this.renderFormationXpBarCompact(teamData)}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    ${this.renderInjuredPlayersBox(teamData)}
-
-                    <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2 pt-4">Rosa Completa (Disponibili)</h3>
-                    <div id="full-squad-list" class="space-y-2 max-h-60 overflow-y-auto min-h-[100px] border border-gray-700 p-2 rounded-lg"
+            <!-- Layout principale: Rosa a sinistra, Campo + Panchina a destra -->
+            <div class="flex flex-col lg:flex-row gap-4">
+                <!-- Rosa Completa (colonna sinistra stretta) -->
+                <div class="lg:w-48 p-3 bg-gray-800 rounded-lg border border-indigo-500 flex flex-col">
+                    <h3 class="text-sm font-bold text-indigo-400 border-b border-gray-600 pb-2 mb-2">Rosa Disponibile</h3>
+                    <div id="full-squad-list" class="space-y-1 overflow-y-auto flex-1 min-h-[200px] max-h-[350px] border border-gray-700 p-2 rounded-lg"
                          ondragover="event.preventDefault();"
                          ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'ROSALIBERA')">
                     </div>
+                    ${this.renderInjuredPlayersBoxCompact(teamData)}
                 </div>
 
-                <div class="lg:w-2/3 space-y-4">
+                <!-- Campo + Panchina (colonna centrale) -->
+                <div class="flex-1 space-y-4">
                     <div id="field-area" class="rounded-lg shadow-xl p-4 text-center">
                         <h4 class="text-white font-bold mb-4 z-10 relative">Campo (Titolari) - Modulo: ${teamData.formation.modulo}</h4>
                         <div class="center-circle"></div>
@@ -169,9 +183,8 @@ window.GestioneSquadreFormazione = {
                         </div>
                     </div>
 
-                    <!-- Legenda Tipologie (spostata sotto panchina) -->
-                    <div class="bg-gray-800 p-3 rounded-lg border border-gray-600">
-                        <h4 class="text-indigo-400 font-bold mb-2 text-sm">Legenda Tipologie</h4>
+                    <!-- Legenda Tipologie -->
+                    <div class="bg-gray-800 p-2 rounded-lg border border-gray-600">
                         ${legendHtml}
                     </div>
 
@@ -301,6 +314,8 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message', `Modulo cambiato in ${newModule}. Rischiera i tuoi giocatori.`, 'info');
             document.getElementById('module-description').textContent = MODULI[newModule].description;
             document.querySelector('#field-area h4').textContent = `Campo (Titolari) - Modulo: ${newModule}`;
+            // Aggiorna barra XP formazione (se presente)
+            this.updateFormationXpBar(context.currentTeamData);
         });
 
         document.getElementById('btn-save-formation').addEventListener('click', () => this.handleSaveFormation(context));
@@ -890,15 +905,29 @@ window.GestioneSquadreFormazione = {
                     }
                 }
 
+                // Calcola livello base e corrente per la visualizzazione
+                const baseLevel = playerWithForm.level || player.level || 1;
+                const currentLevel = playerWithForm.currentLevel || baseLevel;
+                const formMod = playerWithForm.formModifier || 0;
+                const formModText = formMod !== 0 ? `<span class="${formMod > 0 ? 'text-green-400' : 'text-red-400'}">${formMod > 0 ? '+' : ''}${formMod}</span>` : '';
+
+                // Colore ruolo
+                const roleColors = { P: 'text-blue-400', D: 'text-green-400', C: 'text-yellow-400', A: 'text-red-400' };
+                const roleColor = roleColors[player.role] || 'text-gray-400';
+
                 return `
                     <div ${draggableAttr} data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
-                         class="player-card p-2 ${injuredClass} rounded-lg shadow transition duration-100 z-10"
+                         class="player-card p-1.5 ${injuredClass} rounded text-xs shadow transition duration-100 z-10"
                          ${isInjured ? '' : 'ondragstart="window.handleDragStart(event)" ondragend="window.handleDragEnd(event)"'}
                          ${isInjured ? `title="${player.name} e infortunato per ${window.Injuries.getRemainingMatches(player)} partite"` : ''}>
-                        ${iconaBadge}${player.name} (${player.role}) (Liv: ${player.level || player.currentLevel || 1})${abilitiesSummary}${injuryBadge}${equipBadge}
-                        <span class="float-right text-xs font-semibold ${playerWithForm.formModifier > 0 ? 'text-green-400' : (playerWithForm.formModifier < 0 ? 'text-red-400' : 'text-gray-400')}">
-                            ${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier || 0}
-                        </span>
+                        <div class="flex items-center justify-between">
+                            <span class="truncate font-semibold">${isIcona ? '⭐' : ''}${player.name}</span>
+                            <span class="${roleColor} font-bold">${player.role}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] mt-0.5">
+                            <span class="text-yellow-300">Lv.${currentLevel} ${formModText}</span>
+                            <span class="text-gray-500">${injuryBadge}${equipBadge}</span>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1482,7 +1511,7 @@ window.GestioneSquadreFormazione = {
             }
 
             // 4. Salva su Firestore
-            const currentTeamId = window.InterfacciaCore?.getCurrentTeamId();
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
             if (currentTeamId) {
                 const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
                 await updateDoc(teamDocRef, {
@@ -1523,6 +1552,120 @@ window.GestioneSquadreFormazione = {
                 payBtn.disabled = false;
                 payBtn.textContent = '💰 Paga e Cura';
             }
+        }
+    },
+
+    /**
+     * Renderizza la barra XP della formazione corrente (se feature attiva)
+     */
+    renderFormationXpBar(teamData) {
+        // Se il sistema XP formazioni non e abilitato, non mostrare nulla
+        if (!window.FeatureFlags?.isEnabled('formationXp')) return '';
+
+        const modifiers = window.GestioneSquadreConstants?.FORMATION_MODIFIERS;
+        if (!modifiers) return '';
+
+        const modulo = teamData?.formation?.modulo || '1-1-2-1';
+        const formationXp = teamData?.formationXp || {};
+        const xp = formationXp[modulo] || 0;
+        const level = modifiers.getLevelFromXP(xp);
+        const progressPercent = modifiers.getProgressPercent(xp);
+        const xpToNext = level >= modifiers.MAX_LEVEL ? 0 : modifiers.XP_PER_LEVEL - (xp % modifiers.XP_PER_LEVEL);
+        const bonuses = modifiers.getModifiers(modulo, level);
+
+        // Colori per livello (1-10)
+        const levelColors = ['gray', 'green', 'blue', 'purple', 'yellow', 'orange', 'pink', 'cyan', 'red', 'amber'];
+        const lvlColor = levelColors[level - 1] || 'amber';
+        const barColorClass = `bg-${lvlColor}-500`;
+        const textColorClass = `text-${lvlColor}-400`;
+
+        // Descrizione bonus/malus attuali
+        const bonusDescriptions = [];
+        if (bonuses.fase1 > 0) bonusDescriptions.push(`+${bonuses.fase1.toFixed(1)} Costruzione`);
+        if (bonuses.fase1 < 0) bonusDescriptions.push(`${bonuses.fase1.toFixed(1)} Costruzione`);
+        if (bonuses.fase2Dif > 0) bonusDescriptions.push(`+${bonuses.fase2Dif.toFixed(1)} Difesa`);
+        if (bonuses.fase2Dif < 0) bonusDescriptions.push(`${bonuses.fase2Dif.toFixed(1)} Difesa`);
+        if (bonuses.fase3 > 0) bonusDescriptions.push(`+${bonuses.fase3.toFixed(1)} Tiro`);
+        if (bonuses.fase3 < 0) bonusDescriptions.push(`${bonuses.fase3.toFixed(1)} Tiro`);
+
+        const bonusText = bonusDescriptions.length > 0
+            ? bonusDescriptions.join(' | ')
+            : 'Nessun bonus/malus';
+
+        return `
+            <div id="formation-xp-bar" class="p-3 bg-gray-800 rounded-lg border border-${lvlColor}-500 mt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-sm font-bold ${textColorClass} flex items-center gap-2">
+                        <span>📈</span> Esperienza Modulo
+                    </h4>
+                    <span class="text-xs ${textColorClass} font-bold">Lv. ${level}/${modifiers.MAX_LEVEL}</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-3 mb-2">
+                    <div class="${barColorClass} h-3 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400">
+                    <span>${xp} XP</span>
+                    ${level < modifiers.MAX_LEVEL
+                        ? `<span>${xpToNext} XP al prossimo livello</span>`
+                        : `<span class="text-yellow-400">LIVELLO MASSIMO!</span>`
+                    }
+                </div>
+                <div class="mt-2 text-xs text-center ${textColorClass}">${bonusText}</div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza una versione compatta della barra XP (per inserimento in altri box)
+     */
+    renderFormationXpBarCompact(teamData) {
+        // Se il sistema XP formazioni non e abilitato, non mostrare nulla
+        if (!window.FeatureFlags?.isEnabled('formationXp')) return '';
+
+        const modifiers = window.GestioneSquadreConstants?.FORMATION_MODIFIERS;
+        if (!modifiers) return '';
+
+        const modulo = teamData?.formation?.modulo || '1-1-2-1';
+        const formationXp = teamData?.formationXp || {};
+        const xp = formationXp[modulo] || 0;
+        const level = modifiers.getLevelFromXP(xp);
+        const progressPercent = modifiers.getProgressPercent(xp);
+        const bonuses = modifiers.getModifiers(modulo, level);
+
+        // Colori per livello (1-10)
+        const levelColors = ['gray', 'green', 'blue', 'purple', 'yellow', 'orange', 'pink', 'cyan', 'red', 'amber'];
+        const lvlColor = levelColors[level - 1] || 'amber';
+        const barColorClass = `bg-${lvlColor}-500`;
+        const textColorClass = `text-${lvlColor}-400`;
+
+        // Bonus compatti
+        const bonusParts = [];
+        if (bonuses.fase1 !== 0) bonusParts.push(`C:${bonuses.fase1 > 0 ? '+' : ''}${bonuses.fase1.toFixed(1)}`);
+        if (bonuses.fase2Dif !== 0) bonusParts.push(`D:${bonuses.fase2Dif > 0 ? '+' : ''}${bonuses.fase2Dif.toFixed(1)}`);
+        if (bonuses.fase3 !== 0) bonusParts.push(`T:${bonuses.fase3 > 0 ? '+' : ''}${bonuses.fase3.toFixed(1)}`);
+        const bonusText = bonusParts.length > 0 ? bonusParts.join(' ') : '-';
+
+        return `
+            <div id="formation-xp-bar" class="mt-3 pt-3 border-t border-gray-600">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs ${textColorClass} font-bold">📈 Lv.${level}</span>
+                    <span class="text-[10px] text-gray-400">${xp} XP</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
+                    <div class="${barColorClass} h-2 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                </div>
+                <div class="text-[10px] ${textColorClass} text-center">${bonusText}</div>
+            </div>
+        `;
+    },
+
+    /**
+     * Aggiorna dinamicamente la barra XP della formazione (quando cambia modulo)
+     */
+    updateFormationXpBar(teamData) {
+        const existingBar = document.getElementById('formation-xp-bar');
+        if (existingBar) {
+            existingBar.outerHTML = this.renderFormationXpBarCompact(teamData);
         }
     },
 
@@ -1585,6 +1728,63 @@ window.GestioneSquadreFormazione = {
                     ${playersHtml}
                 </div>
                 <p class="text-xs text-green-400 mt-2 text-center font-semibold">💊 Clicca su un giocatore per guarirlo istantaneamente</p>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza il box compatto degli infortunati per la colonna Rosa Disponibile
+     */
+    renderInjuredPlayersBoxCompact(teamData) {
+        // Se il sistema infortuni non e abilitato, non mostrare nulla
+        if (!window.Injuries?.isEnabled()) return '';
+
+        const injuredPlayers = window.Injuries.getInjuredPlayers(teamData);
+
+        if (injuredPlayers.length === 0) {
+            return `
+                <div id="injured-box-compact" class="mt-3 p-2 bg-gray-700/50 rounded-lg border border-red-500/30">
+                    <h4 class="text-xs font-bold text-red-400 flex items-center gap-1 mb-1">
+                        <span>🏥</span> Infermeria
+                    </h4>
+                    <p class="text-gray-500 text-[10px] text-center">Nessun infortunato</p>
+                </div>
+            `;
+        }
+
+        const playersHtml = injuredPlayers.map(p => {
+            const remaining = p.injury.remainingMatches;
+            const healingCost = 10 * remaining;
+
+            const roleColors = {
+                'P': 'text-yellow-400',
+                'D': 'text-blue-400',
+                'C': 'text-green-400',
+                'A': 'text-red-400'
+            };
+
+            return `
+                <div class="flex items-center justify-between py-1 px-1.5 bg-red-900/30 rounded border border-red-700/50 mb-1 cursor-pointer hover:bg-red-800/50 transition text-[10px]"
+                     onclick="window.GestioneSquadreFormazione.openInstantHealingModal('${p.id}')"
+                     title="Clicca per guarire (${healingCost} CS)">
+                    <div class="flex items-center gap-1 truncate">
+                        <span class="${roleColors[p.role] || 'text-gray-400'} font-bold">${p.role}</span>
+                        <span class="text-white truncate">${p.name}</span>
+                    </div>
+                    <span class="text-red-400 font-bold whitespace-nowrap">🏥${remaining}</span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div id="injured-box-compact" class="mt-3 p-2 bg-gray-700/50 rounded-lg border border-red-500">
+                <h4 class="text-xs font-bold text-red-400 flex items-center gap-1 mb-2">
+                    <span>🏥</span> Infermeria (${injuredPlayers.length})
+                </h4>
+                <div class="max-h-24 overflow-y-auto">
+                    ${playersHtml}
+                </div>
+                <p class="text-[9px] text-green-400 mt-1 text-center">💊 Clicca per guarire</p>
             </div>
         `;
     },
@@ -1726,7 +1926,7 @@ window.GestioneSquadreFormazione = {
             teamData.players[playerIndex] = playerWithoutInjury;
 
             // 3. Salva su Firestore
-            const currentTeamId = window.InterfacciaCore?.getCurrentTeamId();
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
             if (currentTeamId) {
                 const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
                 await updateDoc(teamDocRef, {
@@ -1872,7 +2072,7 @@ window.GestioneSquadreFormazione = {
         const moduloConfig = MODULI[bestModulo];
 
         // Verifica che il modulo abbia una configurazione valida
-        if (!moduloConfig || !moduloConfig.slots || !Array.isArray(moduloConfig.slots)) {
+        if (!moduloConfig) {
             return null;
         }
 
@@ -1891,7 +2091,7 @@ window.GestioneSquadreFormazione = {
         }
 
         // 2. Difensori
-        const numDef = moduloConfig.slots.filter(s => s === 'D').length;
+        const numDef = moduloConfig.D || 0;
         for (let i = 0; i < numDef; i++) {
             const available = byRole.D.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {
@@ -1901,7 +2101,7 @@ window.GestioneSquadreFormazione = {
         }
 
         // 3. Centrocampisti
-        const numMid = moduloConfig.slots.filter(s => s === 'C').length;
+        const numMid = moduloConfig.C || 0;
         for (let i = 0; i < numMid; i++) {
             const available = byRole.C.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {
@@ -1911,7 +2111,7 @@ window.GestioneSquadreFormazione = {
         }
 
         // 4. Attaccanti
-        const numFwd = moduloConfig.slots.filter(s => s === 'A').length;
+        const numFwd = moduloConfig.A || 0;
         for (let i = 0; i < numFwd; i++) {
             const available = byRole.A.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {

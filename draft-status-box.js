@@ -312,8 +312,8 @@ window.DraftStatusBox = {
                     <summary class="cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded">
                         Mostra lista completa giocatori
                     </summary>
-                    <div class="max-h-48 overflow-y-auto p-2">
-                        <table class="w-full text-xs">
+                    <div class="max-h-48 overflow-auto p-2">
+                        <table class="w-full text-xs min-w-[280px]">
                             <thead class="sticky top-0 bg-gray-900">
                                 <tr>
                                     <th class="text-left py-1 px-2 text-gray-500">Nome</th>

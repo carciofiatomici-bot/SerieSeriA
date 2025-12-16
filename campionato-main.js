@@ -15,7 +15,7 @@ window.ChampionshipMain = {
         const db = window.db;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
-        
+
         try {
              const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
              await updateDoc(teamDocRef, {
@@ -28,6 +28,38 @@ window.ChampionshipMain = {
         }
     },
 
+    /**
+     * Aggiunge XP alla formazione usata in una partita
+     * @param {string} teamId - ID della squadra
+     * @param {string} modulo - Modulo usato (es. '1-1-2-1')
+     */
+    async addFormationXp(teamId, modulo) {
+        if (!teamId || !modulo) return;
+
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
+        const XP_PER_MATCH = window.GestioneSquadreConstants?.FORMATION_MODIFIERS?.XP_PER_MATCH || 25;
+
+        try {
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) return;
+
+            const teamData = teamDoc.data();
+            const formationXp = teamData.formationXp || {};
+            const currentXp = formationXp[modulo] || 0;
+            const newXp = currentXp + XP_PER_MATCH;
+
+            formationXp[modulo] = newXp;
+            await updateDoc(teamDocRef, { formationXp });
+
+            console.log(`[FormationXP] Squadra ${teamId}: ${modulo} +${XP_PER_MATCH} XP (totale: ${newXp})`);
+        } catch (error) {
+            console.error(`[FormationXP] Errore aggiunta XP per squadra ${teamId}:`, error);
+        }
+    },
 
     /**
      * Simula una singola partita del calendario e aggiorna Firestore/UI.
@@ -341,6 +373,12 @@ window.ChampionshipMain = {
                             window.PlayerExpUI.showMultipleLevelUpModal(allLevelUps);
                         }
                     }
+                }
+
+                // Processa XP formazione (se feature attiva)
+                if (window.FeatureFlags?.isEnabled('formationXp')) {
+                    await this.addFormationXp(match.homeId, homeTeamData.formation?.modulo);
+                    await this.addFormationXp(match.awayId, awayTeamData.formation?.modulo);
                 }
 
                 // REPLAY: Mostra replay SOLO se non e admin

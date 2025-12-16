@@ -230,29 +230,29 @@ window.NextMatchAlert = {
                 </div>
                 <!-- Contenuto collassabile -->
                 <div id="next-match-content" class="p-2">
-                    <p class="text-${typeColor}-400 text-xs mb-1">${typeName} - ${nextMatch.round}</p>
+                    <p class="text-${typeColor}-400 text-xs mb-2 text-center">${typeName} - ${nextMatch.round}</p>
                     <!-- Squadre con loghi e media -->
-                    <div class="flex items-center justify-center gap-3 mb-1">
+                    <div class="flex items-center justify-center gap-4 mb-2">
                         <div class="flex flex-col items-center">
-                            <img src="${homeLogoUrl}" alt="${nextMatch.homeName}" class="w-7 h-7 rounded-full border border-gray-600 object-cover">
-                            <span class="text-white text-[10px] font-semibold truncate max-w-14 ${nextMatch.isHome ? 'text-yellow-400' : ''}">${nextMatch.homeName}</span>
-                            <span class="text-gray-500 text-[8px]">Lv.${nextMatch.homeAvg || '-'}</span>
+                            <img src="${homeLogoUrl}" alt="${nextMatch.homeName}" class="w-10 h-10 rounded-full border-2 border-gray-600 object-cover mb-1" loading="lazy" decoding="async">
+                            <span class="text-white text-xs font-bold truncate max-w-16 ${nextMatch.isHome ? 'text-yellow-400' : ''}">${nextMatch.homeName}</span>
+                            <span class="text-gray-400 text-[10px] font-semibold">Lv.${nextMatch.homeAvg || '-'}</span>
                         </div>
-                        <span class="text-gray-500 text-xs font-bold">vs</span>
+                        <span class="text-gray-500 text-sm font-bold">vs</span>
                         <div class="flex flex-col items-center">
-                            <img src="${awayLogoUrl}" alt="${nextMatch.awayName}" class="w-7 h-7 rounded-full border border-gray-600 object-cover">
-                            <span class="text-white text-[10px] font-semibold truncate max-w-14 ${!nextMatch.isHome ? 'text-yellow-400' : ''}">${nextMatch.awayName}</span>
-                            <span class="text-gray-500 text-[8px]">Lv.${nextMatch.awayAvg || '-'}</span>
+                            <img src="${awayLogoUrl}" alt="${nextMatch.awayName}" class="w-10 h-10 rounded-full border-2 border-gray-600 object-cover mb-1" loading="lazy" decoding="async">
+                            <span class="text-white text-xs font-bold truncate max-w-16 ${!nextMatch.isHome ? 'text-yellow-400' : ''}">${nextMatch.awayName}</span>
+                            <span class="text-gray-400 text-[10px] font-semibold">Lv.${nextMatch.awayAvg || '-'}</span>
                         </div>
                     </div>
                     ${automationState?.isEnabled ? `
-                        <div class="bg-black bg-opacity-30 rounded-sm px-1.5 py-0.5 text-center inline-flex items-center gap-1 w-full justify-center">
-                            <span class="text-gray-500 text-[9px]">20:30</span>
-                            <span id="next-match-countdown" class="text-${typeColor}-400 font-mono font-bold text-xs">--:--:--</span>
+                        <div class="text-center">
+                            <span class="text-gray-500 text-[8px]">20:30</span>
+                            <span id="next-match-countdown" class="text-${typeColor}-400 font-mono font-bold text-[10px] ml-1">--:--:--</span>
                         </div>
                     ` : `
-                        <div class="bg-black bg-opacity-30 rounded-sm px-1.5 py-0.5 text-center">
-                            <span class="text-gray-500 text-[9px]">Automazione non attiva</span>
+                        <div class="text-center">
+                            <span class="text-gray-500 text-[8px]">Automazione non attiva</span>
                         </div>
                     `}
                 </div>
@@ -273,11 +273,10 @@ window.NextMatchAlert = {
             header.addEventListener('click', () => this.toggleMinimize());
         }
 
-        // Carica stato minimizzato da localStorage
-        const savedState = localStorage.getItem('fanta_next_match_minimized');
-        if (savedState === 'true') {
-            this.toggleMinimize();
-        }
+        // Minimizza sempre di default (si apre solo con click)
+        // Reset _isMinimized a false prima di chiamare toggleMinimize per assicurare che sia minimizzato
+        this._isMinimized = false;
+        this.toggleMinimize();
     },
 
     /**

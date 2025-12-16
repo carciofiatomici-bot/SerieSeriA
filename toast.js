@@ -115,8 +115,8 @@ window.Toast = {
         toast.className = `
             pointer-events-auto
             flex items-center gap-3
-            min-w-[280px] max-w-[400px]
-            p-4 rounded-lg shadow-xl
+            min-w-[200px] max-w-[calc(100vw-2rem)] sm:max-w-[400px]
+            p-3 sm:p-4 rounded-lg shadow-xl
             border-l-4 ${style.border}
             bg-gray-800 text-white
             transform translate-x-full opacity-0
@@ -219,9 +219,9 @@ window.Toast = {
         toast.id = id;
         toast.className = `
             pointer-events-auto
-            flex items-center gap-3
-            min-w-[280px] max-w-[450px]
-            p-4 rounded-lg shadow-xl
+            flex items-center gap-2 sm:gap-3
+            min-w-[200px] max-w-[calc(100vw-2rem)] sm:max-w-[450px]
+            p-3 sm:p-4 rounded-lg shadow-xl
             border-l-4 ${style.border}
             bg-gray-800 text-white
             transform translate-x-full opacity-0
@@ -229,11 +229,11 @@ window.Toast = {
         `.replace(/\s+/g, ' ').trim();
 
         toast.innerHTML = `
-            <div class="flex-shrink-0 w-8 h-8 ${style.iconBg} rounded-full flex items-center justify-center text-white font-bold">
+            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 ${style.iconBg} rounded-full flex items-center justify-center text-white font-bold text-sm">
                 ${style.icon}
             </div>
-            <div class="flex-1 text-sm font-medium">${message}</div>
-            <button id="${id}-action" class="flex-shrink-0 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm font-medium transition-colors">
+            <div class="flex-1 text-xs sm:text-sm font-medium">${message}</div>
+            <button id="${id}-action" class="flex-shrink-0 px-2 sm:px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-xs sm:text-sm font-medium transition-colors">
                 ${actionText}
             </button>
             <button class="flex-shrink-0 text-gray-400 hover:text-white transition-colors" onclick="window.Toast.dismiss('${id}')">

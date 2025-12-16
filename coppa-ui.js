@@ -287,52 +287,104 @@ window.CoppaUI = {
     },
 
     /**
-     * Renderizza un tabellone compatto (solo nomi e risultati)
+     * Renderizza un tabellone compatto con accordion per ogni fase
      */
     renderCompactBracket(bracket) {
         let html = `
             <div class="mt-6">
                 <h4 class="text-lg font-bold text-purple-300 mb-3">Tabellone Completo</h4>
-                <div class="overflow-x-auto">
-                    <div class="flex gap-4 min-w-max">
+                <div class="space-y-2">
         `;
 
-        bracket.rounds.forEach(round => {
+        bracket.rounds.forEach((round, roundIndex) => {
+            const accordionId = `coppa-round-${roundIndex}`;
+            const matchCount = round.matches.length;
+            const completedCount = round.matches.filter(m => m.winner).length;
+            const statusText = completedCount === matchCount
+                ? '<span class="text-green-400 text-xs ml-2">Completato</span>'
+                : (completedCount > 0
+                    ? `<span class="text-yellow-400 text-xs ml-2">${completedCount}/${matchCount}</span>`
+                    : '<span class="text-gray-500 text-xs ml-2">Da giocare</span>');
+
             html += `
-                <div class="flex-shrink-0 w-48">
-                    <p class="text-sm font-bold text-purple-400 mb-2 text-center">${round.roundName}</p>
-                    <div class="space-y-2">
+                <div class="border border-purple-600 rounded-lg overflow-hidden">
+                    <button onclick="window.CoppaUI.toggleRoundAccordion('${accordionId}')"
+                            class="w-full p-3 bg-purple-900/50 hover:bg-purple-800/50 transition flex items-center justify-between text-left">
+                        <span class="font-bold text-purple-300">${round.roundName}${statusText}</span>
+                        <span id="${accordionId}-icon" class="text-purple-400 transition-transform">+</span>
+                    </button>
+                    <div id="${accordionId}" class="hidden p-3 bg-gray-800/50">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             `;
 
             round.matches.forEach(match => {
                 const homeName = match.homeTeam ? match.homeTeam.teamName : 'TBD';
                 const awayName = match.awayTeam ? match.awayTeam.teamName : 'TBD';
-                const winnerBg = match.winner ?
-                    (match.winner.teamId === (match.homeTeam?.teamId) ? 'bg-green-900' : '') : '';
-                const loserBg = match.winner ?
-                    (match.winner.teamId === (match.awayTeam?.teamId) ? 'bg-green-900' : '') : '';
+                const winnerBg = match.winner
+                    ? (match.winner.teamId === (match.homeTeam?.teamId) ? 'bg-green-900/50 border-green-600' : 'border-gray-600')
+                    : 'border-gray-600';
+                const loserBg = match.winner
+                    ? (match.winner.teamId === (match.awayTeam?.teamId) ? 'bg-green-900/50 border-green-600' : 'border-gray-600')
+                    : 'border-gray-600';
+
+                // Risultato
+                let resultText = '';
+                if (match.winner) {
+                    if (match.singleMatchResult) {
+                        resultText = `<span class="text-gray-400 text-[10px]">${match.singleMatchResult}</span>`;
+                    } else if (match.leg1Result && match.leg2Result) {
+                        resultText = `<span class="text-gray-400 text-[10px]">${match.leg1Result} / ${match.leg2Result}</span>`;
+                    } else if (match.leg1Result) {
+                        resultText = `<span class="text-gray-400 text-[10px]">${match.leg1Result}</span>`;
+                    }
+                }
 
                 html += `
-                    <div class="bg-gray-700 rounded text-xs">
-                        <div class="p-1 ${winnerBg} ${match.homeTeam ? 'text-white' : 'text-gray-500'}">${homeName}</div>
-                        <div class="p-1 border-t border-gray-600 ${loserBg} ${match.awayTeam ? 'text-white' : 'text-gray-500'}">${awayName}</div>
+                    <div class="bg-gray-700 rounded text-xs overflow-hidden">
+                        <div class="p-2 ${winnerBg} ${match.homeTeam ? 'text-white' : 'text-gray-500'} flex justify-between items-center">
+                            <span class="truncate">${homeName}</span>
+                            ${match.winner?.teamId === match.homeTeam?.teamId ? '<span class="text-green-400 ml-1">✓</span>' : ''}
+                        </div>
+                        <div class="p-2 border-t border-gray-600 ${loserBg} ${match.awayTeam ? 'text-white' : 'text-gray-500'} flex justify-between items-center">
+                            <span class="truncate">${awayName}</span>
+                            ${match.winner?.teamId === match.awayTeam?.teamId ? '<span class="text-green-400 ml-1">✓</span>' : ''}
+                        </div>
+                        ${resultText ? `<div class="p-1 bg-gray-800 text-center">${resultText}</div>` : ''}
                     </div>
                 `;
             });
 
             html += `
+                        </div>
                     </div>
                 </div>
             `;
         });
 
         html += `
-                    </div>
                 </div>
             </div>
         `;
 
         return html;
+    },
+
+    /**
+     * Toggle accordion per le fasi della coppa
+     */
+    toggleRoundAccordion(accordionId) {
+        const content = document.getElementById(accordionId);
+        const icon = document.getElementById(`${accordionId}-icon`);
+        if (!content) return;
+
+        const isHidden = content.classList.contains('hidden');
+        if (isHidden) {
+            content.classList.remove('hidden');
+            if (icon) icon.textContent = '−';
+        } else {
+            content.classList.add('hidden');
+            if (icon) icon.textContent = '+';
+        }
     },
 
     /**
