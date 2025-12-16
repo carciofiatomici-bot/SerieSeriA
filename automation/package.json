@@ -1,0 +1,16 @@
+{
+  "name": "serie-seria-automation",
+  "version": "1.0.0",
+  "description": "Script di automazione per simulazione partite Serie SeriA",
+  "main": "simulate.js",
+  "scripts": {
+    "simulate": "node simulate.js",
+    "test": "node simulate.js --dry-run"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

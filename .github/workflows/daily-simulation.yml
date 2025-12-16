@@ -1,0 +1,40 @@
+# Workflow per simulazione automatica partite alle 20:30 (ora italiana)
+name: Daily Match Simulation
+
+on:
+  schedule:
+    # Esegue alle 19:30 UTC = 20:30 ora italiana (CET/CEST)
+    # Nota: GitHub Actions usa UTC, quindi 19:30 UTC = 20:30 CET (inverno) o 21:30 CEST (estate)
+    # Per l'ora legale italiana (CEST), usa 18:30 UTC
+    - cron: '30 19 * * *'  # Ogni giorno alle 19:30 UTC (20:30 CET)
+
+  # Permette esecuzione manuale per test
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: npm install
+
+      - name: Run simulation
+        working-directory: ./automation
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
+        run: node simulate.js
+
+      - name: Log result
+        run: echo "Simulation completed at $(date)"
