@@ -1,0 +1,38 @@
+# Workflow per controllo automatico timer draft ogni 10 minuti
+name: Draft Timer Check
+
+on:
+  schedule:
+    # Esegue ogni 10 minuti
+    - cron: '*/10 * * * *'
+
+  # Permette esecuzione manuale per test
+  workflow_dispatch:
+
+jobs:
+  check-draft:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: npm install
+
+      - name: Run draft check
+        working-directory: ./automation
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
+        run: node draft-check.js
+
+      - name: Log result
+        run: echo "Draft check completed at $(date)"
