@@ -17,7 +17,7 @@ window.Injuries = {
     INJURY_CHANCE: 0.01, // 1% per giocatore
     MIN_INJURY_DURATION: 1,
     MAX_INJURY_DURATION: 10,
-    MAX_INJURIES_COUNT: 1, // Max 1 infortunato per squadra
+    MAX_INJURIES_COUNT: 99, // Nessun limite infortuni per squadra
 
     /**
      * Verifica se il sistema infortuni e' abilitato
@@ -94,10 +94,18 @@ window.Injuries = {
                 return null;
             }
 
-            // Filtra giocatori gia infortunati
+            // Filtra giocatori gia infortunati e giocatori base (immuni)
             const eligiblePlayers = playersOnField.filter(p => {
                 const playerData = teamData.players?.find(tp => tp.id === p.id);
-                return !playerData?.injury;
+                // Escludi se gia infortunato
+                if (playerData?.injury) return false;
+                // Escludi giocatori base (immuni agli infortuni)
+                const isBase = playerData?.isBase ||
+                               playerData?.isBasePlayer ||
+                               (playerData?.name?.includes('Base')) ||
+                               ((playerData?.level || 1) === 1 && (playerData?.cost || 0) === 0);
+                if (isBase) return false;
+                return true;
             });
 
             if (eligiblePlayers.length === 0) return null;

@@ -144,7 +144,7 @@ window.InterfacciaConstants = {
     DEFAULT_LOGO_URL: "https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg",
     
     // Limite massimo di giocatori nella rosa (escludendo l'Icona)
-    MAX_ROSA_PLAYERS: 12, // 12 giocatori + 1 Icona
+    MAX_ROSA_PLAYERS: 15, // 15 giocatori + 1 Icona
     
     // Collezioni Firestore (verranno inizializzate con appId)
     getTeamsCollectionPath: (appId) => `artifacts/${appId}/public/data/teams`,

@@ -2994,3 +2994,506 @@ html, body {
     display: inline-block;
     animation: roll 0.5s ease-out;
 }
+
+/* ====================================================================
+   FIX MOBILE DASHBOARD - Dicembre 2024
+   ==================================================================== */
+
+/* ===================== FIX 1: HEADER INFO TEAM ===================== */
+/* Riga con Livello Rosa + Nome Squadra + Divisa */
+@media (max-width: 639px) {
+    /* Container principale header */
+    #sponsor-media-box > .flex.justify-center.items-stretch {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    /* Box livello rosa - dimensioni fisse */
+    #sponsor-media-box > .flex > .py-1.px-2 {
+        flex: 0 0 auto !important;
+        min-width: 70px !important;
+        padding: 6px 8px !important;
+    }
+
+    /* Box nome squadra - prende spazio restante ma puo shrinkare */
+    #team-name-box {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        padding: 6px 10px !important;
+        overflow: hidden;
+    }
+
+    /* Nome squadra - troncato se troppo lungo */
+    #team-dashboard-title {
+        font-size: 1rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Box divisa - dimensioni fisse piccole */
+    #team-uniform-box {
+        flex: 0 0 auto !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        padding: 4px !important;
+    }
+
+    #uniform-preview-svg {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+/* ===================== FIX 2: GRIGLIA 4 LOGHI ===================== */
+/* Media, Logo Squadra, Icona, Sponsor - Tutti visibili su mobile */
+@media (max-width: 639px) {
+    /* Container loghi - griglia 2x2 su mobile stretto, riga su mobile largo */
+    #team-logo-container {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 8px !important;
+    }
+
+    /* Tutti gli elementi logo/box - dimensioni uniformi */
+    #team-logo-container > * {
+        flex: 0 0 auto !important;
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+    }
+
+    /* Logo squadra wrapper */
+    #team-logo-wrapper {
+        width: 56px !important;
+        height: 56px !important;
+        min-width: 56px !important;
+    }
+
+    /* Logo e icona - rotondi, stesso size */
+    #team-logo,
+    #team-icona-avatar {
+        width: 56px !important;
+        height: 56px !important;
+    }
+
+    /* Sponsor e media box */
+    #sponsor-box,
+    #media-box,
+    #daily-wheel-box {
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+    }
+
+    /* Immagini interne */
+    #sponsor-image,
+    #media-image {
+        width: 100% !important;
+        height: 100% !important;
+        padding: 2px !important;
+    }
+
+    /* Ruota fortuna emoji */
+    #daily-wheel-box span.text-2xl {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Schermi molto piccoli - griglia 2x2 forzata */
+@media (max-width: 359px) {
+    #team-logo-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+        max-width: 140px !important;
+        margin: 0 auto !important;
+    }
+
+    #team-logo-container > * {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        justify-self: center !important;
+    }
+
+    #team-logo-wrapper,
+    #team-logo,
+    #team-icona-avatar {
+        width: 48px !important;
+        height: 48px !important;
+    }
+}
+
+/* ===================== FIX 3: BOTTONI NAVIGAZIONE ===================== */
+/* Stadio, Hall of Fame, Lega - NON devono crescere troppo */
+@media (max-width: 639px) {
+    /* Container bottoni navigazione */
+    #sponsor-media-box > .flex.justify-center.gap-2.mt-3 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+
+    /* TUTTI i bottoni - dimensioni controllate, NON flex-1 eccessivo */
+    #btn-stadium,
+    #btn-hall-of-fame,
+    #btn-private-leagues {
+        flex: 0 1 auto !important;
+        min-width: 90px !important;
+        max-width: 140px !important;
+        width: auto !important;
+        padding: 8px 12px !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* Hall of Fame - quando e' solo, limita larghezza */
+    #btn-hall-of-fame:only-child,
+    #btn-hall-of-fame:first-child:last-child {
+        max-width: 200px !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* Icone nei bottoni */
+    #btn-stadium span.text-base,
+    #btn-hall-of-fame span.text-base,
+    #btn-private-leagues span.text-base {
+        font-size: 1rem !important;
+    }
+
+    /* Testo bottoni */
+    #btn-stadium span:not(.text-base),
+    #btn-hall-of-fame span:not(.text-base),
+    #btn-private-leagues span:not(.text-base) {
+        font-size: 0.65rem !important;
+    }
+}
+
+/* Se tutti e 3 i bottoni sono visibili - riga orizzontale compatta */
+@media (max-width: 639px) {
+    #sponsor-media-box > .flex.justify-center.gap-2.mt-3:has(#btn-stadium:not(.hidden)):has(#btn-private-leagues:not(.hidden)) {
+        flex-wrap: nowrap !important;
+    }
+
+    #sponsor-media-box > .flex.justify-center.gap-2.mt-3:has(#btn-stadium:not(.hidden)):has(#btn-private-leagues:not(.hidden)) > button {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+}
+
+/* ===================== FIX 4: TOGGLE SWITCH DRAFT ===================== */
+@media (max-width: 639px) {
+    /* Container Draft con toggle */
+    #btn-draft-container {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        overflow: visible !important;
+        min-height: 48px !important;
+    }
+
+    /* Bottone Draft - parte cliccabile */
+    #btn-draft-utente {
+        flex: 1 1 auto !important;
+        padding: 10px 8px !important;
+        font-size: 0.8rem !important;
+        min-height: 44px !important;
+    }
+
+    /* Container toggle - dimensioni fisse */
+    #draft-toggle-container {
+        flex: 0 0 auto !important;
+        padding: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Toggle switch - dimensioni precise */
+    #draft-toggle-container .relative.inline-flex {
+        flex-shrink: 0 !important;
+    }
+
+    #draft-toggle-container label > div,
+    #draft-participation-toggle + div {
+        width: 40px !important;
+        height: 22px !important;
+        min-width: 40px !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+
+    /* Knob del toggle - posizionamento corretto */
+    #draft-toggle-container label > div::after,
+    #draft-participation-toggle + div::after {
+        content: '' !important;
+        position: absolute !important;
+        top: 2px !important;
+        left: 2px !important;
+        width: 18px !important;
+        height: 18px !important;
+        background: white !important;
+        border-radius: 50% !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    /* Stato checked - knob spostato */
+    #draft-participation-toggle:checked + div::after {
+        transform: translateX(18px) !important;
+    }
+
+    /* Separatore */
+    #btn-draft-container > .w-px {
+        width: 1px !important;
+        height: 32px !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* ===================== FIX 5: BOTTONE REGOLE ===================== */
+@media (max-width: 639px) {
+    /* Bottone regole - piu piccolo e posizionato meglio */
+    #rules-global-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px)) !important;
+        right: 10px !important;
+        border-radius: 30px !important;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.5) !important;
+        z-index: 9990 !important; /* Leggermente piu basso per non coprire modali */
+    }
+
+    #rules-global-btn span {
+        font-size: 14px !important;
+        margin-right: 4px !important;
+    }
+
+    /* Nascondi testo "Regole" su schermi molto piccoli */
+    @media (max-width: 380px) {
+        #rules-global-btn {
+            padding: 10px !important;
+            border-radius: 50% !important;
+            width: 44px !important;
+            height: 44px !important;
+        }
+
+        /* Nascondi testo, mostra solo icona */
+        #rules-global-btn {
+            font-size: 0 !important;
+        }
+
+        #rules-global-btn span {
+            font-size: 18px !important;
+            margin: 0 !important;
+        }
+    }
+}
+
+/* ===================== FIX 6: SPAZIO PER BOTTONE REGOLE ===================== */
+/* Aggiungi padding in fondo per evitare sovrapposizione */
+@media (max-width: 639px) {
+    /* Ultimo box della dashboard */
+    #app-content {
+        padding-bottom: 70px !important;
+    }
+
+    /* Box draft/mercato - padding extra in basso */
+    #draft-scambi-box {
+        margin-bottom: 10px !important;
+    }
+
+    /* Box CSS widget */
+    #css-dashboard-widget {
+        margin-bottom: 10px !important;
+    }
+}
+
+/* ===================== FIX 7: RIGA DRAFT/MERCATO ===================== */
+@media (max-width: 639px) {
+    /* Container Draft e Mercato */
+    #draft-mercato-container {
+        padding: 0 4px !important;
+    }
+
+    #draft-scambi-box {
+        padding: 10px !important;
+    }
+
+    /* Griglia Draft/Mercato - 2 colonne */
+    #draft-scambi-box > .grid.grid-cols-2:first-child {
+        gap: 8px !important;
+    }
+
+    /* Bottoni nella griglia */
+    #draft-scambi-box button,
+    #btn-draft-container {
+        font-size: 0.8rem !important;
+        min-height: 48px !important;
+    }
+
+    /* Bottone Mercato - allinea con Draft */
+    #btn-mercato-utente {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+    }
+
+    /* Riga Sfida/Scambi */
+    #actions-buttons-grid {
+        gap: 8px !important;
+    }
+
+    #btn-challenge,
+    #btn-trades {
+        font-size: 0.8rem !important;
+        padding: 10px 8px !important;
+    }
+}
+
+/* ===================== FIX 8: BOX GESTIONE ROSA/FORMAZIONE ===================== */
+@media (max-width: 639px) {
+    #gestione-box {
+        padding: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    #gestione-box .grid.grid-cols-2 {
+        gap: 8px !important;
+    }
+
+    #btn-gestione-rosa,
+    #btn-gestione-formazione {
+        padding: 12px 8px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ===================== FIX 9: BOX COMPETIZIONI ===================== */
+@media (max-width: 639px) {
+    #competizioni-box {
+        padding: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    #competizioni-box .space-y-2 {
+        gap: 6px !important;
+    }
+
+    #btn-user-campionato,
+    #btn-user-coppa,
+    #btn-user-supercoppa {
+        padding: 10px !important;
+        font-size: 0.85rem !important;
+    }
+
+    #btn-user-campionato span.text-xl,
+    #btn-user-coppa span.text-xl,
+    #btn-user-supercoppa span.text-xl {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ===================== FIX 10: TOGGLE PARTECIPAZIONE ===================== */
+@media (max-width: 639px) {
+    #toggle-partecipazione-box {
+        padding: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    #toggle-partecipazione-box .grid.grid-cols-2 {
+        gap: 8px !important;
+    }
+
+    /* Box toggle SerieSeriA e CoppaSeriA */
+    #toggle-partecipazione-box .grid > div {
+        padding: 10px !important;
+    }
+
+    /* Testo toggle */
+    #toggle-partecipazione-box .flex.items-center.justify-center span {
+        font-size: 0.7rem !important;
+    }
+
+    /* Status text */
+    #championship-participation-status,
+    #cup-participation-status {
+        font-size: 0.6rem !important;
+    }
+}
+
+/* ===================== FIX 11: BOTTONI FONDO DASHBOARD ===================== */
+@media (max-width: 639px) {
+    /* Bottoni Login e Elimina */
+    #app-content > .grid.grid-cols-2.mt-4 {
+        gap: 8px !important;
+        padding: 0 4px !important;
+        margin-top: 10px !important;
+    }
+
+    #user-back-to-login-button,
+    #btn-delete-team {
+        font-size: 0.75rem !important;
+        padding: 10px 8px !important;
+    }
+
+    /* Bottoni Tutorial/Changelog */
+    #app-content > .mt-6.flex.justify-center {
+        gap: 8px !important;
+        margin-top: 12px !important;
+        flex-wrap: wrap !important;
+    }
+}
+
+/* ===================== FIX 12: ALERT BANNER POSIZIONE ===================== */
+@media (max-width: 639px) {
+    /* Draft alert - non sovrapporre livello rosa */
+    #draft-alert-banner {
+        top: auto !important;
+        bottom: max(70px, calc(env(safe-area-inset-bottom, 0px) + 65px)) !important;
+        left: 10px !important;
+        max-width: calc(100vw - 20px) !important;
+        z-index: 9995 !important;
+    }
+
+    /* Match alert */
+    #match-alert-banner {
+        top: max(8px, calc(env(safe-area-inset-top, 0px) + 8px)) !important;
+        right: 8px !important;
+        max-width: 200px !important;
+    }
+
+    /* Versione compatta degli alert */
+    #draft-alert-expanded,
+    #match-alert-expanded {
+        padding: 8px !important;
+    }
+
+    #draft-alert-expanded .text-2xl,
+    #match-alert-expanded .text-2xl {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ===================== FIX 13: COLOR PICKER POSIZIONE ===================== */
+@media (max-width: 639px) {
+    #team-color-picker-container {
+        position: absolute !important;
+        top: 6px !important;
+        right: 6px !important;
+        z-index: 50 !important;
+    }
+
+    #team-color-picker {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+    }
+}

@@ -119,6 +119,16 @@ window.GestioneSquadreRosa = {
             injuryMarker = ` <span class="bg-red-800 text-red-300 px-2 py-0.5 rounded-full text-xs font-extrabold" title="Infortunato per ${remaining} partite">🏥 ${remaining}</span>`;
         }
 
+        // Marker Giocatore Base (immune agli infortuni)
+        let basePlayerMarker = '';
+        const isBasePlayer = player.isBase ||
+                            player.isBasePlayer ||
+                            (player.name?.includes('Base')) ||
+                            ((player.level || 1) === 1 && (player.cost || 0) === 0 && !isIcona);
+        if (isBasePlayer) {
+            basePlayerMarker = ' <span class="bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Base - immune agli infortuni">🌱</span>';
+        }
+
         // Marker Contratto
         const contractBadge = window.Contracts?.renderContractBadge(player, teamData) || '';
 
@@ -292,6 +302,7 @@ window.GestioneSquadreRosa = {
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
                         <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}
+                        ${basePlayerMarker}
                         ${injuryMarker}
                         <span class="text-yellow-400">(${player.role})</span>
                         ${typeBadgeHtml}

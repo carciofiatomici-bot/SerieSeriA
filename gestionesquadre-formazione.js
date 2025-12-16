@@ -1548,7 +1548,7 @@ window.GestioneSquadreFormazione = {
         const playersHtml = injuredPlayers.map(p => {
             const remaining = p.injury.remainingMatches;
             const playerLevel = p.level || p.currentLevel || 1;
-            const healingCost = 10 * playerLevel; // Formula: Costo = 10 * Livello
+            const healingCost = 10 * remaining; // Formula: Costo = 10 * Giornate rimaste
 
             const roleColors = {
                 'P': 'bg-yellow-600 text-yellow-100',
@@ -1616,8 +1616,8 @@ window.GestioneSquadreFormazione = {
         const playerLevel = player.level || player.currentLevel || 1;
         const remainingMatches = player.injury.remainingMatches;
 
-        // Calcola il costo: 10 * Livello_Giocatore
-        const cost = 10 * playerLevel;
+        // Calcola il costo: 10 * Giornate rimaste
+        const cost = 10 * remainingMatches;
 
         // Salva i dati per l'elaborazione
         this._instantHealingPlayerId = playerId;

@@ -3476,6 +3476,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Assegnando...';
 
         try {
+            const { doc, getDoc, getDocs, updateDoc, collection } = firestoreTools;
+            const db = window.db;
+
             // Ottieni stato draft corrente
             const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, 'settings');
             const configDoc = await getDoc(configDocRef);
@@ -3518,9 +3521,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const teamData = teamDoc.data();
             const currentRoster = teamData.rosa || [];
 
-            // Verifica che la squadra non abbia gia 12 giocatori
-            if (currentRoster.length >= 12) {
-                throw new Error('La squadra ha gia il massimo di 12 giocatori');
+            // Verifica che la squadra non abbia gia il massimo di giocatori
+            const MAX_ROSA = window.InterfacciaConstants?.MAX_ROSA_PLAYERS || 15;
+            if (currentRoster.length >= MAX_ROSA) {
+                throw new Error(`La squadra ha gia il massimo di ${MAX_ROSA} giocatori`);
             }
 
             // Verifica budget
@@ -3539,22 +3543,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // 2. Aggiungi alla rosa della squadra
-            const newPlayer = {
-                id: randomPlayer.id,
-                nome: randomPlayer.nome,
-                ruolo: randomPlayer.ruolo,
-                tipo: randomPlayer.tipo,
-                livello: randomPlayer.livello || 1,
-                abilities: randomPlayer.abilities || [],
-                eta: randomPlayer.eta || 20,
-                costo: cost,
-                contract: randomPlayer.contract || 3,
-                secretMaxLevel: randomPlayer.secretMaxLevel
-            };
+            // Crea oggetto giocatore filtrando i valori undefined
+            const newPlayer = {};
+
+            // Campi obbligatori con fallback
+            newPlayer.id = randomPlayer.id || `player_${Date.now()}`;
+            newPlayer.nome = randomPlayer.nome || randomPlayer.name || 'Giocatore';
+            newPlayer.ruolo = randomPlayer.ruolo || randomPlayer.role || 'C';
+            newPlayer.tipo = randomPlayer.tipo || randomPlayer.type || 'Tecnica';
+            newPlayer.livello = randomPlayer.livello || randomPlayer.level || 1;
+            newPlayer.abilities = randomPlayer.abilities || [];
+            newPlayer.eta = randomPlayer.eta || randomPlayer.age || 20;
+            newPlayer.costo = cost;
+            newPlayer.contract = randomPlayer.contract || 3;
+
+            // Campi opzionali - aggiungi solo se definiti
+            if (randomPlayer.secretMaxLevel !== undefined && randomPlayer.secretMaxLevel !== null) {
+                newPlayer.secretMaxLevel = randomPlayer.secretMaxLevel;
+            }
+
+            // Filtra la rosa esistente per rimuovere eventuali undefined
+            const cleanRoster = currentRoster.filter(p => p && p.id);
 
             await updateDoc(teamDocRef, {
-                rosa: [...currentRoster, newPlayer],
-                budgetRimanente: budget - cost
+                rosa: [...cleanRoster, newPlayer],
+                budget: budget - cost
             });
 
             displayMessage(`Giocatore ${randomPlayer.nome} assegnato a ${teamData.nomeSquadra}!`, 'success', 'toggle-status-message');
