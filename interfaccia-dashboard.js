@@ -132,6 +132,11 @@ window.InterfacciaDashboard = {
         // Aggiorna gli alert sui bottoni (formazione migliorabile, contratti in scadenza)
         this.updateButtonAlerts();
 
+        // Inizializza il floating alert prossima partita
+        if (window.NextMatchAlert) {
+            window.NextMatchAlert.init();
+        }
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
     },

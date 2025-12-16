@@ -86,10 +86,23 @@ window.InterfacciaAuth = {
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
         const { ADMIN_USERNAME_LOWER } = window.InterfacciaConstants;
-        
+
         const teamId = localStorage.getItem('fanta_session_id');
         const userType = localStorage.getItem('fanta_session_type');
         let lastScreenId = localStorage.getItem('fanta_last_screen');
+
+        // Controlla se e' un refresh (sessionStorage attivo) o nuovo avvio app (PWA chiusa/riaperta)
+        const isPageRefresh = sessionStorage.getItem('fanta_session_active') === 'true';
+
+        // Se l'app e' stata chiusa e riaperta (non un semplice refresh), vai alla dashboard
+        if (!isPageRefresh && lastScreenId && lastScreenId !== 'app-content') {
+            console.log('[Session] Nuovo avvio app - reset alla dashboard');
+            lastScreenId = null;
+            localStorage.removeItem('fanta_last_screen');
+        }
+
+        // Segna la sessione come attiva (si cancella automaticamente quando il tab/app viene chiuso)
+        sessionStorage.setItem('fanta_session_active', 'true');
 
         // Pulisci schermate problematiche dal localStorage (richiedono contesto specifico)
         const problematicScreens = ['draft-content', 'mercato-content'];
@@ -224,9 +237,19 @@ window.InterfacciaAuth = {
                             detail: { mode: 'utente', teamId: teamId } 
                         }));
                     } else if (targetScreenId === elements.mercatoContent?.id) {
-                         document.dispatchEvent(new CustomEvent('mercatoPanelLoaded', { 
-                            detail: { teamId: teamId } 
+                         document.dispatchEvent(new CustomEvent('mercatoPanelLoaded', {
+                            detail: { teamId: teamId }
                         }));
+                    } else if (targetScreenId === 'stadium-content') {
+                        // Ripristina schermata Stadio
+                        if (window.StadiumUI) {
+                            setTimeout(() => window.StadiumUI.init(teamId, teamData), 500);
+                        }
+                    } else if (targetScreenId === 'private-leagues-content') {
+                        // Ripristina schermata Leghe Private
+                        if (window.PrivateLeaguesUI) {
+                            setTimeout(() => window.PrivateLeaguesUI.init(teamId, teamData), 500);
+                        }
                     }
 
                     // Assicura che l'ultima schermata salvata sia un contenuto Utente valido
@@ -904,7 +927,7 @@ window.InterfacciaAuth = {
                              class="w-16 h-16 rounded-full object-cover border-3 border-yellow-400">
                         <div>
                             <h3 class="text-xl font-bold text-white">${icona.name} 👑</h3>
-                            <p class="text-sm text-yellow-400">${icona.role} - ${icona.type} - Lv.${icona.levelRange ? icona.levelRange[0] + '-' + icona.levelRange[1] : icona.level}</p>
+                            <p class="text-sm text-yellow-400">${icona.role} - ${icona.type} - Lv. Iniziale: 10</p>
                         </div>
                     </div>
                     <button onclick="document.getElementById('icona-details-modal').remove()"

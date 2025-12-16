@@ -151,6 +151,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return displayConfigMessage("Errore: Necessarie almeno 2 squadre flaggate per generare il calendario.", 'error');
         }
 
+        // Verifica se il campionato e' in corso (ci sono partite giocate)
+        try {
+            const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+            const scheduleRef = doc(db, schedulePath);
+            const scheduleSnap = await getDoc(scheduleRef);
+
+            if (scheduleSnap.exists()) {
+                const existingSchedule = scheduleSnap.data().matches || [];
+                const playedMatches = existingSchedule.reduce((count, round) => {
+                    return count + (round.matches?.filter(m => m.result !== null).length || 0);
+                }, 0);
+
+                if (playedMatches > 0) {
+                    return displayConfigMessage(
+                        `Impossibile generare un nuovo calendario: il campionato e' in corso (${playedMatches} partite giocate). Termina o resetta prima il campionato attuale.`,
+                        'error'
+                    );
+                }
+            }
+        } catch (err) {
+            console.warn("Errore verifica campionato in corso:", err);
+        }
+
         displayConfigMessage("Generazione calendario in corso...", 'info');
         const button = document.getElementById('btn-generate-schedule');
         button.disabled = true;

@@ -195,12 +195,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Gestisce l'evento personalizzato per l'aggiornamento della dashboard
     document.addEventListener('dashboardNeedsUpdate', () => {
-        window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(elements);
-        // Aggiorna anche gli alert
-        window.InterfacciaDashboard.initDraftAlert();
-        window.InterfacciaDashboard.initMatchAlert();
-        // Ricarica stato toggle draft
-        window.InterfacciaNavigation?.loadDraftParticipationState?.();
+        // Solo se la dashboard (app-content) e visibile - evita refresh indesiderati
+        const appContent = document.getElementById('app-content');
+        if (appContent && !appContent.classList.contains('hidden')) {
+            window.InterfacciaDashboard.reloadTeamDataAndUpdateUI(elements);
+            // Aggiorna anche gli alert
+            window.InterfacciaDashboard.initDraftAlert();
+            window.InterfacciaDashboard.initMatchAlert();
+            // Ricarica stato toggle draft
+            window.InterfacciaNavigation?.loadDraftParticipationState?.();
+        }
     });
 
     // Inizializza gli alert all'avvio e quando cambia schermata

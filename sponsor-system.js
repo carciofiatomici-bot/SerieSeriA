@@ -371,9 +371,9 @@ window.SponsorSystem = {
             const teamDoc = await getDoc(doc(db, teamPath));
             if (!teamDoc.exists()) throw new Error('Squadra non trovata');
             const teamData = teamDoc.data();
-            const currentCredits = teamData.credits || 0;
+            const currentBudget = teamData.budget || 0;
 
-            if (currentCredits < cost) {
+            if (currentBudget < cost) {
                 throw new Error(`Crediti insufficienti! Servono ${cost} CS.`);
             }
 
@@ -391,7 +391,7 @@ window.SponsorSystem = {
 
             await updateDoc(doc(db, teamPath), {
                 sponsor: sponsorData,
-                credits: currentCredits - cost
+                budget: currentBudget - cost
             });
 
             this.showToast(`Contratto firmato con ${sponsor.name}! (-${cost} CS)`, 'success');
@@ -431,11 +431,11 @@ window.SponsorSystem = {
         if (!teamDoc.exists()) throw new Error('Squadra non trovata');
 
         const teamData = teamDoc.data();
-        const currentCredits = teamData.credits || 0;
+        const currentBudget = teamData.budget || 0;
         const sponsorCost = newSponsor.cost || 0;
         const totalCost = this.penaltyCost + sponsorCost;
 
-        if (currentCredits < totalCost) {
+        if (currentBudget < totalCost) {
             throw new Error(`Crediti insufficienti! Servono ${totalCost} CS (penale ${this.penaltyCost} + costo ${sponsorCost}).`);
         }
 
@@ -452,7 +452,7 @@ window.SponsorSystem = {
 
         await updateDoc(doc(db, teamPath), {
             sponsor: sponsorData,
-            credits: currentCredits - totalCost
+            budget: currentBudget - totalCost
         });
 
         this.showToast(`Sponsor cambiato! (-${totalCost} CS)`, 'warning');
@@ -522,9 +522,9 @@ window.SponsorSystem = {
             const teamDoc = await getDoc(doc(db, teamPath));
             if (!teamDoc.exists()) throw new Error('Squadra non trovata');
             const teamData = teamDoc.data();
-            const currentCredits = teamData.credits || 0;
+            const currentBudget = teamData.budget || 0;
 
-            if (currentCredits < cost) {
+            if (currentBudget < cost) {
                 throw new Error(`Crediti insufficienti! Servono ${cost} CS.`);
             }
 
@@ -542,7 +542,7 @@ window.SponsorSystem = {
 
             await updateDoc(doc(db, teamPath), {
                 media: mediaData,
-                credits: currentCredits - cost
+                budget: currentBudget - cost
             });
 
             this.showToast(`Contratto firmato con ${media.name}! (-${cost} CS)`, 'success');
@@ -582,11 +582,11 @@ window.SponsorSystem = {
         if (!teamDoc.exists()) throw new Error('Squadra non trovata');
 
         const teamData = teamDoc.data();
-        const currentCredits = teamData.credits || 0;
+        const currentBudget = teamData.budget || 0;
         const mediaCost = newMedia.cost || 0;
         const totalCost = this.penaltyCost + mediaCost;
 
-        if (currentCredits < totalCost) {
+        if (currentBudget < totalCost) {
             throw new Error(`Crediti insufficienti! Servono ${totalCost} CS (penale ${this.penaltyCost} + costo ${mediaCost}).`);
         }
 
@@ -603,7 +603,7 @@ window.SponsorSystem = {
 
         await updateDoc(doc(db, teamPath), {
             media: mediaData,
-            credits: currentCredits - totalCost
+            budget: currentBudget - totalCost
         });
 
         this.showToast(`Media partner cambiato! (-${totalCost} CS)`, 'warning');
@@ -698,9 +698,9 @@ window.SponsorSystem = {
         const { total, breakdown } = this.calculateBonus(sponsor, media, matchResult);
 
         if (total > 0) {
-            const currentCredits = teamData.credits || 0;
+            const currentBudget = teamData.budget || 0;
             const updates = {
-                credits: currentCredits + total
+                budget: currentBudget + total
             };
 
             if (teamSponsor) {

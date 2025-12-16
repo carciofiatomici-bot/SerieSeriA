@@ -143,11 +143,6 @@ window.GestioneSquadreFormazione = {
                     </select>
                     <p id="module-description" class="text-sm text-gray-400">${MODULI[teamData.formation.modulo].description}</p>
 
-                    <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2 pt-4">Legenda Tipologie (Type)</h3>
-                    <div class="p-3 bg-gray-700 rounded-lg border border-gray-600 shadow-inner">
-                         ${legendHtml}
-                    </div>
-
                     ${this.renderInjuredPlayersBox(teamData)}
 
                     <h3 class="text-xl font-bold text-indigo-400 border-b border-gray-600 pb-2 pt-4">Rosa Completa (Disponibili)</h3>
@@ -172,6 +167,12 @@ window.GestioneSquadreFormazione = {
                              ondragover="event.preventDefault();"
                              ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'B')">
                         </div>
+                    </div>
+
+                    <!-- Legenda Tipologie (spostata sotto panchina) -->
+                    <div class="bg-gray-800 p-3 rounded-lg border border-gray-600">
+                        <h4 class="text-indigo-400 font-bold mb-2 text-sm">Legenda Tipologie</h4>
+                        ${legendHtml}
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">

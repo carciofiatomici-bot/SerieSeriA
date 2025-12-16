@@ -288,7 +288,7 @@ window.GestioneSquadreRosa = {
                        data-player-id="${player.id}"
                        data-player-name="${player.name}"
                        data-player-role="${player.role}"
-                       class="absolute top-2 right-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900 hover:bg-opacity-30 px-1.5 py-1 rounded transition text-lg"
+                       class="absolute top-2 right-2 z-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900 hover:bg-opacity-30 px-1.5 py-1 rounded transition text-lg"
                        title="Statistiche ${player.name}">📊</button>`
             : '';
 

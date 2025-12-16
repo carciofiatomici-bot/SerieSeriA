@@ -381,15 +381,15 @@ window.CreditiSuperSeri = {
             }
 
             const teamData = teamDoc.data();
-            const rosa = teamData.rosa || [];
+            const players = teamData.players || [];
 
             // Trova il giocatore
-            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            const playerIndex = players.findIndex(p => p.id === playerId);
             if (playerIndex === -1) {
                 return { success: false, error: 'Giocatore non trovato nella rosa' };
             }
 
-            const player = rosa[playerIndex];
+            const player = players[playerIndex];
             const isIcona = player.abilities && player.abilities.includes('Icona');
             const livelloAttuale = player.currentLevel || player.level || 1;
             const maxLevel = isIcona ? this.MAX_LEVEL_ICONA : this.MAX_LEVEL_GIOCATORE;
@@ -419,7 +419,7 @@ window.CreditiSuperSeri = {
 
             // Esegui potenziamento
             const nuovoLivello = livelloAttuale + 1;
-            rosa[playerIndex] = {
+            players[playerIndex] = {
                 ...player,
                 currentLevel: nuovoLivello,
                 level: nuovoLivello
@@ -428,7 +428,7 @@ window.CreditiSuperSeri = {
             const nuovoSaldo = saldoAttuale - costo;
 
             await updateDoc(teamDocRef, {
-                rosa: rosa,
+                players: players,
                 creditiSuperSeri: nuovoSaldo
             });
 
@@ -755,15 +755,15 @@ window.CreditiSuperSeri = {
             }
 
             const teamData = teamDoc.data();
-            const rosa = teamData.rosa || [];
+            const players = teamData.players || [];
 
             // Trova il giocatore
-            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            const playerIndex = players.findIndex(p => p.id === playerId);
             if (playerIndex === -1) {
                 return { success: false, error: 'Giocatore non trovato nella rosa' };
             }
 
-            const player = rosa[playerIndex];
+            const player = players[playerIndex];
             const currentAbilities = player.abilities || [];
 
             // Verifica che il giocatore abbia questa abilità
@@ -812,16 +812,16 @@ window.CreditiSuperSeri = {
             };
 
             // Se è negativa, incrementa il contatore
-            rosa[playerIndex] = {
+            players[playerIndex] = {
                 ...player,
                 abilities: nuoveAbilita
             };
 
             if (isNegative) {
-                rosa[playerIndex].negativeRemovedCount = negativeRemovedCount + 1;
+                players[playerIndex].negativeRemovedCount = negativeRemovedCount + 1;
             }
 
-            updateData.rosa = rosa;
+            updateData.players = players;
 
             await updateDoc(teamDocRef, updateData);
 
@@ -900,15 +900,15 @@ window.CreditiSuperSeri = {
             }
 
             const teamData = teamDoc.data();
-            const rosa = teamData.rosa || [];
+            const players = teamData.players || [];
 
             // Trova il giocatore
-            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            const playerIndex = players.findIndex(p => p.id === playerId);
             if (playerIndex === -1) {
                 return { success: false, error: 'Giocatore non trovato nella rosa' };
             }
 
-            const player = rosa[playerIndex];
+            const player = players[playerIndex];
             const currentAbilities = player.abilities || [];
 
             // Verifica che il giocatore non abbia già questa abilità
@@ -980,7 +980,7 @@ window.CreditiSuperSeri = {
 
             // Esegui assegnazione (abilità positiva + negative automatiche)
             const nuoveAbilita = [...currentAbilities, abilityName, ...negativeAbilities];
-            rosa[playerIndex] = {
+            players[playerIndex] = {
                 ...player,
                 abilities: nuoveAbilita
             };
@@ -988,7 +988,7 @@ window.CreditiSuperSeri = {
             const nuovoSaldo = saldoAttuale - costo;
 
             await updateDoc(teamDocRef, {
-                rosa: rosa,
+                players: players,
                 creditiSuperSeri: nuovoSaldo
             });
 
@@ -1257,14 +1257,14 @@ window.CreditiSuperSeri = {
             }
 
             const teamData = teamDoc.data();
-            const rosa = teamData.rosa || [];
+            const players = teamData.players || [];
 
-            const playerIndex = rosa.findIndex(p => p.id === playerId);
+            const playerIndex = players.findIndex(p => p.id === playerId);
             if (playerIndex === -1) {
                 return { success: false, error: 'Giocatore non trovato' };
             }
 
-            const player = rosa[playerIndex];
+            const player = players[playerIndex];
 
             // Solo per Icone
             if (!this.isIcona(player)) {
@@ -1283,12 +1283,12 @@ window.CreditiSuperSeri = {
                 return { success: true, abilitaRimosse: [], message: 'Nessuna abilità da rimuovere' };
             }
 
-            rosa[playerIndex] = {
+            players[playerIndex] = {
                 ...player,
                 abilities: nuoveAbilita
             };
 
-            await updateDoc(teamDocRef, { rosa: rosa });
+            await updateDoc(teamDocRef, { players: players });
 
             // Aggiorna anche la formazione
             if (teamData.formation?.titolari) {
@@ -1327,11 +1327,11 @@ window.CreditiSuperSeri = {
 
             for (const teamDoc of teamsSnapshot.docs) {
                 const teamData = teamDoc.data();
-                const rosa = teamData.rosa || [];
+                const players = teamData.players || [];
                 let modificato = false;
 
-                for (let i = 0; i < rosa.length; i++) {
-                    const player = rosa[i];
+                for (let i = 0; i < players.length; i++) {
+                    const player = players[i];
 
                     if (this.isIcona(player)) {
                         const iconaId = player.id || player.iconaId;
@@ -1342,7 +1342,7 @@ window.CreditiSuperSeri = {
                         const rimosse = currentAbilities.filter(a => !consentite.includes(a));
 
                         if (rimosse.length > 0) {
-                            rosa[i] = { ...player, abilities: nuoveAbilita };
+                            players[i] = { ...player, abilities: nuoveAbilita };
                             modificato = true;
                             abilitaRimosseTotali += rimosse.length;
                             console.log(`[${teamData.teamName}] Icona ${player.name}: rimosse ${rimosse.join(', ')}`);
@@ -1353,13 +1353,13 @@ window.CreditiSuperSeri = {
 
                 if (modificato) {
                     const teamDocRef = doc(db, TEAMS_PATH, teamDoc.id);
-                    await updateDoc(teamDocRef, { rosa: rosa });
+                    await updateDoc(teamDocRef, { players: players });
 
                     // Aggiorna anche formazione
                     if (teamData.formation?.titolari) {
                         const titolari = teamData.formation.titolari.map(t => {
-                            const rosaPlayer = rosa.find(r => r.id === t.id);
-                            return rosaPlayer ? { ...t, abilities: rosaPlayer.abilities } : t;
+                            const matchedPlayer = players.find(r => r.id === t.id);
+                            return matchedPlayer ? { ...t, abilities: matchedPlayer.abilities } : t;
                         });
                         await updateDoc(teamDocRef, { 'formation.titolari': titolari });
                     }

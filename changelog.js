@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.0',
+    currentVersion: '2.2.1',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,26 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.1',
+            date: '2025-12-16',
+            time: '22:00',
+            title: 'Floating Alert Partite + Miglioramenti UI',
+            changes: [
+                { text: 'NUOVO: Floating alert prossima partita in alto a sinistra con countdown', adminOnly: false },
+                { text: 'Alert mostra loghi squadre, media rosa e timer fino alle 20:30', adminOnly: false },
+                { text: 'Alert minimizzabile con click - da ridotto mostra solo icona competizione', adminOnly: false },
+                { text: 'NUOVO: Calendario completo con menu a scomparsa (accordion) per ogni giornata', adminOnly: false },
+                { text: 'La giornata corrente si apre automaticamente', adminOnly: false },
+                { text: 'Indicazione "(tua partita)" sulla giornata in cui giochi', adminOnly: false },
+                { text: 'Nome squadra ora centrato nel box della dashboard', adminOnly: false },
+                { text: 'FIX: Bottone statistiche non copre piu i nomi giocatori in PWA', adminOnly: false },
+                { text: 'FIX: Sponsor e Media ora assegnano crediti al budget correttamente', adminOnly: false },
+                { text: 'FIX: La pagina mantiene la schermata corrente dopo un refresh', adminOnly: false },
+                { text: 'FIX: Alla riapertura della PWA si torna alla dashboard (non all\'ultima schermata)', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.0',
             date: '2025-12-16',

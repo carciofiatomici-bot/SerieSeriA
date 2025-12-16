@@ -2264,6 +2264,11 @@ body {
         z-index: 9998;
         pointer-events: none;
     }
+
+    /* Fix bottone stats che copre nome giocatore in gestione rosa */
+    .player-card-header {
+        padding-right: 3rem !important;
+    }
 }
 
 /* ===================== NOTCH-SPECIFIC LAYOUTS ===================== */
@@ -2773,6 +2778,11 @@ html, body {
     main {
         /* Aggiungi padding extra in basso per compensare */
         padding-bottom: max(80px, calc(var(--safe-bottom, 0px) + 60px));
+    }
+
+    /* Fix bottone stats che copre nome giocatore in gestione rosa (mobile) */
+    .player-card-header {
+        padding-right: 3rem !important;
     }
 }
 

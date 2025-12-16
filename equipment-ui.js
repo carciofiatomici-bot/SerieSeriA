@@ -226,7 +226,8 @@ window.EquipmentUI = {
             }
 
             // Ricarica dati e aggiorna modal
-            await loadTeamDataFromFirestore();
+            const mode = localStorage.getItem('fanta_squadra_mode') || 'rosa';
+            await loadTeamDataFromFirestore(currentTeamId, mode);
             this.refreshModal();
 
             // Aggiorna dashboard
@@ -297,7 +298,8 @@ window.EquipmentUI = {
             }
 
             // Ricarica dati e aggiorna modal
-            await loadTeamDataFromFirestore();
+            const mode = localStorage.getItem('fanta_squadra_mode') || 'rosa';
+            await loadTeamDataFromFirestore(currentTeamId, mode);
             this.refreshModal();
 
             // Aggiorna dashboard

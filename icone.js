@@ -22,7 +22,7 @@ window.TYPE_TECNICA = TYPE_TECNICA;
 window.TYPE_VELOCITA = TYPE_VELOCITA;
 window.CAPTAIN_PLACEHOLDER_URL = CAPTAIN_PLACEHOLDER_URL;
 
-// Nota: Il livello base (p.level) per tutte le icone è fissato a 12.
+// Nota: Il livello base (p.level) per tutte le icone e fissato a 10.
 // Il COSTO è stato AZZERATO (0).
 
 /**
@@ -39,7 +39,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 28,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Croccante.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'Fatto d\'acciaio']
@@ -54,7 +54,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 26,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/shikanto.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'Amici di panchina']
@@ -69,7 +69,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 30,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cap.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'Calcolo delle probabilita']
@@ -84,7 +84,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 25,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/simone.jpg',
         type: TYPE_VELOCITA,
         abilities: ['Icona', 'Parata Efficiente']
@@ -99,7 +99,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 24,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/dappino.png',
         type: TYPE_TECNICA,
         abilities: ['Icona']
@@ -114,7 +114,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 27,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/blatta.jpg',
         type: TYPE_VELOCITA,
         abilities: ['Icona', 'Scheggia impazzita']
@@ -129,7 +129,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 29,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/antony.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Avanti un altro']
@@ -144,7 +144,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 23,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/gladio.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Continua a provare']
@@ -159,7 +159,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 25,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/amedemo.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Tiro Dritto']
@@ -174,7 +174,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 31,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/elficario.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona']
@@ -189,7 +189,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 28,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/luca.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Contrasto di gomito']
@@ -204,7 +204,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 25,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mel.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'Assist-man']
@@ -219,7 +219,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 27,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mark%20Falco.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Osservatore']
@@ -234,7 +234,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 29,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/sandro.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'Relax']
@@ -249,7 +249,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 26,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Fosco.jpg',
         type: TYPE_TECNICA,
         abilities: ['Icona', 'L\'uomo in piu']
@@ -264,7 +264,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         age: 24,
         cost: 0,
         isCaptain: true,
-        level: 12,
+        level: 10,
         photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cocco.jpg',
         type: TYPE_POTENZA,
         abilities: ['Icona', 'Stazionario']

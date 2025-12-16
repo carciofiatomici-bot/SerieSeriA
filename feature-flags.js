@@ -528,8 +528,12 @@ window.FeatureFlags = {
             // Avvia listener real-time per aggiornamenti immediati
             this.startRealtimeListener();
             console.log("Feature Flags inizializzati:", this.getEnabledFlags());
+            // Emetti evento per notificare che i flag sono pronti
+            document.dispatchEvent(new CustomEvent('featureFlagsLoaded'));
         } catch (error) {
             console.warn("Impossibile caricare feature flags, uso defaults:", error);
+            // Emetti comunque l'evento per sbloccare l'UI con i defaults
+            document.dispatchEvent(new CustomEvent('featureFlagsLoaded'));
         }
     },
 

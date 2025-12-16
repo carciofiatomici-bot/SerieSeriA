@@ -96,7 +96,8 @@ window.CoppaConstants = {
      * @returns {number}
      */
     calculateByes(numTeams) {
-        const nextPow2 = this.nextPowerOf2(numTeams);
+        // Usa riferimento esplicito per evitare problemi di contesto this quando destrutturato
+        const nextPow2 = window.CoppaConstants.nextPowerOf2(numTeams);
         return nextPow2 - numTeams;
     }
 };

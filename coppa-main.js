@@ -11,6 +11,20 @@ window.CoppaMain = {
      */
     async generateCupSchedule() {
         try {
+            // Verifica se la coppa e' in corso (ci sono partite giocate)
+            const existingBracket = await window.CoppaSchedule.loadCupSchedule();
+            if (existingBracket && existingBracket.rounds) {
+                const playedMatches = existingBracket.rounds.reduce((count, round) => {
+                    return count + (round.matches?.filter(m =>
+                        m.leg1Result || m.leg2Result || m.result
+                    ).length || 0);
+                }, 0);
+
+                if (playedMatches > 0) {
+                    throw new Error(`Impossibile generare un nuovo calendario: la coppa e' in corso (${playedMatches} partite giocate). Termina o resetta prima la coppa attuale.`);
+                }
+            }
+
             // Ottieni le squadre iscritte alla coppa
             const participants = await window.CoppaSchedule.getCupParticipants();
 

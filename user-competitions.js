@@ -70,34 +70,29 @@ window.UserCompetitions = {
                 }
             }
 
-            // Carica i dati delle squadre per la prossima partita (livelli medi)
+            // Carica i dati di TUTTE le squadre per classifica e prossima partita
             let teamsData = {};
-            if (nextMatch) {
-                const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+            const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
 
-                // Carica dati squadra casa (con cache)
-                let homeTeamData = cache?.get('team', nextMatch.homeId);
-                if (!homeTeamData) {
-                    const homeTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.homeId);
-                    const homeTeamSnap = await getDoc(homeTeamRef);
-                    if (homeTeamSnap.exists()) {
-                        homeTeamData = homeTeamSnap.data();
-                        cache?.set('team', nextMatch.homeId, homeTeamData, cache.TTL.TEAM_DATA);
+            // Carica dati di tutte le squadre nella classifica (per mostrare media rosa)
+            if (standings.length > 0) {
+                const teamIds = standings.map(s => s.teamId);
+                await Promise.all(teamIds.map(async (teamId) => {
+                    let teamData = cache?.get('team', teamId);
+                    if (!teamData) {
+                        try {
+                            const teamRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+                            const teamSnap = await getDoc(teamRef);
+                            if (teamSnap.exists()) {
+                                teamData = teamSnap.data();
+                                cache?.set('team', teamId, teamData, cache.TTL.TEAM_DATA);
+                            }
+                        } catch (e) {
+                            console.warn('Errore caricamento team:', teamId, e);
+                        }
                     }
-                }
-                if (homeTeamData) teamsData[nextMatch.homeId] = homeTeamData;
-
-                // Carica dati squadra trasferta (con cache)
-                let awayTeamData = cache?.get('team', nextMatch.awayId);
-                if (!awayTeamData) {
-                    const awayTeamRef = doc(db, TEAMS_COLLECTION_PATH, nextMatch.awayId);
-                    const awayTeamSnap = await getDoc(awayTeamRef);
-                    if (awayTeamSnap.exists()) {
-                        awayTeamData = awayTeamSnap.data();
-                        cache?.set('team', nextMatch.awayId, awayTeamData, cache.TTL.TEAM_DATA);
-                    }
-                }
-                if (awayTeamData) teamsData[nextMatch.awayId] = awayTeamData;
+                    if (teamData) teamsData[teamId] = teamData;
+                }));
             }
 
             // Renderizza
@@ -130,7 +125,7 @@ window.UserCompetitions = {
 
             // Funzione per ottenere logo grande
             const getLargeLogoHtml = (teamId) => {
-                const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
+                const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
                 return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
             };
 
@@ -198,6 +193,7 @@ window.UserCompetitions = {
                         <thead class="bg-gray-800">
                             <tr>
                                 <th class="py-2 px-3 text-left text-gray-400">#</th>
+                                <th class="py-2 px-2 text-center text-gray-400" title="Media Livello Rosa">Lv</th>
                                 <th class="py-2 px-3 text-left text-gray-400">Squadra</th>
                                 <th class="py-2 px-3 text-center text-gray-400">Pt</th>
                                 <th class="py-2 px-3 text-center text-gray-400">G</th>
@@ -217,9 +213,18 @@ window.UserCompetitions = {
                 const goalDiff = (team.goalsFor || 0) - (team.goalsAgainst || 0);
                 const diffColor = goalDiff > 0 ? 'text-green-400' : goalDiff < 0 ? 'text-red-400' : 'text-gray-400';
 
+                // Calcola media livello rosa
+                const teamFullData = teamsData[team.teamId];
+                let avgLevel = '-';
+                if (teamFullData?.players?.length > 0) {
+                    const totalLevel = teamFullData.players.reduce((sum, p) => sum + (p.currentLevel || p.level || 1), 0);
+                    avgLevel = (totalLevel / teamFullData.players.length).toFixed(1);
+                }
+
                 html += `
                     <tr class="${rowClass}">
                         <td class="py-2 px-3 ${textClass}">${index + 1}</td>
+                        <td class="py-2 px-2 text-center text-cyan-400 text-xs font-semibold">${avgLevel}</td>
                         <td class="py-2 px-3 ${textClass}">${team.teamName}</td>
                         <td class="py-2 px-3 text-center font-bold ${textClass}">${team.points || 0}</td>
                         <td class="py-2 px-3 text-center text-gray-400">${team.gamesPlayed || 0}</td>
@@ -254,16 +259,29 @@ window.UserCompetitions = {
                 </div>
             `;
         } else {
-            html += `<div class="max-h-96 overflow-y-auto space-y-3">`;
+            // Trova la giornata corrente (prima non completata)
+            const currentRoundIndex = scheduleData.findIndex(r => r.matches.some(m => m.result === null));
 
-            scheduleData.forEach(round => {
+            html += `<div class="max-h-96 overflow-y-auto space-y-2" id="calendar-accordion">`;
+
+            scheduleData.forEach((round, index) => {
                 const roundComplete = round.matches.every(m => m.result !== null);
                 const statusIcon = roundComplete ? '✅' : '⏳';
+                const hasMyMatch = round.matches.some(m => m.homeId === currentTeamId || m.awayId === currentTeamId);
+                // Apri di default solo la giornata corrente
+                const isOpen = index === currentRoundIndex;
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
-                        <p class="text-teal-300 font-bold mb-2">${statusIcon} Giornata ${round.round}</p>
-                        <div class="space-y-1">
+                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
+                        <button class="calendar-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer"
+                                data-round="${round.round}" aria-expanded="${isOpen}">
+                            <span class="text-teal-300 font-bold flex items-center gap-2">
+                                ${statusIcon} Giornata ${round.round}
+                                ${hasMyMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
+                            </span>
+                            <span class="calendar-round-arrow text-teal-400 transition-transform ${isOpen ? 'rotate-180' : ''}">▼</span>
+                        </button>
+                        <div class="calendar-round-content ${isOpen ? '' : 'hidden'} px-3 pb-3 space-y-1">
                 `;
 
                 round.matches.forEach(match => {
@@ -292,6 +310,22 @@ window.UserCompetitions = {
         html += `</div>`;
 
         container.innerHTML = html;
+
+        // Aggiungi listener per accordion dopo il rendering
+        setTimeout(() => {
+            document.querySelectorAll('.calendar-round-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const arrow = header.querySelector('.calendar-round-arrow');
+                    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+
+                    // Toggle stato
+                    header.setAttribute('aria-expanded', !isExpanded);
+                    content.classList.toggle('hidden');
+                    arrow.classList.toggle('rotate-180');
+                });
+            });
+        }, 100);
     },
 
     // ================================================================
@@ -374,7 +408,7 @@ window.UserCompetitions = {
 
         // Funzione per ottenere logo grande
         const getLargeLogoHtml = (teamId) => {
-            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
+            const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
         };
 
@@ -640,7 +674,7 @@ window.UserCompetitions = {
 
         // Funzione per ottenere logo grande
         const getLargeLogoHtml = (teamId) => {
-            const url = window.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
+            const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover mx-auto">`;
         };
 

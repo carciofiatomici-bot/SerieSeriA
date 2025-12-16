@@ -13,7 +13,19 @@ window.DashboardFeatures = {
         this.updateFeatureButtons();
         this.setupListeners();
         this.setupFlagChangeListener();
+        this.setupFlagsLoadedListener();
         console.log("Dashboard Features inizializzato");
+    },
+
+    /**
+     * Ascolta quando i feature flags sono completamente caricati
+     * Risolve il problema PWA dove i bottoni non si mostrano al primo caricamento
+     */
+    setupFlagsLoadedListener() {
+        document.addEventListener('featureFlagsLoaded', () => {
+            console.log("Feature Flags caricati, aggiorno bottoni dashboard");
+            this.updateFeatureButtons();
+        });
     },
 
     /**
@@ -354,6 +366,8 @@ window.DashboardFeatures = {
                         return;
                     }
 
+                    // Salva schermata per persistenza al refresh
+                    window.InterfacciaNavigation?.saveLastScreen?.(stadiumContent.id);
                     window.showScreen(stadiumContent);
                     await window.StadiumUI.init(teamId, teamData);
                 } else {
@@ -379,6 +393,8 @@ window.DashboardFeatures = {
                         return;
                     }
 
+                    // Salva schermata per persistenza al refresh
+                    window.InterfacciaNavigation?.saveLastScreen?.(privateLeaguesContent.id);
                     window.showScreen(privateLeaguesContent);
                     await window.PrivateLeaguesUI.init(teamId, teamData);
                 } else {

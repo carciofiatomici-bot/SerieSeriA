@@ -41,7 +41,9 @@
 
         if (!lastSpinDate) return true; // Mai girato
 
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        // Usa data locale (reset alle 00:00 ora locale dell'utente)
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         return lastSpinDate !== today;
     }
 
@@ -114,7 +116,9 @@
             }
 
             const teamData = teamDoc.data();
-            const today = new Date().toISOString().split('T')[0];
+            // Usa data locale (coerente con canSpinToday)
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const wheelData = teamData.dailyWheel || { totalSpins: 0, history: [] };
 
             // Prepara aggiornamento
@@ -141,10 +145,10 @@
 
                 case 'css':
                     // Aggiungi CSS (Crediti Super Seri)
-                    // I CSS sono gestiti tramite achievements/completedAchievements
-                    // Per ora aggiungiamo un campo dedicato
-                    const currentCSS = teamData.cssBonus || 0;
-                    updates.cssBonus = currentCSS + prize.value;
+                    // Usa il campo creditiSuperSeri come il modulo CreditiSuperSeri
+                    const currentCSS = teamData.creditiSuperSeri || 0;
+                    updates.creditiSuperSeri = currentCSS + prize.value;
+                    console.log('[DailyWheel] CSS premio - Saldo attuale:', currentCSS, '+ Premio:', prize.value, '= Nuovo:', currentCSS + prize.value);
                     break;
 
                 case 'object':
