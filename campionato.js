@@ -88,13 +88,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await window.ChampionshipRewards.applySeasonEndRewards(standings);
             const { totalTeams, levelUps } = result;
-            
+
+            // Decrementa contratti di tutti i giocatori (se sistema contratti attivo)
+            let contractsMessage = '';
+            if (window.Contracts?.isEnabled()) {
+                try {
+                    const contractsResult = await window.Contracts.decrementAllContracts();
+                    const totalExpired = contractsResult.results.reduce((sum, r) => sum + r.expired.length, 0);
+                    if (totalExpired > 0) {
+                        contractsMessage = ` ${totalExpired} giocatori con contratto scaduto venduti.`;
+                    }
+                } catch (contractError) {
+                    console.error('[Campionato] Errore decremento contratti:', contractError);
+                }
+            }
+
             await deleteDoc(scheduleDocRef);
             // Resetta lastAutoSimulatedDate a 0
             await setDoc(configDocRef, { isSeasonOver: true, isDraftOpen: false, isMarketOpen: false, lastAutoSimulatedDate: 0 }, { merge: true });
-            
+
             displayConfigMessage(
-                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${levelUps} allenatori sono saliti di livello (20% chance). Calendario eliminato.`, 
+                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${levelUps} allenatori sono saliti di livello (20% chance).${contractsMessage} Calendario eliminato.`,
                 'success'
             );
             

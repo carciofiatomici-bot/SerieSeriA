@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.0.0',
+    currentVersion: '2.2.0',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,38 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.0',
+            date: '2025-12-16',
+            time: '20:00',
+            title: 'Ruota della Fortuna + Auto-Formazione + Potenziale',
+            changes: [
+                { text: 'NUOVO: Ruota della Fortuna Giornaliera - gira ogni giorno per vincere CS, CSS o Oggetti!', adminOnly: false },
+                { text: 'Premi ruota: 5/10/25/50 CS, 1 CSS, Oggetto random', adminOnly: false },
+                { text: 'NUOVO: Sistema Auto-Formazione - schiera automaticamente la formazione migliore', adminOnly: false },
+                { text: 'NUOVO: Giocatori Base Gratuiti nel Mercato - acquista P, D, C, A di livello 1 a 0 CS', adminOnly: false },
+                { text: 'I Giocatori Base non hanno cooldown e possono essere acquistati a volonta', adminOnly: false },
+                { text: 'NUOVO: Potenziale visibile nella Gestione Rosa (Dilettante, Professionista, Fuoriclasse, Leggenda, GOAT)', adminOnly: false },
+                { text: 'NUOVO: Potenziale visibile anche nella lista Draft per scegliere meglio i giocatori', adminOnly: false },
+                { text: 'Nuovo limite livello massimo: Giocatori Base fino a Lv.25, Icone fino a Lv.30', adminOnly: false },
+                { text: 'NUOVO: Alert sul bottone Gestione Formazione se la formazione puo essere migliorata', adminOnly: false },
+                { text: 'NUOVO: Alert sul bottone Gestione Rosa se ci sono contratti in scadenza', adminOnly: false },
+                { text: 'NUOVO: Limite massimo contratti a 5 anni', adminOnly: false },
+                { text: 'Ruoli nella Gestione Rosa ora separati per colore (P blu, D verde, C arancione, A rosso)', adminOnly: false },
+                { text: 'Nuove icone ruoli: Centrocampisti ora con pallone, Attaccanti con scarpa', adminOnly: false },
+                { text: 'NUOVO: Pannello Opzioni Avanzate nelle Utilita Admin (bottone ingranaggio)', adminOnly: true },
+                { text: 'NUOVO: Bottoni gestione contratti: +1, -1, Reset a 1 per tutti i giocatori', adminOnly: true },
+                { text: 'NUOVO: Campo Contratto nel modal modifica giocatore', adminOnly: true },
+                { text: 'NUOVO: Bottone Set Livello Icone per cambiare livello a tutte le Icone', adminOnly: true },
+                { text: 'Categorie Feature Flags ora collassabili e chiuse di default', adminOnly: true },
+                { text: 'Box Annulla Competizioni spostato nelle Opzioni Avanzate', adminOnly: true },
+                { text: 'NUOVO: Bottone "Assegna Giocatore Casuale" nel Draft Admin - assegna un giocatore random', adminOnly: true },
+                { text: 'NUOVO: Pannello Configurazione Ruota Fortuna - modifica premi e probabilita', adminOnly: true },
+                { text: 'Bottone Avanza Turno spostato sotto il toggle Draft Attivo', adminOnly: true },
+                { text: 'Bottone Changelog ora visibile a destra del Tutorial in dashboard', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.0.0',
             date: '2025-12-14',

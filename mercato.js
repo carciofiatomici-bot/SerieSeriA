@@ -45,6 +45,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let availablePlayersCache = [];
     let currentBudgetCache = 0;
 
+    // === GIOCATORI BASE GRATUITI ===
+    const BASE_PLAYER_NAMES = [
+        'Rossi', 'Bianchi', 'Ferrari', 'Russo', 'Romano', 'Gallo', 'Costa', 'Fontana',
+        'Conti', 'Esposito', 'Ricci', 'Bruno', 'De Luca', 'Moretti', 'Marino', 'Greco',
+        'Barbieri', 'Lombardi', 'Giordano', 'Colombo', 'Mancini', 'Longo', 'Leone', 'Martinelli'
+    ];
+    const BASE_PLAYER_FIRST_NAMES = [
+        'Marco', 'Luca', 'Andrea', 'Giuseppe', 'Giovanni', 'Paolo', 'Antonio', 'Francesco',
+        'Alessandro', 'Matteo', 'Lorenzo', 'Davide', 'Simone', 'Fabio', 'Stefano', 'Roberto'
+    ];
+    const PLAYER_TYPES = ['Potenza', 'Tecnica', 'Velocita'];
+    const ROLE_LABELS = { P: 'Portiere', D: 'Difensore', C: 'Centrocampista', A: 'Attaccante' };
+    const ROLE_COLORS = { P: 'blue', D: 'green', C: 'yellow', A: 'red' };
+
     // === SISTEMA OGGETTI ===
     // Tab attivo: 'players' o 'objects'
     let activeMarketTab = 'players';
@@ -80,6 +94,160 @@ document.addEventListener('DOMContentLoaded', () => {
         'attack': 'Attacco',
         'defense': 'Difesa',
         'both': 'Entrambi'
+    };
+
+    /**
+     * Genera un nome casuale per un giocatore base
+     */
+    const generateBasePlayerName = () => {
+        const firstName = BASE_PLAYER_FIRST_NAMES[Math.floor(Math.random() * BASE_PLAYER_FIRST_NAMES.length)];
+        const lastName = BASE_PLAYER_NAMES[Math.floor(Math.random() * BASE_PLAYER_NAMES.length)];
+        return `${firstName} ${lastName}`;
+    };
+
+    /**
+     * Genera un tipo casuale per un giocatore base
+     */
+    const generateBasePlayerType = () => {
+        return PLAYER_TYPES[Math.floor(Math.random() * PLAYER_TYPES.length)];
+    };
+
+    /**
+     * Genera un'eta casuale per un giocatore base (18-25)
+     */
+    const generateBasePlayerAge = () => {
+        return Math.floor(Math.random() * 8) + 18; // 18-25
+    };
+
+    /**
+     * Renderizza la sezione giocatori base gratuiti
+     */
+    const renderBasePlayersSection = (isRosaFull, disableAcquisition) => {
+        const roles = ['P', 'D', 'C', 'A'];
+
+        return `
+            <div class="mt-4 p-4 bg-gray-900 rounded-lg border-2 border-green-500">
+                <h3 class="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
+                    <span>🆓</span> Giocatori Base Gratuiti
+                </h3>
+                <p class="text-xs text-gray-400 mb-3">Acquista giocatori di livello 1 senza costo. Nessun cooldown.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    ${roles.map(role => {
+                        const colorClass = ROLE_COLORS[role];
+                        const canBuy = !isRosaFull && !disableAcquisition;
+                        return `
+                            <button data-role="${role}" data-action="buy-base-player"
+                                    ${canBuy ? '' : 'disabled'}
+                                    class="p-3 rounded-lg font-bold transition duration-150 border-2
+                                           ${canBuy
+                                               ? `bg-${colorClass}-900/50 border-${colorClass}-500 text-${colorClass}-300 hover:bg-${colorClass}-800`
+                                               : 'bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed'}">
+                                <div class="text-2xl mb-1">${role === 'P' ? '🧤' : role === 'D' ? '🛡️' : role === 'C' ? '⚽' : '👟'}</div>
+                                <div class="text-sm">${ROLE_LABELS[role]}</div>
+                                <div class="text-xs text-green-400 mt-1">0 CS</div>
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    /**
+     * Setup event listeners per i bottoni giocatori base
+     */
+    const setupBasePlayersListeners = () => {
+        const basePlayersSection = document.getElementById('base-players-section');
+        if (!basePlayersSection) return;
+
+        basePlayersSection.querySelectorAll('[data-action="buy-base-player"]').forEach(btn => {
+            btn.addEventListener('click', handleBuyBasePlayer);
+        });
+    };
+
+    /**
+     * Gestisce l'acquisto di un giocatore base gratuito
+     */
+    const handleBuyBasePlayer = async (event) => {
+        const target = event.target.closest('[data-action="buy-base-player"]');
+        if (!target || target.disabled) return;
+
+        const role = target.dataset.role;
+        const roleName = ROLE_LABELS[role];
+
+        displayMessage(`Acquisto ${roleName} Base in corso...`, 'info');
+        target.disabled = true;
+
+        try {
+            const { doc, getDoc, updateDoc, runTransaction } = firestoreTools;
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+
+            const result = await runTransaction(db, async (transaction) => {
+                const teamDoc = await transaction.get(teamDocRef);
+
+                if (!teamDoc.exists()) {
+                    throw new Error("Squadra non trovata.");
+                }
+
+                const teamData = teamDoc.data();
+                const currentPlayers = teamData.players || [];
+
+                // Controllo limite rosa
+                const currentRosaCount = getPlayerCountExcludingIcona(currentPlayers);
+                if (currentRosaCount >= MAX_ROSA_PLAYERS) {
+                    throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto.`);
+                }
+
+                // Genera giocatore base
+                const playerId = `base_${role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const playerName = generateBasePlayerName();
+                const playerType = generateBasePlayerType();
+                const playerAge = generateBasePlayerAge();
+
+                let playerForSquad = {
+                    id: playerId,
+                    name: playerName,
+                    role: role,
+                    age: playerAge,
+                    cost: 0,
+                    level: 1,
+                    type: playerType,
+                    abilities: [],
+                    isCaptain: false,
+                    isBasePlayer: true // Flag per identificare giocatori base
+                };
+
+                // Inizializza contratto se sistema contratti attivo
+                if (window.Contracts?.isEnabled()) {
+                    playerForSquad = window.Contracts.initializeContract(playerForSquad);
+                }
+
+                // Genera secretMaxLevel per giocatori base (sistema livello massimo segreto)
+                if (window.PlayerExp?.isSubjectToSecretMaxLevel(playerForSquad)) {
+                    playerForSquad.secretMaxLevel = window.PlayerExp.generateSecretMaxLevel(1);
+                }
+
+                // Aggiorna la squadra (SENZA toccare il cooldown - i giocatori base non hanno cooldown)
+                transaction.update(teamDocRef, {
+                    players: [...currentPlayers, playerForSquad]
+                });
+
+                return { playerName, playerType, role };
+            });
+
+            const { playerName, playerType } = result;
+
+            displayMessage(`${playerName} (${roleName} Lv.1, ${playerType}) aggiunto alla rosa!`, 'success');
+
+            // Ricarica il pannello
+            renderUserMercatoPanel();
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+
+        } catch (error) {
+            console.error("Errore acquisto giocatore base:", error);
+            displayMessage(`Errore: ${error.message}`, 'error');
+            target.disabled = false;
+        }
     };
 
     /**
@@ -569,6 +737,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <!-- Container Giocatori -->
                 <div id="market-players-container" class="${activeMarketTab !== 'players' && showObjectsTab ? 'hidden' : ''}">
+                    <!-- Sezione Giocatori Base Gratuiti (sempre visibile se mercato aperto) -->
+                    <div id="base-players-section">
+                        ${isMarketOpen ? renderBasePlayersSection(isRosaFull, !isMarketOpen) : ''}
+                    </div>
+
                     <div id="available-market-players-list" class="mt-6 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
                         <p class="text-gray-500 text-center">Caricamento giocatori...</p>
                     </div>
@@ -587,16 +760,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusBox = document.getElementById('mercato-status-box');
             const playersListContainer = document.getElementById('available-market-players-list');
 
-            if (!isMarketOpen || isCooldownActive || isRosaFull) {
-
+            if (!isMarketOpen || isRosaFull) {
+                 // Mercato chiuso o rosa piena - blocca tutto
                  statusBox.textContent = mainMessage;
                  statusBox.classList.add('border-red-500', 'bg-red-900', 'text-red-400');
                  playersListContainer.innerHTML = secondaryMessageHtml;
 
-                 if (isCooldownActive) {
-                     // Avvia il cronometro
-                     startAcquisitionCountdown(lastAcquisitionTimestamp);
+                 // Carica comunque gli oggetti se il feature flag è attivo
+                 if (showObjectsTab) {
+                     await loadMarketObjects(budgetRimanente, teamData);
                  }
+                 return;
+            }
+
+            if (isCooldownActive) {
+                 // Cooldown attivo - blocca solo i giocatori del mercato, NON i giocatori base
+                 statusBox.textContent = mainMessage;
+                 statusBox.classList.add('border-yellow-500', 'bg-yellow-900', 'text-yellow-400');
+                 playersListContainer.innerHTML = secondaryMessageHtml;
+
+                 // Avvia il cronometro
+                 startAcquisitionCountdown(lastAcquisitionTimestamp);
+
+                 // Setup listener per giocatori base (funzionano anche con cooldown!)
+                 setupBasePlayersListeners();
 
                  // Carica comunque gli oggetti se il feature flag è attivo
                  if (showObjectsTab) {
@@ -711,6 +898,9 @@ document.addEventListener('DOMContentLoaded', () => {
                  setupMarketFilterListeners();
             }
 
+            // Setup event listener per giocatori base
+            setupBasePlayersListeners();
+
             // Carica anche gli oggetti se il feature flag e' attivo
             if (showObjectsTab) {
                 await loadMarketObjects(budgetRimanente, teamData);
@@ -796,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Nel mercato il level e' gia fisso, non serve generarlo
                     const finalLevel = playerLevel;
 
-                    const playerForSquad = {
+                    let playerForSquad = {
                         id: playerId,
                         name: playerName,
                         role: playerRole,
@@ -807,6 +997,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         abilities: playerAbilities,
                         isCaptain: false
                     };
+
+                    // Inizializza contratto se sistema contratti attivo
+                    if (window.Contracts?.isEnabled()) {
+                        playerForSquad = window.Contracts.initializeContract(playerForSquad);
+                    }
+
+                    // Genera secretMaxLevel per giocatori normali (sistema livello massimo segreto)
+                    if (window.PlayerExp?.isSubjectToSecretMaxLevel(playerForSquad)) {
+                        playerForSquad.secretMaxLevel = window.PlayerExp.generateSecretMaxLevel(finalLevel);
+                    }
 
                     const acquisitionTime = new Date().getTime();
 

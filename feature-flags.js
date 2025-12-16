@@ -435,6 +435,78 @@ window.FeatureFlags = {
                     <li>Solo il creatore puo simulare le partite</li>
                 </ul>
                 <p class="mt-2 text-purple-400">Sfida i tuoi amici in un mini-campionato esclusivo!</p>`
+        },
+        contracts: {
+            id: 'contracts',
+            name: 'Sistema Contratti',
+            description: 'I giocatori hanno contratti a tempo che scadono automaticamente',
+            icon: '📝',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Ogni giocatore normale acquisito ha un contratto di 1 anno</li>
+                    <li>A fine campionato tutti i contratti diminuiscono di 1</li>
+                    <li>Se il contratto arriva a 0, parte un timer di 48 ore</li>
+                    <li>Allo scadere del timer: vendita automatica (50% rimborso)</li>
+                    <li>Bottone "Prolunga Contratto" per rinnovare (+1 anno)</li>
+                    <li>Costo prolungamento: [100 + (livello x 10) + (abilita x 25)] / 2</li>
+                    <li>Il giocatore venduto finisce nel mercato</li>
+                    <li>Icone e giocatori Base (liv.1 gratuiti) sono esclusi</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">All'attivazione, viene assegnato contratto 1 a tutti i giocatori esistenti!</p>
+                <p class="mt-2 text-orange-400">Quando il timer e' attivo, il badge lampeggia con countdown!</p>`
+        },
+        adminViewSecretMaxLevel: {
+            id: 'adminViewSecretMaxLevel',
+            name: 'Admin: Vedi Livelli Max Segreti',
+            description: 'Permette agli admin di vedere i livelli massimi segreti dei giocatori',
+            icon: '🔓',
+            enabled: false,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Mostra il livello massimo segreto nella barra EXP</li>
+                    <li>Quando il giocatore e' al massimo, mostra "MAX LV. X"</li>
+                    <li>Quando non e' al massimo, mostra "(Max: X)" accanto alla barra</li>
+                    <li>Visibile SOLO agli admin</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Utile per debug e gestione della lega.</p>`
+        },
+        autoFormation: {
+            id: 'autoFormation',
+            name: 'Formazione Automatica',
+            description: 'Suggerimento AI della miglior formazione in base a livello, tipologia, abilita e infortuni',
+            icon: '🤖',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Bottone "Auto Formazione" nella Gestione Formazione</li>
+                    <li>Algoritmo che analizza livello, tipologia e abilita dei giocatori</li>
+                    <li>Esclude automaticamente i giocatori infortunati</li>
+                    <li>Suggerisce la formazione ottimale per la tua rosa</li>
+                    <li>Considera le sinergie tra giocatori e ruoli</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Lascia che l'AI ti aiuti a schierare la miglior formazione!</p>`
+        },
+
+        dailyWheel: {
+            id: 'dailyWheel',
+            name: 'Ruota della Fortuna',
+            description: 'Ruota giornaliera con premi CS, CSS e Oggetti',
+            icon: '🎡',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Un giro gratuito al giorno per ogni utente</li>
+                    <li>Premi possibili: 5/10/25/50 CS, 1 CSS, Oggetto random</li>
+                    <li>Bottone nella dashboard visibile solo se disponibile</li>
+                    <li>Animazione ruota con effetto visivo</li>
+                    <li>Storico premi vinti</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Gira la ruota ogni giorno per vincere premi!</p>`
         }
     },
 

@@ -162,6 +162,12 @@
         const progress = window.PlayerExp.getExpProgress(player);
         const maxLevel = window.PlayerExp.getMaxLevel(player);
 
+        // Verifica se admin puo' vedere il livello massimo segreto
+        const isAdmin = window.InterfacciaCore?.isAdmin?.() || false;
+        const adminCanViewSecret = isAdmin && window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');
+        const hasSecretMaxLevel = player.secretMaxLevel !== undefined && player.secretMaxLevel !== null;
+        const showSecretInfo = adminCanViewSecret && hasSecretMaxLevel;
+
         // Se al massimo livello
         if (progress.maxed || player.level >= maxLevel) {
             return `
@@ -182,6 +188,11 @@
 
         const animationClass = animated ? 'transition-all duration-500' : '';
 
+        // Info livello massimo segreto per admin
+        const secretMaxLevelInfo = showSecretInfo
+            ? `<span class="text-purple-400 ml-2" title="Livello massimo segreto">(Max: ${player.secretMaxLevel})</span>`
+            : '';
+
         return `
             <div class="exp-bar-container ${size === 'small' ? 'text-xs' : 'text-sm'}">
                 <div class="w-full bg-gray-700 rounded-full ${size === 'small' ? 'h-1.5' : 'h-2'} overflow-hidden">
@@ -190,7 +201,7 @@
                 </div>
                 ${showText ? `
                     <div class="flex justify-between mt-1 text-gray-400">
-                        <span>EXP: ${window.PlayerExp.formatExp(progress.current)} / ${window.PlayerExp.formatExp(progress.needed)}</span>
+                        <span>EXP: ${window.PlayerExp.formatExp(progress.current)} / ${window.PlayerExp.formatExp(progress.needed)}${secretMaxLevelInfo}</span>
                         <span>${progress.percentage}%</span>
                     </div>
                 ` : ''}

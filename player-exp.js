@@ -39,9 +39,13 @@
 
         // Limiti livello
         MAX_LEVEL_NORMAL: 20,
-        MAX_LEVEL_ICON: 25,
-        MAX_LEVEL_BASE: 5,          // Livello max giocatori base (iniziali)
+        MAX_LEVEL_ICON: 30,
+        MAX_LEVEL_BASE: 25,         // Livello max giocatori base (iniziali)
         MAX_LEVEL_COACH: 10,        // Livello max allenatore
+
+        // Livello massimo segreto (per giocatori normali)
+        SECRET_MAX_LEVEL_MIN: 10,   // Minimo livello segreto
+        SECRET_MAX_LEVEL_MAX: 25,   // Massimo livello segreto
 
         // EXP per azioni - getter dinamico
         get VALUES() {
@@ -85,11 +89,12 @@
     /**
      * Restituisce il livello massimo per un giocatore
      * @param {Object} player - Oggetto giocatore
-     * @returns {number} Livello massimo (5 per base, 20 normale, 25 icone)
+     * @returns {number} Livello massimo (25 per base, secretMaxLevel per normali, 30 icone)
      */
     function getMaxLevel(player) {
         // Verifica se il giocatore e un'icona
-        const isIcon = player.isIcon || player.icon || player.tipo === 'icona';
+        const isIcon = player.isIcon || player.icon || player.tipo === 'icona' ||
+                       (player.abilities && player.abilities.includes('Icona'));
         if (isIcon) return EXP_CONFIG.MAX_LEVEL_ICON;
 
         // Verifica se e un giocatore base (iniziale)
@@ -101,6 +106,12 @@
 
         if (isBase) return EXP_CONFIG.MAX_LEVEL_BASE;
 
+        // NUOVO: Se il giocatore ha un secretMaxLevel, usalo
+        if (player.secretMaxLevel !== undefined && player.secretMaxLevel !== null) {
+            return player.secretMaxLevel;
+        }
+
+        // Fallback per giocatori normali senza secretMaxLevel (legacy)
         return EXP_CONFIG.MAX_LEVEL_NORMAL;
     }
 
@@ -654,6 +665,141 @@
     }
 
     // ========================================
+    // SECRET MAX LEVEL SYSTEM
+    // ========================================
+
+    /**
+     * Verifica se un giocatore e' soggetto al sistema secretMaxLevel
+     * Esclude: Icone e giocatori Base (liv.1 con costo 0)
+     * @param {Object} player - Oggetto giocatore
+     * @param {Object} teamData - Dati squadra (opzionale, per verificare iconaId)
+     * @returns {boolean}
+     */
+    function isSubjectToSecretMaxLevel(player, teamData = null) {
+        if (!player) return false;
+
+        // Escludi Icone
+        const isIcona = (player.abilities && player.abilities.includes('Icona')) ||
+                        (teamData?.iconaId && player.id === teamData.iconaId) ||
+                        player.isIcon || player.icon || player.tipo === 'icona';
+        if (isIcona) return false;
+
+        // Escludi giocatori Base (livello 1 con costo 0)
+        const isBase = ((player.level || 1) === 1 && (player.cost || 0) === 0) ||
+                       player.isBase ||
+                       (player.id && /^[pdca]00[1-9]$/.test(player.id));
+        if (isBase) return false;
+
+        return true;
+    }
+
+    /**
+     * Genera un secretMaxLevel casuale per un giocatore
+     * Il valore sara' sempre >= al livello attuale del giocatore
+     * @param {number} currentLevel - Livello attuale del giocatore
+     * @returns {number} secretMaxLevel (10-25)
+     */
+    function generateSecretMaxLevel(currentLevel) {
+        const min = Math.max(EXP_CONFIG.SECRET_MAX_LEVEL_MIN, currentLevel || 1);
+        const max = EXP_CONFIG.SECRET_MAX_LEVEL_MAX;
+
+        // Usa getRandomInt se disponibile, altrimenti fallback
+        if (window.getRandomInt) {
+            return window.getRandomInt(min, max);
+        }
+        // Fallback
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    /**
+     * Applica secretMaxLevel a tutti i giocatori di una squadra che non ce l'hanno
+     * @param {string} teamId - ID della squadra
+     * @returns {Promise<{updated: number, skipped: number}>}
+     */
+    async function applySecretMaxLevelToTeam(teamId) {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('[PlayerExp] Firestore non disponibile per migrazione secretMaxLevel');
+            return { updated: 0, skipped: 0 };
+        }
+
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const db = window.db;
+
+        const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            return { updated: 0, skipped: 0 };
+        }
+
+        const teamData = teamDoc.data();
+        let updated = 0;
+        let skipped = 0;
+
+        const updatedPlayers = (teamData.players || []).map(player => {
+            // Solo giocatori normali senza secretMaxLevel
+            if (isSubjectToSecretMaxLevel(player, teamData) && player.secretMaxLevel === undefined) {
+                const currentLevel = player.level || 1;
+                updated++;
+                return {
+                    ...player,
+                    secretMaxLevel: generateSecretMaxLevel(currentLevel)
+                };
+            }
+            skipped++;
+            return player;
+        });
+
+        if (updated > 0) {
+            await updateDoc(teamDocRef, { players: updatedPlayers });
+            console.log(`[PlayerExp] SecretMaxLevel applicato a ${updated} giocatori della squadra ${teamData.teamName || teamId}`);
+        }
+
+        return { updated, skipped };
+    }
+
+    /**
+     * Applica secretMaxLevel a TUTTE le squadre
+     * Chiamata automatica al caricamento del modulo
+     * @returns {Promise<{totalUpdated: number, teamsProcessed: number}>}
+     */
+    async function applySecretMaxLevelToAllTeams() {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('[PlayerExp] Firestore non disponibile per migrazione secretMaxLevel');
+            return { totalUpdated: 0, teamsProcessed: 0 };
+        }
+
+        const { collection, getDocs } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const db = window.db;
+
+        try {
+            const teamsRef = collection(db, `artifacts/${appId}/public/data/teams`);
+            const teamsSnapshot = await getDocs(teamsRef);
+
+            let totalUpdated = 0;
+            let teamsProcessed = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const result = await applySecretMaxLevelToTeam(teamDoc.id);
+                totalUpdated += result.updated;
+                teamsProcessed++;
+            }
+
+            if (totalUpdated > 0) {
+                console.log(`[PlayerExp] SecretMaxLevel migrazione completata: ${totalUpdated} giocatori aggiornati in ${teamsProcessed} squadre`);
+            }
+
+            return { totalUpdated, teamsProcessed };
+
+        } catch (error) {
+            console.error('[PlayerExp] Errore migrazione secretMaxLevel:', error);
+            return { totalUpdated: 0, teamsProcessed: 0 };
+        }
+    }
+
+    // ========================================
     // UTILITY
     // ========================================
 
@@ -746,6 +892,12 @@
         migratePlayer,
         migrateTeam,
 
+        // Secret Max Level System
+        isSubjectToSecretMaxLevel,
+        generateSecretMaxLevel,
+        applySecretMaxLevelToTeam,
+        applySecretMaxLevelToAllTeams,
+
         // Utility
         getPlayersNearLevelUp,
         formatExp,
@@ -756,5 +908,21 @@
     };
 
     console.log('[OK] Modulo PlayerExp caricato.');
+
+    // Auto-migrazione secretMaxLevel al caricamento
+    // Eseguita una volta quando Firestore e' disponibile
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkAndMigrate = async () => {
+            if (window.db && window.firestoreTools) {
+                // Esegui migrazione dopo un breve delay per assicurarsi che tutto sia caricato
+                setTimeout(async () => {
+                    await applySecretMaxLevelToAllTeams();
+                }, 2000);
+            } else {
+                setTimeout(checkAndMigrate, 500);
+            }
+        };
+        setTimeout(checkAndMigrate, 1000);
+    });
 
 })();

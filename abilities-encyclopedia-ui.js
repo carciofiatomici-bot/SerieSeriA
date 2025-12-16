@@ -127,7 +127,7 @@ window.AbilitiesUI = {
                         </button>
                         <button onclick="window.AbilitiesUI.filter('C')"
                                 class="filter-btn ${this.currentFilter === 'C' ? 'bg-green-600' : 'bg-gray-700'} hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                            ⚙️ Centrocampisti (${stats.byRole.C})
+                            ⚽ Centrocampisti (${stats.byRole.C})
                         </button>
                         <button onclick="window.AbilitiesUI.filter('A')"
                                 class="filter-btn ${this.currentFilter === 'A' ? 'bg-red-600' : 'bg-gray-700'} hover:bg-red-700 text-white font-bold py-2 px-4 rounded">

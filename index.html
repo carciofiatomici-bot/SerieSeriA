@@ -650,6 +650,13 @@
                              class="w-full h-full rounded-lg border-2 border-yellow-500 shadow-lg object-contain bg-gray-800 p-1 hover:border-yellow-400"
                              title="Sponsor">
                     </div>
+                    <!-- BOX RUOTA FORTUNA (destra dello sponsor) -->
+                    <div id="daily-wheel-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Gira la Ruota della Fortuna!">
+                        <div class="w-full h-full rounded-lg border-2 border-orange-500 shadow-lg bg-gradient-to-br from-yellow-900/50 to-orange-900/50 flex items-center justify-center hover:border-orange-400 relative">
+                            <span class="text-2xl sm:text-3xl md:text-4xl animate-pulse">🎡</span>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-bounce text-[10px] flex items-center justify-center text-white font-bold">!</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO -->
@@ -827,21 +834,21 @@
             </div>
 
             <!-- Pulsanti Tutorial e Admin Panel - In fondo alla dashboard -->
-            <div class="mt-6 flex justify-center gap-3">
+            <div class="mt-6 flex justify-center gap-3 flex-wrap">
                 <!-- Bottone Admin Panel - Visibile SOLO per squadre admin -->
                 <button id="btn-goto-admin-panel"
                         class="hidden bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
                     <span>🔧</span> Pannello Admin
                 </button>
-                <button id="btn-show-changelog-dashboard"
-                        onclick="window.Changelog?.showPlayers()"
-                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>📋</span> Novita
-                </button>
                 <button id="btn-start-tutorial"
                         onclick="window.Tutorial?.start()"
                         class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
                     <span>📖</span> Tutorial
+                </button>
+                <button id="btn-show-changelog-dashboard"
+                        onclick="window.Changelog?.showPlayers()"
+                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📋</span> Changelog
                 </button>
                 <button id="btn-change-password"
                         class="bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
@@ -1533,6 +1540,7 @@
     <script src="sponsor-system.js"></script>
     <script src="private-leagues.js"></script>
     <script src="private-leagues-ui.js"></script>
+    <script src="contracts.js"></script>
     <script src="image-compressor.js"></script>
     <script src="lazy-loader.js"></script>
     <script src="tests.js"></script>
@@ -1633,6 +1641,10 @@
     <!-- 13. CREDITI SUPER SERI (Valuta Premium) -->
     <script src="crediti-super-seri.js"></script>
     <script src="crediti-super-seri-ui.js"></script>
+
+    <!-- 13b. RUOTA DELLA FORTUNA GIORNALIERA -->
+    <script src="daily-wheel.js"></script>
+    <script src="daily-wheel-ui.js"></script>
 
     <!-- 14. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
     <script src="version-check.js"></script>

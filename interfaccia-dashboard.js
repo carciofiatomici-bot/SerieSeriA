@@ -129,6 +129,9 @@ window.InterfacciaDashboard = {
         // Inizializza il sistema di cambio password
         this.initChangePassword();
 
+        // Aggiorna gli alert sui bottoni (formazione migliorabile, contratti in scadenza)
+        this.updateButtonAlerts();
+
         // Mostra la dashboard
         window.showScreen(elements.appContent);
     },
@@ -2089,6 +2092,98 @@ window.InterfacciaDashboard = {
                 minimizedEl?.classList.remove('hidden');
             }
         } catch (e) { }
+    },
+
+    // ====================================================================
+    // BUTTON ALERTS - Formazione migliorabile, Contratti in scadenza
+    // ====================================================================
+
+    /**
+     * Aggiorna gli alert sui bottoni della dashboard
+     * - Formazione: se esiste una formazione migliore disponibile
+     * - Rosa: se ci sono contratti in scadenza
+     */
+    updateButtonAlerts() {
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        if (!currentTeamData) return;
+
+        // Alert Formazione Migliorabile
+        this.updateFormationAlert(currentTeamData);
+
+        // Alert Contratti in Scadenza
+        this.updateContractsAlert(currentTeamData);
+    },
+
+    /**
+     * Aggiorna l'alert sul bottone Gestione Formazione
+     * @param {Object} teamData - Dati della squadra
+     */
+    updateFormationAlert(teamData) {
+        const btnFormazione = document.getElementById('btn-gestione-formazione');
+        if (!btnFormazione) return;
+
+        // Rimuovi alert esistente
+        const existingAlert = btnFormazione.querySelector('.formation-alert-badge');
+        if (existingAlert) existingAlert.remove();
+
+        // Verifica se la formazione puo' essere migliorata
+        if (!window.FeatureFlags?.isEnabled('autoFormation')) return;
+
+        try {
+            const canImprove = window.GestioneSquadreFormazione?.canImproveFormation(teamData);
+            if (canImprove) {
+                const alertBadge = document.createElement('span');
+                alertBadge.className = 'formation-alert-badge absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold text-black animate-pulse';
+                alertBadge.textContent = '!';
+                alertBadge.title = 'Formazione migliorabile disponibile';
+
+                // Assicurati che il bottone sia posizionato relativamente
+                btnFormazione.style.position = 'relative';
+                btnFormazione.appendChild(alertBadge);
+            }
+        } catch (error) {
+            console.warn('[Dashboard] Errore nel calcolo formazione ottimale:', error);
+        }
+    },
+
+    /**
+     * Aggiorna l'alert sul bottone Gestione Rosa per contratti in scadenza
+     * @param {Object} teamData - Dati della squadra
+     */
+    updateContractsAlert(teamData) {
+        const btnRosa = document.getElementById('btn-gestione-rosa');
+        if (!btnRosa) return;
+
+        // Rimuovi alert esistente
+        const existingAlert = btnRosa.querySelector('.contracts-alert-badge');
+        if (existingAlert) existingAlert.remove();
+
+        // Verifica se i contratti sono abilitati
+        if (!window.Contracts?.isEnabled()) return;
+
+        // Conta i contratti in scadenza (valore 0 o timer attivo)
+        const players = teamData.players || [];
+        const expiringContracts = players.filter(p => {
+            // Escludi Icone e giocatori base gratuiti
+            const isIcona = p.abilities && p.abilities.includes('Icona');
+            const isBasePlayer = (p.level || p.currentLevel || 1) === 1 && (p.cost === 0 || !p.cost);
+            if (isIcona || isBasePlayer) return false;
+
+            // Verifica se contratto e' in scadenza (0 o ha timer attivo)
+            const contract = p.contract ?? p.contractYears ?? 1;
+            return contract === 0 || p.contractExpireTimer || p.contractExpiryTimer;
+        });
+
+        if (expiringContracts.length > 0) {
+            const alertBadge = document.createElement('span');
+            alertBadge.className = 'contracts-alert-badge absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white animate-pulse';
+            alertBadge.textContent = expiringContracts.length;
+            alertBadge.title = `${expiringContracts.length} contratt${expiringContracts.length === 1 ? 'o' : 'i'} in scadenza`;
+
+            // Assicurati che il bottone sia posizionato relativamente
+            btnRosa.style.position = 'relative';
+            btnRosa.appendChild(alertBadge);
+        }
     }
 };
 

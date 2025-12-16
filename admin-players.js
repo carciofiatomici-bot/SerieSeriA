@@ -336,14 +336,13 @@ window.AdminPlayers = {
 
         const roles = ['P', 'D', 'C', 'A'];
         const types = ['Potenza', 'Tecnica', 'Velocita'];
-        const nationalities = window.DraftConstants?.NATIONALITIES || [];
 
         const randomRole = roles[getRandomInt(0, roles.length - 1)];
         const randomType = types[getRandomInt(0, types.length - 1)];
-        const randomNationality = nationalities.length > 0 ? nationalities[getRandomInt(0, nationalities.length - 1)] : null;
         const randomAge = getRandomInt(18, 35);
 
-        const randomLevelMax = getRandomInt(10, 20);
+        // Livello max limitato a 8
+        const randomLevelMax = getRandomInt(1, 8);
         const randomLevelMin = getRandomInt(1, randomLevelMax);
 
         // Genera abilita casuali (max 3 positive + 2 negative)
@@ -357,12 +356,7 @@ window.AdminPlayers = {
         const selectedPositive = shuffledPositive.slice(0, numPositive);
         const selectedNegative = shuffledNegative.slice(0, numNegative);
 
-        const totalAbilities = numPositive + numNegative;
-
         // Imposta i valori nei campi
-        if (randomNationality) {
-            document.getElementById('player-nationality').value = randomNationality.code;
-        }
         document.getElementById('player-role').value = randomRole;
         document.getElementById('player-type').value = randomType;
         document.getElementById('player-age').value = randomAge;
@@ -404,24 +398,23 @@ window.AdminPlayers = {
 
         const targetCollection = document.getElementById('target-collection').value;
         const name = document.getElementById('player-name').value.trim();
-        const nationality = document.getElementById('player-nationality')?.value || '';
         const role = document.getElementById('player-role').value;
         const type = document.getElementById('player-type').value;
         const age = parseInt(document.getElementById('player-age').value);
         const levelMin = parseInt(document.getElementById('player-level-min').value);
         const levelMax = parseInt(document.getElementById('player-level-max').value);
 
-        const costDisplayInput = document.getElementById('player-cost-display');
         const selectedAbilities = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked')).map(cb => cb.value);
         const abilitiesCount = selectedAbilities.length;
         const { costMin, costMax } = this.calculateCostRange(levelMin, levelMax, abilitiesCount);
         const allowedAbilities = this.ROLE_ABILITIES_MAP[role] || [];
 
-        if (!name || !role || !type || !nationality || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) ||
-            age < 15 || age > 50 || levelMin < 1 || levelMin > 20 || levelMax < 1 || levelMax > 20 ||
+        // Validazione campi (livello max 8)
+        if (!name || !role || !type || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) ||
+            age < 16 || age > 45 || levelMin < 1 || levelMin > 8 || levelMax < 1 || levelMax > 8 ||
             levelMin > levelMax || costMin < 1) {
              if (msgElement) {
-                 msgElement.textContent = "Errore: controlla che tutti i campi (inclusa Nazionalita) siano compilati e validi.";
+                 msgElement.textContent = "Errore: controlla che tutti i campi siano compilati e validi (livello 1-8, eta 16-45).";
                  msgElement.classList.add('text-red-400');
              }
              return;
@@ -438,19 +431,29 @@ window.AdminPlayers = {
 
         if (selectedAbilities.length > 5) {
              if (msgElement) {
-                 msgElement.textContent = 'Errore: non puoi selezionare piu di 5 abilita totali.';
+                 msgElement.textContent = 'Errore: non puoi selezionare piu di 5 abilita totali (max 3 positive, 2 negative).';
                  msgElement.classList.add('text-red-400');
              }
              return;
         }
 
+        // Genera secretMaxLevel (10-25) per il giocatore
+        const getRandomInt = window.getRandomInt || ((min, max) => Math.floor(Math.random() * (max - min + 1)) + min);
+        const secretMaxLevel = getRandomInt(10, 25);
+
         const newPlayer = {
-            name, nationality, role, age, levelRange: [levelMin, levelMax],
-            costRange: [costMin, costMax], // Range di costo basato sui livelli
-            cost: costMax, // Costo massimo per compatibilita
+            name,
+            role,
             type,
+            age,
+            levelRange: [levelMin, levelMax],
+            costRange: [costMin, costMax],
+            cost: costMax,
             abilities: selectedAbilities,
-            isDrafted: false, teamId: null, creationDate: new Date().toISOString()
+            secretMaxLevel, // Livello massimo nascosto
+            isDrafted: false,
+            teamId: null,
+            creationDate: new Date().toISOString()
         };
 
         try {

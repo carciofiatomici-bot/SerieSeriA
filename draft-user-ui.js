@@ -480,10 +480,23 @@ window.DraftUserUI = {
                                   player.type === 'Tecnica' ? 'text-blue-400' :
                                   player.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
 
+                // Potenziale basato su secretMaxLevel
+                let potenzialText = '';
+                if (player.secretMaxLevel !== undefined) {
+                    const maxLvl = player.secretMaxLevel;
+                    let potenziale, potenzialColor;
+                    if (maxLvl <= 10) { potenziale = 'Dilettante'; potenzialColor = 'text-gray-400'; }
+                    else if (maxLvl <= 15) { potenziale = 'Professionista'; potenzialColor = 'text-green-400'; }
+                    else if (maxLvl <= 19) { potenziale = 'Fuoriclasse'; potenzialColor = 'text-blue-400'; }
+                    else if (maxLvl <= 24) { potenziale = 'Leggenda'; potenzialColor = 'text-purple-400'; }
+                    else { potenziale = 'GOAT'; potenzialColor = 'text-yellow-400'; }
+                    potenzialText = `<span class="${potenzialColor} text-xs font-semibold ml-2">[${potenziale}]</span>`;
+                }
+
                 return `
                     <div class="flex justify-between items-center p-3 bg-gray-600 rounded-lg border border-yellow-500">
                         <div>
-                            <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span>${abilitiesText}</p>
+                            <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span>${abilitiesText}${potenzialText}</p>
                             <p class="text-sm text-yellow-300">Livello: ${player.levelRange[0]}-${player.levelRange[1]} | Costo: ${costDisplay} CS</p>
                         </div>
                         <button data-player-id="${player.id}"

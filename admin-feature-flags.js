@@ -85,13 +85,18 @@ window.AdminFeatureFlags = {
                     </button>
                 </div>
 
-                <!-- Flags per categoria -->
+                <!-- Flags per categoria (collapsibili) -->
                 ${Object.entries(categories).map(([cat, catFlags]) => `
-                    <div class="bg-gray-700 rounded-xl overflow-hidden">
-                        <div class="bg-gray-600 px-4 py-2">
-                            <h3 class="font-semibold text-white">${categoryNames[cat] || cat}</h3>
+                    <div class="bg-gray-700 rounded-xl overflow-hidden category-section" data-category="${cat}">
+                        <div class="bg-gray-600 px-4 py-3 cursor-pointer hover:bg-gray-550 transition-colors category-header flex items-center justify-between"
+                             onclick="window.AdminFeatureFlags.toggleCategory('${cat}')">
+                            <div class="flex items-center gap-2">
+                                <span class="category-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
+                                <h3 class="font-semibold text-white">${categoryNames[cat] || cat}</h3>
+                            </div>
+                            <span class="text-gray-400 text-sm">${catFlags.length} flag${catFlags.length !== 1 ? 's' : ''}</span>
                         </div>
-                        <div class="p-4 space-y-3">
+                        <div class="category-content hidden p-4 space-y-3">
                             ${catFlags.map(flag => this.renderFlagCard(flag)).join('')}
                         </div>
                     </div>
@@ -760,6 +765,23 @@ window.AdminFeatureFlags = {
                 window.Toast.error('Errore nel salvataggio');
             }
             return false;
+        }
+    },
+
+    /**
+     * Toggle categoria (espandi/comprimi)
+     * @param {string} categoryId - ID della categoria
+     */
+    toggleCategory(categoryId) {
+        const section = this.container?.querySelector(`.category-section[data-category="${categoryId}"]`);
+        if (!section) return;
+
+        const content = section.querySelector('.category-content');
+        const icon = section.querySelector('.category-toggle-icon');
+
+        if (content && icon) {
+            content.classList.toggle('hidden');
+            icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
         }
     },
 

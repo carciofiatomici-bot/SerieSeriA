@@ -38,6 +38,9 @@ window.DashboardFeatures = {
         // Box Sponsorship (Media + Sponsor)
         this.updateSponsorshipBoxes();
 
+        // Box Ruota della Fortuna
+        this.updateDailyWheelBox();
+
         // Aggiorna il layout della griglia in base ai bottoni visibili
         this.updateGridLayout();
     },
@@ -82,6 +85,25 @@ window.DashboardFeatures = {
                 btnPrivateLeagues.classList.add('hidden');
                 btnPrivateLeagues.classList.remove('flex');
             }
+        }
+    },
+
+    /**
+     * Aggiorna la visibilita' del box Ruota della Fortuna
+     */
+    updateDailyWheelBox() {
+        const wheelBox = document.getElementById('daily-wheel-box');
+        if (!wheelBox) return;
+
+        const isEnabled = window.FeatureFlags?.isEnabled?.('dailyWheel') || false;
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
+
+        // Mostra solo se feature attiva E puo girare oggi
+        if (isEnabled && canSpin) {
+            wheelBox.classList.remove('hidden');
+        } else {
+            wheelBox.classList.add('hidden');
         }
     },
 
@@ -286,6 +308,26 @@ window.DashboardFeatures = {
                     } else {
                         if (window.Toast) window.Toast.error("Seleziona una squadra");
                     }
+                }
+            });
+        }
+
+        // Box Ruota della Fortuna (nella riga logo)
+        const wheelBox = document.getElementById('daily-wheel-box');
+        if (wheelBox) {
+            wheelBox.addEventListener('click', () => {
+                if (!window.FeatureFlags?.isEnabled('dailyWheel')) {
+                    if (window.Toast) window.Toast.info("Ruota della Fortuna non disponibile");
+                    return;
+                }
+                const teamId = window.InterfacciaCore?.currentTeamId;
+                const teamData = window.InterfacciaCore?.currentTeamData;
+                if (teamId && teamData) {
+                    if (window.DailyWheelUI) {
+                        window.DailyWheelUI.showWheelPopup({ currentTeamId: teamId, teamData: teamData });
+                    }
+                } else {
+                    if (window.Toast) window.Toast.error("Seleziona una squadra");
                 }
             });
         }

@@ -115,7 +115,7 @@ window.DraftUserActions = {
                 }
 
                 // 5. Prepara il Giocatore per la Rosa della Squadra
-                const playerForSquad = {
+                let playerForSquad = {
                     id: playerId,
                     name: playerName,
                     role: playerRole,
@@ -126,6 +126,16 @@ window.DraftUserActions = {
                     abilities: playerAbilities,
                     isCaptain: false
                 };
+
+                // Inizializza contratto se sistema contratti attivo
+                if (window.Contracts?.isEnabled()) {
+                    playerForSquad = window.Contracts.initializeContract(playerForSquad);
+                }
+
+                // Genera secretMaxLevel per giocatori normali (sistema livello massimo segreto)
+                if (window.PlayerExp?.isSubjectToSecretMaxLevel(playerForSquad)) {
+                    playerForSquad.secretMaxLevel = window.PlayerExp.generateSecretMaxLevel(finalLevel);
+                }
 
                 // 6. GUARD FINALE: Ricarica lo stato del giocatore draft per evitare race condition
                 const playerFreshDoc = await getDoc(playerDraftDocRef);

@@ -174,10 +174,16 @@ window.GestioneSquadreFormazione = {
                         </div>
                     </div>
 
-                    <button id="btn-save-formation"
-                            class="w-full bg-indigo-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-400 transition duration-150 transform hover:scale-[1.01]">
-                        Salva Formazione
-                    </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-auto-formation"
+                                class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                            <span>🤖</span> Auto Formazione
+                        </button>
+                        <button id="btn-save-formation"
+                                class="bg-indigo-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-400 transition duration-150 transform hover:scale-[1.01]">
+                            Salva Formazione
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -297,6 +303,9 @@ window.GestioneSquadreFormazione = {
         });
 
         document.getElementById('btn-save-formation').addEventListener('click', () => this.handleSaveFormation(context));
+
+        // Bottone Formazione Automatica
+        document.getElementById('btn-auto-formation')?.addEventListener('click', () => this.handleAutoFormation(context));
 
         // Espone globalmente le funzioni drag and drop
         window.handleDragStart = (e) => this.handleDragStart(e);
@@ -1762,6 +1771,327 @@ window.GestioneSquadreFormazione = {
                 payBtn.textContent = '💊 Paga e Guarisci';
             }
         }
+    },
+
+    // ========================================
+    // AUTO FORMATION SYSTEM
+    // ========================================
+
+    /**
+     * Calcola la miglior formazione automatica
+     * @param {Object} context - Contesto con riferimenti DOM e funzioni
+     */
+    handleAutoFormation(context) {
+        const { displayMessage } = window.GestioneSquadreUtils;
+
+        // Verifica feature flag
+        if (!window.FeatureFlags?.isEnabled('autoFormation')) {
+            displayMessage('formation-message', '❌ Funzionalita Auto Formazione non attiva.', 'error');
+            return;
+        }
+
+        const teamData = context.currentTeamData;
+        if (!teamData || !teamData.players || teamData.players.length === 0) {
+            displayMessage('formation-message', '❌ Nessun giocatore disponibile.', 'error');
+            return;
+        }
+
+        // Calcola la formazione ottimale
+        const optimalFormation = this.calculateOptimalFormation(teamData);
+
+        if (!optimalFormation) {
+            displayMessage('formation-message', '❌ Impossibile generare una formazione valida.', 'error');
+            return;
+        }
+
+        // Applica la formazione
+        teamData.formation.titolari = optimalFormation.titolari;
+        teamData.formation.panchina = optimalFormation.panchina;
+        teamData.formation.modulo = optimalFormation.modulo;
+
+        // Aggiorna il context
+        context.currentTeamData = teamData;
+
+        // Re-render della formazione
+        this.render(teamData, context);
+
+        displayMessage('formation-message', `✅ Formazione ottimale applicata! Modulo: ${optimalFormation.modulo}`, 'success');
+    },
+
+    /**
+     * Calcola la formazione ottimale considerando livello, tipologia, abilita e infortuni
+     * @param {Object} teamData - Dati della squadra
+     * @returns {Object|null} Formazione ottimale {titolari, panchina, modulo}
+     */
+    calculateOptimalFormation(teamData) {
+        const { MODULI } = window.GestioneSquadreConstants;
+        const players = teamData.players || [];
+
+        // Filtra giocatori disponibili (non infortunati)
+        const availablePlayers = players.filter(p => {
+            if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(p)) {
+                return false;
+            }
+            return true;
+        });
+
+        if (availablePlayers.length < 5) {
+            return null; // Non abbastanza giocatori
+        }
+
+        // Separa per ruolo
+        const byRole = {
+            P: availablePlayers.filter(p => p.role === 'P'),
+            D: availablePlayers.filter(p => p.role === 'D'),
+            C: availablePlayers.filter(p => p.role === 'C'),
+            A: availablePlayers.filter(p => p.role === 'A')
+        };
+
+        // Calcola punteggio per ogni giocatore
+        const scoredPlayers = availablePlayers.map(p => ({
+            ...p,
+            score: this.calculatePlayerScore(p)
+        }));
+
+        // Ordina per punteggio (decrescente) all'interno di ogni ruolo
+        for (const role of ['P', 'D', 'C', 'A']) {
+            byRole[role] = byRole[role]
+                .map(p => scoredPlayers.find(sp => sp.id === p.id))
+                .filter(p => p)
+                .sort((a, b) => b.score - a.score);
+        }
+
+        // Trova il miglior modulo basato sui giocatori disponibili
+        const bestModulo = this.findBestModulo(byRole, MODULI);
+
+        if (!bestModulo) {
+            return null;
+        }
+
+        const moduloConfig = MODULI[bestModulo];
+
+        // Verifica che il modulo abbia una configurazione valida
+        if (!moduloConfig || !moduloConfig.slots || !Array.isArray(moduloConfig.slots)) {
+            return null;
+        }
+
+        const titolari = [];
+
+        // Seleziona giocatori per ogni slot del modulo
+        const usedIds = new Set();
+
+        // 1. Portiere (sempre 1)
+        if (byRole.P.length > 0) {
+            const keeper = byRole.P[0];
+            titolari.push({ id: keeper.id, slotId: 'P-0' });
+            usedIds.add(keeper.id);
+        } else {
+            return null; // Nessun portiere
+        }
+
+        // 2. Difensori
+        const numDef = moduloConfig.slots.filter(s => s === 'D').length;
+        for (let i = 0; i < numDef; i++) {
+            const available = byRole.D.filter(p => !usedIds.has(p.id));
+            if (available.length > 0) {
+                titolari.push({ id: available[0].id, slotId: `D-${i}` });
+                usedIds.add(available[0].id);
+            }
+        }
+
+        // 3. Centrocampisti
+        const numMid = moduloConfig.slots.filter(s => s === 'C').length;
+        for (let i = 0; i < numMid; i++) {
+            const available = byRole.C.filter(p => !usedIds.has(p.id));
+            if (available.length > 0) {
+                titolari.push({ id: available[0].id, slotId: `C-${i}` });
+                usedIds.add(available[0].id);
+            }
+        }
+
+        // 4. Attaccanti
+        const numFwd = moduloConfig.slots.filter(s => s === 'A').length;
+        for (let i = 0; i < numFwd; i++) {
+            const available = byRole.A.filter(p => !usedIds.has(p.id));
+            if (available.length > 0) {
+                titolari.push({ id: available[0].id, slotId: `A-${i}` });
+                usedIds.add(available[0].id);
+            }
+        }
+
+        // Verifica che abbiamo 5 titolari
+        if (titolari.length < 5) {
+            // Riempi con altri giocatori disponibili
+            const remaining = scoredPlayers.filter(p => !usedIds.has(p.id));
+            while (titolari.length < 5 && remaining.length > 0) {
+                const next = remaining.shift();
+                const slotRole = next.role;
+                const existingSlots = titolari.filter(t => t.slotId.startsWith(slotRole)).length;
+                titolari.push({ id: next.id, slotId: `${slotRole}-${existingSlots}` });
+                usedIds.add(next.id);
+            }
+        }
+
+        // Panchina: i migliori 3 tra i rimanenti
+        const panchina = scoredPlayers
+            .filter(p => !usedIds.has(p.id))
+            .slice(0, 3)
+            .map((p, i) => ({ id: p.id, slotId: `B-${i}` }));
+
+        return {
+            titolari,
+            panchina,
+            modulo: bestModulo
+        };
+    },
+
+    /**
+     * Calcola il punteggio di un giocatore per la selezione automatica
+     * @param {Object} player - Dati del giocatore
+     * @returns {number} Punteggio
+     */
+    calculatePlayerScore(player) {
+        let score = 0;
+
+        // Base: livello (peso maggiore)
+        const level = player.level || player.currentLevel || 1;
+        score += level * 10;
+
+        // Bonus per Icona
+        const isIcona = player.abilities && player.abilities.includes('Icona');
+        if (isIcona) {
+            score += 50;
+        }
+
+        // Bonus per abilita positive
+        const abilities = player.abilities || [];
+        const NEGATIVE_ABILITIES = ['Mani di Pastafrolla', 'Brocco', 'Piedi di Cemento', 'Pettinatura 500e',
+            'Gambe molli', 'Testa vuota', 'Piede sbagliato', 'Riflessi lenti', 'Occhio pigro',
+            'Permaloso', 'Fumo negli occhi', 'Passo lento', 'Tiratore maldestro'];
+
+        const positiveAbilities = abilities.filter(a => !NEGATIVE_ABILITIES.includes(a) && a !== 'Icona');
+        score += positiveAbilities.length * 8;
+
+        // Malus per abilita negative
+        const negativeAbilities = abilities.filter(a => NEGATIVE_ABILITIES.includes(a));
+        score -= negativeAbilities.length * 5;
+
+        // Bonus per tipologia (varieta nella squadra)
+        const typeBonus = { 'Potenza': 2, 'Tecnica': 2, 'Velocita': 2 };
+        score += typeBonus[player.type] || 0;
+
+        // Bonus per capitano
+        if (player.isCaptain) {
+            score += 15;
+        }
+
+        // Considera la forma se disponibile
+        const formMod = player.formModifier || 0;
+        score += formMod * 3;
+
+        return score;
+    },
+
+    /**
+     * Trova il miglior modulo basato sui giocatori disponibili
+     * @param {Object} byRole - Giocatori per ruolo {P, D, C, A}
+     * @param {Object} MODULI - Configurazione moduli
+     * @returns {string|null} Nome del modulo migliore
+     */
+    findBestModulo(byRole, MODULI) {
+        const counts = {
+            P: byRole.P.length,
+            D: byRole.D.length,
+            C: byRole.C.length,
+            A: byRole.A.length
+        };
+
+        // Calcola punteggio per ogni modulo
+        let bestModulo = null;
+        let bestScore = -1;
+
+        for (const [moduloName, moduloConfig] of Object.entries(MODULI)) {
+            // Salta moduli senza configurazione slots valida
+            if (!moduloConfig || !moduloConfig.slots || !Array.isArray(moduloConfig.slots)) {
+                continue;
+            }
+
+            const required = {
+                P: 1,
+                D: moduloConfig.slots.filter(s => s === 'D').length,
+                C: moduloConfig.slots.filter(s => s === 'C').length,
+                A: moduloConfig.slots.filter(s => s === 'A').length
+            };
+
+            // Verifica se abbiamo abbastanza giocatori
+            const canUse = counts.P >= required.P &&
+                           counts.D >= required.D &&
+                           counts.C >= required.C &&
+                           counts.A >= required.A;
+
+            if (!canUse) continue;
+
+            // Calcola punteggio del modulo (somma dei punteggi dei migliori giocatori)
+            let moduloScore = 0;
+
+            // Portiere
+            if (byRole.P[0]) moduloScore += byRole.P[0].score;
+
+            // Difensori
+            for (let i = 0; i < required.D; i++) {
+                if (byRole.D[i]) moduloScore += byRole.D[i].score;
+            }
+
+            // Centrocampisti
+            for (let i = 0; i < required.C; i++) {
+                if (byRole.C[i]) moduloScore += byRole.C[i].score;
+            }
+
+            // Attaccanti
+            for (let i = 0; i < required.A; i++) {
+                if (byRole.A[i]) moduloScore += byRole.A[i].score;
+            }
+
+            if (moduloScore > bestScore) {
+                bestScore = moduloScore;
+                bestModulo = moduloName;
+            }
+        }
+
+        return bestModulo;
+    },
+
+    /**
+     * Verifica se la formazione attuale e' ottimale
+     * @param {Object} teamData - Dati della squadra
+     * @returns {boolean} True se la formazione potrebbe essere migliorata
+     */
+    canImproveFormation(teamData) {
+        if (!window.FeatureFlags?.isEnabled('autoFormation')) {
+            return false;
+        }
+
+        const currentFormation = teamData.formation;
+        if (!currentFormation || !currentFormation.titolari || currentFormation.titolari.length < 5) {
+            return true; // Formazione incompleta
+        }
+
+        // Calcola formazione ottimale
+        const optimal = this.calculateOptimalFormation(teamData);
+        if (!optimal) return false;
+
+        // Confronta: se i titolari sono diversi, potrebbe migliorare
+        const currentIds = new Set(currentFormation.titolari.map(t => t.id));
+        const optimalIds = new Set(optimal.titolari.map(t => t.id));
+
+        // Se ci sono giocatori diversi, puo' migliorare
+        for (const id of optimalIds) {
+            if (!currentIds.has(id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 };
 

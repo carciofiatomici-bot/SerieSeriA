@@ -40,6 +40,246 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Renderizza il pannello di configurazione della Ruota della Fortuna
+     */
+    const renderWheelConfigPanel = (container) => {
+        if (!window.DailyWheel) {
+            container.innerHTML = '<p class="text-red-400">Modulo DailyWheel non caricato</p>';
+            return;
+        }
+
+        const prizes = window.DailyWheel.PRIZES;
+        const objects = window.DailyWheel.RANDOM_OBJECTS;
+
+        container.innerHTML = `
+            <div class="space-y-4">
+                <p class="text-sm text-gray-400 mb-4">Configura i premi della Ruota della Fortuna e le loro probabilita.</p>
+
+                <!-- Premi attuali -->
+                <div class="space-y-2">
+                    <h4 class="text-orange-300 font-bold">Premi Attuali</h4>
+                    <div id="wheel-prizes-list" class="space-y-2">
+                        ${prizes.map((prize, index) => `
+                            <div class="flex items-center gap-2 p-2 bg-gray-700 rounded-lg" data-prize-index="${index}">
+                                <span class="text-xl">${prize.icon}</span>
+                                <input type="text" class="prize-label flex-1 bg-gray-600 text-white px-2 py-1 rounded text-sm" value="${prize.label}" data-field="label">
+                                <select class="prize-type bg-gray-600 text-white px-2 py-1 rounded text-sm" data-field="type">
+                                    <option value="cs" ${prize.type === 'cs' ? 'selected' : ''}>CS</option>
+                                    <option value="css" ${prize.type === 'css' ? 'selected' : ''}>CSS</option>
+                                    <option value="object" ${prize.type === 'object' ? 'selected' : ''}>Oggetto</option>
+                                </select>
+                                <input type="number" class="prize-value w-16 bg-gray-600 text-white px-2 py-1 rounded text-sm" value="${prize.value || 0}" data-field="value" placeholder="Valore" ${prize.type === 'object' ? 'disabled' : ''}>
+                                <input type="number" class="prize-prob w-16 bg-gray-600 text-white px-2 py-1 rounded text-sm" value="${prize.probability}" data-field="probability" placeholder="Prob%">
+                                <input type="text" class="prize-color w-20 bg-gray-600 text-white px-2 py-1 rounded text-sm" value="${prize.color}" data-field="color" placeholder="#hex">
+                                <button class="btn-remove-prize text-red-400 hover:text-red-300 px-2" data-index="${index}">✖</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Totale probabilita -->
+                <div class="p-2 bg-gray-700 rounded-lg">
+                    <p class="text-sm text-gray-300">
+                        Totale Probabilita: <span id="total-probability" class="font-bold ${prizes.reduce((sum, p) => sum + p.probability, 0) === 100 ? 'text-green-400' : 'text-yellow-400'}">${prizes.reduce((sum, p) => sum + p.probability, 0)}%</span>
+                        <span class="text-xs text-gray-500">(consigliato: 100%)</span>
+                    </p>
+                </div>
+
+                <!-- Aggiungi premio -->
+                <div class="p-3 bg-gray-700/50 rounded-lg border border-dashed border-gray-500">
+                    <h4 class="text-orange-300 font-bold mb-2">Aggiungi Nuovo Premio</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                        <input type="text" id="new-prize-label" class="bg-gray-600 text-white px-2 py-1 rounded text-sm" placeholder="Nome">
+                        <select id="new-prize-type" class="bg-gray-600 text-white px-2 py-1 rounded text-sm">
+                            <option value="cs">CS</option>
+                            <option value="css">CSS</option>
+                            <option value="object">Oggetto</option>
+                        </select>
+                        <input type="number" id="new-prize-value" class="bg-gray-600 text-white px-2 py-1 rounded text-sm" placeholder="Valore">
+                        <input type="number" id="new-prize-prob" class="bg-gray-600 text-white px-2 py-1 rounded text-sm" placeholder="Prob%">
+                        <input type="text" id="new-prize-color" class="bg-gray-600 text-white px-2 py-1 rounded text-sm" placeholder="#colore">
+                        <button id="btn-add-prize" class="bg-green-600 text-white font-bold px-3 py-1 rounded text-sm hover:bg-green-500">+ Aggiungi</button>
+                    </div>
+                </div>
+
+                <!-- Oggetti casuali -->
+                <div class="space-y-2">
+                    <h4 class="text-orange-300 font-bold">Oggetti Casuali (per premio "Oggetto")</h4>
+                    <div id="wheel-objects-list" class="space-y-2">
+                        ${objects.map((obj, index) => `
+                            <div class="flex items-center gap-2 p-2 bg-gray-700 rounded-lg" data-object-index="${index}">
+                                <input type="text" class="object-name flex-1 bg-gray-600 text-white px-2 py-1 rounded text-sm" value="${obj.name}" data-field="name">
+                                <select class="object-slot bg-gray-600 text-white px-2 py-1 rounded text-sm" data-field="slot">
+                                    <option value="scarpini" ${obj.slot === 'scarpini' ? 'selected' : ''}>Scarpini</option>
+                                    <option value="guanti" ${obj.slot === 'guanti' ? 'selected' : ''}>Guanti</option>
+                                    <option value="maglia" ${obj.slot === 'maglia' ? 'selected' : ''}>Maglia</option>
+                                    <option value="parastinchi" ${obj.slot === 'parastinchi' ? 'selected' : ''}>Parastinchi</option>
+                                    <option value="cappello" ${obj.slot === 'cappello' ? 'selected' : ''}>Cappello</option>
+                                </select>
+                                <select class="object-rarity bg-gray-600 text-white px-2 py-1 rounded text-sm" data-field="rarity">
+                                    <option value="comune" ${obj.rarity === 'comune' ? 'selected' : ''}>Comune</option>
+                                    <option value="raro" ${obj.rarity === 'raro' ? 'selected' : ''}>Raro</option>
+                                    <option value="epico" ${obj.rarity === 'epico' ? 'selected' : ''}>Epico</option>
+                                    <option value="leggendario" ${obj.rarity === 'leggendario' ? 'selected' : ''}>Leggendario</option>
+                                </select>
+                                <button class="btn-remove-object text-red-400 hover:text-red-300 px-2" data-index="${index}">✖</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Bottoni azioni -->
+                <div class="flex gap-2 mt-4">
+                    <button id="btn-save-wheel-config" class="flex-1 bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-500">
+                        💾 Salva Configurazione
+                    </button>
+                    <button id="btn-reset-wheel-config" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500">
+                        🔄 Reset Default
+                    </button>
+                </div>
+
+                <p id="wheel-config-message" class="text-center text-sm mt-2"></p>
+            </div>
+        `;
+
+        // Event listeners
+        setupWheelConfigListeners(container);
+    };
+
+    /**
+     * Setup event listeners per il pannello configurazione ruota
+     */
+    const setupWheelConfigListeners = (container) => {
+        // Bottone aggiungi premio
+        const btnAddPrize = container.querySelector('#btn-add-prize');
+        if (btnAddPrize) {
+            btnAddPrize.addEventListener('click', () => {
+                const label = container.querySelector('#new-prize-label').value.trim();
+                const type = container.querySelector('#new-prize-type').value;
+                const value = parseInt(container.querySelector('#new-prize-value').value) || 0;
+                const prob = parseInt(container.querySelector('#new-prize-prob').value) || 0;
+                const color = container.querySelector('#new-prize-color').value.trim() || '#666666';
+
+                if (!label || prob <= 0) {
+                    displayMessage('Inserisci nome e probabilita validi', 'error', 'wheel-config-message');
+                    return;
+                }
+
+                const icons = { cs: '💰', css: '⭐', object: '🎁' };
+                const newPrize = {
+                    id: `prize_${Date.now()}`,
+                    label,
+                    type,
+                    value: type === 'object' ? null : value,
+                    probability: prob,
+                    color,
+                    icon: icons[type] || '🎁'
+                };
+
+                window.DailyWheel.PRIZES.push(newPrize);
+                renderWheelConfigPanel(container);
+                displayMessage('Premio aggiunto (non salvato)', 'info', 'wheel-config-message');
+            });
+        }
+
+        // Bottoni rimuovi premio
+        container.querySelectorAll('.btn-remove-prize').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index);
+                if (window.DailyWheel.PRIZES.length > 1) {
+                    window.DailyWheel.PRIZES.splice(index, 1);
+                    renderWheelConfigPanel(container);
+                    displayMessage('Premio rimosso (non salvato)', 'info', 'wheel-config-message');
+                } else {
+                    displayMessage('Devi avere almeno un premio', 'error', 'wheel-config-message');
+                }
+            });
+        });
+
+        // Bottoni rimuovi oggetto
+        container.querySelectorAll('.btn-remove-object').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index);
+                if (window.DailyWheel.RANDOM_OBJECTS.length > 1) {
+                    window.DailyWheel.RANDOM_OBJECTS.splice(index, 1);
+                    renderWheelConfigPanel(container);
+                    displayMessage('Oggetto rimosso (non salvato)', 'info', 'wheel-config-message');
+                } else {
+                    displayMessage('Devi avere almeno un oggetto', 'error', 'wheel-config-message');
+                }
+            });
+        });
+
+        // Bottone salva configurazione
+        const btnSave = container.querySelector('#btn-save-wheel-config');
+        if (btnSave) {
+            btnSave.addEventListener('click', async () => {
+                // Raccogli i valori aggiornati dai campi
+                const prizeRows = container.querySelectorAll('[data-prize-index]');
+                const updatedPrizes = [];
+
+                prizeRows.forEach((row, index) => {
+                    const originalPrize = window.DailyWheel.PRIZES[index];
+                    updatedPrizes.push({
+                        id: originalPrize.id,
+                        label: row.querySelector('.prize-label').value,
+                        type: row.querySelector('.prize-type').value,
+                        value: row.querySelector('.prize-type').value === 'object' ? null : parseInt(row.querySelector('.prize-value').value) || 0,
+                        probability: parseInt(row.querySelector('.prize-prob').value) || 0,
+                        color: row.querySelector('.prize-color').value,
+                        icon: originalPrize.icon
+                    });
+                });
+
+                // Aggiorna l'array globale
+                window.DailyWheel.PRIZES.length = 0;
+                window.DailyWheel.PRIZES.push(...updatedPrizes);
+
+                // Salva su Firestore nella configurazione
+                try {
+                    const { doc, updateDoc, setDoc, getDoc } = window.firestoreTools;
+                    const appId = window.firestoreTools.appId;
+                    const configPath = `artifacts/${appId}/public/data/config`;
+                    const configDocRef = doc(window.db, configPath, 'wheelConfig');
+
+                    await setDoc(configDocRef, {
+                        prizes: updatedPrizes,
+                        objects: window.DailyWheel.RANDOM_OBJECTS,
+                        updatedAt: new Date().toISOString()
+                    });
+
+                    displayMessage('Configurazione salvata!', 'success', 'wheel-config-message');
+                } catch (error) {
+                    console.error('Errore salvataggio config ruota:', error);
+                    displayMessage('Errore nel salvataggio: ' + error.message, 'error', 'wheel-config-message');
+                }
+            });
+        }
+
+        // Bottone reset default
+        const btnReset = container.querySelector('#btn-reset-wheel-config');
+        if (btnReset) {
+            btnReset.addEventListener('click', () => {
+                if (!confirm('Vuoi ripristinare i premi di default?')) return;
+
+                // Ripristina valori default
+                window.DailyWheel.PRIZES.length = 0;
+                window.DailyWheel.PRIZES.push(
+                    { id: 'cs5', label: '5 CS', type: 'cs', value: 5, probability: 30, color: '#4ade80', icon: '💰' },
+                    { id: 'cs10', label: '10 CS', type: 'cs', value: 10, probability: 25, color: '#22c55e', icon: '💰' },
+                    { id: 'cs25', label: '25 CS', type: 'cs', value: 25, probability: 20, color: '#3b82f6', icon: '💎' },
+                    { id: 'cs50', label: '50 CS', type: 'cs', value: 50, probability: 15, color: '#8b5cf6', icon: '💎' },
+                    { id: 'css1', label: '1 CSS', type: 'css', value: 1, probability: 8, color: '#fbbf24', icon: '⭐' },
+                    { id: 'object', label: 'Oggetto', type: 'object', value: null, probability: 2, color: '#ef4444', icon: '🎁' }
+                );
+
+                renderWheelConfigPanel(container);
+                displayMessage('Ripristinati valori di default', 'info', 'wheel-config-message');
+            });
+        }
+    };
+
+    /**
      * Inizializza il pannello admin
      */
     const initializeAdminPanel = async () => {
@@ -284,6 +524,44 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetHoF.addEventListener('click', handleResetHallOfFame);
         }
 
+        // Aggiungi +1 Contratto a tutti i giocatori
+        const btnAddContractsAll = document.getElementById('btn-add-contracts-all');
+        if (btnAddContractsAll) {
+            btnAddContractsAll.addEventListener('click', handleAddContractsAll);
+        }
+
+        // Set Livello Icone
+        const btnSetIconeLevel = document.getElementById('btn-set-icone-level');
+        if (btnSetIconeLevel) {
+            btnSetIconeLevel.addEventListener('click', handleSetIconeLevel);
+        }
+
+        // Rimuovi -1 Contratto a tutti i giocatori
+        const btnRemoveContractsAll = document.getElementById('btn-remove-contracts-all');
+        if (btnRemoveContractsAll) {
+            btnRemoveContractsAll.addEventListener('click', handleRemoveContractsAll);
+        }
+
+        // Reset tutti i contratti a 1
+        const btnResetContractsAll = document.getElementById('btn-reset-contracts-all');
+        if (btnResetContractsAll) {
+            btnResetContractsAll.addEventListener('click', handleResetContractsAll);
+        }
+
+        // Toggle Opzioni Avanzate
+        const btnToggleAdvanced = document.getElementById('btn-toggle-advanced-utils');
+        const advancedSection = document.getElementById('advanced-utils-section');
+        const advancedIcon = document.getElementById('advanced-utils-icon');
+        const advancedText = document.getElementById('advanced-utils-text');
+        if (btnToggleAdvanced && advancedSection) {
+            btnToggleAdvanced.addEventListener('click', () => {
+                const isHidden = advancedSection.classList.contains('hidden');
+                advancedSection.classList.toggle('hidden');
+                if (advancedIcon) advancedIcon.textContent = isHidden ? '✖️' : '⚙️';
+                if (advancedText) advancedText.textContent = isHidden ? 'Nascondi Opzioni Avanzate' : 'Mostra Opzioni Avanzate';
+            });
+        }
+
         // Bottone Emergenza - Annulla Campionato e Coppa
         const btnEmergencyCancel = document.getElementById('btn-emergency-cancel-competitions');
         if (btnEmergencyCancel) {
@@ -391,6 +669,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnCloseMediaPanel && mediaPanelContainer) {
             btnCloseMediaPanel.addEventListener('click', () => {
                 mediaPanelContainer.classList.add('hidden');
+            });
+        }
+
+        // Configurazione Ruota della Fortuna
+        const btnWheelConfig = document.getElementById('btn-wheel-config');
+        const wheelPanelContainer = document.getElementById('wheel-panel-container');
+        const wheelPanelContent = document.getElementById('wheel-panel-content');
+        const btnCloseWheelPanel = document.getElementById('btn-close-wheel-panel');
+
+        if (btnWheelConfig && wheelPanelContainer) {
+            btnWheelConfig.addEventListener('click', () => {
+                wheelPanelContainer.classList.remove('hidden');
+                renderWheelConfigPanel(wheelPanelContent);
+            });
+        }
+
+        if (btnCloseWheelPanel && wheelPanelContainer) {
+            btnCloseWheelPanel.addEventListener('click', () => {
+                wheelPanelContainer.classList.add('hidden');
             });
         }
 
@@ -754,6 +1051,344 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultDiv.textContent = `Errore: ${error.message}`;
                 resultDiv.className = 'flex items-center justify-center text-sm text-red-400';
             }
+        }
+    };
+
+    /**
+     * Gestisce l'aggiunta di +1 anno di contratto a tutti i giocatori in squadra
+     */
+    const handleAddContractsAll = async () => {
+        // Conferma
+        const confirmed = confirm(
+            '📝 AGGIUNGI +1 CONTRATTO\n\n' +
+            'Questa azione aggiungera +1 anno di contratto a TUTTI i giocatori che sono attualmente in una squadra.\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btn-add-contracts-all');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Aggiornamento...';
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+
+            let teamsUpdated = 0;
+            let playersUpdated = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const players = teamData.players || [];
+
+                if (players.length === 0) continue;
+
+                let modified = false;
+                const MAX_CONTRACT = window.Contracts?.MAX_CONTRACT_YEARS || 5;
+
+                const updatedPlayers = players.map(player => {
+                    // Salta le Icone (non hanno contratti)
+                    const isIcona = player.abilities && player.abilities.includes('Icona');
+                    if (isIcona) return player;
+
+                    // Salta giocatori base gratuiti (liv 1, costo 0)
+                    const isBasePlayer = (player.level || player.currentLevel || 1) === 1 && (player.cost === 0 || !player.cost);
+                    if (isBasePlayer) return player;
+
+                    // Aggiungi +1 al contratto (rispetta il limite massimo)
+                    const currentContract = player.contract ?? player.contractYears ?? 1;
+                    if (currentContract >= MAX_CONTRACT) return player; // Gia al massimo
+
+                    player.contract = currentContract + 1;
+                    if (player.contractYears !== undefined) {
+                        player.contractYears = currentContract + 1;
+                    }
+
+                    // Se aveva un timer di scadenza, rimuovilo
+                    if (player.contractExpireTimer) {
+                        delete player.contractExpireTimer;
+                    }
+                    if (player.contractExpiryTimer) {
+                        delete player.contractExpiryTimer;
+                    }
+
+                    modified = true;
+                    playersUpdated++;
+                    return player;
+                });
+
+                if (modified) {
+                    await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamDoc.id), {
+                        players: updatedPlayers
+                    });
+                    teamsUpdated++;
+                }
+            }
+
+            alert(`✅ Operazione completata!\n\n${playersUpdated} giocatori aggiornati in ${teamsUpdated} squadre.`);
+
+            if (window.Toast) {
+                window.Toast.success(`+1 contratto aggiunto a ${playersUpdated} giocatori`);
+            }
+
+        } catch (error) {
+            console.error('Errore aggiunta contratti:', error);
+            alert(`❌ Errore: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    /**
+     * Gestisce il cambio di livello per tutte le Icone
+     */
+    const handleSetIconeLevel = async () => {
+        // Chiedi il nuovo livello
+        const newLevelStr = prompt(
+            '👑 SET LIVELLO ICONE\n\n' +
+            'Inserisci il nuovo livello da assegnare a TUTTE le Icone (1-30):'
+        );
+
+        if (!newLevelStr) return;
+
+        const newLevel = parseInt(newLevelStr, 10);
+        if (isNaN(newLevel) || newLevel < 1 || newLevel > 30) {
+            alert('❌ Livello non valido. Inserisci un numero tra 1 e 30.');
+            return;
+        }
+
+        // Conferma
+        const confirmed = confirm(
+            `👑 CONFERMA SET LIVELLO ICONE\n\n` +
+            `Stai per impostare il livello di TUTTE le Icone a ${newLevel}.\n\n` +
+            `Sei sicuro di voler procedere?`
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btn-set-icone-level');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Aggiornamento...';
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+
+            let teamsUpdated = 0;
+            let iconesUpdated = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const players = teamData.players || [];
+
+                if (players.length === 0) continue;
+
+                let modified = false;
+                const updatedPlayers = players.map(player => {
+                    // Trova le Icone
+                    const isIcona = player.abilities && player.abilities.includes('Icona');
+                    if (!isIcona) return player;
+
+                    // Aggiorna il livello
+                    player.level = newLevel;
+                    if (player.currentLevel !== undefined) {
+                        player.currentLevel = newLevel;
+                    }
+
+                    modified = true;
+                    iconesUpdated++;
+                    return player;
+                });
+
+                if (modified) {
+                    await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamDoc.id), {
+                        players: updatedPlayers
+                    });
+                    teamsUpdated++;
+                }
+            }
+
+            alert(`✅ Operazione completata!\n\n${iconesUpdated} Icone aggiornate a livello ${newLevel} in ${teamsUpdated} squadre.`);
+
+            if (window.Toast) {
+                window.Toast.success(`${iconesUpdated} Icone impostate a livello ${newLevel}`);
+            }
+
+        } catch (error) {
+            console.error('Errore set livello icone:', error);
+            alert(`❌ Errore: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    /**
+     * Gestisce la rimozione di -1 anno di contratto a tutti i giocatori in squadra
+     */
+    const handleRemoveContractsAll = async () => {
+        // Conferma
+        const confirmed = confirm(
+            '📝 RIMUOVI -1 CONTRATTO\n\n' +
+            'Questa azione rimuovera 1 anno di contratto a TUTTI i giocatori che sono attualmente in una squadra.\n\n' +
+            'I giocatori con contratto 0 avranno il timer di scadenza attivato.\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btn-remove-contracts-all');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Aggiornamento...';
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+
+            let teamsUpdated = 0;
+            let playersUpdated = 0;
+            let timersStarted = 0;
+
+            const CONTRACT_EXPIRE_TIMER_MS = window.Contracts?.CONTRACT_EXPIRE_TIMER_MS || (48 * 60 * 60 * 1000);
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const players = teamData.players || [];
+
+                if (players.length === 0) continue;
+
+                let modified = false;
+
+                const updatedPlayers = players.map(player => {
+                    // Salta le Icone (non hanno contratti)
+                    const isIcona = player.abilities && player.abilities.includes('Icona');
+                    if (isIcona) return player;
+
+                    // Salta giocatori base gratuiti (liv 1, costo 0)
+                    const isBasePlayer = (player.level || player.currentLevel || 1) === 1 && (player.cost === 0 || !player.cost);
+                    if (isBasePlayer) return player;
+
+                    // Salta giocatori che hanno gia il timer attivo
+                    if (player.contractExpireTimer) return player;
+
+                    // Rimuovi -1 al contratto
+                    const currentContract = player.contract ?? 1;
+                    const newContract = currentContract - 1;
+
+                    if (newContract <= 0) {
+                        // Attiva timer scadenza
+                        player.contract = 0;
+                        player.contractExpireTimer = Date.now() + CONTRACT_EXPIRE_TIMER_MS;
+                        timersStarted++;
+                    } else {
+                        player.contract = newContract;
+                    }
+
+                    modified = true;
+                    playersUpdated++;
+                    return player;
+                });
+
+                if (modified) {
+                    await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamDoc.id), {
+                        players: updatedPlayers
+                    });
+                    teamsUpdated++;
+                }
+            }
+
+            alert(`✅ Operazione completata!\n\n${playersUpdated} giocatori aggiornati in ${teamsUpdated} squadre.\n${timersStarted} timer di scadenza attivati.`);
+
+            if (window.Toast) {
+                window.Toast.success(`-1 contratto rimosso a ${playersUpdated} giocatori`);
+            }
+
+        } catch (error) {
+            console.error('Errore rimozione contratti:', error);
+            alert(`❌ Errore: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    /**
+     * Gestisce il reset di tutti i contratti a 1
+     */
+    const handleResetContractsAll = async () => {
+        // Conferma
+        const confirmed = confirm(
+            '📝 RESET CONTRATTI A 1\n\n' +
+            'Questa azione impostera tutti i contratti a 1 anno per TUTTI i giocatori in squadra.\n\n' +
+            'I timer di scadenza verranno rimossi.\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btn-reset-contracts-all');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Aggiornamento...';
+
+        try {
+            const { collection, getDocs, doc, updateDoc } = firestoreTools;
+            const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+
+            let teamsUpdated = 0;
+            let playersUpdated = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const players = teamData.players || [];
+
+                if (players.length === 0) continue;
+
+                let modified = false;
+
+                const updatedPlayers = players.map(player => {
+                    // Salta le Icone (non hanno contratti)
+                    const isIcona = player.abilities && player.abilities.includes('Icona');
+                    if (isIcona) return player;
+
+                    // Salta giocatori base gratuiti (liv 1, costo 0)
+                    const isBasePlayer = (player.level || player.currentLevel || 1) === 1 && (player.cost === 0 || !player.cost);
+                    if (isBasePlayer) return player;
+
+                    // Imposta contratto a 1
+                    player.contract = 1;
+
+                    // Rimuovi timer di scadenza se presente
+                    if (player.contractExpireTimer) {
+                        delete player.contractExpireTimer;
+                    }
+
+                    modified = true;
+                    playersUpdated++;
+                    return player;
+                });
+
+                if (modified) {
+                    await updateDoc(doc(db, TEAMS_COLLECTION_PATH, teamDoc.id), {
+                        players: updatedPlayers
+                    });
+                    teamsUpdated++;
+                }
+            }
+
+            alert(`✅ Operazione completata!\n\n${playersUpdated} giocatori impostati a contratto 1 in ${teamsUpdated} squadre.`);
+
+            if (window.Toast) {
+                window.Toast.success(`${playersUpdated} contratti resettati a 1`);
+            }
+
+        } catch (error) {
+            console.error('Errore reset contratti:', error);
+            alert(`❌ Errore: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     };
 
@@ -1973,6 +2608,12 @@ document.addEventListener('DOMContentLoaded', () => {
             btnForceAdvanceTurn.addEventListener('click', handleForceAdvanceTurn);
         }
 
+        // Bottone assegna giocatore casuale
+        const btnAssignRandomPlayer = document.getElementById('btn-assign-random-player');
+        if (btnAssignRandomPlayer) {
+            btnAssignRandomPlayer.addEventListener('click', handleAssignRandomPlayer);
+        }
+
         // Toggle pausa draft
         const draftPauseToggle = document.getElementById('draft-pause-toggle');
         if (draftPauseToggle) {
@@ -2036,7 +2677,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Carica lo stato corrente del draft a turni
         loadDraftTurnsStatus();
-        
+
+        // Toggle menu a scomparsa "Crea Giocatore"
+        const createPlayerHeader = document.getElementById('create-player-header');
+        if (createPlayerHeader) {
+            createPlayerHeader.addEventListener('click', () => {
+                const content = document.getElementById('create-player-content');
+                const icon = document.getElementById('create-player-toggle-icon');
+                if (content && icon) {
+                    content.classList.toggle('hidden');
+                    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                }
+            });
+        }
+
         const btnRandomPlayer = document.getElementById('btn-random-player');
         if (btnRandomPlayer) btnRandomPlayer.addEventListener('click', () => window.AdminPlayers.handleRandomPlayer());
         
@@ -2100,6 +2754,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnGenerate = document.getElementById('btn-generate-draft-list');
             const btnStop = document.getElementById('btn-stop-draft-turns');
             const btnForceAdvance = document.getElementById('btn-force-advance-turn');
+            const btnAssignRandom = document.getElementById('btn-assign-random-player');
             const pauseToggleContainer = document.getElementById('draft-pause-toggle-container');
             const pauseToggle = document.getElementById('draft-pause-toggle');
             const pauseIcon = document.getElementById('draft-pause-icon');
@@ -2128,11 +2783,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (pauseLabel) pauseLabel.textContent = 'Draft in Pausa';
                     if (pauseSublabel) pauseSublabel.textContent = 'Il timer e\' fermo';
                     if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
+                    if (btnAssignRandom) btnAssignRandom.classList.add('hidden');
                 } else {
                     if (pauseIcon) pauseIcon.textContent = '▶️';
                     if (pauseLabel) pauseLabel.textContent = 'Draft Attivo';
                     if (pauseSublabel) pauseSublabel.textContent = 'Il timer sta scorrendo';
                     if (btnForceAdvance) btnForceAdvance.classList.remove('hidden');
+                    if (btnAssignRandom) btnAssignRandom.classList.remove('hidden');
                 }
 
                 // Mostra stato corrente
@@ -2207,6 +2864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnGenerate) btnGenerate.classList.remove('hidden');
                 if (btnStop) btnStop.classList.add('hidden');
                 if (btnForceAdvance) btnForceAdvance.classList.add('hidden');
+                if (btnAssignRandom) btnAssignRandom.classList.add('hidden');
                 if (pauseToggleContainer) pauseToggleContainer.classList.add('hidden');
                 if (statusContainer) statusContainer.innerHTML = '';
             }
@@ -2805,6 +3463,120 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.innerHTML = '⏭️ Avanza Turno Manualmente';
+        }
+    };
+
+    /**
+     * Gestisce l'assegnazione di un giocatore casuale alla squadra di turno
+     */
+    const handleAssignRandomPlayer = async () => {
+        const btn = document.getElementById('btn-assign-random-player');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Assegnando...';
+
+        try {
+            // Ottieni stato draft corrente
+            const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, 'settings');
+            const configDoc = await getDoc(configDocRef);
+            const configData = configDoc.exists() ? configDoc.data() : {};
+            const draftTurns = configData.draftTurns;
+
+            if (!draftTurns || !draftTurns.isActive) {
+                throw new Error('Draft a turni non attivo');
+            }
+
+            const currentTeamId = draftTurns.currentTeamId;
+            if (!currentTeamId) {
+                throw new Error('Nessuna squadra in turno');
+            }
+
+            // Ottieni lista giocatori draft disponibili
+            const draftPlayersSnapshot = await getDocs(collection(db, DRAFT_PLAYERS_COLLECTION_PATH));
+            const availablePlayers = [];
+            draftPlayersSnapshot.forEach(doc => {
+                const player = doc.data();
+                if (!player.draftedBy) {
+                    availablePlayers.push({ id: doc.id, ...player });
+                }
+            });
+
+            if (availablePlayers.length === 0) {
+                throw new Error('Nessun giocatore disponibile nel draft');
+            }
+
+            // Scegli un giocatore casuale
+            const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+
+            // Ottieni dati squadra
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) {
+                throw new Error('Squadra non trovata');
+            }
+
+            const teamData = teamDoc.data();
+            const currentRoster = teamData.rosa || [];
+
+            // Verifica che la squadra non abbia gia 12 giocatori
+            if (currentRoster.length >= 12) {
+                throw new Error('La squadra ha gia il massimo di 12 giocatori');
+            }
+
+            // Verifica budget
+            const cost = randomPlayer.costo || 0;
+            const budget = teamData.budgetRimanente ?? teamData.budget ?? 0;
+            if (cost > budget) {
+                throw new Error(`Budget insufficiente (${budget} CS) per giocatore ${randomPlayer.nome} (${cost} CS)`);
+            }
+
+            // Assegna il giocatore
+            // 1. Aggiorna il giocatore nel draft
+            const playerDocRef = doc(db, DRAFT_PLAYERS_COLLECTION_PATH, randomPlayer.id);
+            await updateDoc(playerDocRef, {
+                draftedBy: currentTeamId,
+                draftedAt: new Date().toISOString()
+            });
+
+            // 2. Aggiungi alla rosa della squadra
+            const newPlayer = {
+                id: randomPlayer.id,
+                nome: randomPlayer.nome,
+                ruolo: randomPlayer.ruolo,
+                tipo: randomPlayer.tipo,
+                livello: randomPlayer.livello || 1,
+                abilities: randomPlayer.abilities || [],
+                eta: randomPlayer.eta || 20,
+                costo: cost,
+                contract: randomPlayer.contract || 3,
+                secretMaxLevel: randomPlayer.secretMaxLevel
+            };
+
+            await updateDoc(teamDocRef, {
+                rosa: [...currentRoster, newPlayer],
+                budgetRimanente: budget - cost
+            });
+
+            displayMessage(`Giocatore ${randomPlayer.nome} assegnato a ${teamData.nomeSquadra}!`, 'success', 'toggle-status-message');
+
+            // 3. Avanza al turno successivo
+            const context = {
+                db,
+                firestoreTools,
+                paths: {
+                    CHAMPIONSHIP_CONFIG_PATH
+                }
+            };
+            await window.DraftTurns.forceAdvanceTurn(context);
+
+            loadDraftTurnsStatus();
+
+        } catch (error) {
+            console.error('Errore assegnazione giocatore casuale:', error);
+            displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🎲 Assegna Giocatore Casuale';
         }
     };
 

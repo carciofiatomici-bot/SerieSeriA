@@ -221,6 +221,7 @@ window.AdminUI = {
 
                 <!-- Contenuto a scomparsa -->
                 <div id="admin-utils-content" class="hidden mt-4 space-y-4 transition-all duration-300">
+                    <!-- BOTTONI PRINCIPALI -->
                     <div class="grid grid-cols-1 gap-4">
                         <button id="btn-avvia-stagione"
                                 class="bg-gradient-to-r from-green-600 to-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-teal-400 transition duration-150">
@@ -237,47 +238,93 @@ window.AdminUI = {
                             🧪 Test Simulazione
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <button id="btn-fix-icone-ability"
-                                class="bg-yellow-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150">
-                            👑 Fix Icone
-                        </button>
+                    <div class="grid grid-cols-1 gap-4 mt-4">
                         <button id="btn-reset-hall-of-fame"
                                 class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
                             🏛️ Reset HoF Stats
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <button id="btn-formulas-config"
-                                class="bg-gradient-to-r from-cyan-700 to-blue-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-cyan-600 hover:to-blue-500 transition duration-150">
-                            📐 Formule Costi
-                        </button>
-                        <button id="btn-rewards-config"
-                                class="bg-gradient-to-r from-emerald-700 to-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-emerald-600 hover:to-green-500 transition duration-150">
-                            🏆 Configurazione Reward
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <button id="btn-sponsors-config"
-                                class="bg-gradient-to-r from-yellow-700 to-amber-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-yellow-600 hover:to-amber-500 transition duration-150">
-                            🤝 Configurazione Sponsor
-                        </button>
-                        <button id="btn-media-config"
-                                class="bg-gradient-to-r from-pink-700 to-rose-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-pink-600 hover:to-rose-500 transition duration-150">
-                            📺 Configurazione Media
+
+                    <!-- BOTTONE INGRANAGGIO PER OPZIONI AVANZATE -->
+                    <div class="mt-4 border-t border-gray-600 pt-4">
+                        <button id="btn-toggle-advanced-utils"
+                                class="w-full bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg hover:bg-gray-600 transition duration-150 flex items-center justify-center gap-2">
+                            <span id="advanced-utils-icon">⚙️</span>
+                            <span id="advanced-utils-text">Mostra Opzioni Avanzate</span>
                         </button>
                     </div>
 
-                    <!-- BOTTONE EMERGENZA -->
-                    <div class="mt-6 p-4 bg-red-900/30 rounded-lg border-2 border-red-600">
-                        <h4 class="text-lg font-bold text-red-400 mb-2 flex items-center">
-                            <span class="mr-2">⚠️</span> Emergenza
-                        </h4>
-                        <p class="text-xs text-gray-400 mb-3">Annulla completamente Campionato e Coppa senza assegnare premi. Usa solo in caso di errore nella creazione.</p>
-                        <button id="btn-emergency-cancel-competitions"
-                                class="w-full bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150 border border-red-500">
-                            🚨 ANNULLA CAMPIONATO E COPPA
-                        </button>
+                    <!-- SEZIONE OPZIONI AVANZATE (nascosta di default) -->
+                    <div id="advanced-utils-section" class="hidden space-y-4 p-4 bg-gray-800/50 rounded-lg border border-gray-600">
+                        <p class="text-xs text-gray-400 text-center mb-2">Strumenti avanzati per la gestione del sistema</p>
+
+                        <!-- Configurazioni -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="btn-formulas-config"
+                                    class="bg-gradient-to-r from-cyan-700 to-blue-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-cyan-600 hover:to-blue-500 transition duration-150 text-sm">
+                                📐 Formule Costi
+                            </button>
+                            <button id="btn-rewards-config"
+                                    class="bg-gradient-to-r from-emerald-700 to-green-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-emerald-600 hover:to-green-500 transition duration-150 text-sm">
+                                🏆 Config Reward
+                            </button>
+                            <button id="btn-sponsors-config"
+                                    class="bg-gradient-to-r from-yellow-700 to-amber-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-yellow-600 hover:to-amber-500 transition duration-150 text-sm">
+                                🤝 Config Sponsor
+                            </button>
+                            <button id="btn-media-config"
+                                    class="bg-gradient-to-r from-pink-700 to-rose-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-pink-600 hover:to-rose-500 transition duration-150 text-sm">
+                                📺 Config Media
+                            </button>
+                            <button id="btn-wheel-config"
+                                    class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-500 hover:to-yellow-400 transition duration-150 text-sm col-span-2">
+                                🎡 Config Ruota Fortuna
+                            </button>
+                        </div>
+
+                        <!-- Contratti -->
+                        <div class="mt-3">
+                            <p class="text-xs text-gray-500 mb-2">Gestione Contratti</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="btn-add-contracts-all"
+                                        class="bg-gradient-to-r from-blue-700 to-indigo-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-blue-600 hover:to-indigo-500 transition duration-150 text-sm">
+                                    📝 +1
+                                </button>
+                                <button id="btn-remove-contracts-all"
+                                        class="bg-gradient-to-r from-orange-700 to-red-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-600 hover:to-red-500 transition duration-150 text-sm">
+                                    📝 -1
+                                </button>
+                                <button id="btn-reset-contracts-all"
+                                        class="bg-gradient-to-r from-gray-600 to-gray-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-gray-500 hover:to-gray-400 transition duration-150 text-sm">
+                                    📝 Reset 1
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Icone -->
+                        <div class="mt-3">
+                            <p class="text-xs text-gray-500 mb-2">Gestione Icone</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="btn-fix-icone-ability"
+                                        class="bg-yellow-700 text-white font-bold py-2 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150 text-sm">
+                                    👑 Fix Icone
+                                </button>
+                                <button id="btn-set-icone-level"
+                                        class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 text-sm">
+                                    👑 Set Livello
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Emergenza -->
+                        <div class="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600">
+                            <p class="text-xs text-red-400 font-bold mb-2">⚠️ Emergenza</p>
+                            <p class="text-xs text-gray-400 mb-2">Annulla Campionato e Coppa senza premi.</p>
+                            <button id="btn-emergency-cancel-competitions"
+                                    class="w-full bg-red-700 text-white font-bold py-2 rounded-lg shadow-xl hover:bg-red-600 transition duration-150 text-sm border border-red-500">
+                                🚨 Annulla Competizioni
+                            </button>
+                        </div>
                     </div>
 
                     <div class="text-gray-400 text-sm mt-4">
@@ -326,6 +373,17 @@ window.AdminUI = {
                     <button id="btn-close-media-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
                 <div id="media-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE RUOTA FORTUNA (inizialmente nascosto) -->
+            <div id="wheel-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-orange-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-orange-400">🎡 Configurazione Ruota della Fortuna</h3>
+                    <button id="btn-close-wheel-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="wheel-panel-content">
                     <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>
@@ -559,10 +617,6 @@ window.AdminUI = {
                             class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-500 transition">
                         Genera Lista Draft
                     </button>
-                    <button id="btn-force-advance-turn"
-                            class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-500 transition hidden">
-                        ⏭️ Avanza Turno Manualmente
-                    </button>
 
                     <!-- Toggle Pausa Draft -->
                     <div id="draft-pause-toggle-container" class="hidden p-3 bg-gray-800 rounded-lg border border-gray-600">
@@ -581,6 +635,16 @@ window.AdminUI = {
                         </div>
                     </div>
 
+                    <button id="btn-force-advance-turn"
+                            class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-500 transition hidden">
+                        ⏭️ Avanza Turno Manualmente
+                    </button>
+
+                    <button id="btn-assign-random-player"
+                            class="w-full bg-cyan-600 text-white font-bold py-3 rounded-lg hover:bg-cyan-500 transition hidden">
+                        🎲 Assegna Giocatore Casuale
+                    </button>
+
                     <button id="btn-stop-draft-turns"
                             class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-500 transition hidden">
                         Ferma Draft a Turni
@@ -588,94 +652,100 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- CREAZIONE CALCIATORE -->
-            <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-600 pb-2 pt-4">Crea Nuovo Calciatore</h3>
-            <div class="p-6 bg-gray-700 rounded-lg space-y-4 mb-6">
-
-                 <div class="flex flex-col">
-                     <label class="text-gray-300 mb-1 font-semibold" for="target-collection">Destinazione Giocatore</label>
-                     <select id="target-collection"
-                             class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white focus:ring-yellow-400">
-                         <option value="draft">Draft (Selezione a Turni)</option>
-                         <option value="market">Mercato (Acquisto Libero)</option>
-                     </select>
-                     <p class="text-xs text-gray-400 mt-1">Scegli dove aggiungere il giocatore.</p>
-                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-name">Nome</label>
-                        <input type="text" id="player-name" placeholder="Es: Barella" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+            <!-- CREAZIONE CALCIATORE - Menu a Scomparsa -->
+            <div class="mb-6 bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
+                <!-- Header Cliccabile -->
+                <div id="create-player-header" class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-650 transition-colors bg-gray-750">
+                    <div class="flex items-center gap-3">
+                        <span id="create-player-toggle-icon" class="text-yellow-400 transition-transform duration-200">▶</span>
+                        <h3 class="text-xl font-bold text-yellow-400">Crea Giocatore</h3>
                     </div>
+                    <span class="text-gray-400 text-sm">Clicca per espandere</span>
+                </div>
 
+                <!-- Contenuto Collassabile -->
+                <div id="create-player-content" class="hidden p-6 space-y-4 border-t border-gray-600">
+
+                    <!-- Destinazione -->
                     <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-nationality">Nazionalita</label>
-                        <select id="player-nationality" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                            <option value="">Seleziona Nazionalita</option>
-                            ${window.DraftConstants?.NATIONALITIES?.map(n => `<option value="${n.code}">${n.flag} ${n.name}</option>`).join('') || ''}
+                        <label class="text-gray-300 mb-1 font-semibold" for="target-collection">Destinazione</label>
+                        <select id="target-collection" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                            <option value="draft">Draft</option>
+                            <option value="market">Mercato</option>
                         </select>
                     </div>
 
-                    <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-role">Ruolo</label>
-                        <select id="player-role" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                            <option value="">Seleziona Ruolo</option>
-                            <option value="P">P (Portiere)</option>
-                            <option value="D">D (Difensore)</option>
-                            <option value="C">C (Centrocampista)</option>
-                            <option value="A">A (Attaccante)</option>
-                        </select>
+                    <!-- Campi Principali -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-name">Nome</label>
+                            <input type="text" id="player-name" placeholder="Es: Barella" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-role">Ruolo</label>
+                            <select id="player-role" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                                <option value="">Seleziona Ruolo</option>
+                                <option value="P">P (Portiere)</option>
+                                <option value="D">D (Difensore)</option>
+                                <option value="C">C (Centrocampista)</option>
+                                <option value="A">A (Attaccante)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-type">Tipologia</label>
+                            <select id="player-type" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                                <option value="">Seleziona Tipo</option>
+                                ${types.map(t => `<option value="${t}">${t}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-age">Eta (16 - 45)</label>
+                            <input type="number" id="player-age" min="16" max="45" placeholder="25" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-level-min">Livello Min (1 - 8)</label>
+                            <input type="number" id="player-level-min" min="1" max="8" value="1" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-level-max">Livello Max (1 - 8)</label>
+                            <input type="number" id="player-level-max" min="1" max="8" value="3" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                        </div>
                     </div>
 
+                    <!-- Costo Calcolato -->
                     <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-type">Tipologia</label>
-                        <select id="player-type" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                            <option value="">Seleziona Tipo</option>
-                            ${types.map(t => `<option value="${t}">${t}</option>`).join('')}
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-age">Eta (15 - 50)</label>
-                        <input type="number" id="player-age" min="15" max="50" placeholder="25" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-level-min">Liv Minimo (1 - 20)</label>
-                        <input type="number" id="player-level-min" min="1" max="20" placeholder="10" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-gray-300 mb-1" for="player-level-max">Liv Massimo (1 - 20)</label>
-                        <input type="number" id="player-level-max" min="1" max="20" placeholder="18" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                    </div>
-
-                    <div class="flex flex-col lg:col-span-2">
-                        <label class="text-gray-300 mb-1" for="player-cost-display">Costo Calcolato (CS)</label>
-                        <input type="text" id="player-cost-display" value="Costo: 100 CS" readonly disabled
+                        <label class="text-gray-300 mb-1" for="player-cost-display">Costo Calcolato</label>
+                        <input type="text" id="player-cost-display" value="Costo: -- CS" readonly disabled
                                class="p-2 rounded-lg bg-gray-500 border border-yellow-400 text-white font-extrabold text-center cursor-default">
                     </div>
-                </div>
 
-                <div class="flex flex-col lg:col-span-4 border border-gray-600 p-4 rounded-lg bg-gray-800">
-                    <label class="text-gray-300 mb-2 font-semibold text-lg">Abilita (Max 3)</label>
-                    <div id="abilities-checklist" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilita disponibili.</p>
+                    <!-- Abilita -->
+                    <div class="border border-gray-600 p-4 rounded-lg bg-gray-800">
+                        <label class="text-gray-300 mb-2 font-semibold text-lg block">Abilita (Max 3 positive, 2 negative)</label>
+                        <div id="abilities-checklist" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <p class="text-yellow-400 col-span-4" id="abilities-placeholder">Seleziona un ruolo per visualizzare le abilita.</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-random-player"
-                            class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
-                        Crea Giocatore Casuale
-                    </button>
-                    <button id="btn-create-player"
-                            class="bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150">
-                        Aggiungi Calciatore
-                    </button>
-                </div>
+                    <!-- Bottoni -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="btn-random-player"
+                                class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150 flex items-center justify-center gap-2">
+                            <span>🎲</span> Genera Casuale
+                        </button>
+                        <button id="btn-create-player"
+                                class="bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 flex items-center justify-center gap-2">
+                            <span>➕</span> Crea Giocatore
+                        </button>
+                    </div>
 
-                <p id="player-creation-message" class="text-center mt-3 text-red-400"></p>
+                    <p id="player-creation-message" class="text-center mt-3 text-red-400"></p>
+                </div>
             </div>
 
             <!-- LISTE GIOCATORI -->
@@ -1004,8 +1074,8 @@ window.AdminUI = {
                             </div>
                         </div>
 
-                        <!-- EXP -->
-                        <div class="grid grid-cols-2 gap-4">
+                        <!-- EXP e Contratto -->
+                        <div class="grid grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-gray-300 mb-1 font-semibold">EXP Attuale</label>
                                 <input type="number" id="edit-player-exp" value="${player.exp || 0}" min="0"
@@ -1015,6 +1085,11 @@ window.AdminUI = {
                                 <label class="block text-gray-300 mb-1 font-semibold">EXP per Prossimo Lv</label>
                                 <input type="number" id="edit-player-exp-next" value="${player.expToNextLevel || 100}" min="1" readonly disabled
                                        class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 font-semibold">📝 Contratto (anni)</label>
+                                <input type="number" id="edit-player-contract" value="${player.contract || 1}" min="0" max="${window.Contracts?.MAX_CONTRACT_YEARS || 5}"
+                                       class="w-full p-2 rounded bg-gray-700 border border-blue-600 text-blue-300">
                             </div>
                         </div>
 
@@ -1254,7 +1329,8 @@ window.AdminUI = {
                     parseInt(document.getElementById('edit-player-level-max').value)
                 ],
                 abilities: currentAbilities,
-                exp: parseInt(document.getElementById('edit-player-exp').value) || 0
+                exp: parseInt(document.getElementById('edit-player-exp').value) || 0,
+                contract: parseInt(document.getElementById('edit-player-contract').value) || 1
             };
 
             // Calcola nuovo costo

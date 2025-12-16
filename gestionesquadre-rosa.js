@@ -13,12 +13,49 @@ window.GestioneSquadreRosa = {
      */
     render(teamData, context) {
         const { squadraMainTitle, squadraSubtitle, squadraToolsContainer, currentTeamId, loadTeamDataFromFirestore } = context;
-        const { displayMessage, sortPlayersByRole } = window.GestioneSquadreUtils;
+        const { displayMessage } = window.GestioneSquadreUtils;
 
         squadraMainTitle.textContent = "Gestione Rosa";
         squadraSubtitle.textContent = `Budget Rimanente: ${teamData.budget} Crediti Seri | Giocatori in rosa: ${window.getPlayerCountExcludingIcona(teamData.players)}/${window.InterfacciaConstants.MAX_ROSA_PLAYERS} (+ Icona)`;
 
-        const sortedPlayers = sortPlayersByRole(teamData.players);
+        // Separa giocatori per ruolo
+        const players = teamData.players || [];
+        const icona = players.find(p => (p.abilities && p.abilities.includes('Icona')) || (teamData.iconaId && p.id === teamData.iconaId));
+        const portieri = players.filter(p => p.role === 'P' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
+        const difensori = players.filter(p => p.role === 'D' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
+        const centrocampisti = players.filter(p => p.role === 'C' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
+        const attaccanti = players.filter(p => p.role === 'A' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
+
+        const roleColors = {
+            icona: { border: 'border-yellow-500', bg: 'bg-yellow-900 bg-opacity-20', text: 'text-yellow-400', icon: '👑' },
+            P: { border: 'border-blue-500', bg: 'bg-blue-900 bg-opacity-20', text: 'text-blue-400', icon: '🧤' },
+            D: { border: 'border-green-500', bg: 'bg-green-900 bg-opacity-20', text: 'text-green-400', icon: '🛡️' },
+            C: { border: 'border-purple-500', bg: 'bg-purple-900 bg-opacity-20', text: 'text-purple-400', icon: '⚽' },
+            A: { border: 'border-red-500', bg: 'bg-red-900 bg-opacity-20', text: 'text-red-400', icon: '👟' }
+        };
+
+        const renderRoleSection = (role, title, playersList, colors) => {
+            if (playersList.length === 0 && role !== 'icona') return '';
+            if (role === 'icona' && !icona) return '';
+
+            const playersToRender = role === 'icona' ? [icona] : playersList;
+
+            return `
+                <div class="role-section mb-4 ${colors.bg} rounded-lg border ${colors.border} overflow-hidden">
+                    <div class="role-section-header flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700 transition-colors"
+                         data-role="${role}">
+                        <div class="flex items-center gap-2">
+                            <span class="role-toggle-icon text-gray-400 transition-transform duration-200" style="transform: rotate(90deg);">▶</span>
+                            <span class="${colors.text} font-bold text-lg">${colors.icon} ${title}</span>
+                            <span class="text-gray-400 text-sm">(${playersToRender.length})</span>
+                        </div>
+                    </div>
+                    <div class="role-section-content p-3 pt-0 space-y-2">
+                        ${playersToRender.map(player => this.renderPlayerCard(player, teamData)).join('')}
+                    </div>
+                </div>
+            `;
+        };
 
         squadraToolsContainer.innerHTML = `
             <!-- BOTTONE ALLENAMENTO (centrato) -->
@@ -31,17 +68,23 @@ window.GestioneSquadreRosa = {
 
             <div class="bg-gray-700 p-6 rounded-lg border border-green-500 relative">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold text-green-400">I Tuoi Calciatori (Ordinati per Icona, Ruolo e Livello)</h3>
+                    <h3 class="text-2xl font-bold text-green-400">I Tuoi Calciatori</h3>
                     <button id="btn-toggle-licenzia"
                             class="text-gray-400 hover:text-white hover:bg-gray-600 px-2 py-1 rounded transition text-xl"
                             title="Mostra/Nascondi opzioni licenziamento">⚙️</button>
                 </div>
                 <div id="player-list-message" class="text-center mb-4 text-green-500"></div>
 
-                <div id="player-list" class="space-y-3">
-                    ${sortedPlayers.length === 0
+                <div id="player-list">
+                    ${players.length === 0
                         ? '<p class="text-gray-400">Nessun calciatore in rosa. Vai al Draft per acquistarne!</p>'
-                        : sortedPlayers.map(player => this.renderPlayerCard(player, teamData)).join('')
+                        : `
+                            ${renderRoleSection('icona', 'Icona', [], roleColors.icona)}
+                            ${renderRoleSection('P', 'Portieri', portieri, roleColors.P)}
+                            ${renderRoleSection('D', 'Difensori', difensori, roleColors.D)}
+                            ${renderRoleSection('C', 'Centrocampisti', centrocampisti, roleColors.C)}
+                            ${renderRoleSection('A', 'Attaccanti', attaccanti, roleColors.A)}
+                        `
                     }
                 </div>
             </div>
@@ -76,6 +119,9 @@ window.GestioneSquadreRosa = {
             injuryMarker = ` <span class="bg-red-800 text-red-300 px-2 py-0.5 rounded-full text-xs font-extrabold" title="Infortunato per ${remaining} partite">🏥 ${remaining}</span>`;
         }
 
+        // Marker Contratto
+        const contractBadge = window.Contracts?.renderContractBadge(player, teamData) || '';
+
         const isCaptainClass = isCaptain ? 'text-orange-400 font-extrabold' : 'text-white font-semibold';
 
         // Badge tipologia (PlayerTypeBadge)
@@ -88,6 +134,34 @@ window.GestioneSquadreRosa = {
         const abilitiesHtml = playerAbilities.length > 0
             ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => UNIQUE_ABILITIES.includes(a) ? `<span class="text-yellow-400 font-bold">${a}</span>` : a).join(', ')}</p>`
             : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
+
+        // Potenziale basato su secretMaxLevel (solo per giocatori normali, non icone)
+        let potenzialHtml = '';
+        if (!isIcona && player.secretMaxLevel !== undefined && player.secretMaxLevel !== null) {
+            const maxLvl = player.secretMaxLevel;
+            let potenziale = '';
+            let potenzialColor = '';
+            if (maxLvl <= 10) {
+                potenziale = 'Dilettante';
+                potenzialColor = 'text-gray-400';
+            } else if (maxLvl <= 15) {
+                potenziale = 'Professionista';
+                potenzialColor = 'text-green-400';
+            } else if (maxLvl <= 19) {
+                potenziale = 'Fuoriclasse';
+                potenzialColor = 'text-blue-400';
+            } else if (maxLvl <= 24) {
+                potenziale = 'Leggenda';
+                potenzialColor = 'text-purple-400';
+            } else {
+                potenziale = 'GOAT';
+                potenzialColor = 'text-yellow-400';
+            }
+            // Mostra livello max segreto se admin ha il flag attivo
+            const showSecretLevel = window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');
+            const secretLevelText = showSecretLevel ? ` <span class="text-purple-300">(Max: ${maxLvl})</span>` : '';
+            potenzialHtml = `<p class="text-xs mt-1">Potenziale: <span class="${potenzialColor} font-semibold">${potenziale}</span>${secretLevelText}</p>`;
+        }
 
         // Barra EXP
         let expBarHtml = '';
@@ -134,6 +208,24 @@ window.GestioneSquadreRosa = {
                     class="bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md">
                 Nomina Capitano
             </button>`;
+
+        // Pulsante Prolunga Contratto (solo se sistema contratti attivo e giocatore soggetto)
+        let contractButton = '';
+        if (window.Contracts?.isEnabled() && window.Contracts.isSubjectToContract(player, teamData)) {
+            const extensionCost = window.Contracts.calculateExtensionCost(player);
+            const currentContract = player.contract || 1;
+            const hasTimer = window.Contracts.hasExpireTimer(player);
+            contractButton = `
+                <button data-player-id="${player.id}"
+                        data-player-name="${player.name}"
+                        data-extension-cost="${extensionCost}"
+                        data-current-contract="${currentContract}"
+                        data-action="extend-contract"
+                        class="bg-teal-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-teal-500 transition duration-150 shadow-md flex items-center gap-1">
+                    📝 Prolunga (${extensionCost} CS)
+                </button>
+            `;
+        }
 
         // Bottone Licenziamento (nascosto di default, visibile tramite toggle ⚙️)
         const isLicenziabile = !isIcona;
@@ -191,27 +283,43 @@ window.GestioneSquadreRosa = {
             : '';
 
         return `
-            <div class="relative flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border ${borderClass}">
+            <div class="relative bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
                 ${statsButton}
-                <div class="flex items-center mb-2 sm:mb-0 sm:w-1/2">
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
-                            ${iconaMarker}
-                            ${injuryMarker}
-                            <span class="text-yellow-400">(${player.role})</span>
-                            ${typeBadgeHtml}
-                        </div>
-                        <p class="text-sm text-gray-400">Livello: ${player.level || player.currentLevel || 1} | Acquistato per: ${player.cost || 0} CS</p>
-                        ${abilitiesHtml}
-                        ${expBarHtml}
-                        ${equipmentHtml}
+                <!-- Header cliccabile -->
+                <div class="player-card-header flex items-center justify-between p-4 cursor-pointer hover:bg-gray-750 transition-colors"
+                     data-player-id="${player.id}">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
+                        <span class="${isCaptainClass}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
+                        ${iconaMarker}
+                        ${injuryMarker}
+                        <span class="text-yellow-400">(${player.role})</span>
+                        ${typeBadgeHtml}
+                        <span class="text-gray-500 text-sm ml-2">Lv.${player.level || player.currentLevel || 1}</span>
+                        ${contractBadge}
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto items-center">
-                    ${trainingExpButton}
-                    ${captainButton}
-                    ${licenziaButton}
+                <!-- Contenuto espandibile (chiuso di default) -->
+                <div class="player-card-content hidden px-4 pb-4 border-t border-gray-700">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3">
+                        <div class="mb-3 sm:mb-0 sm:w-1/2">
+                            <p class="text-sm text-gray-400">Acquistato per: ${player.cost || 0} CS</p>
+                            ${abilitiesHtml}
+                            ${potenzialHtml}
+                            ${expBarHtml}
+                            ${equipmentHtml}
+                        </div>
+                        <div class="flex flex-col w-full sm:w-auto items-end gap-2">
+                            <div class="flex flex-row items-center gap-2">
+                                ${trainingExpButton}
+                                ${captainButton}
+                            </div>
+                            <div class="flex flex-row items-center gap-2">
+                                ${contractButton}
+                            </div>
+                            ${licenziaButton}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -228,6 +336,35 @@ window.GestioneSquadreRosa = {
         if (playerList) {
             playerList.addEventListener('click', (e) => {
                 const target = e.target;
+
+                // Toggle espansione sezione ruolo (click su header sezione)
+                const roleHeader = target.closest('.role-section-header');
+                if (roleHeader) {
+                    const section = roleHeader.closest('.role-section');
+                    const content = section.querySelector('.role-section-content');
+                    const icon = roleHeader.querySelector('.role-toggle-icon');
+
+                    if (content && icon) {
+                        content.classList.toggle('hidden');
+                        icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                    }
+                    return;
+                }
+
+                // Toggle espansione card giocatore (click su header)
+                const playerHeader = target.closest('.player-card-header');
+                if (playerHeader && !target.closest('button') && !target.closest('[data-action]')) {
+                    const card = playerHeader.closest('.relative');
+                    const content = card.querySelector('.player-card-content');
+                    const icon = playerHeader.querySelector('.player-toggle-icon');
+
+                    if (content && icon) {
+                        content.classList.toggle('hidden');
+                        icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                    }
+                    return;
+                }
+
                 if (target.dataset.action === 'licenzia' || target.dataset.action === 'confirm-licenzia') {
                     this.handleRosaAction(e, context);
                 } else if (target.dataset.action === 'assign-captain') {
@@ -236,6 +373,8 @@ window.GestioneSquadreRosa = {
                     window.EquipmentUI?.showEquipmentModal(target.dataset.playerId, target.dataset.playerName, context);
                 } else if (target.dataset.action === 'training-exp') {
                     this.handleTrainingExp(target.dataset.playerId, target.dataset.playerName, target.dataset.playerRole, context);
+                } else if (target.dataset.action === 'extend-contract') {
+                    this.handleExtendContract(target.dataset.playerId, target.dataset.playerName, parseInt(target.dataset.extensionCost), context);
                 } else if (target.closest('[data-action="view-player-stats"]')) {
                     const container = target.closest('[data-action="view-player-stats"]');
                     if (container && window.FeatureFlags?.isEnabled('playerStats')) {
@@ -342,6 +481,59 @@ window.GestioneSquadreRosa = {
         } catch (error) {
             console.error("Errore nell'assegnazione del Capitano:", error);
             displayMessage(msgContainerId, `Errore: Impossibile nominare ${newCaptainName} Capitano. ${error.message}`, 'error');
+        }
+    },
+
+    /**
+     * Gestisce il prolungamento del contratto di un giocatore
+     */
+    async handleExtendContract(playerId, playerName, extensionCost, context) {
+        const { currentTeamId, currentTeamData, loadTeamDataFromFirestore } = context;
+        const { displayMessage } = window.GestioneSquadreUtils;
+        const msgContainerId = 'player-list-message';
+
+        // Trova il giocatore
+        const player = currentTeamData.players.find(p => p.id === playerId);
+        if (!player) {
+            displayMessage(msgContainerId, 'Giocatore non trovato!', 'error');
+            return;
+        }
+
+        // Verifica budget
+        if ((currentTeamData.budget || 0) < extensionCost) {
+            displayMessage(msgContainerId, `Budget insufficiente! Servono ${extensionCost} CS`, 'error');
+            return;
+        }
+
+        // Conferma
+        const currentContract = player.contract || 0;
+        const hasTimer = window.Contracts?.hasExpireTimer(player);
+        const timerInfo = hasTimer ? `\n⚠️ Timer scadenza attivo! Verra' annullato.` : '';
+
+        const confirmed = confirm(
+            `Vuoi prolungare il contratto di ${playerName}?\n\n` +
+            `Contratto attuale: ${currentContract} anno/i\n` +
+            `Nuovo contratto: ${currentContract + 1} anni\n` +
+            `Costo: ${extensionCost} CS\n\n` +
+            `Budget attuale: ${currentTeamData.budget} CS\n` +
+            `Budget dopo: ${currentTeamData.budget - extensionCost} CS` +
+            timerInfo
+        );
+        if (!confirmed) return;
+
+        displayMessage(msgContainerId, `Prolungamento contratto di ${playerName} in corso...`, 'info');
+
+        // Esegui il prolungamento
+        const result = await window.Contracts.extendContract(player, currentTeamData, context);
+
+        if (result.success) {
+            displayMessage(msgContainerId, result.message, 'success');
+            if (window.Toast) window.Toast.success(result.message);
+            loadTeamDataFromFirestore(currentTeamId, 'rosa');
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+        } else {
+            displayMessage(msgContainerId, result.message, 'error');
+            if (window.Toast) window.Toast.error(result.message);
         }
     },
 
