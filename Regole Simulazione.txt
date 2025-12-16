@@ -1,0 +1,181 @@
+# REGOLAMENTO SIMULAZIONE PARTITA
+
+---
+
+## 1. FORMAZIONI E PREPARAZIONE
+
+### 1.1 Schieramento
+
+Prima dell’inizio della partita ogni squadra definisce:
+ formazione titolare;
+ panchina.
+
+---
+
+### 1.2 Modificatore di Livello del Giocatore
+
+A ogni giocatore viene assegnato un modificatore base in funzione del suo livello.
+La progressione aumenta di +0,5 ogni due livelli (con bonus finale al livello 30).
+
+| Livello | Mod. | Livello | Mod. | Livello | Mod. |
+| ------: | :--: | ------: | :--: | ------: | :--: |
+|      01 |  0,5 |      11 |  3,0 |      21 |  5,5 |
+|      02 |  0,5 |      12 |  3,0 |      22 |  5,5 |
+|      03 |  1,0 |      13 |  3,5 |      23 |  6,0 |
+|      04 |  1,0 |      14 |  3,5 |      24 |  6,0 |
+|      05 |  1,5 |      15 |  4,0 |      25 |  6,5 |
+|      06 |  1,5 |      16 |  4,0 |      26 |  6,5 |
+|      07 |  2,0 |      17 |  4,5 |      27 |  7,0 |
+|      08 |  2,0 |      18 |  4,5 |      28 |  7,0 |
+|      09 |  2,5 |      19 |  5,0 |      29 |  8,0 |
+|      10 |  2,5 |      20 |  5,0 |      30 |  9,0 |
+
+---
+
+### 1.3 Forma Fisica
+
+Prima dell’inizio delle fasi di gioco, al livello di ogni giocatore viene applicato il bonus o malus derivante dalla sua forma fisica.
+
+---
+
+### 1.4 Abilità Speciali
+
+Le abilità dei giocatori in campo (e della panchina, se previsto) possono modificare le formule di calcolo.
+Nota: alcune abilità non sono cumulabili.
+
+---
+
+## 2. MODIFICATORI TATTICI E SITUAZIONALI
+
+Tutti i seguenti modificatori vengono applicati prima dell’inizio delle fasi di gioco.
+
+---
+
+### 2.1 Tipologia dei Giocatori (Sasso – Carta – Forbice)
+
+Il confronto tra tipologie genera bonus e penalità fissi al modificatore:
+
+ Potenza vs Tecnica
+  Potenza: +1,5 al modificatore
+  Tecnica: -1,5 al modificatore
+
+ Tecnica vs Velocità
+  Tecnica: +1,5 al modificatore
+  Velocità: -1,5 al modificatore
+
+ Velocità vs Potenza
+  Velocità: +1,5 al modificatore
+  Potenza: -1,5 al modificatore
+
+Gerarchia: Potenza > Tecnica > Velocità > Potenza
+
+---
+
+### 2.2 Bonus Allenatore
+
+In tutte le fasi di gioco si aggiunge:
+> +(½ livello allenatore)
+
+---
+
+### 2.3 Bonus Capitano
+
+Il capitano della squadra ottiene sempre:
+> +1 al proprio modificatore totale
+
+---
+
+### 2.4 Bonus Stadio (solo squadra di casa)
+
+La squadra che gioca in casa beneficia dei modificatori forniti dallo stadio, in base alle strutture costruite.
+
+---
+
+## 3. SVOLGIMENTO DELLA PARTITA
+
+La simulazione è composta da 50 occasioni per squadra.
+Ogni occasione è suddivisa in 3 fasi sequenziali.
+
+Esempio: Squadra A (attacco) vs Squadra B (difesa)
+
+---
+
+### FASE 1 – COSTRUZIONE (ATTACCO (A) VS DIFESA (B))
+
+Partecipanti:
+ Squadra A (attacco):
+   Difensore (25%) oppure
+   Centrocampista (75%)
+ Squadra B (difesa):
+   Centrocampista (85%) oppure
+   Attaccante (15%)
+
+Formula:
+
+1d20 + Mod. giocatore scelto Squadra A (considerare abilità giocatore) VS 1d20 + Mod. giocatore scelto Squadra B (considerare abilità giocatore)
+
+Esito:
+ Il confronto (50 + Totale Squadra A - Totale Squadra B) determina la percentuale di riuscita del passaggio.
+ Tira 1d100:
+   se il risultato è ≤ della percentuale → si passa alla Fase 2;
+   in caso di fallimento l’azione termina.
+ In caso di fallimento, esiste comunque un 5% di probabilità di passare alla Fase 2. (si chiama successo critico)
+
+---
+
+### FASE 2 – ATTACCO VS DIFESA
+
+(Solo se la Fase 1 è superata)
+
+Partecipanti:
+ Squadra A (attacco): Attaccante (50%) o Centrocampista (50%)
+ Squadra B (difesa): Difensore (50%) o Centrocampista (50%)
+
+Formula:
+
+1d20 + Mod. giocatore scelto Squadra A (considerare abilità giocatore) VS 1d20 + Mod. giocatore scelto Squadra B (considerare abilità giocatore)
+
+Esito:
+ Se A > B → si passa alla Fase 3 e il risultato di A diventa il Valore Tiro.
+ Se B > A → l’azione termina.
+ In caso di fallimento, esiste un 5% di probabilità di accedere comunque alla Fase 3. (si chiama successo critico)
+---
+
+### FASE 3 – TIRO VS PORTIERE
+
+(Solo se la Fase 2 è superata)
+
+Partecipanti:
+ Portiere Squadra B 
+ Tiratore Squadra A selezionato casualmente:
+   Attaccante (75%)
+   Centrocampista (15%)
+   Difensore (5%)
+
+Formula:
+
+(1d20 + Mod. Portiere B (considerare abilità giocatore)) − (1d20 + Mod. giocatore scelto Squadra A (considerare abilità giocatore))
+
+Calcolo Finale (Totale Portiere − Valore Tiro):
+
+ Risultato > 0 → PARATA
+  C’è comunque un 5% di probabilità che l’azione si trasformi in GOAL. (si chiama successo critico)
+
+ Risultato = 0 → INCERTO
+  50% GOAL / 50% PARATA.
+
+ Risultato < 0 → GOAL
+  (assegna un goal al giocatore che in questa occasione è stato scelto nella fase tiro vs portiere e un assist al giocatore che in questa occasione è stato scelto nella fase costruzione)
+
+---
+
+## 5. FINE DELLA PARTITA
+
+Al termine della partita:
+ ogni giocatore, sia in campo sia in panchina, ha 1% di probabilità di infortunarsi;
+ l’infortunio si verifica solo se il flag infortuni è attivo;
+ massimo 1 giocatore per squadra può infortunarsi.
+
+Nota Finale
+Tutte le percentuali e i modificatori possono essere alterati dalle abilità dei giocatori.
+Le abilità hanno priorità assoluta sul regolamento: se un’abilità richiede di aggiungere, rimuovere o modificare regole, l’abilità prevale sempre.

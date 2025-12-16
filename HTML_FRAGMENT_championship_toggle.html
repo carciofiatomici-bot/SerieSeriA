@@ -1,0 +1,41 @@
+<!-- ============================================ -->
+<!-- FRAMMENTO HTML DA AGGIUNGERE IN index.html -->
+<!-- ============================================ -->
+
+<!-- POSIZIONE: Dopo la riga 158, prima del div con "Sei in Area Utente standard" -->
+<!-- Sostituisci il div alle righe 159-161 con questo: -->
+
+            <!-- NUOVO: Toggle Partecipazione Campionato -->
+            <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-purple-500 text-center shadow-lg">
+                <div class="flex items-center justify-center space-x-4 mb-3">
+                    <input type="checkbox" id="championship-participation-toggle" 
+                           class="form-checkbox h-6 w-6 rounded transition duration-150 ease-in-out bg-gray-600 border-purple-500">
+                    <label for="championship-participation-toggle" class="text-white font-bold text-lg cursor-pointer">
+                        🏆 Partecipa al Campionato
+                    </label>
+                </div>
+                <p id="championship-participation-status" class="text-sm text-gray-400">
+                    Caricamento stato...
+                </p>
+            </div>
+
+            <div class="mt-4 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+                <p class="text-white font-semibold">Sei in Area Utente standard. ID Firestore: <span id="team-firestore-id">N/A</span></p>
+            </div>
+
+<!-- ============================================ -->
+<!-- FINE FRAMMENTO HTML -->
+<!-- ============================================ -->
+
+<!-- 
+ISTRUZIONI:
+1. Apri index.html
+2. Trova le righe 159-161 che contengono:
+   <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-green-500 text-center shadow-lg">
+       <p class="text-white font-semibold">Sei in Area Utente standard. ID Firestore: <span id="team-firestore-id">N/A</span></p>
+   </div>
+
+3. Sostituisci TUTTO quel blocco con il codice qui sopra (dal commento NUOVO al div con "Sei in Area Utente standard")
+
+NOTA: Il nuovo div con il toggle viene PRIMA del div verde con l'ID Firestore
+-->

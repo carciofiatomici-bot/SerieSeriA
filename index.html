@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport ottimizzato per iPhone moderni (notch, Dynamic Island) e Android -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+
+    <!-- Theme colors per browser mobile -->
+    <meta name="theme-color" content="#16a34a" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0d1b2a" media="(prefers-color-scheme: dark)">
+
+    <!-- iOS PWA ottimizzazioni -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Serie SeriA">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Formato telefono e email -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+
+    <!-- Descrizione e SEO -->
+    <meta name="description" content="Gestisci la tua squadra di fantacalcio, partecipa al draft e sfida i tuoi amici!">
+    <meta name="application-name" content="Serie SeriA">
+
+    <!-- Microsoft/Windows Phone -->
+    <meta name="msapplication-TileColor" content="#16a34a">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    <title>Serie SeriA</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icone PWA - Multiple sizes per tutti i dispositivi -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png">
+
+    <!-- Splash screens iOS (iPhone moderni) -->
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+
+    <!-- Preload risorse critiche per performance -->
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    <link rel="dns-prefetch" href="https://www.googleapis.com">
+
+    <!-- Carica Tailwind CSS dal CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Collega il foglio di stile esterno -->
+    <link rel="stylesheet" href="style.css">
+    <!-- CARICA FONT AWESOME (per icone tipologie) - async per non bloccare il render -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+</head>
+<body>
+
+    <!-- ALERT DRAFT ATTIVO - Flottante in alto a sinistra, sempre visibile quando c'è un draft -->
+    <div id="draft-alert-banner" class="hidden"
+         style="position: fixed; top: 10px; left: 10px; z-index: 9999; max-width: min(320px, calc(100vw - 20px));">
+        <!-- Versione espansa -->
+        <div id="draft-alert-expanded" class="p-3 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg border-2 border-purple-500 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🎯</span>
+                <div class="flex-1">
+                    <p class="text-purple-300 text-xs font-semibold">DRAFT IN CORSO</p>
+                    <p class="text-white font-bold text-sm"><span id="draft-alert-team" class="text-yellow-400">--</span></p>
+                    <p id="draft-alert-steal-info" class="hidden text-red-300 text-xs font-semibold"></p>
+                    <p id="draft-alert-autoassign-info" class="hidden text-orange-300 text-xs font-semibold"></p>
+                </div>
+                <div class="text-center">
+                    <p class="text-purple-300 text-xs">Tempo</p>
+                    <p id="draft-alert-countdown" class="text-xl font-bold text-white">--:--</p>
+                    <p id="draft-alert-autoassign-countdown" class="hidden text-orange-400 text-xs font-semibold"></p>
+                </div>
+                <!-- Bottone minimizza -->
+                <button id="draft-alert-minimize"
+                        onclick="window.InterfacciaDashboard?.toggleDraftAlertMinimized(true)"
+                        class="text-purple-300 hover:text-white transition p-1 -mr-1 -mt-6"
+                        title="Minimizza">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+            <button id="draft-alert-go-btn"
+                    class="w-full mt-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 px-3 rounded-lg transition text-xs">
+                Vai al Draft →
+            </button>
+        </div>
+        <!-- Versione minimizzata (icona compatta) -->
+        <div id="draft-alert-minimized" class="hidden">
+            <button onclick="window.InterfacciaDashboard?.toggleDraftAlertMinimized(false)"
+                    class="p-2 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg border-2 border-purple-500 shadow-2xl flex items-center gap-2 hover:scale-105 transition"
+                    title="Espandi alert Draft">
+                <span class="text-xl">🎯</span>
+                <span id="draft-alert-countdown-mini" class="text-sm font-bold text-white">--:--</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MATCH ALERT BANNER - Timer prossima partita (Campionato/Coppa) -->
+    <div id="match-alert-banner" class="hidden"
+         style="position: fixed; top: 10px; right: 10px; z-index: 9998; max-width: 280px;">
+        <!-- Versione espansa -->
+        <div id="match-alert-expanded" class="p-3 bg-gradient-to-r from-teal-900 to-cyan-900 rounded-lg border-2 border-teal-500 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">⚽</span>
+                <div class="flex-1">
+                    <p id="match-alert-competition" class="text-teal-300 text-xs font-semibold">PROSSIMA PARTITA</p>
+                    <p id="match-alert-info" class="text-white font-bold text-sm">--</p>
+                    <p id="match-alert-opponent" class="text-teal-200 text-xs">vs --</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-teal-300 text-xs">Tempo</p>
+                    <p id="match-alert-countdown" class="text-xl font-bold text-teal-400">--:--:--</p>
+                </div>
+                <!-- Bottone minimizza -->
+                <button id="match-alert-minimize"
+                        onclick="window.InterfacciaDashboard?.toggleMatchAlertMinimized(true)"
+                        class="text-teal-300 hover:text-white transition p-1 -mr-1 -mt-6"
+                        title="Minimizza">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Versione minimizzata (icona compatta) -->
+        <div id="match-alert-minimized" class="hidden">
+            <button onclick="window.InterfacciaDashboard?.toggleMatchAlertMinimized(false)"
+                    class="p-2 bg-gradient-to-r from-teal-900 to-cyan-900 rounded-lg border-2 border-teal-500 shadow-2xl flex items-center gap-2 hover:scale-105 transition"
+                    title="Espandi timer partita">
+                <span class="text-xl">⚽</span>
+                <span id="match-alert-countdown-mini" class="text-sm font-bold text-teal-400">--:--:--</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PWA INSTALL BANNER - Mostra quando l'app e' installabile -->
+    <div id="pwa-install-banner" class="hidden"
+         style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 9997; width: calc(100% - 32px); max-width: 400px;">
+        <div class="bg-gradient-to-r from-green-900 to-emerald-900 rounded-xl border-2 border-green-500 shadow-2xl p-4">
+            <div class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+                     alt="Serie SeriA"
+                     class="w-12 h-12 rounded-xl"
+                     loading="lazy"
+                     decoding="async">
+                <div class="flex-1">
+                    <p class="text-white font-bold text-sm">Installa Serie SeriA</p>
+                    <p class="text-green-300 text-xs">Accesso rapido dalla home del tuo dispositivo</p>
+                </div>
+                <button onclick="window.hideInstallBanner()"
+                        class="text-green-300 hover:text-white p-1"
+                        title="Chiudi">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex gap-2 mt-3">
+                <button onclick="window.hideInstallBanner()"
+                        class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+                    Non ora
+                </button>
+                <button onclick="window.installPWA()"
+                        class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Installa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottone Regole Globale (sempre visibile) - z-index alto per stare sopra tutto -->
+    <button id="rules-global-btn"
+            onclick="window.RulesPanel.toggle()"
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 9998;
+                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                   color: white; font-weight: bold; padding: 12px 20px;
+                   border-radius: 50px; border: none; cursor: pointer;
+                   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                   font-size: 16px; display: flex; align-items: center; gap: 8px;
+                   transition: all 0.3s ease;">
+        <span style="font-size: 20px;">📖</span> Regole
+    </button>
+
+    <!-- Pannello Regole (nascosto inizialmente) - z-index molto alto per stare sempre in primo piano -->
+    <div id="rules-panel" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[9999] overflow-y-auto">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-t-lg p-6 border-b-4 border-yellow-500">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-4xl font-bold text-white mb-2">📖 Regole del Gioco</h1>
+                        <p class="text-gray-300">Serie SeriA - Fantacalcio Serio</p>
+                    </div>
+                    <button onclick="window.RulesPanel.close()"
+                            class="text-white hover:text-red-400 text-4xl font-bold">
+                        X
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenuto Regole -->
+            <div class="bg-gray-800 p-6 space-y-4">
+
+                <!-- Sezione Squadra (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-yellow-500">
+                    <button onclick="window.RulesPanel.toggleSection('squadra')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚽</span>
+                            <h3 class="text-xl font-bold text-yellow-400">La Squadra</h3>
+                        </div>
+                        <span id="arrow-squadra" class="text-yellow-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-squadra" class="hidden p-4 border-t border-yellow-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
+                            <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
+                            <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
+                            <li>• Ogni giocatore ha un livello (1-30) che influenza le statistiche</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Livelli Giocatore (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-sky-500">
+                    <button onclick="window.RulesPanel.toggleSection('livelli')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📊</span>
+                            <h3 class="text-xl font-bold text-sky-400">Livelli e Modificatori</h3>
+                        </div>
+                        <span id="arrow-livelli" class="text-sky-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-livelli" class="hidden p-4 border-t border-sky-700">
+                        <div class="space-y-4 text-sm">
+                            <!-- Spiegazione -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-sky-500">
+                                <p class="text-gray-300 mb-2">Il <strong class="text-sky-400">Livello</strong> di un giocatore determina il suo <strong class="text-white">Modificatore</strong>, un bonus numerico che viene aggiunto ai tiri durante le fasi di gioco.</p>
+                                <p class="text-gray-400 text-xs">Piu alto il livello = piu forte il giocatore nelle simulazioni.</p>
+                            </div>
+
+                            <!-- Tabella Modificatori -->
+                            <div class="bg-black bg-opacity-30 rounded-lg p-3">
+                                <h4 class="font-bold text-sky-400 mb-3 text-center">Tabella Modificatori per Livello (v4.0)</h4>
+                                <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                                    <!-- Colonna 1: Liv 1-10 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 1-2</span><span class="text-white font-mono">0.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 3-4</span><span class="text-white font-mono">1.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 5-6</span><span class="text-white font-mono">1.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 7-8</span><span class="text-white font-mono">2.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 9-10</span><span class="text-white font-mono">2.5</span></div>
+                                    </div>
+                                    <!-- Colonna 2: Liv 11-20 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 11-12</span><span class="text-white font-mono">3.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 13-14</span><span class="text-white font-mono">3.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 15-16</span><span class="text-white font-mono">4.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 17-18</span><span class="text-white font-mono">4.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 19-20</span><span class="text-white font-mono">5.0</span></div>
+                                    </div>
+                                    <!-- Colonna 3: Liv 21-30 -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 21-22</span><span class="text-white font-mono">5.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 23-24</span><span class="text-white font-mono">6.0</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 25-26</span><span class="text-white font-mono">6.5</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Liv 27-28</span><span class="text-white font-mono">7.0</span></div>
+                                        <div class="flex justify-between"><span class="text-yellow-400">Liv 29</span><span class="text-yellow-400 font-mono">8.0</span></div>
+                                        <div class="flex justify-between"><span class="text-yellow-400">Liv 30</span><span class="text-yellow-400 font-mono">9.0</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note -->
+                            <div class="bg-yellow-900 bg-opacity-20 rounded p-2 border border-yellow-700">
+                                <p class="text-yellow-300 text-xs">I livelli 29 e 30 hanno modificatori piu alti della media, premiando i giocatori al massimo!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione Partita (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-green-500">
+                    <button onclick="window.RulesPanel.toggleSection('partita')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🎮</span>
+                            <h3 class="text-xl font-bold text-green-400">La Partita</h3>
+                        </div>
+                        <span id="arrow-partita" class="text-green-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-partita" class="hidden p-4 border-t border-green-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• Ogni partita ha 3 fasi: <strong class="text-white">Costruzione</strong>, <strong class="text-white">Attacco</strong>, <strong class="text-white">Tiro</strong></li>
+                            <li>• Nella fase Costruzione si contende il possesso palla</li>
+                            <li>• Nella fase Attacco si cerca di superare la difesa</li>
+                            <li>• Nella fase Tiro si cerca di segnare contro il portiere</li>
+                            <li>• Le abilita si attivano in specifiche fasi</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Simulazione (Accordion) - DETTAGLIATA -->
+                <div class="bg-gray-900 rounded-lg border border-cyan-500">
+                    <button onclick="window.RulesPanel.toggleSection('simulazione')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚙️</span>
+                            <h3 class="text-xl font-bold text-cyan-400">Regolamento Simulazione</h3>
+                        </div>
+                        <span id="arrow-simulazione" class="text-cyan-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-simulazione" class="hidden p-4 border-t border-cyan-700">
+                        <div class="space-y-4 text-sm">
+
+                            <!-- Preparazione -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-blue-500">
+                                <h4 class="font-bold text-blue-400 mb-2">1. Preparazione</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Schieramento</strong>: Conferma la formazione con titolari e panchina</li>
+                                    <li>• <strong>Forma Fisica</strong>: Giocatori normali: da -3 a +3 | Icone: da 0 a +6</li>
+                                    <li>• <strong>Abilita</strong>: Vengono considerate le abilita di campo e panchina</li>
+                                </ul>
+                            </div>
+
+                            <!-- Modificatori -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-green-500">
+                                <h4 class="font-bold text-green-400 mb-2">2. Modificatori Tattici (v4.0)</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Tipologia (Sasso-Carta-Forbice)</strong>:</li>
+                                    <li class="ml-4 text-xs"><span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span></li>
+                                    <li class="ml-4 text-xs text-green-400">Chi vince: <strong>+1.5</strong> al modificatore</li>
+                                    <li class="ml-4 text-xs text-red-400">Chi perde: <strong>-1.5</strong> al modificatore</li>
+                                    <li>• <strong>Bonus Allenatore</strong>: +(1/2 Livello Allenatore) in tutte le fasi</li>
+                                    <li>• <strong>Bonus Capitano</strong>: Il capitano ha sempre +1 ai modificatori</li>
+                                </ul>
+                            </div>
+
+                            <!-- Le 3 Fasi -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-yellow-500">
+                                <h4 class="font-bold text-yellow-400 mb-2">3. Le 3 Fasi (50 occasioni per squadra)</h4>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
+                                    <p class="text-cyan-400 font-bold text-xs mb-1">FASE 1: COSTRUZIONE</p>
+                                    <p class="text-gray-400 text-xs">Difensori + Centrocampisti vs Centrocampisti avversari</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Dif + Mod.Cen] vs [1d20 + Mod.Cen avv.]</p>
+                                </div>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
+                                    <p class="text-orange-400 font-bold text-xs mb-1">FASE 2: ATTACCO vs DIFESA</p>
+                                    <p class="text-gray-400 text-xs">Attaccanti + Centrocampisti vs Difensori + Centrocampisti</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Cen + Mod.Att] vs [1d20 + Mod.Dif + 1/2 Mod.Cen]</p>
+                                </div>
+
+                                <div class="bg-black bg-opacity-30 rounded p-2">
+                                    <p class="text-red-400 font-bold text-xs mb-1">FASE 3: TIRO vs PORTIERE</p>
+                                    <p class="text-gray-400 text-xs">Valore Tiro vs Portiere</p>
+                                    <p class="text-gray-300 text-xs">[1d20 + Mod.Portiere] - [1d10 + Valore Tiro]</p>
+                                    <p class="text-gray-400 text-xs mt-1">Risultato > 0: Parata | = 0: 50/50 | < 0: Goal</p>
+                                </div>
+                            </div>
+
+                            <!-- Post Partita -->
+                            <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-purple-500">
+                                <h4 class="font-bold text-purple-400 mb-2">4. Post-Partita</h4>
+                                <ul class="text-gray-300 space-y-1">
+                                    <li>• <strong>Classifica</strong>: Aggiornata automaticamente</li>
+                                    <li>• <strong>Infortuni</strong>: 1% probabilita per giocatore (max 1 per squadra)</li>
+                                    <li>• <strong>Forma</strong>: Chi gioca perde forma, chi riposa la recupera</li>
+                                    <li>• <strong>Premi</strong>: CS distribuiti in base al risultato</li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione Valute (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-amber-500">
+                    <button onclick="window.RulesPanel.toggleSection('valute')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">💰</span>
+                            <h3 class="text-xl font-bold text-amber-400">Valute</h3>
+                        </div>
+                        <span id="arrow-valute" class="text-amber-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-valute" class="hidden p-4 border-t border-amber-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• <strong class="text-white">CS (Crediti Seri)</strong>: Valuta standard per acquistare giocatori</li>
+                            <li>• <strong class="text-amber-400">CSS (Crediti Super Seri)</strong>: Valuta premium per potenziamenti e abilita</li>
+                            <li>• Si guadagnano CS vincendo partite e completando la stagione</li>
+                            <li>• Si guadagnano CSS vincendo trofei (Campionato, Coppa, Supercoppa)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Competizioni (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-purple-500">
+                    <button onclick="window.RulesPanel.toggleSection('competizioni')"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🏆</span>
+                            <h3 class="text-xl font-bold text-purple-400">Competizioni</h3>
+                        </div>
+                        <span id="arrow-competizioni" class="text-purple-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="content-competizioni" class="hidden p-4 border-t border-purple-700">
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li>• <strong class="text-green-400">SerieSeriA</strong>: Campionato a girone unico, tutti contro tutti</li>
+                            <li>• <strong class="text-purple-400">CoppaSeriA</strong>: Eliminazione diretta con andata e ritorno</li>
+                            <li>• <strong class="text-yellow-400">Supercoppa</strong>: Partita secca tra Campione e Vincitore Coppa</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sezione Enciclopedia Abilita (Accordion) -->
+                <div class="bg-gray-900 rounded-lg border border-pink-500">
+                    <button id="btn-toggle-encyclopedia"
+                            onclick="window.RulesPanel.toggleEncyclopedia()"
+                            class="w-full p-4 flex justify-between items-center text-left hover:bg-gray-800 rounded-lg transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📔</span>
+                            <h3 class="text-xl font-bold text-pink-400">Enciclopedia Abilita</h3>
+                        </div>
+                        <span id="encyclopedia-arrow" class="text-pink-400 text-xl transition-transform duration-300">▶</span>
+                    </button>
+                    <div id="encyclopedia-content" class="hidden p-4 border-t border-pink-700">
+                        <div id="encyclopedia-container">
+                            <!-- Contenuto enciclopedia caricato dinamicamente -->
+                            <p class="text-gray-400 text-center">Caricamento abilita...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-900 p-4 rounded-b-lg">
+                <button onclick="window.RulesPanel.close()"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
+                    Chiudi Regole
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="min-h-screen p-4 flex flex-col items-center" id="main-content">
+
+        <!-- 1. BOX GATE - RIMOSSO (accesso diretto al login) -->
+        <!-- Il gate con password è stato rimosso per sicurezza -->
+        <div id="gate-box" class="hidden" style="display: none !important;">
+            <!-- Gate rimosso - gli utenti vanno direttamente al login -->
+        </div>
+
+        <!-- 2. BOX LOGIN (Nome Squadra / Password) -->
+        <div id="login-box" class="football-box w-full max-w-sm transition duration-500 hidden-on-load">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b-2 border-yellow-600 pb-2">Accedi alla tua Dashboard</h2>
+
+            <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
+            <div id="remembered-session-box" class="hidden mb-4">
+                <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center">
+                    <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-yellow-400 object-cover">
+                    <p class="text-lg font-bold text-white mb-1" id="remembered-team-name">Nome Squadra</p>
+                    <p class="text-xs text-gray-400 mb-4">Sessione attiva</p>
+                    <button id="btn-reenter-dashboard"
+                            class="w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02] mb-2">
+                        🏠 Rientra in Dashboard
+                    </button>
+                    <button id="btn-full-logout"
+                            class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150">
+                        🚪 Logout Completo
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOX 1: LOGIN -->
+            <div id="normal-login-box" class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 mb-4">
+                <h3 class="text-sm font-bold text-yellow-400 mb-3 text-center">Login Squadra</h3>
+                <input type="text" id="login-username" placeholder="Nome Squadra"
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
+
+                <input type="password" id="login-password" placeholder="Password"
+                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
+
+                <button id="login-button"
+                        class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02]">
+                    Accedi
+                </button>
+                <p id="login-message" class="text-center mt-2 text-red-400 text-sm"></p>
+            </div>
+
+            <!-- BOX 2: ESPLORA LEGA -->
+            <div class="p-4 bg-gray-700 rounded-lg border-2 border-blue-500 mb-4">
+                <h3 class="text-sm font-bold text-blue-400 mb-3 text-center">Esplora la Lega</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-leaderboard"
+                            class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-500 transition duration-150 transform hover:scale-[1.02]">
+                        📊 Classifica
+                    </button>
+                    <button id="btn-schedule"
+                            class="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-500 transition duration-150 transform hover:scale-[1.02]">
+                        📅 Calendario
+                    </button>
+                    <button id="btn-coppa-home"
+                            class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
+                        🏆 CoppaSeriA
+                    </button>
+                    <button id="btn-supercoppa-home"
+                            class="w-full bg-amber-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-amber-500 transition duration-150 transform hover:scale-[1.02]">
+                        ⭐ SuperCoppa
+                    </button>
+                    <button id="btn-lista-icone"
+                            class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
+                        👑 Icone
+                    </button>
+                    <button id="btn-lista-squadre"
+                            class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-green-500 transition duration-150 transform hover:scale-[1.02]">
+                        📋 Squadre
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOX 3: SUPPORTO -->
+            <div class="p-4 bg-gray-700 rounded-lg border-2 border-red-500">
+                <h3 class="text-sm font-bold text-red-400 mb-3 text-center">Supporto</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-how-to-create-team"
+                            onclick="window.Tutorial?.startHowToCreateTeam()"
+                            class="bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs">
+                        📖 Come creare la mia squadra
+                    </button>
+                    <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
+                       target="_blank"
+                       class="bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
+                        🐛 Segnala Bug
+                    </a>
+                </div>
+                <div class="mt-3 flex justify-center">
+                    <button id="btn-show-changelog"
+                            onclick="window.Changelog?.showPlayers()"
+                            class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
+                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v1.0.0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra -->
+        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative">
+
+            <!-- SELETTORE COLORE PRIMARIO -->
+            <div id="team-color-picker-container" class="absolute top-2 right-2">
+                <input type="color" id="team-color-picker"
+                       class="w-8 h-8 rounded cursor-pointer border-2 border-gray-600 hover:border-white transition"
+                       title="Scegli il colore primario della squadra"
+                       value="#22c55e">
+            </div>
+
+            <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
+            <div id="sponsor-media-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20" style="padding-top: calc(0.5rem + 1.5px); padding-bottom: calc(0.5rem + 1.5px);">
+                <!-- RIGA LIVELLO ROSA + NOME SQUADRA + DIVISA -->
+                <div class="flex justify-center items-stretch mb-3 gap-2 sm:gap-4 md:gap-6">
+                    <!-- BOX LIVELLO MEDIO ROSA (sinistra) -->
+                    <div class="py-1 px-2 sm:px-3 bg-gray-700 rounded-lg border border-green-500 flex flex-col items-center justify-center min-w-0">
+                        <p class="text-[9px] sm:text-[10px] text-gray-300 font-semibold">📈 Lv. Rosa</p>
+                        <p class="leading-tight"><span id="stat-rosa-level" class="text-sm sm:text-base font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[8px] sm:text-[10px] text-gray-400">(0)</span></p>
+                    </div>
+                    <!-- BOX NOME SQUADRA (centro) -->
+                    <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center justify-center">
+                        <h2 id="team-dashboard-title" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+                    </div>
+                    <!-- BOX DIVISA SQUADRA (destra) -->
+                    <div id="team-uniform-box" class="p-1 sm:p-1.5 bg-gray-800 rounded-lg border-2 border-purple-500 text-center shadow-lg flex items-center justify-center gap-1 cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
+                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-8 h-8 sm:w-10 sm:h-10">
+                            <defs></defs>
+                            <!-- Maglia stile jersey.xml -->
+                            <g id="shirt-preview" transform="translate(0, 5)">
+                                <!-- Corpo maglia con maniche integrate -->
+                                <path id="dash-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Colletto -->
+                                <path id="dash-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino sinistro -->
+                                <path id="dash-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                                <!-- Polsino destro -->
+                                <path id="dash-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <!-- MEDIA, LOGO, ICONA E SPONSOR - Tutti centrati su una riga -->
+                <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-visible">
+                    <!-- BOX MEDIA (sinistra del logo) -->
+                    <div id="media-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
+                        <img id="media-image"
+                             src="https://placehold.co/128x128/831843/f9a8d4?text=📺"
+                             alt="Media Partner"
+                             class="w-full h-full rounded-lg border-2 border-pink-500 shadow-lg object-contain bg-gray-800 p-1 hover:border-pink-400"
+                             title="Media Partner">
+                    </div>
+                    <!-- LOGO SQUADRA -->
+                    <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 flex-shrink-0">
+                        <img id="team-logo"
+                             src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
+                             alt="Logo Squadra Modificabile"
+                             class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
+                             style="border-color: #22c55e;"
+                             title="Clicca per cambiare il logo (Inserisci URL)">
+                    </div>
+                    <!-- ICONA SQUADRA -->
+                    <div class="relative group flex-shrink-0">
+                        <img id="team-icona-avatar"
+                             src="https://placehold.co/128x128/facc15/000?text=?"
+                             alt="Avatar Icona"
+                             class="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 border-yellow-400 shadow-lg object-cover cursor-pointer">
+                        <!-- Tooltip personalizzato -->
+                        <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                            <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
+                            <p id="icona-tooltip-level">Livello: --</p>
+                            <p id="icona-tooltip-role">Ruolo: --</p>
+                            <p id="icona-tooltip-type">Tipo: --</p>
+                        </div>
+                    </div>
+                    <!-- BOX SPONSOR (destra dell'icona) -->
+                    <div id="sponsor-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
+                        <img id="sponsor-image"
+                             src="https://placehold.co/128x128/78350f/fcd34d?text=🤝"
+                             alt="Sponsor"
+                             class="w-full h-full rounded-lg border-2 border-yellow-500 shadow-lg object-contain bg-gray-800 p-1 hover:border-yellow-400"
+                             title="Sponsor">
+                    </div>
+                    <!-- BOX RUOTA FORTUNA (destra dello sponsor) -->
+                    <div id="daily-wheel-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Gira la Ruota della Fortuna!">
+                        <div class="w-full h-full rounded-lg border-2 border-orange-500 shadow-lg bg-gradient-to-br from-yellow-900/50 to-orange-900/50 flex items-center justify-center hover:border-orange-400 relative">
+                            <span class="text-2xl sm:text-3xl md:text-4xl animate-pulse">🎡</span>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-bounce text-[10px] flex items-center justify-center text-white font-bold">!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO -->
+                <div class="flex justify-center gap-2 sm:gap-4 mt-3">
+                    <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
+                    <button id="btn-stadium"
+                            class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">
+                        <span class="text-base sm:text-lg">🏟️</span>
+                        <span>Stadio</span>
+                    </button>
+                    <!-- Bottone Hall of Fame -->
+                    <button id="btn-hall-of-fame"
+                            class="flex-1 py-2 px-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
+                        <span class="text-base sm:text-lg">🏛️</span>
+                        <span>Hall of Fame</span>
+                    </button>
+                    <!-- Bottone Leghe Private (visibile solo se feature flag attivo) -->
+                    <button id="btn-private-leagues"
+                            class="hidden flex-1 py-2 px-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 text-white font-extrabold text-[10px] sm:text-xs rounded-lg shadow-xl hover:from-purple-500 hover:via-violet-400 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-purple-300 min-w-0">
+                        <span class="text-base sm:text-lg">👥</span>
+                        <span>Lega Privata</span>
+                    </button>
+                    <!-- Statistica 2: Livello Medio Formazione (nascosto) -->
+                    <div class="hidden">
+                        <p id="stat-formazione-level">N/A</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOX GESTIONE ROSA E FORMAZIONE -->
+            <div id="gestione-box" class="mt-2 sm:mt-4 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                    <button id="btn-gestione-rosa"
+                            class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2 sm:py-6 text-xs sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        👥 <span class="hidden sm:inline">Gestione </span>Rosa
+                    </button>
+                    <button id="btn-gestione-formazione"
+                            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-2 sm:py-6 text-xs sm:text-xl rounded-lg shadow-xl hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        📋 <span class="hidden sm:inline">Gestione </span>Formazione
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOX COMPETIZIONI -->
+            <div id="competizioni-box" class="mt-2 sm:mt-6 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="space-y-1 sm:space-y-3">
+                    <button id="btn-user-campionato"
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">🏅</span>
+                        <span class="text-sm sm:text-xl">SerieSeriA</span>
+                    </button>
+                    <button id="btn-user-coppa"
+                            class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">🏆</span>
+                        <span class="text-sm sm:text-xl">CoppaSeriA</span>
+                    </button>
+                    <button id="btn-user-supercoppa"
+                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
+                        <span class="text-base sm:text-2xl">⭐</span>
+                        <span class="text-sm sm:text-xl">Super CoppaSeriA</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PULSANTI DRAFT E MERCATO - Mobile Optimized -->
+            <div id="draft-mercato-container" class="mt-6 sm:mt-8 relative px-1 sm:px-0">
+                <!-- BOX DRAFT/MERCATO/SFIDA/SCAMBI -->
+                <div id="draft-scambi-box" class="p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                    <!-- Riga 1: Draft e Mercato -->
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-3">
+                        <!-- Contenitore Draft con Toggle -->
+                        <div id="btn-draft-container"
+                             class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
+                            <!-- Parte cliccabile per navigazione -->
+                            <button id="btn-draft-utente"
+                                    class="flex-1 py-3 px-2 text-left flex items-center justify-center gap-1 hover:bg-white/10 transition active:scale-95">
+                                📝 Draft
+                            </button>
+                            <!-- Separatore -->
+                            <div class="w-px h-8 bg-yellow-800/50"></div>
+                            <!-- Toggle Switch per partecipazione Draft -->
+                            <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
+                                    <div class="w-9 h-5 sm:w-11 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
+                                                peer-checked:after:translate-x-full peer-checked:after:border-white
+                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                                after:bg-white after:border-gray-300 after:border after:rounded-full
+                                                after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
+                                                peer-checked:bg-green-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <button id="btn-mercato-utente"
+                                class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
+                            💰 Mercato
+                        </button>
+                    </div>
+                    <!-- Riga 2: Sfida e Scambi -->
+                    <div id="actions-buttons-grid" class="grid grid-cols-2 gap-2 sm:gap-4">
+                        <button id="btn-challenge"
+                                class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span>⚔️</span> Sfida
+                        </button>
+                        <button id="btn-trades"
+                                class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-3 text-sm sm:text-base rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span>🔄</span> Scambi
+                        </button>
+                    </div>
+                    <!-- Riga 3: Crediti Super Seri -->
+                    <div id="css-dashboard-widget" class="mt-2 sm:mt-3">
+                        <!-- Il widget CSS viene renderizzato qui dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
+            <div id="near-level-up-widget-container" class="mt-4">
+                <!-- Il widget EXP viene renderizzato qui dinamicamente -->
+            </div>
+
+            <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
+            <div id="toggle-partecipazione-box" class="mt-4 sm:mt-8 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                    <!-- Toggle SerieSeriA -->
+                    <div class="p-3 sm:p-4 bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
+                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                            <span class="text-white font-extrabold text-xs sm:text-base">🏅 <span class="hidden sm:inline">SerieSeriA</span><span class="sm:hidden">SeriA</span></span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-green-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-400"></div>
+                            </label>
+                        </div>
+                        <p id="championship-participation-status" class="text-[10px] sm:text-xs text-green-200/80 truncate">
+                            Caricamento...
+                        </p>
+                    </div>
+
+                    <!-- Toggle CoppaSeriA -->
+                    <div class="p-3 sm:p-4 bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
+                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
+                            <span class="text-white font-extrabold text-xs sm:text-base">🏆 <span class="hidden sm:inline">CoppaSeriA</span><span class="sm:hidden">Coppa</span></span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-purple-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-purple-400"></div>
+                            </label>
+                        </div>
+                        <p id="cup-participation-status" class="text-[10px] sm:text-xs text-purple-200/80 truncate">
+                            Caricamento...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <span id="team-firestore-id" class="hidden">N/A</span>
+
+            <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4 sm:mt-6 px-1 sm:px-0">
+                <button id="user-back-to-login-button"
+                        class="w-full bg-yellow-500 text-gray-900 font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    🔙 <span class="hidden sm:inline">Torna al </span>Login
+                </button>
+                <!-- PULSANTE ELIMINA SQUADRA -->
+                <button id="btn-delete-team"
+                        class="w-full bg-red-600 text-white font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    🗑️ <span class="hidden sm:inline">Elimina </span>Squadra
+                </button>
+            </div>
+
+            <!-- Bottone Torna al Pannello Admin - Visibile SOLO se si accede dalla dashboard admin -->
+            <div id="admin-return-button-container" class="mt-4 hidden">
+                <button id="btn-return-to-admin"
+                        class="w-full bg-indigo-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02]">
+                    🔧 Torna al Pannello Admin
+                </button>
+            </div>
+
+            <!-- Pulsanti Tutorial e Admin Panel - In fondo alla dashboard -->
+            <div class="mt-6 flex justify-center gap-3 flex-wrap">
+                <!-- Bottone Admin Panel - Visibile SOLO per squadre admin -->
+                <button id="btn-goto-admin-panel"
+                        class="hidden bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔧</span> Pannello Admin
+                </button>
+                <button id="btn-start-tutorial"
+                        onclick="window.Tutorial?.start()"
+                        class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📖</span> Tutorial
+                </button>
+                <button id="btn-show-changelog-dashboard"
+                        onclick="window.Changelog?.showPlayers()"
+                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📋</span> Changelog
+                </button>
+                <button id="btn-change-password"
+                        class="bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔑</span> Cambia Password
+                </button>
+            </div>
+
+            <!-- Pulsante Aggiorna App - Visibile solo quando installata come PWA -->
+            <div id="pwa-update-button-container" class="mt-4 flex justify-center hidden">
+                <button id="btn-check-pwa-update"
+                        class="bg-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-cyan-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>🔄</span> Controlla Aggiornamenti
+                </button>
+            </div>
+        </div>
+        
+        <!-- 4. CONTENUTO AREA AMMINISTRATORE - Dashboard Principale -->
+        <div id="admin-content" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
+            <!-- Contenitore per i pulsanti principali e liste squadre -->
+            <div id="admin-dashboard-container" class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl">
+                <!-- Il layout è generato da admin.js -->
+                <p class="text-gray-400 text-center">Inizializzazione...</p>
+            </div>
+            
+            <!-- Bottone Torna alla Dashboard (solo per squadre admin, non serieseria) -->
+            <div id="admin-return-dashboard-container" class="mt-6 hidden">
+                <button id="btn-return-to-team-dashboard"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold rounded-lg shadow-lg transition transform hover:scale-[1.01] flex items-center justify-center gap-3 border-2 border-blue-400">
+                    <span class="text-xl">🏠</span>
+                    <span id="return-dashboard-team-name">Torna alla Dashboard</span>
+                </button>
+            </div>
+
+            <div class="mt-4 flex gap-3">
+                <button id="btn-admin-changelog"
+                        onclick="window.Changelog?.showAdmin()"
+                        class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>📋</span> Changelog
+                </button>
+                <button id="admin-logout-button"
+                        class="flex-1 bg-red-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-400 transition duration-150 transform hover:scale-[1.02]">
+                    Logout Admin
+                </button>
+            </div>
+        </div>
+        
+        <!-- 5. CONTENUTO AREA DRAFT (Utente) - NASCOSTO -->
+        <div id="draft-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Draft Calciatori</h2>
+             <!-- CONTAINER DRAFT STATUS BOX (giocatori disponibili e ordine draft) - SOPRA il box turno -->
+             <div id="draft-status-box-container" class="mt-6 hidden">
+                 <!-- Il box stato draft viene renderizzato qui dinamicamente da draft-status-box.js -->
+             </div>
+             <div id="draft-tools-container" class="mt-4">
+                <p class="text-center text-gray-400">Strumenti di gestione Draft in caricamento...</p>
+             </div>
+             <button id="draft-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Indietro
+            </button>
+        </div>
+        
+        <!-- 6. CONTENUTO AREA CLASSIFICA - NASCOSTO -->
+        <div id="leaderboard-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-blue-400 text-center mb-4 border-b-4 border-blue-700 pb-2">Classifica Generale Lega</h2>
+             <p class="text-center text-lg text-gray-300">Qui vedrai la classifica aggiornata di tutte le squadre.</p>
+             <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-blue-500 text-center shadow-lg">
+                <p class="text-white font-semibold">I dati della classifica saranno caricati qui.</p>
+             </div>
+             <button id="leaderboard-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna al Login
+            </button>
+        </div>
+        
+        <!-- 7. CONTENUTO AREA CALENDARIO - NASCOSTO -->
+        <div id="schedule-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-teal-400 text-center mb-4 border-b-4 border-teal-700 pb-2">Calendario Partite</h2>
+             <p class="text-center text-lg text-gray-300">Consulta qui le sfide e i risultati di ogni giornata.</p>
+             <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-teal-500 text-center shadow-lg">
+                <p class="text-white font-semibold">I dati del calendario saranno caricati qui.</p>
+             </div>
+             <button id="schedule-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna al Login
+            </button>
+        </div>
+        
+        <!-- 7B. CONTENUTO AREA CAMPIONATO UTENTE (NUOVA) -->
+        <div id="user-campionato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">🏆 SerieSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Prossima partita, classifica e calendario</p>
+             <div id="user-campionato-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati campionato...</p>
+             </div>
+             <button id="user-campionato-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7C. CONTENUTO AREA COPPA UTENTE (NUOVA) -->
+        <div id="user-coppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 CoppaSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Prossima partita e tabellone</p>
+             <div id="user-coppa-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati coppa...</p>
+             </div>
+             <button id="user-coppa-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7D. CONTENUTO AREA SUPERCOPPA UTENTE (NUOVA) -->
+        <div id="user-supercoppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">⭐ Super CoppaSeriA</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Stato e risultato della Super CoppaSeriA</p>
+             <div id="user-supercoppa-container" class="mt-6 space-y-6">
+                <p class="text-center text-gray-400">Caricamento dati supercoppa...</p>
+             </div>
+             <button id="user-supercoppa-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                ← Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 7E. CONTENUTO AREA CAMPIONATO UTENTE (VECCHIO - DA RIMUOVERE) -->
+        <div id="user-championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 Gestione Campionato</h2>
+             <p class="text-center text-lg text-gray-300 mb-6">Simula le partite della tua lega e segui l'andamento</p>
+             <div id="user-championship-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Strumenti di simulazione in caricamento...</p>
+             </div>
+             <button id="user-championship-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 8. CONTENUTO AREA IMPOSTAZIONI CAMPIONATO - NASCOSTO -->
+        <div id="championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Impostazioni e Regole Campionato</h2>
+             <div id="championship-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Strumenti di gestione Campionato in caricamento...</p>
+             </div>
+             <button id="championship-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna al Pannello Admin
+            </button>
+        </div>
+
+        <!-- 9. CONTENUTO AREA GESTIONE SQUADRA (Rosa e Formazione) -->
+        <div id="squadra-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
+             <h2 id="squadra-main-title" class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">Gestione Rosa</h2>
+             <p id="squadra-subtitle" class="text-center text-lg text-gray-300 mb-6">Visualizza e gestisci i tuoi calciatori.</p>
+             
+             <!-- Contenitore logica Gestione Rosa o Formazione -->
+             <div id="squadra-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Contenuto in caricamento...</p>
+             </div>
+             
+             <button id="squadra-back-button"
+                    class="mt-6 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 10. CONTENUTO AREA MERCATO (Acquisti Liberi) - NASCOSTO -->
+        <div id="mercato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-blue-400 text-center mb-4 border-b-4 border-blue-700 pb-2">Mercato Fuori Lista</h2>
+             <div id="mercato-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Contenuto Mercato in caricamento...</p>
+             </div>
+             <button id="mercato-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 10b. CONTENUTO HALL OF FAME (Storico Partite) - NASCOSTO -->
+        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-amber-400 text-center mb-4 border-b-4 border-amber-600 pb-2">🏛️ Hall of Fame</h2>
+             <div id="match-history-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento storico partite...</p>
+             </div>
+             <button id="match-history-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard
+            </button>
+        </div>
+
+        <!-- 10c. CONTENUTO STADIO - NASCOSTO -->
+        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
+            <!-- Il contenuto e' iniettato da stadium-ui.js -->
+            <p class="text-center text-gray-400 p-8">Caricamento stadio...</p>
+        </div>
+
+        <!-- 10d. CONTENUTO LEGHE PRIVATE - NASCOSTO -->
+        <div id="private-leagues-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <h2 class="text-2xl font-bold text-purple-400">
+                    <i class="fas fa-users mr-2"></i>Leghe Private
+                </h2>
+                <button id="private-leagues-back-button"
+                        class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Indietro
+                </button>
+            </div>
+            <!-- Il contenuto e' iniettato da private-leagues-ui.js -->
+            <div id="private-leagues-panel">
+                <p class="text-center text-gray-400 p-8">Caricamento...</p>
+            </div>
+        </div>
+
+        <!-- 11. CONTENUTO: GESTIONE GIOCATORI ADMIN -->
+        <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Calciatori (Creazione e Liste)</h2>
+             
+             <!-- Il contenuto è iniettato da admin.js -->
+             <div id="player-management-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento strumenti...</p>
+             </div>
+
+             <button id="player-management-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard Admin
+            </button>
+        </div>
+
+        <!-- 12. NUOVO CONTENUTO: GESTIONE SQUADRE ADMIN -->
+        <div id="team-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-blue-500 text-center mb-4 border-b-4 border-blue-700 pb-2">Gestione Squadre Registrate</h2>
+             
+             <!-- Il contenuto è iniettato da admin.js -->
+             <div id="team-management-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento strumenti...</p>
+             </div>
+
+             <button id="team-management-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard Admin
+            </button>
+        </div>
+
+        <!-- 12b. NUOVO CONTENUTO: GESTIONE FEATURE FLAGS -->
+        <div id="feature-flags-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-purple-500 text-center mb-4 border-b-4 border-purple-700 pb-2">
+                <i class="fas fa-flag mr-2"></i> Gestione Feature Flags
+             </h2>
+
+             <!-- Il contenuto e' iniettato da admin-feature-flags.js -->
+             <div id="feature-flags-tools-container" class="mt-6">
+                <p class="text-center text-gray-400">Caricamento strumenti...</p>
+             </div>
+
+             <button id="feature-flags-back-button"
+                    class="mt-6 w-full bg-gray-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02]">
+                Torna alla Dashboard Admin
+            </button>
+        </div>
+
+        <!-- 13. NUOVO CONTENUTO: SELEZIONE ALLENATORE -->
+        <div id="coach-selection-box" class="football-box w-full max-w-xl transition duration-500 hidden-on-load">
+            <h2 class="text-4xl font-extrabold text-red-500 text-center mb-4 border-b-4 border-red-700 pb-2">Un Manager per la Tua Squadra</h2>
+            <p class="text-center text-lg text-gray-300 mb-6">Inserisci il nome dell'allenatore che guiderà la squadra. Partirà da Livello 1 e Potrà crescere.</p>
+            
+            <input type="text" id="coach-name-input" placeholder="Nome Allenatore (es. Carlo Ancelotti)"
+                   class="w-full p-3 border border-red-600 rounded-lg focus:ring-red-400 focus:border-red-400 bg-gray-700 text-white mb-4 shadow-inner-dark">
+            
+            <button id="btn-confirm-coach"
+                    class="w-full bg-red-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-400 transition duration-150 transform hover:scale-[1.02]">
+                Conferma e Scegli l'Icona
+            </button>
+            
+            <p id="coach-selection-message" class="text-center mt-3 text-red-400"></p>
+        </div>
+        
+        <!-- 14. CONTENUTO: SELEZIONE ICONA -->
+        <div id="captain-selection-box" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
+             <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Seleziona la tua Icona!</h2>
+             <p id="captain-message" class="text-center text-lg text-gray-300 mb-6">Scegli l'Icona che guiderà la tua squadra. Sarà il tuo giocatore speciale in rosa.</p>
+             
+             <div id="captain-candidates-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <p class="text-center text-gray-400 col-span-4">Caricamento candidati...</p>
+             </div>
+             
+             <p id="captain-selection-error" class="text-center mt-6 text-red-400"></p>
+             
+             <button id="btn-confirm-captain"
+                    class="mt-6 w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02]" disabled>
+                Conferma Icona e Vai alla Dashboard
+            </button>
+        </div>
+        
+        
+        <!-- 15. MODALE DI CONFERMA ELIMINAZIONE SQUADRA (Globale) -->
+        <div id="delete-team-modal" class="fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50 hidden">
+            <div class="football-box w-full max-w-sm">
+                <h3 class="text-3xl font-bold text-red-400 mb-4 border-b border-red-600 pb-2 text-center">ELIMINA SQUADRA</h3>
+                <p class="text-lg text-gray-300 mb-4 text-center">Sei sicuro di voler eliminare definitivamente <span id="team-name-to-delete" class="font-extrabold text-yellow-400">[Nome Squadra]</span>?</p>
+                
+                <p class="text-red-400 font-bold mb-4 text-center">Questa azione è irreversibile.</p>
+
+                <label for="delete-confirmation-input" class="block text-gray-300 font-semibold mb-2">Digita "ELIMINA" per confermare:</label>
+                <input type="text" id="delete-confirmation-input" 
+                       class="w-full p-3 mb-4 rounded-lg bg-gray-700 border border-red-600 text-white uppercase text-center font-extrabold focus:ring-red-400">
+
+                <div class="flex justify-between space-x-4">
+                    <button id="btn-cancel-delete"
+                            class="w-1/2 bg-gray-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-gray-400 transition duration-150">
+                        Annulla
+                    </button>
+                    <button id="btn-confirm-delete-final"
+                            class="w-1/2 bg-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150" disabled>
+                        Conferma Eliminazione
+                    </button>
+                </div>
+                <p id="delete-message" class="text-center mt-3 text-red-400"></p>
+            </div>
+        </div>
+
+        <!-- 16. MODALE LISTA ICONE -->
+        <div id="lista-icone-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-2 pt-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto mb-4 max-h-[95vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-yellow-600 pb-2 sticky top-0 bg-gray-800 pt-2 -mt-2 z-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-yellow-400">👑 Lista Icone</h3>
+                    <button id="btn-close-lista-icone" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+                <p class="text-gray-300 mb-4 text-center text-sm">Scegli un'Icona quando crei la tua squadra!</p>
+                <div id="lista-icone-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Le icone vengono caricate dinamicamente -->
+                </div>
+                <button id="btn-back-to-login"
+                        class="mt-4 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+
+        <!-- 16B. MODALE LISTA SQUADRE -->
+        <div id="lista-squadre-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-2 pt-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto mb-4 max-h-[95vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-green-600 pb-2 sticky top-0 bg-gray-800 pt-2 -mt-2 z-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-green-400">📋 Squadre</h3>
+                    <button id="btn-close-lista-squadre" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+                <p class="text-gray-300 mb-4 text-center text-sm">Tutte le squadre della lega</p>
+                <div id="lista-squadre-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Le squadre vengono caricate dinamicamente -->
+                    <p class="text-center text-gray-400 col-span-2">Caricamento squadre...</p>
+                </div>
+                <button id="btn-back-from-squadre"
+                        class="mt-4 w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+
+        <!-- 17. MODALE EDITOR DIVISA -->
+        <div id="uniform-editor-modal" class="fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50 hidden overflow-y-auto">
+            <div class="football-box w-full max-w-4xl mx-auto my-8">
+                <div class="flex justify-between items-center mb-4 border-b border-purple-600 pb-2">
+                    <h3 class="text-3xl font-bold text-purple-400">👕 Editor Divisa</h3>
+                    <button id="btn-close-uniform-editor" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- ANTEPRIMA DIVISA COMPLETA -->
+                    <div class="bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <h4 class="text-lg font-bold text-white mb-4 text-center">Anteprima Divisa</h4>
+                        <svg id="uniform-full-preview" viewBox="0 0 200 260" class="w-full max-w-xs mx-auto">
+                            <!-- Definizioni pattern -->
+                            <defs id="uniform-patterns-defs"></defs>
+
+                            <!-- MAGLIA (stile jersey.xml) -->
+                            <g id="editor-shirt-preview" transform="translate(0, 10)">
+                                <!-- Corpo maglia con maniche integrate -->
+                                <path id="editor-shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"
+                                    fill="#22c55e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Colletto -->
+                                <path id="editor-shirt-collar" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                                <!-- Polsino sinistro -->
+                                <path id="editor-shirt-cuff-left" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                                <!-- Polsino destro -->
+                                <path id="editor-shirt-cuff-right" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"
+                                    fill="#ffffff" stroke="#1a1a2e" stroke-width="1.5"/>
+                            </g>
+
+                            <!-- PANTALONCINI (stile jersey.xml) -->
+                            <g id="editor-shorts-preview" transform="translate(0, 170)">
+                                <!-- Corpo pantaloncini -->
+                                <path id="editor-shorts-body" d="M 65,0 L 135,0 L 145,70 L 105,70 L 100,40 L 95,70 L 55,70 L 65,0 Z"
+                                    fill="#1a1a2e" stroke="#1a1a2e" stroke-width="2"/>
+                                <!-- Striscia laterale sinistra -->
+                                <path id="editor-shorts-stripe-left" d="M 65,0 L 55,70 L 60,70 L 70,0 Z"
+                                    fill="#ffffff" stroke="none"/>
+                                <!-- Striscia laterale destra -->
+                                <path id="editor-shorts-stripe-right" d="M 135,0 L 145,70 L 140,70 L 130,0 Z"
+                                    fill="#ffffff" stroke="none"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- CONTROLLI EDITOR -->
+                    <div class="space-y-4">
+                        <!-- MAGLIA -->
+                        <div class="bg-gray-800 rounded-lg p-4 border-2 border-green-600">
+                            <h4 class="text-lg font-bold text-green-400 mb-3">👕 Maglia</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Primario</label>
+                                    <input type="color" id="shirt-color-primary" value="#22c55e" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Secondario</label>
+                                    <input type="color" id="shirt-color-secondary" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Colletto</label>
+                                    <input type="color" id="shirt-color-collar" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm text-gray-300 mb-1">Pattern</label>
+                                <select id="shirt-pattern" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+                                    <option value="solid">Tinta Unita</option>
+                                    <option value="half-vertical">Meta Verticale</option>
+                                    <option value="vertical-stripes">Strisce Verticali</option>
+                                    <option value="horizontal-stripes">Strisce Orizzontali</option>
+                                    <option value="diagonal-stripes">Strisce Diagonali</option>
+                                    <option value="center-band-v">Banda Centrale Verticale</option>
+                                    <option value="center-band-h">Banda Centrale Orizzontale</option>
+                                    <option value="shoulders">Spalle Colorate</option>
+                                    <option value="sleeves">Maniche Colorate</option>
+                                    <option value="checkered">Scacchi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- PANTALONCINI -->
+                        <div class="bg-gray-800 rounded-lg p-4 border-2 border-blue-600">
+                            <h4 class="text-lg font-bold text-blue-400 mb-3">🩳 Pantaloncini</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Primario</label>
+                                    <input type="color" id="shorts-color-primary" value="#1a1a2e" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-300 mb-1">Secondario</label>
+                                    <input type="color" id="shorts-color-secondary" value="#ffffff" class="w-full h-10 rounded cursor-pointer border-2 border-gray-600">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm text-gray-300 mb-1">Pattern</label>
+                                <select id="shorts-pattern" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+                                    <option value="solid">Tinta Unita</option>
+                                    <option value="side-stripe">Strisce Laterali</option>
+                                    <option value="half-vertical">Meta Verticale</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- PULSANTI AZIONI -->
+                <div class="mt-6 flex gap-4">
+                    <button id="btn-cancel-uniform"
+                            class="flex-1 bg-gray-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-gray-500 transition duration-150">
+                        Annulla
+                    </button>
+                    <button id="btn-save-uniform"
+                            class="flex-1 bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
+                        Salva Divisa
+                    </button>
+                </div>
+                <p id="uniform-editor-message" class="text-center mt-3"></p>
+            </div>
+        </div>
+
+        <!-- MODAL CAMBIO PASSWORD -->
+        <div id="change-password-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-xl border-2 border-gray-500 shadow-2xl max-w-md w-full overflow-hidden">
+                <div class="bg-gray-700 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>🔑</span> Cambia Password
+                    </h3>
+                    <button id="btn-close-change-password" class="text-white hover:text-gray-300 text-2xl font-bold">&times;</button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-gray-300 text-sm font-semibold mb-2">Nuova Password</label>
+                        <input type="password" id="new-password-input"
+                               class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                               placeholder="Inserisci la nuova password">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-300 text-sm font-semibold mb-2">Conferma Password</label>
+                        <input type="password" id="confirm-password-input"
+                               class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                               placeholder="Conferma la nuova password">
+                    </div>
+                    <p id="change-password-message" class="text-center mb-4 text-sm hidden"></p>
+                    <div class="flex gap-3">
+                        <button id="btn-cancel-change-password"
+                                class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition">
+                            Annulla
+                        </button>
+                        <button id="btn-confirm-change-password"
+                                class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-lg transition">
+                            Cambia Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL CHANGELOG -->
+        <div id="changelog-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[9999] hidden flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-gray-800 rounded-xl border-2 border-indigo-500 shadow-2xl w-full max-w-[calc(100%-1rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+                    <h3 id="changelog-title" class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>📋</span> Novita per i Giocatori
+                    </h3>
+                    <button onclick="window.Changelog?.hide()" class="text-white hover:text-gray-300 text-2xl font-bold">&times;</button>
+                </div>
+                <div id="changelog-content" class="p-6 overflow-y-auto flex-1">
+                    <!-- Contenuto changelog inserito da JS -->
+                </div>
+                <div class="bg-gray-900 px-6 py-3 text-center">
+                    <button onclick="window.Changelog?.hide()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-8 rounded-lg transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Logo che Scorrerà con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
+    <img id="footer-logo"
+         src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+         alt="Logo in fondo alla pagina"
+         loading="lazy"
+         decoding="async">
+
+    <!-- INIZIALIZZAZIONE FIREBASE e AUTH/DB -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // *** IMPORTAZIONE CRITICA: Importa TUTTE le funzioni necessarie per l'oggetto firestoreTools ***
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Imposta il livello di log (utile per il debug)
+        setLogLevel('debug');
+
+        // Variabili globali fornite dall'ambiente Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        // Configurazione e inizializzazione standard (inclusa la tua config come fallback per i test locali)
+        window.firebaseConfig = {
+            apiKey: "AIzaSyDL0n4qFzpPd3v-aoJoI_GJCQ_hlpwbaSA",
+            authDomain: "lega-fantacalcio-unica-2024.firebaseapp.com",
+            projectId: "lega-fantacalcio-unica-2024",
+            storageBucket: "lega-fantacalcio-unica-2024.firebasestorage.app",
+            messagingSenderId: "219665032240",
+            appId: "1:219665032240:web:14cfa85e5186384cc339f5",
+            measurementId: "G-4WFPVEF886",
+            // Unisce la configurazione fornita dal Canvas (se disponibile e valida)
+            ...(firebaseConfig || {})
+        };
+        
+        // Inizializzazione Firebase
+        window.app = initializeApp(window.firebaseConfig);
+        window.db = getFirestore(window.app);
+        window.auth = getAuth(window.app);
+        
+        // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
+        // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
+        // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
+        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, appId }; 
+        
+        // Funzione globale per cambiare schermata
+        window.showScreen = (elementToShow) => {
+            const boxes = [
+                document.getElementById('gate-box'),
+                document.getElementById('login-box'),
+                document.getElementById('app-content'),
+                document.getElementById('admin-content'),
+                document.getElementById('draft-content'),
+                document.getElementById('leaderboard-content'),
+                document.getElementById('schedule-content'),
+                document.getElementById('championship-content'),
+                document.getElementById('squadra-content'),
+                document.getElementById('mercato-content'),
+                document.getElementById('match-history-content'), // Hall of Fame
+                document.getElementById('player-management-content'), // Gestione Giocatori Admin
+                document.getElementById('team-management-content'), // Gestione Squadre Admin
+                document.getElementById('feature-flags-content'), // Gestione Feature Flags Admin
+                document.getElementById('coach-selection-box'), // Selezione Allenatore (NUOVO)
+                document.getElementById('captain-selection-box'), // Selezione Capitano
+                document.getElementById('user-championship-content'), // Campionato Utente (vecchio)
+                document.getElementById('user-campionato-content'), // SerieSeriA Utente
+                document.getElementById('user-coppa-content'), // CoppaSeriA Utente
+                document.getElementById('user-supercoppa-content'), // Super CoppaSeriA Utente
+                document.getElementById('stadium-content'), // Stadio
+                document.getElementById('private-leagues-content') // Leghe Private
+            ];
+            boxes.forEach(box => {
+                if (box) {
+                    box.classList.add('hidden');
+                    box.classList.add('hidden-on-load');
+                }
+            });
+            if (elementToShow) {
+                elementToShow.classList.remove('hidden');
+                elementToShow.classList.remove('hidden-on-load');
+            }
+        };
+
+
+        // Funzione per l'autenticazione iniziale (necessaria per accedere a Firestore)
+        async function initialAuth() {
+            try {
+                // Tenta di autenticare con il token fornito dall'ambiente (se presente)
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) {
+                    await signInWithCustomToken(window.auth, initialAuthToken);
+                    console.log("Autenticazione Firebase riuscita con token personalizzato.");
+                } else {
+                    // Altrimenti, usa l'accesso anonimo come fallback
+                    await signInAnonymously(window.auth);
+                    console.log("Autenticazione Firebase riuscita in modalitÃƒÆ’Ã‚Â  anonima.");
+                }
+            } catch (error) {
+                console.error("Errore durante l'autenticazione iniziale:", error);
+                // In caso di errore critico, si puÃƒÆ’Ã‚Â² mostrare un messaggio di fallback all'utente
+            }
+        }
+        
+        initialAuth();
+
+    </script>
+    
+    <!-- Collega gli script JavaScript esterni - DEVE ESSERE DOPO GLI SCRIPT FIREBASE -->
+    
+    <!-- 1. DEFINIZIONI BASE (Icone, Costanti, Variabili Globali) -->
+    <script src="icone.js?v=3"></script>
+    <script src="firestore-cache.js"></script>
+    <script src="config-listener.js"></script>
+    <script src="listener-manager.js"></script>
+    <script src="interfaccia-core.js"></script>
+    <script src="responsive-images.js"></script>
+
+    <!-- 1.5 UTILITY UI (Toast, Dialogs, Loading, Validazione) -->
+    <script src="toast.js"></script>
+    <script src="confirm-dialog.js"></script>
+    <script src="skeleton-loader.js"></script>
+    <script src="loading-manager.js"></script>
+    <script src="error-handler.js"></script>
+    <script src="form-validator.js"></script>
+    <script src="breadcrumb.js"></script>
+
+    <!-- 1.6 FEATURE FLAGS SYSTEM (Sistema toggle funzionalita') -->
+    <script src="feature-flags.js"></script>
+
+    <!-- 1.7 MODULI FEATURE OPZIONALI (Controllati da Feature Flags) -->
+    <script src="notifications.js"></script>
+    <script src="player-stats-advanced.js"></script>
+    <script src="chat.js"></script>
+    <script src="trades.js"></script>
+    <script src="achievements.js"></script>
+    <script src="injuries.js"></script>
+    <script src="stadium.js"></script>
+    <script src="stadium-ui.js"></script>
+    <script src="training.js"></script>
+    <script src="match-animations.js"></script>
+    <script src="drag-drop.js"></script>
+    <script src="challenges.js"></script>
+    <script src="challenge-match.js"></script>
+    <script src="dashboard-features.js"></script>
+    <script src="next-match-alert.js"></script>
+    <script src="tutorial.js"></script>
+    <script src="changelog.js"></script>
+    <script src="match-history.js"></script>
+    <script src="sponsor-system.js"></script>
+    <script src="private-leagues.js"></script>
+    <script src="private-leagues-ui.js"></script>
+    <script src="contracts.js"></script>
+    <script src="image-compressor.js"></script>
+    <script src="lazy-loader.js"></script>
+    <script src="tests.js"></script>
+
+    <!-- 2. LOGICA DI SIMULAZIONE (Dipende solo dalle costanti) -->
+    <script src="simulazione.js"></script>
+    <script src="simulazione-nuove-regole.js"></script> 
+
+    <!-- 3. MODULI CORE INTERFACCIA (Dipendono da Core) -->
+    <script src="interfaccia-auth.js"></script>       
+    <script src="interfaccia-dashboard.js"></script>
+    <script src="interfaccia-navigation.js"></script>
+    <script src="interfaccia-onboarding.js"></script>
+    <script src="interfaccia-team.js"></script>
+
+    <!-- UNIFORM EDITOR (serve a gestionesquadre-formazione) -->
+    <script src="uniform-editor.js"></script>
+
+    <!-- MODULI GESTIONE SQUADRE (in ordine di dipendenza) -->
+    <script src="gestionesquadre-constants.js"></script>
+    <script src="gestionesquadre-utils.js"></script>
+    <script src="gestionesquadre-rosa.js"></script>
+    <script src="gestionesquadre-formazione.js"></script>
+    <script src="gestionesquadre-icona.js"></script>
+    <script src="gestionesquadre.js"></script> <!-- Orchestratore -->
+    
+    <!-- 4. LOGICHE DI ACQUISTO (Dipendono da Core e possibilmente da Auth/Team) -->
+    <!-- MODULI DRAFT (in ordine di dipendenza) -->
+    <script src="draft-constants.js"></script>
+    <script src="draft-timer-sync.js"></script>
+    <script src="draft-utils.js"></script>
+    <script src="draft-turns.js"></script>
+    <script src="draft-admin-ui.js"></script>
+    <script src="draft-admin-players.js"></script>
+    <script src="draft-user-ui.js"></script>
+    <script src="draft-user-actions.js"></script>
+    <script src="draft-status-box.js"></script>
+    <script src="draft.js"></script> <!-- Orchestratore Draft -->
+    <script src="mercato.js"></script> 
+
+    <!-- 5. LOGICHE ADMIN (Dipendono da Core, Admin-UI/Players/Teams) -->
+    <script src="admin-formulas.js"></script>
+    <script src="admin-rewards.js"></script>
+    <script src="admin-sponsors.js"></script>
+    <script src="admin-media.js"></script>
+    <script src="admin-ui.js"></script>
+    <script src="admin-players.js"></script>
+    <script src="admin-teams.js"></script>
+    <script src="admin-icons.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-feature-flags.js"></script>
+    <script src="admin-objects.js"></script>
+    <script src="equipment-ui.js"></script>
+
+    <!-- 6. LOGICHE CAMPIONATO (Dipendono da Simulation, Core e Admin) -->
+    <script src="player-season-stats.js"></script>
+    <script src="player-season-stats-ui.js"></script>
+    <script src="player-exp.js"></script>
+    <script src="player-exp-ui.js"></script>
+    <script src="training-exp-minigame.js"></script>
+    <script src="campionato-rewards.js"></script>
+    <script src="campionato-simulation.js"></script>
+    <script src="campionato-schedule.js"></script>
+    <script src="campionato-ui.js"></script>
+    <script src="campionato-main.js"></script>
+    <script src="campionato.js"></script>
+    <script src="automazione-simulazioni.js"></script>
+
+    <!-- 7. COPPASERIA (Dipendono da Campionato e Simulation) -->
+    <script src="coppa-constants.js"></script>
+    <script src="coppa-brackets.js"></script>
+    <script src="coppa-simulation.js"></script>
+    <script src="coppa-schedule.js"></script>
+    <script src="coppa-ui.js"></script>
+    <script src="coppa-main.js"></script>
+
+    <!-- 8. SUPERCOPPA (Dipende da Campionato e Coppa) -->
+    <script src="supercoppa.js"></script>
+
+    <!-- 9. ORCHESTRATORE FINALE (Avvia l'app) -->
+    <script src="interfaccia.js"></script>
+
+    <!-- 10. MATCH REPLAY SYSTEM -->
+    <script src="match-replay-simple.js"></script>
+
+    <!-- 11. PLAYER STATS SYSTEM -->
+    <script src="player-stats.js"></script>
+    <script src="player-stats-ui.js"></script>
+
+    <!-- 12. ABILITIES ENCYCLOPEDIA -->
+    <script src="abilities-encyclopedia.js"></script>
+    <script src="abilities-encyclopedia-ui.js"></script>
+    <script src="rules-panel.js"></script>
+    <script src="sponsor-media.js"></script>
+    <script src="user-championship.js"></script>
+    <script src="user-competitions.js"></script>
+
+    <!-- 13. CREDITI SUPER SERI (Valuta Premium) -->
+    <script src="crediti-super-seri.js"></script>
+    <script src="crediti-super-seri-ui.js"></script>
+
+    <!-- 13b. RUOTA DELLA FORTUNA GIORNALIERA -->
+    <script src="daily-wheel.js"></script>
+    <script src="daily-wheel-ui.js"></script>
+
+    <!-- 14. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
+    <script src="version-check.js"></script>
+
+    <!-- 16. PWA SERVICE WORKER REGISTRATION E GESTIONE AGGIORNAMENTI -->
+    <script src="pwa-install.js"></script>
+
+    <!-- MATCH REPLAY OVERLAY (spostato qui da dopo </html>) -->
+    <div id="match-replay-overlay" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden overflow-y-auto">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+
+            <!-- Header con controlli -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">🎬 Replay Partita</h2>
+
+                <div class="flex gap-3">
+                    <!-- Velocita -->
+                    <button id="replay-speed-btn"
+                            onclick="window.MatchReplay.changeSpeed()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Velocita: 1x
+                    </button>
+
+                    <!-- Chiudi (solo se non in riproduzione) -->
+                    <button id="replay-skip-btn"
+                            onclick="window.MatchReplay.hide()"
+                            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Salta ⏭️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenuto dinamico replay -->
+            <div id="replay-content" class="min-h-[500px] flex items-center justify-center">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mx-auto mb-4"></div>
+                    <p class="text-white text-lg">Caricamento replay...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
+
+<!-- NOTA: Il vecchio codice PWA inline e le animazioni CSS sono stati estratti in:
+     - pwa-install.js (logica PWA)
+     - style.css (animazioni replay)
+     Il contenuto che era dopo </html> e' stato rimosso (era HTML invalido).
+-->

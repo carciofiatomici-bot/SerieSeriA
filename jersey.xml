@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" width="400" height="520">
+  <defs>
+    <style>
+      .kit-container {
+        /* Modifica questi colori per personalizzare il completo */
+        --shirt-primary: #003399;   /* Colore principale maglia (es. Blu scuro) */
+        --shirt-trim: #FFFFFF;      /* Colore finiture maglia (es. Bianco) */
+        --shorts-primary: #FFFFFF;  /* Colore principale pantaloncini (es. Bianco) */
+        --shorts-trim: #003399;     /* Colore laterale/finiture pantaloncini (es. Blu scuro) */
+        --number-color: #FFFFFF;    /* Colore del numero */
+      }
+
+      .shirt-body { fill: var(--shirt-primary); }
+      .shirt-collar-cuff { fill: var(--shirt-trim); }
+      .shorts-body { fill: var(--shorts-primary); }
+      .shorts-side-stripe { fill: var(--shorts-trim); }
+      .kit-number { 
+        fill: var(--number-color); 
+        font-family: sans-serif; 
+        font-weight: bold; 
+        text-anchor: middle;
+      }
+    </style>
+  </defs>
+
+  <g class="kit-container">
+    
+    <g id="jersey" transform="translate(0, 10)">
+      <path class="shirt-body" d="M 70,10 L 30,50 L 50,75 L 70,65 L 70,150 L 130,150 L 130,65 L 150,75 L 170,50 L 130,10 C 120,25 80,25 70,10 Z"/>
+      
+      <path class="shirt-collar-cuff" d="M 70,10 C 80,25 120,25 130,10 C 125,18 75,18 70,10 Z"/>
+      
+      <path class="shirt-collar-cuff" d="M 30,50 L 50,75 L 45,80 L 25,55 Z"/>
+      <path class="shirt-collar-cuff" d="M 170,50 L 150,75 L 155,80 L 175,55 Z"/>
+
+      <text x="100" y="100" font-size="50" class="kit-number">10</text>
+    </g>
+
+    <g id="shorts" transform="translate(0, 170)">
+      <path class="shorts-body" d="M 65,0 L 135,0 L 145,70 L 105,70 L 100,40 L 95,70 L 55,70 L 65,0 Z"/>
+      
+      <path class="shorts-side-stripe" d="M 65,0 L 55,70 L 60,70 L 70,0 Z"/>
+      <path class="shorts-side-stripe" d="M 135,0 L 145,70 L 140,70 L 130,0 Z"/>
+    </g>
+
+  </g>
+</svg>

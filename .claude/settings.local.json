@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd:*)",
+      "Bash(cat:*)",
+      "Bash(powershell -Command \"(Get-Content admin-players.js -Raw) -replace ''AbilitÃƒÂ '', ''Abilita'' -replace ''abilitÃƒÂ '', ''abilita'' -replace ''piÃ¹'', ''piu'' -replace ''Ã¨'', ''e'' -replace ''forzerÃƒÂ '', ''forzera'' | Set-Content admin-players.js -Encoding UTF8\")",
+      "Bash(powershell:*)",
+      "Bash(grep:*)",
+      "Bash(for f in C:UsersPowerUserDesktopRepositoryNew Porgetto CalcettoClaude Working Space/*.js)",
+      "Bash(do if xxd $f)",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(node:*)",
+      "Bash(for:*)",
+      "Bash(do node --check \"$f\")",
+      "Bash(echo:*)",
+      "Bash(then echo \"$f has encoding issues\")",
+      "Bash(ls:*)",
+      "Bash(while read f)",
+      "Bash(do echo \"Checking $f...\")",
+      "Bash(wc:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAggiunto GitHub Actions per simulazione automatica alle 20:30\n\n- Workflow daily-simulation.yml per esecuzione giornaliera\n- Script Node.js per simulazione partite via Firebase Admin SDK\nEOF\n)\")",
+      "Bash(git pull:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

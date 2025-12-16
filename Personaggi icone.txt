@@ -1,0 +1,66 @@
+Personaggi icone
+
+Nome: Croccante	
+Ruolo: D
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Croccante.jpg
+Nome: Shikanto
+Ruolo: C
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/shikanto.jpg
+Nome: Il Cap
+Ruolo: C
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cap.jpg
+Nome: Simone
+Ruolo: P
+Tipologia: Velocità
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/simone.jpg
+Nome: Dappino
+Ruolo: C
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/dappino.png
+Nome: Blatta
+Ruolo: D
+Tipologia: Velocità
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/blatta.jpg
+Nome: Antony
+Ruolo: D
+Tipologia: Potente
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/antony.jpg
+Nome: Gladio
+Ruolo: D
+Tipologia: Potente
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/gladio.jpg
+Nome: Amedemo
+Ruolo: A
+Tipologia: Potente
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/amedemo.jpg
+Nome: Flavio El Ficario
+Ruolo: D
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/elficario.jpg
+Nome: Luka Alpakashenka
+Ruolo: D
+Tipologia: Potente
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/luca.jpg
+Nome: Meliodas
+Ruolo: C
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mel.jpg
+Nome: Mark Falco
+Ruolo: P
+Tiplogia: Potente
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Mark%20Falco.jpg
+Nome: Sandro
+Ruolo: Centrocampista
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/sandro.jpg
+Nome: Fosco
+Ruolo: P
+Tipologia: Tecnico
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Fosco.jpg
+Nome: Cocco
+Ruolo: C
+Tipologia: Potenza
+Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/cocco.jpg

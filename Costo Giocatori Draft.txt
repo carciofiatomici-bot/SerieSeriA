@@ -1,0 +1,8 @@
+Costo Giocatori Draft
+
+100 + (livello * 10) + (livello abilità * 25) - (25 * numero abilità negative)
+
+Abilità comune = 1
+Abilità rara = 2
+Abilità Epica = 3
+Abilità Leggendaria = 4
