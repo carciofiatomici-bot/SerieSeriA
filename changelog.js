@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.1',
+    currentVersion: '2.2.2',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,27 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.2',
+            date: '2025-12-16',
+            time: '23:30',
+            title: 'Upgrade Massimale + Accordion Competizioni + Fix Alert',
+            changes: [
+                { text: 'NUOVO: Tab "Upgrade Massimale" nel Negozio CSS per aumentare il livello massimo dei giocatori', adminOnly: false },
+                { text: 'Upgrade Massimale: costa 2x livello giocatore in CSS, limite massimo GOAT Lv.25', adminOnly: false },
+                { text: 'Solo giocatori che hanno raggiunto il loro massimo attuale possono fare upgrade', adminOnly: false },
+                { text: 'Badge GOAT dorato per i giocatori che raggiungono il livello massimo 25', adminOnly: false },
+                { text: 'NUOVO: Menu accordion per Campionato - giornate collassabili, completate in fondo', adminOnly: false },
+                { text: 'NUOVO: Menu accordion per Coppa - turni collassabili, completati in fondo', adminOnly: false },
+                { text: 'NUOVO: Box "Ultima Partita" nel tab Campionato con risultato e colore vittoria/sconfitta/pareggio', adminOnly: false },
+                { text: 'NUOVO: Box "Ultima Partita" nel tab Coppa con risultato ultima partita giocata', adminOnly: false },
+                { text: 'FIX: Alert prossima partita ora mostra i nomi reali delle squadre (non piu "Squadra A vs Squadra B")', adminOnly: false },
+                { text: 'FIX: Alert prossima partita rispetta ordine automazione (coppa o campionato)', adminOnly: false },
+                { text: 'FIX: Icone nuove squadre ora partono da livello 5 invece di 10', adminOnly: false },
+                { text: 'FIX: Errore "getCurrentTeamId is not a function" nel modal Recupero Forma', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.1',
             date: '2025-12-16',
