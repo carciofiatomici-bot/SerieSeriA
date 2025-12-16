@@ -9,8 +9,11 @@
 (function() {
     'use strict';
 
-    // Configurazione premi
-    const PRIZES = [
+    // Flag per sapere se la config e' stata caricata
+    let configLoaded = false;
+
+    // Configurazione premi di DEFAULT (sovrascritta da Firestore se disponibile)
+    let PRIZES = [
         { id: 'cs5', label: '5 CS', type: 'cs', value: 5, probability: 30, color: '#4ade80', icon: '💰' },
         { id: 'cs10', label: '10 CS', type: 'cs', value: 10, probability: 25, color: '#22c55e', icon: '💰' },
         { id: 'cs25', label: '25 CS', type: 'cs', value: 25, probability: 20, color: '#3b82f6', icon: '💎' },
@@ -20,13 +23,68 @@
     ];
 
     // Oggetti possibili (se feature marketObjects attiva)
-    const RANDOM_OBJECTS = [
+    let RANDOM_OBJECTS = [
         { name: 'Scarpini Veloci', slot: 'scarpini', bonus: { stat: 'velocita', value: 1 }, rarity: 'comune' },
         { name: 'Guanti Sicuri', slot: 'guanti', bonus: { stat: 'difesa', value: 1 }, rarity: 'comune' },
         { name: 'Maglia Fortunata', slot: 'maglia', bonus: { stat: 'fortuna', value: 1 }, rarity: 'comune' },
         { name: 'Parastinchi Resistenti', slot: 'parastinchi', bonus: { stat: 'resistenza', value: 1 }, rarity: 'comune' },
         { name: 'Cappello da Campione', slot: 'cappello', bonus: { stat: 'morale', value: 1 }, rarity: 'raro' }
     ];
+
+    /**
+     * Carica la configurazione della ruota da Firestore
+     * @returns {Promise<boolean>} true se caricata con successo
+     */
+    async function loadConfig() {
+        if (configLoaded) return true;
+
+        try {
+            const firestoreTools = window.firestoreTools;
+            if (!firestoreTools) {
+                console.log('[DailyWheel] firestoreTools non disponibile, uso config default');
+                return false;
+            }
+
+            const { doc, getDoc } = firestoreTools;
+            const db = window.db;
+            const appId = firestoreTools.appId;
+
+            if (!db || !appId) {
+                console.log('[DailyWheel] db o appId non disponibile, uso config default');
+                return false;
+            }
+
+            const configPath = `artifacts/${appId}/public/data/config`;
+            const configDocRef = doc(db, configPath, 'wheelConfig');
+            const configDoc = await getDoc(configDocRef);
+
+            if (configDoc.exists()) {
+                const data = configDoc.data();
+
+                if (data.prizes && Array.isArray(data.prizes) && data.prizes.length > 0) {
+                    PRIZES.length = 0;
+                    PRIZES.push(...data.prizes);
+                    console.log('[DailyWheel] Premi caricati da Firestore:', PRIZES.length);
+                }
+
+                if (data.objects && Array.isArray(data.objects) && data.objects.length > 0) {
+                    RANDOM_OBJECTS.length = 0;
+                    RANDOM_OBJECTS.push(...data.objects);
+                    console.log('[DailyWheel] Oggetti caricati da Firestore:', RANDOM_OBJECTS.length);
+                }
+
+                configLoaded = true;
+                return true;
+            } else {
+                console.log('[DailyWheel] Nessuna config salvata, uso default');
+                return false;
+            }
+
+        } catch (error) {
+            console.error('[DailyWheel] Errore caricamento config:', error);
+            return false;
+        }
+    }
 
     /**
      * Verifica se l'utente puo girare oggi
@@ -49,9 +107,13 @@
 
     /**
      * Estrae un premio dalla ruota
-     * @returns {Object} Premio estratto
+     * Carica automaticamente la config se non ancora caricata
+     * @returns {Promise<Object>} Premio estratto
      */
-    function spin() {
+    async function spin() {
+        // Assicurati che la config sia caricata
+        await loadConfig();
+
         const totalProbability = PRIZES.reduce((sum, p) => sum + p.probability, 0);
         let random = Math.random() * totalProbability;
 
@@ -205,7 +267,8 @@
         spin,
         awardPrize,
         getPrizeIndex,
-        isEnabled
+        isEnabled,
+        loadConfig
     };
 
     console.log('[DailyWheel] Modulo caricato');

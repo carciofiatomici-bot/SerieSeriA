@@ -13,10 +13,13 @@
      * Mostra il popup della ruota
      * @param {Object} context - Contesto con teamId e teamData
      */
-    function showWheelPopup(context) {
+    async function showWheelPopup(context) {
         if (!window.DailyWheel?.isEnabled()) return;
 
         const { currentTeamId, teamData } = context;
+
+        // Carica la configurazione da Firestore prima di mostrare
+        await window.DailyWheel.loadConfig();
 
         // Rimuovi popup esistente
         const existing = document.getElementById('daily-wheel-popup');
@@ -141,8 +144,8 @@
         spinBtn.disabled = true;
         spinBtn.textContent = '🎰 Girando...';
 
-        // Estrai premio
-        const prize = window.DailyWheel.spin();
+        // Estrai premio (ora async per caricare config da Firestore)
+        const prize = await window.DailyWheel.spin();
         const prizeIndex = window.DailyWheel.getPrizeIndex(prize);
 
         // Calcola rotazione finale
