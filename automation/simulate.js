@@ -223,6 +223,11 @@ async function simulateChampionshipMatchday(db, appId) {
         match.awayScore = result.awayGoals;
         match.played = true;
         match.playedAt = new Date().toISOString();
+
+        // Invia notifiche alle squadre
+        if (!DRY_RUN) {
+            await sendMatchNotifications(db, appId, homeTeam, awayTeam, result.homeGoals, result.awayGoals, 'Campionato');
+        }
     }
 
     if (!DRY_RUN) {
@@ -441,6 +446,12 @@ async function simulateCupRound(db, appId) {
 
         const result = simulateMatch(actualHome, actualAway);
 
+        // Invia notifiche alle squadre
+        if (!DRY_RUN) {
+            const legLabel = legType === 'leg1' ? 'Andata' : 'Ritorno';
+            await sendMatchNotifications(db, appId, actualHome, actualAway, result.homeGoals, result.awayGoals, `Coppa - ${round.roundName} (${legLabel})`);
+        }
+
         // Salva risultato
         if (legType === 'leg1') {
             match.leg1Result = `${result.homeGoals}-${result.awayGoals}`;
@@ -545,6 +556,48 @@ function promoteWinner(bracket, roundIndex, matchIndex, winner) {
     } else {
         nextMatch.awayTeam = winner;
     }
+}
+
+// ============ NOTIFICHE ============
+
+/**
+ * Invia notifica risultato partita a una squadra
+ */
+async function sendMatchNotification(db, appId, teamId, teamName, opponentName, myScore, oppScore, matchType = 'Campionato') {
+    const won = myScore > oppScore;
+    const draw = myScore === oppScore;
+
+    const notification = {
+        type: 'match_result',
+        title: won ? 'Vittoria!' : (draw ? 'Pareggio' : 'Sconfitta'),
+        message: `${matchType}: ${teamName} ${myScore} - ${oppScore} ${opponentName}`,
+        targetTeamId: teamId,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        read: false,
+        data: {
+            myScore,
+            oppScore,
+            opponent: opponentName,
+            matchType,
+            won,
+            draw
+        }
+    };
+
+    const notifRef = db.collection(`artifacts/${appId}/public/data/notifications`).doc();
+    await notifRef.set(notification);
+
+    console.log(`  [Notifica] ${teamName}: ${notification.title}`);
+}
+
+/**
+ * Invia notifiche per una partita (a entrambe le squadre)
+ */
+async function sendMatchNotifications(db, appId, homeTeam, awayTeam, homeGoals, awayGoals, matchType = 'Campionato') {
+    await Promise.all([
+        sendMatchNotification(db, appId, homeTeam.id, homeTeam.teamName, awayTeam.teamName, homeGoals, awayGoals, matchType),
+        sendMatchNotification(db, appId, awayTeam.id, awayTeam.teamName, homeTeam.teamName, awayGoals, homeGoals, matchType)
+    ]);
 }
 
 // ============ UTILITIES ============
