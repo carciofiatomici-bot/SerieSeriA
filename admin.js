@@ -45,14 +45,19 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Renderizza il pannello di configurazione della Ruota della Fortuna
      */
-    const renderWheelConfigPanel = (container) => {
+    const renderWheelConfigPanel = async (container) => {
         if (!window.DailyWheel) {
             container.innerHTML = '<p class="text-red-400">Modulo DailyWheel non caricato</p>';
             return;
         }
 
+        // Carica config da Firestore prima di mostrare il pannello (forza reload)
+        container.innerHTML = '<p class="text-gray-400">Caricamento configurazione...</p>';
+        await window.DailyWheel.loadConfig(true);
+
         const prizes = window.DailyWheel.PRIZES;
         const objects = window.DailyWheel.RANDOM_OBJECTS;
+        console.log('[Admin] Config ruota caricata:', { prizes: prizes.length, objects: objects.length });
 
         container.innerHTML = `
             <div class="space-y-4">
@@ -128,6 +133,36 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <button class="btn-remove-object text-red-400 hover:text-red-300 px-2" data-index="${index}">✖</button>
                             </div>
                         `).join('')}
+                    </div>
+                </div>
+
+                <!-- Aggiungi oggetto -->
+                <div class="p-3 bg-gray-700/50 rounded-lg border border-dashed border-gray-500">
+                    <h4 class="text-orange-300 font-bold mb-2">Aggiungi Nuovo Oggetto</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <input type="text" id="new-object-name" class="bg-gray-600 text-white px-2 py-1 rounded text-sm" placeholder="Nome oggetto">
+                        <select id="new-object-slot" class="bg-gray-600 text-white px-2 py-1 rounded text-sm">
+                            <option value="scarpini">Scarpini</option>
+                            <option value="guanti">Guanti</option>
+                            <option value="maglia">Maglia</option>
+                            <option value="parastinchi">Parastinchi</option>
+                            <option value="cappello">Cappello</option>
+                        </select>
+                        <select id="new-object-stat" class="bg-gray-600 text-white px-2 py-1 rounded text-sm">
+                            <option value="velocita">Velocita</option>
+                            <option value="difesa">Difesa</option>
+                            <option value="attacco">Attacco</option>
+                            <option value="fortuna">Fortuna</option>
+                            <option value="resistenza">Resistenza</option>
+                            <option value="morale">Morale</option>
+                        </select>
+                        <select id="new-object-rarity" class="bg-gray-600 text-white px-2 py-1 rounded text-sm">
+                            <option value="comune">Comune</option>
+                            <option value="raro">Raro</option>
+                            <option value="epico">Epico</option>
+                            <option value="leggendario">Leggendario</option>
+                        </select>
+                        <button id="btn-add-object" class="bg-green-600 text-white font-bold px-3 py-1 rounded text-sm hover:bg-green-500">+ Aggiungi</button>
                     </div>
                 </div>
 
@@ -213,11 +248,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Bottone aggiungi oggetto
+        const btnAddObject = container.querySelector('#btn-add-object');
+        if (btnAddObject) {
+            btnAddObject.addEventListener('click', () => {
+                const name = container.querySelector('#new-object-name').value.trim();
+                const slot = container.querySelector('#new-object-slot').value;
+                const stat = container.querySelector('#new-object-stat').value;
+                const rarity = container.querySelector('#new-object-rarity').value;
+
+                if (!name) {
+                    displayMessage('Inserisci il nome dell\'oggetto', 'error', 'wheel-config-message');
+                    return;
+                }
+
+                // Valore bonus in base alla rarita
+                const bonusValues = { comune: 1, raro: 2, epico: 3, leggendario: 5 };
+                const bonusValue = bonusValues[rarity] || 1;
+
+                const newObject = {
+                    name,
+                    slot,
+                    bonus: { stat, value: bonusValue },
+                    rarity
+                };
+
+                window.DailyWheel.RANDOM_OBJECTS.push(newObject);
+                renderWheelConfigPanel(container);
+                displayMessage('Oggetto aggiunto (non salvato)', 'info', 'wheel-config-message');
+            });
+        }
+
         // Bottone salva configurazione
         const btnSave = container.querySelector('#btn-save-wheel-config');
         if (btnSave) {
             btnSave.addEventListener('click', async () => {
-                // Raccogli i valori aggiornati dai campi
+                // Raccogli i valori aggiornati dai campi PREMI
                 const prizeRows = container.querySelectorAll('[data-prize-index]');
                 const updatedPrizes = [];
 
@@ -234,9 +300,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-                // Aggiorna l'array globale
+                // Raccogli i valori aggiornati dai campi OGGETTI
+                const objectRows = container.querySelectorAll('[data-object-index]');
+                const updatedObjects = [];
+
+                objectRows.forEach((row, index) => {
+                    const originalObject = window.DailyWheel.RANDOM_OBJECTS[index];
+                    const name = row.querySelector('.object-name').value;
+                    const slot = row.querySelector('.object-slot').value;
+                    const rarity = row.querySelector('.object-rarity').value;
+
+                    updatedObjects.push({
+                        name,
+                        slot,
+                        bonus: originalObject?.bonus || { stat: 'velocita', value: 1 },
+                        rarity
+                    });
+                });
+
+                // Aggiorna gli array globali
                 window.DailyWheel.PRIZES.length = 0;
                 window.DailyWheel.PRIZES.push(...updatedPrizes);
+
+                window.DailyWheel.RANDOM_OBJECTS.length = 0;
+                window.DailyWheel.RANDOM_OBJECTS.push(...updatedObjects);
 
                 // Salva su Firestore nella configurazione
                 try {
@@ -247,11 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     await setDoc(configDocRef, {
                         prizes: updatedPrizes,
-                        objects: window.DailyWheel.RANDOM_OBJECTS,
+                        objects: updatedObjects,
                         updatedAt: new Date().toISOString()
                     });
 
                     displayMessage('Configurazione salvata!', 'success', 'wheel-config-message');
+                    console.log('[Admin] Config ruota salvata:', { prizes: updatedPrizes.length, objects: updatedObjects.length });
                 } catch (error) {
                     console.error('Errore salvataggio config ruota:', error);
                     displayMessage('Errore nel salvataggio: ' + error.message, 'error', 'wheel-config-message');

@@ -33,10 +33,11 @@
 
     /**
      * Carica la configurazione della ruota da Firestore
+     * @param {boolean} forceReload - Se true, ricarica anche se gia caricata
      * @returns {Promise<boolean>} true se caricata con successo
      */
-    async function loadConfig() {
-        if (configLoaded) return true;
+    async function loadConfig(forceReload = false) {
+        if (configLoaded && !forceReload) return true;
 
         try {
             const firestoreTools = window.firestoreTools;
