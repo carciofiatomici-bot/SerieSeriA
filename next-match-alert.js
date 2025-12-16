@@ -63,75 +63,127 @@ window.NextMatchAlert = {
     },
 
     /**
+     * Ottiene il nome di una squadra dal suo ID
+     */
+    getTeamNameById(teamId) {
+        // Prova prima da allTeamsData
+        const allTeams = window.InterfacciaCore?.allTeamsData;
+        if (allTeams) {
+            const team = allTeams.find(t => t.id === teamId);
+            if (team?.name) return team.name;
+        }
+        // Fallback: prova dalla classifica
+        const leaderboard = window.InterfacciaCore?.currentLeaderboard;
+        if (leaderboard) {
+            const entry = leaderboard.find(e => e.teamId === teamId);
+            if (entry?.teamName) return entry.teamName;
+        }
+        return null;
+    },
+
+    /**
      * Ottiene la prossima partita della squadra (campionato o coppa)
+     * Rispetta l'ordine di simulazione dell'automazione
      */
     async getNextMatch(teamId) {
         const { doc, getDoc, appId } = window.firestoreTools;
         const db = window.db;
 
-        // Prima controlla il campionato
-        try {
-            const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
-            const scheduleRef = doc(db, schedulePath);
-            const scheduleDoc = await getDoc(scheduleRef);
+        // Carica lo stato dell'automazione per sapere quale competizione viene simulata prima
+        const automationState = await this.getAutomationState();
+        const nextSimType = automationState?.nextSimulationType || 'campionato';
+        const isCoppaNext = nextSimType.includes('coppa');
 
-            if (scheduleDoc.exists()) {
-                const schedule = scheduleDoc.data().matches || [];
-                for (const round of schedule) {
-                    if (!round.matches) continue;
-                    const match = round.matches.find(m =>
-                        m.result === null && (m.homeId === teamId || m.awayId === teamId)
-                    );
-                    if (match) {
-                        // Carica medie rosa
-                        const homeAvg = await this.getTeamAverageLevel(match.homeId);
-                        const awayAvg = await this.getTeamAverageLevel(match.awayId);
+        // Funzione per caricare partita campionato
+        const getChampionshipMatch = async () => {
+            try {
+                const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+                const scheduleRef = doc(db, schedulePath);
+                const scheduleDoc = await getDoc(scheduleRef);
+
+                if (scheduleDoc.exists()) {
+                    const schedule = scheduleDoc.data().matches || [];
+                    for (const round of schedule) {
+                        if (!round.matches) continue;
+                        const match = round.matches.find(m =>
+                            m.result === null && (m.homeId === teamId || m.awayId === teamId)
+                        );
+                        if (match) {
+                            const homeAvg = await this.getTeamAverageLevel(match.homeId);
+                            const awayAvg = await this.getTeamAverageLevel(match.awayId);
+                            // Ottieni nomi squadre con fallback robusti
+                            const homeName = match.homeName || this.getTeamNameById(match.homeId) || 'Squadra A';
+                            const awayName = match.awayName || this.getTeamNameById(match.awayId) || 'Squadra B';
+                            return {
+                                type: 'campionato',
+                                round: round.round || `Giornata ${schedule.indexOf(round) + 1}`,
+                                homeName,
+                                awayName,
+                                homeId: match.homeId,
+                                awayId: match.awayId,
+                                isHome: match.homeId === teamId,
+                                homeAvg,
+                                awayAvg
+                            };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('[NextMatchAlert] Errore caricamento campionato:', error);
+            }
+            return null;
+        };
+
+        // Funzione per caricare partita coppa
+        const getCupMatch = async () => {
+            try {
+                const bracket = await window.CoppaSchedule?.loadCupSchedule();
+                if (bracket) {
+                    const teamMatches = window.CoppaSchedule.getTeamMatches(bracket, teamId);
+                    const nextCupMatch = teamMatches.find(m => !m.winner);
+                    if (nextCupMatch && nextCupMatch.homeTeam && nextCupMatch.awayTeam) {
+                        const homeAvg = await this.getTeamAverageLevel(nextCupMatch.homeTeam.teamId);
+                        const awayAvg = await this.getTeamAverageLevel(nextCupMatch.awayTeam.teamId);
+                        // Ottieni nomi squadre con fallback robusti
+                        const homeName = nextCupMatch.homeTeam.teamName
+                            || nextCupMatch.homeTeam.name
+                            || this.getTeamNameById(nextCupMatch.homeTeam.teamId)
+                            || 'Squadra A';
+                        const awayName = nextCupMatch.awayTeam.teamName
+                            || nextCupMatch.awayTeam.name
+                            || this.getTeamNameById(nextCupMatch.awayTeam.teamId)
+                            || 'Squadra B';
                         return {
-                            type: 'campionato',
-                            round: round.round,
-                            homeName: match.homeName,
-                            awayName: match.awayName,
-                            homeId: match.homeId,
-                            awayId: match.awayId,
-                            isHome: match.homeId === teamId,
+                            type: 'coppa',
+                            round: nextCupMatch.roundName || 'Turno Coppa',
+                            homeName,
+                            awayName,
+                            homeId: nextCupMatch.homeTeam.teamId,
+                            awayId: nextCupMatch.awayTeam.teamId,
+                            isHome: nextCupMatch.homeTeam.teamId === teamId,
                             homeAvg,
                             awayAvg
                         };
                     }
                 }
+            } catch (error) {
+                console.error('[NextMatchAlert] Errore caricamento coppa:', error);
             }
-        } catch (error) {
-            console.error('[NextMatchAlert] Errore caricamento campionato:', error);
-        }
+            return null;
+        };
 
-        // Poi controlla la coppa
-        try {
-            const bracket = await window.CoppaSchedule?.loadCupSchedule();
-            if (bracket) {
-                const teamMatches = window.CoppaSchedule.getTeamMatches(bracket, teamId);
-                const nextCupMatch = teamMatches.find(m => !m.winner);
-                if (nextCupMatch && nextCupMatch.homeTeam && nextCupMatch.awayTeam) {
-                    // Carica medie rosa
-                    const homeAvg = await this.getTeamAverageLevel(nextCupMatch.homeTeam.teamId);
-                    const awayAvg = await this.getTeamAverageLevel(nextCupMatch.awayTeam.teamId);
-                    return {
-                        type: 'coppa',
-                        round: nextCupMatch.roundName || 'Turno',
-                        homeName: nextCupMatch.homeTeam.name,
-                        awayName: nextCupMatch.awayTeam.name,
-                        homeId: nextCupMatch.homeTeam.teamId,
-                        awayId: nextCupMatch.awayTeam.teamId,
-                        isHome: nextCupMatch.homeTeam.teamId === teamId,
-                        homeAvg,
-                        awayAvg
-                    };
-                }
-            }
-        } catch (error) {
-            console.error('[NextMatchAlert] Errore caricamento coppa:', error);
+        // Rispetta l'ordine dell'automazione: se la prossima simulazione e' coppa, mostra coppa prima
+        if (isCoppaNext) {
+            const cupMatch = await getCupMatch();
+            if (cupMatch) return cupMatch;
+            // Fallback a campionato se non c'e' partita di coppa
+            return await getChampionshipMatch();
+        } else {
+            const champMatch = await getChampionshipMatch();
+            if (champMatch) return champMatch;
+            // Fallback a coppa se non c'e' partita di campionato
+            return await getCupMatch();
         }
-
-        return null;
     },
 
     /**

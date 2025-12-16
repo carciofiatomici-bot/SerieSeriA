@@ -7,6 +7,50 @@
 window.UserCompetitions = {
 
     // ================================================================
+    // HELPER FUNCTIONS
+    // ================================================================
+
+    /**
+     * Trova l'ultima partita giocata dalla squadra nel campionato
+     */
+    findLastPlayedMatch(scheduleData, teamId) {
+        let lastMatch = null;
+        for (const round of scheduleData) {
+            if (!round.matches) continue;
+            const myMatch = round.matches.find(m =>
+                m.result !== null && (m.homeId === teamId || m.awayId === teamId)
+            );
+            if (myMatch) {
+                lastMatch = { ...myMatch, round: round.round };
+            }
+        }
+        return lastMatch;
+    },
+
+    /**
+     * Trova l'ultima partita giocata dalla squadra in coppa
+     */
+    findLastPlayedCupMatch(bracket, teamId) {
+        if (!bracket || !bracket.rounds) return null;
+        let lastMatch = null;
+        for (const round of bracket.rounds) {
+            if (!round.matches) continue;
+            for (const match of round.matches) {
+                const isMyMatch = match.homeTeam?.teamId === teamId || match.awayTeam?.teamId === teamId;
+                const hasResult = match.leg1Result || match.winner;
+                if (isMyMatch && hasResult) {
+                    lastMatch = {
+                        ...match,
+                        roundName: round.roundName,
+                        isSingleMatch: round.isSingleMatch
+                    };
+                }
+            }
+        }
+        return lastMatch;
+    },
+
+    // ================================================================
     // SCHERMATA CAMPIONATO
     // ================================================================
 
@@ -259,12 +303,17 @@ window.UserCompetitions = {
                 </div>
             `;
         } else {
-            // Trova la giornata corrente (prima non completata)
-            const currentRoundIndex = scheduleData.findIndex(r => r.matches.some(m => m.result === null));
+            // Ordina le giornate: prima quelle da giocare, poi quelle completate
+            const sortedSchedule = [...scheduleData].sort((a, b) => {
+                const aComplete = a.matches.every(m => m.result !== null);
+                const bComplete = b.matches.every(m => m.result !== null);
+                if (aComplete === bComplete) return a.round - b.round; // Ordine numerico se stesso stato
+                return aComplete ? 1 : -1; // Completate in fondo
+            });
 
             html += `<div class="max-h-96 overflow-y-auto space-y-2" id="calendar-accordion">`;
 
-            scheduleData.forEach((round, index) => {
+            sortedSchedule.forEach((round, index) => {
                 const roundComplete = round.matches.every(m => m.result !== null);
                 const statusIcon = roundComplete ? '✅' : '⏳';
                 const hasMyMatch = round.matches.some(m => m.homeId === currentTeamId || m.awayId === currentTeamId);
@@ -308,6 +357,34 @@ window.UserCompetitions = {
             html += `</div>`;
         }
         html += `</div>`;
+
+        // SEZIONE 4: Ultima Partita Giocata
+        const lastPlayedMatch = this.findLastPlayedMatch(scheduleData, currentTeamId);
+        if (lastPlayedMatch) {
+            const isHome = lastPlayedMatch.homeId === currentTeamId;
+            const myGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[0]) : parseInt(lastPlayedMatch.result.split('-')[1]);
+            const opponentGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[1]) : parseInt(lastPlayedMatch.result.split('-')[0]);
+            const resultType = myGoals > opponentGoals ? 'win' : myGoals < opponentGoals ? 'loss' : 'draw';
+            const resultColor = resultType === 'win' ? 'from-green-900 to-green-800 border-green-500' : resultType === 'loss' ? 'from-red-900 to-red-800 border-red-500' : 'from-yellow-900 to-yellow-800 border-yellow-500';
+            const resultText = resultType === 'win' ? '✅ VITTORIA' : resultType === 'loss' ? '❌ SCONFITTA' : '🤝 PAREGGIO';
+            const resultTextColor = resultType === 'win' ? 'text-green-400' : resultType === 'loss' ? 'text-red-400' : 'text-yellow-400';
+
+            html += `
+                <div class="bg-gradient-to-r ${resultColor} rounded-lg p-4 border-2 shadow-lg">
+                    <h3 class="text-xl font-bold ${resultTextColor} mb-3 flex items-center gap-2">
+                        <span>📊</span> Ultima Partita (Giornata ${lastPlayedMatch.round})
+                    </h3>
+                    <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                        <div class="flex items-center justify-center gap-4">
+                            <span class="${lastPlayedMatch.homeId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.homeName}</span>
+                            <span class="text-2xl font-extrabold text-white">${lastPlayedMatch.result}</span>
+                            <span class="${lastPlayedMatch.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.awayName}</span>
+                        </div>
+                        <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
+                    </div>
+                </div>
+            `
+        }
 
         container.innerHTML = html;
 
@@ -518,7 +595,7 @@ window.UserCompetitions = {
         }
         html += `</div>`;
 
-        // SEZIONE 2: Tabellone Completo (stile calendario campionato)
+        // SEZIONE 2: Tabellone Completo (stile calendario campionato con accordion)
         html += `
             <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
                 <h3 class="text-xl font-bold text-indigo-400 mb-3 flex items-center gap-2">
@@ -535,19 +612,38 @@ window.UserCompetitions = {
             `;
         }
 
-        // Renderizza ogni round con le partite dettagliate
-        html += `<div class="max-h-96 overflow-y-auto space-y-3">`;
+        // Renderizza ogni round con accordion (collassabile)
+        html += `<div class="max-h-96 overflow-y-auto space-y-2" id="coppa-accordion">`;
 
         if (bracket && bracket.rounds && bracket.rounds.length > 0) {
-            bracket.rounds.forEach(round => {
+            // Ordina i round: prima quelli da giocare, poi quelli completati
+            const sortedRounds = [...bracket.rounds].sort((a, b) => {
+                const aComplete = a.matches.every(m => m.winner !== null && m.winner !== undefined);
+                const bComplete = b.matches.every(m => m.winner !== null && m.winner !== undefined);
+                if (aComplete === bComplete) return a.roundNumber - b.roundNumber;
+                return aComplete ? 1 : -1; // Completate in fondo
+            });
+
+            sortedRounds.forEach((round, index) => {
                 // Verifica se il round è completato
                 const roundComplete = round.matches.every(m => m.winner !== null && m.winner !== undefined);
                 const statusIcon = roundComplete ? '✅' : '⏳';
+                const hasMyMatch = round.matches.some(m =>
+                    m.homeTeam?.teamId === currentTeamId || m.awayTeam?.teamId === currentTeamId
+                );
+                const accordionId = `coppa-round-${index}`;
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg p-3">
-                        <p class="text-indigo-300 font-bold mb-2">${statusIcon} ${round.roundName}</p>
-                        <div class="space-y-2">
+                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
+                        <button class="coppa-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer"
+                                data-accordion="${accordionId}" aria-expanded="false">
+                            <span class="text-indigo-300 font-bold flex items-center gap-2">
+                                ${statusIcon} ${round.roundName}
+                                ${hasMyMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
+                            </span>
+                            <span class="coppa-round-arrow text-indigo-400 transition-transform">▼</span>
+                        </button>
+                        <div id="${accordionId}" class="coppa-round-content hidden px-3 pb-3 space-y-2">
                 `;
 
                 round.matches.forEach(match => {
@@ -605,7 +701,56 @@ window.UserCompetitions = {
         html += `</div>`;
         html += `</div>`;
 
+        // SEZIONE 3: Ultima Partita Giocata in Coppa
+        const lastCupMatch = this.findLastPlayedCupMatch(bracket, currentTeamId);
+        if (lastCupMatch) {
+            const isHome = lastCupMatch.homeTeam?.teamId === currentTeamId;
+            const myTeamWon = lastCupMatch.winner?.teamId === currentTeamId;
+            const resultColor = myTeamWon ? 'from-green-900 to-green-800 border-green-500' : 'from-red-900 to-red-800 border-red-500';
+            const resultText = myTeamWon ? '✅ PASSATO IL TURNO' : '❌ ELIMINATO';
+            const resultTextColor = myTeamWon ? 'text-green-400' : 'text-red-400';
+
+            // Costruisci stringa risultato
+            let resultStr = lastCupMatch.leg1Result || '';
+            if (lastCupMatch.leg2Result) {
+                resultStr += ` / ${lastCupMatch.leg2Result}`;
+            }
+
+            html += `
+                <div class="bg-gradient-to-r ${resultColor} rounded-lg p-4 border-2 shadow-lg">
+                    <h3 class="text-xl font-bold ${resultTextColor} mb-3 flex items-center gap-2">
+                        <span>📊</span> Ultima Partita (${lastCupMatch.roundName})
+                    </h3>
+                    <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                        <div class="flex items-center justify-center gap-4">
+                            <span class="${lastCupMatch.homeTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.homeTeam?.teamName || 'TBD'}</span>
+                            <span class="text-xl font-extrabold text-white">${resultStr}</span>
+                            <span class="${lastCupMatch.awayTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.awayTeam?.teamName || 'TBD'}</span>
+                        </div>
+                        <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
+                    </div>
+                </div>
+            `;
+        }
+
         container.innerHTML = html;
+
+        // Aggiungi listener per accordion coppa dopo il rendering
+        setTimeout(() => {
+            document.querySelectorAll('.coppa-round-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const accordionId = header.getAttribute('data-accordion');
+                    const content = document.getElementById(accordionId);
+                    const arrow = header.querySelector('.coppa-round-arrow');
+                    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+
+                    // Toggle stato
+                    header.setAttribute('aria-expanded', !isExpanded);
+                    content.classList.toggle('hidden');
+                    arrow.classList.toggle('rotate-180');
+                });
+            });
+        }, 100);
     },
 
     // ================================================================

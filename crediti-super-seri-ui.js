@@ -91,6 +91,9 @@ window.CreditiSuperSeriUI = {
                     <button id="tab-rimuovi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
                         Rimuovi Abilita
                     </button>
+                    <button id="tab-upgrade-max" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
+                        Upgrade Massimale
+                    </button>
                     <button id="tab-servizi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
                         Servizi
                     </button>
@@ -131,6 +134,11 @@ window.CreditiSuperSeriUI = {
         document.getElementById('tab-rimuovi').addEventListener('click', () => {
             this.setActiveTab('rimuovi');
             this.renderRimuoviAbilitaContent(rosa, saldo);
+        });
+
+        document.getElementById('tab-upgrade-max').addEventListener('click', () => {
+            this.setActiveTab('upgrade-max');
+            this.renderUpgradeMassimaleContent(rosa, saldo);
         });
 
         // Renderizza contenuto iniziale
@@ -366,6 +374,240 @@ window.CreditiSuperSeriUI = {
                 await this.handleAssegnaAbilita(playerId, abilityName);
             });
         });
+    },
+
+    // Livello massimo assoluto per giocatori normali (GOAT)
+    MAX_SECRET_LEVEL: 25,
+
+    /**
+     * Renderizza il contenuto del tab Upgrade Massimale
+     * Permette di aumentare il livello massimo segreto dei giocatori che hanno raggiunto il max
+     * Limite massimo: 25 (GOAT)
+     */
+    renderUpgradeMassimaleContent(rosa, saldo) {
+        const container = document.getElementById('css-panel-content');
+        if (!container) return;
+
+        const CSS = window.CreditiSuperSeri;
+        const PlayerExp = window.PlayerExp;
+        if (!CSS || !PlayerExp) {
+            container.innerHTML = '<p class="text-red-400 text-center">Sistema non disponibile</p>';
+            return;
+        }
+
+        const MAX_LEVEL = this.MAX_SECRET_LEVEL; // 25 = GOAT
+
+        // Filtra giocatori che hanno raggiunto il loro livello massimo segreto
+        // Escludi icone (non hanno secretMaxLevel)
+        const giocatoriAlMax = rosa.filter(player => {
+            const isIcona = player.abilities && player.abilities.includes('Icona');
+            if (isIcona) return false;
+
+            const currentLevel = player.currentLevel || player.level || 1;
+            const secretMax = player.secretMaxLevel;
+
+            // Deve avere secretMaxLevel e averlo raggiunto
+            return secretMax !== undefined && secretMax !== null && currentLevel >= secretMax;
+        });
+
+        if (giocatoriAlMax.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="text-6xl">📈</span>
+                    <p class="text-gray-400 mt-4">Nessun giocatore ha raggiunto il livello massimo.</p>
+                    <p class="text-gray-500 text-sm mt-2">Potenzia i tuoi giocatori fino al loro limite per sbloccare l'upgrade del massimale.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Ordina per ruolo
+        const ordineRuoli = ['P', 'D', 'C', 'A'];
+        const rosaSorted = [...giocatoriAlMax].sort((a, b) => {
+            return ordineRuoli.indexOf(a.role) - ordineRuoli.indexOf(b.role);
+        });
+
+        let html = `
+            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-purple-500">
+                <p class="text-gray-300 text-sm">
+                    <span class="text-purple-400 font-bold">Upgrade Massimale:</span>
+                    Aumenta il livello massimo raggiungibile di un giocatore.
+                    <br><span class="text-amber-400">Costo: 2 × Livello attuale CSS</span>
+                    <br><span class="text-yellow-400">Limite massimo: Lv.${MAX_LEVEL} (GOAT)</span>
+                </p>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-12 gap-2 text-gray-400 text-sm font-semibold border-b border-gray-700 pb-2 mb-2">
+                    <div class="col-span-1">Ruolo</div>
+                    <div class="col-span-4">Nome</div>
+                    <div class="col-span-2 text-center">Livello</div>
+                    <div class="col-span-2 text-center">Max Attuale</div>
+                    <div class="col-span-2 text-center">Costo</div>
+                    <div class="col-span-1 text-center">Azione</div>
+                </div>
+        `;
+
+        rosaSorted.forEach(player => {
+            const currentLevel = player.currentLevel || player.level || 1;
+            const secretMax = player.secretMaxLevel;
+            const costo = currentLevel * 2; // Costo = 2 × livello giocatore
+            const isAtGoatLevel = secretMax >= MAX_LEVEL; // Gia al massimo assoluto
+            const canAfford = saldo >= costo && !isAtGoatLevel;
+
+            const roleColors = {
+                'P': 'text-yellow-400',
+                'D': 'text-blue-400',
+                'C': 'text-green-400',
+                'A': 'text-red-400'
+            };
+
+            html += `
+                <div class="grid grid-cols-12 gap-2 items-center py-3 border-b border-gray-700 hover:bg-gray-700 rounded transition">
+                    <div class="col-span-1">
+                        <span class="font-bold ${roleColors[player.role] || 'text-white'}">${player.role}</span>
+                    </div>
+                    <div class="col-span-4 text-white font-semibold">
+                        ${player.name}
+                        ${isAtGoatLevel ? '<span class="ml-1 text-yellow-400 text-xs">🐐 GOAT</span>' : ''}
+                    </div>
+                    <div class="col-span-2 text-center">
+                        <span class="text-amber-400 font-bold text-lg">Lv ${currentLevel}</span>
+                    </div>
+                    <div class="col-span-2 text-center">
+                        ${isAtGoatLevel
+                            ? `<span class="text-yellow-400 font-bold">${secretMax} MAX</span>`
+                            : `<span class="text-purple-400 font-bold">${secretMax}</span>
+                               <span class="text-gray-500">→</span>
+                               <span class="text-green-400 font-bold">${secretMax + 1}</span>`
+                        }
+                    </div>
+                    <div class="col-span-2 text-center">
+                        ${isAtGoatLevel
+                            ? '<span class="text-yellow-400 font-bold">GOAT</span>'
+                            : `<span class="${canAfford ? 'text-amber-400' : 'text-red-400'} font-bold">${costo} CSS</span>`
+                        }
+                    </div>
+                    <div class="col-span-1 text-center">
+                        ${isAtGoatLevel
+                            ? '<span class="text-gray-500">-</span>'
+                            : `<button class="btn-upgrade-max ${canAfford
+                                ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              } font-bold py-1 px-3 rounded text-sm transition"
+                              data-player-id="${player.id}"
+                              data-costo="${costo}"
+                              ${canAfford ? '' : 'disabled'}>
+                                📈
+                            </button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Collega eventi upgrade
+        container.querySelectorAll('.btn-upgrade-max').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const playerId = e.target.dataset.playerId;
+                await this.handleUpgradeMassimale(playerId);
+            });
+        });
+    },
+
+    /**
+     * Gestisce l'upgrade del livello massimo di un giocatore
+     * Limite massimo: 25 (GOAT)
+     */
+    async handleUpgradeMassimale(playerId) {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        const teamData = window.InterfacciaCore?.currentTeamData;
+
+        if (!teamId || !teamData) {
+            this.showMessage('Errore: dati squadra non disponibili', 'error');
+            return;
+        }
+
+        // Trova il giocatore
+        const player = teamData.players?.find(p => p.id === playerId);
+        if (!player) {
+            this.showMessage('Errore: giocatore non trovato', 'error');
+            return;
+        }
+
+        const currentSecretMax = player.secretMaxLevel || 20;
+        const MAX_LEVEL = this.MAX_SECRET_LEVEL; // 25 = GOAT
+
+        // Verifica limite GOAT
+        if (currentSecretMax >= MAX_LEVEL) {
+            this.showMessage(`${player.name} ha gia raggiunto il livello GOAT (${MAX_LEVEL})!`, 'error');
+            return;
+        }
+
+        const currentLevel = player.currentLevel || player.level || 1;
+        const costo = currentLevel * 2;
+        const saldo = teamData.creditiSuperSeri || 0;
+
+        if (saldo < costo) {
+            this.showMessage(`CSS insufficienti. Servono ${costo} CSS`, 'error');
+            return;
+        }
+
+        // Conferma
+        if (!confirm(`Vuoi aumentare il livello massimo di ${player.name} da ${currentSecretMax} a ${currentSecretMax + 1} per ${costo} CSS?`)) {
+            return;
+        }
+
+        this.showMessage('Upgrade in corso...', 'info');
+
+        try {
+            const { doc, updateDoc, appId } = window.firestoreTools;
+            const db = window.db;
+            const teamRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+
+            // Aggiorna il giocatore
+            const updatedPlayers = teamData.players.map(p => {
+                if (p.id === playerId) {
+                    return {
+                        ...p,
+                        secretMaxLevel: (p.secretMaxLevel || 20) + 1
+                    };
+                }
+                return p;
+            });
+
+            // Scala i CSS
+            const nuovoSaldo = saldo - costo;
+
+            await updateDoc(teamRef, {
+                players: updatedPlayers,
+                creditiSuperSeri: nuovoSaldo
+            });
+
+            // Aggiorna dati locali
+            window.InterfacciaCore.currentTeamData.players = updatedPlayers;
+            window.InterfacciaCore.currentTeamData.creditiSuperSeri = nuovoSaldo;
+
+            this.showMessage(
+                `Livello massimo di ${player.name} aumentato a ${currentSecretMax + 1}! Saldo: ${nuovoSaldo} CSS`,
+                'success'
+            );
+
+            // Aggiorna saldo nella UI
+            const saldoDisplay = document.getElementById('css-saldo-display');
+            if (saldoDisplay) {
+                saldoDisplay.textContent = `${nuovoSaldo} CSS`;
+            }
+
+            // Ricarica il pannello
+            await this.refreshPanel();
+
+        } catch (error) {
+            console.error('[CSS] Errore upgrade massimale:', error);
+            this.showMessage(`Errore: ${error.message}`, 'error');
+        }
     },
 
     /**
@@ -1095,7 +1337,7 @@ window.CreditiSuperSeriUI = {
         if (!teamDoc.exists()) return;
 
         const teamData = teamDoc.data();
-        const rosa = teamData.rosa || [];
+        const rosa = teamData.players || [];
         const saldo = teamData.creditiSuperSeri || 0;
 
         // Aggiorna anche il currentTeamData globale
@@ -1106,6 +1348,7 @@ window.CreditiSuperSeriUI = {
         const tabAbilita = document.getElementById('tab-abilita');
         const tabServizi = document.getElementById('tab-servizi');
         const tabRimuovi = document.getElementById('tab-rimuovi');
+        const tabUpgradeMax = document.getElementById('tab-upgrade-max');
 
         if (tabPotenziamento?.classList.contains('active')) {
             this.renderPotenziamentoContent(rosa, saldo);
@@ -1113,6 +1356,8 @@ window.CreditiSuperSeriUI = {
             await this.renderServiziContent(saldo);
         } else if (tabRimuovi?.classList.contains('active')) {
             this.renderRimuoviAbilitaContent(rosa, saldo);
+        } else if (tabUpgradeMax?.classList.contains('active')) {
+            this.renderUpgradeMassimaleContent(rosa, saldo);
         } else {
             this.renderAbilitaContent(rosa, saldo);
         }

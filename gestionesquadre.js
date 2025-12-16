@@ -137,10 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clona l'array players per evitare modifiche indesiderate
             let playersForRendering = JSON.parse(JSON.stringify(teamData.players));
 
+            // Variabile per la mappa delle forme (usata in modalità formazione)
+            let formsToSave = null;
+
             // Logica forma (modalita formazione)
             if (mode === 'formazione') {
                 const persistedForms = new Map(Object.entries(teamData.playersFormStatus || {}));
-                const formsToSave = new Map(persistedForms);
+                formsToSave = new Map(persistedForms);
 
                 // Applica le forme ai giocatori
                 playersForRendering = playersForRendering.map(player => {
@@ -175,8 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Aggiorna il contesto globale per i sotto-moduli
             window.GestioneSquadreContext = buildContext();
 
+            // Aggiungi formsMap al contesto (per modalità formazione)
+            if (mode === 'formazione' && formsToSave) {
+                window.GestioneSquadreContext.formsMap = formsToSave;
+            }
+
             // Renderizza in base alla modalita
-            const context = buildContext();
+            const context = window.GestioneSquadreContext;
 
             if (mode === 'rosa') {
                 window.GestioneSquadreRosa.render(teamData, context);
