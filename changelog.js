@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.5',
+    currentVersion: '2.2.6',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,20 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.6',
+            date: '2025-12-17',
+            time: '16:00',
+            title: 'Fix Critici Schedina e UI Mobile',
+            changes: [
+                { text: 'FIX: Errore salvataggio schedina su Firebase risolto', adminOnly: false },
+                { text: 'FIX: Timer countdown schedina ora mostra correttamente il tempo rimanente', adminOnly: false },
+                { text: 'FIX: Icona statistiche giocatore non rompe piu il layout su mobile', adminOnly: false },
+                { text: 'Il countdown si ferma automaticamente 1 ora prima della partita (19:30)', adminOnly: false },
+                { text: 'FIX: Struttura dati Firestore schedine corretta', adminOnly: true }
+            ],
+            type: 'bugfix'
+        },
         {
             version: '2.2.5',
             date: '2025-12-17',

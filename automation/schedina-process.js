@@ -151,8 +151,8 @@ async function calculateResults(db, appId, roundNumber, matches, config) {
     for (const teamDoc of teamsSnapshot.docs) {
         const teamId = teamDoc.id;
 
-        // Carica schedina della squadra
-        const predRef = db.collection(`artifacts/${appId}/public/data/schedine/${teamId}`).doc(`giornata_${roundNumber}`);
+        // Carica schedina della squadra (formato: teamId_giornata_N)
+        const predRef = db.collection(`artifacts/${appId}/public/data/schedine`).doc(`${teamId}_giornata_${roundNumber}`);
         const predDoc = await predRef.get();
 
         if (!predDoc.exists) continue;
@@ -232,8 +232,8 @@ async function applyRewards(db, appId, roundNumber) {
         const teamId = teamDoc.id;
         const teamData = teamDoc.data();
 
-        // Carica schedina della squadra
-        const predRef = db.collection(`artifacts/${appId}/public/data/schedine/${teamId}`).doc(`giornata_${roundNumber}`);
+        // Carica schedina della squadra (formato: teamId_giornata_N)
+        const predRef = db.collection(`artifacts/${appId}/public/data/schedine`).doc(`${teamId}_giornata_${roundNumber}`);
         const predDoc = await predRef.get();
 
         if (!predDoc.exists) continue;

@@ -24,11 +24,18 @@ window.Schedina = {
     },
 
     /**
-     * Ottiene il path per le schedine
+     * Ottiene il path della COLLEZIONE schedine (non documento)
      */
-    getSchedinePath(teamId) {
+    getSchedinaCollectionPath() {
         const appId = window.firestoreTools?.appId;
-        return appId ? `artifacts/${appId}/public/data/${this.COLLECTION_NAME}/${teamId}` : null;
+        return appId ? `artifacts/${appId}/public/data/${this.COLLECTION_NAME}` : null;
+    },
+
+    /**
+     * Genera l'ID documento per una schedina (teamId_giornata_N)
+     */
+    getSchedinaDocId(teamId, roundNumber) {
+        return `${teamId}_giornata_${roundNumber}`;
     },
 
     /**
@@ -149,6 +156,22 @@ window.Schedina = {
     },
 
     /**
+     * Calcola la prossima simulazione delle 20:30
+     */
+    getNextSimulationTime() {
+        const now = new Date();
+        const simTime = new Date();
+        simTime.setHours(20, 30, 0, 0); // 20:30
+
+        // Se sono gia passate le 20:30 di oggi, usa domani
+        if (now >= simTime) {
+            simTime.setDate(simTime.getDate() + 1);
+        }
+
+        return simTime;
+    },
+
+    /**
      * Verifica se l'utente puo' ancora inviare pronostici
      */
     async canSubmitPredictions(roundNumber) {
@@ -158,7 +181,9 @@ window.Schedina = {
             return { canSubmit: false, reason: 'Schedina disabilitata' };
         }
 
-        // Verifica se c'e' una simulazione programmata
+        // Verifica se c'e' una simulazione programmata in Firestore
+        let simTime = null;
+
         try {
             const appId = window.firestoreTools?.appId;
             const { doc, getDoc } = window.firestoreTools;
@@ -168,30 +193,36 @@ window.Schedina = {
             if (configSnap.exists()) {
                 const autoSimConfig = configSnap.data();
                 if (autoSimConfig.nextSimulationTime) {
-                    const simTime = new Date(autoSimConfig.nextSimulationTime);
-                    const closingTime = new Date(simTime.getTime() - (config.closingMinutesBeforeSimulation * 60 * 1000));
-                    const now = new Date();
-
-                    if (now > closingTime) {
-                        return {
-                            canSubmit: false,
-                            reason: 'Pronostici chiusi',
-                            closedAt: closingTime
-                        };
-                    }
-
-                    return {
-                        canSubmit: true,
-                        closingTime: closingTime
-                    };
+                    simTime = new Date(autoSimConfig.nextSimulationTime);
                 }
             }
         } catch (error) {
-            console.warn('[Schedina] Errore verifica tempo chiusura:', error);
+            console.warn('[Schedina] Errore lettura config simulazione:', error);
         }
 
-        // Se non c'e' simulazione automatica, permetti sempre
-        return { canSubmit: true, closingTime: null };
+        // Fallback: usa le 20:30 di oggi/domani
+        if (!simTime) {
+            simTime = this.getNextSimulationTime();
+        }
+
+        // Calcola il tempo di chiusura (1 ora prima della simulazione)
+        const closingTime = new Date(simTime.getTime() - (config.closingMinutesBeforeSimulation * 60 * 1000));
+        const now = new Date();
+
+        if (now > closingTime) {
+            return {
+                canSubmit: false,
+                reason: 'Pronostici chiusi',
+                closedAt: closingTime,
+                nextSimulation: simTime
+            };
+        }
+
+        return {
+            canSubmit: true,
+            closingTime: closingTime,
+            nextSimulation: simTime
+        };
     },
 
     // ==================== PRONOSTICI UTENTE ====================
@@ -200,14 +231,15 @@ window.Schedina = {
      * Ottiene i pronostici dell'utente per una giornata
      */
     async getPredictionsForRound(teamId, roundNumber) {
-        const path = this.getSchedinePath(teamId);
-        if (!path || !window.db || !window.firestoreTools) {
+        const collectionPath = this.getSchedinaCollectionPath();
+        if (!collectionPath || !window.db || !window.firestoreTools) {
             return null;
         }
 
         try {
             const { doc, getDoc } = window.firestoreTools;
-            const docRef = doc(window.db, path, `giornata_${roundNumber}`);
+            const docId = this.getSchedinaDocId(teamId, roundNumber);
+            const docRef = doc(window.db, collectionPath, docId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -229,14 +261,15 @@ window.Schedina = {
             throw new Error(reason);
         }
 
-        const path = this.getSchedinePath(teamId);
-        if (!path || !window.db || !window.firestoreTools) {
+        const collectionPath = this.getSchedinaCollectionPath();
+        if (!collectionPath || !window.db || !window.firestoreTools) {
             throw new Error('Firestore non disponibile');
         }
 
         try {
             const { doc, setDoc } = window.firestoreTools;
-            const docRef = doc(window.db, path, `giornata_${roundNumber}`);
+            const docId = this.getSchedinaDocId(teamId, roundNumber);
+            const docRef = doc(window.db, collectionPath, docId);
 
             await setDoc(docRef, {
                 teamId,
@@ -259,18 +292,19 @@ window.Schedina = {
     /**
      * Ottiene lo storico schedine dell'utente
      */
-    async getUserHistory(teamId, limit = 10) {
-        const path = this.getSchedinePath(teamId);
-        if (!path || !window.db || !window.firestoreTools) {
+    async getUserHistory(teamId, limitCount = 10) {
+        const collectionPath = this.getSchedinaCollectionPath();
+        if (!collectionPath || !window.db || !window.firestoreTools) {
             return [];
         }
 
         try {
-            const { collection, getDocs, query, orderBy, limit: limitFn } = window.firestoreTools;
-            const collRef = collection(window.db, path);
+            const { collection, getDocs, query, where } = window.firestoreTools;
+            const collRef = collection(window.db, collectionPath);
 
-            // Ottiene tutte le schedine ordinate per roundNumber
-            const snapshot = await getDocs(collRef);
+            // Query filtrata per teamId
+            const q = query(collRef, where('teamId', '==', teamId));
+            const snapshot = await getDocs(q);
             const schedine = [];
 
             snapshot.forEach(doc => {
@@ -279,7 +313,7 @@ window.Schedina = {
 
             // Ordina per roundNumber decrescente e limita
             schedine.sort((a, b) => b.roundNumber - a.roundNumber);
-            return schedine.slice(0, limit);
+            return schedine.slice(0, limitCount);
         } catch (error) {
             console.error('[Schedina] Errore caricamento storico:', error);
             return [];
@@ -350,10 +384,11 @@ window.Schedina = {
 
             for (const teamDoc of teamsSnap.docs) {
                 const teamId = teamDoc.id;
-                const schedinePath = this.getSchedinePath(teamId);
-                if (!schedinePath) continue;
+                const collectionPath = this.getSchedinaCollectionPath();
+                if (!collectionPath) continue;
 
-                const predDocRef = doc(window.db, schedinePath, `giornata_${roundNumber}`);
+                const docId = this.getSchedinaDocId(teamId, roundNumber);
+                const predDocRef = doc(window.db, collectionPath, docId);
                 const predSnap = await getDoc(predDocRef);
 
                 if (!predSnap.exists()) continue;
@@ -444,10 +479,11 @@ window.Schedina = {
 
             for (const teamDoc of teamsSnap.docs) {
                 const teamId = teamDoc.id;
-                const schedinePath = this.getSchedinePath(teamId);
-                if (!schedinePath) continue;
+                const collectionPath = this.getSchedinaCollectionPath();
+                if (!collectionPath) continue;
 
-                const predDocRef = doc(window.db, schedinePath, `giornata_${roundNumber}`);
+                const docId = this.getSchedinaDocId(teamId, roundNumber);
+                const predDocRef = doc(window.db, collectionPath, docId);
                 const predSnap = await getDoc(predDocRef);
 
                 if (!predSnap.exists()) continue;
