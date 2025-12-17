@@ -13,24 +13,105 @@ window.FigurineSystem = {
     // Base URL per le immagini figurine
     FIGURINE_BASE_URL: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/',
 
-    // Mapping da icona ID a nome file figurine (senza estensione)
-    ICONA_TO_FIGURINE: {
-        'croc': 'croccante',
-        'shik': 'shikanto',
-        'ilcap': 'cap',
-        'simo': 'simone',
-        'dappi': 'dappino',
-        'gladio': 'gladio',
-        'amedemo': 'amedemo',
-        'flavio': 'elficario',
-        'luka': 'luca',
-        'melio': 'mel',
-        'markf': 'mark falco',
-        'sandro': 'sandro',
-        'fosco': 'fosco',
-        'cocco': 'cocco',
-        'blatta': 'bemolle',
-        'antony': 'antony'
+    // Mapping completo da icona ID a nomi file figurine (nomi esatti come su GitHub)
+    // Formato: { normale, evoluto, alternative, ultimate }
+    FIGURINE_FILES: {
+        'croc': {
+            normale: 'Croccante.jpg',
+            evoluto: 'Croccante Evoluto.jpg',
+            alternative: 'Croccante Alternative.jpg',
+            ultimate: 'Croccante Ultimate.jpg'
+        },
+        'shik': {
+            normale: 'shikanto.jpg',
+            evoluto: 'shikanto evoluto.jpg',
+            alternative: 'shikanto alternative.jpg',
+            ultimate: 'shikanto ultimate.jpg'
+        },
+        'ilcap': {
+            normale: 'cap.jpg',
+            evoluto: 'cap evoluto.jpg',
+            alternative: 'cap alternative.jpg',
+            ultimate: 'cap ultimate.jpg'
+        },
+        'simo': {
+            normale: 'simone.jpg',
+            evoluto: 'simone evolved.jpg',
+            alternative: 'simone alternative.jpg',
+            ultimate: 'simone ultimate.jpg'
+        },
+        'dappi': {
+            normale: 'dappino.png',
+            evoluto: 'dappino evolved.jpg',
+            alternative: 'dappino alternative.jpg',
+            ultimate: 'dappino ultimate.jpg'
+        },
+        'gladio': {
+            normale: 'gladio.jpg',
+            evoluto: 'gladio evoluto.jpg',
+            alternative: 'gladio alternative.jpg',
+            ultimate: 'gladio ultimate.jpg'
+        },
+        'amedemo': {
+            normale: 'amedemo.jpg',
+            evoluto: 'amedemo evolved.jpg',
+            alternative: 'amedemo alternative.jpg',
+            ultimate: 'amedemo ultimate.jpg'
+        },
+        'flavio': {
+            normale: 'elficario.jpg',
+            evoluto: null, // Non esiste
+            alternative: 'elficario alternative.jpg',
+            ultimate: 'elficario ultimate.jpg'
+        },
+        'luka': {
+            normale: 'luca.jpg',
+            evoluto: 'luca evolved.jpg',
+            alternative: 'luca alternative.jpg',
+            ultimate: 'luca ultimate.jpg'
+        },
+        'melio': {
+            normale: 'Mel.jpg',
+            evoluto: 'mel evolved.jpg',
+            alternative: 'mel alternative.jpg',
+            ultimate: 'mel ultimate.jpg'
+        },
+        'markf': {
+            normale: 'Mark Falco.jpg',
+            evoluto: 'mark falco evoluto.jpg',
+            alternative: 'mark falco alternative.jpg',
+            ultimate: 'mark falco ultimate.jpg'
+        },
+        'sandro': {
+            normale: 'sandro.jpg',
+            evoluto: 'sandro evoluto.jpg',
+            alternative: 'sandro alternative.jpg',
+            ultimate: 'sandro ultimate.jpg'
+        },
+        'fosco': {
+            normale: 'Fosco.jpg',
+            evoluto: 'fosco evoluto.jpg',
+            alternative: 'fosco alternative.jpg',
+            ultimate: 'fosco ultimate.jpg'
+        },
+        'cocco': {
+            normale: 'cocco.jpg',
+            evoluto: 'Cocco evoluto.jpg',
+            alternative: 'Cocco alternative.jpg',
+            ultimate: 'cocco ultimate.jpg'
+        },
+        'blatta': {
+            normale: 'Bemolle.jpg',
+            evoluto: 'Bemolle Evoluto.jpg',
+            alternative: 'Bemolle Alternative.jpg',
+            ultimate: 'Bemolle Ultimate.jpg'
+        },
+        'antony': {
+            normale: 'antony.jpg',
+            evoluto: 'Antony Evoluto.jpg',
+            alternative: 'Antony Alternative.jpg',
+            ultimate: 'Antony Ultimate.jpg'
+        }
     },
 
     // Tipi figurine disponibili (4 varianti)
@@ -50,30 +131,20 @@ window.FigurineSystem = {
      * Ottiene l'URL dell'immagine figurina per una specifica icona e rarita
      * @param {string} iconaId - ID dell'icona
      * @param {string} rarity - Rarita (normale, evoluto, alternative, ultimate)
-     * @returns {string} URL dell'immagine
+     * @returns {string} URL dell'immagine o null se non esiste
      */
     getFigurineImageUrl(iconaId, rarity = 'normale') {
-        const baseName = this.ICONA_TO_FIGURINE[iconaId];
-        if (!baseName) {
-            // Fallback all'immagine dell'icona standard
+        const files = this.FIGURINE_FILES[iconaId];
+        if (!files) {
             return null;
         }
 
-        // Gestione speciale per dappino (PNG invece di JPG)
-        const ext = baseName === 'dappino' && rarity === 'normale' ? 'png' : 'jpg';
-
-        switch (rarity) {
-            case 'normale':
-                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName)}.${ext}`;
-            case 'evoluto':
-                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' evolved')}.jpg`;
-            case 'alternative':
-                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' alternative')}.jpg`;
-            case 'ultimate':
-                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' ultimate')}.jpg`;
-            default:
-                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName)}.jpg`;
+        const fileName = files[rarity];
+        if (!fileName) {
+            return null;
         }
+
+        return `${this.FIGURINE_BASE_URL}${encodeURIComponent(fileName)}`;
     },
 
     // ==================== CONFIGURAZIONE ====================
