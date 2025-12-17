@@ -50,7 +50,7 @@ window.FigurineSystem = {
             packPriceCSS: 1,            // CSS per pacchetto (Crediti Super Seri)
             packPrice: 0,               // CS per pacchetto (non usato, ora si usa CSS)
             figurinesPerPack: 1,        // Figurine base per pacchetto
-            bonusFigurineChance: 0.01,  // 1% probabilita di ottenere 2 figurine invece di 1
+            bonusFigurineChance: 0.05,  // 5% probabilita di ottenere 2 figurine invece di 1
             freePackCooldownHours: 8,   // Ore di cooldown dopo apertura pacchetto gratis
             completionBonus: 500,       // Bonus per album completo
             sectionBonus: 50,           // Bonus per sezione completa (1 icona tutte rarita)

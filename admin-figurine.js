@@ -27,9 +27,10 @@ window.AdminFigurine = {
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0">
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-400 mb-1">Figurine per Pacchetto</label>
-                            <input type="number" id="figurine-per-pack" value="${config.figurinesPerPack || 3}"
-                                   class="w-full p-2 rounded bg-gray-600 text-white" min="1" max="10">
+                            <label class="block text-sm text-gray-400 mb-1">Bonus 2 Figurine (%)</label>
+                            <input type="number" id="figurine-bonus-chance" value="${Math.round((config.bonusFigurineChance || 0.05) * 100)}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
+                            <p class="text-xs text-gray-500 mt-1">Base: 1 fig, Bonus: 2 fig</p>
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Cooldown Gratis (ore)</label>
@@ -167,7 +168,7 @@ window.AdminFigurine = {
     collectFormData() {
         return {
             packPrice: parseInt(document.getElementById('figurine-pack-price')?.value) || 50,
-            figurinesPerPack: parseInt(document.getElementById('figurine-per-pack')?.value) || 3,
+            bonusFigurineChance: (parseFloat(document.getElementById('figurine-bonus-chance')?.value) || 5) / 100,
             freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 8,
             completionBonus: parseInt(document.getElementById('figurine-completion-bonus')?.value) || 500,
             sectionBonus: parseInt(document.getElementById('figurine-section-bonus')?.value) || 50,
@@ -205,7 +206,8 @@ window.AdminFigurine = {
             const config = {
                 enabled: true,
                 packPrice: formData.packPrice,
-                figurinesPerPack: formData.figurinesPerPack,
+                figurinesPerPack: 1,  // Sempre 1 base, il bonus e' gestito da bonusFigurineChance
+                bonusFigurineChance: formData.bonusFigurineChance,
                 freePackCooldownHours: formData.freePackCooldownHours,
                 completionBonus: formData.completionBonus,
                 sectionBonus: formData.sectionBonus

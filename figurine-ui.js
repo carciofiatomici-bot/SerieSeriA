@@ -349,7 +349,7 @@ window.FigurineUI = {
                             <h3 class="text-lg font-bold text-green-400 flex items-center gap-2">
                                 🎁 Pacchetto Giornaliero
                             </h3>
-                            <p class="text-sm text-gray-300 mt-1">${config.figurinesPerPack} figurine gratis ogni ${config.freePackCooldownHours} ore</p>
+                            <p class="text-sm text-gray-300 mt-1">1 figurina (${Math.round((1 - (config.bonusFigurineChance || 0.05)) * 100)}%) o 2 (${Math.round((config.bonusFigurineChance || 0.05) * 100)}%) ogni ${config.freePackCooldownHours} ore</p>
                         </div>
                         ${canFree ?
                             `<button id="btn-free-pack" class="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-lg transition animate-pulse">

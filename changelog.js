@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.16',
+    currentVersion: '2.2.17',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,17 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.17',
+            date: '2025-12-18',
+            time: '04:30',
+            title: 'Figurine: Sistema Probabilistico',
+            changes: [
+                { text: 'Pacchetti figurine: 1 figurina (95%) o 2 figurine bonus (5%)', adminOnly: false },
+                { text: 'Config Admin: nuovo campo "Bonus 2 Figurine %" per regolare probabilita', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.16',
             date: '2025-12-18',
