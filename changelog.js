@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.8',
+    currentVersion: '2.2.10',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,18 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.10',
+            date: '2025-12-17',
+            time: '21:30',
+            title: 'Fix Simulazione Campionato',
+            changes: [
+                { text: 'Risolto errore critico che impediva la simulazione delle partite', adminOnly: false },
+                { text: 'Fix registrazione statistiche stagionali (goal, assist, clean sheet)', adminOnly: true },
+                { text: 'Aggiunta protezione contro valori undefined in Firestore', adminOnly: true }
+            ],
+            type: 'fix'
+        },
         {
             version: '2.2.8',
             date: '2025-12-17',
