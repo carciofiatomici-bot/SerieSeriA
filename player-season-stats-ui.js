@@ -36,44 +36,54 @@ window.PlayerSeasonStatsUI = {
         }
     },
 
+    // Nomi e icone delle competizioni
+    COMPETITION_INFO: {
+        campionato: { name: 'Campionato', icon: '🏆', color: 'green' },
+        coppa: { name: 'Coppa', icon: '🏅', color: 'purple' },
+        supercoppa: { name: 'Supercoppa', icon: '⭐', color: 'yellow' }
+    },
+
     /**
      * Renderizza il pannello completo delle statistiche stagionali.
      * @param {string} containerId - ID del container HTML dove inserire la UI
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      */
-    async renderStatsPanel(containerId) {
+    async renderStatsPanel(containerId, competition = 'campionato') {
         const container = document.getElementById(containerId);
         if (!container) {
             console.error('PlayerSeasonStatsUI: Container non trovato:', containerId);
             return;
         }
 
+        const compInfo = this.COMPETITION_INFO[competition] || this.COMPETITION_INFO.campionato;
+
         container.innerHTML = `
             <div class="text-center p-4">
-                <div class="animate-pulse text-gray-400">Caricamento statistiche stagionali...</div>
+                <div class="animate-pulse text-gray-400">Caricamento statistiche ${compInfo.name}...</div>
             </div>
         `;
 
         try {
             const [topScorers, topAssisters, topCleanSheets, summary] = await Promise.all([
-                window.PlayerSeasonStats.getTopScorers(10),
-                window.PlayerSeasonStats.getTopAssisters(10),
-                window.PlayerSeasonStats.getTopCleanSheets(10),
-                window.PlayerSeasonStats.getSeasonSummary()
+                window.PlayerSeasonStats.getTopScorers(10, competition),
+                window.PlayerSeasonStats.getTopAssisters(10, competition),
+                window.PlayerSeasonStats.getTopCleanSheets(10, competition),
+                window.PlayerSeasonStats.getSeasonSummary(competition)
             ]);
 
             const getLogoHtml = window.getLogoHtml || ((teamId) => '');
 
-            const rankingsId = 'season-stats-rankings-' + Date.now();
+            const rankingsId = `season-stats-rankings-${competition}-${Date.now()}`;
             container.innerHTML = `
                 <div class="space-y-4">
                     <!-- Riepilogo Stagione (sempre visibile) -->
-                    ${this.renderSeasonSummary(summary)}
+                    ${this.renderSeasonSummary(summary, competition)}
 
                     <!-- Toggle Classifiche Complete -->
                     <button id="toggle-${rankingsId}"
                             class="w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-between transition-colors"
                             onclick="window.PlayerSeasonStatsUI.toggleRankings('${rankingsId}')">
-                        <span class="text-gray-300 font-semibold">📊 Classifiche Complete</span>
+                        <span class="text-gray-300 font-semibold">📊 Classifiche ${compInfo.name}</span>
                         <span id="icon-${rankingsId}" class="text-gray-400 text-xl transform transition-transform">▼</span>
                     </button>
 
@@ -105,23 +115,26 @@ window.PlayerSeasonStatsUI = {
 
     /**
      * Resetta le statistiche stagionali (solo admin).
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      */
-    async resetSeasonStats() {
-        if (!confirm('Sei sicuro di voler resettare tutte le statistiche stagionali?\n\nGoal, assist e clean sheets torneranno a 0.')) {
+    async resetSeasonStats(competition = 'campionato') {
+        const compInfo = this.COMPETITION_INFO[competition] || this.COMPETITION_INFO.campionato;
+
+        if (!confirm(`Sei sicuro di voler resettare le statistiche ${compInfo.name}?\n\nGoal, assist e clean sheets torneranno a 0.`)) {
             return;
         }
 
         try {
-            await window.PlayerSeasonStats.resetSeasonStats([]);
+            await window.PlayerSeasonStats.resetSeasonStats([], competition);
             if (window.Toast) {
-                window.Toast.success('Statistiche stagionali resettate!');
+                window.Toast.success(`Statistiche ${compInfo.name} resettate!`);
             } else {
-                alert('Statistiche stagionali resettate!');
+                alert(`Statistiche ${compInfo.name} resettate!`);
             }
             // Ricarica il pannello
             const container = document.getElementById('season-individual-stats-container');
             if (container) {
-                this.renderStatsPanel('season-individual-stats-container');
+                this.renderStatsPanel('season-individual-stats-container', competition);
             }
         } catch (error) {
             console.error('Errore reset stats:', error);
@@ -129,8 +142,10 @@ window.PlayerSeasonStatsUI = {
         }
     },
 
-    renderSeasonSummary(summary) {
+    renderSeasonSummary(summary, competition = 'campionato') {
         if (!summary) return '';
+
+        const compInfo = this.COMPETITION_INFO[competition] || this.COMPETITION_INFO.campionato;
 
         const topScorerText = summary.topScorer
             ? `${summary.topScorer.playerName} (${summary.topScorer.goals} gol)`
@@ -148,17 +163,17 @@ window.PlayerSeasonStatsUI = {
         const currentTeamData = window.InterfacciaCore?.currentTeamData;
         const isAdmin = window.isTeamAdmin?.(currentTeamData?.teamName, currentTeamData) || false;
         const resetButtonHtml = isAdmin ? `
-            <button onclick="window.PlayerSeasonStatsUI.resetSeasonStats()"
+            <button onclick="window.PlayerSeasonStatsUI.resetSeasonStats('${competition}')"
                     class="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition"
-                    title="Resetta statistiche stagionali">
+                    title="Resetta statistiche ${compInfo.name}">
                 🔄 Reset
             </button>
         ` : '';
 
         return `
-            <div class="p-4 bg-gradient-to-r from-purple-900 to-pink-900 rounded-lg border-2 border-purple-500 shadow-lg">
-                <h3 class="text-xl font-bold text-purple-300 mb-4 flex items-center">
-                    <span class="mr-2">🏅</span> Premi Individuali Stagionali
+            <div class="p-4 bg-gradient-to-r from-${compInfo.color}-900 to-${compInfo.color}-800 rounded-lg border-2 border-${compInfo.color}-500 shadow-lg">
+                <h3 class="text-xl font-bold text-${compInfo.color}-300 mb-4 flex items-center">
+                    <span class="mr-2">${compInfo.icon}</span> Premi ${compInfo.name}
                     ${resetButtonHtml}
                 </h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

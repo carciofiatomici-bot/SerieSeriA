@@ -137,6 +137,23 @@ window.CoppaMain = {
             legType
         );
 
+        // Registra statistiche stagionali per la coppa
+        if (result.resultString && window.PlayerSeasonStats) {
+            try {
+                const parts = result.resultString.split(' ')[0].split('-');
+                const homeGoals = parseInt(parts[0]) || 0;
+                const awayGoals = parseInt(parts[1]) || 0;
+
+                // Aggiungi ID alle squadre per PlayerSeasonStats
+                const homeWithId = { ...actualHome, id: legType === 'leg2' ? match.awayTeam.teamId : match.homeTeam.teamId };
+                const awayWithId = { ...actualAway, id: legType === 'leg2' ? match.homeTeam.teamId : match.awayTeam.teamId };
+
+                await window.PlayerSeasonStats.recordMatchStats(homeWithId, awayWithId, homeGoals, awayGoals, 'coppa');
+            } catch (statsError) {
+                console.warn('[CoppaMain] Errore registrazione stats coppa:', statsError);
+            }
+        }
+
         // Aggiorna il match nel tabellone
         if (legType === 'leg1') {
             match.leg1Result = result.resultString;

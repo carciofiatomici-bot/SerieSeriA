@@ -196,6 +196,25 @@ window.Supercoppa = {
         supercoppaBracket.winner = winner;
         supercoppaBracket.isCompleted = true;
 
+        // Registra statistiche stagionali per la supercoppa
+        if (window.PlayerSeasonStats) {
+            try {
+                // Aggiungi ID alle squadre per PlayerSeasonStats
+                const homeWithId = { ...homeTeamData, id: supercoppaBracket.homeTeam.teamId };
+                const awayWithId = { ...awayTeamData, id: supercoppaBracket.awayTeam.teamId };
+
+                await window.PlayerSeasonStats.recordMatchStats(
+                    homeWithId,
+                    awayWithId,
+                    matchResult.homeGoals,
+                    matchResult.awayGoals,
+                    'supercoppa'
+                );
+            } catch (statsError) {
+                console.warn('[Supercoppa] Errore registrazione stats:', statsError);
+            }
+        }
+
         // Applica premio al vincitore (1 CSS)
         await this.applyReward(winner.teamId);
 
