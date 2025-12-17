@@ -139,26 +139,32 @@ window.CoppaBrackets = {
 
     /**
      * Inserisce le squadre con bye nel turno appropriato
+     * NOTA: I bye vanno nel slot "awayTeam" perche i vincitori del primo turno
+     * vengono promossi nello slot "homeTeam" (per match con indice pari)
      */
     insertByeTeams(bracket, teamsWithBye) {
         // Le squadre con bye entrano nel turno successivo al primo
         const secondRound = bracket.rounds[1];
         if (!secondRound) return;
 
+        // Strategia: i bye vanno nello slot awayTeam dei primi N match
+        // I vincitori del primo turno andranno nello slot homeTeam corrispondente
         let byeIndex = 0;
         for (let i = 0; i < secondRound.matches.length && byeIndex < teamsWithBye.length; i++) {
             const match = secondRound.matches[i];
-            // Assegna la squadra con bye come "home" se lo slot e vuoto
-            if (!match.homeTeam) {
-                match.homeTeam = teamsWithBye[byeIndex];
-                match.homeTeamFromBye = true;
-                byeIndex++;
-            } else if (!match.awayTeam && byeIndex < teamsWithBye.length) {
+            // Assegna la squadra con bye come "away" per evitare conflitti con promoteWinner
+            if (!match.awayTeam) {
                 match.awayTeam = teamsWithBye[byeIndex];
                 match.awayTeamFromBye = true;
                 byeIndex++;
+            } else if (!match.homeTeam && byeIndex < teamsWithBye.length) {
+                match.homeTeam = teamsWithBye[byeIndex];
+                match.homeTeamFromBye = true;
+                byeIndex++;
             }
         }
+
+        console.log(`[CoppaBrackets] Inseriti ${byeIndex} bye teams nel round ${secondRound.roundName}`);
     },
 
     /**
@@ -220,7 +226,28 @@ window.CoppaBrackets = {
         }
 
         const nextRound = bracket.rounds[nextRoundIndex];
-        const nextMatchIndex = Math.floor(matchIndex / 2);
+
+        // CALCOLO MAPPING: Gestione speciale per round con bye
+        // Se il round successivo ha squadre con bye (awayTeamFromBye), i vincitori
+        // vanno 1:1 nello slot homeTeam dei match corrispondenti
+        const hasByeTeamsInNextRound = nextRound.matches.some(m => m.awayTeamFromBye || m.homeTeamFromBye);
+
+        let nextMatchIndex;
+        let targetSlot; // 'home' o 'away'
+
+        if (hasByeTeamsInNextRound && roundIndex === 0) {
+            // Primo turno -> Round con bye: mapping 1:1
+            // Ogni vincitore va nel match corrispondente, slot home (i bye sono in away)
+            nextMatchIndex = matchIndex;
+            targetSlot = 'home';
+            console.log(`[CoppaBrackets] Mapping 1:1 (bye round): match ${matchIndex} -> match ${nextMatchIndex}, ${targetSlot}`);
+        } else {
+            // Mapping standard: matchIndex/2, slot basato su pari/dispari
+            nextMatchIndex = Math.floor(matchIndex / 2);
+            targetSlot = (matchIndex % 2 === 0) ? 'home' : 'away';
+            console.log(`[CoppaBrackets] Mapping standard: match ${matchIndex} -> match ${nextMatchIndex}, ${targetSlot}`);
+        }
+
         const nextMatch = nextRound.matches[nextMatchIndex];
 
         if (!nextMatch) {
@@ -228,10 +255,10 @@ window.CoppaBrackets = {
             return;
         }
 
-        console.log(`[CoppaBrackets] Promuovo ${winner?.teamName} al round ${nextRound.roundName}, match ${nextMatchIndex}`);
+        console.log(`[CoppaBrackets] Promuovo ${winner?.teamName} al round ${nextRound.roundName}, match ${nextMatchIndex} (${targetSlot})`);
 
         // Assegna il vincitore allo slot appropriato
-        if (matchIndex % 2 === 0) {
+        if (targetSlot === 'home') {
             nextMatch.homeTeam = winner;
         } else {
             nextMatch.awayTeam = winner;

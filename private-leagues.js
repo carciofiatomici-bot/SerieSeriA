@@ -8,7 +8,7 @@ window.PrivateLeagues = {
     MIN_TEAMS: 3,
     MAX_TEAMS: 6,
     MAX_ENTRY_FEE: 500,
-    SIMULATION_COOLDOWN_MS: 48 * 60 * 60 * 1000, // 48 ore in millisecondi
+    SIMULATION_COOLDOWN_MS: 24 * 60 * 60 * 1000, // 24 ore in millisecondi
 
     // ================================================================
     // COOLDOWN MENSILE (1° del mese successivo)
@@ -1161,4 +1161,4 @@ window.PrivateLeagues = {
     }
 };
 
-console.log("Modulo PrivateLeagues caricato (3-6 squadre, timer 48H).");
+console.log("Modulo PrivateLeagues caricato (3-6 squadre, timer 24H).");

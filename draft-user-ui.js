@@ -47,7 +47,7 @@ window.DraftUserUI = {
      */
     async loadRecentPicks(context, limit = 10) {
         const { db, firestoreTools, paths } = context;
-        const { collection, getDocs, query, where, orderBy, doc, getDoc } = firestoreTools;
+        const { collection, getDocs, query, where, orderBy } = firestoreTools;
 
         try {
             // Query per giocatori draftati
@@ -66,8 +66,14 @@ window.DraftUserUI = {
 
             console.log('[RecentPicks] Giocatori draftati trovati:', snapshot.size);
 
-            // Mappa per i nomi delle squadre (cache)
-            const teamNamesCache = {};
+            // OTTIMIZZAZIONE: Usa TeamsListener per caricare tutti i nomi squadre in una sola chiamata
+            // invece di loop getDoc individuali (risparmio ~100-150 reads/giorno)
+            let teamNamesCache = {};
+            if (window.TeamsListener) {
+                await window.TeamsListener.getTeams(); // Assicura che la cache sia popolata
+                teamNamesCache = window.TeamsListener.getTeamNamesMap();
+                console.log('[RecentPicks] Usando TeamsListener per nomi squadre (cache globale)');
+            }
 
             // Converti in array
             const picks = [];
@@ -76,18 +82,8 @@ window.DraftUserUI = {
 
                 // Accetta giocatori con draftedBy (anche senza draftedAt)
                 if (data.draftedBy) {
-                    // Ottieni il nome della squadra (con cache)
-                    let teamName = teamNamesCache[data.draftedBy];
-                    if (!teamName) {
-                        try {
-                            const teamDocRef = doc(db, paths.TEAMS_COLLECTION_PATH, data.draftedBy);
-                            const teamDoc = await getDoc(teamDocRef);
-                            teamName = teamDoc.exists() ? teamDoc.data().teamName : data.draftedBy;
-                            teamNamesCache[data.draftedBy] = teamName;
-                        } catch (e) {
-                            teamName = data.draftedBy;
-                        }
-                    }
+                    // Ottieni il nome della squadra dalla cache (nessun getDoc individuale!)
+                    const teamName = teamNamesCache[data.draftedBy] || data.draftedBy;
 
                     // Converti draftedAt se e' un Timestamp Firestore
                     let draftedAtDate = data.draftedAt;

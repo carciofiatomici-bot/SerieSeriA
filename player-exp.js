@@ -333,6 +333,12 @@
      * @returns {Array} Array di risultati per ogni giocatore
      */
     function processMatchExp(teamData, matchResult) {
+        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare EXP
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[PlayerExp] Reward DISABILITATI - nessun EXP assegnato');
+            return [];
+        }
+
         if (!teamData || !matchResult) return [];
 
         const results = [];

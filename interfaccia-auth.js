@@ -456,8 +456,24 @@ window.InterfacciaAuth = {
             } else {
                 // NUOVA SQUADRA
                 isNewTeam = true;
+
+                // VALIDAZIONE: Verifica che il nome squadra non sia gia in uso (case-insensitive)
+                const { collection, getDocs } = window.firestoreTools;
+                const teamsCollection = collection(window.db, TEAMS_COLLECTION_PATH);
+                const allTeamsSnapshot = await getDocs(teamsCollection);
+
+                const normalizedNewName = teamNameForDisplay.toLowerCase().trim();
+                const duplicateName = allTeamsSnapshot.docs.find(docSnap => {
+                    const existingName = docSnap.data().teamName?.toLowerCase().trim();
+                    return existingName === normalizedNewName;
+                });
+
+                if (duplicateName) {
+                    throw new Error(`Il nome squadra "${teamNameForDisplay}" e gia in uso. Scegli un nome diverso.`);
+                }
+
                 const initialBudget = 500;
-                
+
                 teamData = {
                     teamName: teamNameForDisplay,
                     ownerUserId: userId,

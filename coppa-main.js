@@ -280,6 +280,12 @@ window.CoppaMain = {
      * Applica i crediti per gol e vittoria partita coppa
      */
     async applyMatchCredits(homeTeamId, awayTeamId, result) {
+        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare crediti
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[CoppaMain] Reward DISABILITATI - nessun CS assegnato');
+            return { homeCredits: 0, awayCredits: 0 };
+        }
+
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
         const { REWARDS } = window.CoppaConstants;
@@ -349,6 +355,12 @@ window.CoppaMain = {
      * Applica i premi finali della coppa
      */
     async applyCupRewards() {
+        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare premi
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[CoppaMain] Reward DISABILITATI - nessun premio coppa assegnato');
+            return;
+        }
+
         const bracket = await window.CoppaSchedule.loadCupSchedule();
 
         if (!bracket || bracket.status !== 'completed') {

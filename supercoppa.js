@@ -352,6 +352,12 @@ window.Supercoppa = {
      * Applica il premio CSS al vincitore
      */
     async applyReward(teamId) {
+        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare premi
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[Supercoppa] Reward DISABILITATI - nessun premio assegnato');
+            return;
+        }
+
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
 

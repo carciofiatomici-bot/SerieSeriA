@@ -37,6 +37,12 @@ window.ChampionshipRewards = {
      * @returns {Promise<{homeCredits: number, awayCredits: number}>}
      */
     async applyMatchRewards(homeGoals, awayGoals, homeTeamData, awayTeamData, homeTeamId, awayTeamId) {
+        // CHECK: Se i reward sono disabilitati, ritorna 0 crediti
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[ChampionshipRewards] Reward DISABILITATI - nessun CS assegnato');
+            return { homeCredits: 0, awayCredits: 0 };
+        }
+
         const { doc, updateDoc } = window.firestoreTools;
         const db = window.db;
         const TEAMS_COLLECTION_PATH = `artifacts/${window.firestoreTools.appId}/public/data/teams`;
@@ -110,6 +116,12 @@ window.ChampionshipRewards = {
      * @returns {Promise<{totalTeams: number, levelUps: number}>}
      */
     async applySeasonEndRewards(standings) {
+        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare premi
+        if (window.AdminRewards?.areRewardsDisabled()) {
+            console.log('[ChampionshipRewards] Reward DISABILITATI - nessun premio fine stagione assegnato');
+            return { totalTeams: 0, levelUps: 0 };
+        }
+
         const { doc, updateDoc, getDoc, collection, getDocs } = window.firestoreTools;
         const db = window.db;
         const TEAMS_COLLECTION_PATH = `artifacts/${window.firestoreTools.appId}/public/data/teams`;
