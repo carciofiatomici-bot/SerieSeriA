@@ -345,8 +345,15 @@
 
         // La formazione puo essere un oggetto o un array
         let formation = teamData.formazione || teamData.formation || [];
+
+        // Se e un oggetto con titolari, usa quello
+        if (formation && formation.titolari) {
+            formation = formation.titolari;
+        }
+
+        // Se ancora non e un array, converti (ma filtra solo oggetti, non stringhe come 'modulo')
         if (!Array.isArray(formation)) {
-            formation = Object.values(formation).filter(p => p);
+            formation = Object.values(formation).filter(p => p && typeof p === 'object');
         }
 
         const roster = teamData.rosa || teamData.roster || [];
@@ -504,8 +511,15 @@
 
         // La formazione puo essere un oggetto o un array
         let formation = teamData.formazione || teamData.formation || [];
+
+        // Se e un oggetto con titolari, usa quello
+        if (formation && formation.titolari) {
+            formation = formation.titolari;
+        }
+
+        // Se ancora non e un array, converti (ma filtra solo oggetti, non stringhe come 'modulo')
         if (!Array.isArray(formation)) {
-            formation = Object.values(formation).filter(p => p);
+            formation = Object.values(formation).filter(p => p && typeof p === 'object');
         }
 
         roster.forEach(player => migratePlayer(player));
