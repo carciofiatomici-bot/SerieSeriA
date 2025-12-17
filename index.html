@@ -611,6 +611,13 @@
                 </div>
                 <!-- MEDIA, LOGO, ICONA E SPONSOR - Tutti centrati su una riga -->
                 <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-2 md:gap-3 overflow-visible">
+                    <!-- BOX FIGURINE (sinistra del media) -->
+                    <div id="figurine-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Apri Album Figurine">
+                        <div class="w-full h-full rounded-lg border-2 border-purple-500 shadow-lg bg-gradient-to-br from-purple-900/50 to-indigo-900/50 flex items-center justify-center hover:border-purple-400 relative">
+                            <span class="text-2xl sm:text-3xl md:text-4xl">🎴</span>
+                            <span id="figurine-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full text-[10px] flex items-center justify-center text-white font-bold">!</span>
+                        </div>
+                    </div>
                     <!-- BOX MEDIA (sinistra del logo) -->
                     <div id="media-box" class="hidden relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
                         <img id="media-image"
@@ -1669,6 +1676,10 @@
     <!-- 13b. RUOTA DELLA FORTUNA GIORNALIERA -->
     <script src="daily-wheel.js"></script>
     <script src="daily-wheel-ui.js"></script>
+
+    <!-- 13c. ALBUM FIGURINE -->
+    <script src="figurine.js"></script>
+    <script src="figurine-ui.js"></script>
 
     <!-- 14. VERSION CHECK (Controllo Aggiornamenti Forzati) -->
     <script src="version-check.js"></script>

@@ -294,6 +294,19 @@ window.FigurineSystem = {
     // ==================== PACCHETTI ====================
 
     /**
+     * Verifica se puo aprire pacchetto gratis (async con teamId)
+     */
+    async canOpenFreePackByTeamId(teamId) {
+        try {
+            const album = await this.loadTeamAlbum(teamId);
+            return this.canOpenFreePack(album);
+        } catch (error) {
+            console.error('[Figurine] Errore verifica free pack:', error);
+            return true; // In caso di errore, mostra comunque il badge
+        }
+    },
+
+    /**
      * Verifica se puo aprire pacchetto gratis
      */
     canOpenFreePack(album) {

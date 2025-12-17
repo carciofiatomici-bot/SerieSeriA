@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.6',
+    currentVersion: '2.2.7',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,24 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.7',
+            date: '2025-12-17',
+            time: '18:00',
+            title: 'Sistema Album Figurine + Pull-to-Refresh PWA',
+            changes: [
+                { text: 'NUOVO: Sistema Album Figurine - colleziona le figurine delle 15 Icone!', adminOnly: false },
+                { text: 'Figurine in 3 rarita: Base (70%), Shiny (25%), Gold (5%)', adminOnly: false },
+                { text: 'Pacchetti acquistabili con Crediti Seri + 1 pacchetto gratis al giorno', adminOnly: false },
+                { text: 'Sistema scambi duplicati con altri utenti', adminOnly: false },
+                { text: 'Box figurine nella dashboard (icona viola a sinistra)', adminOnly: false },
+                { text: 'NUOVO: Pull-to-refresh nella versione PWA - trascina giu per aggiornare', adminOnly: false },
+                { text: 'FIX DEFINITIVO: Icona statistiche giocatore non piu sovrapposta su mobile', adminOnly: false },
+                { text: 'NUOVO: Flag Album Figurine nella sezione Gameplay dei Feature Flags', adminOnly: true },
+                { text: 'Configurazione prezzi pacchetti e rarita da pannello admin', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.6',
             date: '2025-12-17',

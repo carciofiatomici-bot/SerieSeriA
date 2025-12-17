@@ -16,7 +16,57 @@ window.FigurineUI = {
     init() {
         this.createModal();
         this.bindEvents();
+        this.setupDashboardBox();
         console.log('[FigurineUI] Inizializzato');
+    },
+
+    /**
+     * Setup box nella dashboard
+     */
+    setupDashboardBox() {
+        const box = document.getElementById('figurine-box');
+        const badge = document.getElementById('figurine-badge');
+
+        if (!box) {
+            console.warn('[FigurineUI] Box dashboard non trovato');
+            return;
+        }
+
+        // Mostra il box
+        box.classList.remove('hidden');
+
+        // Click per aprire pannello
+        box.addEventListener('click', () => {
+            this.open();
+        });
+
+        // Controlla se c'è un pacchetto gratis disponibile
+        this.checkFreePack();
+    },
+
+    /**
+     * Verifica se pacchetto gratuito disponibile e mostra badge
+     */
+    async checkFreePack() {
+        const badge = document.getElementById('figurine-badge');
+        if (!badge) return;
+
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) {
+            badge.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const canOpen = await window.FigurineSystem?.canOpenFreePackByTeamId(teamId);
+            if (canOpen) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        } catch (error) {
+            badge.classList.add('hidden');
+        }
     },
 
     /**

@@ -544,6 +544,24 @@ window.FeatureFlags = {
                     <li>Storico schedine con risultati</li>
                 </ul>
                 <p class="mt-2 text-yellow-400">I pronostici si chiudono prima della simulazione!</p>`
+        },
+        figurine: {
+            id: 'figurine',
+            name: 'Album Figurine',
+            description: 'Colleziona figurine delle Icone in diverse rarita',
+            icon: '🎴',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Colleziona figurine di tutte le 15 Icone</li>
+                    <li>3 rarita: Base (70%), Shiny (25%), Gold (5%)</li>
+                    <li>Pacchetti acquistabili con Crediti Seri</li>
+                    <li>1 pacchetto gratuito al giorno</li>
+                    <li>Sistema scambi duplicati con altri utenti</li>
+                    <li>Album con visualizzazione collezione completa</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Completa l'album per diventare un vero collezionista!</p>`
         }
     },
 
