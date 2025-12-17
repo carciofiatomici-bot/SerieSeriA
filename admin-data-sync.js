@@ -630,15 +630,18 @@ window.AdminDataSync = {
 
     /**
      * Ripara una partita Coppa mancante
+     * Salva direttamente su Firestore (bypassa feature flag per operazioni admin)
      */
     async repairCoppaMatch(match, log) {
         const [homeGoals, awayGoals] = match.result.split('-').map(s => parseInt(s) || 0);
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
 
         // Salva per squadra casa (se mancante)
         if (match.missingFor === 'both' || match.missingFor === 'home') {
             const homeTeamId = match.homeTeam?.teamId;
             if (homeTeamId) {
-                await window.MatchHistory.saveMatch(homeTeamId, {
+                await this.saveMatchDirectly(homeTeamId, {
                     type: 'coppa',
                     homeTeam: {
                         id: homeTeamId,
@@ -663,7 +666,7 @@ window.AdminDataSync = {
         if (match.missingFor === 'both' || match.missingFor === 'away') {
             const awayTeamId = match.awayTeam?.teamId;
             if (awayTeamId) {
-                await window.MatchHistory.saveMatch(awayTeamId, {
+                await this.saveMatchDirectly(awayTeamId, {
                     type: 'coppa',
                     homeTeam: {
                         id: match.homeTeam?.teamId,
@@ -686,7 +689,65 @@ window.AdminDataSync = {
     },
 
     /**
+     * Salva una partita direttamente su Firestore (bypassa feature flag)
+     * Usato per operazioni admin di riparazione
+     */
+    async saveMatchDirectly(teamId, matchData) {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
+
+        const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, teamId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            throw new Error(`Squadra ${teamId} non trovata`);
+        }
+
+        const teamData = teamDoc.data();
+        let matchHistory = teamData.matchHistory || [];
+
+        // Crea record partita
+        const matchRecord = {
+            id: `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            date: new Date().toISOString(),
+            type: matchData.type || 'coppa',
+            homeTeam: matchData.homeTeam,
+            awayTeam: matchData.awayTeam,
+            homeScore: matchData.homeScore || 0,
+            awayScore: matchData.awayScore || 0,
+            isHome: matchData.isHome !== undefined ? matchData.isHome : true,
+            details: matchData.details || null
+        };
+
+        // Calcola risultato
+        const myScore = matchRecord.isHome ? matchRecord.homeScore : matchRecord.awayScore;
+        const opponentScore = matchRecord.isHome ? matchRecord.awayScore : matchRecord.homeScore;
+
+        if (myScore > opponentScore) {
+            matchRecord.result = 'win';
+        } else if (myScore < opponentScore) {
+            matchRecord.result = 'loss';
+        } else {
+            matchRecord.result = 'draw';
+        }
+
+        // Aggiungi in cima
+        matchHistory.unshift(matchRecord);
+
+        // Limita dimensione
+        if (matchHistory.length > 100) {
+            matchHistory = matchHistory.slice(0, 100);
+        }
+
+        // Salva
+        await updateDoc(teamDocRef, { matchHistory });
+        console.log(`[AdminDataSync] Partita salvata direttamente per ${teamId}`, matchRecord);
+    },
+
+    /**
      * Ripara una partita Campionato mancante
+     * Salva direttamente su Firestore (bypassa feature flag per operazioni admin)
      */
     async repairCampionatoMatch(match, log) {
         const [homeGoals, awayGoals] = match.result.split('-').map(s => parseInt(s) || 0);
@@ -694,7 +755,7 @@ window.AdminDataSync = {
         // Salva per squadra casa
         if (match.missingFor === 'both' || match.missingFor === 'home') {
             if (match.homeTeamId) {
-                await window.MatchHistory.saveMatch(match.homeTeamId, {
+                await this.saveMatchDirectly(match.homeTeamId, {
                     type: 'campionato',
                     homeTeam: {
                         id: match.homeTeamId,
@@ -718,7 +779,7 @@ window.AdminDataSync = {
         // Salva per squadra ospite
         if (match.missingFor === 'both' || match.missingFor === 'away') {
             if (match.awayTeamId) {
-                await window.MatchHistory.saveMatch(match.awayTeamId, {
+                await this.saveMatchDirectly(match.awayTeamId, {
                     type: 'campionato',
                     homeTeam: {
                         id: match.homeTeamId,
