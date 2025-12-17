@@ -372,18 +372,24 @@ window.FigurineUI = {
                     ${variants.map(v => {
                         const imgUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, v.id) || fallbackImg;
                         const owned = v.count > 0;
+                        const isBase = v.id === 'normale';
                         return `
-                            <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden ${!owned ? 'opacity-40' : ''}">
-                                <div class="aspect-square bg-gray-800">
+                            <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden">
+                                <div class="aspect-square bg-gray-800 relative">
                                     <img src="${imgUrl}"
                                          alt="${v.name}"
-                                         class="w-full h-full object-cover ${!owned ? 'grayscale' : ''}"
+                                         class="w-full h-full object-cover ${!owned ? 'grayscale brightness-50' : ''}"
                                          onerror="this.src='${fallbackImg}'">
+                                    ${!owned && !isBase ? `
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-7xl text-white font-bold drop-shadow-lg">?</span>
+                                        </div>
+                                    ` : ''}
                                 </div>
                                 <div class="${owned ? v.bgColor : 'bg-gray-700'} p-2 text-center">
                                     <p class="text-sm font-bold ${v.id === 'ultimate' && owned ? 'text-black' : 'text-white'}">${v.name}</p>
                                     <p class="text-xs ${v.id === 'ultimate' && owned ? 'text-gray-800' : 'text-gray-300'}">
-                                        ${owned ? `x${v.count}` : 'Non posseduta'}
+                                        ${owned ? `x${v.count}` : '???'}
                                     </p>
                                 </div>
                             </div>
