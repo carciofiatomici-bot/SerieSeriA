@@ -128,6 +128,9 @@ window.CoppaMain = {
             matchLog = logResult.log;
         }
 
+        // Aggiungi roundName al match per i controlli di sicurezza
+        match.roundName = round.roundName;
+
         // Simula la partita
         const result = await window.CoppaSimulation.simulateCupMatch(
             match,

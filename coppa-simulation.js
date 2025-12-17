@@ -182,8 +182,14 @@ window.CoppaSimulation = {
         };
 
         // SICUREZZA: Per turni andata/ritorno, leg1 non deve MAI determinare un vincitore
-        if (!isSingleMatch && legType === 'leg1') {
-            console.log('[CoppaSimulation] Leg1 di turno andata/ritorno - nessun vincitore determinato');
+        // Controllo doppio: sia isSingleMatch che verifica esplicita del nome round
+        const isTwoLegByName = window.CoppaConstants?.TWO_LEG_ROUNDS?.some(r =>
+            match.roundName?.includes(r) || r.includes(match.roundName || '')
+        ) || false;
+
+        // Se e' leg1 E (isSingleMatch e' false OPPURE il round e' esplicitamente andata/ritorno)
+        if (legType === 'leg1' && (!isSingleMatch || isTwoLegByName)) {
+            console.log(`[CoppaSimulation] Leg1 (${match.roundName || 'unknown'}) - nessun vincitore determinato. isSingleMatch=${isSingleMatch}, isTwoLegByName=${isTwoLegByName}`);
             return matchResult; // Ritorna senza vincitore
         }
 
