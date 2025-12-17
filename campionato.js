@@ -792,8 +792,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Funzione helper per l'automazione
     window.ChampionshipMain.updateLastAutoSimulatedDate = async (timestamp) => {
-        const { doc, setDoc } = firestoreTools;
-        const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
+        const { doc, setDoc, appId } = window.firestoreTools;
+        const configPath = `artifacts/${appId}/public/data/config/championship`;
+        const configDocRef = doc(window.db, configPath);
         try {
             await setDoc(configDocRef, { lastAutoSimulatedDate: timestamp }, { merge: true });
         } catch(e) {
