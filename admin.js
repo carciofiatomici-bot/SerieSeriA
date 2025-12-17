@@ -852,20 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetContractsAll.addEventListener('click', handleResetContractsAll);
         }
 
-        // Toggle Opzioni Avanzate
-        const btnToggleAdvanced = document.getElementById('btn-toggle-advanced-utils');
-        const advancedSection = document.getElementById('advanced-utils-section');
-        const advancedIcon = document.getElementById('advanced-utils-icon');
-        const advancedText = document.getElementById('advanced-utils-text');
-        if (btnToggleAdvanced && advancedSection) {
-            btnToggleAdvanced.addEventListener('click', () => {
-                const isHidden = advancedSection.classList.contains('hidden');
-                advancedSection.classList.toggle('hidden');
-                if (advancedIcon) advancedIcon.textContent = isHidden ? '✖️' : '⚙️';
-                if (advancedText) advancedText.textContent = isHidden ? 'Nascondi Opzioni Avanzate' : 'Mostra Opzioni Avanzate';
-            });
-        }
-
         // Reset Timer Figurine
         const btnResetFigurineTimer = document.getElementById('btn-reset-figurine-timer');
         if (btnResetFigurineTimer) {
