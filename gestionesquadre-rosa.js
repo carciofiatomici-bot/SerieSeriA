@@ -315,24 +315,25 @@ window.GestioneSquadreRosa = {
         // Border rosso se infortunato
         const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
 
-        // Bottone statistiche (se feature attiva) - elemento inline nel flex header
+        // Bottone statistiche (se feature attiva) - posizione assoluta angolo card
         const statsButton = window.FeatureFlags?.isEnabled('playerStats')
             ? `<button data-action="view-player-stats"
                        data-player-id="${player.id}"
                        data-player-name="${player.name}"
                        data-player-role="${player.role}"
-                       class="ml-auto shrink-0 text-blue-400 hover:text-blue-300 bg-gray-900/80 hover:bg-blue-900/50 w-6 h-6 flex items-center justify-center rounded text-xs"
+                       class="absolute top-2 right-2 z-30 text-blue-400 hover:text-blue-300 bg-gray-800 border border-blue-500 hover:bg-blue-900/50 w-7 h-7 flex items-center justify-center rounded-full text-sm shadow-lg"
                        title="Statistiche ${player.name}">📊</button>`
             : '';
 
         return `
-            <div class="bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
+            <div class="relative bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
+                ${statsButton}
                 <!-- Header cliccabile -->
-                <div class="player-card-header flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-gray-750 transition-colors"
+                <div class="player-card-header flex items-center p-3 sm:p-4 ${statsButton ? 'pr-12' : ''} cursor-pointer hover:bg-gray-750 transition-colors"
                      data-player-id="${player.id}">
-                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                        <span class="${nameColorClass} truncate" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
+                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}
                         ${basePlayerMarker}
                         ${seriousPlayerMarker}
@@ -342,7 +343,6 @@ window.GestioneSquadreRosa = {
                         <span class="text-gray-500 text-sm ml-2">Lv.${player.level || player.currentLevel || 1}</span>
                         ${contractBadge}
                     </div>
-                    ${statsButton}
                 </div>
                 <!-- Contenuto espandibile (chiuso di default) -->
                 <div class="player-card-content hidden px-4 pb-4 border-t border-gray-700">
