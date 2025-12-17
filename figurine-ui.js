@@ -7,7 +7,7 @@
 window.FigurineUI = {
     // Stato
     isOpen: false,
-    currentTab: 'album', // album, pack, trades, duplicates
+    currentTab: 'album', // album, pack
     currentAlbum: null,
 
     /**
@@ -97,7 +97,7 @@ window.FigurineUI = {
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-4">
                                 <span id="figurine-progress" class="text-purple-300">Completamento: 0%</span>
-                                <span id="figurine-count" class="text-gray-400">0/48 figurine</span>
+                                <span id="figurine-count" class="text-gray-400">0/64 figurine</span>
                             </div>
                             <div id="figurine-free-pack" class="text-green-400 text-xs"></div>
                         </div>
@@ -113,12 +113,6 @@ window.FigurineUI = {
                         </button>
                         <button class="figurine-tab flex-1 py-2 text-sm font-semibold text-gray-400 hover:text-white transition border-b-2 border-transparent" data-tab="pack">
                             📦 Pacchetti
-                        </button>
-                        <button class="figurine-tab flex-1 py-2 text-sm font-semibold text-gray-400 hover:text-white transition border-b-2 border-transparent" data-tab="trades">
-                            🔄 Scambi
-                        </button>
-                        <button class="figurine-tab flex-1 py-2 text-sm font-semibold text-gray-400 hover:text-white transition border-b-2 border-transparent" data-tab="duplicates">
-                            📋 Duplicati
                         </button>
                     </div>
 
@@ -207,7 +201,7 @@ window.FigurineUI = {
 
         const collection = this.currentAlbum.collection;
         const icone = window.FigurineSystem.getIconeList();
-        const maxFigurine = icone.length * 3;
+        const maxFigurine = icone.length * 4; // 4 varianti per giocatore
         const unique = window.FigurineSystem.countUniqueFigurine(collection);
         const percentage = window.FigurineSystem.getCompletionPercentage(collection);
 
@@ -253,12 +247,6 @@ window.FigurineUI = {
             case 'pack':
                 this.renderPacks();
                 break;
-            case 'trades':
-                this.renderTrades();
-                break;
-            case 'duplicates':
-                this.renderDuplicates();
-                break;
         }
     },
 
@@ -273,9 +261,9 @@ window.FigurineUI = {
         let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">';
 
         icone.forEach(icona => {
-            const counts = collection[icona.id] || { base: 0, shiny: 0, gold: 0 };
-            const hasAny = counts.base > 0 || counts.shiny > 0 || counts.gold > 0;
-            const isComplete = counts.base > 0 && counts.shiny > 0 && counts.gold > 0;
+            const counts = collection[icona.id] || { normale: 0, evoluto: 0, alternative: 0, ultimate: 0 };
+            const hasAny = counts.normale > 0 || counts.evoluto > 0 || counts.alternative > 0 || counts.ultimate > 0;
+            const isComplete = counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0;
 
             html += `
                 <div class="bg-gray-800 rounded-lg p-2 border ${isComplete ? 'border-yellow-500' : (hasAny ? 'border-purple-600' : 'border-gray-700')} relative">
@@ -292,19 +280,23 @@ window.FigurineUI = {
                     <!-- Nome -->
                     <p class="text-xs font-semibold text-white text-center truncate mb-1">${icona.name}</p>
 
-                    <!-- Rarita -->
+                    <!-- Varianti (4 tipi) -->
                     <div class="flex justify-center gap-1">
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.base > 0 ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-500'}"
-                              title="Base: ${counts.base}">
-                            ${counts.base > 0 ? counts.base : '○'}
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.normale > 0 ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-500'}"
+                              title="Normale: ${counts.normale}">
+                            ${counts.normale > 0 ? counts.normale : '○'}
                         </span>
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.shiny > 0 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-500'}"
-                              title="Shiny: ${counts.shiny}">
-                            ${counts.shiny > 0 ? counts.shiny : '○'}
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.evoluto > 0 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-500'}"
+                              title="Evoluto: ${counts.evoluto}">
+                            ${counts.evoluto > 0 ? counts.evoluto : '○'}
                         </span>
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.gold > 0 ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-gray-500'}"
-                              title="Gold: ${counts.gold}">
-                            ${counts.gold > 0 ? counts.gold : '○'}
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.alternative > 0 ? 'bg-purple-500 text-white' : 'bg-gray-700 text-gray-500'}"
+                              title="Alternative: ${counts.alternative}">
+                            ${counts.alternative > 0 ? counts.alternative : '○'}
+                        </span>
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs ${counts.ultimate > 0 ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-700 text-gray-500'}"
+                              title="Ultimate: ${counts.ultimate}">
+                            ${counts.ultimate > 0 ? counts.ultimate : '○'}
                         </span>
                     </div>
                 </div>
@@ -316,11 +308,12 @@ window.FigurineUI = {
         // Legenda
         html += `
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs text-gray-400">
-                <p class="font-semibold mb-1">Legenda Rarita:</p>
-                <div class="flex gap-4">
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-500 mr-1"></span> Base (70%)</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Shiny (25%)</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> Gold (5%)</span>
+                <p class="font-semibold mb-1">Legenda Varianti:</p>
+                <div class="flex flex-wrap gap-3">
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-500 mr-1"></span> Normale (55%)</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto (25%)</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative (15%)</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> Ultimate (5%)</span>
                 </div>
             </div>
         `;
@@ -382,19 +375,19 @@ window.FigurineUI = {
 
                 <!-- Info -->
                 <div class="bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-semibold text-white mb-2">Probabilita Rarita</h4>
+                    <h4 class="font-semibold text-white mb-2">Probabilita Varianti</h4>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="text-gray-300">⚪ Base</span>
+                            <span class="text-gray-300">⚪ Normale</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-32 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gray-500 h-2 rounded-full" style="width: 70%"></div>
+                                    <div class="bg-gray-500 h-2 rounded-full" style="width: 55%"></div>
                                 </div>
-                                <span class="text-gray-400 text-sm">70%</span>
+                                <span class="text-gray-400 text-sm">55%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-blue-300">🔵 Shiny</span>
+                            <span class="text-blue-300">🔵 Evoluto</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-32 bg-gray-700 rounded-full h-2">
                                     <div class="bg-blue-500 h-2 rounded-full" style="width: 25%"></div>
@@ -403,7 +396,16 @@ window.FigurineUI = {
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-yellow-300">🟡 Gold</span>
+                            <span class="text-purple-300">🟣 Alternative</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 15%"></div>
+                                </div>
+                                <span class="text-gray-400 text-sm">15%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-yellow-300">🟡 Ultimate</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-32 bg-gray-700 rounded-full h-2">
                                     <div class="bg-yellow-500 h-2 rounded-full" style="width: 5%"></div>
@@ -456,9 +458,17 @@ window.FigurineUI = {
 
         result.figurine.forEach(fig => {
             const rarityColors = {
-                base: 'border-gray-500 bg-gray-800',
-                shiny: 'border-blue-500 bg-blue-900/30',
-                gold: 'border-yellow-500 bg-yellow-900/30'
+                normale: 'border-gray-500 bg-gray-800',
+                evoluto: 'border-blue-500 bg-blue-900/30',
+                alternative: 'border-purple-500 bg-purple-900/30',
+                ultimate: 'border-yellow-500 bg-yellow-900/30'
+            };
+
+            const textColors = {
+                normale: 'text-gray-400',
+                evoluto: 'text-blue-400',
+                alternative: 'text-purple-400',
+                ultimate: 'text-yellow-400'
             };
 
             html += `
@@ -468,7 +478,7 @@ window.FigurineUI = {
                          class="w-16 h-16 mx-auto rounded object-cover mb-1"
                          onerror="this.src='https://placehold.co/80x80/1f2937/6b7280?text=?'">
                     <p class="text-xs font-semibold text-white truncate">${fig.iconaName}</p>
-                    <p class="text-xs ${fig.rarity === 'gold' ? 'text-yellow-400' : (fig.rarity === 'shiny' ? 'text-blue-400' : 'text-gray-400')}">${fig.rarityInfo.name}</p>
+                    <p class="text-xs ${textColors[fig.rarity]}">${fig.rarityInfo.name}</p>
                 </div>
             `;
         });
@@ -493,162 +503,6 @@ window.FigurineUI = {
             container.classList.add('hidden');
             this.renderPacks();
         });
-    },
-
-    /**
-     * Renderizza scambi
-     */
-    async renderTrades() {
-        const content = document.getElementById('figurine-content');
-        const teamId = window.InterfacciaCore?.currentTeamId;
-
-        content.innerHTML = '<p class="text-center text-gray-400">Caricamento scambi...</p>';
-
-        const trades = await window.FigurineSystem.getOpenTrades(teamId);
-
-        let html = `
-            <div class="space-y-4">
-                <button id="btn-new-trade" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition">
-                    + Proponi Nuovo Scambio
-                </button>
-
-                <h3 class="font-semibold text-white">Scambi Disponibili</h3>
-        `;
-
-        if (trades.length === 0) {
-            html += '<p class="text-center text-gray-400 py-8">Nessuno scambio disponibile</p>';
-        } else {
-            trades.forEach(trade => {
-                const offerIcona = window.FigurineSystem.getIconaById(trade.offer.iconaId);
-                const wantedIcona = window.FigurineSystem.getIconaById(trade.wanted.iconaId);
-
-                html += `
-                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <div class="text-center">
-                                    <img src="${offerIcona?.photoUrl || ''}" class="w-12 h-12 rounded object-cover mx-auto"
-                                         onerror="this.src='https://placehold.co/48x48/1f2937/6b7280?text=?'">
-                                    <p class="text-xs text-gray-300">${offerIcona?.name || '?'}</p>
-                                    <p class="text-xs text-${trade.offer.rarity === 'gold' ? 'yellow' : (trade.offer.rarity === 'shiny' ? 'blue' : 'gray')}-400">${trade.offer.rarity}</p>
-                                </div>
-                                <span class="text-2xl">➡️</span>
-                                <div class="text-center">
-                                    <img src="${wantedIcona?.photoUrl || ''}" class="w-12 h-12 rounded object-cover mx-auto"
-                                         onerror="this.src='https://placehold.co/48x48/1f2937/6b7280?text=?'">
-                                    <p class="text-xs text-gray-300">${wantedIcona?.name || '?'}</p>
-                                    <p class="text-xs text-${trade.wanted.rarity === 'gold' ? 'yellow' : (trade.wanted.rarity === 'shiny' ? 'blue' : 'gray')}-400">${trade.wanted.rarity}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs text-gray-400">da ${trade.fromTeamName}</p>
-                                <button class="btn-accept-trade mt-2 bg-green-600 hover:bg-green-500 text-white text-sm px-3 py-1 rounded"
-                                        data-trade-id="${trade.id}">
-                                    Accetta
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        html += '</div>';
-        content.innerHTML = html;
-
-        // Bind eventi
-        document.getElementById('btn-new-trade')?.addEventListener('click', () => this.showNewTradeForm());
-        document.querySelectorAll('.btn-accept-trade').forEach(btn => {
-            btn.addEventListener('click', () => this.acceptTrade(btn.dataset.tradeId));
-        });
-    },
-
-    /**
-     * Mostra form nuovo scambio
-     */
-    showNewTradeForm() {
-        // Implementazione semplificata
-        alert('Funzionalita scambi in arrivo!');
-    },
-
-    /**
-     * Accetta scambio
-     */
-    async acceptTrade(tradeId) {
-        const teamId = window.InterfacciaCore?.currentTeamId;
-        if (!teamId) return;
-
-        if (!confirm('Accettare questo scambio?')) return;
-
-        try {
-            await window.FigurineSystem.acceptTrade(tradeId, teamId);
-            alert('Scambio completato!');
-            await this.loadAlbum();
-            this.renderTrades();
-        } catch (error) {
-            alert('Errore: ' + error.message);
-        }
-    },
-
-    /**
-     * Renderizza duplicati
-     */
-    renderDuplicates() {
-        const content = document.getElementById('figurine-content');
-        const collection = this.currentAlbum?.collection || {};
-        const duplicates = window.FigurineSystem.getDuplicates(collection);
-
-        let html = '<div class="space-y-4">';
-
-        if (duplicates.length === 0) {
-            html += '<p class="text-center text-gray-400 py-8">Nessun duplicato da vendere</p>';
-        } else {
-            html += '<p class="text-sm text-gray-400 mb-2">Vendi i duplicati per guadagnare CS (tieni sempre almeno 1 copia)</p>';
-
-            duplicates.forEach(dup => {
-                html += `
-                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <img src="${dup.iconaPhoto || ''}" class="w-12 h-12 rounded object-cover"
-                                 onerror="this.src='https://placehold.co/48x48/1f2937/6b7280?text=?'">
-                            <div>
-                                <p class="text-white font-semibold">${dup.iconaName}</p>
-                                <p class="text-sm text-${dup.rarity === 'gold' ? 'yellow' : (dup.rarity === 'shiny' ? 'blue' : 'gray')}-400">${dup.rarityInfo.name} x${dup.duplicateCount}</p>
-                            </div>
-                        </div>
-                        <button class="btn-sell-dup bg-yellow-600 hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded-lg"
-                                data-icona="${dup.iconaId}" data-rarity="${dup.rarity}">
-                            Vendi +${dup.rarityInfo.sellValue} CS
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        html += '</div>';
-        content.innerHTML = html;
-
-        // Bind eventi
-        document.querySelectorAll('.btn-sell-dup').forEach(btn => {
-            btn.addEventListener('click', () => this.sellDuplicate(btn.dataset.icona, btn.dataset.rarity));
-        });
-    },
-
-    /**
-     * Vende duplicato
-     */
-    async sellDuplicate(iconaId, rarity) {
-        const teamId = window.InterfacciaCore?.currentTeamId;
-        if (!teamId) return;
-
-        try {
-            const result = await window.FigurineSystem.sellDuplicate(teamId, iconaId, rarity);
-            await this.loadAlbum();
-            this.updateStats();
-            this.renderDuplicates();
-        } catch (error) {
-            alert('Errore: ' + error.message);
-        }
     }
 };
 

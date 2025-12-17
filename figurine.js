@@ -1,21 +1,21 @@
 //
 // ====================================================================
-// FIGURINE.JS - Sistema Collezione Figurine delle Icone
+// FIGURINE.JS - Sistema Collezione Figurine dei Giocatori
 // ====================================================================
-// Album collezionabile con figurine delle 16 Icone in 3 rarita
+// Album collezionabile con figurine in 4 varianti
 //
 
 window.FigurineSystem = {
     // Costanti
     CONFIG_DOC_ID: 'figurineConfig',
     COLLECTION_NAME: 'figurine',
-    TRADES_COLLECTION: 'figurineTrades',
 
-    // Rarita disponibili
+    // Tipi figurine disponibili (4 varianti)
     RARITIES: {
-        base: { id: 'base', name: 'Base', color: 'gray', probability: 0.70, sellValue: 5 },
-        shiny: { id: 'shiny', name: 'Shiny', color: 'blue', probability: 0.25, sellValue: 15 },
-        gold: { id: 'gold', name: 'Gold', color: 'yellow', probability: 0.05, sellValue: 50 }
+        normale: { id: 'normale', name: 'Normale', color: 'gray', probability: 0.55, cssClass: 'border-gray-400' },
+        evoluto: { id: 'evoluto', name: 'Evoluto', color: 'blue', probability: 0.25, cssClass: 'border-blue-500' },
+        alternative: { id: 'alternative', name: 'Alternative', color: 'purple', probability: 0.15, cssClass: 'border-purple-500' },
+        ultimate: { id: 'ultimate', name: 'Ultimate', color: 'yellow', probability: 0.05, cssClass: 'border-yellow-400' }
     },
 
     // Cache
@@ -181,12 +181,13 @@ window.FigurineSystem = {
         const icone = this.getIconeList();
         const collection = {};
 
-        // Inizializza tutte le figurine a 0
+        // Inizializza tutte le figurine a 0 (4 tipi)
         icone.forEach(icona => {
             collection[icona.id] = {
-                base: 0,
-                shiny: 0,
-                gold: 0
+                normale: 0,
+                evoluto: 0,
+                alternative: 0,
+                ultimate: 0
             };
         });
 
@@ -240,7 +241,7 @@ window.FigurineSystem = {
     countTotalFigurine(collection) {
         let total = 0;
         Object.values(collection).forEach(icona => {
-            total += (icona.base || 0) + (icona.shiny || 0) + (icona.gold || 0);
+            total += (icona.normale || 0) + (icona.evoluto || 0) + (icona.alternative || 0) + (icona.ultimate || 0);
         });
         return total;
     },
@@ -251,20 +252,21 @@ window.FigurineSystem = {
     countUniqueFigurine(collection) {
         let unique = 0;
         Object.values(collection).forEach(icona => {
-            if (icona.base > 0) unique++;
-            if (icona.shiny > 0) unique++;
-            if (icona.gold > 0) unique++;
+            if (icona.normale > 0) unique++;
+            if (icona.evoluto > 0) unique++;
+            if (icona.alternative > 0) unique++;
+            if (icona.ultimate > 0) unique++;
         });
         return unique;
     },
 
     /**
-     * Ottiene le sezioni complete (tutte e 3 le rarita di un'icona)
+     * Ottiene le sezioni complete (tutte e 4 le varianti di un giocatore)
      */
     getCompletedSections(collection) {
         const completed = [];
         Object.entries(collection).forEach(([iconaId, counts]) => {
-            if (counts.base > 0 && counts.shiny > 0 && counts.gold > 0) {
+            if (counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0) {
                 completed.push(iconaId);
             }
         });
@@ -277,7 +279,7 @@ window.FigurineSystem = {
     isAlbumComplete(collection) {
         const icone = this.getIconeList();
         return Object.values(collection).every(counts =>
-            counts.base > 0 && counts.shiny > 0 && counts.gold > 0
+            counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0
         ) && Object.keys(collection).length >= icone.length;
     },
 
@@ -286,7 +288,7 @@ window.FigurineSystem = {
      */
     getCompletionPercentage(collection) {
         const icone = this.getIconeList();
-        const maxFigurine = icone.length * 3; // 3 rarita per icona
+        const maxFigurine = icone.length * 4; // 4 varianti per giocatore
         const unique = this.countUniqueFigurine(collection);
         return Math.round((unique / maxFigurine) * 100);
     },
@@ -347,14 +349,17 @@ window.FigurineSystem = {
         const icone = this.getIconeList();
         const randomIcona = icone[Math.floor(Math.random() * icone.length)];
 
-        // Determina rarita
+        // Determina tipo figurina (probabilita cumulative)
         const roll = Math.random();
-        let rarity = 'base';
+        let rarity = 'normale';
 
-        if (roll < this.RARITIES.gold.probability) {
-            rarity = 'gold';
-        } else if (roll < this.RARITIES.gold.probability + this.RARITIES.shiny.probability) {
-            rarity = 'shiny';
+        // Ultimate: 5%, Alternative: 15%, Evoluto: 25%, Normale: 55%
+        if (roll < this.RARITIES.ultimate.probability) {
+            rarity = 'ultimate';
+        } else if (roll < this.RARITIES.ultimate.probability + this.RARITIES.alternative.probability) {
+            rarity = 'alternative';
+        } else if (roll < this.RARITIES.ultimate.probability + this.RARITIES.alternative.probability + this.RARITIES.evoluto.probability) {
+            rarity = 'evoluto';
         }
 
         return {
@@ -397,7 +402,7 @@ window.FigurineSystem = {
 
             // Aggiungi all'album
             if (!album.collection[figurina.iconaId]) {
-                album.collection[figurina.iconaId] = { base: 0, shiny: 0, gold: 0 };
+                album.collection[figurina.iconaId] = { normale: 0, evoluto: 0, alternative: 0, ultimate: 0 };
             }
             album.collection[figurina.iconaId][figurina.rarity]++;
         }
@@ -433,203 +438,6 @@ window.FigurineSystem = {
             bonusEarned: bonusEarned,
             isFree: isFree
         };
-    },
-
-    // ==================== DUPLICATI ====================
-
-    /**
-     * Ottiene i duplicati vendibili
-     */
-    getDuplicates(collection) {
-        const duplicates = [];
-
-        Object.entries(collection).forEach(([iconaId, counts]) => {
-            const icona = this.getIconaById(iconaId);
-            if (!icona) return;
-
-            Object.entries(counts).forEach(([rarity, count]) => {
-                if (count > 1) {
-                    const rarityInfo = this.RARITIES[rarity];
-                    duplicates.push({
-                        iconaId,
-                        iconaName: icona.name,
-                        iconaPhoto: icona.photoUrl,
-                        rarity,
-                        rarityInfo,
-                        duplicateCount: count - 1,
-                        sellValue: rarityInfo.sellValue * (count - 1)
-                    });
-                }
-            });
-        });
-
-        return duplicates;
-    },
-
-    /**
-     * Vende un duplicato
-     */
-    async sellDuplicate(teamId, iconaId, rarity) {
-        const album = await this.loadTeamAlbum(teamId);
-
-        if (!album.collection[iconaId] || album.collection[iconaId][rarity] <= 1) {
-            throw new Error('Nessun duplicato da vendere');
-        }
-
-        const rarityInfo = this.RARITIES[rarity];
-        album.collection[iconaId][rarity]--;
-
-        await this.saveTeamAlbum(teamId, album);
-        await this.updateTeamBudget(teamId, rarityInfo.sellValue);
-
-        return {
-            sold: { iconaId, rarity },
-            earned: rarityInfo.sellValue
-        };
-    },
-
-    // ==================== SCAMBI ====================
-
-    /**
-     * Crea una proposta di scambio
-     */
-    async createTradeOffer(fromTeamId, fromTeamName, offer, wanted) {
-        const appId = window.firestoreTools?.appId;
-        if (!appId || !window.db) {
-            throw new Error('Firestore non disponibile');
-        }
-
-        const { collection, addDoc } = window.firestoreTools;
-        const tradesRef = collection(window.db, `artifacts/${appId}/public/data/${this.TRADES_COLLECTION}`);
-
-        const trade = {
-            fromTeamId,
-            fromTeamName,
-            offer: offer,           // { iconaId, rarity }
-            wanted: wanted,         // { iconaId, rarity }
-            status: 'open',
-            createdAt: new Date().toISOString()
-        };
-
-        const docRef = await addDoc(tradesRef, trade);
-        console.log('[Figurine] Scambio creato:', docRef.id);
-        return docRef.id;
-    },
-
-    /**
-     * Ottiene gli scambi aperti
-     */
-    async getOpenTrades(excludeTeamId = null) {
-        const appId = window.firestoreTools?.appId;
-        if (!appId || !window.db) return [];
-
-        try {
-            const { collection, getDocs, query, where } = window.firestoreTools;
-            const tradesRef = collection(window.db, `artifacts/${appId}/public/data/${this.TRADES_COLLECTION}`);
-            const q = query(tradesRef, where('status', '==', 'open'));
-            const snapshot = await getDocs(q);
-
-            const trades = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (!excludeTeamId || data.fromTeamId !== excludeTeamId) {
-                    trades.push({ id: doc.id, ...data });
-                }
-            });
-
-            return trades;
-        } catch (error) {
-            console.error('[Figurine] Errore caricamento scambi:', error);
-            return [];
-        }
-    },
-
-    /**
-     * Accetta uno scambio
-     */
-    async acceptTrade(tradeId, acceptingTeamId) {
-        const appId = window.firestoreTools?.appId;
-        if (!appId || !window.db) {
-            throw new Error('Firestore non disponibile');
-        }
-
-        const { doc, getDoc, updateDoc } = window.firestoreTools;
-        const tradeRef = doc(window.db, `artifacts/${appId}/public/data/${this.TRADES_COLLECTION}`, tradeId);
-        const tradeSnap = await getDoc(tradeRef);
-
-        if (!tradeSnap.exists()) {
-            throw new Error('Scambio non trovato');
-        }
-
-        const trade = tradeSnap.data();
-        if (trade.status !== 'open') {
-            throw new Error('Scambio non piu disponibile');
-        }
-
-        // Carica album di entrambi
-        const fromAlbum = await this.loadTeamAlbum(trade.fromTeamId);
-        const toAlbum = await this.loadTeamAlbum(acceptingTeamId);
-
-        // Verifica disponibilita
-        if (!fromAlbum.collection[trade.offer.iconaId] ||
-            fromAlbum.collection[trade.offer.iconaId][trade.offer.rarity] < 1) {
-            throw new Error('Il proponente non ha piu la figurina offerta');
-        }
-
-        if (!toAlbum.collection[trade.wanted.iconaId] ||
-            toAlbum.collection[trade.wanted.iconaId][trade.wanted.rarity] < 1) {
-            throw new Error('Non hai la figurina richiesta');
-        }
-
-        // Esegui scambio
-        fromAlbum.collection[trade.offer.iconaId][trade.offer.rarity]--;
-        fromAlbum.collection[trade.wanted.iconaId][trade.wanted.rarity]++;
-
-        toAlbum.collection[trade.wanted.iconaId][trade.wanted.rarity]--;
-        toAlbum.collection[trade.offer.iconaId][trade.offer.rarity]++;
-
-        // Salva
-        await this.saveTeamAlbum(trade.fromTeamId, fromAlbum);
-        await this.saveTeamAlbum(acceptingTeamId, toAlbum);
-
-        // Aggiorna stato scambio
-        await updateDoc(tradeRef, {
-            status: 'completed',
-            acceptedBy: acceptingTeamId,
-            completedAt: new Date().toISOString()
-        });
-
-        return { success: true };
-    },
-
-    /**
-     * Cancella uno scambio
-     */
-    async cancelTrade(tradeId, teamId) {
-        const appId = window.firestoreTools?.appId;
-        if (!appId || !window.db) {
-            throw new Error('Firestore non disponibile');
-        }
-
-        const { doc, getDoc, updateDoc } = window.firestoreTools;
-        const tradeRef = doc(window.db, `artifacts/${appId}/public/data/${this.TRADES_COLLECTION}`, tradeId);
-        const tradeSnap = await getDoc(tradeRef);
-
-        if (!tradeSnap.exists()) {
-            throw new Error('Scambio non trovato');
-        }
-
-        const trade = tradeSnap.data();
-        if (trade.fromTeamId !== teamId) {
-            throw new Error('Non puoi cancellare questo scambio');
-        }
-
-        await updateDoc(tradeRef, {
-            status: 'cancelled',
-            cancelledAt: new Date().toISOString()
-        });
-
-        return { success: true };
     },
 
     // ==================== UTILITIES ====================
