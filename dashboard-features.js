@@ -701,9 +701,11 @@ window.DashboardFeatures = {
             negozioBox.classList.add('flex');
 
             // Click per aprire negozio
-            negozioBox.onclick = () => {
-                if (window.CreditiSuperSeriUI) {
-                    window.CreditiSuperSeriUI.openShop();
+            negozioBox.onclick = async () => {
+                if (window.CreditiSuperSeriUI && teamId) {
+                    const rosa = teamData?.players || [];
+                    const saldo = await window.CreditiSuperSeri?.getSaldo(teamId) || 0;
+                    window.CreditiSuperSeriUI.openPotenziamentoPanel(rosa, saldo);
                 }
             };
         } else if (negozioBox) {
