@@ -303,8 +303,8 @@ window.CoppaSchedule = {
             // Bye sono gia "completati"
             if (match.isBye) return true;
 
-            // Se manca una squadra, non conta
-            if (!match.homeTeam || !match.awayTeam) return true;
+            // Se manca una squadra (TBD), il turno NON e completato
+            if (!match.homeTeam || !match.awayTeam) return false;
 
             // Verifica se il match ha un vincitore
             return match.winner !== null;
