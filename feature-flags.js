@@ -161,6 +161,22 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-yellow-400">Versione veloce per vedere solo il meglio! Accessibile dal bottone "Solo Highlights" dopo ogni partita.</p>`
         },
+        matchReplay: {
+            id: 'matchReplay',
+            name: 'Replay Partite',
+            description: 'Mostra il replay automatico dopo ogni simulazione di partita',
+            icon: '🎬',
+            enabled: true,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Replay automatico dopo ogni partita simulata</li>
+                    <li>Animazioni fasi di gioco (costruzione, attacco, tiro)</li>
+                    <li>Velocita' regolabile (1x, 2x, 3x)</li>
+                    <li>Bottone "Salta" per chiudere il replay</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Disattiva questo flag per saltare tutti i replay automatici.</p>`
+        },
         creditiSuperSeri: {
             id: 'creditiSuperSeri',
             name: 'Crediti Super Seri',

@@ -145,9 +145,10 @@ window.ChampionshipMain = {
                 }
             }
 
-            // REPLAY: Mostra replay SOLO se non e admin
+            // REPLAY: Mostra replay SOLO se non e admin E flag attivo
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
-                if (window.MatchReplaySimple && !isAdmin) {
+                const replayEnabled = window.FeatureFlags?.isEnabled('matchReplay') !== false;
+                if (window.MatchReplaySimple && !isAdmin && replayEnabled) {
                     await window.MatchReplaySimple.playFromResult(
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },
@@ -391,9 +392,10 @@ window.ChampionshipMain = {
                     await this.addFormationXp(match.awayId, awayTeamData.formation?.modulo);
                 }
 
-                // REPLAY: Mostra replay SOLO se non e admin
+                // REPLAY: Mostra replay SOLO se non e admin E flag attivo
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
-                if (window.MatchReplaySimple && !isAdmin) {
+                const replayEnabled = window.FeatureFlags?.isEnabled('matchReplay') !== false;
+                if (window.MatchReplaySimple && !isAdmin && replayEnabled) {
                     await window.MatchReplaySimple.playFromResult(
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },
