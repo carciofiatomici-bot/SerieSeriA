@@ -107,10 +107,8 @@ window.AdminDataSync = {
         document.getElementById('btn-sync-data')?.addEventListener('click', () => this.repairData());
         document.getElementById('btn-close-sync-panel')?.addEventListener('click', () => {
             // Torna alla vista admin principale
-            if (window.AdminUI?.renderAdminPanel) {
-                window.AdminUI.renderAdminPanel();
-            } else if (window.Admin?.showAdminPanel) {
-                window.Admin.showAdminPanel();
+            if (window.renderAdminDashboardLayout) {
+                window.renderAdminDashboardLayout();
             }
         });
     },

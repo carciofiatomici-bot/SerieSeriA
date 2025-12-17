@@ -671,7 +671,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await window.AdminUI.renderAdminDashboard(adminDashboardContainer, configData, allTeams);
         setupAdminDashboardEvents();
     };
-    
+
+    // Esponi la funzione per poterla chiamare da altri moduli (es. admin-data-sync)
+    window.renderAdminDashboardLayout = renderAdminDashboardLayout;
+
     /**
      * Cabla gli eventi della dashboard
      */
