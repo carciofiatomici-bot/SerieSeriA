@@ -111,9 +111,17 @@ window.DashboardFeatures = {
         const teamData = window.InterfacciaCore?.currentTeamData;
         const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
 
-        // Mostra solo se feature attiva E puo girare oggi
-        if (isEnabled && canSpin) {
+        // Mostra se feature attiva (indipendentemente dal cooldown)
+        if (isEnabled) {
             wheelBox.classList.remove('hidden');
+            // Aggiorna lo stile del box in base alla disponibilita
+            if (canSpin) {
+                wheelBox.classList.remove('opacity-50', 'grayscale');
+                wheelBox.title = 'Gira la Ruota della Fortuna!';
+            } else {
+                wheelBox.classList.add('opacity-50', 'grayscale');
+                wheelBox.title = 'Ruota gia girata oggi - Torna domani!';
+            }
         } else {
             wheelBox.classList.add('hidden');
         }

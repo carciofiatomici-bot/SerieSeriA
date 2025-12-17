@@ -178,11 +178,8 @@
                 <span class="text-2xl text-yellow-400">${prize.label}</span>
             `;
 
-            // Nascondi il box della ruota nella dashboard immediatamente
-            const wheelBox = document.getElementById('daily-wheel-box');
-            if (wheelBox) {
-                wheelBox.classList.add('hidden');
-            }
+            // NON nascondere il box della ruota nella dashboard (rimane visibile con cooldown)
+            // Il box mostrera il timer di cooldown invece del pulsante gira
 
             // Aggiorna anche i dati locali della squadra per riflettere il cambio
             if (window.InterfacciaCore?.currentTeamData) {

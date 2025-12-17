@@ -88,6 +88,9 @@ window.CreditiSuperSeri = {
     // Costo servizio sblocco lega privata (rimuove cooldown mensile)
     COSTO_SBLOCCO_LEGA: 1,
 
+    // Conversione CS -> CSS (2000 CS = 1 CSS)
+    CS_TO_CSS_RATE: 2000,
+
     // Conversione CSS -> CS (getter dinamici)
     get CSS_TO_CS_RATE() {
         return window.FormulasConfig?.cssToCsRate || 1000;
@@ -1228,6 +1231,67 @@ window.CreditiSuperSeri = {
 
         } catch (error) {
             console.error('Errore acquisto sblocco lega:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Converti CS in CSS (2000 CS = 1 CSS)
+     * @param {string} teamId
+     * @returns {Promise<{success: boolean, cssOttenuti?: number, nuovoSaldoCSS?: number, nuovoBudget?: number, error?: string}>}
+     */
+    async convertiCSinCSS(teamId) {
+        try {
+            const enabled = await this.isEnabled();
+            if (!enabled) {
+                return { success: false, error: 'Sistema CSS non attivo' };
+            }
+
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+            // Carica dati squadra
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                return { success: false, error: 'Squadra non trovata' };
+            }
+
+            const teamData = teamDoc.data();
+            const budgetAttuale = teamData.budget || 0;
+            const saldoCSS = teamData.creditiSuperSeri || 0;
+
+            // Verifica budget CS
+            if (budgetAttuale < this.CS_TO_CSS_RATE) {
+                return {
+                    success: false,
+                    error: `Crediti insufficienti. Hai ${budgetAttuale} CS, servono ${this.CS_TO_CSS_RATE} CS`
+                };
+            }
+
+            // Esegui conversione
+            const nuovoBudget = budgetAttuale - this.CS_TO_CSS_RATE;
+            const nuovoSaldoCSS = saldoCSS + 1;
+
+            await updateDoc(teamDocRef, {
+                budget: nuovoBudget,
+                creditiSuperSeri: nuovoSaldoCSS
+            });
+
+            console.log(`Convertiti ${this.CS_TO_CSS_RATE} CS in 1 CSS. Nuovo saldo: ${nuovoSaldoCSS} CSS, Budget: ${nuovoBudget} CS`);
+
+            return {
+                success: true,
+                cssOttenuti: 1,
+                nuovoSaldoCSS,
+                nuovoBudget
+            };
+
+        } catch (error) {
+            console.error('Errore conversione CS in CSS:', error);
             return { success: false, error: error.message };
         }
     },

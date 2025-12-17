@@ -764,6 +764,15 @@ window.GestioneSquadreFormazione = {
         // Data attribute per la forma del giocatore
         const formDataAttr = playerWithForm ? `data-form-modifier="${playerWithForm.formModifier || 0}"` : '';
 
+        // Bottone rimuovi giocatore (solo se c'e' un giocatore nello slot)
+        const removeButtonHtml = playerWithForm ? `
+            <button class="absolute bottom-0 left-0 w-4 h-4 bg-red-600 hover:bg-red-500 text-white rounded-br-lg rounded-tl-sm text-[8px] leading-none flex items-center justify-center z-20 shadow"
+                    onclick="event.stopPropagation(); window.GestioneSquadreFormazione.removePlayerFromSlot('${playerWithForm.id}', 'field')"
+                    title="Rimuovi dalla formazione">
+                ✕
+            </button>
+        ` : '';
+
         return `
             <div data-role="${role}" id="${slotId}" class="slot-target w-full text-center rounded-lg shadow-inner-dark transition duration-150 cursor-pointer relative
                         ${bgColor} ${textColor}
@@ -777,6 +786,7 @@ window.GestioneSquadreFormazione = {
                  title="${titleText}">
                 ${playerContent}
                 ${warningHtml}
+                ${removeButtonHtml}
             </div>
         `;
     },
@@ -917,7 +927,7 @@ window.GestioneSquadreFormazione = {
 
                 return `
                     <div ${draggableAttr} data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
-                         class="player-card p-1.5 ${injuredClass} rounded text-xs shadow transition duration-100 z-10"
+                         class="player-card p-1.5 ${injuredClass} rounded text-xs shadow transition duration-100 z-10 relative"
                          ${isInjured ? '' : 'ondragstart="window.handleDragStart(event)" ondragend="window.handleDragEnd(event)"'}
                          ${isInjured ? `title="${player.name} e infortunato per ${window.Injuries.getRemainingMatches(player)} partite"` : ''}>
                         <div class="flex items-center justify-between">
@@ -928,6 +938,11 @@ window.GestioneSquadreFormazione = {
                             <span class="text-yellow-300">Lv.${currentLevel} ${formModText}</span>
                             <span class="text-gray-500">${injuryBadge}${equipBadge}</span>
                         </div>
+                        <button class="absolute bottom-0 left-0 w-3.5 h-3.5 bg-red-600 hover:bg-red-500 text-white rounded-br-md rounded-tl-sm text-[7px] leading-none flex items-center justify-center z-20 shadow"
+                                onclick="event.stopPropagation(); window.GestioneSquadreFormazione.removePlayerFromSlot('${player.id}', 'bench')"
+                                title="Rimuovi dalla panchina">
+                            ✕
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -1375,6 +1390,42 @@ window.GestioneSquadreFormazione = {
         if (formModifier < 0) {
             this.openFormRecoveryModal(player, formModifier, teamData);
         }
+    },
+
+    /**
+     * Rimuove un giocatore dalla formazione (campo o panchina) e lo rimette nella rosa disponibile
+     * @param {string} playerId - ID del giocatore
+     * @param {string} location - 'field' o 'bench'
+     */
+    removePlayerFromSlot(playerId, location) {
+        const context = window.GestioneSquadreContext;
+        const teamData = context?.currentTeamData;
+
+        if (!teamData || !playerId) {
+            console.warn('[Formazione] Impossibile rimuovere giocatore: dati mancanti');
+            return;
+        }
+
+        const { removePlayerFromPosition, displayMessage, saveFormation } = window.GestioneSquadreUtils;
+
+        // Rimuovi il giocatore dalla posizione attuale
+        removePlayerFromPosition(playerId, teamData);
+
+        // Salva la formazione su Firestore
+        const teamId = context.currentTeamId;
+        if (teamId) {
+            saveFormation(teamId, teamData.formation)
+                .then(() => {
+                    displayMessage('formation-message', 'Giocatore rimosso dalla formazione', 'success');
+                })
+                .catch(err => {
+                    console.error('[Formazione] Errore salvataggio:', err);
+                    displayMessage('formation-message', 'Errore nel salvataggio', 'error');
+                });
+        }
+
+        // Aggiorna la visualizzazione
+        this.renderFieldSlots(teamData, context);
     },
 
     /**

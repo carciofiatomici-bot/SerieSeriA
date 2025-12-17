@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.10',
+    currentVersion: '2.2.12',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,39 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.12',
+            date: '2025-12-18',
+            time: '00:30',
+            title: 'Conversione CS, Bottone Rimuovi e Miglioramenti UI',
+            changes: [
+                { text: 'NUOVO: Converti 2000 CS in 1 CSS nel Negozio CSS (tab Servizi)', adminOnly: false },
+                { text: 'NUOVO: Bottone X per rimuovere giocatori dalla formazione senza drag', adminOnly: false },
+                { text: 'Pacchetto figurine gratis: cooldown 8 ore dopo apertura (non piu reset alle 12)', adminOnly: false },
+                { text: 'La Ruota della Fortuna rimane visibile anche dopo uso (in grigio)', adminOnly: false },
+                { text: 'Simulazioni: 30 occasioni per partita (era 40)', adminOnly: false },
+                { text: 'Regole aggiornate per riflettere le 30 occasioni', adminOnly: false },
+                { text: 'Fix badge verde figurine non si nascondeva dopo apertura pacchetto', adminOnly: false }
+            ],
+            type: 'feature'
+        },
+        {
+            version: '2.2.11',
+            date: '2025-12-17',
+            time: '23:30',
+            title: 'Rework Sistema Figurine + Scambio Duplicate',
+            changes: [
+                { text: 'NUOVO: Scambia figurine duplicate per CS!', adminOnly: false },
+                { text: '3 Normali = 50 CS, 3 Evolute = 75 CS, 3 Alternative = 150 CS, 3 Ultimate = 300 CS', adminOnly: false },
+                { text: 'Pacchetti ora costano 1 CSS (Credito Super Serio)', adminOnly: false },
+                { text: '99% ottieni 1 figurina, 1% bonus: ne ottieni 2!', adminOnly: false },
+                { text: 'Pacchetto gratis si resetta ogni giorno alle 12:00', adminOnly: false },
+                { text: 'Fix bug Coppa: partite andata non determinano piu il vincitore', adminOnly: false },
+                { text: 'Flag EXP separato dal flag Reward (ora indipendenti)', adminOnly: true },
+                { text: 'Modularizzazione pannello admin: wheel, schedina, figurine', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.10',
             date: '2025-12-17',

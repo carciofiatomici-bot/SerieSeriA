@@ -224,7 +224,7 @@ let piantagraneVictim = {}; // { odine: victimId }
 let partecipazioni = {}; // { odine: 0 }
 
 // Numero totale occasioni partita (per Veterano - ultime 5)
-let totalOccasionsInMatch = 40; // default 40 occasioni
+let totalOccasionsInMatch = 30; // default 30 occasioni
 
 /**
  * Helper per ordinare giocatori per ruolo (P, D, C, A) e poi per livello decrescente

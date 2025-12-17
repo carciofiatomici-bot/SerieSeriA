@@ -35,7 +35,7 @@ MANUALE DELLE ABILITÀ
 (3) Specialista Tiro: Fase 3 (in attacco). Il giocatore ottiene +1 fisso al modificatore quando partecipa a quella fase, ma -0.5 nelle altre fasi.
 (4) Multiruolo: Quando il giocatore viene schierato in un ruolo che non è il suo, il suo livello non subisce modifiche.
 (4) Tiro Potente: (Solo Difensori, Centrocampisti, Attaccanti). 5% di probabilità di tirare 2d10 invece che 1d20 durante la fase 3 "tiro vs portiere" e di prendere il più alto.
-(4) Veterano: Nelle ultime 5 occasioni della partita (dal 35 al 40), il giocatore aggiunge +1.5 al suo modificatore.
+(4) Veterano: Nelle ultime 5 occasioni della partita (dal 26 al 30), il giocatore aggiunge +1.5 al suo modificatore.
 (4) Talento Precoce: Aggiunge un bonus fisso di +1.5 al modificatore base, simulando un potenziale maggiore del livello attuale. (il livello massimo del giocatore scende a 18).
 (4) Jolly Tattico: A inizio partita, il giocatore può scegliere di cambiare la sua "Tipologia" (Potenza/Tecnica/Velocità)  per adattarsi a più avversari possibile. La scelta è definitiva per tutto il match.
 

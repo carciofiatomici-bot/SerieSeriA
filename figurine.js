@@ -51,9 +51,17 @@ window.FigurineSystem = {
             packPrice: 0,               // CS per pacchetto (non usato, ora si usa CSS)
             figurinesPerPack: 1,        // Figurine base per pacchetto
             bonusFigurineChance: 0.01,  // 1% probabilita di ottenere 2 figurine invece di 1
-            freePackCooldownHours: 24,  // Ore tra pacchetti gratis
+            freePackCooldownHours: 8,   // Ore di cooldown dopo apertura pacchetto gratis
             completionBonus: 500,       // Bonus per album completo
-            sectionBonus: 50            // Bonus per sezione completa (1 icona tutte rarita)
+            sectionBonus: 50,           // Bonus per sezione completa (1 icona tutte rarita)
+            // Scambio figurine duplicate: 3 figurine = X CS
+            tradeRequiredCount: 3,      // Figurine richieste per scambio
+            tradeRewards: {
+                normale: 50,            // 3 normali = 50 CS
+                evoluto: 75,            // 3 evolute = 75 CS
+                alternative: 150,       // 3 alternative = 150 CS
+                ultimate: 300           // 3 ultimate = 300 CS
+            }
         };
     },
 
@@ -311,30 +319,52 @@ window.FigurineSystem = {
     },
 
     /**
+     * Ottiene il prossimo reset delle 12:00
+     * Se ora sono prima delle 12:00, ritorna le 12:00 di oggi
+     * Se ora sono dopo le 12:00, ritorna le 12:00 di domani
+     */
+    getNextResetTime() {
+        const now = new Date();
+        const resetHour = 12; // 12:00
+
+        const todayReset = new Date(now);
+        todayReset.setHours(resetHour, 0, 0, 0);
+
+        // Se siamo dopo le 12:00 di oggi, il prossimo reset e' domani
+        if (now >= todayReset) {
+            todayReset.setDate(todayReset.getDate() + 1);
+        }
+
+        return todayReset;
+    },
+
+    /**
      * Verifica se puo aprire pacchetto gratis
+     * Cooldown di 8 ore dopo l'apertura dell'ultimo pacchetto
      */
     canOpenFreePack(album) {
         if (!album.lastFreePack) return true;
 
-        const config = this._config || this.getDefaultConfig();
-        const cooldownMs = config.freePackCooldownHours * 60 * 60 * 1000;
-        const lastPack = new Date(album.lastFreePack).getTime();
-        const now = Date.now();
+        const lastPack = new Date(album.lastFreePack);
+        const now = new Date();
+        const cooldownMs = this.config.freePackCooldownHours * 60 * 60 * 1000; // 8 ore in ms
 
-        return (now - lastPack) >= cooldownMs;
+        // Puo aprire se sono passate almeno 8 ore dall'ultimo pacchetto
+        return (now.getTime() - lastPack.getTime()) >= cooldownMs;
     },
 
     /**
-     * Tempo rimanente per pacchetto gratis
+     * Tempo rimanente per pacchetto gratis (cooldown 8 ore)
      */
     getTimeUntilFreePack(album) {
         if (!album.lastFreePack) return null;
+        if (this.canOpenFreePack(album)) return null;
 
-        const config = this._config || this.getDefaultConfig();
-        const cooldownMs = config.freePackCooldownHours * 60 * 60 * 1000;
-        const lastPack = new Date(album.lastFreePack).getTime();
-        const nextPack = lastPack + cooldownMs;
-        const remaining = nextPack - Date.now();
+        const lastPack = new Date(album.lastFreePack);
+        const cooldownMs = this.config.freePackCooldownHours * 60 * 60 * 1000;
+        const nextAvailable = new Date(lastPack.getTime() + cooldownMs);
+        const now = new Date();
+        const remaining = nextAvailable.getTime() - now.getTime();
 
         if (remaining <= 0) return null;
 
@@ -450,6 +480,129 @@ window.FigurineSystem = {
             isFree: isFree,
             gotBonus: numFigurine > 1
         };
+    },
+
+    // ==================== SCAMBIO FIGURINE ====================
+
+    /**
+     * Conta le figurine duplicate scambiabili per rarita
+     * Duplicate = quelle oltre la prima (quella nell'album)
+     * @param {Object} collection - La collezione dell'album
+     * @returns {Object} { normale: X, evoluto: Y, alternative: Z, ultimate: W }
+     */
+    countTradableDuplicates(collection) {
+        const duplicates = {
+            normale: 0,
+            evoluto: 0,
+            alternative: 0,
+            ultimate: 0
+        };
+
+        Object.values(collection).forEach(iconaCounts => {
+            // Per ogni rarita, le duplicate sono quelle oltre la prima
+            if (iconaCounts.normale > 1) duplicates.normale += iconaCounts.normale - 1;
+            if (iconaCounts.evoluto > 1) duplicates.evoluto += iconaCounts.evoluto - 1;
+            if (iconaCounts.alternative > 1) duplicates.alternative += iconaCounts.alternative - 1;
+            if (iconaCounts.ultimate > 1) duplicates.ultimate += iconaCounts.ultimate - 1;
+        });
+
+        return duplicates;
+    },
+
+    /**
+     * Calcola quanti scambi sono possibili per ogni rarita
+     * @param {Object} duplicates - Output di countTradableDuplicates
+     * @param {number} requiredCount - Figurine richieste per scambio (default 3)
+     * @returns {Object} { normale: X, evoluto: Y, ... } numero di scambi possibili
+     */
+    countPossibleTrades(duplicates, requiredCount = 3) {
+        return {
+            normale: Math.floor(duplicates.normale / requiredCount),
+            evoluto: Math.floor(duplicates.evoluto / requiredCount),
+            alternative: Math.floor(duplicates.alternative / requiredCount),
+            ultimate: Math.floor(duplicates.ultimate / requiredCount)
+        };
+    },
+
+    /**
+     * Esegue uno scambio di figurine duplicate per CS
+     * @param {string} teamId - ID squadra
+     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate)
+     * @param {number} count - Numero di scambi da fare (default 1)
+     * @returns {Object} { success, csEarned, message }
+     */
+    async tradeDuplicates(teamId, rarity, count = 1) {
+        const config = await this.loadConfig();
+        const album = await this.loadTeamAlbum(teamId);
+        const requiredCount = config.tradeRequiredCount || 3;
+        const reward = config.tradeRewards?.[rarity] || 0;
+
+        if (!reward) {
+            return { success: false, message: `Rarita "${rarity}" non valida` };
+        }
+
+        const totalRequired = requiredCount * count;
+        const duplicates = this.countTradableDuplicates(album.collection);
+
+        if (duplicates[rarity] < totalRequired) {
+            return {
+                success: false,
+                message: `Figurine insufficienti: hai ${duplicates[rarity]} duplicate ${rarity}, servono ${totalRequired}`
+            };
+        }
+
+        // Rimuovi le figurine dalla collezione (le duplicate, non la prima)
+        let toRemove = totalRequired;
+        for (const iconaId in album.collection) {
+            if (toRemove <= 0) break;
+
+            const iconaCounts = album.collection[iconaId];
+            if (iconaCounts[rarity] > 1) {
+                const removable = iconaCounts[rarity] - 1; // Lascia sempre almeno 1
+                const removeNow = Math.min(removable, toRemove);
+                iconaCounts[rarity] -= removeNow;
+                toRemove -= removeNow;
+            }
+        }
+
+        // Salva album aggiornato
+        await this.saveTeamAlbum(teamId, album);
+
+        // Assegna CS
+        const csEarned = reward * count;
+        await this.updateTeamBudget(teamId, csEarned);
+
+        return {
+            success: true,
+            csEarned: csEarned,
+            traded: totalRequired,
+            rarity: rarity,
+            message: `Scambiate ${totalRequired} figurine ${rarity} per ${csEarned} CS!`
+        };
+    },
+
+    /**
+     * Scambia tutte le figurine duplicate di una rarita
+     * @param {string} teamId - ID squadra
+     * @param {string} rarity - Rarita da scambiare
+     * @returns {Object} { success, csEarned, traded, message }
+     */
+    async tradeAllDuplicates(teamId, rarity) {
+        const config = await this.loadConfig();
+        const album = await this.loadTeamAlbum(teamId);
+        const requiredCount = config.tradeRequiredCount || 3;
+
+        const duplicates = this.countTradableDuplicates(album.collection);
+        const possibleTrades = Math.floor(duplicates[rarity] / requiredCount);
+
+        if (possibleTrades === 0) {
+            return {
+                success: false,
+                message: `Non hai abbastanza figurine ${rarity} duplicate (servono ${requiredCount})`
+            };
+        }
+
+        return await this.tradeDuplicates(teamId, rarity, possibleTrades);
     },
 
     // ==================== UTILITIES ====================

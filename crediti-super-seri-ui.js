@@ -622,10 +622,16 @@ window.CreditiSuperSeriUI = {
         const costoAcquistoCS = CSS?.COSTO_CONVERSIONE_CS || 1;
         const csOttenuti = CSS?.CSS_TO_CS_RATE || 1000;
         const costoSbloccoLega = CSS?.COSTO_SBLOCCO_LEGA || 1;
+        const csPerCSS = CSS?.CS_TO_CSS_RATE || 2000;
 
         const canAffordIcona = saldo >= costoSostituzioneIcona;
         const canAffordCS = saldo >= costoAcquistoCS;
         const canAffordSblocco = saldo >= costoSbloccoLega;
+
+        // Verifica budget CS per conversione CS -> CSS
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        const budgetCS = teamData?.budget || 0;
+        const canAffordCStoCSS = budgetCS >= csPerCSS;
 
         // Verifica se la squadra e' in cooldown per le leghe private
         const teamId = window.InterfacciaCore?.currentTeamId;
@@ -722,6 +728,30 @@ window.CreditiSuperSeriUI = {
                         </div>
                     </div>
                 </div>
+
+                <!-- Servizio: Converti CS in CSS -->
+                <div class="bg-gray-700 rounded-lg p-4 border border-amber-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">💎</span>
+                            <div>
+                                <p class="text-white font-bold text-lg">Converti CS in CSS</p>
+                                <p class="text-gray-400 text-sm">Converti ${csPerCSS} CS in 1 CSS (Hai ${budgetCS} CS)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="${canAffordCStoCSS ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${csPerCSS} CS</span>
+                            <button id="btn-converti-cs-css"
+                                    class="${canAffordCStoCSS
+                                        ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    ${canAffordCStoCSS ? '' : 'disabled'}>
+                                Converti
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -746,6 +776,14 @@ window.CreditiSuperSeriUI = {
         if (btnSbloccoLega && sbloccoLegaDisponibile) {
             btnSbloccoLega.addEventListener('click', async () => {
                 await this.handleSbloccoLega();
+            });
+        }
+
+        // Event listener per Converti CS in CSS
+        const btnConvertiCSCSS = document.getElementById('btn-converti-cs-css');
+        if (btnConvertiCSCSS && canAffordCStoCSS) {
+            btnConvertiCSCSS.addEventListener('click', async () => {
+                await this.handleConvertiCSinCSS();
             });
         }
     },
@@ -1094,6 +1132,63 @@ window.CreditiSuperSeriUI = {
             }
         } else {
             this.showMessage(result.error || 'Errore durante l\'acquisto', 'error');
+        }
+    },
+
+    /**
+     * Gestisce la conversione di CS in CSS (2000 CS = 1 CSS)
+     */
+    async handleConvertiCSinCSS() {
+        const CSS = window.CreditiSuperSeri;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!CSS || !teamId) {
+            this.showMessage('Errore: sistema non disponibile', 'error');
+            return;
+        }
+
+        const csRequired = CSS.CS_TO_CSS_RATE || 2000;
+
+        // Mostra messaggio di conferma
+        const confirmed = confirm(
+            `Vuoi convertire ${csRequired} CS in 1 CSS?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.showMessage('Conversione in corso...', 'info');
+
+        const result = await CSS.convertiCSinCSS(teamId);
+
+        if (result.success) {
+            this.showMessage(
+                `Convertiti ${csRequired} CS in 1 CSS! Saldo: ${result.nuovoSaldoCSS} CSS, Budget: ${result.nuovoBudget} CS`,
+                'success'
+            );
+
+            // Aggiorna saldo nella UI
+            const saldoDisplay = document.getElementById('css-saldo-display');
+            if (saldoDisplay) {
+                saldoDisplay.textContent = `${result.nuovoSaldoCSS} CSS`;
+            }
+
+            // Aggiorna dati locali
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.creditiSuperSeri = result.nuovoSaldoCSS;
+                window.InterfacciaCore.currentTeamData.budget = result.nuovoBudget;
+            }
+
+            // Aggiorna il tab servizi
+            await this.renderServiziContent(result.nuovoSaldoCSS);
+
+            // Notifica toast
+            if (window.Toast) {
+                window.Toast.success('Conversione completata!');
+            }
+        } else {
+            this.showMessage(result.error || 'Errore durante la conversione', 'error');
         }
     },
 

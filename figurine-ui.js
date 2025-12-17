@@ -335,6 +335,11 @@ window.FigurineUI = {
         const css = teamData?.creditiSuperSeri || 0;
         const packCost = config.packPriceCSS || 1;
 
+        // Calcola duplicati scambiabili
+        const duplicates = window.FigurineSystem.countTradableDuplicates(this.currentAlbum.collection);
+        const tradeRewards = config.tradeRewards || { normale: 50, evoluto: 75, alternative: 150, ultimate: 300 };
+        const tradeRequired = config.tradeRequiredCount || 3;
+
         content.innerHTML = `
             <div class="space-y-4">
                 <!-- Pacchetto Gratis -->
@@ -418,6 +423,33 @@ window.FigurineUI = {
                     </div>
                 </div>
 
+                <!-- Scambio Figurine Duplicate -->
+                <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-xl p-4 border border-amber-500">
+                    <h4 class="font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                        🔄 Scambia Figurine Duplicate
+                    </h4>
+                    <p class="text-xs text-gray-400 mb-3">${tradeRequired} figurine duplicate = CS (la prima resta nell'album)</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button data-trade="normale" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.normale < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.normale < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-gray-300 text-sm">⚪ Normali: ${duplicates.normale}</span>
+                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.normale} CS</span>
+                        </button>
+                        <button data-trade="evoluto" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.evoluto < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.evoluto < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-blue-300 text-sm">🔵 Evolute: ${duplicates.evoluto}</span>
+                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.evoluto} CS</span>
+                        </button>
+                        <button data-trade="alternative" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.alternative < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.alternative < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-purple-300 text-sm">🟣 Alternative: ${duplicates.alternative}</span>
+                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.alternative} CS</span>
+                        </button>
+                        <button data-trade="ultimate" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.ultimate < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.ultimate < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-yellow-300 text-sm">🟡 Ultimate: ${duplicates.ultimate}</span>
+                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.ultimate} CS</span>
+                        </button>
+                    </div>
+                    <p id="trade-result" class="text-center text-sm mt-2"></p>
+                </div>
+
                 <!-- Container risultato apertura -->
                 <div id="pack-result" class="hidden"></div>
             </div>
@@ -426,6 +458,56 @@ window.FigurineUI = {
         // Bind buttons
         document.getElementById('btn-free-pack')?.addEventListener('click', () => this.openPack(true));
         document.getElementById('btn-buy-pack')?.addEventListener('click', () => this.openPack(false));
+
+        // Bind trade buttons
+        document.querySelectorAll('.trade-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const rarity = e.currentTarget.dataset.trade;
+                if (!rarity) return;
+                await this.tradeDuplicates(rarity);
+            });
+        });
+    },
+
+    /**
+     * Scambia figurine duplicate
+     */
+    async tradeDuplicates(rarity) {
+        const resultEl = document.getElementById('trade-result');
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        if (!teamId) {
+            if (resultEl) {
+                resultEl.textContent = 'Errore: squadra non trovata';
+                resultEl.className = 'text-center text-sm mt-2 text-red-400';
+            }
+            return;
+        }
+
+        try {
+            const result = await window.FigurineSystem.tradeAllDuplicates(teamId, rarity);
+
+            if (result.success) {
+                if (resultEl) {
+                    resultEl.textContent = result.message;
+                    resultEl.className = 'text-center text-sm mt-2 text-green-400';
+                }
+                // Ricarica album e UI
+                this.currentAlbum = await window.FigurineSystem.loadTeamAlbum(teamId);
+                await this.renderPacks();
+            } else {
+                if (resultEl) {
+                    resultEl.textContent = result.message;
+                    resultEl.className = 'text-center text-sm mt-2 text-red-400';
+                }
+            }
+        } catch (error) {
+            console.error('[FigurineUI] Errore scambio:', error);
+            if (resultEl) {
+                resultEl.textContent = `Errore: ${error.message}`;
+                resultEl.className = 'text-center text-sm mt-2 text-red-400';
+            }
+        }
     },
 
     /**
@@ -440,6 +522,11 @@ window.FigurineUI = {
             this.currentAlbum = result.album;
             this.updateStats();
             this.showPackResult(result);
+
+            // Aggiorna il badge del pacchetto gratis nella dashboard
+            if (isFree) {
+                this.checkFreePack();
+            }
         } catch (error) {
             alert(error.message);
         }
