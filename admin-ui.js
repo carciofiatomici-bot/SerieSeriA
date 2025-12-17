@@ -284,6 +284,10 @@ window.AdminUI = {
                                     class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 text-sm">
                                 🎯 Config Schedina
                             </button>
+                            <button id="btn-figurine-config"
+                                    class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-400 transition duration-150 text-sm">
+                                🃏 Config Figurine
+                            </button>
                         </div>
 
                         <!-- Contratti -->
@@ -399,6 +403,17 @@ window.AdminUI = {
                     <button id="btn-close-schedina-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
                 <div id="schedina-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE FIGURINE (inizialmente nascosto) -->
+            <div id="figurine-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-purple-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-purple-400">🃏 Configurazione Album Figurine</h3>
+                    <button id="btn-close-figurine-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="figurine-panel-content">
                     <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>

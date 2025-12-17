@@ -990,6 +990,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Configurazione Figurine
+        const btnFigurineConfig = document.getElementById('btn-figurine-config');
+        const figurinePanelContainer = document.getElementById('figurine-panel-container');
+        const figurinePanelContent = document.getElementById('figurine-panel-content');
+        const btnCloseFigurinePanel = document.getElementById('btn-close-figurine-panel');
+
+        if (btnFigurineConfig && figurinePanelContainer) {
+            btnFigurineConfig.addEventListener('click', () => {
+                figurinePanelContainer.classList.remove('hidden');
+                if (window.AdminFigurine) {
+                    window.AdminFigurine.renderConfigPanel(figurinePanelContent);
+                }
+            });
+        }
+
+        if (btnCloseFigurinePanel && figurinePanelContainer) {
+            btnCloseFigurinePanel.addEventListener('click', () => {
+                figurinePanelContainer.classList.add('hidden');
+            });
+        }
+
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {
