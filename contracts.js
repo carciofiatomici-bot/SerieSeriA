@@ -39,11 +39,11 @@ window.Contracts = {
         // Escludi Giocatori Seri (livello max 10, non lasciano mai la squadra)
         if (player.isSeriousPlayer) return false;
 
-        // Escludi giocatori Base (non lasciano mai la squadra)
+        // Escludi giocatori Base/Gratuiti (costo 0, non lasciano mai la squadra)
         const isBase = player.isBase ||
                        player.isBasePlayer ||
                        (player.name?.includes('Base')) ||
-                       ((player.level || 1) === 1 && (player.cost || 0) === 0);
+                       (player.cost === 0 || player.cost === undefined || player.cost === null);
         if (isBase) return false;
 
         return true;
