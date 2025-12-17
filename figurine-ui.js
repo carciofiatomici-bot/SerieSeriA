@@ -357,7 +357,7 @@ window.FigurineUI = {
 
         const modal = document.createElement('div');
         modal.id = 'figurine-variants-modal';
-        modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 bg-black/80 z-[1100] flex items-center justify-center p-4';
 
         modal.innerHTML = `
             <div class="bg-gray-900 rounded-xl border-2 border-purple-500 max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -373,18 +373,22 @@ window.FigurineUI = {
                         const imgUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, v.id) || fallbackImg;
                         const owned = v.count > 0;
                         const isBase = v.id === 'normale';
+                        // Per figurine non-base non possedute: nessuna immagine, solo placeholder
+                        const showImage = owned || isBase;
+                        const displayUrl = showImage ? imgUrl : 'https://placehold.co/150x150/1f2937/374151?text=';
                         return `
                             <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden">
                                 <div class="aspect-square bg-gray-800 relative">
-                                    <img src="${imgUrl}"
-                                         alt="${v.name}"
-                                         class="w-full h-full object-cover ${!owned ? 'grayscale brightness-50' : ''}"
-                                         onerror="this.src='${fallbackImg}'">
-                                    ${!owned && !isBase ? `
-                                        <div class="absolute inset-0 flex items-center justify-center">
-                                            <span class="text-7xl text-white font-bold drop-shadow-lg">?</span>
+                                    ${showImage ? `
+                                        <img src="${displayUrl}"
+                                             alt="${v.name}"
+                                             class="w-full h-full object-cover ${!owned && isBase ? 'grayscale brightness-50' : ''}"
+                                             onerror="this.src='${fallbackImg}'">
+                                    ` : `
+                                        <div class="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                                            <span class="text-7xl text-gray-500 font-bold">?</span>
                                         </div>
-                                    ` : ''}
+                                    `}
                                 </div>
                                 <div class="${owned ? v.bgColor : 'bg-gray-700'} p-2 text-center">
                                     <p class="text-sm font-bold ${v.id === 'ultimate' && owned ? 'text-black' : 'text-white'}">${v.name}</p>
