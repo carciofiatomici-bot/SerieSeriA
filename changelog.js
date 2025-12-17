@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.21',
+    currentVersion: '2.2.22',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
