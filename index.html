@@ -708,9 +708,35 @@
                         <p class="text-[9px] sm:text-[10px] text-gray-300 font-semibold">📈 Lv. Rosa</p>
                         <p class="leading-tight"><span id="stat-rosa-level" class="text-sm sm:text-base font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[8px] sm:text-[10px] text-gray-400">(0)</span></p>
                     </div>
-                    <!-- BOX NOME SQUADRA (centro) -->
-                    <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center justify-center">
+                    <!-- BOX NOME SQUADRA (centro) + MENU HAMBURGER -->
+                    <div id="team-name-box" class="py-1 px-3 sm:px-4 rounded-lg border border-green-500 flex items-center justify-center gap-2 relative">
                         <h2 id="team-dashboard-title" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-center uppercase" style="color: #22c55e;">NOME SQUADRA</h2>
+                        <!-- Menu Hamburger -->
+                        <button id="dashboard-menu-btn" class="text-gray-400 hover:text-white text-xl p-1 rounded hover:bg-gray-700 transition" title="Menu">
+                            ⋮
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="dashboard-menu-dropdown" class="hidden absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
+                            <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📖</span> Tutorial
+                            </button>
+                            <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📋</span> Changelog
+                            </button>
+                            <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>🔑</span> Cambia Password
+                            </button>
+                            <div class="border-t border-gray-700"></div>
+                            <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
+                                <span>🔧</span> Pannello Admin
+                            </button>
+                            <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
+                                <span>🚪</span> Logout
+                            </button>
+                            <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
+                                <span>🗑️</span> Elimina Squadra
+                            </button>
+                        </div>
                     </div>
                     <!-- BOX DIVISA SQUADRA (destra) -->
                     <div id="team-uniform-box" class="p-1 sm:p-1.5 bg-gray-800 rounded-lg border-2 border-purple-500 text-center shadow-lg flex items-center justify-center gap-1 cursor-pointer hover:border-purple-400 hover:bg-gray-700 transition duration-150" title="Clicca per modificare la divisa">
@@ -821,8 +847,41 @@
                 </div>
             </div>
 
+            <!-- BOX RISORSE UNIFICATO (CS, CSS, Level-up) -->
+            <div id="risorse-box" class="mt-2 sm:mt-3 p-2 sm:p-3 rounded-lg border border-amber-500/50 bg-gradient-to-r from-amber-900/20 to-yellow-900/20">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <!-- Crediti Seri -->
+                    <div class="flex items-center gap-1.5 bg-gray-800/50 rounded-lg px-2 py-1">
+                        <span class="text-base">💰</span>
+                        <div class="text-xs">
+                            <span class="text-gray-400">CS:</span>
+                            <span id="risorse-cs" class="text-green-400 font-bold">0</span>
+                        </div>
+                    </div>
+                    <!-- Crediti Super Seri -->
+                    <div class="flex items-center gap-1.5 bg-gray-800/50 rounded-lg px-2 py-1">
+                        <span class="text-base">💎</span>
+                        <div class="text-xs">
+                            <span class="text-gray-400">CSS:</span>
+                            <span id="risorse-css" class="text-yellow-400 font-bold">0</span>
+                        </div>
+                    </div>
+                    <!-- Pacchetti Figurine (se attivo) -->
+                    <div id="risorse-pacchetti" class="hidden flex items-center gap-1.5 bg-gray-800/50 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-700/50 transition" title="Apri Album Figurine">
+                        <span class="text-base">📦</span>
+                        <div class="text-xs">
+                            <span class="text-purple-400 font-bold" id="risorse-pacchetti-count">Gratis!</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Widget Level-up compatto -->
+                <div id="risorse-levelup-widget" class="mt-2 hidden">
+                    <!-- Renderizzato dinamicamente -->
+                </div>
+            </div>
+
             <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-            <div id="gestione-box" class="mt-2 sm:mt-4 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+            <div id="gestione-box" class="mt-2 sm:mt-3 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
                 <div class="grid grid-cols-2 gap-2 sm:gap-4">
                     <button id="btn-gestione-rosa"
                             class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2 sm:py-6 text-xs sm:text-xl rounded-lg shadow-xl hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
@@ -835,23 +894,42 @@
                 </div>
             </div>
 
-            <!-- BOX COMPETIZIONI -->
-            <div id="competizioni-box" class="mt-2 sm:mt-6 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
-                <div class="space-y-1 sm:space-y-3">
-                    <button id="btn-user-campionato"
-                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
-                        <span class="text-base sm:text-2xl">🏅</span>
-                        <span class="text-sm sm:text-xl">SerieSeriA</span>
-                    </button>
-                    <button id="btn-user-coppa"
-                            class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
-                        <span class="text-base sm:text-2xl">🏆</span>
-                        <span class="text-sm sm:text-xl">CoppaSeriA</span>
-                    </button>
+            <!-- BOX COMPETIZIONI (con toggle integrati) -->
+            <div id="competizioni-box" class="mt-2 sm:mt-3 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
+                <div class="space-y-2">
+                    <!-- SerieSeriA con toggle -->
+                    <div class="flex items-stretch gap-2">
+                        <button id="btn-user-campionato"
+                                class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span class="text-base sm:text-xl">🏅</span>
+                            <span class="text-sm sm:text-lg">SerieSeriA</span>
+                        </button>
+                        <div class="flex items-center bg-green-800/50 rounded-lg px-2" title="Partecipa al campionato">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- CoppaSeriA con toggle -->
+                    <div class="flex items-stretch gap-2">
+                        <button id="btn-user-coppa"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-3 rounded-lg shadow-xl hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                            <span class="text-base sm:text-xl">🏆</span>
+                            <span class="text-sm sm:text-lg">CoppaSeriA</span>
+                        </button>
+                        <div class="flex items-center bg-purple-800/50 rounded-lg px-2" title="Partecipa alla coppa">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Super CoppaSeriA (senza toggle) -->
                     <button id="btn-user-supercoppa"
-                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-2 sm:py-4 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-3">
-                        <span class="text-base sm:text-2xl">⭐</span>
-                        <span class="text-sm sm:text-xl">Super CoppaSeriA</span>
+                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-2 sm:py-3 rounded-lg shadow-xl hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1 sm:gap-2">
+                        <span class="text-base sm:text-xl">⭐</span>
+                        <span class="text-sm sm:text-lg">Super CoppaSeriA</span>
                     </button>
                 </div>
             </div>
@@ -913,52 +991,12 @@
                 <!-- Il widget EXP viene renderizzato qui dinamicamente -->
             </div>
 
-            <!-- Toggle Partecipazione Campionato e Coppa - Mobile Optimized -->
-            <div id="toggle-partecipazione-box" class="mt-4 sm:mt-8 p-2 sm:p-3 rounded-lg border border-green-500 bg-gray-900/20">
-                <div class="grid grid-cols-2 gap-2 sm:gap-4">
-                    <!-- Toggle SerieSeriA -->
-                    <div class="p-3 sm:p-4 bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
-                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <span class="text-white font-extrabold text-xs sm:text-base">🏅 <span class="hidden sm:inline">SerieSeriA</span><span class="sm:hidden">SeriA</span></span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-green-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-400"></div>
-                            </label>
-                        </div>
-                        <p id="championship-participation-status" class="text-[10px] sm:text-xs text-green-200/80 truncate">
-                            Caricamento...
-                        </p>
-                    </div>
-
-                    <!-- Toggle CoppaSeriA -->
-                    <div class="p-3 sm:p-4 bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-xl text-center transition duration-150 transform hover:scale-[1.01]">
-                        <div class="flex items-center justify-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <span class="text-white font-extrabold text-xs sm:text-base">🏆 <span class="hidden sm:inline">CoppaSeriA</span><span class="sm:hidden">Coppa</span></span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                                <div class="w-9 h-5 sm:w-11 sm:h-6 bg-purple-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-purple-400"></div>
-                            </label>
-                        </div>
-                        <p id="cup-participation-status" class="text-[10px] sm:text-xs text-purple-200/80 truncate">
-                            Caricamento...
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <!-- Toggle ora integrati nel box competizioni sopra -->
 
             <span id="team-firestore-id" class="hidden">N/A</span>
-
-            <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4 sm:mt-6 px-1 sm:px-0">
-                <button id="user-back-to-login-button"
-                        class="w-full bg-yellow-500 text-gray-900 font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                    🔙 <span class="hidden sm:inline">Torna al </span>Login
-                </button>
-                <!-- PULSANTE ELIMINA SQUADRA -->
-                <button id="btn-delete-team"
-                        class="w-full bg-red-600 text-white font-extrabold py-2 sm:py-3 text-sm sm:text-base rounded-lg shadow-xl hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                    🗑️ <span class="hidden sm:inline">Elimina </span>Squadra
-                </button>
-            </div>
+            <!-- Bottoni nascosti per compatibilita JS esistente -->
+            <button id="user-back-to-login-button" class="hidden"></button>
+            <button id="btn-delete-team" class="hidden"></button>
 
             <!-- Bottone Torna al Pannello Admin - Visibile SOLO se si accede dalla dashboard admin -->
             <div id="admin-return-button-container" class="mt-4 hidden">
@@ -968,35 +1006,15 @@
                 </button>
             </div>
 
-            <!-- Pulsanti Tutorial e Admin Panel - In fondo alla dashboard -->
-            <div class="mt-6 flex justify-center gap-3 flex-wrap">
-                <!-- Bottone Admin Panel - Visibile SOLO per squadre admin -->
-                <button id="btn-goto-admin-panel"
-                        class="hidden bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>🔧</span> Pannello Admin
-                </button>
-                <button id="btn-start-tutorial"
-                        onclick="window.Tutorial?.start()"
-                        class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>📖</span> Tutorial
-                </button>
-                <button id="btn-show-changelog-dashboard"
-                        onclick="window.Changelog?.showPlayers()"
-                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>📋</span> Changelog
-                </button>
-                <button id="btn-change-password"
-                        class="bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>🔑</span> Cambia Password
-                </button>
+            <!-- Bottoni utility ora nel menu hamburger - questi sono nascosti per compatibilita JS -->
+            <div class="hidden">
+                <button id="btn-goto-admin-panel"></button>
+                <button id="btn-start-tutorial"></button>
+                <button id="btn-show-changelog-dashboard"></button>
+                <button id="btn-change-password"></button>
             </div>
-
-            <!-- Pulsante Aggiorna App - Visibile solo quando installata come PWA -->
-            <div id="pwa-update-button-container" class="mt-4 flex justify-center hidden">
-                <button id="btn-check-pwa-update"
-                        class="bg-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-cyan-500 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>🔄</span> Controlla Aggiornamenti
-                </button>
+            <div id="pwa-update-button-container" class="hidden">
+                <button id="btn-check-pwa-update"></button>
             </div>
         </div>
         

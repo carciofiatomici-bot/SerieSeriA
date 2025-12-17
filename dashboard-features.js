@@ -14,6 +14,8 @@ window.DashboardFeatures = {
         this.setupListeners();
         this.setupFlagChangeListener();
         this.setupFlagsLoadedListener();
+        this.initHamburgerMenu();
+        this.updateRisorseBox();
         console.log("Dashboard Features inizializzato");
     },
 
@@ -52,6 +54,12 @@ window.DashboardFeatures = {
 
         // Box Ruota della Fortuna
         this.updateDailyWheelBox();
+
+        // Box Risorse unificato
+        this.updateRisorseBox();
+
+        // Aggiorna visibilita' admin nel menu
+        this.updateAdminMenuVisibility();
 
         // Aggiorna il layout della griglia in base ai bottoni visibili
         this.updateGridLayout();
@@ -574,6 +582,162 @@ window.DashboardFeatures = {
             } else {
                 btn.classList.add('hidden');
             }
+        }
+    },
+
+    // ========================================
+    // MENU HAMBURGER
+    // ========================================
+
+    /**
+     * Inizializza il menu hamburger nella dashboard
+     */
+    initHamburgerMenu() {
+        const menuBtn = document.getElementById('dashboard-menu-btn');
+        const dropdown = document.getElementById('dashboard-menu-dropdown');
+
+        if (!menuBtn || !dropdown) return;
+
+        // Toggle menu
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Chiudi menu cliccando fuori
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== menuBtn) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Setup azioni menu
+        this.setupMenuActions();
+
+        // Mostra pannello admin se squadra admin
+        this.updateAdminMenuVisibility();
+    },
+
+    /**
+     * Setup azioni dei bottoni menu
+     */
+    setupMenuActions() {
+        const dropdown = document.getElementById('dashboard-menu-dropdown');
+
+        // Tutorial
+        document.getElementById('menu-tutorial')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            window.Tutorial?.start();
+        });
+
+        // Changelog
+        document.getElementById('menu-changelog')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            window.Changelog?.showPlayers();
+        });
+
+        // Cambia Password
+        document.getElementById('menu-password')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            const modal = document.getElementById('change-password-modal');
+            if (modal) modal.classList.remove('hidden');
+        });
+
+        // Pannello Admin
+        document.getElementById('menu-admin-panel')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent) window.showScreen(adminContent);
+        });
+
+        // Logout
+        document.getElementById('menu-logout')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            const loginBox = document.getElementById('login-box');
+            if (loginBox) window.showScreen(loginBox);
+        });
+
+        // Elimina Squadra
+        document.getElementById('menu-delete-team')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            // Trigger il click sul bottone nascosto originale
+            document.getElementById('btn-delete-team')?.click();
+        });
+    },
+
+    /**
+     * Aggiorna visibilita' opzione admin nel menu
+     */
+    updateAdminMenuVisibility() {
+        const menuAdminPanel = document.getElementById('menu-admin-panel');
+        if (!menuAdminPanel) return;
+
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        const teamName = teamData?.name;
+        const isAdmin = window.isTeamAdmin?.(teamName, teamData) || false;
+
+        if (isAdmin) {
+            menuAdminPanel.classList.remove('hidden');
+        } else {
+            menuAdminPanel.classList.add('hidden');
+        }
+    },
+
+    // ========================================
+    // BOX RISORSE
+    // ========================================
+
+    /**
+     * Aggiorna il box risorse unificato (CS, CSS, Pacchetti)
+     */
+    async updateRisorseBox() {
+        const teamData = window.InterfacciaCore?.currentTeamData;
+        const teamId = window.InterfacciaCore?.currentTeamId;
+
+        // Aggiorna CS
+        const csEl = document.getElementById('risorse-cs');
+        if (csEl && teamData) {
+            const cs = teamData.budget || 0;
+            csEl.textContent = cs.toLocaleString('it-IT');
+        }
+
+        // Aggiorna CSS
+        const cssEl = document.getElementById('risorse-css');
+        if (cssEl && teamData) {
+            const css = teamData.creditiSuperSeri || 0;
+            cssEl.textContent = css;
+        }
+
+        // Aggiorna Pacchetti Figurine
+        const pacchettiBox = document.getElementById('risorse-pacchetti');
+        const pacchettiCount = document.getElementById('risorse-pacchetti-count');
+
+        if (pacchettiBox && window.FeatureFlags?.isEnabled('figurine')) {
+            pacchettiBox.classList.remove('hidden');
+            pacchettiBox.classList.add('flex');
+
+            // Verifica se pacchetto gratis disponibile
+            if (teamId && window.FigurineSystem) {
+                try {
+                    const canOpen = await window.FigurineSystem.canOpenFreePackByTeamId(teamId);
+                    if (pacchettiCount) {
+                        pacchettiCount.textContent = canOpen ? 'Gratis!' : 'Album';
+                        pacchettiCount.className = canOpen
+                            ? 'text-green-400 font-bold animate-pulse'
+                            : 'text-purple-400 font-bold';
+                    }
+                } catch (e) {
+                    if (pacchettiCount) pacchettiCount.textContent = 'Album';
+                }
+            }
+
+            // Click per aprire album
+            pacchettiBox.onclick = () => {
+                if (window.FigurineUI) window.FigurineUI.open();
+            };
+        } else if (pacchettiBox) {
+            pacchettiBox.classList.add('hidden');
+            pacchettiBox.classList.remove('flex');
         }
     }
 };

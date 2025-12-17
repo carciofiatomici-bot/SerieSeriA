@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.19',
+    currentVersion: '2.2.20',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,20 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.20',
+            date: '2025-12-18',
+            time: '14:00',
+            title: 'Riorganizzazione Dashboard',
+            changes: [
+                { text: 'Nuovo box Risorse in alto: CS, CSS e pacchetti figurine insieme', adminOnly: false },
+                { text: 'Toggle partecipazione integrati nei bottoni Competizioni', adminOnly: false },
+                { text: 'Menu hamburger nell\'header per Tutorial, Changelog, Password, Logout', adminOnly: false },
+                { text: 'Dashboard piu compatta e organizzata', adminOnly: false },
+                { text: 'Fix figurine: modal varianti ora appare correttamente sopra', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.19',
             date: '2025-12-18',
