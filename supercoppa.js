@@ -62,15 +62,14 @@ window.Supercoppa = {
         const { appId, doc, getDoc } = window.firestoreTools;
         const db = window.db;
 
-        // Carica classifica campionato
-        const leaderboardRef = doc(db, `artifacts/${appId}/public/data/leaderboard`, 'standings');
-        const leaderboardDoc = await getDoc(leaderboardRef);
+        // Carica classifica campionato (usando LeaderboardListener)
+        const leaderboardData = await window.LeaderboardListener.getLeaderboard();
 
-        if (!leaderboardDoc.exists()) {
+        if (!leaderboardData?.standings) {
             throw new Error('Classifica campionato non trovata.');
         }
 
-        const standings = leaderboardDoc.data().standings || [];
+        const standings = leaderboardData.standings;
         if (standings.length < 2) {
             throw new Error('Servono almeno 2 squadre in classifica.');
         }

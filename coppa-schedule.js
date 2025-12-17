@@ -210,10 +210,9 @@ window.CoppaSchedule = {
             return [];
         }
 
-        // Carica la classifica del campionato
-        const leaderboardRef = doc(db, `artifacts/${appId}/public/data/leaderboard`, 'standings');
-        const leaderboardDoc = await getDoc(leaderboardRef);
-        const standings = leaderboardDoc.exists() ? leaderboardDoc.data().standings || [] : [];
+        // Carica la classifica del campionato (usando LeaderboardListener)
+        const leaderboardData = await window.LeaderboardListener.getLeaderboard();
+        const standings = leaderboardData?.standings || [];
 
         // Mappa posizioni classifica
         const positionMap = {};

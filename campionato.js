@@ -77,14 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
         const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
-        
+
 
         try {
-            const leaderboardDoc = await getDoc(leaderboardDocRef);
-            if (!leaderboardDoc.exists() || !leaderboardDoc.data().standings || leaderboardDoc.data().standings.length === 0) {
+            // Usa LeaderboardListener per cache condivisa
+            const leaderboardData = await window.LeaderboardListener.getLeaderboard();
+            if (!leaderboardData?.standings || leaderboardData.standings.length === 0) {
                  throw new Error("Classifica non trovata o vuota. Impossibile assegnare i premi.");
             }
-            const standings = leaderboardDoc.data().standings;
+            const standings = leaderboardData.standings;
             
             const result = await window.ChampionshipRewards.applySeasonEndRewards(standings);
             const { totalTeams, levelUps } = result;

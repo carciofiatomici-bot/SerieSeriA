@@ -68,15 +68,14 @@ window.DraftTurns = {
                 });
             });
 
-            // 2. Prova a caricare la classifica
-            const leaderboardDocRef = doc(db, paths.LEADERBOARD_COLLECTION_PATH, 'standings');
-            const leaderboardDoc = await getDoc(leaderboardDocRef);
+            // 2. Prova a caricare la classifica (usando LeaderboardListener)
+            const leaderboardData = await window.LeaderboardListener.getLeaderboard();
 
             let orderedTeams = [];
 
-            if (leaderboardDoc.exists() && leaderboardDoc.data().standings && leaderboardDoc.data().standings.length > 0) {
+            if (leaderboardData?.standings && leaderboardData.standings.length > 0) {
                 // Usa la classifica esistente
-                const standings = leaderboardDoc.data().standings;
+                const standings = leaderboardData.standings;
                 console.log("Generazione ordine draft basata sulla classifica.");
 
                 // Ordina per posizione in classifica (1 = primo, N = ultimo)

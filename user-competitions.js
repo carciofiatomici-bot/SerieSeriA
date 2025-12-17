@@ -91,15 +91,9 @@ window.UserCompetitions = {
                 cache?.set('schedule', 'full', scheduleData, cache.TTL.SCHEDULE);
             }
 
-            // Carica classifica (con cache 2 min)
-            let standings = cache?.get('leaderboard', 'standings');
-            if (!standings) {
-                const leaderboardPath = `artifacts/${appId}/public/data/leaderboard/standings`;
-                const leaderboardRef = doc(db, leaderboardPath);
-                const leaderboardSnap = await getDoc(leaderboardRef);
-                standings = leaderboardSnap.exists() ? leaderboardSnap.data().standings : [];
-                cache?.set('leaderboard', 'standings', standings, cache.TTL.LEADERBOARD);
-            }
+            // Carica classifica (usando LeaderboardListener per cache condivisa)
+            const leaderboardData = await window.LeaderboardListener.getLeaderboard();
+            const standings = leaderboardData?.standings || [];
 
             // Trova prossima partita
             let nextMatch = null;

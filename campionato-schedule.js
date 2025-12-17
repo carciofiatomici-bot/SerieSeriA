@@ -133,6 +133,11 @@ window.ChampionshipSchedule = {
             lastUpdated: new Date().toISOString()
         });
 
+        // Invalida cache LeaderboardListener dopo inizializzazione
+        if (window.LeaderboardListener) {
+            window.LeaderboardListener.invalidateCache();
+        }
+
         // Resetta le statistiche stagionali (goal, assist, clean sheets)
         if (window.PlayerSeasonStats) {
             await window.PlayerSeasonStats.resetSeasonStats(teams);
