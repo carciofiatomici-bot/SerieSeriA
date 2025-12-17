@@ -20,6 +20,12 @@ window.AutomazioneSimulazioni = {
     SIMULATION_MINUTE: 30,
 
     /**
+     * Orario calcolo schedina (21:30 - 1 ora dopo simulazione)
+     */
+    SCHEDINA_HOUR: 21,
+    SCHEDINA_MINUTE: 30,
+
+    /**
      * Carica lo stato dell'automazione dal database
      */
     async loadAutomationState() {
@@ -355,6 +361,100 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
+     * Verifica se e' il momento di calcolare la schedina (21:30)
+     */
+    isSchedinaTime() {
+        const now = new Date();
+        return now.getHours() === this.SCHEDINA_HOUR &&
+               now.getMinutes() === this.SCHEDINA_MINUTE;
+    },
+
+    /**
+     * Verifica se la schedina di oggi e' gia' stata processata
+     */
+    async hasProcessedSchedinaToday() {
+        const state = await this.loadAutomationState();
+        if (!state || !state.lastSchedinaProcessDate) return false;
+
+        const lastDate = new Date(state.lastSchedinaProcessDate);
+        const today = new Date();
+
+        return lastDate.getFullYear() === today.getFullYear() &&
+               lastDate.getMonth() === today.getMonth() &&
+               lastDate.getDate() === today.getDate();
+    },
+
+    /**
+     * Processa i risultati della schedina (calcola risultati e assegna premi)
+     */
+    async processSchedina() {
+        if (!window.Schedina || !window.FeatureFlags?.isEnabled('schedina')) {
+            console.log('[Automazione] Schedina non abilitata, skip processo');
+            return { success: false, reason: 'disabled' };
+        }
+
+        try {
+            // Trova l'ultima giornata giocata
+            const schedule = await window.ScheduleListener?.getSchedule(true);
+            if (!schedule?.matches) {
+                console.log('[Automazione] Schedule non disponibile per schedina');
+                return { success: false, reason: 'no_schedule' };
+            }
+
+            // Trova l'ultima giornata con risultati
+            let lastPlayedRound = null;
+            for (let i = schedule.matches.length - 1; i >= 0; i--) {
+                const round = schedule.matches[i];
+                const playedMatches = round.matches.filter(m => m.result);
+                if (playedMatches.length > 0) {
+                    lastPlayedRound = round.round;
+                    break;
+                }
+            }
+
+            if (!lastPlayedRound) {
+                console.log('[Automazione] Nessuna giornata giocata per schedina');
+                return { success: false, reason: 'no_played_round' };
+            }
+
+            console.log(`[Automazione] Calcolo risultati schedina per giornata ${lastPlayedRound}...`);
+
+            // Calcola risultati
+            const calcResult = await window.Schedina.calculateResults(lastPlayedRound);
+            if (!calcResult.success) {
+                console.error('[Automazione] Errore calcolo schedina:', calcResult.error);
+                return { success: false, reason: 'calc_error', error: calcResult.error };
+            }
+
+            console.log(`[Automazione] Risultati calcolati: ${calcResult.participants?.length || 0} partecipanti`);
+
+            // Assegna premi
+            const rewardResult = await window.Schedina.applyRewards(lastPlayedRound);
+            console.log(`[Automazione] Premi assegnati: ${rewardResult.rewarded} squadre`);
+
+            // Aggiorna stato
+            const state = await this.loadAutomationState() || {};
+            await this.saveAutomationState({
+                ...state,
+                lastSchedinaProcessDate: new Date().toISOString(),
+                lastSchedinaRound: lastPlayedRound,
+                lastSchedinaParticipants: calcResult.participants?.length || 0,
+                lastSchedinaRewarded: rewardResult.rewarded
+            });
+
+            return {
+                success: true,
+                round: lastPlayedRound,
+                participants: calcResult.participants?.length || 0,
+                rewarded: rewardResult.rewarded
+            };
+        } catch (error) {
+            console.error('[Automazione] Errore processo schedina:', error);
+            return { success: false, reason: 'exception', error: error.message };
+        }
+    },
+
+    /**
      * Verifica se la simulazione di oggi e' gia' stata eseguita
      */
     async hasSimulatedToday() {
@@ -376,12 +476,21 @@ window.AutomazioneSimulazioni = {
         const state = await this.loadAutomationState();
         if (!state || !state.isEnabled) return;
 
-        // Verifica se e' l'ora giusta e non abbiamo gia' simulato oggi
+        // Verifica se e' l'ora giusta e non abbiamo gia' simulato oggi (20:30)
         if (this.isSimulationTime()) {
             const alreadySimulated = await this.hasSimulatedToday();
             if (!alreadySimulated) {
                 console.log('[Automazione] Esecuzione simulazione automatica alle 20:30');
                 await this.executeSimulation();
+            }
+        }
+
+        // Verifica se e' l'ora di processare la schedina (21:30 - 1 ora dopo simulazione)
+        if (this.isSchedinaTime()) {
+            const alreadyProcessed = await this.hasProcessedSchedinaToday();
+            if (!alreadyProcessed) {
+                console.log('[Automazione] Processo schedina automatico alle 21:30');
+                await this.processSchedina();
             }
         }
     },

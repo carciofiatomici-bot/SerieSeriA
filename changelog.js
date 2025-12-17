@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.4',
+    currentVersion: '2.2.5',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,22 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.5',
+            date: '2025-12-17',
+            time: '14:00',
+            title: 'Automazione Schedina + Fix UI Mobile',
+            changes: [
+                { text: 'NUOVO: I premi della schedina vengono assegnati automaticamente 1 ora dopo la partita', adminOnly: false },
+                { text: 'NUOVO: Timer countdown "Pronostici chiudono tra:" nella schedina', adminOnly: false },
+                { text: 'I pronostici si chiudono automaticamente 1 ora prima della simulazione', adminOnly: false },
+                { text: 'Notifica automatica quando vinci premi dalla schedina', adminOnly: false },
+                { text: 'FIX: Icona statistiche giocatore riposizionata correttamente su mobile', adminOnly: false },
+                { text: 'NUOVO: GitHub Action per calcolo automatico schedina alle 21:30', adminOnly: true },
+                { text: 'Automazione schedina integrata nel sistema di simulazione', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.4',
             date: '2025-12-17',
