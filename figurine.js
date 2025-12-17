@@ -86,6 +86,16 @@ window.FigurineSystem = {
 
             if (docSnap.exists()) {
                 this._config = { ...this.getDefaultConfig(), ...docSnap.data() };
+
+                // Applica le probabilita salvate su Firestore
+                if (this._config.rarityProbabilities) {
+                    const probs = this._config.rarityProbabilities;
+                    if (probs.normale !== undefined) this.RARITIES.normale.probability = probs.normale / 100;
+                    if (probs.evoluto !== undefined) this.RARITIES.evoluto.probability = probs.evoluto / 100;
+                    if (probs.alternative !== undefined) this.RARITIES.alternative.probability = probs.alternative / 100;
+                    if (probs.ultimate !== undefined) this.RARITIES.ultimate.probability = probs.ultimate / 100;
+                    console.log('[Figurine] Probabilita caricate da Firestore:', probs);
+                }
             } else {
                 this._config = this.getDefaultConfig();
             }
