@@ -104,8 +104,31 @@ window.PlayerSeasonStatsUI = {
     },
 
     /**
-     * Renderizza il riepilogo della stagione.
+     * Resetta le statistiche stagionali (solo admin).
      */
+    async resetSeasonStats() {
+        if (!confirm('Sei sicuro di voler resettare tutte le statistiche stagionali?\n\nGoal, assist e clean sheets torneranno a 0.')) {
+            return;
+        }
+
+        try {
+            await window.PlayerSeasonStats.resetSeasonStats([]);
+            if (window.Toast) {
+                window.Toast.success('Statistiche stagionali resettate!');
+            } else {
+                alert('Statistiche stagionali resettate!');
+            }
+            // Ricarica il pannello
+            const container = document.getElementById('season-individual-stats-container');
+            if (container) {
+                this.renderStatsPanel('season-individual-stats-container');
+            }
+        } catch (error) {
+            console.error('Errore reset stats:', error);
+            alert('Errore: ' + error.message);
+        }
+    },
+
     renderSeasonSummary(summary) {
         if (!summary) return '';
 
@@ -121,10 +144,21 @@ window.PlayerSeasonStatsUI = {
             ? `${summary.topCleanSheet.playerName} (${summary.topCleanSheet.cleanSheets} CS)`
             : 'Nessuno';
 
+        // Mostra pulsante reset solo per admin
+        const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
+        const resetButtonHtml = isAdmin ? `
+            <button onclick="window.PlayerSeasonStatsUI.resetSeasonStats()"
+                    class="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition"
+                    title="Resetta statistiche stagionali">
+                🔄 Reset
+            </button>
+        ` : '';
+
         return `
             <div class="p-4 bg-gradient-to-r from-purple-900 to-pink-900 rounded-lg border-2 border-purple-500 shadow-lg">
                 <h3 class="text-xl font-bold text-purple-300 mb-4 flex items-center">
                     <span class="mr-2">🏅</span> Premi Individuali Stagionali
+                    ${resetButtonHtml}
                 </h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-black bg-opacity-30 rounded-lg p-3 text-center">

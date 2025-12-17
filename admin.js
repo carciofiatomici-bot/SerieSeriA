@@ -757,17 +757,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnAdminLeaderboard) {
             btnAdminLeaderboard.addEventListener('click', () => {
                  window.showScreen(leaderboardContent);
-                 if (window.loadLeaderboard) window.InterfacciaDashboard && window.InterfacciaDashboard.loadLeaderboard && window.InterfacciaDashboard.loadLeaderboard();
-                 document.getElementById('leaderboard-back-button').onclick = () => window.showScreen(adminContent);
+                 if (window.InterfacciaDashboard?.loadLeaderboard) {
+                     window.InterfacciaDashboard.loadLeaderboard();
+                 }
+                 const backBtn = document.getElementById('leaderboard-back-button');
+                 if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
             });
         }
-        
+
         const btnAdminSchedule = document.getElementById('btn-admin-schedule');
         if (btnAdminSchedule) {
             btnAdminSchedule.addEventListener('click', () => {
                  window.showScreen(scheduleContent);
-                 if (window.InterfacciaDashboard?.loadSchedule) window.InterfacciaDashboard.loadSchedule();
-                 document.getElementById('schedule-back-button').onclick = () => window.showScreen(adminContent);
+                 if (window.InterfacciaDashboard?.loadSchedule) {
+                     window.InterfacciaDashboard.loadSchedule();
+                 }
+                 const backBtn = document.getElementById('schedule-back-button');
+                 if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
             });
         }
         
