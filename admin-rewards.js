@@ -13,8 +13,11 @@ window.AdminRewards = {
     // VALORI DEFAULT
     // ====================================================================
     DEFAULT_CONFIG: {
-        // FLAG GLOBALE - Blocca tutti i reward
-        rewardsDisabled: false,  // Se true, nessun reward viene assegnato
+        // FLAG GLOBALE - Blocca tutti i reward monetari (CS, CSS)
+        rewardsDisabled: false,  // Se true, nessun reward monetario viene assegnato
+
+        // FLAG EXP - Blocca solo l'EXP (separato dai reward monetari)
+        expDisabled: false,      // Se true, nessun EXP viene assegnato
 
         // Reward CS - Partite
         rewardGoalCS: 5,
@@ -68,11 +71,19 @@ window.AdminRewards = {
     },
 
     /**
-     * Verifica se i reward sono disabilitati
-     * @returns {boolean} true se i reward sono bloccati
+     * Verifica se i reward monetari (CS, CSS) sono disabilitati
+     * @returns {boolean} true se i reward monetari sono bloccati
      */
     areRewardsDisabled() {
         return this.get('rewardsDisabled') === true;
+    },
+
+    /**
+     * Verifica se l'EXP e' disabilitata (separato dai reward monetari)
+     * @returns {boolean} true se l'EXP e' bloccata
+     */
+    isExpDisabled() {
+        return this.get('expDisabled') === true;
     },
 
     // ====================================================================
@@ -166,17 +177,17 @@ window.AdminRewards = {
                 <!-- Messaggio -->
                 <div id="rewards-message" class="hidden p-3 rounded-lg text-center"></div>
 
-                <!-- TOGGLE GLOBALE - Disabilita tutti i reward -->
+                <!-- TOGGLE GLOBALE - Disabilita reward monetari (CS, CSS) -->
                 <div class="bg-gray-700 p-4 rounded-lg border-2 ${config.rewardsDisabled ? 'border-red-500' : 'border-green-500'}">
                     <div class="flex items-center justify-between">
                         <div>
                             <h4 class="text-lg font-bold ${config.rewardsDisabled ? 'text-red-400' : 'text-green-400'}">
-                                ${config.rewardsDisabled ? '🚫 Reward DISABILITATI' : '✅ Reward ATTIVI'}
+                                ${config.rewardsDisabled ? '🚫 Reward Monetari DISABILITATI' : '✅ Reward Monetari ATTIVI'}
                             </h4>
                             <p class="text-sm text-gray-400 mt-1">
                                 ${config.rewardsDisabled
-                                    ? 'Nessun reward (CS, CSS, EXP) verra assegnato durante le partite'
-                                    : 'I reward vengono assegnati normalmente durante le partite'}
+                                    ? 'Nessun reward monetario (CS, CSS) verra assegnato durante le partite'
+                                    : 'I reward monetari (CS, CSS) vengono assegnati normalmente'}
                             </p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -185,6 +196,30 @@ window.AdminRewards = {
                             <div class="w-14 h-7 bg-green-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
                             <span class="ml-3 text-sm font-medium text-gray-300">
                                 ${config.rewardsDisabled ? 'OFF' : 'ON'}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- TOGGLE EXP - Disabilita solo l'EXP dei giocatori -->
+                <div class="bg-gray-700 p-4 rounded-lg border-2 ${config.expDisabled ? 'border-orange-500' : 'border-indigo-500'}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold ${config.expDisabled ? 'text-orange-400' : 'text-indigo-400'}">
+                                ${config.expDisabled ? '🚫 EXP Giocatori DISABILITATA' : '✅ EXP Giocatori ATTIVA'}
+                            </h4>
+                            <p class="text-sm text-gray-400 mt-1">
+                                ${config.expDisabled
+                                    ? 'I giocatori non guadagnano EXP durante le partite'
+                                    : 'I giocatori guadagnano EXP normalmente durante le partite'}
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="reward-expDisabled" ${config.expDisabled ? 'checked' : ''}
+                                   class="sr-only peer">
+                            <div class="w-14 h-7 bg-indigo-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-300">
+                                ${config.expDisabled ? 'OFF' : 'ON'}
                             </span>
                         </label>
                     </div>
@@ -388,10 +423,16 @@ window.AdminRewards = {
 
         const config = {};
 
-        // Raccogli il flag rewardsDisabled (checkbox)
+        // Raccogli il flag rewardsDisabled (checkbox per reward monetari)
         const rewardsDisabledCheckbox = document.getElementById('reward-rewardsDisabled');
         if (rewardsDisabledCheckbox) {
             config.rewardsDisabled = rewardsDisabledCheckbox.checked;
+        }
+
+        // Raccogli il flag expDisabled (checkbox separato per EXP)
+        const expDisabledCheckbox = document.getElementById('reward-expDisabled');
+        if (expDisabledCheckbox) {
+            config.expDisabled = expDisabledCheckbox.checked;
         }
 
         // Raccogli i campi numerici
