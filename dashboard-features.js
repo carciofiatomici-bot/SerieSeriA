@@ -688,11 +688,28 @@ window.DashboardFeatures = {
     // ========================================
 
     /**
-     * Aggiorna il box risorse unificato (CS, CSS, Album, Ruota)
+     * Aggiorna il box risorse unificato (Negozio, CS, CSS, Album, Ruota)
      */
     async updateRisorseBox() {
         const teamData = window.InterfacciaCore?.currentTeamData;
         const teamId = window.InterfacciaCore?.currentTeamId;
+
+        // Aggiorna Negozio CSS
+        const negozioBox = document.getElementById('risorse-negozio');
+        if (negozioBox && window.FeatureFlags?.isEnabled('creditiSuperSeri')) {
+            negozioBox.classList.remove('hidden');
+            negozioBox.classList.add('flex');
+
+            // Click per aprire negozio
+            negozioBox.onclick = () => {
+                if (window.CreditiSuperSeriUI) {
+                    window.CreditiSuperSeriUI.openShop();
+                }
+            };
+        } else if (negozioBox) {
+            negozioBox.classList.add('hidden');
+            negozioBox.classList.remove('flex');
+        }
 
         // Aggiorna CS
         const csEl = document.getElementById('risorse-cs');
