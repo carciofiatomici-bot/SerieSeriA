@@ -60,7 +60,7 @@ window.FigurineSystem = {
         },
         'flavio': {
             normale: 'elficario.jpg',
-            evoluto: null, // Non esiste
+            evoluto: 'elficario evoluto.jpg',
             alternative: 'elficario alternative.jpg',
             ultimate: 'elficario ultimate.jpg'
         },
