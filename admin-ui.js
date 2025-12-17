@@ -116,250 +116,186 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- MENU A SCOMPARSA GESTIONE LEGA -->
-            <div class="mb-6">
-                <button id="btn-toggle-league-management" class="w-full bg-gradient-to-r from-green-600 via-purple-600 to-yellow-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+            <!-- ========== 1. GESTIONE COMPETIZIONI ========== -->
+            <div class="mb-4">
+                <button id="btn-toggle-league-management" class="w-full bg-gradient-to-r from-green-600 via-purple-600 to-yellow-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
                     <span class="flex items-center">
-                        <i class="fas fa-trophy mr-3"></i> Gestione Lega
+                        <i class="fas fa-trophy mr-3"></i> Gestione Competizioni
                     </span>
                     <i id="league-management-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
                 </button>
 
-                <!-- Contenuto a scomparsa -->
-                <div id="league-management-content" class="hidden mt-4 space-y-6 transition-all duration-300">
-                    <!-- SEZIONE SERIESERIA -->
-                    <div>
-                        <h3 class="text-xl font-bold text-green-400 mb-3 flex items-center">
-                            <span class="mr-2">🏅</span> SerieSeriA
-                        </h3>
-                        <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500">
-                            <p class="text-gray-400 text-sm mb-3">Gestisci il campionato principale</p>
-                            <div class="grid grid-cols-3 gap-4">
-                                <button id="btn-admin-leaderboard"
-                                        class="bg-green-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-500 transition duration-150">
-                                    <i class="fas fa-chart-bar mr-2"></i> Classifica
-                                </button>
-                                <button id="btn-admin-schedule"
-                                        class="bg-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-600 transition duration-150">
-                                    <i class="fas fa-calendar-alt mr-2"></i> Calendario
-                                </button>
-                                <button id="btn-generate-championship-schedule"
-                                        class="bg-green-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-700 transition duration-150">
-                                    <i class="fas fa-plus-circle mr-2"></i> Genera Calendario
-                                </button>
-                            </div>
-                            <div id="serieseria-status-container" class="mt-4">
-                                <p class="text-gray-400 text-center text-sm">Caricamento stato campionato...</p>
-                            </div>
+                <div id="league-management-content" class="hidden mt-3 space-y-4 transition-all duration-300">
+                    <!-- SerieSeriA -->
+                    <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500">
+                        <h4 class="text-lg font-bold text-green-400 mb-3 flex items-center">🏅 SerieSeriA</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button id="btn-admin-leaderboard" class="bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-500 transition text-sm">
+                                <i class="fas fa-chart-bar mr-1"></i> Classifica
+                            </button>
+                            <button id="btn-admin-schedule" class="bg-green-700 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition text-sm">
+                                <i class="fas fa-calendar-alt mr-1"></i> Calendario
+                            </button>
+                            <button id="btn-generate-championship-schedule" class="bg-green-800 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition text-sm">
+                                <i class="fas fa-plus-circle mr-1"></i> Genera
+                            </button>
+                        </div>
+                        <div id="serieseria-status-container" class="mt-3">
+                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
                         </div>
                     </div>
 
-                    <!-- SEZIONE COPPA SERIA -->
-                    <div>
-                        <h3 class="text-xl font-bold text-purple-400 mb-3 flex items-center">
-                            <span class="mr-2">🏆</span> CoppaSeriA
-                        </h3>
-                        <div id="coppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-purple-500">
-                            <p class="text-gray-400 text-sm mb-3">Gestisci il torneo a eliminazione diretta</p>
-                            <div class="grid grid-cols-2 gap-4">
-                                <button id="btn-generate-cup-schedule"
-                                        class="bg-purple-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150">
-                                    <i class="fas fa-trophy mr-2"></i> Genera Calendario Coppa
-                                </button>
-                                <button id="btn-view-cup-bracket"
-                                        class="bg-purple-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-700 transition duration-150">
-                                    <i class="fas fa-sitemap mr-2"></i> Visualizza Tabellone
-                                </button>
-                            </div>
-                            <div id="coppa-status-container" class="mt-4">
-                                <p class="text-gray-400 text-center text-sm">Caricamento stato coppa...</p>
-                            </div>
+                    <!-- CoppaSeriA -->
+                    <div id="coppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-purple-500">
+                        <h4 class="text-lg font-bold text-purple-400 mb-3 flex items-center">🏆 CoppaSeriA</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="btn-generate-cup-schedule" class="bg-purple-600 text-white font-bold py-2 rounded-lg hover:bg-purple-500 transition text-sm">
+                                <i class="fas fa-trophy mr-1"></i> Genera Coppa
+                            </button>
+                            <button id="btn-view-cup-bracket" class="bg-purple-800 text-white font-bold py-2 rounded-lg hover:bg-purple-700 transition text-sm">
+                                <i class="fas fa-sitemap mr-1"></i> Tabellone
+                            </button>
+                        </div>
+                        <div id="coppa-status-container" class="mt-3">
+                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
                         </div>
                     </div>
 
-                    <!-- SEZIONE SUPERCOPPA -->
-                    <div>
-                        <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
-                            <span class="mr-2">⭐</span> SuperCoppaSeriA
-                        </h3>
-                        <div id="supercoppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-yellow-500">
-                            <p class="text-gray-400 text-sm mb-3">Campione vs Vincitore Coppa (o 2° classificato)</p>
-                            <!-- Il contenuto viene renderizzato da Supercoppa.renderAdminUI() -->
-                        </div>
+                    <!-- SuperCoppa -->
+                    <div id="supercoppa-admin-section" class="p-4 bg-gray-800 rounded-lg border border-yellow-500">
+                        <h4 class="text-lg font-bold text-yellow-400 mb-3 flex items-center">⭐ SuperCoppaSeriA</h4>
+                        <p class="text-gray-400 text-xs">Campione vs Vincitore Coppa</p>
                     </div>
-                </div>
-            </div>
 
-            <!-- MENU A SCOMPARSA AUTOMAZIONE SIMULAZIONI -->
-            <div class="mb-6">
-                <button id="btn-toggle-automation" class="w-full bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
-                    <span class="flex items-center">
-                        <i class="fas fa-robot mr-3"></i> Automazione Simulazioni
-                    </span>
-                    <i id="automation-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
-                </button>
-
-                <!-- Contenuto a scomparsa -->
-                <div id="automation-content" class="hidden mt-4 transition-all duration-300">
+                    <!-- Automazione -->
                     <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500">
-                        <p class="text-gray-400 text-sm mb-3">Simula automaticamente partite di Campionato e Coppa alle 20:30 in alternanza</p>
+                        <h4 class="text-lg font-bold text-teal-400 mb-3 flex items-center">🤖 Automazione Simulazioni</h4>
+                        <p class="text-gray-400 text-xs mb-2">Simula automaticamente alle 20:30</p>
                         <div id="automation-status-container">
-                            <p class="text-gray-400 text-center text-sm">Caricamento stato automazione...</p>
+                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- MENU A SCOMPARSA UTILITA ADMIN -->
-            <div class="mb-6">
-                <button id="btn-toggle-admin-utils" class="w-full bg-gradient-to-r from-red-700 to-red-500 text-white font-extrabold py-4 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+            <!-- ========== 2. AZIONI STAGIONE ========== -->
+            <div class="mb-4">
+                <button id="btn-toggle-admin-utils" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
                     <span class="flex items-center">
-                        <i class="fas fa-tools mr-3"></i> Utilita Admin
+                        <i class="fas fa-rocket mr-3"></i> Azioni Stagione
                     </span>
                     <i id="admin-utils-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
                 </button>
 
-                <!-- Contenuto a scomparsa -->
-                <div id="admin-utils-content" class="hidden mt-4 space-y-4 transition-all duration-300">
-                    <!-- BOTTONI PRINCIPALI -->
-                    <div class="grid grid-cols-1 gap-4">
-                        <button id="btn-avvia-stagione"
-                                class="bg-gradient-to-r from-green-600 to-teal-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-teal-400 transition duration-150">
+                <div id="admin-utils-content" class="hidden mt-3 p-4 bg-gray-800 rounded-lg border border-teal-500 transition-all duration-300">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-avvia-stagione" class="bg-gradient-to-r from-green-600 to-teal-500 text-white font-bold py-3 rounded-lg hover:from-green-500 hover:to-teal-400 transition col-span-2">
                             🚀 Avvia Stagione
                         </button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <button id="btn-create-objects"
-                                class="bg-emerald-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-emerald-600 transition duration-150">
+                        <button id="btn-create-objects" class="bg-emerald-700 text-white font-bold py-2 rounded-lg hover:bg-emerald-600 transition text-sm">
                             🎒 Creazione Oggetti
                         </button>
-                        <button id="btn-test-simulation-new-rules"
-                                class="bg-purple-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-purple-600 transition duration-150">
+                        <button id="btn-test-simulation-new-rules" class="bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-600 transition text-sm">
                             🧪 Test Simulazione
                         </button>
-                    </div>
-                    <div class="grid grid-cols-1 gap-4 mt-4">
-                        <button id="btn-reset-hall-of-fame"
-                                class="bg-red-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-600 transition duration-150">
+                        <button id="btn-reset-hall-of-fame" class="bg-orange-700 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition text-sm col-span-2">
                             🏛️ Reset HoF Stats
                         </button>
                     </div>
+                    <p class="text-gray-400 text-xs mt-3 text-center">Squadre partecipanti: <span class="font-bold text-green-400">${participatingTeamsCount}</span></p>
+                </div>
+            </div>
 
-                    <!-- BOTTONE INGRANAGGIO PER OPZIONI AVANZATE -->
-                    <div class="mt-4 border-t border-gray-600 pt-4">
-                        <button id="btn-toggle-advanced-utils"
-                                class="w-full bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg hover:bg-gray-600 transition duration-150 flex items-center justify-center gap-2">
-                            <span id="advanced-utils-icon">⚙️</span>
-                            <span id="advanced-utils-text">Mostra Opzioni Avanzate</span>
+            <!-- ========== 3. CONFIGURAZIONI ========== -->
+            <div class="mb-4">
+                <button id="btn-toggle-configs" class="w-full bg-gradient-to-r from-cyan-600 to-blue-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <i class="fas fa-cogs mr-3"></i> Configurazioni
+                    </span>
+                    <i id="configs-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <div id="configs-content" class="hidden mt-3 p-4 bg-gray-800 rounded-lg border border-cyan-500 transition-all duration-300">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-formulas-config" class="bg-gradient-to-r from-cyan-700 to-blue-600 text-white font-bold py-2 rounded-lg hover:from-cyan-600 hover:to-blue-500 transition text-sm">
+                            📐 Formule Costi
+                        </button>
+                        <button id="btn-rewards-config" class="bg-gradient-to-r from-emerald-700 to-green-600 text-white font-bold py-2 rounded-lg hover:from-emerald-600 hover:to-green-500 transition text-sm">
+                            🏆 Reward
+                        </button>
+                        <button id="btn-sponsors-config" class="bg-gradient-to-r from-yellow-700 to-amber-600 text-white font-bold py-2 rounded-lg hover:from-yellow-600 hover:to-amber-500 transition text-sm">
+                            🤝 Sponsor
+                        </button>
+                        <button id="btn-media-config" class="bg-gradient-to-r from-pink-700 to-rose-600 text-white font-bold py-2 rounded-lg hover:from-pink-600 hover:to-rose-500 transition text-sm">
+                            📺 Media
+                        </button>
+                        <button id="btn-wheel-config" class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white font-bold py-2 rounded-lg hover:from-orange-500 hover:to-yellow-400 transition text-sm">
+                            🎡 Ruota
+                        </button>
+                        <button id="btn-schedina-config" class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 rounded-lg hover:from-green-500 hover:to-emerald-400 transition text-sm">
+                            🎯 Schedina
+                        </button>
+                        <button id="btn-figurine-config" class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition text-sm col-span-2">
+                            🃏 Figurine
                         </button>
                     </div>
+                </div>
+            </div>
 
-                    <!-- SEZIONE OPZIONI AVANZATE (nascosta di default) -->
-                    <div id="advanced-utils-section" class="hidden space-y-4 p-4 bg-gray-800/50 rounded-lg border border-gray-600">
-                        <p class="text-xs text-gray-400 text-center mb-2">Strumenti avanzati per la gestione del sistema</p>
+            <!-- ========== 4. GESTIONE DATI ========== -->
+            <div class="mb-4">
+                <button id="btn-toggle-data-management" class="w-full bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <i class="fas fa-database mr-3"></i> Gestione Dati
+                    </span>
+                    <i id="data-management-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
 
-                        <!-- Configurazioni -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <button id="btn-formulas-config"
-                                    class="bg-gradient-to-r from-cyan-700 to-blue-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-cyan-600 hover:to-blue-500 transition duration-150 text-sm">
-                                📐 Formule Costi
-                            </button>
-                            <button id="btn-rewards-config"
-                                    class="bg-gradient-to-r from-emerald-700 to-green-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-emerald-600 hover:to-green-500 transition duration-150 text-sm">
-                                🏆 Config Reward
-                            </button>
-                            <button id="btn-sponsors-config"
-                                    class="bg-gradient-to-r from-yellow-700 to-amber-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-yellow-600 hover:to-amber-500 transition duration-150 text-sm">
-                                🤝 Config Sponsor
-                            </button>
-                            <button id="btn-media-config"
-                                    class="bg-gradient-to-r from-pink-700 to-rose-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-pink-600 hover:to-rose-500 transition duration-150 text-sm">
-                                📺 Config Media
-                            </button>
-                            <button id="btn-wheel-config"
-                                    class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-500 hover:to-yellow-400 transition duration-150 text-sm">
-                                🎡 Config Ruota
-                            </button>
-                            <button id="btn-schedina-config"
-                                    class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 text-sm">
-                                🎯 Config Schedina
-                            </button>
-                            <button id="btn-figurine-config"
-                                    class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-purple-500 hover:to-indigo-400 transition duration-150 text-sm">
-                                🃏 Config Figurine
-                            </button>
-                        </div>
-
-                        <!-- Contratti -->
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500 mb-2">Gestione Contratti</p>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button id="btn-add-contracts-all"
-                                        class="bg-gradient-to-r from-blue-700 to-indigo-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-blue-600 hover:to-indigo-500 transition duration-150 text-sm">
-                                    📝 +1
-                                </button>
-                                <button id="btn-remove-contracts-all"
-                                        class="bg-gradient-to-r from-orange-700 to-red-600 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-600 hover:to-red-500 transition duration-150 text-sm">
-                                    📝 -1
-                                </button>
-                                <button id="btn-reset-contracts-all"
-                                        class="bg-gradient-to-r from-gray-600 to-gray-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-gray-500 hover:to-gray-400 transition duration-150 text-sm">
-                                    📝 Reset 1
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Icone -->
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500 mb-2">Gestione Icone</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button id="btn-fix-icone-ability"
-                                        class="bg-yellow-700 text-white font-bold py-2 rounded-lg shadow-xl hover:bg-yellow-600 transition duration-150 text-sm">
-                                    👑 Fix Icone
-                                </button>
-                                <button id="btn-set-icone-level"
-                                        class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-yellow-500 hover:to-amber-400 transition duration-150 text-sm">
-                                    👑 Set Livello
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Figurine -->
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500 mb-2">Gestione Figurine</p>
-                            <div class="grid grid-cols-1 gap-2">
-                                <button id="btn-reset-figurine-timer"
-                                        class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 text-sm">
-                                    🃏 Reset Timer Pacchetti Gratis
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Sincronizzazione Dati -->
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500 mb-2">Sincronizzazione Dati</p>
-                            <div class="grid grid-cols-1 gap-2">
-                                <button id="btn-data-sync"
-                                        class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-blue-500 hover:to-cyan-400 transition duration-150 text-sm">
-                                    🔄 Sincronizza Dati Firebase
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Emergenza -->
-                        <div class="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600">
-                            <p class="text-xs text-red-400 font-bold mb-2">⚠️ Emergenza</p>
-                            <p class="text-xs text-gray-400 mb-2">Annulla Campionato e Coppa senza premi.</p>
-                            <button id="btn-emergency-cancel-competitions"
-                                    class="w-full bg-red-700 text-white font-bold py-2 rounded-lg shadow-xl hover:bg-red-600 transition duration-150 text-sm border border-red-500">
-                                🚨 Annulla Competizioni
-                            </button>
+                <div id="data-management-content" class="hidden mt-3 p-4 bg-gray-800 rounded-lg border border-indigo-500 space-y-4 transition-all duration-300">
+                    <!-- Contratti -->
+                    <div>
+                        <p class="text-xs text-gray-400 mb-2 font-bold">📝 Contratti (tutte le squadre)</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="btn-add-contracts-all" class="bg-blue-700 text-white font-bold py-2 rounded-lg hover:bg-blue-600 transition text-sm">+1</button>
+                            <button id="btn-remove-contracts-all" class="bg-orange-700 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition text-sm">-1</button>
+                            <button id="btn-reset-contracts-all" class="bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-500 transition text-sm">Reset</button>
                         </div>
                     </div>
 
-                    <div class="text-gray-400 text-sm mt-4">
-                        Squadre partecipanti: <span class="font-bold text-green-400 ml-1">${participatingTeamsCount}</span>
+                    <!-- Icone -->
+                    <div>
+                        <p class="text-xs text-gray-400 mb-2 font-bold">👑 Icone</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-fix-icone-ability" class="bg-yellow-700 text-white font-bold py-2 rounded-lg hover:bg-yellow-600 transition text-sm">Fix Abilita</button>
+                            <button id="btn-set-icone-level" class="bg-amber-600 text-white font-bold py-2 rounded-lg hover:bg-amber-500 transition text-sm">Set Livello</button>
+                        </div>
                     </div>
+
+                    <!-- Figurine & Sync -->
+                    <div>
+                        <p class="text-xs text-gray-400 mb-2 font-bold">🔧 Manutenzione</p>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button id="btn-reset-figurine-timer" class="bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-600 transition text-sm">
+                                🃏 Reset Timer Figurine
+                            </button>
+                            <button id="btn-data-sync" class="bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-500 transition text-sm">
+                                🔄 Sincronizza Dati Firebase
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== 5. EMERGENZA ========== -->
+            <div class="mb-4 p-4 bg-red-900/30 rounded-lg border border-red-600">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-red-400 font-bold">🚨 Emergenza</p>
+                        <p class="text-xs text-gray-400">Annulla Campionato e Coppa senza premi</p>
+                    </div>
+                    <button id="btn-emergency-cancel-competitions" class="bg-red-700 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm border border-red-500">
+                        Annulla Competizioni
+                    </button>
                 </div>
             </div>
 

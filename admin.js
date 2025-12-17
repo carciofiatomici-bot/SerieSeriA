@@ -712,26 +712,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Toggle menu Automazione Simulazioni
-        const btnToggleAutomation = document.getElementById('btn-toggle-automation');
-        const automationContent = document.getElementById('automation-content');
-        const automationChevron = document.getElementById('automation-chevron');
-        let automationLoaded = false;
+        // Toggle menu Configurazioni
+        const btnToggleConfigs = document.getElementById('btn-toggle-configs');
+        const configsContent = document.getElementById('configs-content');
+        const configsChevron = document.getElementById('configs-chevron');
 
-        if (btnToggleAutomation && automationContent) {
-            btnToggleAutomation.addEventListener('click', () => {
-                const isHidden = automationContent.classList.contains('hidden');
+        if (btnToggleConfigs && configsContent) {
+            btnToggleConfigs.addEventListener('click', () => {
+                const isHidden = configsContent.classList.contains('hidden');
                 if (isHidden) {
-                    automationContent.classList.remove('hidden');
-                    automationChevron?.classList.add('rotate-180');
-                    // Carica il pannello automazione solo la prima volta che viene aperto
-                    if (!automationLoaded) {
-                        loadAutomationPanel();
-                        automationLoaded = true;
-                    }
+                    configsContent.classList.remove('hidden');
+                    configsChevron?.classList.add('rotate-180');
                 } else {
-                    automationContent.classList.add('hidden');
-                    automationChevron?.classList.remove('rotate-180');
+                    configsContent.classList.add('hidden');
+                    configsChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Toggle menu Gestione Dati
+        const btnToggleDataMgmt = document.getElementById('btn-toggle-data-management');
+        const dataMgmtContent = document.getElementById('data-management-content');
+        const dataMgmtChevron = document.getElementById('data-management-chevron');
+
+        if (btnToggleDataMgmt && dataMgmtContent) {
+            btnToggleDataMgmt.addEventListener('click', () => {
+                const isHidden = dataMgmtContent.classList.contains('hidden');
+                if (isHidden) {
+                    dataMgmtContent.classList.remove('hidden');
+                    dataMgmtChevron?.classList.add('rotate-180');
+                } else {
+                    dataMgmtContent.classList.add('hidden');
+                    dataMgmtChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Carica pannello automazione quando si apre Gestione Competizioni
+        let automationLoaded = false;
+        if (btnToggleLeague && leagueContent) {
+            const origListener = btnToggleLeague.onclick;
+            btnToggleLeague.addEventListener('click', () => {
+                if (!automationLoaded && !leagueContent.classList.contains('hidden')) {
+                    loadAutomationPanel();
+                    automationLoaded = true;
                 }
             });
         }

@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.17',
+    currentVersion: '2.2.18',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,21 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.18',
+            date: '2025-12-18',
+            time: '05:00',
+            title: 'Riorganizzazione Pannello Admin',
+            changes: [
+                { text: 'ADMIN: Pannello Admin riorganizzato in 5 sezioni coerenti', adminOnly: true },
+                { text: 'ADMIN: Nuova sezione "Gestione Competizioni" con Campionato, Coppa, SuperCoppa e Automazione', adminOnly: true },
+                { text: 'ADMIN: Nuova sezione "Azioni Stagione" con Avvia Stagione, Creazione Oggetti, Test, Reset HoF', adminOnly: true },
+                { text: 'ADMIN: Nuova sezione "Configurazioni" raggruppa tutte le config (Formule, Reward, Sponsor, etc.)', adminOnly: true },
+                { text: 'ADMIN: Nuova sezione "Gestione Dati" per Contratti, Icone, Manutenzione', adminOnly: true },
+                { text: 'ADMIN: Sezione "Emergenza" sempre visibile in fondo', adminOnly: true }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.17',
             date: '2025-12-18',
