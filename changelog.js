@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.15',
+    currentVersion: '2.2.16',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,17 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.16',
+            date: '2025-12-18',
+            time: '04:00',
+            title: 'Fix UI Admin',
+            changes: [
+                { text: 'Aggiunto bottone chiudi al pannello Sincronizza Dati', adminOnly: true },
+                { text: 'Fix visualizzazione probabilita figurine (errore floating point)', adminOnly: true }
+            ],
+            type: 'fix'
+        },
         {
             version: '2.2.15',
             date: '2025-12-18',

@@ -19,10 +19,13 @@ window.AdminDataSync = {
 
         container.innerHTML = `
             <div class="p-4">
-                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <i class="fas fa-sync-alt text-blue-400"></i>
-                    Sincronizzazione Dati
-                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-sync-alt text-blue-400"></i>
+                        Sincronizzazione Dati
+                    </h2>
+                    <button id="btn-close-sync-panel" class="text-gray-400 hover:text-white text-2xl px-2">&times;</button>
+                </div>
 
                 <p class="text-gray-400 text-sm mb-6">
                     Verifica e ripara incoerenze tra i dati salvati su Firebase e quelli mostrati nell'app.
@@ -102,6 +105,14 @@ window.AdminDataSync = {
         // Event listeners
         document.getElementById('btn-analyze-data')?.addEventListener('click', () => this.analyzeData());
         document.getElementById('btn-sync-data')?.addEventListener('click', () => this.repairData());
+        document.getElementById('btn-close-sync-panel')?.addEventListener('click', () => {
+            // Torna alla vista admin principale
+            if (window.AdminUI?.renderAdminPanel) {
+                window.AdminUI.renderAdminPanel();
+            } else if (window.Admin?.showAdminPanel) {
+                window.Admin.showAdminPanel();
+            }
+        });
     },
 
     /**

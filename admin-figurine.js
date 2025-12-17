@@ -58,28 +58,28 @@ window.AdminFigurine = {
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span> Normale (%)
                             </label>
-                            <input type="number" id="figurine-prob-normale" value="${(rarities.normale?.probability || 0.55) * 100}"
+                            <input type="number" id="figurine-prob-normale" value="${Math.round((rarities.normale?.probability || 0.55) * 100)}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto (%)
                             </label>
-                            <input type="number" id="figurine-prob-evoluto" value="${(rarities.evoluto?.probability || 0.25) * 100}"
+                            <input type="number" id="figurine-prob-evoluto" value="${Math.round((rarities.evoluto?.probability || 0.25) * 100)}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative (%)
                             </label>
-                            <input type="number" id="figurine-prob-alternative" value="${(rarities.alternative?.probability || 0.15) * 100}"
+                            <input type="number" id="figurine-prob-alternative" value="${Math.round((rarities.alternative?.probability || 0.15) * 100)}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span> Ultimate (%)
                             </label>
-                            <input type="number" id="figurine-prob-ultimate" value="${(rarities.ultimate?.probability || 0.05) * 100}"
+                            <input type="number" id="figurine-prob-ultimate" value="${Math.round((rarities.ultimate?.probability || 0.05) * 100)}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
                         </div>
                     </div>
