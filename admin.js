@@ -17,8 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const featureFlagsContent = document.getElementById('feature-flags-content');
     const featureFlagsToolsContainer = document.getElementById('feature-flags-tools-container');
 
-    const leaderboardContent = document.getElementById('leaderboard-content');
-    const scheduleContent = document.getElementById('schedule-content');
+    // leaderboardContent e scheduleContent rimossi - ora si usa user-campionato-content
 
     let db;
     let firestoreTools;
@@ -782,25 +781,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const btnAdminLeaderboard = document.getElementById('btn-admin-leaderboard');
         if (btnAdminLeaderboard) {
-            btnAdminLeaderboard.addEventListener('click', () => {
-                 window.showScreen(leaderboardContent);
-                 if (window.InterfacciaDashboard?.loadLeaderboard) {
-                     window.InterfacciaDashboard.loadLeaderboard();
+            btnAdminLeaderboard.addEventListener('click', async () => {
+                 const userCampionatoContent = document.getElementById('user-campionato-content');
+                 if (userCampionatoContent) {
+                     window.showScreen(userCampionatoContent);
+                     // Carica il campionato (include classifica)
+                     if (window.UserCampionato) {
+                         await window.UserCampionato.load();
+                     }
+                     const backBtn = document.getElementById('user-campionato-back-button');
+                     if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
                  }
-                 const backBtn = document.getElementById('leaderboard-back-button');
-                 if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
             });
         }
 
         const btnAdminSchedule = document.getElementById('btn-admin-schedule');
         if (btnAdminSchedule) {
-            btnAdminSchedule.addEventListener('click', () => {
-                 window.showScreen(scheduleContent);
-                 if (window.InterfacciaDashboard?.loadSchedule) {
-                     window.InterfacciaDashboard.loadSchedule();
+            btnAdminSchedule.addEventListener('click', async () => {
+                 const userCampionatoContent = document.getElementById('user-campionato-content');
+                 if (userCampionatoContent) {
+                     window.showScreen(userCampionatoContent);
+                     // Carica il campionato (include calendario)
+                     if (window.UserCampionato) {
+                         await window.UserCampionato.load();
+                     }
+                     const backBtn = document.getElementById('user-campionato-back-button');
+                     if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
                  }
-                 const backBtn = document.getElementById('schedule-back-button');
-                 if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
             });
         }
         

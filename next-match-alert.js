@@ -16,6 +16,14 @@ window.NextMatchAlert = {
     _countdownInterval: null,
     _isMinimized: false,
 
+    // Stato per il drag
+    _isDragging: false,
+    _hasMoved: false,
+    _dragStartX: 0,
+    _dragStartY: 0,
+    _alertStartX: 0,
+    _alertStartY: 0,
+
     /**
      * Inizializza il floating alert
      */
@@ -247,7 +255,14 @@ window.NextMatchAlert = {
     createAlertElement(nextMatch, automationState) {
         const alert = document.createElement('div');
         alert.id = 'next-match-floating-alert';
-        alert.className = 'fixed top-16 left-4 z-40 transition-all duration-300';
+        alert.className = 'fixed z-40';
+
+        // Carica posizione salvata o usa default
+        const savedPos = this.loadSavedPosition();
+        alert.style.top = savedPos.top;
+        alert.style.left = savedPos.left;
+        alert.style.right = savedPos.right;
+        alert.style.bottom = savedPos.bottom;
 
         // Colori e icone per tipo competizione
         let typeColor, typeIcon, typeName;
@@ -271,12 +286,13 @@ window.NextMatchAlert = {
 
         alert.innerHTML = `
             <div class="bg-gray-900 rounded-lg border-2 border-${typeColor}-500 shadow-xl overflow-hidden max-w-xs">
-                <!-- Header sempre visibile -->
-                <div class="bg-gradient-to-r from-${typeColor}-800 to-${typeColor}-700 px-3 py-1.5 flex items-center justify-between cursor-pointer" id="next-match-header">
+                <!-- Header sempre visibile - trascinabile -->
+                <div class="bg-gradient-to-r from-${typeColor}-800 to-${typeColor}-700 px-3 py-1.5 flex items-center justify-between cursor-move select-none" id="next-match-header">
                     <span id="next-match-header-text" class="text-white font-bold text-sm flex items-center gap-1">
+                        <span class="drag-handle opacity-50 mr-1">⋮⋮</span>
                         ${typeIcon} <span class="header-label">Prossima Partita</span>
                     </span>
-                    <button id="next-match-toggle" class="text-white hover:text-gray-300 transition text-lg leading-none ml-2">
+                    <button id="next-match-toggle" class="text-white hover:text-gray-300 transition text-lg leading-none ml-2 cursor-pointer">
                         <span class="toggle-icon">−</span>
                     </button>
                 </div>
@@ -323,13 +339,31 @@ window.NextMatchAlert = {
         document.body.appendChild(alert);
         this._alertElement = alert;
 
-        // Event listener per toggle
+        // Event listener per drag e toggle
         const header = document.getElementById('next-match-header');
         const toggleBtn = document.getElementById('next-match-toggle');
 
         if (header) {
-            header.addEventListener('click', () => this.toggleMinimize());
+            // Drag events (mouse)
+            header.addEventListener('mousedown', (e) => this.handleDragStart(e));
+
+            // Drag events (touch)
+            header.addEventListener('touchstart', (e) => this.handleDragStart(e), { passive: false });
         }
+
+        // Toggle button click (non propagare drag)
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleMinimize();
+            });
+        }
+
+        // Document-level listeners per drag
+        document.addEventListener('mousemove', (e) => this.handleDragMove(e));
+        document.addEventListener('mouseup', (e) => this.handleDragEnd(e));
+        document.addEventListener('touchmove', (e) => this.handleDragMove(e), { passive: false });
+        document.addEventListener('touchend', (e) => this.handleDragEnd(e));
 
         // Bottone Schedina - mostra se flag attivo
         this.updateSchedinaButton();
@@ -394,6 +428,129 @@ window.NextMatchAlert = {
 
         // Salva stato in localStorage
         localStorage.setItem('fanta_next_match_minimized', this._isMinimized.toString());
+    },
+
+    /**
+     * Carica posizione salvata da localStorage
+     */
+    loadSavedPosition() {
+        try {
+            const saved = localStorage.getItem('fanta_next_match_position');
+            if (saved) {
+                const pos = JSON.parse(saved);
+                return {
+                    top: pos.top || 'auto',
+                    left: pos.left || 'auto',
+                    right: pos.right || 'auto',
+                    bottom: pos.bottom || 'auto'
+                };
+            }
+        } catch (e) {
+            console.error('[NextMatchAlert] Errore caricamento posizione:', e);
+        }
+        // Default: in alto a sinistra
+        return { top: '64px', left: '16px', right: 'auto', bottom: 'auto' };
+    },
+
+    /**
+     * Salva posizione in localStorage
+     */
+    savePosition() {
+        if (!this._alertElement) return;
+        const style = this._alertElement.style;
+        const pos = {
+            top: style.top,
+            left: style.left,
+            right: style.right,
+            bottom: style.bottom
+        };
+        localStorage.setItem('fanta_next_match_position', JSON.stringify(pos));
+    },
+
+    /**
+     * Gestisce inizio drag
+     */
+    handleDragStart(e) {
+        // Non iniziare drag se click su bottone toggle
+        if (e.target.closest('#next-match-toggle')) return;
+
+        this._isDragging = true;
+        this._hasMoved = false;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        this._dragStartX = clientX;
+        this._dragStartY = clientY;
+
+        if (this._alertElement) {
+            const rect = this._alertElement.getBoundingClientRect();
+            this._alertStartX = rect.left;
+            this._alertStartY = rect.top;
+        }
+
+        if (e.touches) {
+            e.preventDefault();
+        }
+    },
+
+    /**
+     * Gestisce movimento drag
+     */
+    handleDragMove(e) {
+        if (!this._isDragging || !this._alertElement) return;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - this._dragStartX;
+        const deltaY = clientY - this._dragStartY;
+
+        // Considera come movimento solo se spostamento > 5px
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            this._hasMoved = true;
+        }
+
+        const newX = this._alertStartX + deltaX;
+        const newY = this._alertStartY + deltaY;
+
+        // Limita ai margini dello schermo
+        const rect = this._alertElement.getBoundingClientRect();
+        const maxX = window.innerWidth - rect.width - 8;
+        const maxY = window.innerHeight - rect.height - 8;
+
+        const finalX = Math.max(8, Math.min(newX, maxX));
+        const finalY = Math.max(8, Math.min(newY, maxY));
+
+        // Applica posizione
+        this._alertElement.style.left = `${finalX}px`;
+        this._alertElement.style.top = `${finalY}px`;
+        this._alertElement.style.right = 'auto';
+        this._alertElement.style.bottom = 'auto';
+
+        if (e.touches) {
+            e.preventDefault();
+        }
+    },
+
+    /**
+     * Gestisce fine drag
+     */
+    handleDragEnd(e) {
+        if (!this._isDragging) return;
+
+        this._isDragging = false;
+
+        // Se non si e' mosso, e' un click per toggle
+        if (!this._hasMoved) {
+            // Non fare toggle se click su bottone
+            if (!e.target?.closest('#next-match-toggle')) {
+                this.toggleMinimize();
+            }
+        } else {
+            // Salva nuova posizione
+            this.savePosition();
+        }
     },
 
     /**

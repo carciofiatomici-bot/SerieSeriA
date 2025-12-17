@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.18',
+    currentVersion: '2.2.19',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,20 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.19',
+            date: '2025-12-18',
+            time: '12:00',
+            title: 'Layout PWA e Floating Trascinabile',
+            changes: [
+                { text: 'Layout dashboard migliorato: figurine e ruota in riga separata', adminOnly: false },
+                { text: 'Floating prossima partita ora trascinabile lungo i margini', adminOnly: false },
+                { text: 'Tabella premi nella homepage con design moderno a 3 colonne', adminOnly: false },
+                { text: 'Badge ruota fortuna verde solo quando disponibile (non piu rosso)', adminOnly: false },
+                { text: 'Fix bottoni Classifica/Calendario in admin Gestione Competizioni', adminOnly: true }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.18',
             date: '2025-12-18',

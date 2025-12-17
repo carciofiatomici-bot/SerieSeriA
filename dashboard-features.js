@@ -105,24 +105,20 @@ window.DashboardFeatures = {
      */
     updateDailyWheelBox() {
         const wheelBox = document.getElementById('daily-wheel-box');
+        const badge = document.getElementById('daily-wheel-badge');
         if (!wheelBox) return;
 
         const isEnabled = window.FeatureFlags?.isEnabled?.('dailyWheel') || false;
         const teamData = window.InterfacciaCore?.currentTeamData;
         const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
 
-        // Mostra se feature attiva (indipendentemente dal cooldown)
+        // Mostra se feature attiva
         if (isEnabled) {
             wheelBox.classList.remove('hidden');
-            // Aggiorna lo stile del box in base alla disponibilita
             if (canSpin) {
-                wheelBox.classList.remove('opacity-50', 'grayscale');
                 wheelBox.title = 'Gira la Ruota della Fortuna!';
-                // Rimuovi timer se presente
-                const timerSpan = wheelBox.querySelector('.wheel-timer');
-                if (timerSpan) timerSpan.remove();
+                if (badge) badge.classList.remove('hidden');
             } else {
-                wheelBox.classList.add('opacity-50', 'grayscale');
                 // Calcola tempo fino a mezzanotte
                 const now = new Date();
                 const midnight = new Date(now);
@@ -131,6 +127,7 @@ window.DashboardFeatures = {
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 wheelBox.title = `Prossimo giro tra ${hours}h ${minutes}m`;
+                if (badge) badge.classList.add('hidden');
             }
         } else {
             wheelBox.classList.add('hidden');
