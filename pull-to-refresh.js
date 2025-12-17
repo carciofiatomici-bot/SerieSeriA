@@ -49,12 +49,25 @@ window.PullToRefresh = {
             sessionStorage.removeItem(this.SCREEN_KEY);
             console.log('[PullToRefresh] Ripristino schermata:', savedScreen);
 
-            // Aspetta che l'app sia pronta, poi naviga alla schermata salvata
-            setTimeout(() => {
-                if (typeof window.showScreen === 'function') {
-                    window.showScreen(savedScreen);
+            // Aspetta che l'app sia completamente pronta
+            const tryRestore = (attempts = 0) => {
+                if (attempts > 10) {
+                    console.warn('[PullToRefresh] Impossibile ripristinare schermata dopo 10 tentativi');
+                    return;
                 }
-            }, 1000);
+
+                // Verifica se showScreen esiste e l'utente e' loggato
+                if (typeof window.showScreen === 'function' && window.InterfacciaCore?.currentTeamId) {
+                    console.log('[PullToRefresh] Navigo a:', savedScreen);
+                    window.showScreen(savedScreen);
+                } else {
+                    // Riprova dopo 500ms
+                    setTimeout(() => tryRestore(attempts + 1), 500);
+                }
+            };
+
+            // Primo tentativo dopo 1.5 secondi
+            setTimeout(() => tryRestore(0), 1500);
         }
     },
 
@@ -62,14 +75,27 @@ window.PullToRefresh = {
      * Trova la schermata attualmente visibile
      */
     getCurrentScreen() {
-        // Cerca la schermata visibile (non hidden)
-        const screens = document.querySelectorAll('[id$="-screen"]');
-        for (const screen of screens) {
-            if (!screen.classList.contains('hidden') && screen.offsetParent !== null) {
-                return screen.id;
+        // Lista delle schermate principali
+        const screenIds = [
+            'team-screen',
+            'mercato-screen',
+            'draft-screen',
+            'campionato-screen',
+            'coppa-screen',
+            'admin-screen',
+            'supercoppa-screen',
+            'private-leagues-screen'
+        ];
+
+        // Cerca quale schermata non ha la classe hidden
+        for (const id of screenIds) {
+            const screen = document.getElementById(id);
+            if (screen && !screen.classList.contains('hidden')) {
+                return id;
             }
         }
-        return 'dashboard-screen'; // Default
+
+        return null; // Dashboard o nessuna schermata specifica
     },
 
     /**
@@ -233,9 +259,11 @@ window.PullToRefresh = {
 
         // Salva la schermata corrente prima del reload
         const currentScreen = this.getCurrentScreen();
-        if (currentScreen && currentScreen !== 'dashboard-screen') {
+        if (currentScreen) {
             sessionStorage.setItem(this.SCREEN_KEY, currentScreen);
             console.log('[PullToRefresh] Salvo schermata:', currentScreen);
+        } else {
+            console.log('[PullToRefresh] Refresh dalla dashboard, nessuna schermata da salvare');
         }
 
         // Mostra spinner di caricamento

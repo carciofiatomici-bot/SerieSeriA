@@ -315,25 +315,24 @@ window.GestioneSquadreRosa = {
         // Border rosso se infortunato
         const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
 
-        // Bottone statistiche (se feature attiva) - posizione assoluta angolo card
+        // Bottone statistiche (se feature attiva) - inline dopo il nome
         const statsButton = window.FeatureFlags?.isEnabled('playerStats')
             ? `<button data-action="view-player-stats"
                        data-player-id="${player.id}"
                        data-player-name="${player.name}"
                        data-player-role="${player.role}"
-                       class="absolute top-2 right-2 z-30 text-blue-400 hover:text-blue-300 bg-gray-800 border border-blue-500 hover:bg-blue-900/50 w-7 h-7 flex items-center justify-center rounded-full text-sm shadow-lg"
+                       class="inline-flex items-center justify-center w-5 h-5 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded ml-1"
                        title="Statistiche ${player.name}">📊</button>`
             : '';
 
         return `
-            <div class="relative bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
-                ${statsButton}
+            <div class="bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
                 <!-- Header cliccabile -->
-                <div class="player-card-header flex items-center p-3 sm:p-4 ${statsButton ? 'pr-12' : ''} cursor-pointer hover:bg-gray-750 transition-colors"
+                <div class="player-card-header flex items-center p-3 sm:p-4 cursor-pointer hover:bg-gray-750 transition-colors"
                      data-player-id="${player.id}">
                     <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
+                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>${statsButton}
                         ${iconaMarker}
                         ${basePlayerMarker}
                         ${seriousPlayerMarker}
