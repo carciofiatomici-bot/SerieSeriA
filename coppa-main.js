@@ -179,6 +179,27 @@ window.CoppaMain = {
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
             const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
 
+            // Salva EXP aggiornata su Firestore
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            try {
+                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                    const { updateDoc: updateDocFn } = window.firestoreTools;
+                    await updateDocFn(doc(db, teamsPath, match.homeTeam.teamId), {
+                        rosa: homeTeamData.rosa,
+                        coach: homeTeamData.coach || null
+                    });
+                }
+                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                    const { updateDoc: updateDocFn } = window.firestoreTools;
+                    await updateDocFn(doc(db, teamsPath, match.awayTeam.teamId), {
+                        rosa: awayTeamData.rosa,
+                        coach: awayTeamData.coach || null
+                    });
+                }
+            } catch (expSaveError) {
+                console.warn('[CoppaMain] Errore salvataggio EXP:', expSaveError);
+            }
+
             // Mostra notifiche level-up
             if (window.PlayerExpUI) {
                 const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);

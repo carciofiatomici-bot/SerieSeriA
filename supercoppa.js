@@ -129,7 +129,7 @@ window.Supercoppa = {
      * Simula la Supercoppa
      */
     async simulateSupercoppa() {
-        const { appId, doc, getDoc } = window.firestoreTools;
+        const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
 
         const supercoppaBracket = await this.loadSupercoppa();
@@ -236,6 +236,25 @@ window.Supercoppa = {
                 awayGoals: matchResult.awayGoals,
                 isHome: false
             });
+
+            // Salva EXP aggiornata su Firestore
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            try {
+                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                    await updateDoc(doc(db, teamsPath, supercoppaBracket.homeTeam.teamId), {
+                        rosa: homeTeamData.rosa,
+                        coach: homeTeamData.coach || null
+                    });
+                }
+                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                    await updateDoc(doc(db, teamsPath, supercoppaBracket.awayTeam.teamId), {
+                        rosa: awayTeamData.rosa,
+                        coach: awayTeamData.coach || null
+                    });
+                }
+            } catch (expSaveError) {
+                console.warn('[Supercoppa] Errore salvataggio EXP:', expSaveError);
+            }
 
             // Mostra notifiche level-up
             if (window.PlayerExpUI) {

@@ -401,7 +401,7 @@ window.GestioneSquadreRosa = {
                 // Toggle espansione card giocatore (click su header)
                 const playerHeader = target.closest('.player-card-header');
                 if (playerHeader && !target.closest('button') && !target.closest('[data-action]')) {
-                    const card = playerHeader.closest('.relative');
+                    const card = playerHeader.parentElement;
                     const content = card.querySelector('.player-card-content');
                     const icon = playerHeader.querySelector('.player-toggle-icon');
 

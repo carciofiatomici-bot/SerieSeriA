@@ -136,6 +136,26 @@ window.ChampionshipMain = {
                 const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
                 const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
 
+                // Salva EXP aggiornata su Firestore
+                const { updateDoc, doc, appId } = window.firestoreTools;
+                const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+                // Salva rosa home team con EXP aggiornata
+                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                    await updateDoc(doc(window.db, teamsPath, match.homeId), {
+                        rosa: homeTeamData.rosa,
+                        coach: homeTeamData.coach || null
+                    });
+                }
+
+                // Salva rosa away team con EXP aggiornata
+                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                    await updateDoc(doc(window.db, teamsPath, match.awayId), {
+                        rosa: awayTeamData.rosa,
+                        coach: awayTeamData.coach || null
+                    });
+                }
+
                 // Mostra notifiche level-up
                 if (window.PlayerExpUI) {
                     const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);
@@ -376,6 +396,23 @@ window.ChampionshipMain = {
                 if (window.PlayerExp) {
                     const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
                     const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+
+                    // Salva EXP aggiornata su Firestore
+                    const { updateDoc, doc, appId } = window.firestoreTools;
+                    const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+                    if (homeTeamData.rosa && homeExpResults.length > 0) {
+                        await updateDoc(doc(window.db, teamsPath, match.homeId), {
+                            rosa: homeTeamData.rosa,
+                            coach: homeTeamData.coach || null
+                        });
+                    }
+                    if (awayTeamData.rosa && awayExpResults.length > 0) {
+                        await updateDoc(doc(window.db, teamsPath, match.awayId), {
+                            rosa: awayTeamData.rosa,
+                            coach: awayTeamData.coach || null
+                        });
+                    }
 
                     // Mostra notifiche level-up
                     if (window.PlayerExpUI) {
