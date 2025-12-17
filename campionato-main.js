@@ -95,9 +95,9 @@ window.ChampionshipMain = {
             const homeTeamDoc = await getDoc(doc(db, TEAMS_COLLECTION_PATH, match.homeId));
             const awayTeamDoc = await getDoc(doc(db, TEAMS_COLLECTION_PATH, match.awayId));
             
-            // UTILIZZA I DATI FRESCHI DEL DOC
-            const homeTeamData = homeTeamDoc.exists() ? homeTeamDoc.data() : null;
-            const awayTeamData = awayTeamDoc.exists() ? awayTeamDoc.data() : null;
+            // UTILIZZA I DATI FRESCHI DEL DOC (aggiungi ID per PlayerSeasonStats)
+            const homeTeamData = homeTeamDoc.exists() ? { ...homeTeamDoc.data(), id: match.homeId } : null;
+            const awayTeamData = awayTeamDoc.exists() ? { ...awayTeamDoc.data(), id: match.awayId } : null;
             
             if (!homeTeamData || !awayTeamData) {
                 throw new Error(`Dati squadra mancanti per ${match.homeName} o ${match.awayName}.`);
@@ -316,8 +316,9 @@ window.ChampionshipMain = {
                     getDoc(doc(db, TEAMS_COLLECTION_PATH, match.awayId))
                 ]);
                 
-                const homeTeamData = homeTeamDoc.exists() ? homeTeamDoc.data() : null;
-                const awayTeamData = awayTeamDoc.exists() ? awayTeamDoc.data() : null;
+                // Aggiungi ID per PlayerSeasonStats
+                const homeTeamData = homeTeamDoc.exists() ? { ...homeTeamDoc.data(), id: match.homeId } : null;
+                const awayTeamData = awayTeamDoc.exists() ? { ...awayTeamDoc.data(), id: match.awayId } : null;
 
                 if (!homeTeamData || !awayTeamData) {
                     console.warn(`Dati squadra mancanti per il match ${match.homeName} vs ${match.awayName}. Salto.`);

@@ -160,6 +160,16 @@ window.PlayerSeasonStats = {
         const { doc, getDoc, setDoc } = window.firestoreTools;
         const db = window.db;
 
+        // Estrai ID squadre (supporta vari formati)
+        const homeTeamId = homeTeamData.id || homeTeamData.teamId || homeTeamData.docId || 'unknown_home';
+        const awayTeamId = awayTeamData.id || awayTeamData.teamId || awayTeamData.docId || 'unknown_away';
+
+        // Verifica che abbiamo ID validi
+        if (homeTeamId === 'unknown_home' || awayTeamId === 'unknown_away') {
+            console.warn('PlayerSeasonStats: ID squadra mancante, skip registrazione stats');
+            return;
+        }
+
         const statsDocRef = doc(db, this.getStatsPath(), this.STATS_DOC_ID);
         const statsDoc = await getDoc(statsDocRef);
 
@@ -171,7 +181,7 @@ window.PlayerSeasonStats = {
 
         // Registra goal squadra casa
         for (let i = 0; i < homeGoals; i++) {
-            const { scorer, assister } = this.selectScorerAndAssister(homeTitolari, homeTeamData.teamName, homeTeamData.id || homeTeamData.teamId);
+            const { scorer, assister } = this.selectScorerAndAssister(homeTitolari, homeTeamData.teamName, homeTeamId);
             if (scorer) {
                 this.addGoalToStats(data.stats, scorer, assister);
             }
@@ -179,7 +189,7 @@ window.PlayerSeasonStats = {
 
         // Registra goal squadra trasferta
         for (let i = 0; i < awayGoals; i++) {
-            const { scorer, assister } = this.selectScorerAndAssister(awayTitolari, awayTeamData.teamName, awayTeamData.id || awayTeamData.teamId);
+            const { scorer, assister } = this.selectScorerAndAssister(awayTitolari, awayTeamData.teamName, awayTeamId);
             if (scorer) {
                 this.addGoalToStats(data.stats, scorer, assister);
             }
@@ -189,7 +199,7 @@ window.PlayerSeasonStats = {
         if (awayGoals === 0) {
             const homeGK = homeTitolari.find(p => p.role === 'P');
             if (homeGK) {
-                this.addCleanSheetToStats(data.stats, homeGK, homeTeamData.teamName, homeTeamData.id || homeTeamData.teamId);
+                this.addCleanSheetToStats(data.stats, homeGK, homeTeamData.teamName, homeTeamId);
             }
         }
 
@@ -197,11 +207,28 @@ window.PlayerSeasonStats = {
         if (homeGoals === 0) {
             const awayGK = awayTitolari.find(p => p.role === 'P');
             if (awayGK) {
-                this.addCleanSheetToStats(data.stats, awayGK, awayTeamData.teamName, awayTeamData.id || awayTeamData.teamId);
+                this.addCleanSheetToStats(data.stats, awayGK, awayTeamData.teamName, awayTeamId);
             }
         }
 
         data.lastUpdated = new Date().toISOString();
+
+        // Pulisci eventuali valori undefined prima di salvare
+        for (const playerId of Object.keys(data.stats)) {
+            const playerStats = data.stats[playerId];
+            if (!playerStats.teamId || playerStats.teamId === undefined) {
+                playerStats.teamId = 'unknown';
+            }
+            if (!playerStats.teamName || playerStats.teamName === undefined) {
+                playerStats.teamName = 'Squadra Sconosciuta';
+            }
+            if (!playerStats.playerName || playerStats.playerName === undefined) {
+                playerStats.playerName = 'Giocatore';
+            }
+            if (!playerStats.role || playerStats.role === undefined) {
+                playerStats.role = 'C';
+            }
+        }
 
         await setDoc(statsDocRef, data);
 
@@ -285,34 +312,57 @@ window.PlayerSeasonStats = {
      * Helper: Aggiunge un goal alle statistiche.
      */
     addGoalToStats(stats, scorer, assister) {
-        if (!scorer) return;
+        if (!scorer || !scorer.id) return;
+
+        // Assicurati che teamId non sia mai undefined
+        const scorerTeamId = scorer.teamId || 'unknown';
+        const scorerTeamName = scorer.teamName || 'Squadra Sconosciuta';
 
         if (!stats[scorer.id]) {
             stats[scorer.id] = {
                 playerId: scorer.id,
-                playerName: scorer.name,
-                teamId: scorer.teamId,
-                teamName: scorer.teamName,
-                role: scorer.role,
+                playerName: scorer.name || 'Giocatore',
+                teamId: scorerTeamId,
+                teamName: scorerTeamName,
+                role: scorer.role || 'C',
                 goals: 0,
                 assists: 0,
                 cleanSheets: 0
             };
+        } else {
+            // Fix record esistenti con teamId mancante
+            if (!stats[scorer.id].teamId) {
+                stats[scorer.id].teamId = scorerTeamId;
+            }
+            if (!stats[scorer.id].teamName) {
+                stats[scorer.id].teamName = scorerTeamName;
+            }
         }
         stats[scorer.id].goals++;
 
-        if (assister && assister.id !== scorer.id) {
+        if (assister && assister.id && assister.id !== scorer.id) {
+            const assisterTeamId = assister.teamId || 'unknown';
+            const assisterTeamName = assister.teamName || 'Squadra Sconosciuta';
+
             if (!stats[assister.id]) {
                 stats[assister.id] = {
                     playerId: assister.id,
-                    playerName: assister.name,
-                    teamId: assister.teamId,
-                    teamName: assister.teamName,
-                    role: assister.role,
+                    playerName: assister.name || 'Giocatore',
+                    teamId: assisterTeamId,
+                    teamName: assisterTeamName,
+                    role: assister.role || 'C',
                     goals: 0,
                     assists: 0,
                     cleanSheets: 0
                 };
+            } else {
+                // Fix record esistenti con teamId mancante
+                if (!stats[assister.id].teamId) {
+                    stats[assister.id].teamId = assisterTeamId;
+                }
+                if (!stats[assister.id].teamName) {
+                    stats[assister.id].teamName = assisterTeamName;
+                }
             }
             stats[assister.id].assists++;
         }
@@ -322,14 +372,18 @@ window.PlayerSeasonStats = {
      * Helper: Aggiunge un clean sheet alle statistiche.
      */
     addCleanSheetToStats(stats, goalkeeper, teamName, teamId) {
-        if (!goalkeeper) return;
+        if (!goalkeeper || !goalkeeper.id) return;
+
+        // Assicurati che i valori non siano mai undefined
+        const safeTeamId = teamId || 'unknown';
+        const safeTeamName = teamName || 'Squadra Sconosciuta';
 
         if (!stats[goalkeeper.id]) {
             stats[goalkeeper.id] = {
                 playerId: goalkeeper.id,
-                playerName: goalkeeper.name,
-                teamId: teamId,
-                teamName: teamName,
+                playerName: goalkeeper.name || 'Portiere',
+                teamId: safeTeamId,
+                teamName: safeTeamName,
                 role: 'P',
                 goals: 0,
                 assists: 0,
@@ -449,4 +503,4 @@ window.PlayerSeasonStats = {
     }
 };
 
-console.log("PlayerSeasonStats.js caricato - Gestione statistiche stagionali (goal, assist, clean sheets)");
+console.log("PlayerSeasonStats.js caricato - Gestione statistiche stagionali (goal, assist, clean sheets) - v2.2.10 FIX");

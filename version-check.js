@@ -8,7 +8,7 @@
 
 window.VersionCheck = {
     // Versione corrente dell'app (deve corrispondere a APP_VERSION in service-worker.js)
-    CURRENT_VERSION: '2.2.8',
+    CURRENT_VERSION: '2.2.10',
 
     // Chiave localStorage per salvare la versione accettata
     VERSION_KEY: 'serie-seria-accepted-version',
