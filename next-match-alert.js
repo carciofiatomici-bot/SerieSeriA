@@ -307,6 +307,12 @@ window.NextMatchAlert = {
                             <span class="text-gray-500 text-[8px]">Automazione non attiva</span>
                         </div>
                     `}
+                    <!-- Bottone Schedina (visibile solo se flag attivo) -->
+                    <div id="next-match-schedina-btn-container" class="mt-2 hidden">
+                        <button id="next-match-schedina-btn" class="w-full py-1.5 bg-green-600 hover:bg-green-500 rounded text-white text-xs font-bold flex items-center justify-center gap-1 transition">
+                            <span>🎯</span> Compila Schedina
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -325,10 +331,41 @@ window.NextMatchAlert = {
             header.addEventListener('click', () => this.toggleMinimize());
         }
 
+        // Bottone Schedina - mostra se flag attivo
+        this.updateSchedinaButton();
+
+        // Event listener per bottone schedina
+        const schedinaBtn = document.getElementById('next-match-schedina-btn');
+        if (schedinaBtn) {
+            schedinaBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita toggle del pannello
+                if (window.SchedinaUI) {
+                    window.SchedinaUI.open();
+                } else {
+                    window.Toast?.warning('Schedina non disponibile');
+                }
+            });
+        }
+
         // Minimizza sempre di default (si apre solo con click)
         // Reset _isMinimized a false prima di chiamare toggleMinimize per assicurare che sia minimizzato
         this._isMinimized = false;
         this.toggleMinimize();
+    },
+
+    /**
+     * Aggiorna visibilita' bottone schedina
+     */
+    updateSchedinaButton() {
+        const container = document.getElementById('next-match-schedina-btn-container');
+        if (!container) return;
+
+        const isSchedinaEnabled = window.FeatureFlags?.isEnabled('schedina');
+        if (isSchedinaEnabled) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
     },
 
     /**
@@ -417,5 +454,12 @@ window.NextMatchAlert = {
         await this.init();
     }
 };
+
+// Ascolta cambio flag schedina per aggiornare bottone
+document.addEventListener('featureFlagChanged', (e) => {
+    if (e.detail?.flagId === 'schedina') {
+        window.NextMatchAlert.updateSchedinaButton();
+    }
+});
 
 console.log('[NextMatchAlert] Modulo caricato');

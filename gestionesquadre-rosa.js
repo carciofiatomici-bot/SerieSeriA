@@ -321,7 +321,7 @@ window.GestioneSquadreRosa = {
                        data-player-id="${player.id}"
                        data-player-name="${player.name}"
                        data-player-role="${player.role}"
-                       class="absolute top-2 right-2 z-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900 hover:bg-opacity-30 px-1.5 py-1 rounded transition text-lg"
+                       class="absolute top-1 right-1 sm:top-2 sm:right-2 z-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900 hover:bg-opacity-30 px-1 py-0.5 sm:px-1.5 sm:py-1 rounded transition text-sm sm:text-lg"
                        title="Statistiche ${player.name}">📊</button>`
             : '';
 
@@ -331,7 +331,7 @@ window.GestioneSquadreRosa = {
                 <!-- Header cliccabile -->
                 <div class="player-card-header flex items-center justify-between p-4 cursor-pointer hover:bg-gray-750 transition-colors"
                      data-player-id="${player.id}">
-                    <div class="flex items-center gap-2 flex-wrap pr-8">
+                    <div class="flex items-center gap-2 flex-wrap pr-10 sm:pr-8">
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
                         <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
                         ${iconaMarker}

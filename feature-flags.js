@@ -526,6 +526,24 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-cyan-400"><strong>Fasi bonus:</strong> Centrocampisti in Costruzione, Difensori in Difesa, Attaccanti in Tiro</p>
                 <p class="mt-2 text-yellow-400">Usa la stessa formazione per potenziarla!</p>`
+        },
+        schedina: {
+            id: 'schedina',
+            name: 'Schedina Pronostici',
+            description: 'Sistema per pronosticare risultati partite e vincere crediti',
+            icon: '🎯',
+            enabled: false,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Pronostica i risultati delle partite (1/X/2)</li>
+                    <li>Vinci crediti per ogni pronostico corretto</li>
+                    <li>Bonus speciale per schedina perfetta</li>
+                    <li>Soglia minima partite corrette configurabile</li>
+                    <li>Accesso dal floating alert "Prossima Partita"</li>
+                    <li>Storico schedine con risultati</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">I pronostici si chiudono prima della simulazione!</p>`
         }
     },
 

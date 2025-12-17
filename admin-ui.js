@@ -277,8 +277,12 @@ window.AdminUI = {
                                 📺 Config Media
                             </button>
                             <button id="btn-wheel-config"
-                                    class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-500 hover:to-yellow-400 transition duration-150 text-sm col-span-2">
-                                🎡 Config Ruota Fortuna
+                                    class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-orange-500 hover:to-yellow-400 transition duration-150 text-sm">
+                                🎡 Config Ruota
+                            </button>
+                            <button id="btn-schedina-config"
+                                    class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 text-sm">
+                                🎯 Config Schedina
                             </button>
                         </div>
 
@@ -384,6 +388,17 @@ window.AdminUI = {
                     <button id="btn-close-wheel-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
                 <div id="wheel-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO CONFIGURAZIONE SCHEDINA (inizialmente nascosto) -->
+            <div id="schedina-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-green-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-green-400">🎯 Configurazione Schedina Pronostici</h3>
+                    <button id="btn-close-schedina-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="schedina-panel-content">
                     <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>

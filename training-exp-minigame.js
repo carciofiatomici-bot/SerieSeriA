@@ -10,8 +10,14 @@ window.TrainingExpMinigame = {
     config: {
         XP_PER_SUCCESS: 50,      // XP per ogni tentativo riuscito
         MAX_ATTEMPTS: 3,          // Numero massimo di tentativi
-        MAX_XP: 150               // XP massimo ottenibile (3 * 50)
+        MAX_XP: 150,              // XP massimo ottenibile (3 * 50)
+        BASE_WIDTH: 800,          // Larghezza base per calcolo scala
+        BASE_HEIGHT: 600          // Altezza base per calcolo scala
     },
+
+    // ==================== SCALING MOBILE ====================
+    scale: 1,                     // Fattore di scala corrente
+    isMobile: false,              // Flag dispositivo mobile
 
     // ==================== STATO ====================
     isOpen: false,
@@ -31,6 +37,8 @@ window.TrainingExpMinigame = {
     hudEl: null,
     feedbackEl: null,
     gameOverEl: null,
+    rotateHintEl: null,
+    rotateHintIgnored: false,     // Se l'utente ha ignorato il suggerimento
 
     // ==================== OGGETTI DI GIOCO ====================
     mouse: { x: 0, y: 0 },
@@ -89,6 +97,18 @@ window.TrainingExpMinigame = {
                 <div id="training-instructions" class="absolute bottom-4 left-4 right-4 text-center text-white text-sm opacity-75">
                     <span id="instruction-text"></span>
                 </div>
+
+                <!-- Landscape suggestion overlay (mobile portrait) -->
+                <div id="training-rotate-hint" class="absolute inset-0 bg-black bg-opacity-90 flex-col items-center justify-center z-20 hidden">
+                    <div class="text-center p-6">
+                        <div class="text-6xl mb-4 animate-pulse">📱↔️</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Ruota il dispositivo</h3>
+                        <p class="text-gray-300 text-sm mb-4">Per una migliore esperienza di gioco,<br>ruota il telefono in orizzontale</p>
+                        <button id="training-ignore-rotate" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">
+                            Continua comunque
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -100,9 +120,16 @@ window.TrainingExpMinigame = {
         this.hudEl = document.getElementById('training-hud');
         this.feedbackEl = document.getElementById('training-feedback');
         this.gameOverEl = document.getElementById('training-gameover');
+        this.rotateHintEl = document.getElementById('training-rotate-hint');
 
         // Event listeners
         this.setupEventListeners();
+
+        // Listener per "Continua comunque"
+        document.getElementById('training-ignore-rotate').addEventListener('click', () => {
+            this.rotateHintIgnored = true;
+            this.hideRotateHint();
+        });
 
         console.log('[TrainingExpMinigame] Inizializzato');
     },
@@ -137,16 +164,40 @@ window.TrainingExpMinigame = {
         this.canvas.addEventListener('mousedown', () => this.handleInput());
         this.canvas.addEventListener('touchstart', () => this.handleInput());
 
-        // Resize
+        // Resize e orientamento
         window.addEventListener('resize', () => {
-            if (this.isOpen) this.resizeCanvas();
+            if (this.isOpen) {
+                this.resizeCanvas();
+                this.checkRotateHint();
+            }
+        });
+
+        // Orientamento cambiato (specifico per mobile)
+        window.addEventListener('orientationchange', () => {
+            if (this.isOpen) {
+                setTimeout(() => {
+                    this.resizeCanvas();
+                    this.checkRotateHint();
+                }, 100); // Delay per permettere al browser di aggiornare le dimensioni
+            }
         });
     },
 
     resizeCanvas() {
-        // Dimensioni responsive (max 800x600, min 320x240)
-        const maxW = Math.min(800, window.innerWidth - 32);
-        const maxH = Math.min(600, window.innerHeight - 150);
+        // Rileva mobile
+        this.isMobile = window.innerWidth < 768 || window.innerHeight < 600;
+
+        // Su mobile: padding minimo e quasi fullscreen
+        const padding = this.isMobile ? 8 : 32;
+        const headerSpace = this.isMobile ? 60 : 150;
+
+        // Dimensioni disponibili
+        const availW = window.innerWidth - (padding * 2);
+        const availH = window.innerHeight - headerSpace;
+
+        // Max dimensioni (su mobile permetti di andare piu' grandi)
+        const maxW = this.isMobile ? Math.min(availW, 900) : Math.min(800, availW);
+        const maxH = this.isMobile ? Math.min(availH, 700) : Math.min(600, availH);
 
         // Mantieni aspect ratio 4:3
         const ratio = 4 / 3;
@@ -158,8 +209,61 @@ window.TrainingExpMinigame = {
             w = h * ratio;
         }
 
+        // Imposta dimensioni canvas
         this.canvas.width = w;
         this.canvas.height = h;
+
+        // Calcola fattore di scala rispetto alle dimensioni base
+        this.scale = Math.min(w / this.config.BASE_WIDTH, h / this.config.BASE_HEIGHT);
+
+        // Su mobile, scala minima per elementi touch-friendly
+        if (this.isMobile) {
+            this.scale = Math.max(this.scale, 0.6); // Minimo 60% per touch
+        }
+
+        console.log(`[TrainingExpMinigame] Canvas: ${w}x${h}, Scale: ${this.scale.toFixed(2)}, Mobile: ${this.isMobile}`);
+    },
+
+    /**
+     * Restituisce una dimensione scalata
+     */
+    scaled(value) {
+        return value * this.scale;
+    },
+
+    /**
+     * Verifica se mostrare il suggerimento landscape
+     */
+    checkRotateHint() {
+        // Mostra solo su mobile in portrait e se non ignorato
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const isMobileDevice = window.innerWidth < 768;
+
+        if (isMobileDevice && isPortrait && !this.rotateHintIgnored) {
+            this.showRotateHint();
+        } else {
+            this.hideRotateHint();
+        }
+    },
+
+    /**
+     * Mostra overlay suggerimento rotazione
+     */
+    showRotateHint() {
+        if (this.rotateHintEl) {
+            this.rotateHintEl.classList.remove('hidden');
+            this.rotateHintEl.classList.add('flex');
+        }
+    },
+
+    /**
+     * Nascondi overlay suggerimento rotazione
+     */
+    hideRotateHint() {
+        if (this.rotateHintEl) {
+            this.rotateHintEl.classList.add('hidden');
+            this.rotateHintEl.classList.remove('flex');
+        }
     },
 
     // ==================== APERTURA/CHIUSURA ====================
@@ -199,6 +303,7 @@ window.TrainingExpMinigame = {
         this.gameState = 'PLAYING';
         this.roundActive = true;
         this.isOpen = true;
+        this.rotateHintIgnored = false; // Reset per ogni nuova sessione
 
         // Reset elementi
         this.gameOverEl.classList.add('hidden');
@@ -210,6 +315,7 @@ window.TrainingExpMinigame = {
 
         // Resize e setup
         this.resizeCanvas();
+        this.checkRotateHint(); // Verifica orientamento all'apertura
         this.updateHud();
         this.setInstructions();
         this.resetRound();
@@ -344,23 +450,25 @@ window.TrainingExpMinigame = {
     setupGoalkeeper() {
         // Portiere fisso sulla linea di porta in basso
         this.player.x = this.canvas.width / 2;
-        this.player.y = this.canvas.height - 80;
-        this.player.radius = 40;
+        this.player.y = this.canvas.height - this.scaled(80);
+        this.player.radius = this.scaled(50); // Piu' grande per touch
 
         this.ball.active = true;
         this.ball.x = this.canvas.width / 2;
-        this.ball.y = 50;
+        this.ball.y = this.scaled(50);
+        this.ball.radius = this.scaled(15); // Palla piu' grande
 
         // Traiettoria verso la porta (random X proporzionale al canvas)
-        const goalWidth = Math.min(300, this.canvas.width * 0.5);
+        const goalWidth = Math.min(this.scaled(300), this.canvas.width * 0.5);
         const targetX = (this.canvas.width / 2 - goalWidth / 2) + Math.random() * goalWidth;
-        const targetY = this.canvas.height + 50;
+        const targetY = this.canvas.height + this.scaled(50);
 
         const angle = Math.atan2(targetY - this.ball.y, targetX - this.ball.x);
 
-        // Difficolta progressiva
-        const speedLevels = [6, 9, 12]; // Facile, Medio, Difficile
-        const speed = speedLevels[this.attempts] || speedLevels[2];
+        // Difficolta progressiva - velocita' scalata
+        const speedLevels = [5, 7, 10]; // Leggermente ridotte per mobile
+        const baseSpeed = speedLevels[this.attempts] || speedLevels[2];
+        const speed = baseSpeed * this.scale;
 
         this.ball.vx = Math.cos(angle) * speed;
         this.ball.vy = Math.sin(angle) * speed;
@@ -368,18 +476,20 @@ window.TrainingExpMinigame = {
 
     setupDefender() {
         this.player.x = this.canvas.width / 2;
-        this.player.y = this.canvas.height - 150;
-        this.player.radius = 20;
+        this.player.y = this.canvas.height - this.scaled(150);
+        this.player.radius = this.scaled(28); // Piu' grande per touch
 
-        // Difficolta progressiva
-        const speedLevels = [2.5, 4, 6]; // Facile, Medio, Difficile
-        const enemySpeed = speedLevels[this.attempts] || speedLevels[2];
+        // Difficolta progressiva - velocita' scalata
+        const speedLevels = [2, 3.5, 5]; // Leggermente ridotte
+        const baseSpeed = speedLevels[this.attempts] || speedLevels[2];
+        const enemySpeed = baseSpeed * this.scale;
 
         // Nemico parte dall'alto
+        const margin = this.scaled(100);
         this.targets = [{
-            x: Math.random() * (this.canvas.width - 200) + 100,
-            y: -60,
-            radius: 30,
+            x: Math.random() * (this.canvas.width - margin * 2) + margin,
+            y: -this.scaled(60),
+            radius: this.scaled(35), // Piu' grande per visibilita'
             speed: enemySpeed,
             hasBall: true
         }];
@@ -387,23 +497,28 @@ window.TrainingExpMinigame = {
 
     setupMidfielder() {
         this.player.x = this.canvas.width / 2;
-        this.player.y = this.canvas.height - 100;
+        this.player.y = this.canvas.height - this.scaled(100);
+        this.player.radius = this.scaled(25);
 
         this.ball.x = this.player.x;
         this.ball.y = this.player.y;
+        this.ball.radius = this.scaled(12);
         this.ball.active = false;
 
-        // Difficolta progressiva
-        const speedLevels = [2, 3.5, 5.5];  // Facile, Medio, Difficile
-        const radiusLevels = [28, 22, 16];  // Grande, Medio, Piccolo
-        const teammateSpeed = speedLevels[this.attempts] || speedLevels[2];
-        const teammateRadius = radiusLevels[this.attempts] || radiusLevels[2];
+        // Difficolta progressiva - dimensioni e velocita' scalate
+        const speedLevels = [1.5, 2.5, 4];  // Ridotte per mobile
+        const radiusLevels = [35, 28, 22];  // Piu' grandi per touch
+        const baseSpeed = speedLevels[this.attempts] || speedLevels[2];
+        const baseRadius = radiusLevels[this.attempts] || radiusLevels[2];
+        const teammateSpeed = baseSpeed * this.scale;
+        const teammateRadius = this.scaled(baseRadius);
 
+        const margin = this.scaled(50);
         this.targets = [];
         for (let i = 0; i < 3; i++) {
             this.targets.push({
-                x: Math.random() * (this.canvas.width - 100) + 50,
-                y: Math.random() * (this.canvas.height * 0.5) + 50,
+                x: Math.random() * (this.canvas.width - margin * 2) + margin,
+                y: Math.random() * (this.canvas.height * 0.5) + margin,
                 radius: teammateRadius,
                 vx: (Math.random() > 0.5 ? 1 : -1) * teammateSpeed,
                 vy: 0,
@@ -414,24 +529,29 @@ window.TrainingExpMinigame = {
 
     setupStriker() {
         this.player.x = this.canvas.width / 2;
-        this.player.y = this.canvas.height - 100;
+        this.player.y = this.canvas.height - this.scaled(100);
+        this.player.radius = this.scaled(25);
 
         this.ball.x = this.player.x;
         this.ball.y = this.player.y;
+        this.ball.radius = this.scaled(12);
         this.ball.active = false;
 
-        // Difficolta progressiva
-        const speedLevels = [3, 5, 8];      // Facile, Medio, Difficile
-        const widthLevels = [60, 90, 130];  // Stretto, Medio, Largo
-        const gkSpeed = speedLevels[this.attempts] || speedLevels[2];
-        const gkWidth = widthLevels[this.attempts] || widthLevels[2];
+        // Difficolta progressiva - scalata
+        const speedLevels = [2.5, 4, 6];     // Ridotte per mobile
+        const widthLevels = [70, 100, 140];  // Piu' larghi per visibilita'
+        const baseSpeed = speedLevels[this.attempts] || speedLevels[2];
+        const baseWidth = widthLevels[this.attempts] || widthLevels[2];
+        const gkSpeed = baseSpeed * this.scale;
+        const gkWidth = this.scaled(baseWidth);
+        const gkHeight = this.scaled(35);
 
         // Portiere nemico
         this.targets = [{
             x: this.canvas.width / 2,
-            y: 80,
+            y: this.scaled(80),
             width: gkWidth,
-            height: 30,
+            height: gkHeight,
             vx: gkSpeed,
             type: 'gk_enemy'
         }];
@@ -444,13 +564,13 @@ window.TrainingExpMinigame = {
 
         if (this.currentRole === 'mid' && !this.ball.active) {
             const angle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
-            const speed = 12;
+            const speed = 10 * this.scale; // Velocita' scalata
             this.ball.vx = Math.cos(angle) * speed;
             this.ball.vy = Math.sin(angle) * speed;
             this.ball.active = true;
         } else if (this.currentRole === 'fwd' && !this.ball.active) {
             const angle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
-            const speed = 18;
+            const speed = 14 * this.scale; // Velocita' scalata
             this.ball.vx = Math.cos(angle) * speed;
             this.ball.vy = Math.sin(angle) * speed;
             this.ball.active = true;
@@ -477,12 +597,13 @@ window.TrainingExpMinigame = {
         this.ball.x += this.ball.vx;
         this.ball.y += this.ball.vy;
 
-        // Collisione
+        // Collisione - margine scalato per touch piu' generoso
         const dx = this.ball.x - this.player.x;
         const dy = this.ball.y - this.player.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
+        const hitMargin = this.scaled(15); // Margine piu' generoso
 
-        if (dist < (this.player.radius + this.ball.radius + 10)) {
+        if (dist < (this.player.radius + this.ball.radius + hitMargin)) {
             this.showFeedback('PARATA!', 'green');
             this.score++;
             this.nextAttempt(true); // Successo
@@ -508,20 +629,22 @@ window.TrainingExpMinigame = {
 
         enemy.y += enemy.speed;
 
-        const ballDistFromFeet = 50;
+        // Valori scalati
+        const ballDistFromFeet = this.scaled(50);
         const enemyBallX = enemy.x;
         const enemyBallY = enemy.y + ballDistFromFeet;
-        const enemyBallRadius = 18;
+        const enemyBallRadius = this.scaled(20); // Piu' grande per touch
 
         const distBody = Math.hypot(this.player.x - enemy.x, this.player.y - enemy.y);
         const distBall = Math.hypot(this.player.x - enemyBallX, this.player.y - enemyBallY);
+        const hitMargin = this.scaled(8); // Margine generoso
 
-        if (distBall < (this.player.radius + enemyBallRadius + 5)) {
+        if (distBall < (this.player.radius + enemyBallRadius + hitMargin)) {
             this.showFeedback('PRESA!', 'green');
             this.score++;
             this.nextAttempt(true); // Successo
             return;
-        } else if (distBody < (this.player.radius + enemy.radius - 5)) {
+        } else if (distBody < (this.player.radius + enemy.radius - this.scaled(5))) {
             this.showFeedback('FALLO!', 'red');
             this.nextAttempt(false); // Fallimento
             return;
@@ -534,9 +657,10 @@ window.TrainingExpMinigame = {
 
     updateMid() {
         // Muovi i compagni anche se il round e' concluso (per visual)
+        const margin = this.scaled(50);
         this.targets.forEach(t => {
             t.x += t.vx;
-            if (t.x < 50 || t.x > this.canvas.width - 50) t.vx *= -1;
+            if (t.x < margin || t.x > this.canvas.width - margin) t.vx *= -1;
         });
 
         // Se il round e' gia' concluso, non processare collisioni
@@ -547,10 +671,11 @@ window.TrainingExpMinigame = {
             this.ball.y += this.ball.vy;
 
             let hit = false;
+            const hitMargin = this.scaled(8); // Margine generoso per touch
             this.targets.forEach((t, index) => {
                 if (hit) return; // Gia' colpito un target
                 const dist = Math.hypot(this.ball.x - t.x, this.ball.y - t.y);
-                if (dist < (this.ball.radius + t.radius + 5)) {
+                if (dist < (this.ball.radius + t.radius + hitMargin)) {
                     this.showFeedback('ASSIST!', 'green');
                     this.score++;
                     hit = true;
@@ -573,10 +698,11 @@ window.TrainingExpMinigame = {
     updateFwd() {
         const gk = this.targets[0];
 
-        // Movimento portiere nemico (anche se round concluso per visual)
+        // Movimento portiere nemico (anche se round concluso per visual) - range scalato
         gk.x += gk.vx;
         const goalCenter = this.canvas.width / 2;
-        if (gk.x < goalCenter - 120 || gk.x > goalCenter + 120) {
+        const gkRange = this.scaled(140);
+        if (gk.x < goalCenter - gkRange || gk.x > goalCenter + gkRange) {
             gk.vx *= -1;
         }
 
@@ -587,19 +713,23 @@ window.TrainingExpMinigame = {
             this.ball.x += this.ball.vx;
             this.ball.y += this.ball.vy;
 
-            // Collisione portiere nemico
-            if (this.ball.x > gk.x - (gk.width / 2 + 10) &&
-                this.ball.x < gk.x + (gk.width / 2 + 10) &&
-                this.ball.y > gk.y - (gk.height / 2 + 10) &&
-                this.ball.y < gk.y + (gk.height / 2 + 15)) {
+            // Collisione portiere nemico - margini scalati
+            const hitMarginX = this.scaled(10);
+            const hitMarginY = this.scaled(12);
+            if (this.ball.x > gk.x - (gk.width / 2 + hitMarginX) &&
+                this.ball.x < gk.x + (gk.width / 2 + hitMarginX) &&
+                this.ball.y > gk.y - (gk.height / 2 + hitMarginY) &&
+                this.ball.y < gk.y + (gk.height / 2 + hitMarginY)) {
                 this.showFeedback('PARATO!', 'red');
                 this.nextAttempt(false); // Fallimento
                 return;
             }
 
-            // GOL o FUORI
-            if (this.ball.y < 60) {
-                if (this.ball.x > goalCenter - 150 && this.ball.x < goalCenter + 150) {
+            // GOL o FUORI - valori scalati
+            const goalLineY = this.scaled(60);
+            const goalWidth = this.scaled(160);
+            if (this.ball.y < goalLineY) {
+                if (this.ball.x > goalCenter - goalWidth && this.ball.x < goalCenter + goalWidth) {
                     this.showFeedback('GOOOOL!', 'green');
                     this.score++;
                     this.nextAttempt(true); // Successo
@@ -717,25 +847,28 @@ window.TrainingExpMinigame = {
         ctx.fillStyle = '#4ade80';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Righe campo
+        // Righe campo - dimensioni scalate
         ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = Math.max(2, this.scaled(4));
 
         if (this.currentRole === 'gk' || this.currentRole === 'fwd') {
-            // Porta e area
+            // Porta e area - dimensioni scalate
+            const areaW = this.scaled(500);
+            const areaH = this.scaled(200);
             ctx.strokeRect(
-                canvas.width / 2 - 250,
-                this.currentRole === 'gk' ? canvas.height - 200 : 0,
-                500,
-                200
+                canvas.width / 2 - areaW / 2,
+                this.currentRole === 'gk' ? canvas.height - areaH : 0,
+                areaW,
+                areaH
             );
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            const goalY = this.currentRole === 'gk' ? canvas.height - 10 : 10;
-            ctx.fillRect(canvas.width / 2 - 150, goalY, 300, 5);
+            const goalW = this.scaled(300);
+            const goalY = this.currentRole === 'gk' ? canvas.height - this.scaled(10) : this.scaled(10);
+            ctx.fillRect(canvas.width / 2 - goalW / 2, goalY, goalW, this.scaled(5));
         } else {
-            // Centrocampo
+            // Centrocampo - cerchio scalato
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, this.scaled(80), 0, Math.PI * 2);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(0, canvas.height / 2);
@@ -745,23 +878,25 @@ window.TrainingExpMinigame = {
 
         if (this.gameState !== 'PLAYING') return;
 
-        // Disegna giocatore
+        // Disegna giocatore - usa radius gia' scalato in setup
         ctx.beginPath();
         ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.player.color;
         ctx.fill();
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = Math.max(2, this.scaled(3));
         ctx.stroke();
 
-        // Guanti portiere
+        // Guanti portiere - scalati
         if (this.currentRole === 'gk') {
+            const gloveOffset = this.scaled(30);
+            const gloveSize = this.scaled(12);
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(this.player.x - 25, this.player.y, 10, 0, Math.PI * 2);
+            ctx.arc(this.player.x - gloveOffset, this.player.y, gloveSize, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(this.player.x + 25, this.player.y, 10, 0, Math.PI * 2);
+            ctx.arc(this.player.x + gloveOffset, this.player.y, gloveSize, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -769,78 +904,89 @@ window.TrainingExpMinigame = {
         if (this.currentRole === 'def') {
             const enemy = this.targets[0];
             if (enemy) {
-                // Corpo nemico
+                // Corpo nemico - usa radius gia' scalato
                 ctx.beginPath();
                 ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#ef4444';
                 ctx.fill();
                 ctx.fillStyle = 'white';
-                ctx.font = '14px Arial';
+                ctx.font = `${Math.max(12, this.scaled(16))}px Arial`;
                 ctx.textAlign = 'center';
-                ctx.fillText('AVV', enemy.x, enemy.y + 5);
+                ctx.fillText('AVV', enemy.x, enemy.y + this.scaled(5));
 
-                // Palla nemica
+                // Palla nemica - scalata
+                const ballDist = this.scaled(50);
+                const ballRadius = this.scaled(18);
                 ctx.beginPath();
-                ctx.arc(enemy.x, enemy.y + 50, 15, 0, Math.PI * 2);
+                ctx.arc(enemy.x, enemy.y + ballDist, ballRadius, 0, Math.PI * 2);
                 ctx.fillStyle = 'white';
                 ctx.fill();
                 ctx.strokeStyle = 'black';
+                ctx.lineWidth = Math.max(1, this.scaled(2));
                 ctx.stroke();
 
                 // Linea collegamento
                 ctx.beginPath();
                 ctx.moveTo(enemy.x, enemy.y + enemy.radius);
-                ctx.lineTo(enemy.x, enemy.y + 35);
+                ctx.lineTo(enemy.x, enemy.y + this.scaled(35));
                 ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = Math.max(1, this.scaled(2));
                 ctx.stroke();
             }
         } else if (this.currentRole === 'fwd') {
+            // Portiere nemico - usa dimensioni gia' scalate in setup
             const gk = this.targets[0];
             ctx.fillStyle = '#ef4444';
             ctx.fillRect(gk.x - gk.width / 2, gk.y - gk.height / 2, gk.width, gk.height);
             ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
+            ctx.font = `${Math.max(10, this.scaled(14))}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText('PORTIERE', gk.x, gk.y + 4);
+            ctx.fillText('PORTIERE', gk.x, gk.y + this.scaled(4));
         } else if (this.currentRole === 'mid') {
+            // Compagni - usano radius gia' scalato in setup
             this.targets.forEach(t => {
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#3b82f6';
                 ctx.fill();
-                ctx.lineWidth = 3;
+                ctx.lineWidth = Math.max(2, this.scaled(3));
                 ctx.strokeStyle = '#fde047';
                 ctx.stroke();
             });
         }
 
-        // Palla libera
+        // Palla libera - usa radius gia' scalato in setup
         if (this.currentRole !== 'def') {
             ctx.beginPath();
             ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
             ctx.fill();
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.max(1, this.scaled(2));
             ctx.stroke();
         }
 
-        // Mirino per mid/fwd
+        // Mirino per mid/fwd - scalato e piu' visibile su mobile
         if ((this.currentRole === 'mid' || this.currentRole === 'fwd') && !this.ball.active) {
             ctx.beginPath();
             ctx.moveTo(this.player.x, this.player.y);
             ctx.lineTo(this.mouse.x, this.mouse.y);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = Math.max(2, this.scaled(2));
+            const dashSize = this.scaled(5);
+            ctx.setLineDash([dashSize, dashSize]);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Cursore mira
+            // Cursore mira - piu' grande su mobile per visibilita'
+            const cursorSize = this.isMobile ? this.scaled(10) : this.scaled(6);
             ctx.beginPath();
-            ctx.arc(this.mouse.x, this.mouse.y, 5, 0, Math.PI * 2);
+            ctx.arc(this.mouse.x, this.mouse.y, cursorSize, 0, Math.PI * 2);
             ctx.fillStyle = 'yellow';
             ctx.fill();
+            ctx.strokeStyle = 'orange';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
     },
 
