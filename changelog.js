@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.7',
+    currentVersion: '2.2.8',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,19 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.8',
+            date: '2025-12-17',
+            time: '20:00',
+            title: 'Fix UI Rosa + Pull-to-Refresh Migliorato',
+            changes: [
+                { text: 'Bottone Statistiche spostato su riga separata nella Gestione Rosa', adminOnly: false },
+                { text: 'Pull-to-refresh PWA ora mantiene la pagina corrente dopo il refresh', adminOnly: false },
+                { text: 'Se eri nella Rosa, dopo il refresh torni nella Rosa (non piu alla dashboard)', adminOnly: false },
+                { text: 'Allineate tutte le versioni PWA (service worker, version-check, changelog)', adminOnly: true }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.7',
             date: '2025-12-17',
