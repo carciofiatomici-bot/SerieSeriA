@@ -1403,7 +1403,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // *** IMPORTAZIONE CRITICA: Importa TUTTE le funzioni necessarie per l'oggetto firestoreTools ***
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Imposta il livello di log (utile per il debug)
@@ -1430,7 +1430,18 @@
         window.app = initializeApp(window.firebaseConfig);
         window.db = getFirestore(window.app);
         window.auth = getAuth(window.app);
-        
+
+        // Abilita cache offline per ridurre letture Firestore
+        enableIndexedDbPersistence(window.db).then(() => {
+            console.log("[Firebase] Offline persistence abilitata - cache locale attiva");
+        }).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn("[Firebase] Offline persistence non disponibile: app aperta in piu tab");
+            } else if (err.code === 'unimplemented') {
+                console.warn("[Firebase] Offline persistence non supportata da questo browser");
+            }
+        });
+
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
         // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.

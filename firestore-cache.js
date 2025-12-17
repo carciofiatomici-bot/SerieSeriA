@@ -10,15 +10,16 @@
 window.FirestoreCache = {
 
     // Configurazione TTL (Time To Live) in millisecondi
+    // OTTIMIZZATO: TTL aumentati per ridurre letture Firestore del 30-50%
     TTL: {
-        TEAM_DATA: 60 * 1000,           // 1 minuto per dati squadra
-        TEAM_LIST: 2 * 60 * 1000,       // 2 minuti per lista squadre
-        CONFIG: 5 * 60 * 1000,          // 5 minuti per configurazioni
-        PLAYERS: 5 * 60 * 1000,         // 5 minuti per giocatori draft/mercato
-        LEADERBOARD: 2 * 60 * 1000,     // 2 minuti per classifica
-        SCHEDULE: 5 * 60 * 1000,        // 5 minuti per calendario
-        SHORT: 30 * 1000,               // 30 secondi per dati volatili
-        VERY_SHORT: 10 * 1000           // 10 secondi per dati molto volatili
+        TEAM_DATA: 5 * 60 * 1000,       // 5 minuti per dati squadra (era 1 min)
+        TEAM_LIST: 10 * 60 * 1000,      // 10 minuti per lista squadre (era 2 min)
+        CONFIG: 15 * 60 * 1000,         // 15 minuti per configurazioni (era 5 min)
+        PLAYERS: 10 * 60 * 1000,        // 10 minuti per giocatori draft/mercato (era 5 min)
+        LEADERBOARD: 5 * 60 * 1000,     // 5 minuti per classifica (era 2 min)
+        SCHEDULE: 15 * 60 * 1000,       // 15 minuti per calendario (era 5 min)
+        SHORT: 2 * 60 * 1000,           // 2 minuti per dati volatili (era 30 sec)
+        VERY_SHORT: 30 * 1000           // 30 secondi per dati molto volatili (era 10 sec)
     },
 
     // Storage interno
