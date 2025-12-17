@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.3',
+    currentVersion: '2.2.4',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,26 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.4',
+            date: '2025-12-17',
+            time: '12:00',
+            title: 'Sistema Schedina Pronostici + Fix Mobile',
+            changes: [
+                { text: 'NUOVO: Sistema Schedina Pronostici - pronostica i risultati 1/X/2 delle partite!', adminOnly: false },
+                { text: 'Schedina accessibile dal floating alert della prossima partita', adminOnly: false },
+                { text: 'Vinci crediti per ogni pronostico corretto + bonus schedina perfetta', adminOnly: false },
+                { text: 'Soglia minima partite corrette configurabile per vincere premi', adminOnly: false },
+                { text: 'Storico schedine con risultati e premi vinti', adminOnly: false },
+                { text: 'MIGLIORATO: Minigiochi allenamento ora scalano dinamicamente su mobile', adminOnly: false },
+                { text: 'MIGLIORATO: Fullscreen automatico per minigiochi su dispositivi mobili', adminOnly: false },
+                { text: 'FIX: Icona statistiche non piu sovrapposta al nome giocatore su mobile', adminOnly: false },
+                { text: 'NUOVO: Flag Schedina nella sezione Admin dei Feature Flags', adminOnly: true },
+                { text: 'NUOVO: Pannello Config Schedina per configurare premi e soglie', adminOnly: true },
+                { text: 'Admin puo calcolare risultati e assegnare premi manualmente', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.3',
             date: '2025-12-16',
