@@ -216,6 +216,7 @@ window.SchedinaUI = {
      */
     renderCurrentRound() {
         const content = document.getElementById('schedina-content');
+        const footer = document.getElementById('schedina-footer');
 
         if (!this.currentRound) {
             content.innerHTML = `
@@ -225,13 +226,19 @@ window.SchedinaUI = {
                     <p class="text-sm mt-2">Tutte le partite sono state giocate</p>
                 </div>
             `;
-            document.getElementById('schedina-footer').classList.add('hidden');
+            footer.classList.add('hidden');
             return;
         }
 
         // Verifica se gia' calcolata
         if (this.existingPrediction?.status === 'calculated') {
             this.renderCalculatedResults();
+            return;
+        }
+
+        // Se ha gia' inviato una schedina (status pending), mostra solo i pronostici in sola lettura
+        if (this.existingPrediction && this.existingPrediction.status === 'pending') {
+            this.renderSubmittedPredictions();
             return;
         }
 
@@ -283,12 +290,6 @@ window.SchedinaUI = {
 
         content.innerHTML = `
             <div class="space-y-3">
-                ${this.existingPrediction ? `
-                    <div class="bg-green-900/30 border border-green-500 rounded-lg p-3 text-center mb-4">
-                        <p class="text-green-400 text-sm">Hai gia' inviato una schedina per questa giornata</p>
-                        <p class="text-gray-400 text-xs mt-1">Puoi modificarla fino alla chiusura</p>
-                    </div>
-                ` : ''}
                 ${matchesHtml}
             </div>
         `;
@@ -304,6 +305,66 @@ window.SchedinaUI = {
         });
 
         this.updateSubmitButton();
+    },
+
+    /**
+     * Renderizza schedina gia' inviata (sola lettura)
+     */
+    renderSubmittedPredictions() {
+        const content = document.getElementById('schedina-content');
+        const footer = document.getElementById('schedina-footer');
+
+        // Nascondi il bottone invia
+        footer.classList.add('hidden');
+
+        const predictionsHtml = this.existingPrediction.predictions.map(p => {
+            const predColor = p.prediction === '1' ? 'bg-green-600' :
+                             p.prediction === 'X' ? 'bg-yellow-600' : 'bg-blue-600';
+
+            return `
+                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div class="flex items-center justify-between gap-2">
+                        <!-- Squadra Casa -->
+                        <div class="flex-1 text-center">
+                            <p class="text-white font-semibold text-sm truncate">${p.homeName}</p>
+                        </div>
+
+                        <!-- Pronostico (solo visualizzazione) -->
+                        <div class="flex gap-1 mx-2">
+                            <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg flex items-center justify-center
+                                        ${predColor} text-white ring-2 ${p.prediction === '1' ? 'ring-green-400' : p.prediction === 'X' ? 'ring-yellow-400' : 'ring-blue-400'}">
+                                ${p.prediction}
+                            </span>
+                        </div>
+
+                        <!-- Squadra Trasferta -->
+                        <div class="flex-1 text-center">
+                            <p class="text-white font-semibold text-sm truncate">${p.awayName}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        content.innerHTML = `
+            <div class="space-y-3">
+                <!-- Banner schedina inviata -->
+                <div class="bg-green-900/40 border-2 border-green-500 rounded-xl p-4 text-center">
+                    <p class="text-3xl mb-2">✅</p>
+                    <p class="text-green-400 font-bold text-lg">Schedina Inviata!</p>
+                    <p class="text-gray-300 text-sm mt-2">I tuoi pronostici per la Giornata ${this.currentRound.roundNumber}</p>
+                    <p class="text-gray-500 text-xs mt-1">In attesa dei risultati delle partite</p>
+                </div>
+
+                <!-- Lista pronostici -->
+                <div class="mt-4">
+                    <h3 class="text-gray-400 text-sm font-semibold mb-3 uppercase tracking-wide">I tuoi pronostici:</h3>
+                    <div class="space-y-2">
+                        ${predictionsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
     },
 
     /**

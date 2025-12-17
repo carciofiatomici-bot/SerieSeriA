@@ -11,9 +11,9 @@ window.PlayerStats = {
      */
     initPlayerStats(playerId, playerName, role) {
         return {
-            playerId,
-            playerName,
-            role,
+            playerId: playerId || 'unknown',
+            playerName: playerName || 'Giocatore',
+            role: role || 'C',
             matchesPlayed: 0,
             matchesStarting: 0, // Partite da titolare
             matchesBench: 0, // Partite in panchina
@@ -573,28 +573,31 @@ window.PlayerStats = {
 
             // Aggiungi a storico partite (max 30)
             const matchRecord = {
-                matchId: `${matchInfo.matchType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                matchId: `${matchInfo.matchType || 'match'}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                 date: new Date().toISOString(),
                 type: matchInfo.matchType || 'campionato',
                 opponent: {
-                    id: matchInfo.opponentId,
-                    name: matchInfo.opponentName
+                    id: matchInfo.opponentId || 'unknown',
+                    name: matchInfo.opponentName || 'Avversario'
                 },
                 result: {
-                    goalsFor,
-                    goalsAgainst,
-                    isHome: matchInfo.isHome,
-                    outcome
+                    goalsFor: goalsFor || 0,
+                    goalsAgainst: goalsAgainst || 0,
+                    isHome: matchInfo.isHome || false,
+                    outcome: outcome || 'draw'
                 },
                 performance: {
                     isStarting: true,
                     rating: parseFloat(playerRating.toFixed(1)),
-                    goalsScored: playerGoals,
-                    assists: playerAssists,
-                    cleanSheet: player.role === 'P' ? cleanSheet : undefined,
-                    isMVP
+                    goalsScored: playerGoals || 0,
+                    assists: playerAssists || 0,
+                    isMVP: isMVP || false
                 }
             };
+            // Aggiungi cleanSheet solo per portieri
+            if (player.role === 'P') {
+                matchRecord.performance.cleanSheet = cleanSheet || false;
+            }
 
             stats.matchHistory.unshift(matchRecord);
             if (stats.matchHistory.length > 30) {
