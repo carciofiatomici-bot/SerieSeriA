@@ -45,39 +45,43 @@ window.PullToRefresh = {
      * Ripristina la schermata salvata dopo un refresh
      */
     restoreScreen() {
-        const savedScreen = sessionStorage.getItem(this.SCREEN_KEY);
-        const savedSection = sessionStorage.getItem(this.SECTION_KEY);
+        // Leggi da URL hash (es. #team-screen:Gestione%20Rosa)
+        const hash = window.location.hash;
+        if (!hash || !hash.startsWith('#restore:')) return;
 
-        if (savedScreen) {
-            sessionStorage.removeItem(this.SCREEN_KEY);
-            sessionStorage.removeItem(this.SECTION_KEY);
-            console.log('[PullToRefresh] Ripristino schermata:', savedScreen, 'sezione:', savedSection);
+        // Pulisci l'hash
+        const data = hash.replace('#restore:', '');
+        history.replaceState(null, '', window.location.pathname);
 
-            // Aspetta che l'app sia completamente pronta
-            const tryRestore = (attempts = 0) => {
-                if (attempts > 10) {
-                    console.warn('[PullToRefresh] Impossibile ripristinare schermata dopo 10 tentativi');
-                    return;
+        const [savedScreen, savedSection] = data.split(':').map(s => decodeURIComponent(s));
+        if (!savedScreen) return;
+
+        console.log('[PullToRefresh] Ripristino da hash:', savedScreen, savedSection);
+
+        // Aspetta che l'app sia completamente pronta
+        const tryRestore = (attempts = 0) => {
+            if (attempts > 20) {
+                console.warn('[PullToRefresh] Impossibile ripristinare schermata dopo 20 tentativi');
+                return;
+            }
+
+            // Verifica se showScreen esiste e l'utente e' loggato
+            if (typeof window.showScreen === 'function' && window.InterfacciaCore?.currentTeamId) {
+                console.log('[PullToRefresh] Navigo a:', savedScreen);
+                window.showScreen(savedScreen);
+
+                // Se era team-screen, ripristina anche la sezione
+                if (savedScreen === 'team-screen' && savedSection) {
+                    setTimeout(() => this.restoreTeamSection(savedSection), 800);
                 }
+            } else {
+                // Riprova dopo 300ms
+                setTimeout(() => tryRestore(attempts + 1), 300);
+            }
+        };
 
-                // Verifica se showScreen esiste e l'utente e' loggato
-                if (typeof window.showScreen === 'function' && window.InterfacciaCore?.currentTeamId) {
-                    console.log('[PullToRefresh] Navigo a:', savedScreen);
-                    window.showScreen(savedScreen);
-
-                    // Se era team-screen, ripristina anche la sezione
-                    if (savedScreen === 'team-screen' && savedSection) {
-                        setTimeout(() => this.restoreTeamSection(savedSection), 500);
-                    }
-                } else {
-                    // Riprova dopo 500ms
-                    setTimeout(() => tryRestore(attempts + 1), 500);
-                }
-            };
-
-            // Primo tentativo dopo 1.5 secondi
-            setTimeout(() => tryRestore(0), 1500);
-        }
+        // Primo tentativo dopo 2 secondi
+        setTimeout(() => tryRestore(0), 2000);
     },
 
     /**
@@ -298,22 +302,21 @@ window.PullToRefresh = {
     triggerRefresh() {
         this.isRefreshing = true;
 
-        // Salva la schermata corrente prima del reload
+        // Costruisci URL con hash per il restore
         const currentScreen = this.getCurrentScreen();
-        if (currentScreen) {
-            sessionStorage.setItem(this.SCREEN_KEY, currentScreen);
-            console.log('[PullToRefresh] Salvo schermata:', currentScreen);
+        let restoreHash = '';
 
-            // Se siamo in team-screen, salva anche la sezione attiva
+        if (currentScreen) {
+            restoreHash = `#restore:${encodeURIComponent(currentScreen)}`;
+
+            // Se siamo in team-screen, aggiungi anche la sezione
             if (currentScreen === 'team-screen') {
                 const section = this.getCurrentTeamSection();
                 if (section) {
-                    sessionStorage.setItem(this.SECTION_KEY, section);
-                    console.log('[PullToRefresh] Salvo sezione:', section);
+                    restoreHash += `:${encodeURIComponent(section)}`;
                 }
             }
-        } else {
-            console.log('[PullToRefresh] Refresh dalla dashboard, nessuna schermata da salvare');
+            console.log('[PullToRefresh] Salvo stato in hash:', restoreHash);
         }
 
         // Mostra spinner di caricamento
@@ -339,7 +342,12 @@ window.PullToRefresh = {
 
         // Ricarica pagina dopo breve delay per feedback visivo
         setTimeout(() => {
-            window.location.reload();
+            if (restoreHash) {
+                // Usa hash per passare lo stato attraverso il reload
+                window.location.href = window.location.pathname + restoreHash;
+            } else {
+                window.location.reload();
+            }
         }, 500);
     }
 };
