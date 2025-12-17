@@ -12,6 +12,31 @@
 window.PlayerSeasonStatsUI = {
 
     /**
+     * Toggle per mostrare/nascondere le classifiche complete.
+     * @param {string} rankingsId - ID del contenitore delle classifiche
+     */
+    toggleRankings(rankingsId) {
+        const rankings = document.getElementById(rankingsId);
+        const icon = document.getElementById('icon-' + rankingsId);
+
+        if (!rankings) return;
+
+        if (rankings.classList.contains('hidden')) {
+            rankings.classList.remove('hidden');
+            if (icon) {
+                icon.textContent = '▲';
+                icon.classList.add('rotate-180');
+            }
+        } else {
+            rankings.classList.add('hidden');
+            if (icon) {
+                icon.textContent = '▼';
+                icon.classList.remove('rotate-180');
+            }
+        }
+    },
+
+    /**
      * Renderizza il pannello completo delle statistiche stagionali.
      * @param {string} containerId - ID del container HTML dove inserire la UI
      */
@@ -38,21 +63,32 @@ window.PlayerSeasonStatsUI = {
 
             const getLogoHtml = window.getLogoHtml || ((teamId) => '');
 
+            const rankingsId = 'season-stats-rankings-' + Date.now();
             container.innerHTML = `
-                <div class="space-y-6">
-                    <!-- Riepilogo Stagione -->
+                <div class="space-y-4">
+                    <!-- Riepilogo Stagione (sempre visibile) -->
                     ${this.renderSeasonSummary(summary)}
 
-                    <!-- Classifiche -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <!-- Capocannoniere -->
-                        ${this.renderRankingCard('Capocannoniere', topScorers, 'goals', 'bg-gradient-to-br from-yellow-900 to-amber-800', 'border-yellow-500', getLogoHtml)}
+                    <!-- Toggle Classifiche Complete -->
+                    <button id="toggle-${rankingsId}"
+                            class="w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-between transition-colors"
+                            onclick="window.PlayerSeasonStatsUI.toggleRankings('${rankingsId}')">
+                        <span class="text-gray-300 font-semibold">📊 Classifiche Complete</span>
+                        <span id="icon-${rankingsId}" class="text-gray-400 text-xl transform transition-transform">▼</span>
+                    </button>
 
-                        <!-- Miglior Assistman -->
-                        ${this.renderRankingCard('Miglior Assistman', topAssisters, 'assists', 'bg-gradient-to-br from-blue-900 to-indigo-800', 'border-blue-500', getLogoHtml)}
+                    <!-- Classifiche (collassate di default) -->
+                    <div id="${rankingsId}" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                            <!-- Capocannoniere -->
+                            ${this.renderRankingCard('Capocannoniere', topScorers, 'goals', 'bg-gradient-to-br from-yellow-900 to-amber-800', 'border-yellow-500', getLogoHtml)}
 
-                        <!-- Portiere Imbattuto -->
-                        ${this.renderRankingCard('Portiere Imbattuto', topCleanSheets, 'cleanSheets', 'bg-gradient-to-br from-green-900 to-emerald-800', 'border-green-500', getLogoHtml)}
+                            <!-- Miglior Assistman -->
+                            ${this.renderRankingCard('Miglior Assistman', topAssisters, 'assists', 'bg-gradient-to-br from-blue-900 to-indigo-800', 'border-blue-500', getLogoHtml)}
+
+                            <!-- Portiere Imbattuto -->
+                            ${this.renderRankingCard('Portiere Imbattuto', topCleanSheets, 'cleanSheets', 'bg-gradient-to-br from-green-900 to-emerald-800', 'border-green-500', getLogoHtml)}
+                        </div>
                     </div>
                 </div>
             `;

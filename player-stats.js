@@ -526,12 +526,22 @@ window.PlayerStats = {
         const baseRating = outcome === 'win' ? 6.5 : outcome === 'draw' ? 6.0 : 5.5;
 
         for (const player of titolari) {
-            const statsPath = `${statsBasePath}/${player.id}`;
+            // Skip giocatori senza ID valido
+            if (!player || !player.id) {
+                console.warn('[PlayerStats] Giocatore senza ID, skip');
+                continue;
+            }
+
+            const playerId = player.id || `unknown_${Date.now()}`;
+            const playerName = player.name || 'Giocatore';
+            const playerRole = player.role || 'C';
+
+            const statsPath = `${statsBasePath}/${playerId}`;
             const statsRef = doc(db, statsPath);
 
             // Carica stats esistenti
             const statsDoc = await getDoc(statsRef);
-            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(player.id, player.name, player.role);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(playerId, playerName, playerRole);
 
             // Aggiungi matchHistory se non esiste
             if (!stats.matchHistory) {
@@ -539,14 +549,14 @@ window.PlayerStats = {
             }
 
             // Trova gol/assist assegnati a questo giocatore
-            const playerGoals = goalAssignments.filter(g => g.scorerId === player.id).length;
-            const playerAssists = goalAssignments.filter(g => g.assisterId === player.id).length;
+            const playerGoals = goalAssignments.filter(g => g.scorerId === playerId).length;
+            const playerAssists = goalAssignments.filter(g => g.assisterId === playerId).length;
 
             // Calcola rating individuale
             let playerRating = baseRating;
             playerRating += playerGoals * 1.0;  // +1 per gol
             playerRating += playerAssists * 0.5; // +0.5 per assist
-            if (player.role === 'P' && cleanSheet) playerRating += 1.0; // +1 per clean sheet
+            if (playerRole === 'P' && cleanSheet) playerRating += 1.0; // +1 per clean sheet
             playerRating = Math.max(4.0, Math.min(10.0, playerRating + (Math.random() - 0.5))); // Variazione
 
             // Aggiorna stats cumulative
@@ -555,7 +565,7 @@ window.PlayerStats = {
             stats.goalsScored = (stats.goalsScored || 0) + playerGoals;
             stats.assists = (stats.assists || 0) + playerAssists;
 
-            if (player.role === 'P') {
+            if (playerRole === 'P') {
                 if (cleanSheet) stats.cleanSheets = (stats.cleanSheets || 0) + 1;
                 // Stima parate: gol subiti +2 random se non clean sheet
                 if (!cleanSheet) stats.saves = (stats.saves || 0) + goalsAgainst + Math.floor(Math.random() * 3);
@@ -595,7 +605,7 @@ window.PlayerStats = {
                 }
             };
             // Aggiungi cleanSheet solo per portieri
-            if (player.role === 'P') {
+            if (playerRole === 'P') {
                 matchRecord.performance.cleanSheet = cleanSheet || false;
             }
 
@@ -611,11 +621,21 @@ window.PlayerStats = {
 
         // Registra anche i panchinari (con stats ridotte)
         for (const player of panchina) {
-            const statsPath = `${statsBasePath}/${player.id}`;
+            // Skip giocatori senza ID valido
+            if (!player || !player.id) {
+                console.warn('[PlayerStats] Panchinaro senza ID, skip');
+                continue;
+            }
+
+            const playerId = player.id || `unknown_${Date.now()}`;
+            const playerName = player.name || 'Giocatore';
+            const playerRole = player.role || 'C';
+
+            const statsPath = `${statsBasePath}/${playerId}`;
             const statsRef = doc(db, statsPath);
 
             const statsDoc = await getDoc(statsRef);
-            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(player.id, player.name, player.role);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(playerId, playerName, playerRole);
 
             if (!stats.matchHistory) stats.matchHistory = [];
 
