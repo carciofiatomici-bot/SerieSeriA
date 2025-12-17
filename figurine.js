@@ -47,8 +47,10 @@ window.FigurineSystem = {
     getDefaultConfig() {
         return {
             enabled: true,
-            packPrice: 50,              // CS per pacchetto
-            figurinesPerPack: 3,        // Figurine per pacchetto
+            packPriceCSS: 1,            // CSS per pacchetto (Crediti Super Seri)
+            packPrice: 0,               // CS per pacchetto (non usato, ora si usa CSS)
+            figurinesPerPack: 1,        // Figurine base per pacchetto
+            bonusFigurineChance: 0.01,  // 1% probabilita di ottenere 2 figurine invece di 1
             freePackCooldownHours: 24,  // Ore tra pacchetti gratis
             completionBonus: 500,       // Bonus per album completo
             sectionBonus: 50            // Bonus per sezione completa (1 icona tutte rarita)
@@ -373,6 +375,8 @@ window.FigurineSystem = {
 
     /**
      * Apre un pacchetto di figurine
+     * Costa 1 CSS (Credito Super Serio)
+     * 99% una figurina, 1% due figurine
      */
     async openPack(teamId, isFree = false) {
         const config = await this.loadConfig();
@@ -384,19 +388,26 @@ window.FigurineSystem = {
         }
 
         if (!isFree) {
-            // Verifica crediti
+            // Verifica CSS (Crediti Super Seri)
             const teamData = await this.getTeamData(teamId);
-            if (!teamData || (teamData.budget || 0) < config.packPrice) {
-                throw new Error('Crediti insufficienti');
+            const packCost = config.packPriceCSS || 1;
+            const currentCSS = teamData?.creditiSuperSeri || 0;
+
+            if (currentCSS < packCost) {
+                throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
             }
 
-            // Sottrai crediti
-            await this.updateTeamBudget(teamId, -config.packPrice);
+            // Sottrai CSS
+            await this.updateTeamCSS(teamId, -packCost);
         }
+
+        // Determina numero figurine: 99% una, 1% due
+        const bonusChance = config.bonusFigurineChance || 0.01;
+        const numFigurine = Math.random() < bonusChance ? 2 : 1;
 
         // Estrai figurine
         const extracted = [];
-        for (let i = 0; i < config.figurinesPerPack; i++) {
+        for (let i = 0; i < numFigurine; i++) {
             const figurina = this.extractRandomFigurina();
             extracted.push(figurina);
 
@@ -436,7 +447,8 @@ window.FigurineSystem = {
             figurine: extracted,
             album: album,
             bonusEarned: bonusEarned,
-            isFree: isFree
+            isFree: isFree,
+            gotBonus: numFigurine > 1
         };
     },
 
@@ -461,7 +473,7 @@ window.FigurineSystem = {
     },
 
     /**
-     * Aggiorna budget squadra
+     * Aggiorna budget squadra (CS)
      */
     async updateTeamBudget(teamId, amount) {
         const appId = window.firestoreTools?.appId;
@@ -479,6 +491,29 @@ window.FigurineSystem = {
             return true;
         } catch (error) {
             console.error('[Figurine] Errore aggiornamento budget:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Aggiorna CSS squadra (Crediti Super Seri)
+     */
+    async updateTeamCSS(teamId, amount) {
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db) return false;
+
+        try {
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
+            const teamSnap = await getDoc(teamRef);
+
+            if (!teamSnap.exists()) return false;
+
+            const currentCSS = teamSnap.data().creditiSuperSeri || 0;
+            await updateDoc(teamRef, { creditiSuperSeri: currentCSS + amount });
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore aggiornamento CSS:', error);
             return false;
         }
     }

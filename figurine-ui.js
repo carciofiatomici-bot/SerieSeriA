@@ -332,6 +332,8 @@ window.FigurineUI = {
 
         const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
         const budget = teamData?.budget || 0;
+        const css = teamData?.creditiSuperSeri || 0;
+        const packCost = config.packPriceCSS || 1;
 
         content.innerHTML = `
             <div class="space-y-4">
@@ -361,14 +363,14 @@ window.FigurineUI = {
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-bold text-purple-400 flex items-center gap-2">
-                                📦 Pacchetto Premium
+                                📦 Pacchetto Figurine
                             </h3>
-                            <p class="text-sm text-gray-300 mt-1">${config.figurinesPerPack} figurine per ${config.packPrice} CS</p>
-                            <p class="text-xs text-gray-500 mt-1">Budget attuale: ${budget} CS</p>
+                            <p class="text-sm text-gray-300 mt-1">1 figurina (1% di ottenerne 2!) per ${packCost} CSS</p>
+                            <p class="text-xs text-gray-500 mt-1">CSS disponibili: ${css}</p>
                         </div>
-                        <button id="btn-buy-pack" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-3 rounded-lg transition ${budget < config.packPrice ? 'opacity-50 cursor-not-allowed' : ''}"
-                                ${budget < config.packPrice ? 'disabled' : ''}>
-                            ACQUISTA
+                        <button id="btn-buy-pack" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-3 rounded-lg transition ${css < packCost ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${css < packCost ? 'disabled' : ''}>
+                            ${packCost} CSS
                         </button>
                     </div>
                 </div>
