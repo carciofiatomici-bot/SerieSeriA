@@ -91,18 +91,13 @@ window.InterfacciaAuth = {
         const userType = localStorage.getItem('fanta_session_type');
         let lastScreenId = localStorage.getItem('fanta_last_screen');
 
-        // Controlla se e' un refresh (sessionStorage attivo) o nuovo avvio app (PWA chiusa/riaperta)
-        const isPageRefresh = sessionStorage.getItem('fanta_session_active') === 'true';
-
-        // Se l'app e' stata chiusa e riaperta (non un semplice refresh), vai alla dashboard
-        if (!isPageRefresh && lastScreenId && lastScreenId !== 'app-content') {
-            console.log('[Session] Nuovo avvio app - reset alla dashboard');
+        // SEMPRE torna alla dashboard su refresh/nuovo avvio
+        // (l'utente puo navigare manualmente dopo il caricamento)
+        if (lastScreenId && lastScreenId !== 'app-content') {
+            console.log('[Session] Refresh/nuovo avvio - reset alla dashboard');
             lastScreenId = null;
             localStorage.removeItem('fanta_last_screen');
         }
-
-        // Segna la sessione come attiva (si cancella automaticamente quando il tab/app viene chiuso)
-        sessionStorage.setItem('fanta_session_active', 'true');
 
         // Pulisci schermate problematiche dal localStorage (richiedono contesto specifico)
         const problematicScreens = ['draft-content', 'mercato-content'];
