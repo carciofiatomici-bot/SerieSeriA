@@ -842,6 +842,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Reset Timer Figurine
+        const btnResetFigurineTimer = document.getElementById('btn-reset-figurine-timer');
+        if (btnResetFigurineTimer) {
+            btnResetFigurineTimer.addEventListener('click', handleResetFigurineTimer);
+        }
+
         // Bottone Emergenza - Annulla Campionato e Coppa
         const btnEmergencyCancel = document.getElementById('btn-emergency-cancel-competitions');
         if (btnEmergencyCancel) {
@@ -1787,6 +1793,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Errore reset contratti:', error);
+            alert(`❌ Errore: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    /**
+     * Reset timer pacchetti figurine gratis per tutte le squadre
+     */
+    const handleResetFigurineTimer = async () => {
+        const confirmed = confirm(
+            '🃏 RESET TIMER PACCHETTI FIGURINE\n\n' +
+            'Questa azione resettera il cooldown dei pacchetti gratis\n' +
+            'per TUTTE le squadre che hanno un album figurine.\n\n' +
+            'Tutti potranno aprire subito un pacchetto gratis.\n\n' +
+            'Sei sicuro di voler procedere?'
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btn-reset-figurine-timer');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Reset...';
+
+        try {
+            const { collection, getDocs, updateDoc, doc, deleteField } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const FIGURINE_PATH = `artifacts/${appId}/public/data/figurine`;
+
+            const figurineSnapshot = await getDocs(collection(db, FIGURINE_PATH));
+
+            let resetCount = 0;
+            for (const figurineDoc of figurineSnapshot.docs) {
+                const data = figurineDoc.data();
+                if (data.lastFreePack) {
+                    await updateDoc(doc(db, FIGURINE_PATH, figurineDoc.id), {
+                        lastFreePack: deleteField()
+                    });
+                    resetCount++;
+                }
+            }
+
+            alert(`✅ Timer resettato per ${resetCount} squadre!`);
+
+            if (window.Toast) {
+                window.Toast.success(`Timer figurine resettato per ${resetCount} squadre`);
+            }
+
+        } catch (error) {
+            console.error('Errore reset timer figurine:', error);
             alert(`❌ Errore: ${error.message}`);
         } finally {
             btn.disabled = false;

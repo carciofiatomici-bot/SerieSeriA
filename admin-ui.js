@@ -324,6 +324,17 @@ window.AdminUI = {
                             </div>
                         </div>
 
+                        <!-- Figurine -->
+                        <div class="mt-3">
+                            <p class="text-xs text-gray-500 mb-2">Gestione Figurine</p>
+                            <div class="grid grid-cols-1 gap-2">
+                                <button id="btn-reset-figurine-timer"
+                                        class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-2 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 text-sm">
+                                    🃏 Reset Timer Pacchetti Gratis
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Emergenza -->
                         <div class="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600">
                             <p class="text-xs text-red-400 font-bold mb-2">⚠️ Emergenza</p>
