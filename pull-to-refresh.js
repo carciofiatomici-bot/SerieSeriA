@@ -21,8 +21,9 @@ window.PullToRefresh = {
     indicator: null,
     spinner: null,
 
-    // Chiave sessionStorage per salvare schermata
+    // Chiavi sessionStorage
     SCREEN_KEY: 'pull-refresh-screen',
+    SECTION_KEY: 'pull-refresh-section',
 
     /**
      * Inizializza il pull-to-refresh
@@ -45,9 +46,12 @@ window.PullToRefresh = {
      */
     restoreScreen() {
         const savedScreen = sessionStorage.getItem(this.SCREEN_KEY);
+        const savedSection = sessionStorage.getItem(this.SECTION_KEY);
+
         if (savedScreen) {
             sessionStorage.removeItem(this.SCREEN_KEY);
-            console.log('[PullToRefresh] Ripristino schermata:', savedScreen);
+            sessionStorage.removeItem(this.SECTION_KEY);
+            console.log('[PullToRefresh] Ripristino schermata:', savedScreen, 'sezione:', savedSection);
 
             // Aspetta che l'app sia completamente pronta
             const tryRestore = (attempts = 0) => {
@@ -60,6 +64,11 @@ window.PullToRefresh = {
                 if (typeof window.showScreen === 'function' && window.InterfacciaCore?.currentTeamId) {
                     console.log('[PullToRefresh] Navigo a:', savedScreen);
                     window.showScreen(savedScreen);
+
+                    // Se era team-screen, ripristina anche la sezione
+                    if (savedScreen === 'team-screen' && savedSection) {
+                        setTimeout(() => this.restoreTeamSection(savedSection), 500);
+                    }
                 } else {
                     // Riprova dopo 500ms
                     setTimeout(() => tryRestore(attempts + 1), 500);
@@ -69,6 +78,38 @@ window.PullToRefresh = {
             // Primo tentativo dopo 1.5 secondi
             setTimeout(() => tryRestore(0), 1500);
         }
+    },
+
+    /**
+     * Ripristina la sezione attiva di team-screen
+     */
+    restoreTeamSection(section) {
+        console.log('[PullToRefresh] Ripristino sezione team:', section);
+
+        const sectionButtons = {
+            'Gestione Rosa': 'btn-gestione-rosa',
+            'Gestione Formazione': 'btn-gestione-formazione'
+        };
+
+        const buttonId = sectionButtons[section];
+        if (buttonId) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                console.log('[PullToRefresh] Click su:', buttonId);
+                button.click();
+            }
+        }
+    },
+
+    /**
+     * Trova la sezione attiva di team-screen
+     */
+    getCurrentTeamSection() {
+        const titleElement = document.getElementById('squadra-main-title');
+        if (titleElement) {
+            return titleElement.textContent?.trim() || null;
+        }
+        return null;
     },
 
     /**
@@ -262,6 +303,15 @@ window.PullToRefresh = {
         if (currentScreen) {
             sessionStorage.setItem(this.SCREEN_KEY, currentScreen);
             console.log('[PullToRefresh] Salvo schermata:', currentScreen);
+
+            // Se siamo in team-screen, salva anche la sezione attiva
+            if (currentScreen === 'team-screen') {
+                const section = this.getCurrentTeamSection();
+                if (section) {
+                    sessionStorage.setItem(this.SECTION_KEY, section);
+                    console.log('[PullToRefresh] Salvo sezione:', section);
+                }
+            }
         } else {
             console.log('[PullToRefresh] Refresh dalla dashboard, nessuna schermata da salvare');
         }
