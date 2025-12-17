@@ -81,14 +81,14 @@ window.ChampionshipMain = {
         const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
         const SCHEDULE_DOC_ID = 'full_schedule';
         const LEADERBOARD_DOC_ID = 'standings';
-        
+
         let match = schedule[roundIndex].matches[matchIndex];
 
         try {
-            // 1. Carica classifica
+            // 1. Carica classifica (usando LeaderboardListener per cache condivisa)
             const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
-            const leaderboardDoc = await getDoc(leaderboardDocRef);
-            let standings = leaderboardDoc.exists() ? leaderboardDoc.data().standings : [];
+            const leaderboardData = await window.LeaderboardListener.getLeaderboard();
+            let standings = leaderboardData?.standings || [];
             const standingsMap = new Map(standings.map(s => [s.teamId, s]));
 
             // 2. Carica dati squadre (FETCH FRESCO per includere playersFormStatus)
@@ -226,6 +226,9 @@ window.ChampionshipMain = {
             await setDoc(scheduleDocRef, { matches: schedule }, { merge: true });
             await setDoc(leaderboardDocRef, { standings: updatedStandings, lastUpdated: new Date().toISOString() });
 
+            // Invalida cache LeaderboardListener dopo salvataggio
+            window.LeaderboardListener.invalidateCache();
+
             // 8. Dispatch evento matchSimulated per notifiche push
             document.dispatchEvent(new CustomEvent('matchSimulated', {
                 detail: {
@@ -297,9 +300,10 @@ window.ChampionshipMain = {
         }
 
         try {
+            // Carica classifica (usando LeaderboardListener per cache condivisa)
             const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
-            const leaderboardDoc = await getDoc(leaderboardDocRef);
-            let standings = leaderboardDoc.exists() ? leaderboardDoc.data().standings : [];
+            const leaderboardData = await window.LeaderboardListener.getLeaderboard();
+            let standings = leaderboardData?.standings || [];
             const standingsMap = new Map(standings.map(s => [s.teamId, s]));
 
             for (const match of matchesToSimulate) {
@@ -514,6 +518,9 @@ window.ChampionshipMain = {
             });
             
             await setDoc(leaderboardDocRef, { standings: updatedStandings, lastUpdated: new Date().toISOString() });
+
+            // Invalida cache LeaderboardListener dopo salvataggio
+            window.LeaderboardListener.invalidateCache();
 
             if (renderCallback) {
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);
