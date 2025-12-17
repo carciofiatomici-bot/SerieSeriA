@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.13',
+    currentVersion: '2.2.14',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,18 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.14',
+            date: '2025-12-18',
+            time: '02:30',
+            title: 'Fix Coppa e Pacchetti Figurine',
+            changes: [
+                { text: 'Partite di andata Coppa ora salvate in Hall of Fame e statistiche', adminOnly: false },
+                { text: 'Replay disponibili anche per partite di andata Coppa', adminOnly: false },
+                { text: 'Corretto cooldown pacchetti figurine gratis (8 ore)', adminOnly: false }
+            ],
+            type: 'fix'
+        },
         {
             version: '2.2.13',
             date: '2025-12-18',

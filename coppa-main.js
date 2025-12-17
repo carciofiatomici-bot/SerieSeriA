@@ -212,6 +212,69 @@ window.CoppaMain = {
             }
         }
 
+        // SEMPRE: Salva nello storico partite per entrambe le squadre (sia andata che ritorno)
+        if (window.MatchHistory && result.resultString) {
+            const parts = result.resultString.split(' ')[0].split('-');
+            const homeGoals = parseInt(parts[0]) || 0;
+            const awayGoals = parseInt(parts[1]) || 0;
+
+            // Salva per squadra di casa
+            await window.MatchHistory.saveMatch(match.homeTeam.teamId, {
+                type: 'coppa',
+                homeTeam: {
+                    id: match.homeTeam.teamId,
+                    name: match.homeTeam.teamName,
+                    logoUrl: homeTeamData.logoUrl || ''
+                },
+                awayTeam: {
+                    id: match.awayTeam.teamId,
+                    name: match.awayTeam.teamName,
+                    logoUrl: awayTeamData.logoUrl || ''
+                },
+                homeScore: homeGoals,
+                awayScore: awayGoals,
+                isHome: true,
+                details: {
+                    round: round.roundName,
+                    leg: legType,
+                    matchLog: matchLog
+                }
+            });
+
+            // Salva per squadra ospite
+            await window.MatchHistory.saveMatch(match.awayTeam.teamId, {
+                type: 'coppa',
+                homeTeam: {
+                    id: match.homeTeam.teamId,
+                    name: match.homeTeam.teamName,
+                    logoUrl: homeTeamData.logoUrl || ''
+                },
+                awayTeam: {
+                    id: match.awayTeam.teamId,
+                    name: match.awayTeam.teamName,
+                    logoUrl: awayTeamData.logoUrl || ''
+                },
+                homeScore: homeGoals,
+                awayScore: awayGoals,
+                isHome: false,
+                details: {
+                    round: round.roundName,
+                    leg: legType,
+                    matchLog: matchLog
+                }
+            });
+
+            // Dispatch evento matchSimulated per notifiche push
+            document.dispatchEvent(new CustomEvent('matchSimulated', {
+                detail: {
+                    homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName },
+                    awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName },
+                    result: `${homeGoals}-${awayGoals}`,
+                    type: 'Coppa'
+                }
+            }));
+        }
+
         // Se c'e un vincitore, promuovilo al turno successivo
         if (result.winner) {
             match.winner = result.winner;
@@ -224,69 +287,6 @@ window.CoppaMain = {
 
             // Promuovi il vincitore
             window.CoppaBrackets.promoteWinner(bracket, roundIndex, matchIndex, result.winner);
-
-            // Salva nello storico partite per entrambe le squadre
-            if (window.MatchHistory && result.resultString) {
-                const parts = result.resultString.split(' ')[0].split('-');
-                const homeGoals = parseInt(parts[0]) || 0;
-                const awayGoals = parseInt(parts[1]) || 0;
-
-                // Salva per squadra di casa
-                await window.MatchHistory.saveMatch(match.homeTeam.teamId, {
-                    type: 'coppa',
-                    homeTeam: {
-                        id: match.homeTeam.teamId,
-                        name: match.homeTeam.teamName,
-                        logoUrl: homeTeamData.logoUrl || ''
-                    },
-                    awayTeam: {
-                        id: match.awayTeam.teamId,
-                        name: match.awayTeam.teamName,
-                        logoUrl: awayTeamData.logoUrl || ''
-                    },
-                    homeScore: homeGoals,
-                    awayScore: awayGoals,
-                    isHome: true,
-                    details: {
-                        round: round.roundName,
-                        leg: legType,
-                        matchLog: matchLog
-                    }
-                });
-
-                // Salva per squadra ospite
-                await window.MatchHistory.saveMatch(match.awayTeam.teamId, {
-                    type: 'coppa',
-                    homeTeam: {
-                        id: match.homeTeam.teamId,
-                        name: match.homeTeam.teamName,
-                        logoUrl: homeTeamData.logoUrl || ''
-                    },
-                    awayTeam: {
-                        id: match.awayTeam.teamId,
-                        name: match.awayTeam.teamName,
-                        logoUrl: awayTeamData.logoUrl || ''
-                    },
-                    homeScore: homeGoals,
-                    awayScore: awayGoals,
-                    isHome: false,
-                    details: {
-                        round: round.roundName,
-                        leg: legType,
-                        matchLog: matchLog
-                    }
-                });
-
-                // Dispatch evento matchSimulated per notifiche push
-                document.dispatchEvent(new CustomEvent('matchSimulated', {
-                    detail: {
-                        homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName },
-                        awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName },
-                        result: `${homeGoals}-${awayGoals}`,
-                        type: 'Coppa'
-                    }
-                }));
-            }
         }
 
         // Verifica se il turno e completato

@@ -33,7 +33,7 @@ window.AdminFigurine = {
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Cooldown Gratis (ore)</label>
-                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 24}"
+                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 8}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="1">
                         </div>
                         <div>
@@ -168,7 +168,7 @@ window.AdminFigurine = {
         return {
             packPrice: parseInt(document.getElementById('figurine-pack-price')?.value) || 50,
             figurinesPerPack: parseInt(document.getElementById('figurine-per-pack')?.value) || 3,
-            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 24,
+            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 8,
             completionBonus: parseInt(document.getElementById('figurine-completion-bonus')?.value) || 500,
             sectionBonus: parseInt(document.getElementById('figurine-section-bonus')?.value) || 50,
             rarities: {
