@@ -980,7 +980,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnSchedinaConfig && schedinaContainer) {
             btnSchedinaConfig.addEventListener('click', () => {
                 schedinaContainer.classList.remove('hidden');
-                renderSchedinaConfigPanel(schedinaContent);
+                if (window.AdminSchedina) {
+                    window.AdminSchedina.renderConfigPanel(schedinaContent);
+                } else {
+                    renderSchedinaConfigPanel(schedinaContent);
+                }
             });
         }
 
