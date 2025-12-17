@@ -332,7 +332,7 @@ window.GestioneSquadreRosa = {
                      data-player-id="${player.id}">
                     <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>${statsButton}
+                        <span class="${nameColorClass} inline-flex items-center" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}${statsButton}</span>
                         ${iconaMarker}
                         ${basePlayerMarker}
                         ${seriousPlayerMarker}
