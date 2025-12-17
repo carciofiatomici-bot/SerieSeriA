@@ -30,7 +30,8 @@
       "Bash(git push:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nAggiunto GitHub Actions per simulazione automatica alle 20:30\n\n- Workflow daily-simulation.yml per esecuzione giornaliera\n- Script Node.js per simulazione partite via Firebase Admin SDK\nEOF\n)\")",
       "Bash(git pull:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []
