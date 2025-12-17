@@ -54,11 +54,13 @@ window.AdminFeatureFlags = {
         }
 
         const categoryNames = {
+            admin: '🔐 Admin',
             communication: '💬 Comunicazione',
             stats: '📊 Statistiche',
             gameplay: '🎮 Gameplay',
             gamification: '🏆 Gamification',
             economy: '💎 Economia',
+            support: '🛠️ Supporto',
             altro: '⚙️ Altro'
         };
 
@@ -94,9 +96,6 @@ window.AdminFeatureFlags = {
                     </button>
                 </div>
 
-                <!-- TOGGLE GLOBALE REWARD -->
-                ${this.renderRewardsToggle()}
-
                 <!-- Flags per categoria (collapsibili) -->
                 ${Object.entries(categories).map(([cat, catFlags]) => `
                     <div class="bg-gray-700 rounded-xl overflow-hidden category-section" data-category="${cat}">
@@ -106,9 +105,10 @@ window.AdminFeatureFlags = {
                                 <span class="category-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
                                 <h3 class="font-semibold text-white">${categoryNames[cat] || cat}</h3>
                             </div>
-                            <span class="text-gray-400 text-sm">${catFlags.length} flag${catFlags.length !== 1 ? 's' : ''}</span>
+                            <span class="text-gray-400 text-sm">${catFlags.length + (cat === 'admin' ? 1 : 0)} flag${(catFlags.length + (cat === 'admin' ? 1 : 0)) !== 1 ? 's' : ''}</span>
                         </div>
                         <div class="category-content hidden p-4 space-y-3">
+                            ${cat === 'admin' ? this.renderRewardsToggle() : ''}
                             ${catFlags.map(flag => this.renderFlagCard(flag)).join('')}
                         </div>
                     </div>
@@ -149,8 +149,8 @@ window.AdminFeatureFlags = {
         console.log('[AdminFeatureFlags] Rendering toggle reward, isDisabled:', isDisabled);
 
         return `
-            <div class="bg-gradient-to-r ${isDisabled ? 'from-red-900 to-red-700' : 'from-green-900 to-green-700'} rounded-xl overflow-hidden border-2 ${isDisabled ? 'border-red-500' : 'border-green-500'} shadow-lg">
-                <div class="p-5">
+            <div class="bg-gradient-to-r ${isDisabled ? 'from-red-900 to-red-700' : 'from-green-900 to-green-700'} rounded-xl overflow-hidden border-2 ${isDisabled ? 'border-red-500' : 'border-green-500'} shadow-lg mb-4">
+                <div class="p-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <div class="text-4xl">${isDisabled ? '🚫' : '💰'}</div>
