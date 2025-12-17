@@ -1496,33 +1496,21 @@ window.CreditiSuperSeriUI = {
         const enabled = await CSS.isEnabled();
         const teamId = window.InterfacciaCore?.currentTeamId;
 
-        // Trova il container del widget (sempre presente nell'HTML)
+        // Widget CSS rimosso dalla dashboard - ora nel box risorse in cima
+        // Manteniamo solo la logica per il negozio nel box risorse
         const widgetContainer = document.getElementById('css-dashboard-widget');
-        if (!widgetContainer) return;
-
-        if (!enabled || !teamId) {
-            // Nascondi widget se CSS non abilitato
+        if (widgetContainer) {
             widgetContainer.innerHTML = '';
             widgetContainer.classList.add('hidden');
+        }
+
+        if (!enabled || !teamId) {
             return;
         }
 
-        // Mostra il container
-        widgetContainer.classList.remove('hidden');
-
-        const saldo = await CSS.getSaldo(teamId);
-        this.renderSaldoWidget(widgetContainer, saldo, enabled);
-
-        // Collega evento apertura pannello
-        const btnOpen = document.getElementById('btn-open-css-shop');
-        if (btnOpen) {
-            btnOpen.addEventListener('click', async () => {
-                const teamData = window.InterfacciaCore?.currentTeamData;
-                const rosa = teamData?.players || [];
-                const currentSaldo = await CSS.getSaldo(teamId);
-                this.openPotenziamentoPanel(rosa, currentSaldo);
-            });
-        }
+        // Widget non piu' renderizzato - ora gestito dal box risorse
+        // const saldo = await CSS.getSaldo(teamId);
+        // this.renderSaldoWidget(widgetContainer, saldo, enabled);
     }
 };
 

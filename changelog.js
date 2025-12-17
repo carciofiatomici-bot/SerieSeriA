@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.22',
+    currentVersion: '2.2.24',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,30 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.24',
+            date: '2025-12-18',
+            time: '17:00',
+            title: 'Menu Hamburger nel Box Risorse',
+            changes: [
+                { text: 'Menu hamburger spostato nel box Risorse a destra', adminOnly: false },
+                { text: 'Box nome squadra semplificato (solo nome)', adminOnly: false },
+                { text: 'Widget CSS rimosso dalla dashboard (ora nel box Risorse)', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
+        {
+            version: '2.2.23',
+            date: '2025-12-18',
+            time: '16:00',
+            title: 'Miglioramenti Dashboard',
+            changes: [
+                { text: 'Nome squadra con nuovo stile: font sportivo, gradiente e animazione glow', adminOnly: false },
+                { text: 'Negozio CSS spostato a destra nel box Risorse', adminOnly: false },
+                { text: 'Box nome squadra con bordo trasparente', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.21',
             date: '2025-12-18',
