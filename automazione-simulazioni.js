@@ -610,6 +610,49 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
+     * Avanza il tipo di simulazione al prossimo nella sequenza.
+     * Da chiamare dopo una simulazione manuale per sincronizzare con l'automazione.
+     * @param {string} simulatedType - Tipo appena simulato ('campionato', 'coppa_andata', 'coppa_ritorno')
+     */
+    async advanceSimulationType(simulatedType) {
+        try {
+            const state = await this.loadAutomationState();
+            if (!state) return;
+
+            const currentNext = state.nextSimulationType || 'coppa_andata';
+
+            // Se il tipo simulato corrisponde al prossimo, avanza
+            // campionato -> campionato
+            // coppa_andata/coppa_ritorno -> coppa (match partiale)
+            let shouldAdvance = false;
+
+            if (simulatedType === 'campionato' && currentNext === 'campionato') {
+                shouldAdvance = true;
+            } else if (simulatedType === 'coppa' && currentNext.includes('coppa')) {
+                shouldAdvance = true;
+            }
+
+            if (shouldAdvance) {
+                const newNext = this.getNextSimulationType(currentNext);
+                await this.saveAutomationState({
+                    ...state,
+                    nextSimulationType: newNext,
+                    lastManualSimulation: new Date().toISOString(),
+                    lastManualSimulationType: simulatedType
+                });
+                console.log(`[Automazione] Tipo simulazione avanzato: ${currentNext} -> ${newNext}`);
+
+                // Aggiorna l'alert della prossima partita
+                if (window.NextMatchAlert) {
+                    window.NextMatchAlert.refresh();
+                }
+            }
+        } catch (error) {
+            console.error('[Automazione] Errore avanzamento tipo simulazione:', error);
+        }
+    },
+
+    /**
      * Inizializza il modulo (da chiamare al caricamento della pagina admin)
      */
     async initialize() {

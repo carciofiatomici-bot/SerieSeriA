@@ -246,6 +246,11 @@ window.ChampionshipMain = {
                 renderCallback(reloadedSchedule, allTeams);
             }
 
+            // 10. Sincronizza con automazione (avanza tipo simulazione)
+            if (window.AutomazioneSimulazioni?.advanceSimulationType) {
+                await window.AutomazioneSimulazioni.advanceSimulationType('campionato');
+            }
+
         } catch (error) {
             console.error("Errore durante la simulazione singola:", error);
             // FIX: Riabilita il pulsante solo se esiste
@@ -527,6 +532,11 @@ window.ChampionshipMain = {
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);
                 const reloadedSchedule = reloadedScheduleDoc.exists() ? reloadedScheduleDoc.data().matches : [];
                 renderCallback(reloadedSchedule, allTeams);
+            }
+
+            // Sincronizza con automazione (avanza tipo simulazione)
+            if (window.AutomazioneSimulazioni?.advanceSimulationType) {
+                await window.AutomazioneSimulazioni.advanceSimulationType('campionato');
             }
 
         } catch (error) {

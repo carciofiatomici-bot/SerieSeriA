@@ -290,6 +290,11 @@ window.CoppaMain = {
             window.CoppaAdminPanel.refresh();
         }
 
+        // Sincronizza con automazione (avanza tipo simulazione)
+        if (window.AutomazioneSimulazioni?.advanceSimulationType) {
+            await window.AutomazioneSimulazioni.advanceSimulationType('coppa');
+        }
+
         return result;
     },
 
