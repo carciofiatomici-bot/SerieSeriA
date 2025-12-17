@@ -161,6 +161,33 @@ window.CoppaMain = {
             match.leg2Result = result.resultString;
         }
 
+        // SEMPRE: Applica i crediti per gol (il bonus vittoria viene assegnato solo se c'e un vincitore)
+        await this.applyMatchCredits(match.homeTeam.teamId, match.awayTeam.teamId, result);
+
+        // SEMPRE: Processa XP formazione (se feature attiva)
+        if (window.FeatureFlags?.isEnabled('formationXp') && window.ChampionshipMain?.addFormationXp) {
+            await window.ChampionshipMain.addFormationXp(match.homeTeam.teamId, homeTeamData.formation?.modulo);
+            await window.ChampionshipMain.addFormationXp(match.awayTeam.teamId, awayTeamData.formation?.modulo);
+        }
+
+        // SEMPRE: Processa EXP giocatori
+        if (window.PlayerExp) {
+            const parts = result.resultString.split(' ')[0].split('-');
+            const homeGoals = parseInt(parts[0]) || 0;
+            const awayGoals = parseInt(parts[1]) || 0;
+
+            const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
+            const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+
+            // Mostra notifiche level-up
+            if (window.PlayerExpUI) {
+                const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);
+                if (allLevelUps.length > 0) {
+                    window.PlayerExpUI.showMultipleLevelUpModal(allLevelUps);
+                }
+            }
+        }
+
         // Se c'e un vincitore, promuovilo al turno successivo
         if (result.winner) {
             match.winner = result.winner;
@@ -173,15 +200,6 @@ window.CoppaMain = {
 
             // Promuovi il vincitore
             window.CoppaBrackets.promoteWinner(bracket, roundIndex, matchIndex, result.winner);
-
-            // Applica i crediti per gol
-            await this.applyMatchCredits(match.homeTeam.teamId, match.awayTeam.teamId, result);
-
-            // Processa XP formazione (se feature attiva)
-            if (window.FeatureFlags?.isEnabled('formationXp') && window.ChampionshipMain?.addFormationXp) {
-                await window.ChampionshipMain.addFormationXp(match.homeTeam.teamId, homeTeamData.formation?.modulo);
-                await window.ChampionshipMain.addFormationXp(match.awayTeam.teamId, awayTeamData.formation?.modulo);
-            }
 
             // Salva nello storico partite per entrambe le squadre
             if (window.MatchHistory && result.resultString) {
