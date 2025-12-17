@@ -68,11 +68,22 @@ function calculateTeamStrength(teamData) {
 
     let totalStrength = 0;
 
-    for (const playerId of formation) {
+    for (const playerEntry of formation) {
+        // La formazione puo contenere oggetti compressi {id, role, level, ...} o stringhe (ID)
+        const playerId = typeof playerEntry === 'object' ? playerEntry.id : playerEntry;
+
+        if (!playerId) continue;
+
+        // Cerca il giocatore completo nella rosa
         const player = players.find(p => p.id === playerId);
+
         if (player) {
             const formMod = formStatus[playerId]?.mod || 0;
             totalStrength += calculatePlayerStrength(player, formMod);
+        } else if (typeof playerEntry === 'object' && playerEntry.level) {
+            // Fallback: usa i dati compressi se il giocatore non e nella rosa
+            const formMod = formStatus[playerId]?.mod || 0;
+            totalStrength += calculatePlayerStrength(playerEntry, formMod);
         }
     }
 
@@ -101,9 +112,23 @@ function simulateMatch(homeTeam, awayTeam) {
     const homeStrength = calculateTeamStrength(homeTeam);
     const awayStrength = calculateTeamStrength(awayTeam);
 
+    // Protezione: se entrambe le squadre hanno forza 0, usa default
+    if (homeStrength === 0 && awayStrength === 0) {
+        console.log('    ATTENZIONE: Entrambe le squadre hanno forza 0, usando simulazione casuale');
+        const homeGoals = Math.floor(Math.random() * 3);
+        const awayGoals = Math.floor(Math.random() * 3);
+        return { homeGoals, awayGoals };
+    }
+
     const adjustedHomeStrength = homeStrength * 1.1; // Bonus casa
 
     const totalStrength = adjustedHomeStrength + awayStrength;
+
+    // Protezione contro divisione per zero
+    if (totalStrength === 0) {
+        return { homeGoals: 0, awayGoals: 0 };
+    }
+
     const homeProb = adjustedHomeStrength / totalStrength;
     const awayProb = awayStrength / totalStrength;
 
