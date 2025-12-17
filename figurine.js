@@ -347,7 +347,8 @@ window.FigurineSystem = {
 
         const lastPack = new Date(album.lastFreePack);
         const now = new Date();
-        const cooldownMs = this.config.freePackCooldownHours * 60 * 60 * 1000; // 8 ore in ms
+        const config = this._config || this.getDefaultConfig();
+        const cooldownMs = config.freePackCooldownHours * 60 * 60 * 1000; // 8 ore in ms
 
         // Puo aprire se sono passate almeno 8 ore dall'ultimo pacchetto
         return (now.getTime() - lastPack.getTime()) >= cooldownMs;
@@ -361,7 +362,8 @@ window.FigurineSystem = {
         if (this.canOpenFreePack(album)) return null;
 
         const lastPack = new Date(album.lastFreePack);
-        const cooldownMs = this.config.freePackCooldownHours * 60 * 60 * 1000;
+        const config = this._config || this.getDefaultConfig();
+        const cooldownMs = config.freePackCooldownHours * 60 * 60 * 1000;
         const nextAvailable = new Date(lastPack.getTime() + cooldownMs);
         const now = new Date();
         const remaining = nextAvailable.getTime() - now.getTime();

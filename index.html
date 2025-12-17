@@ -230,8 +230,8 @@
                     </button>
                     <div id="content-squadra" class="hidden p-4 border-t border-yellow-700">
                         <ul class="text-gray-300 space-y-2 text-sm">
-                            <li>• Ogni squadra ha <strong class="text-white">12 giocatori + 1 Icona</strong> (capitano speciale)</li>
-                            <li>• <strong class="text-white">Formazione:</strong> 5 titolari in campo + 7 in panchina (max 12 schierabili)</li>
+                            <li>• Ogni squadra ha <strong class="text-white">15 giocatori + 1 Icona</strong> (capitano speciale)</li>
+                            <li>• <strong class="text-white">Formazione:</strong> 5 titolari in campo + 3 in panchina + riserve</li>
                             <li>• <strong class="text-white">Moduli disponibili:</strong> 1-2-2, 1-1-2-1, 1-3-1, 1-1-3</li>
                             <li>• Ruoli: <span class="text-blue-400">P</span> (Portiere), <span class="text-green-400">D</span> (Difensore), <span class="text-yellow-400">C</span> (Centrocampista), <span class="text-red-400">A</span> (Attaccante)</li>
                             <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span> > <span class="text-red-400">Potenza</span> (carta-forbice-sasso)</li>
@@ -391,24 +391,31 @@
                             <!-- Le 3 Fasi -->
                             <div class="bg-gray-800 rounded-lg p-3 border-l-4 border-yellow-500">
                                 <h4 class="font-bold text-yellow-400 mb-2">3. Le 3 Fasi (30 occasioni per partita)</h4>
+                                <p class="text-gray-400 text-xs mb-3">Ogni occasione passa attraverso 3 fasi. Se una fase fallisce, l'occasione termina senza goal (5% chance di passare comunque).</p>
 
                                 <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
                                     <p class="text-cyan-400 font-bold text-xs mb-1">FASE 1: COSTRUZIONE</p>
-                                    <p class="text-gray-400 text-xs">Difensori + Centrocampisti vs Centrocampisti avversari</p>
-                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Dif + Mod.Cen] vs [1d20 + Mod.Cen avv.]</p>
+                                    <p class="text-gray-400 text-xs">La squadra attaccante cerca di superare il centrocampo avversario</p>
+                                    <p class="text-gray-300 text-xs">Attaccanti: [1d20 + Mod.Dif + Mod.Cen + All/2]</p>
+                                    <p class="text-gray-300 text-xs">Difensori: [1d20 + Mod.Cen + All/2]</p>
+                                    <p class="text-gray-400 text-xs mt-1">Successo = 50% +/- differenza (min 5%, max 95%)</p>
                                 </div>
 
                                 <div class="bg-black bg-opacity-30 rounded p-2 mb-2">
                                     <p class="text-orange-400 font-bold text-xs mb-1">FASE 2: ATTACCO vs DIFESA</p>
-                                    <p class="text-gray-400 text-xs">Attaccanti + Centrocampisti vs Difensori + Centrocampisti</p>
-                                    <p class="text-gray-300 text-xs">[1d20 + 1/2 Mod.Cen + Mod.Att] vs [1d20 + Mod.Dif + 1/2 Mod.Cen]</p>
+                                    <p class="text-gray-400 text-xs">L'attacco cerca di superare la difesa avversaria</p>
+                                    <p class="text-gray-300 text-xs">Attaccanti: [1d20 + Mod.Cen + Mod.Att + All/2]</p>
+                                    <p class="text-gray-300 text-xs">Difensori: [1d20 + Mod.Dif + Mod.Cen + All/2]</p>
+                                    <p class="text-gray-400 text-xs mt-1">Risultato >= 0: Successo! Il valore diventa il "Valore Tiro"</p>
                                 </div>
 
                                 <div class="bg-black bg-opacity-30 rounded p-2">
                                     <p class="text-red-400 font-bold text-xs mb-1">FASE 3: TIRO vs PORTIERE</p>
-                                    <p class="text-gray-400 text-xs">Valore Tiro vs Portiere</p>
-                                    <p class="text-gray-300 text-xs">[1d20 + Mod.Portiere] - [1d10 + Valore Tiro]</p>
-                                    <p class="text-gray-400 text-xs mt-1">Risultato > 0: Parata | = 0: 50/50 | < 0: Goal</p>
+                                    <p class="text-gray-400 text-xs">Il tiro viene effettuato contro il portiere</p>
+                                    <p class="text-gray-300 text-xs">Calcolo: [1d20 + Mod.Portiere] - [1d10 + Valore Tiro]</p>
+                                    <p class="text-green-400 text-xs mt-1">Risultato > 0: Parata</p>
+                                    <p class="text-yellow-400 text-xs">Risultato = 0: 50/50 (si tira un dado)</p>
+                                    <p class="text-red-400 text-xs">Risultato < 0: GOAL!</p>
                                 </div>
                             </div>
 

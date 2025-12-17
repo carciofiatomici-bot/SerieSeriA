@@ -653,10 +653,10 @@ window.GestioneSquadreRosa = {
                 displayMessage(msgContainerId, `${playerName}: nessun successo, niente EXP guadagnati`, 'info');
             }
 
-            // Imposta cooldown per questo ruolo (tranne se test mode)
+            // Imposta cooldown giornaliero (1 giocatore al giorno, tranne se test mode)
             // A questo punto score >= 0 (annullato gestito sopra con return)
             if (!testMode) {
-                await window.TrainingExpMinigame?.setCooldown(currentTeamId, player.role);
+                await window.TrainingExpMinigame?.setCooldown(currentTeamId);
             }
 
             // Aggiorna vista rosa
@@ -776,11 +776,12 @@ window.GestioneSquadreRosa = {
 
                 // Il giocatore in rosa ha un level fisso (non range)
                 const finalLevel = playerInRosa.level || 1;
+                const originalCost = playerInRosa.cost !== undefined && playerInRosa.cost !== null ? playerInRosa.cost : 0;
 
-                // I giocatori di livello 1 (starter gratuiti) non vanno nel mercato
-                if (finalLevel > 1) {
+                // I giocatori gratuiti (costo 0) o di livello 1 non vanno nel mercato
+                const isFreePlayer = originalCost === 0 || finalLevel === 1;
+                if (!isFreePlayer) {
                     // Il costo nel mercato e' 2/3 del costo originale di acquisto
-                    const originalCost = playerInRosa.cost !== undefined && playerInRosa.cost !== null ? playerInRosa.cost : 0;
                     const marketCost = Math.floor(originalCost * 2 / 3);
                     const finalAge = playerInRosa.age !== undefined && playerInRosa.age !== null ? playerInRosa.age : 25;
                     const finalRole = playerInRosa.role || 'C';
@@ -816,7 +817,7 @@ window.GestioneSquadreRosa = {
                 if (window.loadDraftPlayersAdmin) window.loadDraftPlayersAdmin();
                 if (window.loadMarketPlayersAdmin) window.loadMarketPlayersAdmin();
 
-                const marketMessage = finalLevel > 1 ? ' Tornato nel Mercato.' : '';
+                const marketMessage = !isFreePlayer ? ' Tornato nel Mercato.' : '';
                 displayMessage(msgContainerId, `Giocatore ${playerName} licenziato! Rimborsati ${refundCost} CS.${marketMessage}`, 'success');
                 loadTeamDataFromFirestore(currentTeamId, 'rosa');
                 document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));

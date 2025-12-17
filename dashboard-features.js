@@ -118,9 +118,19 @@ window.DashboardFeatures = {
             if (canSpin) {
                 wheelBox.classList.remove('opacity-50', 'grayscale');
                 wheelBox.title = 'Gira la Ruota della Fortuna!';
+                // Rimuovi timer se presente
+                const timerSpan = wheelBox.querySelector('.wheel-timer');
+                if (timerSpan) timerSpan.remove();
             } else {
                 wheelBox.classList.add('opacity-50', 'grayscale');
-                wheelBox.title = 'Ruota gia girata oggi - Torna domani!';
+                // Calcola tempo fino a mezzanotte
+                const now = new Date();
+                const midnight = new Date(now);
+                midnight.setHours(24, 0, 0, 0);
+                const diff = midnight - now;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                wheelBox.title = `Prossimo giro tra ${hours}h ${minutes}m`;
             }
         } else {
             wheelBox.classList.add('hidden');

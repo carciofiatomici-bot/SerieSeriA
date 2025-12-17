@@ -10,6 +10,28 @@
     let currentRotation = 0;
 
     /**
+     * Calcola il tempo rimanente fino a mezzanotte
+     * @returns {Object} { hours, minutes, seconds, formatted }
+     */
+    function getTimeUntilMidnight() {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        const diff = midnight - now;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        return {
+            hours,
+            minutes,
+            seconds,
+            formatted: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        };
+    }
+
+    /**
      * Mostra il popup della ruota
      * @param {Object} context - Contesto con teamId e teamData
      */
@@ -17,6 +39,9 @@
         if (!window.DailyWheel?.isEnabled()) return;
 
         const { currentTeamId, teamData } = context;
+
+        // Verifica se puo' girare PRIMA di mostrare il popup
+        const canSpin = window.DailyWheel.canSpinToday(teamData);
 
         // Carica la configurazione da Firestore prima di mostrare
         await window.DailyWheel.loadConfig();
@@ -93,10 +118,17 @@
 
                 <!-- Bottoni -->
                 <div class="flex gap-3">
+                    ${canSpin ? `
                     <button id="btn-spin-wheel"
                             class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-bold py-3 px-6 rounded-xl hover:from-yellow-400 hover:to-orange-400 transition-all transform hover:scale-105 shadow-lg">
                         🎲 GIRA LA RUOTA!
                     </button>
+                    ` : `
+                    <div class="flex-1 bg-gray-700 text-center py-3 px-6 rounded-xl">
+                        <p class="text-gray-400 text-sm">Prossimo giro disponibile tra:</p>
+                        <p id="wheel-countdown" class="text-yellow-400 font-bold text-xl">${getTimeUntilMidnight().formatted}</p>
+                    </div>
+                    `}
                     <button id="btn-close-wheel"
                             class="bg-gray-700 text-gray-300 font-bold py-3 px-4 rounded-xl hover:bg-gray-600 transition">
                         ✖
@@ -113,9 +145,12 @@
         document.body.appendChild(popup);
 
         // Event listeners
-        document.getElementById('btn-spin-wheel').addEventListener('click', () => {
-            handleSpin(currentTeamId, teamData);
-        });
+        const spinBtn = document.getElementById('btn-spin-wheel');
+        if (spinBtn) {
+            spinBtn.addEventListener('click', () => {
+                handleSpin(currentTeamId, teamData);
+            });
+        }
 
         document.getElementById('btn-close-wheel').addEventListener('click', () => {
             closeWheelPopup();
@@ -127,6 +162,22 @@
                 closeWheelPopup();
             }
         });
+
+        // Se non puo' girare, avvia timer countdown
+        if (!canSpin) {
+            const countdownEl = document.getElementById('wheel-countdown');
+            if (countdownEl) {
+                const countdownInterval = setInterval(() => {
+                    // Verifica se popup esiste ancora
+                    if (!document.getElementById('daily-wheel-popup')) {
+                        clearInterval(countdownInterval);
+                        return;
+                    }
+                    const time = getTimeUntilMidnight();
+                    countdownEl.textContent = time.formatted;
+                }, 1000);
+            }
+        }
     }
 
     /**
@@ -134,6 +185,14 @@
      */
     async function handleSpin(teamId, teamData) {
         if (isSpinning) return;
+
+        // Doppio check di sicurezza: verifica se puo' ancora girare
+        if (!window.DailyWheel.canSpinToday(teamData)) {
+            if (window.Toast) {
+                window.Toast.error('Hai gia girato la ruota oggi! Torna domani.');
+            }
+            return;
+        }
 
         const spinBtn = document.getElementById('btn-spin-wheel');
         const wheelSvg = document.getElementById('wheel-svg');

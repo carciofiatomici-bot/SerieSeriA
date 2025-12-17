@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.12',
+    currentVersion: '2.2.13',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -24,13 +24,28 @@ window.Changelog = {
     // adminOnly: false o assente = visibile a tutti
     entries: [
         {
+            version: '2.2.13',
+            date: '2025-12-18',
+            time: '01:30',
+            title: 'Ruota Timer, Allenamento Daily e Regole Corrette',
+            changes: [
+                { text: 'Ruota della Fortuna: mostra timer fino a mezzanotte quando gia usata', adminOnly: false },
+                { text: 'Ruota della Fortuna: impossibile girare piu volte (reset alle 00:00)', adminOnly: false },
+                { text: 'Allenamento EXP: 1 solo giocatore al giorno (era 1 per ruolo)', adminOnly: false },
+                { text: 'Giocatori gratuiti licenziati non tornano piu nel Mercato', adminOnly: false },
+                { text: 'Regole aggiornate: 5 titolari + 3 panchina + riserve', adminOnly: false },
+                { text: 'Regolamento Simulazione: formule delle 3 fasi corrette', adminOnly: false },
+                { text: 'Fix errore figurine config non caricata', adminOnly: true }
+            ],
+            type: 'feature'
+        },
+        {
             version: '2.2.12',
             date: '2025-12-18',
             time: '00:30',
-            title: 'Conversione CS, Bottone Rimuovi e Miglioramenti UI',
+            title: 'Conversione CS e Miglioramenti UI',
             changes: [
                 { text: 'NUOVO: Converti 2000 CS in 1 CSS nel Negozio CSS (tab Servizi)', adminOnly: false },
-                { text: 'NUOVO: Bottone X per rimuovere giocatori dalla formazione senza drag', adminOnly: false },
                 { text: 'Pacchetto figurine gratis: cooldown 8 ore dopo apertura (non piu reset alle 12)', adminOnly: false },
                 { text: 'La Ruota della Fortuna rimane visibile anche dopo uso (in grigio)', adminOnly: false },
                 { text: 'Simulazioni: 30 occasioni per partita (era 40)', adminOnly: false },

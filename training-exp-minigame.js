@@ -280,11 +280,11 @@ window.TrainingExpMinigame = {
             return;
         }
 
-        // Verifica cooldown prima di aprire (double-check)
-        if (this.isInCooldown(player.role) && !window.FeatureFlags?.isEnabled('trainingExpTestMode')) {
-            console.warn(`[TrainingExpMinigame] Cooldown attivo per ruolo ${player.role}`);
+        // Verifica cooldown prima di aprire (1 giocatore al giorno)
+        if (this.isInCooldown() && !window.FeatureFlags?.isEnabled('trainingExpTestMode')) {
+            console.warn(`[TrainingExpMinigame] Cooldown attivo - gia allenato oggi`);
             if (window.Toast) {
-                window.Toast.warning(`Hai gia allenato un ${this.getRoleNameItalian(player.role)} oggi!`);
+                window.Toast.warning(`Hai gia allenato un giocatore oggi! Torna domani.`);
             }
             return;
         }
@@ -355,24 +355,22 @@ window.TrainingExpMinigame = {
         console.log(`[TrainingExpMinigame] Chiuso - Score: ${this.score}, Cancelled: ${cancelled}`);
     },
 
-    // ==================== COOLDOWN (per ruolo) ====================
+    // ==================== COOLDOWN (un giocatore al giorno) ====================
 
     /**
-     * Verifica se un ruolo specifico e' in cooldown
-     * @param {string} role - Ruolo del giocatore (P, D, C, A)
+     * Verifica se l'allenamento giornaliero e' gia stato usato
+     * Limite: 1 giocatore al giorno (reset alle 00:00)
      */
-    isInCooldown(role) {
-        if (!role) return false;
-
+    isInCooldown() {
         const teamData = window.InterfacciaCore?.currentTeamData;
-        const trainingByRole = teamData?.lastTrainingByRole;
+        const lastTraining = teamData?.lastTrainingDate;
 
-        if (!trainingByRole || !trainingByRole[role]) return false;
+        if (!lastTraining) return false;
 
-        const trainingDate = new Date(trainingByRole[role]);
+        const trainingDate = new Date(lastTraining);
         const today = new Date();
 
-        // Stesso giorno = cooldown attivo per quel ruolo
+        // Stesso giorno = cooldown attivo (gia allenato un giocatore oggi)
         return trainingDate.toDateString() === today.toDateString();
     },
 
@@ -406,12 +404,11 @@ window.TrainingExpMinigame = {
     },
 
     /**
-     * Imposta il cooldown per un ruolo specifico
+     * Imposta il cooldown dell'allenamento giornaliero
      * @param {string} teamId - ID della squadra
-     * @param {string} role - Ruolo del giocatore (P, D, C, A)
      */
-    async setCooldown(teamId, role) {
-        if (!teamId || !role || !window.db || !window.firestoreTools) {
+    async setCooldown(teamId) {
+        if (!teamId || !window.db || !window.firestoreTools) {
             console.error('[TrainingExpMinigame] Impossibile salvare cooldown');
             return;
         }
@@ -421,25 +418,18 @@ window.TrainingExpMinigame = {
             const appId = window.firestoreTools.appId;
             const teamDocRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
 
-            // Ottieni i cooldown esistenti o crea nuovo oggetto
-            const teamData = window.InterfacciaCore?.currentTeamData;
-            const existingCooldowns = teamData?.lastTrainingByRole || {};
-
-            const updatedCooldowns = {
-                ...existingCooldowns,
-                [role]: Date.now()
-            };
+            const trainingDate = Date.now();
 
             await updateDoc(teamDocRef, {
-                lastTrainingByRole: updatedCooldowns
+                lastTrainingDate: trainingDate
             });
 
             // Aggiorna anche in memoria
             if (window.InterfacciaCore?.currentTeamData) {
-                window.InterfacciaCore.currentTeamData.lastTrainingByRole = updatedCooldowns;
+                window.InterfacciaCore.currentTeamData.lastTrainingDate = trainingDate;
             }
 
-            console.log(`[TrainingExpMinigame] Cooldown salvato per ruolo ${role}`);
+            console.log(`[TrainingExpMinigame] Cooldown allenamento giornaliero salvato`);
         } catch (error) {
             console.error('[TrainingExpMinigame] Errore salvataggio cooldown:', error);
         }
