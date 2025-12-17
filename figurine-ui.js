@@ -265,16 +265,21 @@ window.FigurineUI = {
             const hasAny = counts.normale > 0 || counts.evoluto > 0 || counts.alternative > 0 || counts.ultimate > 0;
             const isComplete = counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0;
 
+            // Usa immagine figurina se disponibile, altrimenti photoUrl icona
+            const figurineImg = window.FigurineSystem.getFigurineImageUrl(icona.id, 'normale');
+            const imgSrc = figurineImg || icona.photoUrl || 'https://placehold.co/100x100/1f2937/6b7280?text=?';
+
             html += `
-                <div class="bg-gray-800 rounded-lg p-2 border ${isComplete ? 'border-yellow-500' : (hasAny ? 'border-purple-600' : 'border-gray-700')} relative">
+                <div class="figurine-card bg-gray-800 rounded-lg p-2 border ${isComplete ? 'border-yellow-500' : (hasAny ? 'border-purple-600' : 'border-gray-700')} relative cursor-pointer hover:bg-gray-700 transition"
+                     data-icona-id="${icona.id}" data-icona-name="${icona.name}">
                     ${isComplete ? '<span class="absolute -top-2 -right-2 text-lg">⭐</span>' : ''}
 
-                    <!-- Immagine Icona -->
+                    <!-- Immagine Figurina -->
                     <div class="aspect-square rounded overflow-hidden mb-2 ${!hasAny ? 'opacity-30 grayscale' : ''}">
-                        <img src="${icona.photoUrl || 'https://placehold.co/100x100/1f2937/6b7280?text=?'}"
+                        <img src="${imgSrc}"
                              alt="${icona.name}"
                              class="w-full h-full object-cover"
-                             onerror="this.src='https://placehold.co/100x100/1f2937/6b7280?text=?'">
+                             onerror="this.src='${icona.photoUrl || 'https://placehold.co/100x100/1f2937/6b7280?text=?'}'">
                     </div>
 
                     <!-- Nome -->
@@ -308,17 +313,101 @@ window.FigurineUI = {
         // Legenda
         html += `
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs text-gray-400">
-                <p class="font-semibold mb-1">Legenda Varianti:</p>
-                <div class="flex flex-wrap gap-3">
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-500 mr-1"></span> Normale (55%)</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto (25%)</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative (15%)</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> Ultimate (5%)</span>
+                <p class="font-semibold mb-1">Tocca una figurina per vedere tutte le varianti</p>
+                <div class="flex flex-wrap gap-3 mt-2">
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-500 mr-1"></span> Normale</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> Ultimate</span>
                 </div>
             </div>
         `;
 
         content.innerHTML = html;
+
+        // Event listener per aprire il modal delle varianti
+        content.querySelectorAll('.figurine-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const iconaId = card.dataset.iconaId;
+                const iconaName = card.dataset.iconaName;
+                this.showVariantsModal(iconaId, iconaName);
+            });
+        });
+    },
+
+    /**
+     * Mostra modal con tutte le varianti di una figurina
+     */
+    showVariantsModal(iconaId, iconaName) {
+        const collection = this.currentAlbum?.collection || {};
+        const counts = collection[iconaId] || { normale: 0, evoluto: 0, alternative: 0, ultimate: 0 };
+
+        // Rimuovi modal esistente
+        document.getElementById('figurine-variants-modal')?.remove();
+
+        const variants = [
+            { id: 'normale', name: 'Normale', color: 'gray', bgColor: 'bg-gray-600', count: counts.normale },
+            { id: 'evoluto', name: 'Evoluto', color: 'blue', bgColor: 'bg-blue-600', count: counts.evoluto },
+            { id: 'alternative', name: 'Alternative', color: 'purple', bgColor: 'bg-purple-600', count: counts.alternative },
+            { id: 'ultimate', name: 'Ultimate', color: 'yellow', bgColor: 'bg-yellow-500', count: counts.ultimate }
+        ];
+
+        const icona = window.FigurineSystem.getIconeList().find(i => i.id === iconaId);
+        const fallbackImg = icona?.photoUrl || 'https://placehold.co/150x150/1f2937/6b7280?text=?';
+
+        const modal = document.createElement('div');
+        modal.id = 'figurine-variants-modal';
+        modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+
+        modal.innerHTML = `
+            <div class="bg-gray-900 rounded-xl border-2 border-purple-500 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                <!-- Header -->
+                <div class="p-4 bg-gradient-to-r from-purple-800 to-purple-600 rounded-t-xl flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white">${iconaName}</h3>
+                    <button id="close-variants-modal" class="text-white hover:text-purple-200 text-2xl">&times;</button>
+                </div>
+
+                <!-- Varianti -->
+                <div class="p-4 grid grid-cols-2 gap-4">
+                    ${variants.map(v => {
+                        const imgUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, v.id) || fallbackImg;
+                        const owned = v.count > 0;
+                        return `
+                            <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden ${!owned ? 'opacity-40' : ''}">
+                                <div class="aspect-square bg-gray-800">
+                                    <img src="${imgUrl}"
+                                         alt="${v.name}"
+                                         class="w-full h-full object-cover ${!owned ? 'grayscale' : ''}"
+                                         onerror="this.src='${fallbackImg}'">
+                                </div>
+                                <div class="${owned ? v.bgColor : 'bg-gray-700'} p-2 text-center">
+                                    <p class="text-sm font-bold ${v.id === 'ultimate' && owned ? 'text-black' : 'text-white'}">${v.name}</p>
+                                    <p class="text-xs ${v.id === 'ultimate' && owned ? 'text-gray-800' : 'text-gray-300'}">
+                                        ${owned ? `x${v.count}` : 'Non posseduta'}
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 border-t border-gray-700 text-center">
+                    <button id="close-variants-btn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded-lg transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Event listeners
+        document.getElementById('close-variants-modal').addEventListener('click', () => modal.remove());
+        document.getElementById('close-variants-btn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     },
 
     /**

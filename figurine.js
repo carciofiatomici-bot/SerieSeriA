@@ -10,6 +10,29 @@ window.FigurineSystem = {
     CONFIG_DOC_ID: 'figurineConfig',
     COLLECTION_NAME: 'figurine',
 
+    // Base URL per le immagini figurine
+    FIGURINE_BASE_URL: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/',
+
+    // Mapping da icona ID a nome file figurine (senza estensione)
+    ICONA_TO_FIGURINE: {
+        'croc': 'croccante',
+        'shik': 'shikanto',
+        'ilcap': 'cap',
+        'simo': 'simone',
+        'dappi': 'dappino',
+        'gladio': 'gladio',
+        'amedemo': 'amedemo',
+        'flavio': 'elficario',
+        'luka': 'luca',
+        'melio': 'mel',
+        'markf': 'mark falco',
+        'sandro': 'sandro',
+        'fosco': 'fosco',
+        'cocco': 'cocco',
+        'blatta': 'bemolle',
+        'antony': 'antony'
+    },
+
     // Tipi figurine disponibili (4 varianti)
     RARITIES: {
         normale: { id: 'normale', name: 'Normale', color: 'gray', probability: 0.55, cssClass: 'border-gray-400' },
@@ -22,6 +45,36 @@ window.FigurineSystem = {
     _config: null,
     _configLoaded: false,
     _iconeList: null,
+
+    /**
+     * Ottiene l'URL dell'immagine figurina per una specifica icona e rarita
+     * @param {string} iconaId - ID dell'icona
+     * @param {string} rarity - Rarita (normale, evoluto, alternative, ultimate)
+     * @returns {string} URL dell'immagine
+     */
+    getFigurineImageUrl(iconaId, rarity = 'normale') {
+        const baseName = this.ICONA_TO_FIGURINE[iconaId];
+        if (!baseName) {
+            // Fallback all'immagine dell'icona standard
+            return null;
+        }
+
+        // Gestione speciale per dappino (PNG invece di JPG)
+        const ext = baseName === 'dappino' && rarity === 'normale' ? 'png' : 'jpg';
+
+        switch (rarity) {
+            case 'normale':
+                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName)}.${ext}`;
+            case 'evoluto':
+                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' evolved')}.jpg`;
+            case 'alternative':
+                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' alternative')}.jpg`;
+            case 'ultimate':
+                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName + ' ultimate')}.jpg`;
+            default:
+                return `${this.FIGURINE_BASE_URL}${encodeURIComponent(baseName)}.jpg`;
+        }
+    },
 
     // ==================== CONFIGURAZIONE ====================
 
