@@ -53,7 +53,12 @@ window.GestioneSquadreUtils = {
      */
     applyFormForDisplay(player, formsMap) {
         const playerId = player.id;
-        const getRandomInt = window.getRandomInt;
+        // Fallback se getRandomInt non e' ancora definito
+        const getRandomInt = window.getRandomInt || ((min, max) => {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        });
 
         // 1. RECUPERO: Se la forma è già stata calcolata e salvata, usala
         if (formsMap.has(playerId)) {
