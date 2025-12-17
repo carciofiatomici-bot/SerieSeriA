@@ -21,6 +21,9 @@ window.PullToRefresh = {
     indicator: null,
     spinner: null,
 
+    // Chiave sessionStorage per salvare schermata
+    SCREEN_KEY: 'pull-refresh-screen',
+
     /**
      * Inizializza il pull-to-refresh
      */
@@ -33,7 +36,40 @@ window.PullToRefresh = {
 
         this.createIndicator();
         this.bindEvents();
+        this.restoreScreen();
         console.log('[PullToRefresh] Inizializzato');
+    },
+
+    /**
+     * Ripristina la schermata salvata dopo un refresh
+     */
+    restoreScreen() {
+        const savedScreen = sessionStorage.getItem(this.SCREEN_KEY);
+        if (savedScreen) {
+            sessionStorage.removeItem(this.SCREEN_KEY);
+            console.log('[PullToRefresh] Ripristino schermata:', savedScreen);
+
+            // Aspetta che l'app sia pronta, poi naviga alla schermata salvata
+            setTimeout(() => {
+                if (typeof window.showScreen === 'function') {
+                    window.showScreen(savedScreen);
+                }
+            }, 1000);
+        }
+    },
+
+    /**
+     * Trova la schermata attualmente visibile
+     */
+    getCurrentScreen() {
+        // Cerca la schermata visibile (non hidden)
+        const screens = document.querySelectorAll('[id$="-screen"]');
+        for (const screen of screens) {
+            if (!screen.classList.contains('hidden') && screen.offsetParent !== null) {
+                return screen.id;
+            }
+        }
+        return 'dashboard-screen'; // Default
     },
 
     /**
@@ -194,6 +230,13 @@ window.PullToRefresh = {
      */
     triggerRefresh() {
         this.isRefreshing = true;
+
+        // Salva la schermata corrente prima del reload
+        const currentScreen = this.getCurrentScreen();
+        if (currentScreen && currentScreen !== 'dashboard-screen') {
+            sessionStorage.setItem(this.SCREEN_KEY, currentScreen);
+            console.log('[PullToRefresh] Salvo schermata:', currentScreen);
+        }
 
         // Mostra spinner di caricamento
         const icon = this.spinner.querySelector('.refresh-icon');
