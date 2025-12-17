@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.20',
+    currentVersion: '2.2.21',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,18 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.21',
+            date: '2025-12-18',
+            time: '15:00',
+            title: 'Box Risorse in Cima',
+            changes: [
+                { text: 'Box Risorse spostato in cima alla dashboard', adminOnly: false },
+                { text: 'Album Figurine e Ruota della Fortuna nel box Risorse', adminOnly: false },
+                { text: 'Rimossa riga figurine/ruota sotto i loghi', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.20',
             date: '2025-12-18',

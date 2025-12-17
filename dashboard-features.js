@@ -688,7 +688,7 @@ window.DashboardFeatures = {
     // ========================================
 
     /**
-     * Aggiorna il box risorse unificato (CS, CSS, Pacchetti)
+     * Aggiorna il box risorse unificato (CS, CSS, Album, Ruota)
      */
     async updateRisorseBox() {
         const teamData = window.InterfacciaCore?.currentTeamData;
@@ -708,7 +708,7 @@ window.DashboardFeatures = {
             cssEl.textContent = css;
         }
 
-        // Aggiorna Pacchetti Figurine
+        // Aggiorna Album Figurine
         const pacchettiBox = document.getElementById('risorse-pacchetti');
         const pacchettiCount = document.getElementById('risorse-pacchetti-count');
 
@@ -738,6 +738,43 @@ window.DashboardFeatures = {
         } else if (pacchettiBox) {
             pacchettiBox.classList.add('hidden');
             pacchettiBox.classList.remove('flex');
+        }
+
+        // Aggiorna Ruota della Fortuna
+        const ruotaBox = document.getElementById('risorse-ruota');
+        const ruotaStatus = document.getElementById('risorse-ruota-status');
+
+        if (ruotaBox && window.FeatureFlags?.isEnabled('dailyWheel')) {
+            ruotaBox.classList.remove('hidden');
+            ruotaBox.classList.add('flex');
+
+            // Verifica se puo girare
+            const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
+            if (ruotaStatus) {
+                if (canSpin) {
+                    ruotaStatus.textContent = 'Gira!';
+                    ruotaStatus.className = 'text-green-400 font-bold animate-pulse';
+                } else {
+                    // Calcola tempo fino a mezzanotte
+                    const now = new Date();
+                    const midnight = new Date(now);
+                    midnight.setHours(24, 0, 0, 0);
+                    const diff = midnight - now;
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    ruotaStatus.textContent = `${hours}h`;
+                    ruotaStatus.className = 'text-orange-400 font-bold';
+                }
+            }
+
+            // Click per aprire ruota
+            ruotaBox.onclick = () => {
+                if (teamId && teamData && window.DailyWheelUI) {
+                    window.DailyWheelUI.showWheelPopup({ currentTeamId: teamId, teamData: teamData });
+                }
+            };
+        } else if (ruotaBox) {
+            ruotaBox.classList.add('hidden');
+            ruotaBox.classList.remove('flex');
         }
     }
 };
