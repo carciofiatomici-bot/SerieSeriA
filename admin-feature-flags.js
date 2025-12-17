@@ -18,21 +18,30 @@ window.AdminFeatureFlags = {
     /**
      * Renderizza il pannello nel container admin
      */
-    render(containerId = 'admin-feature-flags-content') {
+    async render(containerId = 'admin-feature-flags-content') {
         this.container = document.getElementById(containerId);
         if (!this.container) {
             console.warn("Container admin feature flags non trovato");
             return;
         }
 
-        this.updateUI();
+        await this.updateUI();
     },
 
     /**
      * Aggiorna l'interfaccia
      */
-    updateUI() {
+    async updateUI() {
         if (!this.container) return;
+
+        // Carica config AdminRewards per il toggle reward
+        if (window.AdminRewards && !window.AdminRewards._config) {
+            try {
+                await window.AdminRewards.loadConfig();
+            } catch (e) {
+                console.warn('[AdminFeatureFlags] Impossibile caricare config reward:', e);
+            }
+        }
 
         const flags = window.FeatureFlags?.getAllFlags() || {};
 
@@ -85,6 +94,9 @@ window.AdminFeatureFlags = {
                     </button>
                 </div>
 
+                <!-- TOGGLE GLOBALE REWARD -->
+                ${this.renderRewardsToggle()}
+
                 <!-- Flags per categoria (collapsibili) -->
                 ${Object.entries(categories).map(([cat, catFlags]) => `
                     <div class="bg-gray-700 rounded-xl overflow-hidden category-section" data-category="${cat}">
@@ -116,6 +128,57 @@ window.AdminFeatureFlags = {
 
         // Event listeners
         this.setupEventListeners();
+    },
+
+    /**
+     * Renderizza il toggle globale per disabilitare i reward
+     */
+    renderRewardsToggle() {
+        // Ottieni stato da config caricata
+        let isDisabled = false;
+        try {
+            if (window.AdminRewards && window.AdminRewards._config) {
+                isDisabled = window.AdminRewards._config.rewardsDisabled === true;
+            } else if (window.RewardsConfig) {
+                isDisabled = window.RewardsConfig.rewardsDisabled === true;
+            }
+        } catch (e) {
+            console.warn('[AdminFeatureFlags] Errore lettura stato reward:', e);
+        }
+
+        console.log('[AdminFeatureFlags] Rendering toggle reward, isDisabled:', isDisabled);
+
+        return `
+            <div class="bg-gradient-to-r ${isDisabled ? 'from-red-900 to-red-700' : 'from-green-900 to-green-700'} rounded-xl overflow-hidden border-2 ${isDisabled ? 'border-red-500' : 'border-green-500'} shadow-lg">
+                <div class="p-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="text-4xl">${isDisabled ? '🚫' : '💰'}</div>
+                            <div>
+                                <h3 class="font-bold text-xl ${isDisabled ? 'text-red-300' : 'text-green-300'}">
+                                    ${isDisabled ? 'REWARD DISABILITATI' : 'REWARD ATTIVI'}
+                                </h3>
+                                <p class="text-sm ${isDisabled ? 'text-red-200' : 'text-green-200'} mt-1">
+                                    ${isDisabled
+                                        ? 'Nessun reward (CS, CSS, EXP) viene assegnato durante le partite'
+                                        : 'I reward vengono assegnati normalmente durante le partite'}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="rewards-disabled-toggle" ${isDisabled ? 'checked' : ''}
+                                       class="sr-only peer">
+                                <div class="w-16 h-8 bg-green-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                            </label>
+                            <span class="text-xs font-bold ${isDisabled ? 'text-red-300' : 'text-green-300'}">
+                                ${isDisabled ? 'BLOCCA' : 'ATTIVO'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     },
 
     /**
@@ -789,6 +852,42 @@ window.AdminFeatureFlags = {
      * Setup event listeners
      */
     setupEventListeners() {
+        // Toggle reward disabilitati
+        const rewardsToggle = document.getElementById('rewards-disabled-toggle');
+        if (rewardsToggle) {
+            rewardsToggle.addEventListener('change', async (e) => {
+                const isDisabled = e.target.checked;
+                rewardsToggle.disabled = true;
+
+                try {
+                    // Carica config attuale, modifica e salva
+                    if (window.AdminRewards) {
+                        await window.AdminRewards.loadConfig();
+                        const config = window.AdminRewards.getConfig();
+                        config.rewardsDisabled = isDisabled;
+                        await window.AdminRewards.saveConfig(config);
+                    }
+
+                    if (window.Toast) {
+                        window.Toast.success(isDisabled
+                            ? 'Reward DISABILITATI - nessun CS/CSS/EXP verra assegnato'
+                            : 'Reward ATTIVI - i premi verranno assegnati normalmente');
+                    }
+
+                    // Aggiorna UI
+                    this.updateUI();
+                } catch (error) {
+                    console.error('Errore toggle reward:', error);
+                    if (window.Toast) {
+                        window.Toast.error('Errore nel salvare la modifica');
+                    }
+                    e.target.checked = !isDisabled;
+                } finally {
+                    rewardsToggle.disabled = false;
+                }
+            });
+        }
+
         // Toggle singolo flag
         this.container.querySelectorAll('.flag-toggle').forEach(toggle => {
             toggle.addEventListener('change', async (e) => {

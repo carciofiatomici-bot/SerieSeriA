@@ -13,6 +13,9 @@ window.AdminRewards = {
     // VALORI DEFAULT
     // ====================================================================
     DEFAULT_CONFIG: {
+        // FLAG GLOBALE - Blocca tutti i reward
+        rewardsDisabled: false,  // Se true, nessun reward viene assegnato
+
         // Reward CS - Partite
         rewardGoalCS: 5,
         rewardVittoriaCS: 25,
@@ -62,6 +65,14 @@ window.AdminRewards = {
     get(key) {
         const config = this.getConfig();
         return config[key] !== undefined ? config[key] : this.DEFAULT_CONFIG[key];
+    },
+
+    /**
+     * Verifica se i reward sono disabilitati
+     * @returns {boolean} true se i reward sono bloccati
+     */
+    areRewardsDisabled() {
+        return this.get('rewardsDisabled') === true;
     },
 
     // ====================================================================
@@ -154,6 +165,30 @@ window.AdminRewards = {
 
                 <!-- Messaggio -->
                 <div id="rewards-message" class="hidden p-3 rounded-lg text-center"></div>
+
+                <!-- TOGGLE GLOBALE - Disabilita tutti i reward -->
+                <div class="bg-gray-700 p-4 rounded-lg border-2 ${config.rewardsDisabled ? 'border-red-500' : 'border-green-500'}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold ${config.rewardsDisabled ? 'text-red-400' : 'text-green-400'}">
+                                ${config.rewardsDisabled ? '🚫 Reward DISABILITATI' : '✅ Reward ATTIVI'}
+                            </h4>
+                            <p class="text-sm text-gray-400 mt-1">
+                                ${config.rewardsDisabled
+                                    ? 'Nessun reward (CS, CSS, EXP) verra assegnato durante le partite'
+                                    : 'I reward vengono assegnati normalmente durante le partite'}
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="reward-rewardsDisabled" ${config.rewardsDisabled ? 'checked' : ''}
+                                   class="sr-only peer">
+                            <div class="w-14 h-7 bg-green-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-300">
+                                ${config.rewardsDisabled ? 'OFF' : 'ON'}
+                            </span>
+                        </label>
+                    </div>
+                </div>
 
                 <!-- Sezione: Reward CS Partite -->
                 <div class="bg-gray-700 p-4 rounded-lg border border-emerald-500">
@@ -352,6 +387,14 @@ window.AdminRewards = {
         ];
 
         const config = {};
+
+        // Raccogli il flag rewardsDisabled (checkbox)
+        const rewardsDisabledCheckbox = document.getElementById('reward-rewardsDisabled');
+        if (rewardsDisabledCheckbox) {
+            config.rewardsDisabled = rewardsDisabledCheckbox.checked;
+        }
+
+        // Raccogli i campi numerici
         fields.forEach(field => {
             const input = document.getElementById(`reward-${field}`);
             if (input) {

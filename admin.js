@@ -2355,7 +2355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Avvia una nuova stagione: genera calendari campionato e coppa, poi attiva automazione
      */
-    const handleAvviaStagione = async () => {
+    async function handleAvviaStagione() {
         const btn = document.getElementById('btn-avvia-stagione');
         if (!btn) return;
 
@@ -2449,7 +2449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
             btn.innerHTML = '🚀 Avvia Stagione';
         }
-    };
+    }
 
     /**
      * Mostra il pannello di simulazione completo della coppa
@@ -4335,12 +4335,22 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Renderizza pannello gestione Feature Flags
      */
-    const renderFeatureFlagsPanel = () => {
+    const renderFeatureFlagsPanel = async () => {
         window.showScreen(featureFlagsContent);
+
+        // Precarica config AdminRewards per il toggle
+        if (window.AdminRewards && !window.AdminRewards._config) {
+            try {
+                await window.AdminRewards.loadConfig();
+                console.log('[Admin] Config reward precaricata per Flag panel');
+            } catch (e) {
+                console.warn('[Admin] Errore precaricamento config reward:', e);
+            }
+        }
 
         // Renderizza il contenuto tramite AdminFeatureFlags
         if (window.AdminFeatureFlags) {
-            window.AdminFeatureFlags.render('feature-flags-tools-container');
+            await window.AdminFeatureFlags.render('feature-flags-tools-container');
         } else {
             featureFlagsToolsContainer.innerHTML = `
                 <p class="text-center text-red-400">Modulo AdminFeatureFlags non disponibile.</p>
