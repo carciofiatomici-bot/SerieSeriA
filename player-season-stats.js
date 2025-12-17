@@ -42,35 +42,38 @@ window.PlayerSeasonStats = {
      * Inizializza/Resetta le statistiche stagionali.
      * Da chiamare quando si genera un nuovo calendario.
      * @param {Array} teams - Array di squadre partecipanti con i loro giocatori
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      */
-    async resetSeasonStats(teams = []) {
+    async resetSeasonStats(teams = [], competition = 'campionato') {
         const { doc, setDoc } = window.firestoreTools;
         const db = window.db;
 
-        const statsDocRef = doc(db, this.getStatsPath(), this.STATS_DOC_ID);
+        const statsDocRef = doc(db, this.getStatsPath(competition), this.getStatsDocId(competition));
 
         // Inizializza struttura vuota - le stats verranno popolate durante le partite
         const initialData = {
+            competition: competition,
             seasonStartDate: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             stats: {}  // { playerId: { goals, assists, cleanSheets, playerName, teamId, teamName, role } }
         };
 
         await setDoc(statsDocRef, initialData);
-        console.log('PlayerSeasonStats: Statistiche stagionali resettate.');
+        console.log(`PlayerSeasonStats: Statistiche ${competition} resettate.`);
 
         return initialData;
     },
 
     /**
      * Carica le statistiche stagionali correnti da Firestore.
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      * @returns {Object} Oggetto con le statistiche
      */
-    async loadSeasonStats() {
+    async loadSeasonStats(competition = 'campionato') {
         const { doc, getDoc } = window.firestoreTools;
         const db = window.db;
 
-        const statsDocRef = doc(db, this.getStatsPath(), this.STATS_DOC_ID);
+        const statsDocRef = doc(db, this.getStatsPath(competition), this.getStatsDocId(competition));
         const statsDoc = await getDoc(statsDocRef);
 
         if (statsDoc.exists()) {
@@ -78,7 +81,7 @@ window.PlayerSeasonStats = {
         }
 
         // Se non esiste, inizializza
-        return await this.resetSeasonStats();
+        return await this.resetSeasonStats([], competition);
     },
 
     /**
@@ -172,8 +175,9 @@ window.PlayerSeasonStats = {
      * @param {Object} awayTeamData - Dati squadra trasferta
      * @param {number} homeGoals - Goal squadra casa
      * @param {number} awayGoals - Goal squadra trasferta
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      */
-    async recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals) {
+    async recordMatchStats(homeTeamData, awayTeamData, homeGoals, awayGoals, competition = 'campionato') {
         const { doc, getDoc, setDoc } = window.firestoreTools;
         const db = window.db;
 
@@ -187,7 +191,7 @@ window.PlayerSeasonStats = {
             return;
         }
 
-        const statsDocRef = doc(db, this.getStatsPath(), this.STATS_DOC_ID);
+        const statsDocRef = doc(db, this.getStatsPath(competition), this.getStatsDocId(competition));
         const statsDoc = await getDoc(statsDocRef);
 
         let data = statsDoc.exists() ? statsDoc.data() : { stats: {}, seasonStartDate: new Date().toISOString() };
@@ -249,7 +253,7 @@ window.PlayerSeasonStats = {
 
         await setDoc(statsDocRef, data);
 
-        console.log(`PlayerSeasonStats: Registrate stats partita - Casa: ${homeGoals} gol, Trasferta: ${awayGoals} gol`);
+        console.log(`PlayerSeasonStats [${competition}]: Registrate stats partita - Casa: ${homeGoals} gol, Trasferta: ${awayGoals} gol`);
     },
 
     /**
@@ -417,10 +421,11 @@ window.PlayerSeasonStats = {
     /**
      * Ottiene la classifica marcatori (capocannoniere).
      * @param {number} limit - Numero massimo di giocatori da restituire (default: 10)
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      * @returns {Array} Classifica ordinata per goal
      */
-    async getTopScorers(limit = 10) {
-        const data = await this.loadSeasonStats();
+    async getTopScorers(limit = 10, competition = 'campionato') {
+        const data = await this.loadSeasonStats(competition);
         const stats = Object.values(data.stats || {});
 
         return stats
@@ -436,10 +441,11 @@ window.PlayerSeasonStats = {
     /**
      * Ottiene la classifica assistman.
      * @param {number} limit - Numero massimo di giocatori da restituire (default: 10)
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      * @returns {Array} Classifica ordinata per assist
      */
-    async getTopAssisters(limit = 10) {
-        const data = await this.loadSeasonStats();
+    async getTopAssisters(limit = 10, competition = 'campionato') {
+        const data = await this.loadSeasonStats(competition);
         const stats = Object.values(data.stats || {});
 
         return stats
@@ -454,10 +460,11 @@ window.PlayerSeasonStats = {
     /**
      * Ottiene la classifica portieri imbattuti (clean sheets).
      * @param {number} limit - Numero massimo di portieri da restituire (default: 10)
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      * @returns {Array} Classifica ordinata per clean sheets
      */
-    async getTopCleanSheets(limit = 10) {
-        const data = await this.loadSeasonStats();
+    async getTopCleanSheets(limit = 10, competition = 'campionato') {
+        const data = await this.loadSeasonStats(competition);
         const stats = Object.values(data.stats || {});
 
         return stats
@@ -490,10 +497,11 @@ window.PlayerSeasonStats = {
 
     /**
      * Ottiene un riepilogo delle statistiche stagionali.
+     * @param {string} competition - Competizione (campionato, coppa, supercoppa)
      * @returns {Object} Riepilogo con totali e top giocatori
      */
-    async getSeasonSummary() {
-        const data = await this.loadSeasonStats();
+    async getSeasonSummary(competition = 'campionato') {
+        const data = await this.loadSeasonStats(competition);
         const stats = Object.values(data.stats || {});
 
         const totalGoals = stats.reduce((sum, s) => sum + (s.goals || 0), 0);
@@ -507,6 +515,7 @@ window.PlayerSeasonStats = {
             .reduce((top, s) => (s.cleanSheets > (top?.cleanSheets || 0)) ? s : top, null);
 
         return {
+            competition: competition,
             seasonStartDate: data.seasonStartDate,
             lastUpdated: data.lastUpdated,
             totalGoals,

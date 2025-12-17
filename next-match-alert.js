@@ -299,7 +299,7 @@ window.NextMatchAlert = {
                     </div>
                     ${automationState?.isEnabled ? `
                         <div class="text-center">
-                            <span class="text-gray-500 text-[8px]">20:30</span>
+                            <span class="text-gray-500 text-[8px]">Prossima sim: ${automationState.nextSimulationType || 'campionato'} - 20:30</span>
                             <span id="next-match-countdown" class="text-${typeColor}-400 font-mono font-bold text-[10px] ml-1">--:--:--</span>
                         </div>
                     ` : `
