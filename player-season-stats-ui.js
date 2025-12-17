@@ -145,7 +145,8 @@ window.PlayerSeasonStatsUI = {
             : 'Nessuno';
 
         // Mostra pulsante reset solo per admin
-        const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const isAdmin = window.isTeamAdmin?.(currentTeamData?.teamName, currentTeamData) || false;
         const resetButtonHtml = isAdmin ? `
             <button onclick="window.PlayerSeasonStatsUI.resetSeasonStats()"
                     class="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition"

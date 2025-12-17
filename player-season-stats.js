@@ -13,13 +13,30 @@
 
 window.PlayerSeasonStats = {
 
+    // Competizioni supportate
+    COMPETITIONS: {
+        CAMPIONATO: 'campionato',
+        COPPA: 'coppa',
+        SUPERCOPPA: 'supercoppa'
+    },
+
     // Path Firestore per le statistiche stagionali
-    getStatsPath() {
+    getStatsPath(competition = 'campionato') {
         const appId = window.firestoreTools?.appId;
         return `artifacts/${appId}/public/data/seasonStats`;
     },
 
-    STATS_DOC_ID: 'playerStats',
+    // Doc ID per competizione
+    getStatsDocId(competition = 'campionato') {
+        const docIds = {
+            campionato: 'playerStats',
+            coppa: 'coppaStats',
+            supercoppa: 'supercoppaStats'
+        };
+        return docIds[competition] || 'playerStats';
+    },
+
+    STATS_DOC_ID: 'playerStats', // Default per retrocompatibilità
 
     /**
      * Inizializza/Resetta le statistiche stagionali.
