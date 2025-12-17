@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.14',
+    currentVersion: '2.2.15',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,19 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.15',
+            date: '2025-12-18',
+            time: '03:30',
+            title: 'Floating Alert e Sincronizzazione Dati',
+            changes: [
+                { text: 'Avviso aggiornamento ora e un floating alert non bloccante', adminOnly: false },
+                { text: 'Bottone X per chiudere avviso (riappare dopo 1 ora)', adminOnly: false },
+                { text: 'ADMIN: Nuovo pannello Sincronizzazione Dati Firebase', adminOnly: true },
+                { text: 'ADMIN: Analizza e ripara partite mancanti in Hall of Fame', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.14',
             date: '2025-12-18',

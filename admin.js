@@ -848,6 +848,14 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetFigurineTimer.addEventListener('click', handleResetFigurineTimer);
         }
 
+        // Sincronizzazione Dati
+        const btnDataSync = document.getElementById('btn-data-sync');
+        if (btnDataSync) {
+            btnDataSync.addEventListener('click', () => {
+                window.AdminDataSync?.showSyncPanel();
+            });
+        }
+
         // Bottone Emergenza - Annulla Campionato e Coppa
         const btnEmergencyCancel = document.getElementById('btn-emergency-cancel-competitions');
         if (btnEmergencyCancel) {
