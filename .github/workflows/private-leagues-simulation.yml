@@ -1,0 +1,56 @@
+name: Simulazione Leghe Private
+
+on:
+  # Esegui ogni ora
+  schedule:
+    - cron: '0 * * * *'
+
+  # Permetti esecuzione manuale
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry Run (simula senza salvare)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  simulate-private-leagues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install firebase-admin
+
+      - name: Run Private Leagues Simulation
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            node automation/private-leagues-simulate.js --dry-run
+          else
+            node automation/private-leagues-simulate.js
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Simulazione Leghe Private" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Data**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "- **Modalita**: Dry Run (nessuna modifica)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Modalita**: Produzione" >> $GITHUB_STEP_SUMMARY
+          fi
