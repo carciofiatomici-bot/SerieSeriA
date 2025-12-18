@@ -93,6 +93,33 @@ Access via browser console:
 - `window.firestoreTools` - database operations
 - `window.ExamplesUsage` - usage patterns
 
+## Coding Standards
+
+### Naming Conventions
+- **Global modules**: PascalCase - `window.ModuleName = { ... }`
+- **Functions/variables**: camelCase - `getUserData()`, `currentTeam`
+- **Constants**: UPPER_SNAKE_CASE - `LEVEL_MODIFIERS`, `TYPE_ADVANTAGE`
+- **File names**: kebab-case for new files - `game-constants.js`, `player-stats.js`
+
+### Error Handling
+- Always wrap async event listeners in try/catch
+- Use `window.ErrorHandler?.handle(error, { context: 'description' })` for centralized error handling
+- Add `.catch()` to all promise chains
+
+### Logging
+- Use `window.Logger` for conditional logging (auto-disabled in production)
+- Available methods: `Logger.debug()`, `Logger.info()`, `Logger.warn()`, `Logger.error()`
+- Enable debug in production: `Logger.enableDebug()` then reload
+
+### Security
+- Never trust client-side data (DOM dataset, localStorage) for authorization
+- Always validate on server/Firestore side
+- Use `window.escapeHtml()` for user-generated content in innerHTML
+
+### Shared Constants
+- Use `window.GameConstants` for game mechanics constants
+- Available: `LEVEL_MODIFIERS`, `TYPE_ADVANTAGE`, `getTypeModifier()`, `getLevelModifier()`
+
 ## External Dependencies
 
 - Firebase SDK (CDN)
