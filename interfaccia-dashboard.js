@@ -46,6 +46,7 @@ window.InterfacciaDashboard = {
             if (iconaPlayer) {
                 let photoUrl = iconaPlayer.photoUrl;
                 let playerType = iconaPlayer.type;
+                const iconaId = iconaPlayer.id;
                 if (!photoUrl && window.CAPTAIN_CANDIDATES_TEMPLATES) {
                     const template = window.CAPTAIN_CANDIDATES_TEMPLATES.find(t => t.name === iconaPlayer.name || t.id === iconaPlayer.id);
                     if (template) {
@@ -59,9 +60,20 @@ window.InterfacciaDashboard = {
                 const iconaRole = iconaPlayer.role || '?';
                 const iconaType = playerType || 'N/A';
 
-                if (photoUrl) {
+                // Controlla se c'e' una variante figurina selezionata
+                const iconaVariant = currentTeamData.iconaVariant || 'normale';
+                let finalPhotoUrl = photoUrl;
+
+                if (iconaVariant !== 'normale' && iconaId && window.FigurineSystem) {
+                    const figurineUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, iconaVariant);
+                    if (figurineUrl) {
+                        finalPhotoUrl = figurineUrl;
+                    }
+                }
+
+                if (finalPhotoUrl) {
                     // Sanitizza URL per convertire vecchi formati GitHub
-                    iconaAvatarElement.src = window.sanitizeGitHubUrl(photoUrl);
+                    iconaAvatarElement.src = window.sanitizeGitHubUrl(finalPhotoUrl);
                 } else {
                     iconaAvatarElement.src = 'https://placehold.co/96x96/facc15/000?text=?';
                 }
@@ -80,6 +92,12 @@ window.InterfacciaDashboard = {
                 const tooltipName = document.getElementById('icona-tooltip-name');
                 if (tooltipName) tooltipName.textContent = 'Nessuna Icona';
             }
+
+            // Inizializza il selettore variante icona (click sull'avatar)
+            this.initIconaVariantSelector();
+
+            // Valida che la variante selezionata sia ancora posseduta
+            this.validateIconaVariant();
         }
 
         // Applica il colore primario salvato
@@ -2232,6 +2250,273 @@ window.InterfacciaDashboard = {
             // Assicurati che il bottone sia posizionato relativamente
             btnRosa.style.position = 'relative';
             btnRosa.appendChild(alertBadge);
+        }
+    },
+
+    // ==================== SELEZIONE VARIANTE ICONA ====================
+
+    /**
+     * Inizializza il click handler per la selezione variante icona
+     */
+    initIconaVariantSelector() {
+        const iconaAvatar = document.getElementById('team-icona-avatar');
+        if (!iconaAvatar) return;
+
+        // Previeni listener duplicati
+        if (iconaAvatar.dataset.variantSelectorInit) return;
+        iconaAvatar.dataset.variantSelectorInit = 'true';
+
+        iconaAvatar.addEventListener('click', async () => {
+            await this.showIconaVariantModal();
+        });
+    },
+
+    /**
+     * Mostra il modal per selezionare la variante dell'icona
+     */
+    async showIconaVariantModal() {
+        const currentTeamData = window.InterfacciaCore.currentTeamData;
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+
+        if (!currentTeamData || !currentTeamId) {
+            if (window.Toast) window.Toast.error('Dati squadra non disponibili');
+            return;
+        }
+
+        // Trova l'icona corrente
+        const players = currentTeamData.players || [];
+        let iconaPlayer = players.find(p => p.abilities && p.abilities.includes('Icona'));
+        if (!iconaPlayer) {
+            iconaPlayer = players.find(p => p.isCaptain === true);
+        }
+        if (!iconaPlayer && currentTeamData.iconaId) {
+            iconaPlayer = players.find(p => p.id === currentTeamData.iconaId);
+        }
+
+        if (!iconaPlayer || !iconaPlayer.id) {
+            if (window.Toast) window.Toast.error('Nessuna icona trovata');
+            return;
+        }
+
+        const iconaId = iconaPlayer.id;
+        const iconaName = iconaPlayer.name || 'Icona';
+        const currentVariant = currentTeamData.iconaVariant || 'normale';
+
+        // Carica l'album figurine per vedere quali varianti possiede
+        let ownedVariants = { normale: 1, evoluto: 0, alternative: 0, ultimate: 0 };
+
+        if (window.FigurineSystem) {
+            try {
+                const album = await window.FigurineSystem.loadTeamAlbum(currentTeamId);
+                if (album && album.collection && album.collection[iconaId]) {
+                    ownedVariants = album.collection[iconaId];
+                }
+            } catch (error) {
+                console.warn('[Dashboard] Errore caricamento album figurine:', error);
+            }
+        }
+
+        // Ottieni URL base dal template per 'normale'
+        let basePhotoUrl = iconaPlayer.photoUrl;
+        if (!basePhotoUrl && window.CAPTAIN_CANDIDATES_TEMPLATES) {
+            const template = window.CAPTAIN_CANDIDATES_TEMPLATES.find(t => t.id === iconaId);
+            if (template) basePhotoUrl = template.photoUrl;
+        }
+
+        // Rimuovi modal esistente
+        const existingModal = document.getElementById('icona-variant-modal');
+        if (existingModal) existingModal.remove();
+
+        // Crea il modal
+        const variants = ['normale', 'evoluto', 'alternative', 'ultimate'];
+        const variantLabels = {
+            normale: { name: 'Normale', color: 'gray-400', border: 'gray-500' },
+            evoluto: { name: 'Evoluto', color: 'blue-400', border: 'blue-500' },
+            alternative: { name: 'Alternative', color: 'purple-400', border: 'purple-500' },
+            ultimate: { name: 'Ultimate', color: 'yellow-400', border: 'yellow-500' }
+        };
+
+        let variantsHtml = '';
+        for (const variant of variants) {
+            const owned = variant === 'normale' || (ownedVariants[variant] > 0);
+            const isSelected = variant === currentVariant;
+            const label = variantLabels[variant];
+
+            // URL immagine
+            let imgUrl;
+            if (variant === 'normale') {
+                imgUrl = basePhotoUrl ? window.sanitizeGitHubUrl(basePhotoUrl) : 'https://placehold.co/96x96/facc15/000?text=?';
+            } else if (window.FigurineSystem) {
+                imgUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, variant) || 'https://placehold.co/96x96/333/666?text=?';
+            } else {
+                imgUrl = 'https://placehold.co/96x96/333/666?text=?';
+            }
+
+            const opacity = owned ? '' : 'opacity-40 grayscale';
+            const cursor = owned ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed';
+            const border = isSelected ? `ring-4 ring-${label.border} ring-offset-2 ring-offset-gray-900` : '';
+            const lockIcon = owned ? '' : '<div class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg"><span class="text-2xl">🔒</span></div>';
+
+            variantsHtml += `
+                <div class="variant-option relative ${opacity} ${cursor} ${border} rounded-lg overflow-hidden transition-all duration-200"
+                     data-variant="${variant}" data-owned="${owned}">
+                    <img src="${imgUrl}" alt="${label.name}"
+                         class="w-full aspect-square object-cover border-2 border-${label.border} rounded-lg"
+                         onerror="this.src='https://placehold.co/96x96/333/666?text=?'">
+                    ${lockIcon}
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-center py-1">
+                        <span class="text-xs font-bold text-${label.color}">${label.name}</span>
+                    </div>
+                    ${isSelected ? '<div class="absolute top-1 right-1 text-green-400 text-lg">✓</div>' : ''}
+                </div>
+            `;
+        }
+
+        const modal = document.createElement('div');
+        modal.id = 'icona-variant-modal';
+        modal.innerHTML = `
+            <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" id="icona-variant-backdrop">
+                <div class="bg-gray-900 border-2 border-yellow-500 rounded-xl p-4 sm:p-6 max-w-md w-full shadow-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold text-yellow-400">
+                            👑 Variante Avatar: ${iconaName}
+                        </h3>
+                        <button id="close-variant-modal" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Seleziona una variante per il tuo avatar. Le varianti bloccate richiedono la figurina nell'album.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                        ${variantsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Event handlers
+        document.getElementById('close-variant-modal').addEventListener('click', () => modal.remove());
+        document.getElementById('icona-variant-backdrop').addEventListener('click', (e) => {
+            if (e.target.id === 'icona-variant-backdrop') modal.remove();
+        });
+
+        // Click sulle varianti
+        modal.querySelectorAll('.variant-option').forEach(option => {
+            option.addEventListener('click', async () => {
+                const variant = option.dataset.variant;
+                const owned = option.dataset.owned === 'true';
+
+                if (!owned) {
+                    if (window.Toast) window.Toast.warning('Non possiedi questa variante nell\'album!');
+                    return;
+                }
+
+                await this.saveIconaVariant(variant, iconaId);
+                modal.remove();
+            });
+        });
+    },
+
+    /**
+     * Salva la variante icona selezionata
+     * @param {string} variant - La variante da salvare (normale, evoluto, alternative, ultimate)
+     * @param {string} iconaId - ID dell'icona
+     */
+    async saveIconaVariant(variant, iconaId) {
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+        if (!currentTeamId) return;
+
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db) {
+            if (window.Toast) window.Toast.error('Errore: database non disponibile');
+            return;
+        }
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+            const teamRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
+
+            await updateDoc(teamRef, { iconaVariant: variant });
+
+            // Aggiorna dati locali
+            window.InterfacciaCore.currentTeamData.iconaVariant = variant;
+
+            // Aggiorna l'avatar
+            const iconaAvatarElement = document.getElementById('team-icona-avatar');
+            if (iconaAvatarElement) {
+                let newPhotoUrl;
+                if (variant === 'normale') {
+                    // Usa foto base dal template
+                    if (window.CAPTAIN_CANDIDATES_TEMPLATES) {
+                        const template = window.CAPTAIN_CANDIDATES_TEMPLATES.find(t => t.id === iconaId);
+                        if (template) newPhotoUrl = template.photoUrl;
+                    }
+                } else if (window.FigurineSystem) {
+                    newPhotoUrl = window.FigurineSystem.getFigurineImageUrl(iconaId, variant);
+                }
+
+                if (newPhotoUrl) {
+                    iconaAvatarElement.src = window.sanitizeGitHubUrl(newPhotoUrl);
+                }
+            }
+
+            if (window.Toast) {
+                const variantNames = {
+                    normale: 'Normale',
+                    evoluto: 'Evoluto',
+                    alternative: 'Alternative',
+                    ultimate: 'Ultimate'
+                };
+                window.Toast.success(`Avatar cambiato in: ${variantNames[variant]}`);
+            }
+
+            console.log(`[Dashboard] Variante icona salvata: ${variant}`);
+        } catch (error) {
+            console.error('[Dashboard] Errore salvataggio variante icona:', error);
+            if (window.Toast) window.Toast.error('Errore nel salvataggio. Riprova.');
+        }
+    },
+
+    /**
+     * Verifica e resetta la variante icona se non piu' posseduta
+     * Da chiamare al login o quando l'album cambia
+     */
+    async validateIconaVariant() {
+        const currentTeamData = window.InterfacciaCore.currentTeamData;
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+
+        if (!currentTeamData || !currentTeamId) return;
+
+        const currentVariant = currentTeamData.iconaVariant;
+        if (!currentVariant || currentVariant === 'normale') return;
+
+        // Trova l'icona
+        const players = currentTeamData.players || [];
+        let iconaPlayer = players.find(p => p.abilities && p.abilities.includes('Icona'));
+        if (!iconaPlayer) {
+            iconaPlayer = players.find(p => p.isCaptain === true);
+        }
+        if (!iconaPlayer || !iconaPlayer.id) return;
+
+        const iconaId = iconaPlayer.id;
+
+        // Verifica possesso
+        if (window.FigurineSystem) {
+            try {
+                const album = await window.FigurineSystem.loadTeamAlbum(currentTeamId);
+                if (album && album.collection && album.collection[iconaId]) {
+                    const owned = album.collection[iconaId][currentVariant] > 0;
+                    if (!owned) {
+                        // Reset a normale
+                        await this.saveIconaVariant('normale', iconaId);
+                        console.log(`[Dashboard] Variante ${currentVariant} non piu' posseduta, reset a normale`);
+                    }
+                }
+            } catch (error) {
+                console.warn('[Dashboard] Errore validazione variante icona:', error);
+            }
         }
     }
 };
