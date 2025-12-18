@@ -735,18 +735,18 @@ window.DashboardFeatures = {
             pacchettiBox.classList.remove('hidden');
             pacchettiBox.classList.add('flex');
 
-            // Verifica se pacchetto gratis disponibile
+            // Verifica se pacchetto gratis disponibile - aggiunge indicatore visivo sull'emoji
             if (teamId && window.FigurineSystem) {
                 try {
                     const canOpen = await window.FigurineSystem.canOpenFreePackByTeamId(teamId);
-                    if (pacchettiCount) {
-                        pacchettiCount.textContent = canOpen ? 'Gratis!' : 'Album';
-                        pacchettiCount.className = canOpen
-                            ? 'text-green-400 font-bold animate-pulse'
-                            : 'text-purple-400 font-bold';
+                    if (canOpen) {
+                        // Aggiungi glow/pulse al box se pacchetto gratis disponibile
+                        pacchettiBox.classList.add('animate-pulse', 'ring-2', 'ring-green-400');
+                    } else {
+                        pacchettiBox.classList.remove('animate-pulse', 'ring-2', 'ring-green-400');
                     }
                 } catch (e) {
-                    if (pacchettiCount) pacchettiCount.textContent = 'Album';
+                    // Ignora errori
                 }
             }
 
@@ -767,22 +767,13 @@ window.DashboardFeatures = {
             ruotaBox.classList.remove('hidden');
             ruotaBox.classList.add('flex');
 
-            // Verifica se puo girare
+            // Verifica se puo girare - aggiunge indicatore visivo sull'emoji
             const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
-            if (ruotaStatus) {
-                if (canSpin) {
-                    ruotaStatus.textContent = 'Gira!';
-                    ruotaStatus.className = 'text-green-400 font-bold animate-pulse';
-                } else {
-                    // Calcola tempo fino a mezzanotte
-                    const now = new Date();
-                    const midnight = new Date(now);
-                    midnight.setHours(24, 0, 0, 0);
-                    const diff = midnight - now;
-                    const hours = Math.floor(diff / (1000 * 60 * 60));
-                    ruotaStatus.textContent = `${hours}h`;
-                    ruotaStatus.className = 'text-orange-400 font-bold';
-                }
+            if (canSpin) {
+                // Aggiungi glow/pulse al box se può girare
+                ruotaBox.classList.add('animate-pulse', 'ring-2', 'ring-green-400');
+            } else {
+                ruotaBox.classList.remove('animate-pulse', 'ring-2', 'ring-green-400');
             }
 
             // Click per aprire ruota

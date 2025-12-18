@@ -6,10 +6,10 @@
 //
 
 window.PullToRefresh = {
-    // Configurazione
-    threshold: 80,           // Pixel da tirare per attivare refresh
-    maxPull: 120,            // Massimo pull visivo
-    resistance: 2.5,         // Resistenza al pull (piu alto = piu difficile)
+    // Configurazione - valori alti per evitare attivazioni accidentali
+    threshold: 150,          // Pixel da tirare per attivare refresh (era 80)
+    maxPull: 180,            // Massimo pull visivo
+    resistance: 4,           // Resistenza al pull - molto alta per evitare attivazioni accidentali (era 2.5)
 
     // Stato
     startY: 0,

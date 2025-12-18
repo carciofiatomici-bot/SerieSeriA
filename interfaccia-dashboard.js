@@ -610,21 +610,24 @@ window.InterfacciaDashboard = {
         const toggle = document.getElementById('championship-participation-toggle');
         const statusText = document.getElementById('championship-participation-status');
 
-        if (!toggle || !statusText) return;
+        if (!toggle) return;
 
         const currentTeamData = window.InterfacciaCore.currentTeamData;
         const isParticipating = currentTeamData?.isParticipating || false;
 
         toggle.checked = isParticipating;
 
-        if (isParticipating) {
-            statusText.textContent = '✅ Stai partecipando al campionato';
-            statusText.classList.remove('text-gray-400', 'text-red-400');
-            statusText.classList.add('text-green-400');
-        } else {
-            statusText.textContent = '❌ Non stai partecipando al campionato';
-            statusText.classList.remove('text-green-400', 'text-red-400');
-            statusText.classList.add('text-gray-400');
+        // Aggiorna status text solo se esiste
+        if (statusText) {
+            if (isParticipating) {
+                statusText.textContent = '✅ Stai partecipando al campionato';
+                statusText.classList.remove('text-gray-400', 'text-red-400');
+                statusText.classList.add('text-green-400');
+            } else {
+                statusText.textContent = '❌ Non stai partecipando al campionato';
+                statusText.classList.remove('text-green-400', 'text-red-400');
+                statusText.classList.add('text-gray-400');
+            }
         }
     },
 
@@ -634,51 +637,60 @@ window.InterfacciaDashboard = {
     async handleChampionshipParticipationToggle(isChecked) {
         const toggle = document.getElementById('championship-participation-toggle');
         const statusText = document.getElementById('championship-participation-status');
-        
-        if (!toggle || !statusText) return;
-        
+
+        if (!toggle) return;
+
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         if (!currentTeamId) return;
-        
+
         const { doc, updateDoc } = window.firestoreTools;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
-        
+
         // Disabilita il toggle durante il salvataggio
         toggle.disabled = true;
-        statusText.textContent = '⏳ Salvataggio in corso...';
-        statusText.classList.remove('text-green-400', 'text-gray-400', 'text-red-400');
-        statusText.classList.add('text-yellow-400');
-        
+        if (statusText) {
+            statusText.textContent = '⏳ Salvataggio in corso...';
+            statusText.classList.remove('text-green-400', 'text-gray-400', 'text-red-400');
+            statusText.classList.add('text-yellow-400');
+        }
+
         try {
             const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
-            
+
             await updateDoc(teamDocRef, {
                 isParticipating: isChecked
             });
-            
+
             // Aggiorna i dati locali
             window.InterfacciaCore.currentTeamData.isParticipating = isChecked;
-            
+
             // Aggiorna l'UI
-            if (isChecked) {
-                statusText.textContent = '✅ Stai partecipando al campionato';
-                statusText.classList.remove('text-yellow-400');
-                statusText.classList.add('text-green-400');
-            } else {
-                statusText.textContent = '❌ Non stai partecipando al campionato';
-                statusText.classList.remove('text-yellow-400');
-                statusText.classList.add('text-gray-400');
+            if (statusText) {
+                if (isChecked) {
+                    statusText.textContent = '✅ Stai partecipando al campionato';
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-green-400');
+                } else {
+                    statusText.textContent = '❌ Non stai partecipando al campionato';
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-gray-400');
+                }
             }
-            
+
         } catch (error) {
             console.error('Errore nel salvataggio stato partecipazione:', error);
-            
+
             // Ripristina lo stato precedente in caso di errore
             toggle.checked = !isChecked;
-            statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
-            statusText.classList.remove('text-yellow-400');
-            statusText.classList.add('text-red-400');
+            if (statusText) {
+                statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-red-400');
+            }
+            if (window.Toast) {
+                window.Toast.error('Errore nel salvataggio. Riprova.');
+            }
         } finally {
             toggle.disabled = false;
         }
@@ -704,21 +716,24 @@ window.InterfacciaDashboard = {
         const toggle = document.getElementById('cup-participation-toggle');
         const statusText = document.getElementById('cup-participation-status');
 
-        if (!toggle || !statusText) return;
+        if (!toggle) return;
 
         const currentTeamData = window.InterfacciaCore.currentTeamData;
         const isCupParticipating = currentTeamData?.isCupParticipating || false;
 
         toggle.checked = isCupParticipating;
 
-        if (isCupParticipating) {
-            statusText.textContent = '✅ Iscritto alla CoppaSeriA';
-            statusText.classList.remove('text-gray-400', 'text-red-400');
-            statusText.classList.add('text-purple-400');
-        } else {
-            statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
-            statusText.classList.remove('text-purple-400', 'text-red-400');
-            statusText.classList.add('text-gray-400');
+        // Aggiorna status text solo se esiste
+        if (statusText) {
+            if (isCupParticipating) {
+                statusText.textContent = '✅ Iscritto alla CoppaSeriA';
+                statusText.classList.remove('text-gray-400', 'text-red-400');
+                statusText.classList.add('text-purple-400');
+            } else {
+                statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
+                statusText.classList.remove('text-purple-400', 'text-red-400');
+                statusText.classList.add('text-gray-400');
+            }
         }
     },
 
@@ -729,16 +744,18 @@ window.InterfacciaDashboard = {
         const toggle = document.getElementById('cup-participation-toggle');
         const statusText = document.getElementById('cup-participation-status');
 
-        if (!toggle || !statusText) return;
+        if (!toggle) return;
 
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         if (!currentTeamId) return;
 
         // Disabilita il toggle durante il salvataggio
         toggle.disabled = true;
-        statusText.textContent = '⏳ Salvataggio in corso...';
-        statusText.classList.remove('text-purple-400', 'text-gray-400', 'text-red-400');
-        statusText.classList.add('text-yellow-400');
+        if (statusText) {
+            statusText.textContent = '⏳ Salvataggio in corso...';
+            statusText.classList.remove('text-purple-400', 'text-gray-400', 'text-red-400');
+            statusText.classList.add('text-yellow-400');
+        }
 
         try {
             await window.CoppaMain.toggleCupParticipation(currentTeamId, isChecked);
@@ -747,14 +764,16 @@ window.InterfacciaDashboard = {
             window.InterfacciaCore.currentTeamData.isCupParticipating = isChecked;
 
             // Aggiorna l'UI
-            if (isChecked) {
-                statusText.textContent = '✅ Iscritto alla CoppaSeriA';
-                statusText.classList.remove('text-yellow-400');
-                statusText.classList.add('text-purple-400');
-            } else {
-                statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
-                statusText.classList.remove('text-yellow-400');
-                statusText.classList.add('text-gray-400');
+            if (statusText) {
+                if (isChecked) {
+                    statusText.textContent = '✅ Iscritto alla CoppaSeriA';
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-purple-400');
+                } else {
+                    statusText.textContent = '❌ Non iscritto alla CoppaSeriA';
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-gray-400');
+                }
             }
 
         } catch (error) {
@@ -762,9 +781,14 @@ window.InterfacciaDashboard = {
 
             // Ripristina lo stato precedente in caso di errore
             toggle.checked = !isChecked;
-            statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
-            statusText.classList.remove('text-yellow-400');
-            statusText.classList.add('text-red-400');
+            if (statusText) {
+                statusText.textContent = '❌ Errore nel salvataggio. Riprova.';
+                statusText.classList.remove('text-yellow-400');
+                statusText.classList.add('text-red-400');
+            }
+            if (window.Toast) {
+                window.Toast.error('Errore nel salvataggio. Riprova.');
+            }
         } finally {
             toggle.disabled = false;
         }
@@ -2090,12 +2114,13 @@ window.InterfacciaDashboard = {
     },
 
     /**
-     * Ripristina stato minimizzato dal localStorage
+     * Ripristina stato minimizzato dal localStorage (default: minimizzato)
      */
     restoreMatchAlertMinimizedState() {
         try {
             const saved = localStorage.getItem('match_alert_minimized');
-            this._matchAlertMinimized = saved === 'true';
+            // Default: minimizzato (true) se non c'è valore salvato
+            this._matchAlertMinimized = saved !== 'false';
 
             if (this._matchAlertMinimized) {
                 const expandedEl = document.getElementById('match-alert-expanded');
