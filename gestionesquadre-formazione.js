@@ -1107,6 +1107,11 @@ window.GestioneSquadreFormazione = {
                 window.Notifications.notify.outOfPosition(outOfPositionPlayers.length, playerNames);
             }
 
+            // Aggiorna l'alert sul bottone formazione nella dashboard
+            if (window.InterfacciaDashboard?.updateFormationAlert) {
+                window.InterfacciaDashboard.updateFormationAlert(window.InterfacciaCore.currentTeamData);
+            }
+
         } catch (error) {
             console.error("Errore nel salvataggio:", error);
             displayMessage('formation-message', `Errore di salvataggio: ${error.message}`, 'error');
@@ -2049,8 +2054,26 @@ window.GestioneSquadreFormazione = {
         // Aggiorna il context
         context.currentTeamData = teamData;
 
-        // Re-render della formazione
-        this.render(teamData, context);
+        // Aggiorna UI del modulo
+        const { MODULI } = window.GestioneSquadreConstants;
+        const formationSelect = document.getElementById('formation-select');
+        if (formationSelect) {
+            formationSelect.value = optimalFormation.modulo;
+        }
+        const moduleDescription = document.getElementById('module-description');
+        if (moduleDescription && MODULI[optimalFormation.modulo]) {
+            moduleDescription.textContent = MODULI[optimalFormation.modulo].description;
+        }
+        const fieldAreaHeader = document.querySelector('#field-area h4');
+        if (fieldAreaHeader) {
+            fieldAreaHeader.textContent = `Campo (Titolari) - Modulo: ${optimalFormation.modulo}`;
+        }
+
+        // Re-render degli slot (non tutto il pannello per evitare listener duplicati)
+        this.renderFieldSlots(teamData, context);
+
+        // Aggiorna barra XP formazione
+        this.updateFormationXpBar(teamData);
 
         displayMessage('formation-message', `✅ Formazione ottimale applicata! Modulo: ${optimalFormation.modulo}`, 'success');
     },
@@ -2120,7 +2143,8 @@ window.GestioneSquadreFormazione = {
         // 1. Portiere (sempre 1)
         if (byRole.P.length > 0) {
             const keeper = byRole.P[0];
-            titolari.push({ id: keeper.id, slotId: 'P-0' });
+            keeper.assignedPosition = 'P';
+            titolari.push(keeper);
             usedIds.add(keeper.id);
         } else {
             return null; // Nessun portiere
@@ -2131,8 +2155,10 @@ window.GestioneSquadreFormazione = {
         for (let i = 0; i < numDef; i++) {
             const available = byRole.D.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {
-                titolari.push({ id: available[0].id, slotId: `D-${i}` });
-                usedIds.add(available[0].id);
+                const player = available[0];
+                player.assignedPosition = 'D';
+                titolari.push(player);
+                usedIds.add(player.id);
             }
         }
 
@@ -2141,8 +2167,10 @@ window.GestioneSquadreFormazione = {
         for (let i = 0; i < numMid; i++) {
             const available = byRole.C.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {
-                titolari.push({ id: available[0].id, slotId: `C-${i}` });
-                usedIds.add(available[0].id);
+                const player = available[0];
+                player.assignedPosition = 'C';
+                titolari.push(player);
+                usedIds.add(player.id);
             }
         }
 
@@ -2151,8 +2179,10 @@ window.GestioneSquadreFormazione = {
         for (let i = 0; i < numFwd; i++) {
             const available = byRole.A.filter(p => !usedIds.has(p.id));
             if (available.length > 0) {
-                titolari.push({ id: available[0].id, slotId: `A-${i}` });
-                usedIds.add(available[0].id);
+                const player = available[0];
+                player.assignedPosition = 'A';
+                titolari.push(player);
+                usedIds.add(player.id);
             }
         }
 
@@ -2162,9 +2192,8 @@ window.GestioneSquadreFormazione = {
             const remaining = scoredPlayers.filter(p => !usedIds.has(p.id));
             while (titolari.length < 5 && remaining.length > 0) {
                 const next = remaining.shift();
-                const slotRole = next.role;
-                const existingSlots = titolari.filter(t => t.slotId.startsWith(slotRole)).length;
-                titolari.push({ id: next.id, slotId: `${slotRole}-${existingSlots}` });
+                next.assignedPosition = next.role;
+                titolari.push(next);
                 usedIds.add(next.id);
             }
         }
@@ -2172,8 +2201,7 @@ window.GestioneSquadreFormazione = {
         // Panchina: i migliori 3 tra i rimanenti
         const panchina = scoredPlayers
             .filter(p => !usedIds.has(p.id))
-            .slice(0, 3)
-            .map((p, i) => ({ id: p.id, slotId: `B-${i}` }));
+            .slice(0, 3);
 
         return {
             titolari,
@@ -2248,16 +2276,16 @@ window.GestioneSquadreFormazione = {
         let bestScore = -1;
 
         for (const [moduloName, moduloConfig] of Object.entries(MODULI)) {
-            // Salta moduli senza configurazione slots valida
-            if (!moduloConfig || !moduloConfig.slots || !Array.isArray(moduloConfig.slots)) {
+            // Salta moduli senza configurazione valida
+            if (!moduloConfig || moduloConfig.P === undefined) {
                 continue;
             }
 
             const required = {
                 P: 1,
-                D: moduloConfig.slots.filter(s => s === 'D').length,
-                C: moduloConfig.slots.filter(s => s === 'C').length,
-                A: moduloConfig.slots.filter(s => s === 'A').length
+                D: moduloConfig.D || 0,
+                C: moduloConfig.C || 0,
+                A: moduloConfig.A || 0
             };
 
             // Verifica se abbiamo abbastanza giocatori
