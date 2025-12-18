@@ -408,7 +408,12 @@ window.NextMatchAlert = {
     toggleMinimize() {
         const content = document.getElementById('next-match-content');
         const toggleIcon = document.querySelector('#next-match-toggle .toggle-icon');
+        const toggleBtn = document.getElementById('next-match-toggle');
         const headerLabel = document.querySelector('#next-match-header-text .header-label');
+        const header = document.getElementById('next-match-header');
+        const headerText = document.getElementById('next-match-header-text');
+        const dragHandle = header?.querySelector('.drag-handle');
+        const alertContainer = this._alertElement?.querySelector('.bg-gray-900');
 
         if (!content) return;
 
@@ -417,13 +422,47 @@ window.NextMatchAlert = {
         if (this._isMinimized) {
             content.classList.add('hidden');
             if (toggleIcon) toggleIcon.textContent = '+';
-            // Nascondi label, mostra solo emoji
+            // Nascondi label e drag handle
             if (headerLabel) headerLabel.classList.add('hidden');
+            if (dragHandle) dragHandle.classList.add('hidden');
+            // Riduci padding header per renderlo compatto come menu hamburger
+            if (header) {
+                header.classList.remove('px-3', 'py-1.5');
+                header.classList.add('p-0.5');
+            }
+            if (headerText) {
+                headerText.classList.remove('text-sm');
+                headerText.classList.add('text-[11px]');
+            }
+            // Nascondi bottone toggle, usa header intero come click
+            if (toggleBtn) toggleBtn.classList.add('hidden');
+            // Riduci dimensioni container
+            if (alertContainer) {
+                alertContainer.classList.remove('max-w-xs');
+                alertContainer.classList.add('w-5', 'h-5');
+            }
         } else {
             content.classList.remove('hidden');
             if (toggleIcon) toggleIcon.textContent = '−';
-            // Mostra label
+            // Mostra label e drag handle
             if (headerLabel) headerLabel.classList.remove('hidden');
+            if (dragHandle) dragHandle.classList.remove('hidden');
+            // Ripristina padding header
+            if (header) {
+                header.classList.add('px-3', 'py-1.5');
+                header.classList.remove('p-0.5');
+            }
+            if (headerText) {
+                headerText.classList.add('text-sm');
+                headerText.classList.remove('text-[11px]');
+            }
+            // Mostra bottone toggle
+            if (toggleBtn) toggleBtn.classList.remove('hidden');
+            // Ripristina dimensioni container
+            if (alertContainer) {
+                alertContainer.classList.add('max-w-xs');
+                alertContainer.classList.remove('w-5', 'h-5');
+            }
         }
 
         // Salva stato in localStorage
