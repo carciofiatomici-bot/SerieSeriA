@@ -346,7 +346,9 @@ window.VersionCheck = {
         } catch (error) {
             console.error('[VersionCheck] Errore durante aggiornamento:', error);
             if ('caches' in window) {
-                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                caches.keys()
+                    .then(names => names.forEach(name => caches.delete(name)))
+                    .catch(err => console.warn('[VersionCheck] Errore pulizia cache:', err));
             }
             setTimeout(() => {
                 window.location.href = window.location.origin + window.location.pathname + '?force=' + Date.now();
