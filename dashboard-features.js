@@ -761,19 +761,24 @@ window.DashboardFeatures = {
             pacchettiBox.classList.remove('hidden');
             pacchettiBox.classList.add('flex');
 
-            // Verifica se pacchetto gratis disponibile - aggiunge indicatore visivo sull'emoji
+            // Verifica se pacchetto gratis disponibile - aggiunge indicatore visivo
+            const albumFreeAlert = document.getElementById('album-free-alert');
             if (teamId && window.FigurineSystem) {
                 try {
                     const canOpen = await window.FigurineSystem.canOpenFreePackByTeamId(teamId);
                     if (canOpen) {
-                        // Aggiungi glow/pulse al box se pacchetto gratis disponibile
-                        pacchettiBox.classList.add('animate-pulse', 'ring-2', 'ring-green-400');
+                        // Mostra pallino rosso alert
+                        if (albumFreeAlert) albumFreeAlert.classList.remove('hidden');
                     } else {
-                        pacchettiBox.classList.remove('animate-pulse', 'ring-2', 'ring-green-400');
+                        // Nascondi pallino
+                        if (albumFreeAlert) albumFreeAlert.classList.add('hidden');
                     }
                 } catch (e) {
-                    // Ignora errori
+                    // Ignora errori, nascondi alert
+                    if (albumFreeAlert) albumFreeAlert.classList.add('hidden');
                 }
+            } else {
+                if (albumFreeAlert) albumFreeAlert.classList.add('hidden');
             }
 
             // Click per aprire album
@@ -783,6 +788,9 @@ window.DashboardFeatures = {
         } else if (pacchettiBox) {
             pacchettiBox.classList.add('hidden');
             pacchettiBox.classList.remove('flex');
+            // Nascondi anche l'alert
+            const albumFreeAlert = document.getElementById('album-free-alert');
+            if (albumFreeAlert) albumFreeAlert.classList.add('hidden');
         }
 
         // Aggiorna Ruota della Fortuna
@@ -793,13 +801,15 @@ window.DashboardFeatures = {
             ruotaBox.classList.remove('hidden');
             ruotaBox.classList.add('flex');
 
-            // Verifica se puo girare - aggiunge indicatore visivo sull'emoji
+            // Verifica se puo girare - aggiunge indicatore visivo
+            const wheelAlert = document.getElementById('wheel-available-alert');
             const canSpin = window.DailyWheel?.canSpinToday(teamData) || false;
             if (canSpin) {
-                // Aggiungi glow/pulse al box se può girare
-                ruotaBox.classList.add('animate-pulse', 'ring-2', 'ring-green-400');
+                // Mostra pallino verde alert
+                if (wheelAlert) wheelAlert.classList.remove('hidden');
             } else {
-                ruotaBox.classList.remove('animate-pulse', 'ring-2', 'ring-green-400');
+                // Nascondi pallino
+                if (wheelAlert) wheelAlert.classList.add('hidden');
             }
 
             // Click per aprire ruota
@@ -811,6 +821,9 @@ window.DashboardFeatures = {
         } else if (ruotaBox) {
             ruotaBox.classList.add('hidden');
             ruotaBox.classList.remove('flex');
+            // Nascondi anche l'alert
+            const wheelAlert = document.getElementById('wheel-available-alert');
+            if (wheelAlert) wheelAlert.classList.add('hidden');
         }
 
         // Gestisci visibilità separatori
