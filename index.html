@@ -708,90 +708,97 @@
         </div>
 
         <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra -->
-        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative">
+        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative overflow-visible">
 
             <!-- BOX RISORSE IN CIMA (Negozio, CS, CSS, Album, Ruota) -->
             <div id="risorse-box" class="mb-1 p-0.5 rounded border border-amber-500/40 bg-amber-900/10">
-                <div class="flex items-center justify-center gap-0.5 flex-nowrap">
-                    <!-- Album -->
-                    <div id="risorse-pacchetti" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
-                        <span class="text-sm">🎴</span>
-                        <span class="hidden" id="risorse-pacchetti-count"></span>
+                <div class="flex items-center justify-between gap-0.5 flex-nowrap">
+                    <!-- GRUPPO SINISTRA: Album e Ruota -->
+                    <div class="flex items-center gap-0.5">
+                        <!-- Album -->
+                        <div id="risorse-pacchetti" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
+                            <span class="text-sm">🎴</span>
+                            <span class="hidden" id="risorse-pacchetti-count"></span>
+                        </div>
+                        <!-- Ruota -->
+                        <div id="risorse-ruota" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
+                            <span class="text-sm">🎡</span>
+                            <span class="hidden" id="risorse-ruota-status"></span>
+                        </div>
                     </div>
-                    <!-- Ruota -->
-                    <div id="risorse-ruota" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
-                        <span class="text-sm">🎡</span>
-                        <span class="hidden" id="risorse-ruota-status"></span>
-                    </div>
-                    <!-- Negozio -->
-                    <div id="risorse-negozio" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
-                        <span class="text-sm">🛒</span>
-                    </div>
-                    <!-- Crediti Seri -->
-                    <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
-                        <span class="text-sm">💰</span>
-                        <span class="text-[10px] text-gray-400">CS</span>
-                        <span id="risorse-cs" class="text-[11px] text-green-400 font-bold">0</span>
-                    </div>
-                    <!-- Crediti Super Seri -->
-                    <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
-                        <span class="text-sm">💎</span>
-                        <span class="text-[10px] text-gray-400">CSS</span>
-                        <span id="risorse-css" class="text-[11px] text-yellow-400 font-bold">0</span>
+                    <!-- GRUPPO DESTRA: CS, CSS, Negozio -->
+                    <div class="flex items-center gap-0.5">
+                        <!-- Crediti Seri -->
+                        <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
+                            <span class="text-sm">💰</span>
+                            <span class="text-[10px] text-gray-400">CS</span>
+                            <span id="risorse-cs" class="text-[11px] text-green-400 font-bold">0</span>
+                        </div>
+                        <!-- Crediti Super Seri -->
+                        <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
+                            <span class="text-sm">💎</span>
+                            <span class="text-[10px] text-gray-400">CSS</span>
+                            <span id="risorse-css" class="text-[11px] text-yellow-400 font-bold">0</span>
+                        </div>
+                        <!-- Negozio -->
+                        <div id="risorse-negozio" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
+                            <span class="text-sm">🛒</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- SELETTORE COLORE PRIMARIO -->
-            <div id="team-color-picker-container" class="absolute top-2 right-2">
-                <input type="color" id="team-color-picker"
-                       class="w-8 h-8 rounded cursor-pointer border-2 border-gray-600 hover:border-white transition"
-                       title="Scegli il colore primario della squadra"
-                       value="#22c55e">
+            <!-- BOX NOME SQUADRA + MENU HAMBURGER -->
+            <div id="team-name-box" class="mb-1 p-1 rounded-lg border border-green-500/50 bg-gray-900/30 relative">
+                <!-- Nome Squadra (centro assoluto) -->
+                <h2 id="team-dashboard-title" class="text-sm sm:text-lg md:text-xl font-extrabold text-center uppercase team-name-fancy leading-none py-0.5">NOME SQUADRA</h2>
+                <!-- Menu Hamburger (sinistra assoluto) -->
+                <div class="absolute left-1 top-1/2 -translate-y-1/2">
+                    <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center bg-gray-700/60 rounded cursor-pointer hover:bg-gray-600/80 transition" title="Menu">
+                        <span class="text-xs">☰</span>
+                    </button>
+                    <!-- Dropdown Menu (posizionato via JS) -->
+                    <div id="dashboard-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
+                        <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>📖</span> Tutorial
+                        </button>
+                        <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>📋</span> Changelog
+                        </button>
+                        <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>🔑</span> Cambia Password
+                        </button>
+                        <div class="border-t border-gray-700"></div>
+                        <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
+                            <span>🔧</span> Pannello Admin
+                        </button>
+                        <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
+                            <span>🚪</span> Logout
+                        </button>
+                        <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
+                            <span>🗑️</span> Elimina Squadra
+                        </button>
+                    </div>
+                </div>
+                <!-- Selettore Colore (destra assoluto) -->
+                <div id="team-color-picker-container" class="absolute right-1 top-1/2 -translate-y-1/2">
+                    <input type="color" id="team-color-picker"
+                           class="w-5 h-5 rounded cursor-pointer border border-gray-600 hover:border-white transition"
+                           title="Scegli il colore primario della squadra"
+                           value="#22c55e">
+                </div>
             </div>
 
-            <!-- BOX SPONSOR-MEDIA (include nome squadra) -->
+            <!-- BOX SPONSOR-MEDIA -->
             <div id="sponsor-media-box" class="p-1 sm:p-1.5 rounded-lg border border-green-500 bg-gray-900/20">
-                <!-- RIGA LIVELLO ROSA + NOME SQUADRA + DIVISA - tutto in linea -->
-                <div class="flex justify-center items-center mb-1 gap-1 sm:gap-2">
+                <!-- RIGA LIVELLO ROSA + DIVISA -->
+                <div class="flex justify-center items-center mb-1 gap-2 sm:gap-3">
                     <!-- BOX LIVELLO MEDIO ROSA (sinistra) -->
                     <div class="px-1 sm:px-1.5 flex flex-col items-center justify-center min-w-0">
                         <p class="text-[7px] sm:text-[8px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
                         <p class="leading-none"><span id="stat-rosa-level" class="text-[10px] sm:text-xs font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[6px] sm:text-[8px] text-gray-400">(0)</span></p>
                     </div>
-                    <!-- BOX NOME SQUADRA (centro) con menu hamburger -->
-                    <div id="team-name-box" class="px-1 sm:px-2 flex items-center justify-center gap-1 min-w-0 flex-1">
-                        <h2 id="team-dashboard-title" class="text-xs sm:text-base md:text-lg font-extrabold text-center uppercase team-name-fancy leading-none truncate max-w-[120px] sm:max-w-[180px] md:max-w-[240px]">NOME SQUADRA</h2>
-                        <!-- Menu Hamburger -->
-                        <div class="relative">
-                            <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center bg-gray-700/60 rounded cursor-pointer hover:bg-gray-600/80 transition" title="Menu">
-                                <span class="text-xs">☰</span>
-                            </button>
-                            <!-- Dropdown Menu -->
-                            <div id="dashboard-menu-dropdown" class="hidden absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
-                                <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                    <span>📖</span> Tutorial
-                                </button>
-                                <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                    <span>📋</span> Changelog
-                                </button>
-                                <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                    <span>🔑</span> Cambia Password
-                                </button>
-                                <div class="border-t border-gray-700"></div>
-                                <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
-                                    <span>🔧</span> Pannello Admin
-                                </button>
-                                <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
-                                    <span>🚪</span> Logout
-                                </button>
-                                <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
-                                    <span>🗑️</span> Elimina Squadra
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- BOX DIVISA SQUADRA (destra) - in linea -->
+                    <!-- BOX DIVISA SQUADRA (destra) -->
                     <div id="team-uniform-box" class="flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
                         <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-6 h-6 sm:w-7 sm:h-7">
                             <defs></defs>
@@ -860,7 +867,7 @@
                 <div id="daily-wheel-box" class="hidden"></div>
 
                 <!-- RIEPILOGO STATISTICHE SQUADRA + HALL OF FAME + STADIO -->
-                <div class="flex justify-center gap-1.5 sm:gap-2 mt-1">
+                <div class="flex justify-center gap-1.5 sm:gap-2">
                     <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
                     <button id="btn-stadium"
                             class="hidden flex-1 py-1.5 px-1.5 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-md shadow-lg hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">

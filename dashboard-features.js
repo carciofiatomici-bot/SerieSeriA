@@ -598,10 +598,22 @@ window.DashboardFeatures = {
 
         if (!menuBtn || !dropdown) return;
 
-        // Toggle menu
+        // Toggle menu con posizionamento fixed
         menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdown.classList.toggle('hidden');
+            const isHidden = dropdown.classList.contains('hidden');
+
+            if (isHidden) {
+                // Calcola posizione del bottone
+                const rect = menuBtn.getBoundingClientRect();
+                // Posiziona il dropdown sotto il bottone
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = (rect.bottom + 4) + 'px';
+                dropdown.style.left = rect.left + 'px';
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
         });
 
         // Chiudi menu cliccando fuori
@@ -610,6 +622,11 @@ window.DashboardFeatures = {
                 dropdown.classList.add('hidden');
             }
         });
+
+        // Chiudi menu su scroll
+        window.addEventListener('scroll', () => {
+            dropdown.classList.add('hidden');
+        }, true);
 
         // Setup azioni menu
         this.setupMenuActions();
