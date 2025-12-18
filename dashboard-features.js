@@ -598,6 +598,9 @@ window.DashboardFeatures = {
 
         if (!menuBtn || !dropdown) return;
 
+        // Sposta dropdown nel body per evitare problemi di overflow
+        document.body.appendChild(dropdown);
+
         // Toggle menu con posizionamento fixed
         menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -610,6 +613,7 @@ window.DashboardFeatures = {
                 dropdown.style.position = 'fixed';
                 dropdown.style.top = (rect.bottom + 4) + 'px';
                 dropdown.style.left = rect.left + 'px';
+                dropdown.style.zIndex = '9999';
                 dropdown.classList.remove('hidden');
             } else {
                 dropdown.classList.add('hidden');
