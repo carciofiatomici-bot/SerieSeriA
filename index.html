@@ -711,36 +711,36 @@
         <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative">
 
             <!-- BOX RISORSE IN CIMA (Negozio, CS, CSS, Album, Ruota) -->
-            <div id="risorse-box" class="mb-1 sm:mb-1.5 p-1 sm:p-1.5 rounded-md border border-amber-500/50 bg-gradient-to-r from-amber-900/20 to-yellow-900/20">
-                <div class="flex items-center justify-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto">
-                    <!-- Negozio CSS (destra, order-last) - solo emoji -->
-                    <div id="risorse-negozio" class="hidden flex items-center bg-yellow-900/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-yellow-800/40 transition border border-yellow-500/30 order-last" title="Apri Negozio CSS">
-                        <span class="text-xs">🛒</span>
+            <div id="risorse-box" class="mb-1 p-0.5 rounded border border-amber-500/40 bg-amber-900/10">
+                <div class="flex items-center justify-center gap-0.5 flex-nowrap">
+                    <!-- Album (order-first, sinistra) -->
+                    <div id="risorse-pacchetti" class="hidden h-5 px-1 flex items-center justify-center bg-purple-900/40 rounded cursor-pointer hover:bg-purple-800/50 transition" title="Album Figurine">
+                        <span class="text-[11px]">🎴</span>
+                        <span class="hidden" id="risorse-pacchetti-count"></span>
                     </div>
                     <!-- Crediti Seri -->
-                    <div class="flex items-center gap-0.5 bg-gray-800/50 rounded px-1.5 py-0.5">
-                        <span class="text-xs">💰</span>
-                        <span class="text-[10px]"><span class="text-gray-400">CS:</span><span id="risorse-cs" class="text-green-400 font-bold">0</span></span>
+                    <div class="h-5 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
+                        <span class="text-[11px]">💰</span>
+                        <span id="risorse-cs" class="text-[10px] text-green-400 font-bold">0</span>
                     </div>
                     <!-- Crediti Super Seri -->
-                    <div class="flex items-center gap-0.5 bg-gray-800/50 rounded px-1.5 py-0.5">
-                        <span class="text-xs">💎</span>
-                        <span class="text-[10px]"><span class="text-gray-400">CSS:</span><span id="risorse-css" class="text-yellow-400 font-bold">0</span></span>
+                    <div class="h-5 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded">
+                        <span class="text-[11px]">💎</span>
+                        <span id="risorse-css" class="text-[10px] text-yellow-400 font-bold">0</span>
                     </div>
-                    <!-- Album Figurine (se attivo) - order-first per posizionarlo a sinistra, solo emoji -->
-                    <div id="risorse-pacchetti" class="hidden flex items-center bg-purple-900/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-purple-800/40 transition border border-purple-500/30 order-first" title="Apri Album Figurine">
-                        <span class="text-xs">🎴</span>
-                        <span class="hidden" id="risorse-pacchetti-count">Album</span>
+                    <!-- Ruota -->
+                    <div id="risorse-ruota" class="hidden h-5 px-1 flex items-center justify-center bg-orange-900/40 rounded cursor-pointer hover:bg-orange-800/50 transition" title="Ruota Fortuna">
+                        <span class="text-[11px]">🎡</span>
+                        <span class="hidden" id="risorse-ruota-status"></span>
                     </div>
-                    <!-- Ruota Fortuna (se attivo) - solo emoji -->
-                    <div id="risorse-ruota" class="hidden flex items-center bg-orange-900/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-orange-800/40 transition border border-orange-500/30" title="Gira la Ruota della Fortuna!">
-                        <span class="text-xs">🎡</span>
-                        <span class="hidden" id="risorse-ruota-status">Ruota</span>
+                    <!-- Negozio -->
+                    <div id="risorse-negozio" class="hidden h-5 px-1 flex items-center justify-center bg-yellow-900/40 rounded cursor-pointer hover:bg-yellow-800/50 transition" title="Negozio CSS">
+                        <span class="text-[11px]">🛒</span>
                     </div>
-                    <!-- Menu Hamburger (destra) -->
-                    <div class="relative order-last">
-                        <button id="dashboard-menu-btn" class="flex items-center bg-gray-700/50 rounded px-1.5 py-0.5 cursor-pointer hover:bg-gray-600/50 transition border border-gray-500/30" title="Menu">
-                            <span class="text-xs">⋮</span>
+                    <!-- Menu -->
+                    <div class="relative">
+                        <button id="dashboard-menu-btn" class="h-5 px-1 flex items-center justify-center bg-gray-700/40 rounded cursor-pointer hover:bg-gray-600/50 transition" title="Menu">
+                            <span class="text-[11px]">⋮</span>
                         </button>
                         <!-- Dropdown Menu -->
                         <div id="dashboard-menu-dropdown" class="hidden absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
