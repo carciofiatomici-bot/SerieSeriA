@@ -1,368 +1,111 @@
-//
-// ====================================================================
-// PULL-TO-REFRESH.JS - Aggiornamento pagina con gesto swipe
-// ====================================================================
-// Permette di ricaricare la pagina tirando verso il basso dalla cima
-//
+/**
+ * ====================================================================
+ * PULL-TO-REFRESH.JS - Sistema di aggiornamento swipe
+ * ====================================================================
+ * Versione corretta: Soglia 80px per facile attivazione su PWA.
+ */
 
 window.PullToRefresh = {
-    // Configurazione - valori alti per evitare attivazioni accidentali
-    threshold: 150,          // Pixel da tirare per attivare refresh (era 80)
-    maxPull: 180,            // Massimo pull visivo
-    resistance: 4,           // Resistenza al pull - molto alta per evitare attivazioni accidentali (era 2.5)
+    threshold: 80,           // Pixel minimi (prima era 150, troppo alto)
+    maxPull: 140,            // Massimo spostamento visivo
+    resistance: 2.2,         // Resistenza (prima era 4, troppo pesante)
 
-    // Stato
     startY: 0,
     currentY: 0,
     isPulling: false,
     isRefreshing: false,
 
-    // Elementi DOM
     indicator: null,
     spinner: null,
 
-    // Chiavi sessionStorage
-    SCREEN_KEY: 'pull-refresh-screen',
-    SECTION_KEY: 'pull-refresh-section',
-
-    /**
-     * Inizializza il pull-to-refresh
-     */
     init() {
-        // Non attivare su desktop
-        if (!this.isTouchDevice()) {
-            console.log('[PullToRefresh] Non e un dispositivo touch, skip');
-            return;
-        }
+        if (!('ontouchstart' in window || navigator.maxTouchPoints > 0)) return;
 
         this.createIndicator();
         this.bindEvents();
-        this.restoreScreen();
-        console.log('[PullToRefresh] Inizializzato');
+        console.log('[PTR] Sistema inizializzato (Soglia: 80px)');
     },
 
-    /**
-     * Ripristina la schermata salvata dopo un refresh
-     */
-    restoreScreen() {
-        // Leggi da URL hash (es. #team-screen:Gestione%20Rosa)
-        const hash = window.location.hash;
-        if (!hash || !hash.startsWith('#restore:')) return;
-
-        // Pulisci l'hash
-        const data = hash.replace('#restore:', '');
-        history.replaceState(null, '', window.location.pathname);
-
-        const [savedScreen, savedSection] = data.split(':').map(s => decodeURIComponent(s));
-        if (!savedScreen) return;
-
-        console.log('[PullToRefresh] Ripristino da hash:', savedScreen, savedSection);
-
-        // Aspetta che l'app sia completamente pronta
-        const tryRestore = (attempts = 0) => {
-            if (attempts > 20) {
-                console.warn('[PullToRefresh] Impossibile ripristinare schermata dopo 20 tentativi');
-                return;
-            }
-
-            // Verifica se showScreen esiste e l'utente e' loggato
-            if (typeof window.showScreen === 'function' && window.InterfacciaCore?.currentTeamId) {
-                console.log('[PullToRefresh] Navigo a:', savedScreen);
-                window.showScreen(savedScreen);
-
-                // Se era team-screen, ripristina anche la sezione
-                if (savedScreen === 'team-screen' && savedSection) {
-                    setTimeout(() => this.restoreTeamSection(savedSection), 800);
-                }
-            } else {
-                // Riprova dopo 300ms
-                setTimeout(() => tryRestore(attempts + 1), 300);
-            }
-        };
-
-        // Primo tentativo dopo 2 secondi
-        setTimeout(() => tryRestore(0), 2000);
-    },
-
-    /**
-     * Ripristina la sezione attiva di team-screen
-     */
-    restoreTeamSection(section) {
-        console.log('[PullToRefresh] Ripristino sezione team:', section);
-
-        const sectionButtons = {
-            'Gestione Rosa': 'btn-gestione-rosa',
-            'Gestione Formazione': 'btn-gestione-formazione'
-        };
-
-        const buttonId = sectionButtons[section];
-        if (buttonId) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                console.log('[PullToRefresh] Click su:', buttonId);
-                button.click();
-            }
-        }
-    },
-
-    /**
-     * Trova la sezione attiva di team-screen
-     */
-    getCurrentTeamSection() {
-        const titleElement = document.getElementById('squadra-main-title');
-        if (titleElement) {
-            return titleElement.textContent?.trim() || null;
-        }
-        return null;
-    },
-
-    /**
-     * Trova la schermata attualmente visibile
-     */
-    getCurrentScreen() {
-        // Lista delle schermate principali
-        const screenIds = [
-            'team-screen',
-            'mercato-screen',
-            'draft-screen',
-            'campionato-screen',
-            'coppa-screen',
-            'admin-screen',
-            'supercoppa-screen',
-            'private-leagues-screen'
-        ];
-
-        // Cerca quale schermata non ha la classe hidden
-        for (const id of screenIds) {
-            const screen = document.getElementById(id);
-            if (screen && !screen.classList.contains('hidden')) {
-                return id;
-            }
-        }
-
-        return null; // Dashboard o nessuna schermata specifica
-    },
-
-    /**
-     * Verifica se e un dispositivo touch
-     */
-    isTouchDevice() {
-        return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    },
-
-    /**
-     * Crea l'indicatore visivo
-     */
     createIndicator() {
-        // Container indicatore
+        if (document.getElementById('pull-refresh-indicator')) return;
+
         this.indicator = document.createElement('div');
         this.indicator.id = 'pull-refresh-indicator';
-        this.indicator.className = 'fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center pointer-events-none';
-        this.indicator.style.cssText = 'transform: translateY(-100%); transition: none; height: 60px;';
+        this.indicator.className = 'fixed top-0 left-0 right-0 z-[99999] flex items-center justify-center pointer-events-none opacity-0';
+        this.indicator.style.transform = 'translateY(-100%)';
 
-        // Spinner/Icona
         this.spinner = document.createElement('div');
-        this.spinner.className = 'flex flex-col items-center';
+        this.spinner.className = 'bg-gray-800 border-2 border-green-500 rounded-full p-3 shadow-2xl';
         this.spinner.innerHTML = `
-            <div class="refresh-icon text-2xl transition-transform duration-200">
-                <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                    </path>
-                </svg>
-            </div>
-            <span class="refresh-text text-xs text-gray-400 mt-1">Tira per aggiornare</span>
+            <svg class="w-6 h-6 text-green-400" id="ptr-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                </path>
+            </svg>
         `;
 
         this.indicator.appendChild(this.spinner);
-        document.body.insertBefore(this.indicator, document.body.firstChild);
+        document.body.appendChild(this.indicator);
     },
 
-    /**
-     * Collega gli eventi touch
-     */
     bindEvents() {
-        document.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
-        document.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-        document.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
-    },
-
-    /**
-     * Verifica se siamo completamente in cima alla pagina
-     */
-    isAtTop() {
-        // Deve essere esattamente 0 (o molto vicino per tolleranza float)
-        return window.scrollY <= 1 && document.documentElement.scrollTop <= 1;
-    },
-
-    /**
-     * Gestisce inizio touch
-     */
-    handleTouchStart(e) {
-        if (this.isRefreshing) return;
-
-        // Pull-to-refresh solo se:
-        // 1. Siamo completamente in cima alla pagina
-        // 2. Il touch inizia nella parte alta dello schermo (primi 100px)
-        const touchY = e.touches[0].clientY;
-        if (this.isAtTop() && touchY < 100) {
-            this.startY = touchY;
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY > 5 || this.isRefreshing) return;
+            this.startY = e.touches[0].clientY;
             this.isPulling = true;
-        }
-    },
-
-    /**
-     * Gestisce movimento touch
-     */
-    handleTouchMove(e) {
-        if (!this.isPulling || this.isRefreshing) return;
-        if (!this.isAtTop()) {
-            this.resetPull();
-            return;
-        }
-
-        this.currentY = e.touches[0].clientY;
-        const pullDistance = (this.currentY - this.startY) / this.resistance;
-
-        if (pullDistance > 0) {
-            // Previeni scroll normale quando si tira
-            e.preventDefault();
-
-            // Limita il pull
-            const limitedPull = Math.min(pullDistance, this.maxPull);
-
-            // Aggiorna indicatore
-            this.updateIndicator(limitedPull);
-        }
-    },
-
-    /**
-     * Gestisce fine touch
-     */
-    handleTouchEnd(e) {
-        if (!this.isPulling || this.isRefreshing) return;
-
-        const pullDistance = (this.currentY - this.startY) / this.resistance;
-
-        if (pullDistance >= this.threshold) {
-            this.triggerRefresh();
-        } else {
-            this.resetPull();
-        }
-
-        this.isPulling = false;
-    },
-
-    /**
-     * Aggiorna l'indicatore visivo
-     */
-    updateIndicator(pullDistance) {
-        // Trasla l'indicatore
-        const translateY = Math.min(pullDistance - 60, 20);
-        this.indicator.style.transform = `translateY(${translateY}px)`;
-
-        // Ruota l'icona in base al pull
-        const rotation = (pullDistance / this.threshold) * 180;
-        const icon = this.spinner.querySelector('.refresh-icon');
-        if (icon) {
-            icon.style.transform = `rotate(${Math.min(rotation, 180)}deg)`;
-        }
-
-        // Aggiorna testo
-        const text = this.spinner.querySelector('.refresh-text');
-        if (text) {
-            if (pullDistance >= this.threshold) {
-                text.textContent = 'Rilascia per aggiornare';
-                text.className = 'refresh-text text-xs text-green-400 mt-1';
-            } else {
-                text.textContent = 'Tira per aggiornare';
-                text.className = 'refresh-text text-xs text-gray-400 mt-1';
-            }
-        }
-    },
-
-    /**
-     * Resetta l'indicatore
-     */
-    resetPull() {
-        this.indicator.style.transition = 'transform 0.3s ease';
-        this.indicator.style.transform = 'translateY(-100%)';
-
-        const icon = this.spinner.querySelector('.refresh-icon');
-        if (icon) {
-            icon.style.transform = 'rotate(0deg)';
-        }
-
-        setTimeout(() => {
             this.indicator.style.transition = 'none';
-        }, 300);
+        }, { passive: true });
 
-        this.startY = 0;
-        this.currentY = 0;
+        document.addEventListener('touchmove', (e) => {
+            if (!this.isPulling || this.isRefreshing) return;
+
+            this.currentY = e.touches[0].clientY;
+            const diff = (this.currentY - this.startY) / this.resistance;
+
+            if (diff > 0) {
+                if (e.cancelable) e.preventDefault();
+                this.updateUI(diff);
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            if (!this.isPulling || this.isRefreshing) return;
+
+            const finalDiff = (this.currentY - this.startY) / this.resistance;
+            if (finalDiff >= this.threshold) {
+                this.triggerRefresh();
+            } else {
+                this.resetUI();
+            }
+            this.isPulling = false;
+        }, { passive: true });
     },
 
-    /**
-     * Attiva il refresh
-     */
+    updateUI(dist) {
+        const pull = Math.min(dist, this.maxPull);
+        this.indicator.style.opacity = Math.min(pull / this.threshold, 1);
+        this.indicator.style.transform = `translateY(${Math.min(pull - 40, 40)}px)`;
+        
+        const icon = document.getElementById('ptr-icon-svg');
+        if (icon) icon.style.transform = `rotate(${dist * 2}deg)`;
+    },
+
+    resetUI() {
+        this.indicator.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s';
+        this.indicator.style.transform = 'translateY(-100%)';
+        this.indicator.style.opacity = '0';
+    },
+
     triggerRefresh() {
         this.isRefreshing = true;
+        this.indicator.style.transition = 'transform 0.2s ease';
+        this.indicator.style.transform = 'translateY(40px)';
+        
+        const icon = document.getElementById('ptr-icon-svg');
+        if (icon) icon.classList.add('animate-spin');
 
-        // Costruisci URL con hash per il restore
-        const currentScreen = this.getCurrentScreen();
-        let restoreHash = '';
-
-        if (currentScreen) {
-            restoreHash = `#restore:${encodeURIComponent(currentScreen)}`;
-
-            // Se siamo in team-screen, aggiungi anche la sezione
-            if (currentScreen === 'team-screen') {
-                const section = this.getCurrentTeamSection();
-                if (section) {
-                    restoreHash += `:${encodeURIComponent(section)}`;
-                }
-            }
-            console.log('[PullToRefresh] Salvo stato in hash:', restoreHash);
-        }
-
-        // Mostra spinner di caricamento
-        const icon = this.spinner.querySelector('.refresh-icon');
-        if (icon) {
-            icon.innerHTML = `
-                <svg class="w-8 h-8 text-green-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            `;
-        }
-
-        const text = this.spinner.querySelector('.refresh-text');
-        if (text) {
-            text.textContent = 'Aggiornamento...';
-            text.className = 'refresh-text text-xs text-green-400 mt-1';
-        }
-
-        // Posiziona indicatore visibile
-        this.indicator.style.transition = 'transform 0.3s ease';
-        this.indicator.style.transform = 'translateY(10px)';
-
-        // Ricarica pagina dopo breve delay per feedback visivo
-        setTimeout(() => {
-            if (restoreHash) {
-                // Usa hash per passare lo stato attraverso il reload
-                window.location.href = window.location.pathname + restoreHash;
-            } else {
-                window.location.reload();
-            }
-        }, 500);
+        setTimeout(() => window.location.reload(), 600);
     }
 };
 
-// Inizializza quando DOM pronto
-document.addEventListener('DOMContentLoaded', () => {
-    // Piccolo delay per assicurarsi che tutto sia caricato
-    setTimeout(() => {
-        window.PullToRefresh.init();
-    }, 500);
-});
-
-console.log('Modulo pull-to-refresh.js caricato.');
+window.PullToRefresh.init();

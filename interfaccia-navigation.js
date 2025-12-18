@@ -1,6 +1,6 @@
 //
 // ====================================================================
-// MODULO INTERFACCIA-NAVIGATION.JS (Navigazione e Routing)
+// MODULO INTERFACCIA-NAVIGATION.JS (Navigazione e Routing) - INTEGRALE
 // ====================================================================
 //
 
@@ -8,24 +8,21 @@ window.InterfacciaNavigation = {
     
     /**
      * Salva l'ID della schermata corrente in localStorage.
-     * @param {string} screenId - L'ID del container (es. 'app-content', 'squadra-content').
+     * @param {string} screenId - L'ID del container.
      */
     saveLastScreen(screenId) {
-        // Schermate che NON devono essere salvate per il ripristino
-        // (richiedono contesto specifico o sono temporanee)
         const excludedScreens = [
             'login-box',
             'gate-box',
             'coach-selection-box',
             'captain-selection-box',
-            'draft-content',      // Richiede teamId e mode specifici
-            'mercato-content'     // Richiede teamId specifico
+            'draft-content',
+            'mercato-content'
         ];
 
         if (screenId && !excludedScreens.includes(screenId)) {
             localStorage.setItem('fanta_last_screen', screenId);
         } else if (screenId === 'app-content') {
-            // La Dashboard e il punto di partenza, lo salviamo
             localStorage.setItem('fanta_last_screen', screenId);
         }
     },
@@ -37,22 +34,23 @@ window.InterfacciaNavigation = {
         const currentTeamId = () => window.InterfacciaCore.currentTeamId;
         const self = this;
         
-        // Funzione helper per la navigazione e il tracciamento
+        // --- FIX: Inizializzazione del Menu Hamburger ---
+        this.initHamburgerMenu();
+
         const navigateAndTrack = (screenElement, mode, dispatchEventName) => {
             if (window.showScreen) {
-                // 1. Salva la destinazione
                 self.saveLastScreen(screenElement.id);
-                // 2. Mostra la schermata
                 window.showScreen(screenElement);
-                // 3. Lancia l'evento specifico per il caricamento del contenuto
                 if (dispatchEventName) {
                      document.dispatchEvent(new CustomEvent(dispatchEventName, { 
                         detail: { mode: mode, teamId: currentTeamId() } 
                     }));
                 }
+                // Chiude il menu se aperto durante la navigazione
+                this.closeMenu();
             }
         };
-        
+
         // Gestione Rosa
         if (elements.btnGestioneRosa) {
             elements.btnGestioneRosa.addEventListener('click', () => {
@@ -77,9 +75,6 @@ window.InterfacciaNavigation = {
             });
         }
 
-        // Toggle partecipazione Draft
-        this.initDraftParticipationToggle();
-        
         // Mercato Utente
         if (elements.btnMercatoUtente) {
             elements.btnMercatoUtente.addEventListener('click', () => {
@@ -90,78 +85,96 @@ window.InterfacciaNavigation = {
             });
         }
 
-        // Sfida un'altra squadra
+        // Sfida
         if (elements.btnChallenge) {
             elements.btnChallenge.addEventListener('click', () => {
-                // Verifica se le sfide sono abilitate
                 if (!window.FeatureFlags?.isEnabled('challenges')) {
-                    if (window.Toast) window.Toast.info("Sfide non aperte");
+                    if (window.Toast) window.Toast.info("Sfide non ancora attive in questa versione.");
                     return;
                 }
                 if (window.Challenges) {
                     window.Challenges.showChallengeModal();
-                } else {
-                    if (window.Toast) window.Toast.error("Sistema sfide non disponibile");
                 }
+                this.closeMenu();
             });
         }
 
-        // Classifica dalla Dashboard
+        // Listener per Classifica e Calendario dalla Dashboard
         if (elements.btnDashboardLeaderboard) {
             elements.btnDashboardLeaderboard.addEventListener('click', () => {
                 self.saveLastScreen(elements.leaderboardContent.id);
                 window.showScreen(elements.leaderboardContent);
                 window.InterfacciaDashboard.loadLeaderboard();
+                this.closeMenu();
             });
         }
         
-        // Calendario dalla Dashboard
         if (elements.btnDashboardSchedule) {
             elements.btnDashboardSchedule.addEventListener('click', () => {
                 self.saveLastScreen(elements.scheduleContent.id);
                 window.showScreen(elements.scheduleContent);
                 window.InterfacciaDashboard.loadSchedule();
+                this.closeMenu();
             });
         }
-        
-        // Campionato dalla Dashboard (NUOVO)
-        if (elements.btnDashboardChampionship) {
-            elements.btnDashboardChampionship.addEventListener('click', async () => {
-                const userChampionshipContent = document.getElementById('user-championship-content');
-                const userChampionshipBackButton = document.getElementById('user-championship-back-button');
-                
-                if (userChampionshipContent && userChampionshipBackButton) {
-                    self.saveLastScreen(userChampionshipContent.id);
-                    window.showScreen(userChampionshipContent);
-                    
-                    // Carica il campionato
-                    if (window.UserChampionship) {
-                        await window.UserChampionship.loadUserChampionship();
-                    }
-                    
-                    // Listener per tornare indietro
-                    userChampionshipBackButton.onclick = () => {
-                        self.saveLastScreen(elements.appContent.id);
-                        window.showScreen(elements.appContent);
-                    };
-                }
-            });
-        }
-        
-        // Listener per la Dashboard stessa (per coerenza)
-        if (elements.appContent) {
-            document.getElementById('user-logout-button')?.addEventListener('click', () => self.saveLastScreen(elements.loginBox.id));
-        }
+
+        // Inizializza il toggle partecipazione draft (Logica originale mantenuta)
+        this.initDraftParticipationToggle();
+    },
+
+    /**
+     * --- NUOVA LOGICA: MENU HAMBURGER (⋮) ---
+     */
+    initHamburgerMenu() {
+        const menuBtn = document.getElementById('dashboard-menu-btn');
+        const dropdown = document.getElementById('dashboard-menu-dropdown');
+
+        if (!menuBtn || !dropdown) return;
+
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== menuBtn) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Collega i bottoni interni al menu
+        document.getElementById('menu-logout')?.addEventListener('click', () => {
+            window.InterfacciaAuth?.logout();
+            this.closeMenu();
+        });
+
+        document.getElementById('menu-password')?.addEventListener('click', () => {
+            const modal = document.getElementById('change-password-modal');
+            if (modal) modal.classList.remove('hidden');
+            this.closeMenu();
+        });
+
+        document.getElementById('menu-tutorial')?.addEventListener('click', () => {
+            window.Tutorial?.start();
+            this.closeMenu();
+        });
+
+        document.getElementById('menu-changelog')?.addEventListener('click', () => {
+            window.Changelog?.showPlayers();
+            this.closeMenu();
+        });
+    },
+
+    closeMenu() {
+        document.getElementById('dashboard-menu-dropdown')?.classList.add('hidden');
     },
 
     /**
      * Inizializza i listener di navigazione pubblica (login page).
      */
     initializePublicNavigationListeners(elements) {
-        const currentTeamId = () => window.InterfacciaCore.currentTeamId;
         const self = this;
         
-        // Classifica (Login Page)
         if (elements.btnLeaderboard) {
             elements.btnLeaderboard.addEventListener('click', () => {
                 self.saveLastScreen(elements.leaderboardContent.id);
@@ -170,7 +183,6 @@ window.InterfacciaNavigation = {
             });
         }
         
-        // Calendario (Login Page)
         if (elements.btnSchedule) {
             elements.btnSchedule.addEventListener('click', () => {
                 self.saveLastScreen(elements.scheduleContent.id);
@@ -179,19 +191,15 @@ window.InterfacciaNavigation = {
             });
         }
         
-        // Ritorno dalla Classifica
         if (elements.leaderboardBackButton) {
             elements.leaderboardBackButton.addEventListener('click', () => {
-                // Resetta la schermata salvata, torneremo al punto di ingresso predefinito
                 localStorage.removeItem('fanta_last_screen'); 
                 this.handleBackNavigation(elements);
             });
         }
         
-        // Ritorno dal Calendario
         if (elements.scheduleBackButton) {
             elements.scheduleBackButton.addEventListener('click', () => {
-                // Resetta la schermata salvata, torneremo al punto di ingresso predefinito
                 localStorage.removeItem('fanta_last_screen');
                 this.handleBackNavigation(elements);
             });
@@ -199,13 +207,11 @@ window.InterfacciaNavigation = {
     },
 
     /**
-     * Gestisce la navigazione di ritorno in base al contesto (Admin/User/Login).
+     * Gestisce il ritorno alla schermata corretta in base allo stato sessione.
      */
     handleBackNavigation(elements) {
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         const userType = localStorage.getItem('fanta_session_type');
-
-        // Cancella lo stato dell'ultima schermata salvata quando si torna indietro.
         localStorage.removeItem('fanta_last_screen');
 
         if (currentTeamId && userType === 'admin') {
@@ -218,7 +224,7 @@ window.InterfacciaNavigation = {
     },
 
     /**
-     * Inizializza il toggle di partecipazione al Draft
+     * --- LOGICA ORIGINALE DRAFT (Ripristinata) ---
      */
     initDraftParticipationToggle() {
         const toggle = document.getElementById('draft-participation-toggle');
@@ -226,24 +232,15 @@ window.InterfacciaNavigation = {
 
         if (!toggle || !toggleContainer) return;
 
-        // Previeni la propagazione del click al bottone genitore
-        toggleContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // Gestione cambio stato toggle
+        toggleContainer.addEventListener('click', (e) => e.stopPropagation());
         toggle.addEventListener('change', async (e) => {
             e.stopPropagation();
             await this.handleDraftToggle(e.target.checked);
         });
 
-        // Carica lo stato iniziale
         this.loadDraftParticipationState();
     },
 
-    /**
-     * Carica lo stato di partecipazione al Draft da Firestore
-     */
     async loadDraftParticipationState() {
         const toggle = document.getElementById('draft-participation-toggle');
         if (!toggle) return;
@@ -258,39 +255,26 @@ window.InterfacciaNavigation = {
             const teamDoc = await getDoc(teamDocRef);
 
             if (teamDoc.exists()) {
-                const teamData = teamDoc.data();
-                const isEnabled = teamData.draft_enabled === true;
+                const isEnabled = teamDoc.data().draft_enabled === true;
                 toggle.checked = isEnabled;
                 this.updateToggleTooltip(isEnabled);
             }
         } catch (error) {
-            console.error('[DraftToggle] Errore caricamento stato:', error);
+            console.error('[DraftToggle] Errore caricamento:', error);
         }
     },
 
-    /**
-     * Gestisce il cambio di stato del toggle Draft
-     * @param {boolean} enabled - Nuovo stato
-     */
     async handleDraftToggle(enabled) {
         const teamId = window.InterfacciaCore?.currentTeamId;
-        if (!teamId) {
-            if (window.Toast) window.Toast.error('Nessuna squadra selezionata');
-            return;
-        }
-
-        const toggle = document.getElementById('draft-participation-toggle');
+        if (!teamId) return;
 
         try {
             const { doc, updateDoc, appId } = window.firestoreTools;
             const teamsPath = `artifacts/${appId}/public/data/teams`;
             const teamDocRef = doc(window.db, teamsPath, teamId);
 
-            await updateDoc(teamDocRef, {
-                draft_enabled: enabled
-            });
+            await updateDoc(teamDocRef, { draft_enabled: enabled });
 
-            // Aggiorna anche i dati locali
             if (window.InterfacciaCore?.currentTeamData) {
                 window.InterfacciaCore.currentTeamData.draft_enabled = enabled;
             }
@@ -298,27 +282,17 @@ window.InterfacciaNavigation = {
             this.updateToggleTooltip(enabled);
 
             if (window.Toast) {
-                if (enabled) {
-                    window.Toast.success('Partecipazione al Draft attivata');
-                } else {
-                    window.Toast.info('Partecipazione al Draft disattivata');
-                }
+                if (enabled) window.Toast.success('Partecipazione al Draft attivata');
+                else window.Toast.info('Partecipazione al Draft disattivata');
             }
-
-            console.log(`[DraftToggle] draft_enabled = ${enabled}`);
-
         } catch (error) {
             console.error('[DraftToggle] Errore salvataggio:', error);
             if (window.Toast) window.Toast.error('Errore nel salvare la preferenza');
-            // Ripristina lo stato precedente
+            const toggle = document.getElementById('draft-participation-toggle');
             if (toggle) toggle.checked = !enabled;
         }
     },
 
-    /**
-     * Aggiorna il tooltip del toggle
-     * @param {boolean} enabled - Stato attuale
-     */
     updateToggleTooltip(enabled) {
         const container = document.getElementById('draft-toggle-container');
         if (container) {
@@ -328,5 +302,3 @@ window.InterfacciaNavigation = {
         }
     }
 };
-
-console.log("[OK] Modulo interfaccia-navigation.js caricato.");
