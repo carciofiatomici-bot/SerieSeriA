@@ -79,14 +79,17 @@ window.DashboardFeatures = {
      */
     updateStadiumButton() {
         const btnStadium = document.getElementById('btn-stadium');
-        if (btnStadium) {
+        const btnHallOfFame = document.getElementById('btn-hall-of-fame');
+        if (btnStadium && btnHallOfFame) {
             const isEnabled = window.FeatureFlags?.isEnabled?.('stadium') || false;
             if (isEnabled) {
+                // Entrambi visibili
                 btnStadium.classList.remove('hidden');
-                btnStadium.classList.add('flex');
+                btnHallOfFame.classList.remove('col-span-2');
             } else {
+                // Solo Hall of Fame visibile, occupa entrambe le colonne
                 btnStadium.classList.add('hidden');
-                btnStadium.classList.remove('flex');
+                btnHallOfFame.classList.add('col-span-2');
             }
         }
     },
@@ -95,15 +98,13 @@ window.DashboardFeatures = {
      * Aggiorna la visibilita' del bottone Leghe Private
      */
     updatePrivateLeaguesButton() {
-        const btnPrivateLeagues = document.getElementById('btn-private-leagues');
-        if (btnPrivateLeagues) {
+        const privateLeaguesBox = document.getElementById('private-leagues-box');
+        if (privateLeaguesBox) {
             const isEnabled = window.FeatureFlags?.isEnabled?.('privateLeagues') || false;
             if (isEnabled) {
-                btnPrivateLeagues.classList.remove('hidden');
-                btnPrivateLeagues.classList.add('flex');
+                privateLeaguesBox.classList.remove('hidden');
             } else {
-                btnPrivateLeagues.classList.add('hidden');
-                btnPrivateLeagues.classList.remove('flex');
+                privateLeaguesBox.classList.add('hidden');
             }
         }
     },
@@ -668,7 +669,11 @@ window.DashboardFeatures = {
         document.getElementById('menu-admin-panel')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');
             const adminContent = document.getElementById('admin-content');
-            if (adminContent) window.showScreen(adminContent);
+            if (adminContent) {
+                window.showScreen(adminContent);
+                // Emetti evento per inizializzare il pannello admin
+                document.dispatchEvent(new CustomEvent('adminLoggedIn'));
+            }
         });
 
         // Logout
@@ -806,6 +811,41 @@ window.DashboardFeatures = {
         } else if (ruotaBox) {
             ruotaBox.classList.add('hidden');
             ruotaBox.classList.remove('flex');
+        }
+
+        // Gestisci visibilità separatori
+        const separatorStart = document.getElementById('risorse-separator-start');
+        const separator = document.getElementById('risorse-separator');
+        const separatorEnd = document.getElementById('risorse-separator-end');
+
+        const albumVisible = pacchettiBox && !pacchettiBox.classList.contains('hidden');
+        const ruotaVisible = ruotaBox && !ruotaBox.classList.contains('hidden');
+
+        // Separatore iniziale: visibile se album è visibile
+        if (separatorStart) {
+            if (albumVisible) {
+                separatorStart.classList.remove('hidden');
+            } else {
+                separatorStart.classList.add('hidden');
+            }
+        }
+
+        // Separatore centrale: visibile solo se entrambi sono visibili
+        if (separator) {
+            if (albumVisible && ruotaVisible) {
+                separator.classList.remove('hidden');
+            } else {
+                separator.classList.add('hidden');
+            }
+        }
+
+        // Separatore finale: visibile se ruota è visibile, oppure se solo album è visibile
+        if (separatorEnd) {
+            if (ruotaVisible || (albumVisible && !ruotaVisible)) {
+                separatorEnd.classList.remove('hidden');
+            } else {
+                separatorEnd.classList.add('hidden');
+            }
         }
     }
 };

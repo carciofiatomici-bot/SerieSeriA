@@ -166,6 +166,12 @@ window.FigurineUI = {
             return;
         }
 
+        // Crea modal se non esiste ancora
+        if (!document.getElementById('figurine-modal')) {
+            this.createModal();
+            this.bindEvents();
+        }
+
         document.getElementById('figurine-modal')?.classList.remove('hidden');
         this.isOpen = true;
 
@@ -205,20 +211,26 @@ window.FigurineUI = {
         const unique = window.FigurineSystem.countUniqueFigurine(collection);
         const percentage = window.FigurineSystem.getCompletionPercentage(collection);
 
-        document.getElementById('figurine-progress').textContent = `Completamento: ${percentage}%`;
-        document.getElementById('figurine-count').textContent = `${unique}/${maxFigurine} figurine`;
-        document.getElementById('figurine-progress-bar').style.width = `${percentage}%`;
+        const progressEl = document.getElementById('figurine-progress');
+        const countEl = document.getElementById('figurine-count');
+        const progressBarEl = document.getElementById('figurine-progress-bar');
+        const freePackEl = document.getElementById('figurine-free-pack');
+
+        if (progressEl) progressEl.textContent = `Completamento: ${percentage}%`;
+        if (countEl) countEl.textContent = `${unique}/${maxFigurine} figurine`;
+        if (progressBarEl) progressBarEl.style.width = `${percentage}%`;
 
         // Free pack
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
-        const freePackEl = document.getElementById('figurine-free-pack');
-        if (canFree) {
-            freePackEl.innerHTML = '🎁 Pacchetto GRATIS disponibile!';
-            freePackEl.className = 'text-green-400 text-xs font-bold animate-pulse';
-        } else {
-            const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
-            freePackEl.innerHTML = timeLeft ? `Prossimo gratis: ${timeLeft.formatted}` : '';
-            freePackEl.className = 'text-gray-400 text-xs';
+        if (freePackEl) {
+            if (canFree) {
+                freePackEl.innerHTML = '🎁 Pacchetto GRATIS disponibile!';
+                freePackEl.className = 'text-green-400 text-xs font-bold animate-pulse';
+            } else {
+                const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
+                freePackEl.innerHTML = timeLeft ? `Prossimo gratis: ${timeLeft.formatted}` : '';
+                freePackEl.className = 'text-gray-400 text-xs';
+            }
         }
     },
 

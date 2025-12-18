@@ -540,6 +540,18 @@ window.InterfacciaDashboard = {
             teamNameBox.style.borderColor = color;
         }
 
+        // Colore testo nome squadra
+        const teamTitle = document.getElementById('team-dashboard-title');
+        if (teamTitle) {
+            teamTitle.style.color = color;
+        }
+
+        // Bordo box Lega Privata
+        const privateLeaguesBox = document.getElementById('private-leagues-box');
+        if (privateLeaguesBox) {
+            privateLeaguesBox.style.borderColor = color;
+        }
+
         // Bordo box Stadio-Hall of Fame
         const stadioHallBox = document.getElementById('stadio-hall-box');
         if (stadioHallBox) {

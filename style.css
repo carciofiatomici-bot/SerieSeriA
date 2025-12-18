@@ -3397,62 +3397,7 @@ html, body {
 }
 
 /* ===================== FIX 3: BOTTONI NAVIGAZIONE ===================== */
-/* Stadio, Hall of Fame, Lega - NON devono crescere troppo */
-@media (max-width: 639px) {
-    /* Container bottoni navigazione */
-    #sponsor-media-box > .flex.justify-center.gap-2.mt-3 {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        gap: 6px !important;
-    }
-
-    /* TUTTI i bottoni - dimensioni controllate, NON flex-1 eccessivo */
-    #btn-stadium,
-    #btn-hall-of-fame,
-    #btn-private-leagues {
-        flex: 0 1 auto !important;
-        min-width: 90px !important;
-        max-width: 140px !important;
-        width: auto !important;
-        padding: 8px 12px !important;
-        font-size: 0.7rem !important;
-    }
-
-    /* Hall of Fame - quando e' solo, limita larghezza */
-    #btn-hall-of-fame:only-child,
-    #btn-hall-of-fame:first-child:last-child {
-        max-width: 200px !important;
-        flex: 0 0 auto !important;
-    }
-
-    /* Icone nei bottoni */
-    #btn-stadium span.text-base,
-    #btn-hall-of-fame span.text-base,
-    #btn-private-leagues span.text-base {
-        font-size: 1rem !important;
-    }
-
-    /* Testo bottoni */
-    #btn-stadium span:not(.text-base),
-    #btn-hall-of-fame span:not(.text-base),
-    #btn-private-leagues span:not(.text-base) {
-        font-size: 0.65rem !important;
-    }
-}
-
-/* Se tutti e 3 i bottoni sono visibili - riga orizzontale compatta */
-@media (max-width: 639px) {
-    #sponsor-media-box > .flex.justify-center.gap-2.mt-3:has(#btn-stadium:not(.hidden)):has(#btn-private-leagues:not(.hidden)) {
-        flex-wrap: nowrap !important;
-    }
-
-    #sponsor-media-box > .flex.justify-center.gap-2.mt-3:has(#btn-stadium:not(.hidden)):has(#btn-private-leagues:not(.hidden)) > button {
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
-}
+/* Regole rimosse - ora i bottoni usano grid layout in gestione-box */
 
 /* ===================== FIX 4: TOGGLE SWITCH DRAFT ===================== */
 @media (max-width: 639px) {

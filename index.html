@@ -715,16 +715,22 @@
                 <div class="flex items-center justify-between gap-0.5 flex-nowrap">
                     <!-- GRUPPO SINISTRA: Album e Ruota -->
                     <div class="flex items-center gap-0.5">
+                        <!-- Separatore prima album -->
+                        <span id="risorse-separator-start" class="hidden text-gray-500 text-xs">|</span>
                         <!-- Album -->
                         <div id="risorse-pacchetti" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
-                            <span class="text-sm">🎴</span>
+                            <span class="text-base">🎴</span>
                             <span class="hidden" id="risorse-pacchetti-count"></span>
                         </div>
+                        <!-- Separatore centrale -->
+                        <span id="risorse-separator" class="hidden text-gray-500 text-xs">|</span>
                         <!-- Ruota -->
                         <div id="risorse-ruota" class="hidden h-6 px-1 flex items-center justify-center rounded cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
-                            <span class="text-sm">🎡</span>
+                            <span class="text-base">🎡</span>
                             <span class="hidden" id="risorse-ruota-status"></span>
                         </div>
+                        <!-- Separatore dopo ruota -->
+                        <span id="risorse-separator-end" class="hidden text-gray-500 text-xs">|</span>
                     </div>
                     <!-- GRUPPO DESTRA: CS, CSS, Negozio -->
                     <div class="flex items-center gap-0.5">
@@ -754,8 +760,8 @@
                 <h2 id="team-dashboard-title" class="text-sm sm:text-lg md:text-xl font-extrabold text-center uppercase team-name-fancy leading-none py-0.5">NOME SQUADRA</h2>
                 <!-- Menu Hamburger (sinistra assoluto) -->
                 <div class="absolute left-1 top-1/2 -translate-y-1/2">
-                    <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center bg-gray-700/60 rounded cursor-pointer hover:bg-gray-600/80 transition" title="Menu">
-                        <span class="text-xs">☰</span>
+                    <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
+                        <span class="text-xs text-white">☰</span>
                     </button>
                     <!-- Dropdown Menu (posizionato via JS) -->
                     <div id="dashboard-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
@@ -783,23 +789,22 @@
                 <!-- Selettore Colore (destra assoluto) -->
                 <div id="team-color-picker-container" class="absolute right-2 top-1/2 -translate-y-1/2">
                     <input type="color" id="team-color-picker"
-                           class="w-4 h-4 rounded cursor-pointer border border-gray-600 hover:border-white transition"
+                           class="w-4 h-4 rounded cursor-pointer border border-gray-600 hover:border-white transition appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
                            title="Scegli il colore primario della squadra"
                            value="#22c55e">
                 </div>
             </div>
 
             <!-- BOX SPONSOR-MEDIA -->
-            <div id="sponsor-media-box" class="p-1 sm:p-1.5 rounded-lg border border-green-500 bg-gray-900/20">
-                <!-- RIGA LIVELLO ROSA + DIVISA -->
-                <div class="flex justify-center items-center mb-1 gap-2 sm:gap-3">
-                    <!-- BOX LIVELLO MEDIO ROSA (sinistra) -->
-                    <div class="px-1 sm:px-1.5 flex flex-col items-center justify-center min-w-0">
-                        <p class="text-[7px] sm:text-[8px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
-                        <p class="leading-none"><span id="stat-rosa-level" class="text-[10px] sm:text-xs font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[6px] sm:text-[8px] text-gray-400">(0)</span></p>
+            <div id="sponsor-media-box" class="px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-lg border border-green-500 bg-gray-900/20">
+                <!-- RIGA PROSSIMA PARTITA + DIVISA + LIVELLO ROSA (flex con 3 zone) -->
+                <div class="flex items-center justify-between mb-0.5">
+                    <!-- BOX PROSSIMA PARTITA (sinistra) -->
+                    <div id="next-match-inline-box" class="flex-1 min-w-0">
+                        <!-- Contenuto generato da next-match-alert.js -->
                     </div>
-                    <!-- BOX DIVISA SQUADRA (destra) -->
-                    <div id="team-uniform-box" class="flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
+                    <!-- BOX DIVISA SQUADRA (centro fisso) -->
+                    <div id="team-uniform-box" class="flex-shrink-0 mx-2 flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
                         <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-6 h-6 sm:w-7 sm:h-7">
                             <defs></defs>
                             <!-- Maglia stile jersey.xml -->
@@ -818,6 +823,13 @@
                                     fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
                             </g>
                         </svg>
+                    </div>
+                    <!-- BOX LIVELLO MEDIO ROSA (destra) -->
+                    <div class="flex-1 min-w-0 flex justify-end">
+                        <div class="px-1 sm:px-1.5 flex flex-col items-center justify-center">
+                            <p class="text-[7px] sm:text-[8px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
+                            <p class="leading-none"><span id="stat-rosa-level" class="text-[10px] sm:text-xs font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[6px] sm:text-[8px] text-gray-400">(0)</span></p>
+                        </div>
                     </div>
                 </div>
                 <!-- MEDIA, LOGO, ICONA E SPONSOR - Riga principale -->
@@ -873,37 +885,27 @@
             </div>
 
             <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-            <div id="gestione-box" class="mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20">
-                <!-- Riga Stadio, Hall of Fame, Lega Privata -->
-                <div class="flex justify-center gap-1.5 sm:gap-2">
-                    <!-- Bottone Stadio (visibile solo se feature flag attivo) -->
+            <div id="gestione-box" class="mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-1.5 sm:space-y-2">
+                <!-- Riga Stadio e Hall of Fame -->
+                <div id="stadio-hall-row" class="grid grid-cols-2 gap-1.5 sm:gap-2">
                     <button id="btn-stadium"
-                            class="hidden flex-1 py-1.5 px-1.5 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-md shadow-lg hover:from-green-500 hover:via-emerald-400 hover:to-green-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-green-300 min-w-0">
-                        <span class="text-sm sm:text-base">🏟️</span>
-                        <span>Stadio</span>
+                            class="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-emerald-500 hover:to-green-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        🏟️ Stadio
                     </button>
-                    <!-- Bottone Hall of Fame -->
                     <button id="btn-hall-of-fame"
-                            class="flex-1 py-1.5 px-1.5 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-gray-900 font-extrabold text-[9px] sm:text-[10px] rounded-md shadow-lg hover:from-amber-500 hover:via-yellow-400 hover:to-amber-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center border border-yellow-300 min-w-0">
-                        <span class="text-sm sm:text-base">🏛️</span>
-                        <span>Hall of Fame</span>
-                    </button>
-                    <!-- Bottone Leghe Private (visibile solo se feature flag attivo) -->
-                    <button id="btn-private-leagues"
-                            class="hidden flex-1 py-1.5 px-1.5 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-md shadow-lg hover:from-purple-500 hover:via-violet-400 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex-col items-center justify-center border border-purple-300 min-w-0">
-                        <span class="text-sm sm:text-base">👥</span>
-                        <span>Lega Privata</span>
+                            class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-amber-500 hover:to-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        🏛️ Hall of Fame
                     </button>
                 </div>
                 <!-- Riga Rosa e Formazione -->
-                <div class="grid grid-cols-2 gap-1.5 sm:gap-2 mt-1.5">
+                <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
                     <button id="btn-gestione-rosa"
-                            class="bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-1.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        👥 <span class="hidden sm:inline">Gestione </span>Rosa
+                            class="w-full bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        👥 Rosa
                     </button>
                     <button id="btn-gestione-formazione"
-                            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-1.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        📋 <span class="hidden sm:inline">Gestione </span>Formazione
+                            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        📋 Formazione
                     </button>
                 </div>
             </div>
@@ -921,7 +923,7 @@
                         <div class="flex items-center bg-green-800/50 rounded-md px-1.5" title="Partecipa al campionato">
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                                <div class="w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                                <div class="relative w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
                             </label>
                         </div>
                     </div>
@@ -935,7 +937,7 @@
                         <div class="flex items-center bg-purple-800/50 rounded-md px-1.5" title="Partecipa alla coppa">
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                                <div class="w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
+                                <div class="relative w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
                             </label>
                         </div>
                     </div>
@@ -1001,6 +1003,14 @@
             <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
             <div id="near-level-up-widget-container" class="mt-2">
                 <!-- Il widget EXP viene renderizzato qui dinamicamente -->
+            </div>
+
+            <!-- BOX LEGA PRIVATA -->
+            <div id="private-leagues-box" class="hidden mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 flex justify-center">
+                <button id="btn-private-leagues"
+                        class="flex-1 max-w-xs bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                    👥 Lega Privata
+                </button>
             </div>
 
             <!-- Toggle ora integrati nel box competizioni sopra -->
