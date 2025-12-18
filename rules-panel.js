@@ -7,11 +7,67 @@
 window.RulesPanel = {
 
     isOpen: false,
+    isMinimized: false,
     isEncyclopediaExpanded: false,
     encyclopediaLoaded: false,
 
+    // Chiave localStorage per stato minimizzato
+    MINIMIZED_KEY: 'serie-seria-rules-minimized',
+
     // Stato delle sezioni accordion
     expandedSections: {},
+
+    /**
+     * Inizializza il pannello regole (carica stato da localStorage)
+     */
+    init() {
+        // Carica stato minimizzato da localStorage
+        const savedState = localStorage.getItem(this.MINIMIZED_KEY);
+        if (savedState === 'true') {
+            this.isMinimized = true;
+            this.applyMinimizedState();
+        }
+    },
+
+    /**
+     * Minimizza il bottone regole al bordo destro
+     */
+    minimize() {
+        this.isMinimized = true;
+        localStorage.setItem(this.MINIMIZED_KEY, 'true');
+        this.applyMinimizedState();
+    },
+
+    /**
+     * Ripristina il bottone regole alla versione completa
+     */
+    restore() {
+        this.isMinimized = false;
+        localStorage.setItem(this.MINIMIZED_KEY, 'false');
+        this.applyRestoredState();
+    },
+
+    /**
+     * Applica lo stato minimizzato (nasconde bottone, mostra barra)
+     */
+    applyMinimizedState() {
+        const container = document.getElementById('rules-btn-container');
+        const minimizedBtn = document.getElementById('rules-minimized-btn');
+
+        if (container) container.style.display = 'none';
+        if (minimizedBtn) minimizedBtn.style.display = 'block';
+    },
+
+    /**
+     * Applica lo stato ripristinato (mostra bottone, nasconde barra)
+     */
+    applyRestoredState() {
+        const container = document.getElementById('rules-btn-container');
+        const minimizedBtn = document.getElementById('rules-minimized-btn');
+
+        if (container) container.style.display = 'block';
+        if (minimizedBtn) minimizedBtn.style.display = 'none';
+    },
 
     /**
      * Toggle di una sezione accordion generica
@@ -444,5 +500,10 @@ window.RulesPanel = {
         }
     }
 };
+
+// Auto-inizializzazione quando il DOM e' pronto
+document.addEventListener('DOMContentLoaded', () => {
+    window.RulesPanel.init();
+});
 
 console.log("Modulo Rules-Panel caricato.");
