@@ -188,10 +188,11 @@ window.PullToRefresh = {
     },
 
     /**
-     * Verifica se siamo in cima alla pagina
+     * Verifica se siamo completamente in cima alla pagina
      */
     isAtTop() {
-        return window.scrollY <= 0;
+        // Deve essere esattamente 0 (o molto vicino per tolleranza float)
+        return window.scrollY <= 1 && document.documentElement.scrollTop <= 1;
     },
 
     /**
@@ -200,8 +201,12 @@ window.PullToRefresh = {
     handleTouchStart(e) {
         if (this.isRefreshing) return;
 
-        if (this.isAtTop()) {
-            this.startY = e.touches[0].clientY;
+        // Pull-to-refresh solo se:
+        // 1. Siamo completamente in cima alla pagina
+        // 2. Il touch inizia nella parte alta dello schermo (primi 100px)
+        const touchY = e.touches[0].clientY;
+        if (this.isAtTop() && touchY < 100) {
+            this.startY = touchY;
             this.isPulling = true;
         }
     },
