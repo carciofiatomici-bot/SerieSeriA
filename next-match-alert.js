@@ -88,14 +88,25 @@ window.NextMatchAlert = {
 
     /**
      * Ottiene la prossima partita della squadra (campionato o coppa)
+     * Usa la stessa logica di findNextValidSimulation per determinare
+     * quale competizione verra' effettivamente simulata
      */
     async getNextMatch(teamId) {
         const { doc, getDoc, appId } = window.firestoreTools;
         const db = window.db;
 
         const automationState = await this.getAutomationState();
-        const nextSimType = automationState?.nextSimulationType || 'campionato';
-        const isCoppaNext = nextSimType.includes('coppa');
+
+        // Usa findNextValidSimulation per determinare cosa verra' REALMENTE simulato
+        // invece di basarsi solo su nextSimulationType
+        let actualNextType = automationState?.nextSimulationType || 'campionato';
+        if (window.AutomazioneSimulazioni?.findNextValidSimulation) {
+            const validType = await window.AutomazioneSimulazioni.findNextValidSimulation(actualNextType);
+            if (validType) {
+                actualNextType = validType;
+            }
+        }
+        const isCoppaNext = actualNextType.includes('coppa');
 
         const getChampionshipMatch = async () => {
             try {

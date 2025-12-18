@@ -265,11 +265,12 @@ window.AutomazioneSimulazioni = {
             }
 
             // Determina se simulare andata o ritorno
-            let targetLegType = legType === 'coppa_andata' ? 'andata' : 'ritorno';
+            // IMPORTANTE: simulateRound e simulateMatch si aspettano 'leg1' o 'leg2', non 'andata'/'ritorno'
+            let targetLegType = legType === 'coppa_andata' ? 'leg1' : 'leg2';
 
-            // Se e' partita secca (finale), simula direttamente
+            // Se e' partita secca (finale), usa leg1
             if (roundInfo.isSingleMatch) {
-                targetLegType = 'single';
+                targetLegType = 'leg1';
             }
 
             // Simula il turno
