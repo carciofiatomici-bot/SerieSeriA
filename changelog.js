@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.24',
+    currentVersion: '2.2.25',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,19 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.25',
+            date: '2025-12-18',
+            time: '19:00',
+            title: 'Fix UI e Pull-to-Refresh',
+            changes: [
+                { text: 'Fix bottoni Stadio/Hall of Fame - ora stessa larghezza di Rosa/Formazione', adminOnly: false },
+                { text: 'Fix toggle SerieSeriA/CoppaSeriA - pallino posizionato correttamente', adminOnly: false },
+                { text: 'Pull-to-refresh migliorato - si attiva SOLO quando sei gia in cima alla pagina', adminOnly: false },
+                { text: 'Rimosso CSS che limitava larghezza bottoni navigazione', adminOnly: true }
+            ],
+            type: 'fix'
+        },
         {
             version: '2.2.24',
             date: '2025-12-18',
