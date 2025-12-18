@@ -136,7 +136,9 @@ window.AdminDataSync = {
 
         const log = (msg, type = 'info') => {
             const colors = { info: 'text-gray-400', success: 'text-green-400', warning: 'text-yellow-400', error: 'text-red-400' };
-            logContent.innerHTML += `<div class="${colors[type]}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            // *** SICUREZZA: Sanitizza il messaggio per prevenire XSS ***
+            const safeMsg = window.escapeHtml ? window.escapeHtml(msg) : msg;
+            logContent.innerHTML += `<div class="${colors[type]}">[${new Date().toLocaleTimeString()}] ${safeMsg}</div>`;
             logContent.scrollTop = logContent.scrollHeight;
         };
 
@@ -198,10 +200,12 @@ window.AdminDataSync = {
         } catch (error) {
             console.error('Errore analisi dati:', error);
             log(`ERRORE: ${error.message}`, 'error');
+            // *** SICUREZZA: Sanitizza error.message per prevenire XSS ***
+            const safeErrorMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
             resultsDiv.innerHTML = `
                 <div class="text-red-400 text-center">
                     <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                    <p>Errore durante l'analisi: ${error.message}</p>
+                    <p>Errore durante l'analisi: ${safeErrorMsg}</p>
                 </div>
             `;
         }
@@ -555,7 +559,9 @@ window.AdminDataSync = {
 
         const log = (msg, type = 'info') => {
             const colors = { info: 'text-gray-400', success: 'text-green-400', warning: 'text-yellow-400', error: 'text-red-400' };
-            logContent.innerHTML += `<div class="${colors[type]}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            // *** SICUREZZA: Sanitizza il messaggio per prevenire XSS ***
+            const safeMsg = window.escapeHtml ? window.escapeHtml(msg) : msg;
+            logContent.innerHTML += `<div class="${colors[type]}">[${new Date().toLocaleTimeString()}] ${safeMsg}</div>`;
             logContent.scrollTop = logContent.scrollHeight;
         };
 

@@ -186,6 +186,9 @@ self.addEventListener('install', (event) => {
                 precacheCriticalImages();
                 return self.skipWaiting();
             })
+            .catch((error) => {
+                console.error('[Service Worker] Errore durante installazione:', error);
+            })
     );
 });
 
@@ -237,9 +240,14 @@ self.addEventListener('fetch', (event) => {
                                         cache.put(request, responseClone);
                                         // Limita dimensione cache immagini
                                         trimImageCache();
-                                    });
+                                    })
+                                    .catch((err) => console.warn('[Service Worker] Errore cache immagine:', err));
                                 return response;
                             });
+                    })
+                    .catch((error) => {
+                        console.warn('[Service Worker] Errore fetch immagine:', error);
+                        return new Response('', { status: 404 });
                     })
             );
             return;
@@ -261,9 +269,14 @@ self.addEventListener('fetch', (event) => {
                             // Cacha la risposta
                             const responseClone = response.clone();
                             caches.open(DYNAMIC_CACHE)
-                                .then((cache) => cache.put(request, responseClone));
+                                .then((cache) => cache.put(request, responseClone))
+                                .catch((err) => console.warn('[Service Worker] Errore cache CDN:', err));
                             return response;
                         });
+                })
+                .catch((error) => {
+                    console.warn('[Service Worker] Errore fetch CDN:', error);
+                    return new Response('', { status: 503 });
                 })
         );
         return;
@@ -313,6 +326,8 @@ self.addEventListener('message', (event) => {
                 return Promise.all(names.map((name) => caches.delete(name)));
             }).then(() => {
                 console.log('[Service Worker] Tutte le cache cancellate');
+            }).catch((error) => {
+                console.error('[Service Worker] Errore pulizia cache:', error);
             })
         );
     }

@@ -1035,7 +1035,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentBudget = teamData.budget || 0;
                     const currentPlayers = teamData.players || [];
 
-                    // Recupera le abilita del giocatore dal mercato
+                    // *** SICUREZZA: Usa SEMPRE i dati dal server, MAI dal DOM ***
+                    // I valori nel dataset HTML possono essere manipolati da DevTools
+                    const serverPlayerCost = playerMarketData.cost || 0;
+                    const serverPlayerLevel = playerMarketData.level || 1;
+                    const serverPlayerName = playerMarketData.name || 'Sconosciuto';
+                    const serverPlayerRole = playerMarketData.role || 'C';
+                    const serverPlayerAge = playerMarketData.age || 18;
+                    const serverPlayerType = playerMarketData.type || 'Potenza';
                     const playerAbilities = playerMarketData.abilities || [];
 
                     // *** CONTROLLO COOLDOWN MERCATO ***
@@ -1055,21 +1062,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error(`Limite massimo di ${MAX_ROSA_PLAYERS} giocatori raggiunto (esclusa Icona).`);
                     }
 
-                    if (currentBudget < playerCost) {
+                    // *** SICUREZZA: Usa il costo dal server per il controllo budget ***
+                    if (currentBudget < serverPlayerCost) {
                         throw new Error("Crediti Seri insufficienti.");
                     }
 
                     // Nel mercato il level e' gia fisso, non serve generarlo
-                    const finalLevel = playerLevel;
+                    const finalLevel = serverPlayerLevel;
 
                     let playerForSquad = {
                         id: playerId,
-                        name: playerName,
-                        role: playerRole,
-                        age: playerAge,
-                        cost: playerCost,
+                        name: serverPlayerName,
+                        role: serverPlayerRole,
+                        age: serverPlayerAge,
+                        cost: serverPlayerCost,
                         level: finalLevel,
-                        type: playerType,
+                        type: serverPlayerType,
                         abilities: playerAbilities,
                         isCaptain: false
                     };
@@ -1088,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // AGGIORNAMENTI ATOMICI nella transazione
                     transaction.update(teamDocRef, {
-                        budget: currentBudget - playerCost,
+                        budget: currentBudget - serverPlayerCost,
                         players: [...currentPlayers, playerForSquad],
                         [MARKET_COOLDOWN_KEY]: acquisitionTime,
                     });
@@ -1098,12 +1106,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         teamId: currentTeamId,
                     });
 
-                    return { finalLevel, newBudget: currentBudget - playerCost };
+                    return { finalLevel, newBudget: currentBudget - serverPlayerCost, playerName: serverPlayerName };
                 });
 
-                const { finalLevel, newBudget } = result;
+                const { finalLevel, newBudget, playerName: confirmedPlayerName } = result;
 
-                displayMessage(`Acquisto Riuscito! ${playerName} (Lv.${finalLevel}) e' nella tua rosa dal Mercato. Budget: ${newBudget} CS.`, 'success');
+                displayMessage(`Acquisto Riuscito! ${confirmedPlayerName} (Lv.${finalLevel}) e' nella tua rosa dal Mercato. Budget: ${newBudget} CS.`, 'success');
 
                 // Ricarica la lista per mostrare che il giocatore non e' piu disponibile
                 renderUserMercatoPanel();

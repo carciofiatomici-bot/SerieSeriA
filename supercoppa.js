@@ -579,6 +579,9 @@ window.Supercoppa = {
                             }
                         });
                     }
+                }).catch(error => {
+                    console.error('[Supercoppa] Errore verifica creazione:', error);
+                    container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
                 });
             } else {
                 const isCompleted = bracket.isCompleted;
@@ -701,6 +704,9 @@ window.Supercoppa = {
                     });
                 }
             }
+        }).catch(error => {
+            console.error('[Supercoppa] Errore caricamento:', error);
+            container.innerHTML = `<p class="text-red-400 text-center">Errore caricamento Supercoppa: ${error.message}</p>`;
         });
     },
 

@@ -95,7 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // SECURITY CHECK: Verifica che l'utente possa accedere a questa squadra
         const loggedInTeamId = window.InterfacciaCore?.currentTeamId;
         const isAdmin = await window.checkCurrentTeamIsAdmin();
-        const isAdminViewingTeam = localStorage.getItem('fanta_admin_viewing_team') === teamId;
+        // *** SICUREZZA: localStorage puo essere manipolato da DevTools ***
+        // Verifica PRIMA che l'utente sia admin (da Firestore), poi controlla localStorage
+        const isAdminViewingTeam = isAdmin && localStorage.getItem('fanta_admin_viewing_team') === teamId;
 
         if (teamId !== loggedInTeamId && !isAdmin && !isAdminViewingTeam) {
             console.error('[GestioneSquadre] Accesso negato: tentativo di accedere a squadra non propria.');

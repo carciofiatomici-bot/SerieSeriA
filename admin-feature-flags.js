@@ -925,52 +925,67 @@ window.AdminFeatureFlags = {
 
         // Abilita tutte
         document.getElementById('enable-all-flags')?.addEventListener('click', async () => {
-            if (window.ConfirmDialog) {
-                const confirmed = await window.ConfirmDialog.show({
-                    title: 'Abilita Tutte',
-                    message: 'Sei sicuro di voler abilitare tutte le feature?',
-                    confirmText: 'Abilita Tutte',
-                    confirmClass: 'bg-green-600 hover:bg-green-500'
-                });
-                if (!confirmed) return;
-            }
+            try {
+                if (window.ConfirmDialog) {
+                    const confirmed = await window.ConfirmDialog.show({
+                        title: 'Abilita Tutte',
+                        message: 'Sei sicuro di voler abilitare tutte le feature?',
+                        confirmText: 'Abilita Tutte',
+                        confirmClass: 'bg-green-600 hover:bg-green-500'
+                    });
+                    if (!confirmed) return;
+                }
 
-            for (const flagId of Object.keys(window.FeatureFlags.flags)) {
-                await window.FeatureFlags.enable(flagId, false);
-            }
-            await window.FeatureFlags.saveToFirestore();
+                for (const flagId of Object.keys(window.FeatureFlags.flags)) {
+                    await window.FeatureFlags.enable(flagId, false);
+                }
+                await window.FeatureFlags.saveToFirestore();
 
-            if (window.Toast) window.Toast.success("Tutte le feature sono state abilitate");
-            this.updateUI();
+                if (window.Toast) window.Toast.success("Tutte le feature sono state abilitate");
+                this.updateUI();
+            } catch (error) {
+                console.error('[AdminFeatureFlags] Errore abilitazione tutte:', error);
+                window.ErrorHandler?.handle(error, { context: 'enable-all-flags' });
+            }
         });
 
         // Disabilita tutte
         document.getElementById('disable-all-flags')?.addEventListener('click', async () => {
-            if (window.ConfirmDialog) {
-                const confirmed = await window.ConfirmDialog.show({
-                    title: 'Disabilita Tutte',
-                    message: 'Sei sicuro di voler disabilitare tutte le feature?',
-                    confirmText: 'Disabilita Tutte',
-                    confirmClass: 'bg-red-600 hover:bg-red-500',
-                    type: 'danger'
-                });
-                if (!confirmed) return;
-            }
+            try {
+                if (window.ConfirmDialog) {
+                    const confirmed = await window.ConfirmDialog.show({
+                        title: 'Disabilita Tutte',
+                        message: 'Sei sicuro di voler disabilitare tutte le feature?',
+                        confirmText: 'Disabilita Tutte',
+                        confirmClass: 'bg-red-600 hover:bg-red-500',
+                        type: 'danger'
+                    });
+                    if (!confirmed) return;
+                }
 
-            for (const flagId of Object.keys(window.FeatureFlags.flags)) {
-                await window.FeatureFlags.disable(flagId, false);
-            }
-            await window.FeatureFlags.saveToFirestore();
+                for (const flagId of Object.keys(window.FeatureFlags.flags)) {
+                    await window.FeatureFlags.disable(flagId, false);
+                }
+                await window.FeatureFlags.saveToFirestore();
 
-            if (window.Toast) window.Toast.info("Tutte le feature sono state disabilitate");
-            this.updateUI();
+                if (window.Toast) window.Toast.info("Tutte le feature sono state disabilitate");
+                this.updateUI();
+            } catch (error) {
+                console.error('[AdminFeatureFlags] Errore disabilitazione tutte:', error);
+                window.ErrorHandler?.handle(error, { context: 'disable-all-flags' });
+            }
         });
 
         // Ricarica
         document.getElementById('refresh-flags')?.addEventListener('click', async () => {
-            await window.FeatureFlags.loadFromFirestore();
-            this.updateUI();
-            if (window.Toast) window.Toast.info("Feature flags ricaricati");
+            try {
+                await window.FeatureFlags.loadFromFirestore();
+                this.updateUI();
+                if (window.Toast) window.Toast.info("Feature flags ricaricati");
+            } catch (error) {
+                console.error('[AdminFeatureFlags] Errore ricarica flags:', error);
+                window.ErrorHandler?.handle(error, { context: 'refresh-flags' });
+            }
         });
 
         // Toggle accordion card (click su header)

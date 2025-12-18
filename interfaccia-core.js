@@ -167,17 +167,15 @@ window.InterfacciaConstants = {
 // --- FUNZIONE HELPER PER VERIFICARE ADMIN ---
 /**
  * Verifica se una squadra ha permessi admin.
- * Admin se: teamName === "serieseria" (case insensitive) OPPURE isAdmin === true
- * @param {string} teamName - Nome della squadra
- * @param {object} teamData - Dati della squadra da Firestore (opzionale)
+ * *** SICUREZZA: Il controllo admin deve basarsi SOLO sul campo isAdmin in Firestore ***
+ * Non usare mai il nome squadra per determinare privilegi admin (manipolabile dall'utente)
+ * @param {string} teamName - Nome della squadra (ignorato per sicurezza)
+ * @param {object} teamData - Dati della squadra da Firestore (obbligatorio per verifica sicura)
  * @returns {boolean}
  */
 window.isTeamAdmin = function(teamName, teamData = null) {
-    // Check 1: nome squadra è "serieseria"
-    if (teamName && teamName.toLowerCase() === 'serieseria') {
-        return true;
-    }
-    // Check 2: campo isAdmin nel documento
+    // *** SICUREZZA: Usa SOLO il campo isAdmin dal documento Firestore ***
+    // Il nome squadra non deve MAI determinare privilegi admin (puo essere modificato)
     if (teamData && teamData.isAdmin === true) {
         return true;
     }

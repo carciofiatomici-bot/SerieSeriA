@@ -212,13 +212,23 @@ window.AdminFigurine = {
     setupListeners() {
         // Salva configurazione
         document.getElementById('btn-save-figurine-config')?.addEventListener('click', async () => {
-            await this.saveConfig();
+            try {
+                await this.saveConfig();
+            } catch (error) {
+                console.error('[AdminFigurine] Errore salvataggio config:', error);
+                window.ErrorHandler?.handle(error, { context: 'save-figurine-config' });
+            }
         });
 
         // Reset default
         document.getElementById('btn-reset-figurine-config')?.addEventListener('click', async () => {
-            if (confirm('Vuoi resettare la configurazione delle figurine ai valori di default?')) {
-                await this.resetConfig();
+            try {
+                if (confirm('Vuoi resettare la configurazione delle figurine ai valori di default?')) {
+                    await this.resetConfig();
+                }
+            } catch (error) {
+                console.error('[AdminFigurine] Errore reset config:', error);
+                window.ErrorHandler?.handle(error, { context: 'reset-figurine-config' });
             }
         });
 

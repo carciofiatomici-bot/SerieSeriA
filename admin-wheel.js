@@ -101,13 +101,23 @@ window.AdminWheel = {
 
         // Salva configurazione
         document.getElementById('btn-save-wheel-config')?.addEventListener('click', async () => {
-            await this.saveConfig();
+            try {
+                await this.saveConfig();
+            } catch (error) {
+                console.error('[AdminWheel] Errore salvataggio config:', error);
+                window.ErrorHandler?.handle(error, { context: 'save-wheel-config' });
+            }
         });
 
         // Reset default
         document.getElementById('btn-reset-wheel-config')?.addEventListener('click', async () => {
-            if (confirm('Vuoi resettare la configurazione della ruota ai valori di default?')) {
-                await this.resetConfig();
+            try {
+                if (confirm('Vuoi resettare la configurazione della ruota ai valori di default?')) {
+                    await this.resetConfig();
+                }
+            } catch (error) {
+                console.error('[AdminWheel] Errore reset config:', error);
+                window.ErrorHandler?.handle(error, { context: 'reset-wheel-config' });
             }
         });
 

@@ -92,24 +92,34 @@ window.AdminSchedina = {
         const btnSave = container.querySelector('#btn-save-schedina-config');
         if (btnSave) {
             btnSave.addEventListener('click', async () => {
-                const newConfig = {
-                    baseRewardPerCorrect: parseInt(container.querySelector('#schedina-base-reward').value) || 5,
-                    perfectBonusReward: parseInt(container.querySelector('#schedina-perfect-bonus').value) || 50,
-                    minCorrectToWin: parseInt(container.querySelector('#schedina-min-correct').value) || 0,
-                    closingMinutesBeforeSimulation: parseInt(container.querySelector('#schedina-closing-minutes').value) || 60
-                };
+                try {
+                    const newConfig = {
+                        baseRewardPerCorrect: parseInt(container.querySelector('#schedina-base-reward').value) || 5,
+                        perfectBonusReward: parseInt(container.querySelector('#schedina-perfect-bonus').value) || 50,
+                        minCorrectToWin: parseInt(container.querySelector('#schedina-min-correct').value) || 0,
+                        closingMinutesBeforeSimulation: parseInt(container.querySelector('#schedina-closing-minutes').value) || 60
+                    };
 
-                const success = await window.Schedina.saveConfig(newConfig);
-                const msgEl = container.querySelector('#schedina-config-message');
-                if (success) {
-                    msgEl.textContent = 'Configurazione salvata!';
-                    msgEl.className = 'text-sm mb-2 text-green-400';
-                } else {
-                    msgEl.textContent = 'Errore nel salvataggio';
-                    msgEl.className = 'text-sm mb-2 text-red-400';
+                    const success = await window.Schedina.saveConfig(newConfig);
+                    const msgEl = container.querySelector('#schedina-config-message');
+                    if (success) {
+                        msgEl.textContent = 'Configurazione salvata!';
+                        msgEl.className = 'text-sm mb-2 text-green-400';
+                    } else {
+                        msgEl.textContent = 'Errore nel salvataggio';
+                        msgEl.className = 'text-sm mb-2 text-red-400';
+                    }
+
+                    setTimeout(() => { msgEl.textContent = ''; }, 3000);
+                } catch (error) {
+                    console.error('[AdminSchedina] Errore salvataggio config:', error);
+                    const msgEl = container.querySelector('#schedina-config-message');
+                    if (msgEl) {
+                        msgEl.textContent = 'Errore: ' + error.message;
+                        msgEl.className = 'text-sm mb-2 text-red-400';
+                    }
+                    window.ErrorHandler?.handle(error, { context: 'save-schedina-config' });
                 }
-
-                setTimeout(() => { msgEl.textContent = ''; }, 3000);
             });
         }
 

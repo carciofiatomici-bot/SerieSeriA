@@ -209,12 +209,17 @@ window.AdminMedia = {
         const btnSave = container.querySelector('#btn-save-media');
         if (btnSave) {
             btnSave.addEventListener('click', async () => {
-                this.collectFormValues();
-                const success = await this.saveConfig();
-                if (success) {
-                    if (window.Toast) window.Toast.success('Configurazione salvata!');
-                } else {
-                    if (window.Toast) window.Toast.error('Errore nel salvataggio');
+                try {
+                    this.collectFormValues();
+                    const success = await this.saveConfig();
+                    if (success) {
+                        if (window.Toast) window.Toast.success('Configurazione salvata!');
+                    } else {
+                        if (window.Toast) window.Toast.error('Errore nel salvataggio');
+                    }
+                } catch (error) {
+                    console.error('[AdminMedia] Errore salvataggio config:', error);
+                    window.ErrorHandler?.handle(error, { context: 'save-media-config' });
                 }
             });
         }
