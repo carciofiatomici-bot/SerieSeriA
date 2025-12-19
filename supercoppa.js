@@ -224,7 +224,7 @@ window.Supercoppa = {
             winner.teamId
         );
 
-        // Processa EXP giocatori
+        // Processa EXP giocatori (NUOVO SISTEMA)
         if (window.PlayerExp) {
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, {
                 homeGoals: matchResult.homeGoals,
@@ -237,23 +237,12 @@ window.Supercoppa = {
                 isHome: false
             });
 
-            // Salva EXP aggiornata su Firestore
-            const teamsPath = `artifacts/${appId}/public/data/teams`;
-            try {
-                if (homeTeamData.players && homeExpResults.length > 0) {
-                    await updateDoc(doc(db, teamsPath, supercoppaBracket.homeTeam.teamId), {
-                        players: homeTeamData.players,
-                        coach: homeTeamData.coach || null
-                    });
-                }
-                if (awayTeamData.players && awayExpResults.length > 0) {
-                    await updateDoc(doc(db, teamsPath, supercoppaBracket.awayTeam.teamId), {
-                        players: awayTeamData.players,
-                        coach: awayTeamData.coach || null
-                    });
-                }
-            } catch (expSaveError) {
-                console.warn('[Supercoppa] Errore salvataggio EXP:', expSaveError);
+            // NUOVO: Salva EXP in campo separato 'playersExp'
+            if (homeExpResults.length > 0) {
+                await window.PlayerExp.saveExpToFirestore(supercoppaBracket.homeTeam.teamId, homeExpResults);
+            }
+            if (awayExpResults.length > 0) {
+                await window.PlayerExp.saveExpToFirestore(supercoppaBracket.awayTeam.teamId, awayExpResults);
             }
 
             // Mostra notifiche level-up

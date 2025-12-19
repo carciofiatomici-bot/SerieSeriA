@@ -173,7 +173,7 @@ window.CoppaMain = {
             await window.ChampionshipMain.addFormationXp(match.awayTeam.teamId, awayTeamData.formation?.modulo);
         }
 
-        // SEMPRE: Processa EXP giocatori
+        // SEMPRE: Processa EXP giocatori (NUOVO SISTEMA)
         if (window.PlayerExp) {
             const parts = result.resultString.split(' ')[0].split('-');
             const homeGoals = parseInt(parts[0]) || 0;
@@ -182,25 +182,12 @@ window.CoppaMain = {
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
             const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
 
-            // Salva EXP aggiornata su Firestore
-            const teamsPath = `artifacts/${appId}/public/data/teams`;
-            try {
-                if (homeTeamData.players && homeExpResults.length > 0) {
-                    const { updateDoc: updateDocFn } = window.firestoreTools;
-                    await updateDocFn(doc(db, teamsPath, match.homeTeam.teamId), {
-                        players: homeTeamData.players,
-                        coach: homeTeamData.coach || null
-                    });
-                }
-                if (awayTeamData.players && awayExpResults.length > 0) {
-                    const { updateDoc: updateDocFn } = window.firestoreTools;
-                    await updateDocFn(doc(db, teamsPath, match.awayTeam.teamId), {
-                        players: awayTeamData.players,
-                        coach: awayTeamData.coach || null
-                    });
-                }
-            } catch (expSaveError) {
-                console.warn('[CoppaMain] Errore salvataggio EXP:', expSaveError);
+            // NUOVO: Salva EXP in campo separato 'playersExp'
+            if (homeExpResults.length > 0) {
+                await window.PlayerExp.saveExpToFirestore(match.homeTeam.teamId, homeExpResults);
+            }
+            if (awayExpResults.length > 0) {
+                await window.PlayerExp.saveExpToFirestore(match.awayTeam.teamId, awayExpResults);
             }
 
             // Mostra notifiche level-up
