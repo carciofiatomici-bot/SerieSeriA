@@ -158,7 +158,8 @@ window.FigurineSystem = {
 
     // Mapping per collezione Illustrazioni
     ILLUSTRAZIONI_FILES: {
-        // Esempio: 'illustrazione1': { base: 'NomeIllustrazione.jpg', name: 'Nome Illustrazione' }
+        'antony_vs_croccante': { base: 'Antony vs Croccante.jpg', name: 'Antony vs Croccante' },
+        'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' }
     },
 
     // Mapping per collezione Figurine Utenti
