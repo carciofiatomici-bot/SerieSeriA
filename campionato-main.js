@@ -155,11 +155,15 @@ window.ChampionshipMain = {
 
                 // Salva players home team con EXP aggiornata
                 console.log('[EXP Debug] Condizione salvataggio home:', homeTeamData.players && homeExpResults.length > 0);
+                console.log('[EXP Debug] Primo giocatore home PRIMA:', JSON.stringify(homeTeamData.players[0]?.exp));
+                console.log('[EXP Debug] EXP risultati home:', homeExpResults.map(r => ({ name: r.player?.name || r.player?.nome, exp: r.expGained })));
                 if (homeTeamData.players && homeExpResults.length > 0) {
+                    console.log('[EXP Debug] Salvataggio home team in corso...');
                     await updateDoc(doc(window.db, teamsPath, match.homeId), {
                         players: homeTeamData.players,
                         coach: homeTeamData.coach || null
                     });
+                    console.log('[EXP Debug] Salvataggio home completato!');
                 }
 
                 // Salva players away team con EXP aggiornata
