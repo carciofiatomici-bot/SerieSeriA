@@ -159,11 +159,15 @@ window.ChampionshipMain = {
                 console.log('[EXP Debug] EXP risultati home:', homeExpResults.map(r => ({ name: r.player?.name || r.player?.nome, exp: r.expGained })));
                 if (homeTeamData.players && homeExpResults.length > 0) {
                     console.log('[EXP Debug] Salvataggio home team in corso...');
-                    await updateDoc(doc(window.db, teamsPath, match.homeId), {
-                        players: homeTeamData.players,
-                        coach: homeTeamData.coach || null
-                    });
-                    console.log('[EXP Debug] Salvataggio home completato!');
+                    try {
+                        await updateDoc(doc(window.db, teamsPath, match.homeId), {
+                            players: homeTeamData.players,
+                            coach: homeTeamData.coach || null
+                        });
+                        console.log('[EXP Debug] Salvataggio home completato!');
+                    } catch (err) {
+                        console.error('[EXP Debug] ERRORE salvataggio home:', err);
+                    }
                 }
 
                 // Salva players away team con EXP aggiornata
@@ -171,11 +175,15 @@ window.ChampionshipMain = {
                 console.log('[EXP Debug] EXP risultati away:', awayExpResults.map(r => ({ name: r.player?.name || r.player?.nome, exp: r.expGained })));
                 if (awayTeamData.players && awayExpResults.length > 0) {
                     console.log('[EXP Debug] Salvataggio away team in corso...');
-                    await updateDoc(doc(window.db, teamsPath, match.awayId), {
-                        players: awayTeamData.players,
-                        coach: awayTeamData.coach || null
-                    });
-                    console.log('[EXP Debug] Salvataggio away completato!');
+                    try {
+                        await updateDoc(doc(window.db, teamsPath, match.awayId), {
+                            players: awayTeamData.players,
+                            coach: awayTeamData.coach || null
+                        });
+                        console.log('[EXP Debug] Salvataggio away completato!');
+                    } catch (err) {
+                        console.error('[EXP Debug] ERRORE salvataggio away:', err);
+                    }
                 }
 
                 // Mostra notifiche level-up
