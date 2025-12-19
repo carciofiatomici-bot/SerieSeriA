@@ -891,7 +891,6 @@ window.FigurineUI = {
         const enabledCollections = window.FigurineSystem.getEnabledCollectionsWithItems();
         const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1, figurine_utenti: 1 };
         const csPrice = config.packPriceCS || 150; // Prezzo in CS per pacchetto
-        const probs = config.iconeProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
         // Calcola duplicati scambiabili
         const duplicates = window.FigurineSystem.countTradableDuplicates(this.currentAlbum.collection);
@@ -987,53 +986,53 @@ window.FigurineUI = {
                     </div>
                 </div>
 
-                <!-- Probabilita Varianti Icone -->
+                <!-- Probabilita Rarita Figurine -->
                 <div class="bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-semibold text-white mb-2">Probabilita Varianti (Icone)</h4>
+                    <h4 class="font-semibold text-white mb-2">Probabilita Rarita</h4>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="text-gray-300 text-sm">⚪ Normale</span>
+                            <span class="text-gray-300 text-sm">⚪ Comune</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gray-500 h-2 rounded-full" style="width: ${probs.normale}%"></div>
+                                    <div class="bg-gray-500 h-2 rounded-full" style="width: 40%"></div>
                                 </div>
-                                <span class="text-gray-400 text-xs w-8">${probs.normale}%</span>
+                                <span class="text-gray-400 text-xs w-8">40%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-blue-300 text-sm">🔵 Evoluto</span>
+                            <span class="text-green-300 text-sm">🟢 Non Comune</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-blue-500 h-2 rounded-full" style="width: ${probs.evoluto}%"></div>
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 30%"></div>
                                 </div>
-                                <span class="text-gray-400 text-xs w-8">${probs.evoluto}%</span>
+                                <span class="text-gray-400 text-xs w-8">30%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-purple-300 text-sm">🟣 Alternative</span>
+                            <span class="text-blue-300 text-sm">🔵 Rara</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-purple-500 h-2 rounded-full" style="width: ${probs.alternative}%"></div>
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 18%"></div>
                                 </div>
-                                <span class="text-gray-400 text-xs w-8">${probs.alternative}%</span>
+                                <span class="text-gray-400 text-xs w-8">18%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-yellow-300 text-sm">🟡 Ultimate</span>
+                            <span class="text-purple-300 text-sm">🟣 Epica</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: ${probs.ultimate}%"></div>
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 9%"></div>
                                 </div>
-                                <span class="text-gray-400 text-xs w-8">${probs.ultimate}%</span>
+                                <span class="text-gray-400 text-xs w-8">9%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-pink-300 text-sm">🩷 Fantasy</span>
+                            <span class="text-yellow-300 text-sm">🟠 Leggendaria</span>
                             <div class="flex items-center gap-2">
                                 <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-pink-500 h-2 rounded-full" style="width: ${probs.fantasy}%"></div>
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 3%"></div>
                                 </div>
-                                <span class="text-gray-400 text-xs w-8">${probs.fantasy}%</span>
+                                <span class="text-gray-400 text-xs w-8">3%</span>
                             </div>
                         </div>
                     </div>
