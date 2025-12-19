@@ -357,7 +357,7 @@
             formation = Object.values(formation).filter(p => p && typeof p === 'object');
         }
 
-        const roster = teamData.rosa || teamData.roster || [];
+        const roster = teamData.players || teamData.rosa || teamData.roster || [];
         const captainId = teamData.capitanoId || teamData.captainId;
 
         // Calcola bonus spogliatoi (+5% per livello)
@@ -384,6 +384,16 @@
         // Totale: bonus progressivo (dal contratto) + bonus passivo
         expBonusMultiplier += sponsorExpBonus + mediaExpBonus + passiveBonus;
 
+        // Bonus EXP da figurine uniche (+0.01% per figurina unica)
+        if (window.FigurineSystem?.getUniqueFigurineCountSync) {
+            const teamId = teamData.id || teamData.teamId;
+            if (teamId) {
+                const uniqueFigurineCount = window.FigurineSystem.getUniqueFigurineCountSync(teamId);
+                const figurineBonus = uniqueFigurineCount * 0.0001; // 0.01% = 0.0001 come moltiplicatore
+                expBonusMultiplier += figurineBonus;
+            }
+        }
+
         // Determina risultato partita
         const teamGoals = matchResult.isHome ? matchResult.homeGoals : matchResult.awayGoals;
         const opponentGoals = matchResult.isHome ? matchResult.awayGoals : matchResult.homeGoals;
@@ -399,11 +409,17 @@
         const playerStats = matchResult.playerStats || {};
 
         // Processa titolari (formazione)
-        formation.forEach(player => {
-            if (!player) return;
+        // FIX: Trova il giocatore in roster (rosa) e applica EXP a quello, non alla copia in formation
+        formation.forEach(formPlayer => {
+            if (!formPlayer) return;
 
-            const playerId = player.id || player.visitorId;
+            const playerId = formPlayer.id || formPlayer.visitorId;
             const stats = playerStats[playerId] || {};
+
+            // Trova il giocatore originale nella rosa
+            const rosterPlayer = roster.find(p => (p.id === playerId) || (p.visitorId === playerId));
+            // Usa il player della rosa se esiste, altrimenti usa quello della formazione
+            const playerToUpdate = rosterPlayer || formPlayer;
 
             const matchData = {
                 isStarter: true,
@@ -415,11 +431,11 @@
                 isCaptain: playerId === captainId
             };
 
-            const expGained = calculateMatchExp(player, matchData, expBonusMultiplier);
-            const applyResult = applyExp(player, expGained);
+            const expGained = calculateMatchExp(playerToUpdate, matchData, expBonusMultiplier);
+            const applyResult = applyExp(playerToUpdate, expGained);
 
             results.push({
-                player: player,
+                player: playerToUpdate,
                 playerId: playerId,
                 expGained: expGained,
                 ...applyResult
@@ -508,7 +524,7 @@
     function migrateTeam(teamData) {
         if (!teamData) return;
 
-        const roster = teamData.rosa || teamData.roster || [];
+        const roster = teamData.players || teamData.rosa || teamData.roster || [];
 
         // La formazione puo essere un oggetto o un array
         let formation = teamData.formazione || teamData.formation || [];
@@ -837,7 +853,7 @@
     function getPlayersNearLevelUp(teamData, threshold = 75) {
         if (!teamData) return [];
 
-        const roster = teamData.rosa || teamData.roster || [];
+        const roster = teamData.players || teamData.rosa || teamData.roster || [];
         const nearLevelUp = [];
 
         roster.forEach(player => {

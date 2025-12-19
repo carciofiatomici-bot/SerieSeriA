@@ -148,18 +148,18 @@ window.ChampionshipMain = {
                 const { updateDoc, doc, appId } = window.firestoreTools;
                 const teamsPath = `artifacts/${appId}/public/data/teams`;
 
-                // Salva rosa home team con EXP aggiornata
-                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                // Salva players home team con EXP aggiornata
+                if (homeTeamData.players && homeExpResults.length > 0) {
                     await updateDoc(doc(window.db, teamsPath, match.homeId), {
-                        rosa: homeTeamData.rosa,
+                        players: homeTeamData.players,
                         coach: homeTeamData.coach || null
                     });
                 }
 
-                // Salva rosa away team con EXP aggiornata
-                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                // Salva players away team con EXP aggiornata
+                if (awayTeamData.players && awayExpResults.length > 0) {
                     await updateDoc(doc(window.db, teamsPath, match.awayId), {
-                        rosa: awayTeamData.rosa,
+                        players: awayTeamData.players,
                         coach: awayTeamData.coach || null
                     });
                 }
@@ -421,15 +421,15 @@ window.ChampionshipMain = {
                     const { updateDoc, doc, appId } = window.firestoreTools;
                     const teamsPath = `artifacts/${appId}/public/data/teams`;
 
-                    if (homeTeamData.rosa && homeExpResults.length > 0) {
+                    if (homeTeamData.players && homeExpResults.length > 0) {
                         await updateDoc(doc(window.db, teamsPath, match.homeId), {
-                            rosa: homeTeamData.rosa,
+                            players: homeTeamData.players,
                             coach: homeTeamData.coach || null
                         });
                     }
-                    if (awayTeamData.rosa && awayExpResults.length > 0) {
+                    if (awayTeamData.players && awayExpResults.length > 0) {
                         await updateDoc(doc(window.db, teamsPath, match.awayId), {
-                            rosa: awayTeamData.rosa,
+                            players: awayTeamData.players,
                             coach: awayTeamData.coach || null
                         });
                     }

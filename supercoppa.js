@@ -240,15 +240,15 @@ window.Supercoppa = {
             // Salva EXP aggiornata su Firestore
             const teamsPath = `artifacts/${appId}/public/data/teams`;
             try {
-                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                if (homeTeamData.players && homeExpResults.length > 0) {
                     await updateDoc(doc(db, teamsPath, supercoppaBracket.homeTeam.teamId), {
-                        rosa: homeTeamData.rosa,
+                        players: homeTeamData.players,
                         coach: homeTeamData.coach || null
                     });
                 }
-                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                if (awayTeamData.players && awayExpResults.length > 0) {
                     await updateDoc(doc(db, teamsPath, supercoppaBracket.awayTeam.teamId), {
-                        rosa: awayTeamData.rosa,
+                        players: awayTeamData.players,
                         coach: awayTeamData.coach || null
                     });
                 }

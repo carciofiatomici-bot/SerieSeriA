@@ -185,17 +185,17 @@ window.CoppaMain = {
             // Salva EXP aggiornata su Firestore
             const teamsPath = `artifacts/${appId}/public/data/teams`;
             try {
-                if (homeTeamData.rosa && homeExpResults.length > 0) {
+                if (homeTeamData.players && homeExpResults.length > 0) {
                     const { updateDoc: updateDocFn } = window.firestoreTools;
                     await updateDocFn(doc(db, teamsPath, match.homeTeam.teamId), {
-                        rosa: homeTeamData.rosa,
+                        players: homeTeamData.players,
                         coach: homeTeamData.coach || null
                     });
                 }
-                if (awayTeamData.rosa && awayExpResults.length > 0) {
+                if (awayTeamData.players && awayExpResults.length > 0) {
                     const { updateDoc: updateDocFn } = window.firestoreTools;
                     await updateDocFn(doc(db, teamsPath, match.awayTeam.teamId), {
-                        rosa: awayTeamData.rosa,
+                        players: awayTeamData.players,
                         coach: awayTeamData.coach || null
                     });
                 }
