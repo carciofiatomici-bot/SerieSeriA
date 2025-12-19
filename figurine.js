@@ -462,14 +462,17 @@ window.FigurineSystem = {
     /**
      * Carica le rarita delle figurine da Firestore
      * Formato: { collectionId: { itemId: rarityLevel, ... }, ... }
+     * @param {boolean} forceRefresh - Se true, ignora la cache e ricarica da Firestore
      */
-    async loadFigurineRarities() {
-        if (this._figurineRarities) {
+    async loadFigurineRarities(forceRefresh = false) {
+        // Usa cache solo se non forzato il refresh
+        if (this._figurineRarities && !forceRefresh) {
             return this._figurineRarities;
         }
 
         const path = this.getConfigPath();
         if (!path || !window.db || !window.firestoreTools) {
+            console.warn('[Figurine] loadFigurineRarities: path/db/firestoreTools non disponibili');
             this._figurineRarities = this.getDefaultFigurineRarities();
             return this._figurineRarities;
         }
@@ -480,8 +483,13 @@ window.FigurineSystem = {
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                this._figurineRarities = docSnap.data();
+                const data = docSnap.data();
+                // Rimuovi il campo updatedAt dai dati prima di usarli
+                const { updatedAt, ...rarities } = data;
+                this._figurineRarities = rarities;
+                console.log('[Figurine] Rarita caricate da Firestore:', Object.keys(rarities));
             } else {
+                console.log('[Figurine] Documento rarita non esiste, uso default');
                 this._figurineRarities = this.getDefaultFigurineRarities();
             }
         } catch (error) {
@@ -1670,6 +1678,76 @@ window.FigurineSystem = {
             console.error('[Figurine] Errore aggiornamento CS:', error);
             return false;
         }
+    },
+
+    // ==================== SFONDO DASHBOARD ====================
+
+    /**
+     * Salva la preferenza dello sfondo dashboard per un team
+     * @param {string} teamId - ID del team
+     * @param {string} itemId - ID della figurina illustrazione (o null per rimuovere)
+     */
+    async saveDashboardBackground(teamId, itemId) {
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db || !teamId) {
+            console.error('[Figurine] Impossibile salvare sfondo');
+            return false;
+        }
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
+
+            if (itemId) {
+                // Salva sfondo
+                const imgUrl = `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(this.ILLUSTRAZIONI_FILES[itemId]?.base || '')}`;
+                await updateDoc(teamRef, {
+                    dashboardBackground: {
+                        itemId: itemId,
+                        imageUrl: imgUrl,
+                        updatedAt: new Date().toISOString()
+                    }
+                });
+                console.log('[Figurine] Sfondo salvato:', itemId);
+            } else {
+                // Rimuovi sfondo
+                await updateDoc(teamRef, { dashboardBackground: null });
+                console.log('[Figurine] Sfondo rimosso');
+            }
+
+            // Aggiorna anche currentTeamData
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.dashboardBackground = itemId ? {
+                    itemId,
+                    imageUrl: `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(this.ILLUSTRAZIONI_FILES[itemId]?.base || '')}`
+                } : null;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore salvataggio sfondo:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Ottiene lo sfondo dashboard corrente di un team
+     * @param {string} teamId - ID del team
+     * @returns {Object|null} { itemId, imageUrl } o null
+     */
+    async getDashboardBackground(teamId) {
+        const teamData = await this.getTeamData(teamId);
+        return teamData?.dashboardBackground || null;
+    },
+
+    /**
+     * Verifica se un utente possiede una specifica illustrazione
+     * @param {Object} album - Album dell'utente
+     * @param {string} itemId - ID dell'illustrazione
+     */
+    hasIllustrazione(album, itemId) {
+        const count = album?.collections?.illustrazioni?.[itemId]?.base || 0;
+        return count > 0;
     },
 
     // ==================== ADMIN UTILITIES ====================

@@ -591,8 +591,8 @@ window.AdminFigurine = {
             return;
         }
 
-        // Carica rarita attuali
-        const rarities = await window.FigurineSystem.loadFigurineRarities();
+        // Carica rarita attuali (forza refresh per avere dati freschi)
+        const rarities = await window.FigurineSystem.loadFigurineRarities(true);
         const RARITIES = window.FigurineSystem.FIGURINE_RARITIES;
 
         // Collezioni da gestire (escluse Icone che usano varianti)

@@ -733,6 +733,13 @@ window.FigurineUI = {
         const rarityLevel = window.FigurineSystem.getFigurineRarity(collectionId, itemId);
         const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
 
+        // Verifica se e' lo sfondo attuale
+        const currentBg = window.InterfacciaCore?.currentTeamData?.dashboardBackground;
+        const isCurrentBackground = currentBg?.itemId === itemId;
+
+        // Pulsante sfondo (solo per illustrazioni possedute)
+        const canSetBackground = collectionId === 'illustrazioni' && owned;
+
         const modal = document.createElement('div');
         modal.id = 'figurine-variants-modal';
         modal.className = 'fixed inset-0 bg-black/80 z-[1100] flex items-center justify-center p-4';
@@ -783,7 +790,14 @@ window.FigurineUI = {
                 </div>
 
                 <!-- Footer -->
-                <div class="p-4 border-t border-gray-700 text-center">
+                <div class="p-4 border-t border-gray-700 text-center space-y-2">
+                    ${canSetBackground ? `
+                        <button id="set-background-btn" class="${isCurrentBackground
+                            ? 'bg-red-600 hover:bg-red-500'
+                            : 'bg-purple-600 hover:bg-purple-500'} text-white font-bold py-2 px-4 rounded-lg transition w-full flex items-center justify-center gap-2">
+                            ${isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo'}
+                        </button>
+                    ` : ''}
                     <button id="close-variants-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-lg transition">
                         Chiudi
                     </button>
@@ -807,6 +821,38 @@ window.FigurineUI = {
                     this.showFullscreenImage(imgUrlData, itemName, isOwned);
                 });
             }
+        }
+
+        // Pulsante sfondo
+        if (canSetBackground) {
+            document.getElementById('set-background-btn')?.addEventListener('click', async () => {
+                const teamId = window.InterfacciaCore?.currentTeamId;
+                if (!teamId) return;
+
+                const btn = document.getElementById('set-background-btn');
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Salvataggio...';
+
+                try {
+                    if (isCurrentBackground) {
+                        // Rimuovi sfondo
+                        await window.FigurineSystem.saveDashboardBackground(teamId, null);
+                        alert('Sfondo rimosso!');
+                    } else {
+                        // Imposta sfondo
+                        await window.FigurineSystem.saveDashboardBackground(teamId, itemId);
+                        alert('Sfondo impostato! Torna alla dashboard per vederlo.');
+                    }
+                    modal.remove();
+                    // Aggiorna dashboard se visibile
+                    window.DashboardBackground?.apply();
+                } catch (error) {
+                    console.error('[FigurineUI] Errore impostazione sfondo:', error);
+                    alert('Errore nel salvataggio dello sfondo');
+                    btn.disabled = false;
+                    btn.innerHTML = isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo';
+                }
+            });
         }
 
         modal.addEventListener('click', (e) => {
@@ -1322,3 +1368,85 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('Modulo figurine-ui.js caricato.');
+
+// ====================================================================
+// DASHBOARD BACKGROUND - Gestisce lo sfondo personalizzato della dashboard
+// ====================================================================
+
+window.DashboardBackground = {
+    // ID dell'elemento dashboard
+    DASHBOARD_ELEMENT_ID: 'app-content',
+
+    // Overlay per leggibilita
+    OVERLAY_OPACITY: 0.7,
+
+    /**
+     * Applica lo sfondo alla dashboard
+     */
+    apply() {
+        const bg = window.InterfacciaCore?.currentTeamData?.dashboardBackground;
+        const element = document.getElementById(this.DASHBOARD_ELEMENT_ID);
+
+        if (!element) {
+            console.warn('[DashboardBackground] Elemento dashboard non trovato');
+            return;
+        }
+
+        // Rimuovi sfondo esistente
+        this.remove();
+
+        if (!bg?.imageUrl) {
+            console.log('[DashboardBackground] Nessuno sfondo impostato');
+            return;
+        }
+
+        // Crea container per sfondo con overlay
+        const bgContainer = document.createElement('div');
+        bgContainer.id = 'dashboard-bg-container';
+        bgContainer.className = 'absolute inset-0 -z-10 overflow-hidden rounded-xl';
+        bgContainer.innerHTML = `
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${bg.imageUrl}')"></div>
+            <div class="absolute inset-0 bg-gray-900" style="opacity: ${this.OVERLAY_OPACITY}"></div>
+        `;
+
+        // Assicurati che il parent abbia position relative
+        element.style.position = 'relative';
+        element.insertBefore(bgContainer, element.firstChild);
+
+        console.log('[DashboardBackground] Sfondo applicato:', bg.itemId);
+    },
+
+    /**
+     * Rimuove lo sfondo dalla dashboard
+     */
+    remove() {
+        const existing = document.getElementById('dashboard-bg-container');
+        if (existing) {
+            existing.remove();
+        }
+    },
+
+    /**
+     * Inizializza e applica lo sfondo quando i dati sono pronti
+     */
+    init() {
+        // Applica subito se i dati sono gia disponibili
+        if (window.InterfacciaCore?.currentTeamData) {
+            this.apply();
+        }
+
+        // Ascolta cambi di team/login
+        document.addEventListener('teamDataLoaded', () => {
+            this.apply();
+        });
+    }
+};
+
+// Init quando DOM pronto
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        window.DashboardBackground.init();
+    }, 1500);
+});
+
+console.log('Modulo DashboardBackground caricato.');
