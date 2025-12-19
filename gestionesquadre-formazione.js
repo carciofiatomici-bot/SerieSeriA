@@ -177,9 +177,21 @@ window.GestioneSquadreFormazione = {
 
                     <div id="bench-container" class="bg-gray-800 p-3 rounded-lg border-2 border-indigo-500 h-32">
                         <h4 class="text-indigo-400 font-bold mb-2">Panchina (Max 3 Giocatori)</h4>
-                        <div id="panchina-slots" class="h-16 items-center flex space-x-2"
-                             ondragover="event.preventDefault();"
-                             ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'B')">
+                        <div class="flex h-16 gap-2">
+                            <div id="panchina-slots" class="flex-1 items-center flex space-x-2"
+                                 ondragover="event.preventDefault();"
+                                 ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'B')">
+                            </div>
+                            <!-- Zona rimozione giocatore -->
+                            <div id="bench-remove-zone"
+                                 class="w-16 h-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-red-500 bg-red-900 bg-opacity-30 text-red-400 text-xs text-center cursor-pointer transition hover:bg-red-800 hover:bg-opacity-50"
+                                 ondragover="event.preventDefault(); this.classList.add('bg-red-700', 'bg-opacity-70', 'border-solid');"
+                                 ondragleave="this.classList.remove('bg-red-700', 'bg-opacity-70', 'border-solid');"
+                                 ondrop="this.classList.remove('bg-red-700', 'bg-opacity-70', 'border-solid'); window.GestioneSquadreFormazione.handleDrop(event, 'ROSALIBERA');"
+                                 title="Trascina qui per rimuovere dalla formazione">
+                                <span class="text-lg">🗑️</span>
+                                <span class="leading-tight">Rimuovi</span>
+                            </div>
                         </div>
                     </div>
 
