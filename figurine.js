@@ -232,7 +232,7 @@ window.FigurineSystem = {
         normale: { iconaChance: 0, xpBonus: 0, description: 'Nessun bonus' },
         evoluto: { iconaChance: 5, xpBonus: 5, description: '+5% Icona | +5% XP' },
         alternative: { iconaChance: 10, xpBonus: 10, description: '+10% Icona | +10% XP' },
-        ultimate: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' },
+        ultimate: { iconaChance: 20, xpBonus: 15, description: '+20% Icona | +15% XP' },
         fantasy: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' },
         base: { iconaChance: 0, xpBonus: 0, description: 'Nessun bonus' }
     },
