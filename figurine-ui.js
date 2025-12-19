@@ -376,21 +376,25 @@ window.FigurineUI = {
             return `<div class="p-4 text-center text-gray-500">Collezione in arrivo...</div>`;
         }
 
-        // Giocatori Seri: lista compatta senza anteprime
+        // Giocatori Seri: card con ? se non posseduta
         if (collId === 'giocatori_seri') {
-            let html = '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3">';
+            let html = '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 p-3">';
             Object.entries(files).forEach(([itemId, itemFiles]) => {
                 const counts = albumColl[itemId] || { base: 0 };
                 const hasAny = counts.base > 0;
                 const displayName = itemFiles.name || itemId;
 
                 html += `
-                    <div class="figurine-card bg-gray-800 rounded-lg px-3 py-2 border ${hasAny ? 'border-emerald-500' : 'border-gray-700'} cursor-pointer hover:bg-gray-700 transition flex items-center justify-between gap-2"
+                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border ${hasAny ? 'border-emerald-500' : 'border-gray-700'} cursor-pointer hover:bg-gray-700 transition text-center"
                          data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
-                        <p class="text-xs font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} truncate flex-1">${displayName}</p>
-                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${hasAny ? 'bg-emerald-500 text-white' : 'bg-gray-700 text-gray-500'}">
-                            ${hasAny ? counts.base : '○'}
-                        </span>
+                        <div class="aspect-square rounded bg-gray-700 flex items-center justify-center mb-1">
+                            ${hasAny
+                                ? `<span class="text-2xl">⚽</span>`
+                                : `<span class="text-3xl text-gray-500 font-bold">?</span>`
+                            }
+                        </div>
+                        <p class="text-[10px] font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} truncate">${displayName}</p>
+                        ${hasAny ? `<span class="text-[10px] text-emerald-400">x${counts.base}</span>` : ''}
                     </div>
                 `;
             });
@@ -654,8 +658,10 @@ window.FigurineUI = {
 
         const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
         const css = teamData?.creditiSuperSeri || 0;
+        const cs = teamData?.creditiSeri || 0;
         const collections = window.FigurineSystem.COLLECTIONS;
-        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1 };
+        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1 };
+        const csPrice = 150; // Prezzo in CS per pacchetto
         const probs = config.iconeProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
         // Calcola duplicati scambiabili
@@ -668,10 +674,16 @@ window.FigurineUI = {
 
         content.innerHTML = `
             <div class="space-y-4">
-                <!-- CSS Disponibili -->
-                <div class="bg-gray-800 rounded-lg p-3 flex items-center justify-between">
-                    <span class="text-gray-300">💎 Crediti Super Seri disponibili:</span>
-                    <span class="text-xl font-bold text-cyan-400">${css} CSS</span>
+                <!-- Crediti Disponibili -->
+                <div class="bg-gray-800 rounded-lg p-3 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-300">💰</span>
+                        <span class="text-lg font-bold text-yellow-400">${cs} CS</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-300">💎</span>
+                        <span class="text-lg font-bold text-cyan-400">${css} CSS</span>
+                    </div>
                 </div>
 
                 <!-- Pacchetto Gratis -->
@@ -684,7 +696,7 @@ window.FigurineUI = {
                             <p class="text-sm text-gray-300 mt-1">
                                 1 figurina (${100 - bonusChance}%) o 2 (${bonusChance}%) da qualsiasi collezione
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">Disponibile ogni ${config.freePackCooldownHours || 6} ore</p>
+                            <p class="text-xs text-gray-500 mt-1">Disponibile ogni ${config.freePackCooldownHours || 4} ore</p>
                         </div>
                         ${canFree ?
                             `<button id="btn-free-pack" class="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-lg transition animate-pulse">
@@ -707,12 +719,13 @@ window.FigurineUI = {
                             const files = window.FigurineSystem.getCollectionFiles(collId);
                             if (Object.keys(files).length === 0 && collId !== 'icone') return '';
 
-                            const price = collectionPrices[collId] || 1;
-                            const canBuy = css >= price;
+                            const cssPrice = collectionPrices[collId] || 1;
+                            const canBuyCS = cs >= csPrice;
+                            const canBuyCSS = css >= cssPrice;
                             const variantText = collId === 'icone' ? '5 varianti con bonus' : 'variante base';
 
                             return `
-                                <div class="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg">
+                                <div class="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg flex-wrap gap-2">
                                     <div class="flex items-center gap-3">
                                         <span class="text-2xl">${collDef.icon}</span>
                                         <div>
@@ -720,10 +733,16 @@ window.FigurineUI = {
                                             <p class="text-xs text-gray-400">${variantText}</p>
                                         </div>
                                     </div>
-                                    <button class="btn-collection-pack bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-lg transition ${!canBuy ? 'opacity-50 cursor-not-allowed' : ''}"
-                                            data-collection="${collId}" data-price="${price}" ${!canBuy ? 'disabled' : ''}>
-                                        ${price} CSS
-                                    </button>
+                                    <div class="flex gap-2">
+                                        <button class="btn-collection-pack-cs bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm ${!canBuyCS ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                data-collection="${collId}" data-price="${csPrice}" data-currency="cs" ${!canBuyCS ? 'disabled' : ''}>
+                                            ${csPrice} CS
+                                        </button>
+                                        <button class="btn-collection-pack-css bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm ${!canBuyCSS ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                data-collection="${collId}" data-price="${cssPrice}" data-currency="css" ${!canBuyCSS ? 'disabled' : ''}>
+                                            ${cssPrice} CSS
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
@@ -822,12 +841,23 @@ window.FigurineUI = {
         document.getElementById('btn-free-pack')?.addEventListener('click', () => this.openPack(true));
 
         // Bind collection pack buttons (con conferma)
-        document.querySelectorAll('.btn-collection-pack').forEach(btn => {
+        // Bottoni acquisto con CS
+        document.querySelectorAll('.btn-collection-pack-cs').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const collId = e.currentTarget.dataset.collection;
                 const price = parseInt(e.currentTarget.dataset.price);
                 const collName = collections[collId]?.name || collId;
-                await this.confirmAndOpenCollectionPack(collId, collName, price);
+                await this.confirmAndOpenCollectionPack(collId, collName, price, 'cs');
+            });
+        });
+
+        // Bottoni acquisto con CSS
+        document.querySelectorAll('.btn-collection-pack-css').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const collId = e.currentTarget.dataset.collection;
+                const price = parseInt(e.currentTarget.dataset.price);
+                const collName = collections[collId]?.name || collId;
+                await this.confirmAndOpenCollectionPack(collId, collName, price, 'css');
             });
         });
 
@@ -843,33 +873,38 @@ window.FigurineUI = {
 
     /**
      * Mostra conferma e apre pacchetto collezione specifica
+     * @param {string} currency - 'cs' o 'css'
      */
-    async confirmAndOpenCollectionPack(collectionId, collectionName, price) {
+    async confirmAndOpenCollectionPack(collectionId, collectionName, price, currency = 'css') {
+        const currencyLabel = currency === 'cs' ? 'CS' : 'CSS';
+        const currencyName = currency === 'cs' ? 'Crediti Seri' : 'Crediti Super Seri';
+
         // Usa ConfirmDialog se disponibile, altrimenti confirm nativo
         const confirmed = window.ConfirmDialog
             ? await window.ConfirmDialog.show({
                 title: 'Conferma Acquisto',
-                message: `Vuoi acquistare un pacchetto ${collectionName} per ${price} CSS?`,
+                message: `Vuoi acquistare un pacchetto ${collectionName} per ${price} ${currencyLabel}?`,
                 confirmText: 'Acquista',
                 cancelText: 'Annulla',
                 type: 'warning'
             })
-            : confirm(`Vuoi acquistare un pacchetto ${collectionName} per ${price} CSS?`);
+            : confirm(`Vuoi acquistare un pacchetto ${collectionName} per ${price} ${currencyLabel}?`);
 
         if (confirmed) {
-            await this.openCollectionPack(collectionId);
+            await this.openCollectionPack(collectionId, currency);
         }
     },
 
     /**
      * Apre pacchetto di una collezione specifica
+     * @param {string} currency - 'cs' o 'css'
      */
-    async openCollectionPack(collectionId) {
+    async openCollectionPack(collectionId, currency = 'css') {
         const teamId = window.InterfacciaCore?.currentTeamId;
         if (!teamId) return;
 
         try {
-            const result = await window.FigurineSystem.openCollectionPack(teamId, collectionId);
+            const result = await window.FigurineSystem.openCollectionPack(teamId, collectionId, currency);
             this.currentAlbum = result.album;
             this.updateStats();
             this.showPackResult(result);

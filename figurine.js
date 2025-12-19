@@ -156,6 +156,11 @@ window.FigurineSystem = {
         // Esempio: 'allenatore1': { base: 'NomeAllenatore.jpg' }
     },
 
+    // Mapping per collezione Illustrazioni
+    ILLUSTRAZIONI_FILES: {
+        // Esempio: 'illustrazione1': { base: 'NomeIllustrazione.jpg', name: 'Nome Illustrazione' }
+    },
+
     // ==================== COLLEZIONI ====================
     // Sistema multi-collezione per figurine
     COLLECTIONS: {
@@ -188,6 +193,16 @@ window.FigurineSystem = {
             hasBonus: false,  // Solo collezionabili
             variants: ['base'],
             baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Allenatori/'
+        },
+        illustrazioni: {
+            id: 'illustrazioni',
+            name: 'Illustrazioni',
+            description: 'Opere d\'arte esclusive',
+            icon: '🎨',
+            enabled: true,
+            hasBonus: false,  // Solo collezionabili
+            variants: ['base'],
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/'
         }
     },
 
@@ -281,7 +296,7 @@ window.FigurineSystem = {
         return {
             enabled: true,
             // Pacchetto gratis (tutte le collezioni)
-            freePackCooldownHours: 6,   // Ore di cooldown dopo apertura pacchetto gratis
+            freePackCooldownHours: 4,   // Ore di cooldown dopo apertura pacchetto gratis
             freePackChance1: 0.99,      // 99% = 1 figurina
             freePackChance2: 0.01,      // 1% = 2 figurine
             // Prezzi pacchetti specifici per collezione (in CSS)
@@ -478,6 +493,12 @@ window.FigurineSystem = {
             allenatoriCollection[id] = { base: 0 };
         });
 
+        // Collezione Illustrazioni (solo base)
+        const illustrazioniCollection = {};
+        Object.keys(this.ILLUSTRAZIONI_FILES).forEach(id => {
+            illustrazioniCollection[id] = { base: 0 };
+        });
+
         return {
             teamId,
             // Legacy (retrocompatibilita)
@@ -486,7 +507,8 @@ window.FigurineSystem = {
             collections: {
                 icone: iconeCollection,
                 giocatori_seri: giocatoriSeriCollection,
-                allenatori: allenatoriCollection
+                allenatori: allenatoriCollection,
+                illustrazioni: illustrazioniCollection
             },
             totalFigurine: 0,
             uniqueFigurine: 0,
@@ -671,6 +693,7 @@ window.FigurineSystem = {
             case 'icone': return this.FIGURINE_FILES;
             case 'giocatori_seri': return this.GIOCATORI_SERI_FILES;
             case 'allenatori': return this.ALLENATORI_FILES;
+            case 'illustrazioni': return this.ILLUSTRAZIONI_FILES;
             default: return {};
         }
     },
@@ -922,7 +945,7 @@ window.FigurineSystem = {
      * @param {string} teamId - ID squadra
      * @param {string} collectionId - ID collezione (icone, giocatori_seri, allenatori)
      */
-    async openCollectionPack(teamId, collectionId) {
+    async openCollectionPack(teamId, collectionId, currency = 'css') {
         const config = await this.loadConfig();
         const album = await this.loadTeamAlbum(teamId);
 
@@ -931,25 +954,43 @@ window.FigurineSystem = {
             throw new Error(`Collezione "${collectionId}" non trovata`);
         }
 
-        // Ottieni prezzo pacchetto per questa collezione
-        const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
-
-        // Verifica CSS (Crediti Super Seri)
         const teamData = await this.getTeamData(teamId);
-        const currentCSS = teamData?.creditiSuperSeri || 0;
 
-        if (currentCSS < packCost) {
-            throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
+        // Gestisci pagamento in base alla valuta
+        if (currency === 'cs') {
+            // Acquisto con CS (Crediti Seri)
+            const csPrice = 150;
+            const currentCS = teamData?.creditiSeri || 0;
+
+            if (currentCS < csPrice) {
+                throw new Error(`CS insufficienti (hai ${currentCS}, servono ${csPrice})`);
+            }
+
+            // Sottrai CS
+            await this.updateTeamCS(teamId, -csPrice);
+        } else {
+            // Acquisto con CSS (Crediti Super Seri)
+            const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
+            const currentCSS = teamData?.creditiSuperSeri || 0;
+
+            if (currentCSS < packCost) {
+                throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
+            }
+
+            // Sottrai CSS
+            await this.updateTeamCSS(teamId, -packCost);
         }
-
-        // Sottrai CSS
-        await this.updateTeamCSS(teamId, -packCost);
 
         // Estrai figurina dalla collezione specifica
         const figurina = this.extractRandomFromCollection(collectionId);
         if (!figurina) {
-            // Rimborsa CSS se estrazione fallita
-            await this.updateTeamCSS(teamId, packCost);
+            // Rimborsa se estrazione fallita
+            if (currency === 'cs') {
+                await this.updateTeamCS(teamId, 150);
+            } else {
+                const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
+                await this.updateTeamCSS(teamId, packCost);
+            }
             throw new Error(`Impossibile estrarre da collezione "${collectionId}"`);
         }
 
@@ -1254,6 +1295,31 @@ window.FigurineSystem = {
             return true;
         } catch (error) {
             console.error('[Figurine] Errore aggiornamento CSS:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Aggiorna i Crediti Seri (CS) di un team
+     * @param {string} teamId - ID squadra
+     * @param {number} amount - Quantita da aggiungere (o sottrarre se negativo)
+     */
+    async updateTeamCS(teamId, amount) {
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db) return false;
+
+        try {
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
+            const teamSnap = await getDoc(teamRef);
+
+            if (!teamSnap.exists()) return false;
+
+            const currentCS = teamSnap.data().creditiSeri || 0;
+            await updateDoc(teamRef, { creditiSeri: currentCS + amount });
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore aggiornamento CS:', error);
             return false;
         }
     }

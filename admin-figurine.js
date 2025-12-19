@@ -17,7 +17,7 @@ window.AdminFigurine = {
 
         // Carica config fresca da Firestore (forza reload)
         const config = await this.loadConfigFromFirestore();
-        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1 };
+        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1 };
         const probs = config.iconeProbabilities || config.rarityProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
         container.innerHTML = `
@@ -28,7 +28,7 @@ window.AdminFigurine = {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Cooldown Gratis (ore)</label>
-                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 6}"
+                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 4}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="1">
                         </div>
                         <div>
@@ -58,7 +58,7 @@ window.AdminFigurine = {
                 <!-- Prezzi Pacchetti Collezione -->
                 <div class="bg-gray-700 p-4 rounded-lg">
                     <h4 class="text-lg font-bold text-purple-300 mb-4">Prezzi Pacchetti per Collezione (CSS)</h4>
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">👑 Icone</label>
                             <input type="number" id="figurine-price-icone" value="${collectionPrices.icone || 1}"
@@ -72,6 +72,11 @@ window.AdminFigurine = {
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">📋 Allenatori</label>
                             <input type="number" id="figurine-price-allenatori" value="${collectionPrices.allenatori || 1}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">🎨 Illustrazioni</label>
+                            <input type="number" id="figurine-price-illustrazioni" value="${collectionPrices.illustrazioni || 1}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0">
                         </div>
                     </div>
@@ -194,7 +199,7 @@ window.AdminFigurine = {
     async loadConfigFromFirestore() {
         const defaults = {
             enabled: true,
-            freePackCooldownHours: 6,
+            freePackCooldownHours: 4,
             freePackChance2: 0.01,
             completionBonus: 500,
             sectionBonus: 50,
@@ -202,7 +207,8 @@ window.AdminFigurine = {
             collectionPackPrices: {
                 icone: 1,
                 giocatori_seri: 1,
-                allenatori: 1
+                allenatori: 1,
+                illustrazioni: 1
             },
             iconeProbabilities: {
                 normale: 50,
@@ -317,7 +323,7 @@ window.AdminFigurine = {
     collectFormData() {
         return {
             enabled: true,
-            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 6,
+            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 4,
             freePackChance2: (parseInt(document.getElementById('figurine-bonus-chance')?.value) || 1) / 100,
             completionBonus: parseInt(document.getElementById('figurine-completion-bonus')?.value) || 500,
             sectionBonus: parseInt(document.getElementById('figurine-section-bonus')?.value) || 50,
@@ -325,7 +331,8 @@ window.AdminFigurine = {
             collectionPackPrices: {
                 icone: parseInt(document.getElementById('figurine-price-icone')?.value) || 1,
                 giocatori_seri: parseInt(document.getElementById('figurine-price-giocatori')?.value) || 1,
-                allenatori: parseInt(document.getElementById('figurine-price-allenatori')?.value) || 1
+                allenatori: parseInt(document.getElementById('figurine-price-allenatori')?.value) || 1,
+                illustrazioni: parseInt(document.getElementById('figurine-price-illustrazioni')?.value) || 1
             },
             iconeProbabilities: {
                 normale: parseInt(document.getElementById('figurine-prob-normale')?.value) || 50,
@@ -431,7 +438,7 @@ window.AdminFigurine = {
         try {
             const defaults = {
                 enabled: true,
-                freePackCooldownHours: 6,
+                freePackCooldownHours: 4,
                 freePackChance2: 0.01,
                 completionBonus: 500,
                 sectionBonus: 50,
