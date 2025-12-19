@@ -174,19 +174,24 @@ window.CoppaMain = {
         }
 
         // SEMPRE: Processa EXP giocatori (NUOVO SISTEMA)
+        console.log('[Coppa EXP] Inizio processamento EXP');
         if (window.PlayerExp) {
             const parts = result.resultString.split(' ')[0].split('-');
             const homeGoals = parseInt(parts[0]) || 0;
             const awayGoals = parseInt(parts[1]) || 0;
+            console.log('[Coppa EXP] Risultato:', homeGoals, '-', awayGoals);
 
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
             const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+            console.log('[Coppa EXP] Risultati home:', homeExpResults.length, 'away:', awayExpResults.length);
 
             // NUOVO: Salva EXP in campo separato 'playersExp'
             if (homeExpResults.length > 0) {
+                console.log('[Coppa EXP] Salvataggio home team:', match.homeTeam.teamId);
                 await window.PlayerExp.saveExpToFirestore(match.homeTeam.teamId, homeExpResults);
             }
             if (awayExpResults.length > 0) {
+                console.log('[Coppa EXP] Salvataggio away team:', match.awayTeam.teamId);
                 await window.PlayerExp.saveExpToFirestore(match.awayTeam.teamId, awayExpResults);
             }
 
