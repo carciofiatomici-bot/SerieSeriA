@@ -1,8 +1,8 @@
 //
 // ====================================================================
-// ADMIN-FIGURINE.JS - Configurazione Sistema Figurine
+// ADMIN-FIGURINE.JS - Configurazione Sistema Figurine Multi-Collezione
 // ====================================================================
-// Pannello admin per configurare probabilita, prezzi e cooldown
+// Pannello admin per configurare probabilita, prezzi, cooldown e collezioni
 //
 
 window.AdminFigurine = {
@@ -17,6 +17,8 @@ window.AdminFigurine = {
 
         // Carica config fresca da Firestore (forza reload)
         const config = await this.loadConfigFromFirestore();
+        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1 };
+        const probs = config.iconeProbabilities || config.rarityProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
         container.innerHTML = `
             <div class="space-y-6">
@@ -25,20 +27,15 @@ window.AdminFigurine = {
                     <h4 class="text-lg font-bold text-purple-300 mb-4">Parametri Generali</h4>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm text-gray-400 mb-1">Prezzo Pacchetto (CSS)</label>
-                            <input type="number" id="figurine-pack-price-css" value="${config.packPriceCSS || 1}"
-                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                            <label class="block text-sm text-gray-400 mb-1">Cooldown Gratis (ore)</label>
+                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 6}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Bonus 2 Figurine (%)</label>
-                            <input type="number" id="figurine-bonus-chance" value="${Math.round((config.bonusFigurineChance || 0.05) * 100)}"
+                            <input type="number" id="figurine-bonus-chance" value="${Math.round((config.freePackChance2 || config.bonusFigurineChance || 0.01) * 100)}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0" max="100" step="1">
-                            <p class="text-xs text-gray-500 mt-1">Base: 1 fig, Bonus: 2 fig</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Cooldown Gratis (ore)</label>
-                            <input type="number" id="figurine-cooldown" value="${config.freePackCooldownHours || 8}"
-                                   class="w-full p-2 rounded bg-gray-600 text-white" min="1">
+                            <p class="text-xs text-gray-500 mt-1">Pack gratis: 1 (base) o 2 (bonus)</p>
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Bonus Album Completo (CS)</label>
@@ -58,47 +55,76 @@ window.AdminFigurine = {
                     </div>
                 </div>
 
-                <!-- Probabilita Rarita -->
+                <!-- Prezzi Pacchetti Collezione -->
                 <div class="bg-gray-700 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold text-purple-300 mb-4">Probabilita Rarita</h4>
+                    <h4 class="text-lg font-bold text-purple-300 mb-4">Prezzi Pacchetti per Collezione (CSS)</h4>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">👑 Icone</label>
+                            <input type="number" id="figurine-price-icone" value="${collectionPrices.icone || 1}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">⚽ Giocatori Seri</label>
+                            <input type="number" id="figurine-price-giocatori" value="${collectionPrices.giocatori_seri || 1}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">📋 Allenatori</label>
+                            <input type="number" id="figurine-price-allenatori" value="${collectionPrices.allenatori || 1}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Probabilita Rarita Icone (5 varianti) -->
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-bold text-purple-300 mb-4">Probabilita Varianti (Collezione Icone)</h4>
                     <p class="text-xs text-gray-400 mb-3">Le probabilita devono sommare a 100%</p>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span> Normale (%)
                             </label>
-                            <input type="number" id="figurine-prob-normale" value="${config.rarityProbabilities?.normale || 55}"
+                            <input type="number" id="figurine-prob-normale" value="${probs.normale || 50}"
                                    class="w-full p-2 rounded bg-gray-600 text-white prob-input" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto (%)
                             </label>
-                            <input type="number" id="figurine-prob-evoluto" value="${config.rarityProbabilities?.evoluto || 25}"
+                            <input type="number" id="figurine-prob-evoluto" value="${probs.evoluto || 25}"
                                    class="w-full p-2 rounded bg-gray-600 text-white prob-input" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative (%)
                             </label>
-                            <input type="number" id="figurine-prob-alternative" value="${config.rarityProbabilities?.alternative || 15}"
+                            <input type="number" id="figurine-prob-alternative" value="${probs.alternative || 12}"
                                    class="w-full p-2 rounded bg-gray-600 text-white prob-input" min="0" max="100" step="1">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">
                                 <span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span> Ultimate (%)
                             </label>
-                            <input type="number" id="figurine-prob-ultimate" value="${config.rarityProbabilities?.ultimate || 5}"
+                            <input type="number" id="figurine-prob-ultimate" value="${probs.ultimate || 8}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white prob-input" min="0" max="100" step="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">
+                                <span class="inline-block w-3 h-3 rounded-full bg-pink-500 mr-1"></span> Fantasy (%)
+                            </label>
+                            <input type="number" id="figurine-prob-fantasy" value="${probs.fantasy || 5}"
                                    class="w-full p-2 rounded bg-gray-600 text-white prob-input" min="0" max="100" step="1">
                         </div>
                     </div>
                     <p id="figurine-prob-total" class="text-center mt-3 text-sm font-bold"></p>
                 </div>
 
-                <!-- Reward Scambio -->
+                <!-- Reward Scambio (5 varianti + base) -->
                 <div class="bg-gray-700 p-4 rounded-lg">
                     <h4 class="text-lg font-bold text-purple-300 mb-4">Reward Scambio Duplicati (CS)</h4>
-                    <div class="grid grid-cols-4 gap-3">
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Normale</label>
                             <input type="number" id="figurine-trade-normale" value="${config.tradeRewards?.normale || 50}"
@@ -119,15 +145,27 @@ window.AdminFigurine = {
                             <input type="number" id="figurine-trade-ultimate" value="${config.tradeRewards?.ultimate || 300}"
                                    class="w-full p-2 rounded bg-gray-600 text-white text-sm" min="0">
                         </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Fantasy</label>
+                            <input type="number" id="figurine-trade-fantasy" value="${config.tradeRewards?.fantasy || 300}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white text-sm" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Base</label>
+                            <input type="number" id="figurine-trade-base" value="${config.tradeRewards?.base || 25}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white text-sm" min="0">
+                        </div>
                     </div>
                 </div>
 
                 <!-- Statistiche -->
                 <div class="bg-gray-700 p-4 rounded-lg">
                     <h4 class="text-lg font-bold text-purple-300 mb-2">Info Sistema</h4>
-                    <div class="text-sm text-gray-400">
+                    <div class="text-sm text-gray-400 space-y-1">
                         <p>Icone disponibili: <span class="text-white font-bold">${window.FigurineSystem?.getIconeList()?.length || 0}</span></p>
-                        <p>Figurine totali per album completo: <span class="text-white font-bold">${(window.FigurineSystem?.getIconeList()?.length || 0) * 4}</span></p>
+                        <p>Figurine Icone (5 varianti): <span class="text-white font-bold">${(window.FigurineSystem?.getIconeList()?.length || 0) * 5}</span></p>
+                        <p>Giocatori Seri: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.GIOCATORI_SERI_FILES || {}).length}</span></p>
+                        <p>Allenatori: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.ALLENATORI_FILES || {}).length}</span></p>
                     </div>
                 </div>
 
@@ -156,23 +194,30 @@ window.AdminFigurine = {
     async loadConfigFromFirestore() {
         const defaults = {
             enabled: true,
-            packPriceCSS: 1,
-            bonusFigurineChance: 0.05,
-            freePackCooldownHours: 8,
+            freePackCooldownHours: 6,
+            freePackChance2: 0.01,
             completionBonus: 500,
             sectionBonus: 50,
             tradeRequiredCount: 3,
-            rarityProbabilities: {
-                normale: 55,
+            collectionPackPrices: {
+                icone: 1,
+                giocatori_seri: 1,
+                allenatori: 1
+            },
+            iconeProbabilities: {
+                normale: 50,
                 evoluto: 25,
-                alternative: 15,
-                ultimate: 5
+                alternative: 12,
+                ultimate: 8,
+                fantasy: 5
             },
             tradeRewards: {
                 normale: 50,
                 evoluto: 75,
                 alternative: 150,
-                ultimate: 300
+                ultimate: 300,
+                fantasy: 300,
+                base: 25
             }
         };
 
@@ -189,9 +234,13 @@ window.AdminFigurine = {
                 return {
                     ...defaults,
                     ...data,
-                    rarityProbabilities: {
-                        ...defaults.rarityProbabilities,
-                        ...(data.rarityProbabilities || {})
+                    collectionPackPrices: {
+                        ...defaults.collectionPackPrices,
+                        ...(data.collectionPackPrices || {})
+                    },
+                    iconeProbabilities: {
+                        ...defaults.iconeProbabilities,
+                        ...(data.iconeProbabilities || data.rarityProbabilities || {})
                     },
                     tradeRewards: {
                         ...defaults.tradeRewards,
@@ -239,15 +288,16 @@ window.AdminFigurine = {
     },
 
     /**
-     * Aggiorna il totale delle probabilita
+     * Aggiorna il totale delle probabilita (5 varianti)
      */
     updateProbabilityTotal() {
         const normale = parseInt(document.getElementById('figurine-prob-normale')?.value) || 0;
         const evoluto = parseInt(document.getElementById('figurine-prob-evoluto')?.value) || 0;
         const alternative = parseInt(document.getElementById('figurine-prob-alternative')?.value) || 0;
         const ultimate = parseInt(document.getElementById('figurine-prob-ultimate')?.value) || 0;
+        const fantasy = parseInt(document.getElementById('figurine-prob-fantasy')?.value) || 0;
 
-        const total = normale + evoluto + alternative + ultimate;
+        const total = normale + evoluto + alternative + ultimate + fantasy;
         const totalEl = document.getElementById('figurine-prob-total');
 
         if (totalEl) {
@@ -267,23 +317,30 @@ window.AdminFigurine = {
     collectFormData() {
         return {
             enabled: true,
-            packPriceCSS: parseInt(document.getElementById('figurine-pack-price-css')?.value) || 1,
-            bonusFigurineChance: (parseInt(document.getElementById('figurine-bonus-chance')?.value) || 5) / 100,
-            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 8,
+            freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 6,
+            freePackChance2: (parseInt(document.getElementById('figurine-bonus-chance')?.value) || 1) / 100,
             completionBonus: parseInt(document.getElementById('figurine-completion-bonus')?.value) || 500,
             sectionBonus: parseInt(document.getElementById('figurine-section-bonus')?.value) || 50,
             tradeRequiredCount: parseInt(document.getElementById('figurine-trade-count')?.value) || 3,
-            rarityProbabilities: {
-                normale: parseInt(document.getElementById('figurine-prob-normale')?.value) || 55,
+            collectionPackPrices: {
+                icone: parseInt(document.getElementById('figurine-price-icone')?.value) || 1,
+                giocatori_seri: parseInt(document.getElementById('figurine-price-giocatori')?.value) || 1,
+                allenatori: parseInt(document.getElementById('figurine-price-allenatori')?.value) || 1
+            },
+            iconeProbabilities: {
+                normale: parseInt(document.getElementById('figurine-prob-normale')?.value) || 50,
                 evoluto: parseInt(document.getElementById('figurine-prob-evoluto')?.value) || 25,
-                alternative: parseInt(document.getElementById('figurine-prob-alternative')?.value) || 15,
-                ultimate: parseInt(document.getElementById('figurine-prob-ultimate')?.value) || 5
+                alternative: parseInt(document.getElementById('figurine-prob-alternative')?.value) || 12,
+                ultimate: parseInt(document.getElementById('figurine-prob-ultimate')?.value) || 8,
+                fantasy: parseInt(document.getElementById('figurine-prob-fantasy')?.value) || 5
             },
             tradeRewards: {
                 normale: parseInt(document.getElementById('figurine-trade-normale')?.value) || 50,
                 evoluto: parseInt(document.getElementById('figurine-trade-evoluto')?.value) || 75,
                 alternative: parseInt(document.getElementById('figurine-trade-alternative')?.value) || 150,
-                ultimate: parseInt(document.getElementById('figurine-trade-ultimate')?.value) || 300
+                ultimate: parseInt(document.getElementById('figurine-trade-ultimate')?.value) || 300,
+                fantasy: parseInt(document.getElementById('figurine-trade-fantasy')?.value) || 300,
+                base: parseInt(document.getElementById('figurine-trade-base')?.value) || 25
             }
         };
     },
@@ -303,9 +360,9 @@ window.AdminFigurine = {
         try {
             const formData = this.collectFormData();
 
-            // Valida probabilita
-            const { normale, evoluto, alternative, ultimate } = formData.rarityProbabilities;
-            const totalProb = normale + evoluto + alternative + ultimate;
+            // Valida probabilita (5 varianti)
+            const { normale, evoluto, alternative, ultimate, fantasy } = formData.iconeProbabilities;
+            const totalProb = normale + evoluto + alternative + ultimate + fantasy;
 
             if (totalProb !== 100) {
                 throw new Error(`Le probabilita devono sommare a 100% (attuale: ${totalProb}%)`);
@@ -330,11 +387,12 @@ window.AdminFigurine = {
                 window.FigurineSystem._config = formData;
                 window.FigurineSystem._configLoaded = true;
 
-                // Aggiorna le probabilita in RARITIES
-                window.FigurineSystem.RARITIES.normale.probability = normale / 100;
-                window.FigurineSystem.RARITIES.evoluto.probability = evoluto / 100;
-                window.FigurineSystem.RARITIES.alternative.probability = alternative / 100;
-                window.FigurineSystem.RARITIES.ultimate.probability = ultimate / 100;
+                // Aggiorna le probabilita in ICONE_RARITIES
+                window.FigurineSystem.ICONE_RARITIES.normale.probability = normale / 100;
+                window.FigurineSystem.ICONE_RARITIES.evoluto.probability = evoluto / 100;
+                window.FigurineSystem.ICONE_RARITIES.alternative.probability = alternative / 100;
+                window.FigurineSystem.ICONE_RARITIES.ultimate.probability = ultimate / 100;
+                window.FigurineSystem.ICONE_RARITIES.fantasy.probability = fantasy / 100;
             }
 
             if (msgEl) {
@@ -373,23 +431,30 @@ window.AdminFigurine = {
         try {
             const defaults = {
                 enabled: true,
-                packPriceCSS: 1,
-                bonusFigurineChance: 0.05,
-                freePackCooldownHours: 8,
+                freePackCooldownHours: 6,
+                freePackChance2: 0.01,
                 completionBonus: 500,
                 sectionBonus: 50,
                 tradeRequiredCount: 3,
-                rarityProbabilities: {
-                    normale: 55,
+                collectionPackPrices: {
+                    icone: 1,
+                    giocatori_seri: 1,
+                    allenatori: 1
+                },
+                iconeProbabilities: {
+                    normale: 50,
                     evoluto: 25,
-                    alternative: 15,
-                    ultimate: 5
+                    alternative: 12,
+                    ultimate: 8,
+                    fantasy: 5
                 },
                 tradeRewards: {
                     normale: 50,
                     evoluto: 75,
                     alternative: 150,
-                    ultimate: 300
+                    ultimate: 300,
+                    fantasy: 300,
+                    base: 25
                 }
             };
 
@@ -405,10 +470,11 @@ window.AdminFigurine = {
             if (window.FigurineSystem) {
                 window.FigurineSystem._config = defaults;
                 window.FigurineSystem._configLoaded = true;
-                window.FigurineSystem.RARITIES.normale.probability = 0.55;
-                window.FigurineSystem.RARITIES.evoluto.probability = 0.25;
-                window.FigurineSystem.RARITIES.alternative.probability = 0.15;
-                window.FigurineSystem.RARITIES.ultimate.probability = 0.05;
+                window.FigurineSystem.ICONE_RARITIES.normale.probability = 0.50;
+                window.FigurineSystem.ICONE_RARITIES.evoluto.probability = 0.25;
+                window.FigurineSystem.ICONE_RARITIES.alternative.probability = 0.12;
+                window.FigurineSystem.ICONE_RARITIES.ultimate.probability = 0.08;
+                window.FigurineSystem.ICONE_RARITIES.fantasy.probability = 0.05;
             }
 
             // Ricarica pannello

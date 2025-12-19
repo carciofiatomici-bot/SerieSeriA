@@ -14,122 +14,212 @@ window.FigurineSystem = {
     FIGURINE_BASE_URL: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/',
 
     // Mapping completo da icona ID a nomi file figurine (nomi esatti come su GitHub)
-    // Formato: { normale, evoluto, alternative, ultimate }
+    // Formato: { normale, evoluto, alternative, ultimate, fantasy }
     FIGURINE_FILES: {
         'croc': {
             normale: 'Croccante.jpg',
             evoluto: 'Croccante Evoluto.jpg',
             alternative: 'Croccante Alternative.jpg',
-            ultimate: 'Croccante Ultimate.jpg'
+            ultimate: 'Croccante Ultimate.jpg',
+            fantasy: 'Croccante Fantasy.jpg'
         },
         'shik': {
             normale: 'shikanto.jpg',
             evoluto: 'shikanto evoluto.jpg',
             alternative: 'shikanto alternative.jpg',
-            ultimate: 'shikanto ultimate.jpg'
+            ultimate: 'shikanto ultimate.jpg',
+            fantasy: 'shikanto fantasy.jpg'
         },
         'ilcap': {
             normale: 'cap.jpg',
             evoluto: 'cap evoluto.jpg',
             alternative: 'cap alternative.jpg',
-            ultimate: 'cap ultimate.jpg'
+            ultimate: 'cap ultimate.jpg',
+            fantasy: 'cap fantasy.jpg'
         },
         'simo': {
             normale: 'simone.jpg',
             evoluto: 'simone evolved.jpg',
             alternative: 'simone alternative.jpg',
-            ultimate: 'simone ultimate.jpg'
+            ultimate: 'simone ultimate.jpg',
+            fantasy: 'simone fantasy.jpg'
         },
         'dappi': {
             normale: 'dappino.png',
             evoluto: 'dappino evolved.jpg',
             alternative: 'dappino alternative.jpg',
-            ultimate: 'dappino ultimate.jpg'
+            ultimate: 'dappino ultimate.jpg',
+            fantasy: 'dappino fantasy.jpg'
         },
         'gladio': {
             normale: 'gladio.jpg',
             evoluto: 'gladio evoluto.jpg',
             alternative: 'gladio alternative.jpg',
-            ultimate: 'gladio ultimate.jpg'
+            ultimate: 'gladio ultimate.jpg',
+            fantasy: 'gladio fantasy.jpg'
         },
         'amedemo': {
             normale: 'amedemo.jpg',
             evoluto: 'amedemo evolved.jpg',
             alternative: 'amedemo alternative.jpg',
-            ultimate: 'amedemo ultimate.jpg'
+            ultimate: 'amedemo ultimate.jpg',
+            fantasy: 'amedemo fantasy.jpg'
         },
         'flavio': {
             normale: 'elficario.jpg',
             evoluto: 'elficario evoluto.jpg',
             alternative: 'elficario alternative.jpg',
-            ultimate: 'elficario ultimate.jpg'
+            ultimate: 'elficario ultimate.jpg',
+            fantasy: 'elficario fantasy.jpg'
         },
         'luka': {
             normale: 'luca.jpg',
             evoluto: 'luca evolved.jpg',
             alternative: 'luca alternative.jpg',
-            ultimate: 'luca ultimate.jpg'
+            ultimate: 'luca ultimate.jpg',
+            fantasy: 'luca fantasy.jpg'
         },
         'melio': {
             normale: 'Mel.jpg',
             evoluto: 'mel evolved.jpg',
             alternative: 'mel alternative.jpg',
-            ultimate: 'mel ultimate.jpg'
+            ultimate: 'mel ultimate.jpg',
+            fantasy: 'mel fantasy.jpg'
         },
         'markf': {
             normale: 'Mark Falco.jpg',
             evoluto: 'mark falco evoluto.jpg',
             alternative: 'mark falco alternative.jpg',
-            ultimate: 'mark falco ultimate.jpg'
+            ultimate: 'mark falco ultimate.jpg',
+            fantasy: 'mark falco fantasy.jpg'
         },
         'sandro': {
             normale: 'sandro.jpg',
             evoluto: 'sandro evoluto.jpg',
             alternative: 'sandro alternative.jpg',
-            ultimate: 'sandro ultimate.jpg'
+            ultimate: 'sandro ultimate.jpg',
+            fantasy: 'sandro fantasy.jpg'
         },
         'fosco': {
             normale: 'Fosco.jpg',
             evoluto: 'fosco evoluto.jpg',
             alternative: 'fosco alternative.jpg',
-            ultimate: 'fosco ultimate.jpg'
+            ultimate: 'fosco ultimate.jpg',
+            fantasy: 'fosco fantasy.jpg'
         },
         'cocco': {
             normale: 'cocco.jpg',
             evoluto: 'Cocco evoluto.jpg',
             alternative: 'Cocco alternative.jpg',
-            ultimate: 'cocco ultimate.jpg'
+            ultimate: 'cocco ultimate.jpg',
+            fantasy: 'cocco fantasy.jpg'
         },
         'blatta': {
             normale: 'Bemolle.jpg',
             evoluto: 'Bemolle Evoluto.jpg',
             alternative: 'Bemolle Alternative.jpg',
-            ultimate: 'Bemolle Ultimate.jpg'
+            ultimate: 'Bemolle Ultimate.jpg',
+            fantasy: 'Bemolle Fantasy.jpg'
         },
         'antony': {
             normale: 'antony.jpg',
             evoluto: 'Antony Evoluto.jpg',
             alternative: 'Antony Alternative.jpg',
-            ultimate: 'Antony Ultimate.jpg'
+            ultimate: 'Antony Ultimate.jpg',
+            fantasy: 'Antony Fantasy.jpg'
         }
     },
 
-    // Tipi figurine disponibili (4 varianti)
-    RARITIES: {
-        normale: { id: 'normale', name: 'Normale', color: 'gray', probability: 0.55, cssClass: 'border-gray-400' },
-        evoluto: { id: 'evoluto', name: 'Evoluto', color: 'blue', probability: 0.25, cssClass: 'border-blue-500' },
-        alternative: { id: 'alternative', name: 'Alternative', color: 'purple', probability: 0.15, cssClass: 'border-purple-500' },
-        ultimate: { id: 'ultimate', name: 'Ultimate', color: 'yellow', probability: 0.05, cssClass: 'border-yellow-400' }
+    // Mapping per collezione Giocatori Seri
+    GIOCATORI_SERI_FILES: {
+        'alessandro_salucci': { base: 'Alessandro Salucci.jpg', name: 'Alessandro Salucci' },
+        'alex_fuoco': { base: 'Alex Fuoco.jpg', name: 'Alex Fuoco' },
+        'armando_machedonna': { base: 'Armando Machedonna.jpg', name: 'Armando Machedonna' },
+        'baldovini_domenico': { base: 'Baldovini Domenico.jpg', name: 'Baldovini Domenico' },
+        'claudio_broccolo': { base: 'Claudio Broccolo.jpg', name: 'Claudio Broccolo' },
+        'costantino_tiraboschi': { base: 'Costantino Tiraboschi.jpg', name: 'Costantino Tiraboschi' },
+        'dado_abrami': { base: 'Dado Abrami.jpg', name: 'Dado Abrami' },
+        'daniele_busto': { base: 'Daniele Busto.jpg', name: 'Daniele Busto' },
+        'eros_hamschick': { base: 'Eros Hamschick.jpg', name: 'Eros Hamschick' },
+        'harry_poster': { base: 'Harry Poster.jpg', name: 'Harry Poster' },
+        'jeanluigi_provolone': { base: 'Jeanluigi Provolone.jpg', name: 'Jeanluigi Provolone' },
+        'joaquin_del_rio': { base: 'Joaquin Del Rio.jpg', name: 'Joaquin Del Rio' },
+        'pino_costa': { base: 'Pino Costa.jpg', name: 'Pino Costa' },
+        'roberto_lgabowsky': { base: 'Roberto Lgabowsky.jpg', name: 'Roberto Lgabowsky' },
+        'silvano_abategiovanni': { base: 'Silvano Abategiovanni.jpg', name: 'Silvano Abategiovanni' },
+        'vico_motta': { base: 'Vico Motta.jpg', name: 'Vico Motta' },
+        'viola_augusto': { base: 'Viola Augusto.jpg', name: 'Viola Augusto' }
     },
 
-    // Bonus associati alle varianti quando usate come avatar
+    // Mapping per collezione Allenatori (da popolare)
+    ALLENATORI_FILES: {
+        // Esempio: 'allenatore1': { base: 'NomeAllenatore.jpg' }
+    },
+
+    // ==================== COLLEZIONI ====================
+    // Sistema multi-collezione per figurine
+    COLLECTIONS: {
+        icone: {
+            id: 'icone',
+            name: 'Icone',
+            description: 'Le leggendarie icone del calcetto',
+            icon: '👑',
+            enabled: true,
+            hasBonus: true,  // Le varianti danno bonus
+            variants: ['normale', 'evoluto', 'alternative', 'ultimate', 'fantasy'],
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/'
+        },
+        giocatori_seri: {
+            id: 'giocatori_seri',
+            name: 'Giocatori Seri',
+            description: 'I giocatori piu seri del campionato',
+            icon: '⚽',
+            enabled: true,
+            hasBonus: false,  // Solo collezionabili
+            variants: ['base'],
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Giocatori%20Seri/'
+        },
+        allenatori: {
+            id: 'allenatori',
+            name: 'Allenatori',
+            description: 'I mister che guidano le squadre',
+            icon: '📋',
+            enabled: false,  // Disabilitato - cartella non presente
+            hasBonus: false,  // Solo collezionabili
+            variants: ['base'],
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Allenatori/'
+        }
+    },
+
+    // Varianti per collezione Icone (5 varianti)
+    ICONE_RARITIES: {
+        normale: { id: 'normale', name: 'Normale', color: 'gray', probability: 0.50, cssClass: 'border-gray-400' },
+        evoluto: { id: 'evoluto', name: 'Evoluto', color: 'blue', probability: 0.25, cssClass: 'border-blue-500' },
+        alternative: { id: 'alternative', name: 'Alternative', color: 'purple', probability: 0.12, cssClass: 'border-purple-500' },
+        ultimate: { id: 'ultimate', name: 'Ultimate', color: 'yellow', probability: 0.08, cssClass: 'border-yellow-400' },
+        fantasy: { id: 'fantasy', name: 'Fantasy', color: 'pink', probability: 0.05, cssClass: 'border-pink-500' }
+    },
+
+    // Varianti per collezioni senza bonus (solo base)
+    BASE_RARITIES: {
+        base: { id: 'base', name: 'Base', color: 'emerald', probability: 1.0, cssClass: 'border-emerald-500' }
+    },
+
+    // Alias per retrocompatibilita
+    get RARITIES() {
+        return this.ICONE_RARITIES;
+    },
+
+    // Bonus associati alle varianti quando usate come avatar (solo per Icone)
     // iconaChance: bonus % alla probabilita di attivazione bonus icona (base 50%)
     // xpBonus: bonus % all'XP formazione guadagnato dopo le partite
     VARIANT_BONUSES: {
         normale: { iconaChance: 0, xpBonus: 0, description: 'Nessun bonus' },
         evoluto: { iconaChance: 5, xpBonus: 5, description: '+5% Icona | +5% XP' },
         alternative: { iconaChance: 10, xpBonus: 10, description: '+10% Icona | +10% XP' },
-        ultimate: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' }
+        ultimate: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' },
+        fantasy: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' },
+        base: { iconaChance: 0, xpBonus: 0, description: 'Nessun bonus' }
     },
 
     // Cache
@@ -190,20 +280,40 @@ window.FigurineSystem = {
     getDefaultConfig() {
         return {
             enabled: true,
-            packPriceCSS: 1,            // CSS per pacchetto (Crediti Super Seri)
-            packPrice: 0,               // CS per pacchetto (non usato, ora si usa CSS)
-            figurinesPerPack: 1,        // Figurine base per pacchetto
-            bonusFigurineChance: 0.05,  // 5% probabilita di ottenere 2 figurine invece di 1
-            freePackCooldownHours: 8,   // Ore di cooldown dopo apertura pacchetto gratis
+            // Pacchetto gratis (tutte le collezioni)
+            freePackCooldownHours: 6,   // Ore di cooldown dopo apertura pacchetto gratis
+            freePackChance1: 0.99,      // 99% = 1 figurina
+            freePackChance2: 0.01,      // 1% = 2 figurine
+            // Prezzi pacchetti specifici per collezione (in CSS)
+            collectionPackPrices: {
+                icone: 1,
+                giocatori_seri: 1,
+                allenatori: 1
+            },
+            // Probabilita varianti per collezione Icone
+            iconeProbabilities: {
+                normale: 50,
+                evoluto: 25,
+                alternative: 12,
+                ultimate: 8,
+                fantasy: 5
+            },
+            // Legacy (retrocompatibilita)
+            packPriceCSS: 1,
+            packPrice: 0,
+            figurinesPerPack: 1,
+            bonusFigurineChance: 0.01,  // 1% per pacchetto gratis (2 invece di 1)
             completionBonus: 500,       // Bonus per album completo
-            sectionBonus: 50,           // Bonus per sezione completa (1 icona tutte rarita)
+            sectionBonus: 50,           // Bonus per sezione completa
             // Scambio figurine duplicate: 3 figurine = X CS
-            tradeRequiredCount: 3,      // Figurine richieste per scambio
+            tradeRequiredCount: 3,
             tradeRewards: {
-                normale: 50,            // 3 normali = 50 CS
-                evoluto: 75,            // 3 evolute = 75 CS
-                alternative: 150,       // 3 alternative = 150 CS
-                ultimate: 300           // 3 ultimate = 300 CS
+                normale: 50,
+                evoluto: 75,
+                alternative: 150,
+                ultimate: 300,
+                fantasy: 300,           // Stesso valore di ultimate
+                base: 25                // Per collezioni senza varianti
             }
         };
     },
@@ -230,14 +340,15 @@ window.FigurineSystem = {
             if (docSnap.exists()) {
                 this._config = { ...this.getDefaultConfig(), ...docSnap.data() };
 
-                // Applica le probabilita salvate su Firestore
-                if (this._config.rarityProbabilities) {
-                    const probs = this._config.rarityProbabilities;
-                    if (probs.normale !== undefined) this.RARITIES.normale.probability = probs.normale / 100;
-                    if (probs.evoluto !== undefined) this.RARITIES.evoluto.probability = probs.evoluto / 100;
-                    if (probs.alternative !== undefined) this.RARITIES.alternative.probability = probs.alternative / 100;
-                    if (probs.ultimate !== undefined) this.RARITIES.ultimate.probability = probs.ultimate / 100;
-                    console.log('[Figurine] Probabilita caricate da Firestore:', probs);
+                // Applica le probabilita salvate su Firestore (legacy + nuovo formato)
+                const probs = this._config.iconeProbabilities || this._config.rarityProbabilities;
+                if (probs) {
+                    if (probs.normale !== undefined) this.ICONE_RARITIES.normale.probability = probs.normale / 100;
+                    if (probs.evoluto !== undefined) this.ICONE_RARITIES.evoluto.probability = probs.evoluto / 100;
+                    if (probs.alternative !== undefined) this.ICONE_RARITIES.alternative.probability = probs.alternative / 100;
+                    if (probs.ultimate !== undefined) this.ICONE_RARITIES.ultimate.probability = probs.ultimate / 100;
+                    if (probs.fantasy !== undefined) this.ICONE_RARITIES.fantasy.probability = probs.fantasy / 100;
+                    console.log('[Figurine] Probabilita Icone caricate da Firestore:', probs);
                 }
             } else {
                 this._config = this.getDefaultConfig();
@@ -338,25 +449,45 @@ window.FigurineSystem = {
     },
 
     /**
-     * Crea un album vuoto
+     * Crea un album vuoto (multi-collezione)
      */
     createEmptyAlbum(teamId) {
         const icone = this.getIconeList();
-        const collection = {};
 
-        // Inizializza tutte le figurine a 0 (4 tipi)
+        // Collezione Icone (5 varianti)
+        const iconeCollection = {};
         icone.forEach(icona => {
-            collection[icona.id] = {
+            iconeCollection[icona.id] = {
                 normale: 0,
                 evoluto: 0,
                 alternative: 0,
-                ultimate: 0
+                ultimate: 0,
+                fantasy: 0
             };
+        });
+
+        // Collezione Giocatori Seri (solo base)
+        const giocatoriSeriCollection = {};
+        Object.keys(this.GIOCATORI_SERI_FILES).forEach(id => {
+            giocatoriSeriCollection[id] = { base: 0 };
+        });
+
+        // Collezione Allenatori (solo base)
+        const allenatoriCollection = {};
+        Object.keys(this.ALLENATORI_FILES).forEach(id => {
+            allenatoriCollection[id] = { base: 0 };
         });
 
         return {
             teamId,
-            collection,
+            // Legacy (retrocompatibilita)
+            collection: iconeCollection,
+            // Nuovo sistema multi-collezione
+            collections: {
+                icone: iconeCollection,
+                giocatori_seri: giocatoriSeriCollection,
+                allenatori: allenatoriCollection
+            },
             totalFigurine: 0,
             uniqueFigurine: 0,
             lastFreePack: null,
@@ -399,18 +530,18 @@ window.FigurineSystem = {
     // ==================== STATISTICHE ====================
 
     /**
-     * Conta il totale delle figurine (inclusi duplicati)
+     * Conta il totale delle figurine (inclusi duplicati) - collezione Icone
      */
     countTotalFigurine(collection) {
         let total = 0;
         Object.values(collection).forEach(icona => {
-            total += (icona.normale || 0) + (icona.evoluto || 0) + (icona.alternative || 0) + (icona.ultimate || 0);
+            total += (icona.normale || 0) + (icona.evoluto || 0) + (icona.alternative || 0) + (icona.ultimate || 0) + (icona.fantasy || 0);
         });
         return total;
     },
 
     /**
-     * Conta le figurine uniche (almeno 1 di ogni tipo)
+     * Conta le figurine uniche (almeno 1 di ogni tipo) - collezione Icone
      */
     countUniqueFigurine(collection) {
         let unique = 0;
@@ -419,17 +550,57 @@ window.FigurineSystem = {
             if (icona.evoluto > 0) unique++;
             if (icona.alternative > 0) unique++;
             if (icona.ultimate > 0) unique++;
+            if (icona.fantasy > 0) unique++;
         });
         return unique;
     },
 
     /**
-     * Ottiene le sezioni complete (tutte e 4 le varianti di un giocatore)
+     * Conta totale figurine per una collezione specifica
+     */
+    countCollectionTotal(collections, collectionId) {
+        const coll = collections?.[collectionId];
+        if (!coll) return 0;
+
+        let total = 0;
+        const collectionDef = this.COLLECTIONS[collectionId];
+        const variants = collectionDef?.variants || ['base'];
+
+        Object.values(coll).forEach(item => {
+            variants.forEach(v => {
+                total += item[v] || 0;
+            });
+        });
+        return total;
+    },
+
+    /**
+     * Conta figurine uniche per una collezione specifica
+     */
+    countCollectionUnique(collections, collectionId) {
+        const coll = collections?.[collectionId];
+        if (!coll) return 0;
+
+        let unique = 0;
+        const collectionDef = this.COLLECTIONS[collectionId];
+        const variants = collectionDef?.variants || ['base'];
+
+        Object.values(coll).forEach(item => {
+            variants.forEach(v => {
+                if ((item[v] || 0) > 0) unique++;
+            });
+        });
+        return unique;
+    },
+
+    /**
+     * Ottiene le sezioni complete (tutte le varianti di un personaggio) - collezione Icone
      */
     getCompletedSections(collection) {
         const completed = [];
         Object.entries(collection).forEach(([iconaId, counts]) => {
-            if (counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0) {
+            // Tutte e 5 le varianti per le Icone
+            if (counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0 && counts.fantasy > 0) {
                 completed.push(iconaId);
             }
         });
@@ -437,23 +608,71 @@ window.FigurineSystem = {
     },
 
     /**
-     * Verifica se l'album e completo
+     * Verifica se l'album Icone e completo
      */
     isAlbumComplete(collection) {
         const icone = this.getIconeList();
         return Object.values(collection).every(counts =>
-            counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0
+            counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0 && counts.fantasy > 0
         ) && Object.keys(collection).length >= icone.length;
     },
 
     /**
-     * Calcola la percentuale di completamento
+     * Verifica se una collezione specifica e completa
+     */
+    isCollectionComplete(collections, collectionId) {
+        const coll = collections?.[collectionId];
+        if (!coll) return false;
+
+        const collectionDef = this.COLLECTIONS[collectionId];
+        const variants = collectionDef?.variants || ['base'];
+        const files = this.getCollectionFiles(collectionId);
+
+        if (Object.keys(coll).length < Object.keys(files).length) return false;
+
+        return Object.values(coll).every(item =>
+            variants.every(v => (item[v] || 0) > 0)
+        );
+    },
+
+    /**
+     * Calcola la percentuale di completamento - collezione Icone
      */
     getCompletionPercentage(collection) {
         const icone = this.getIconeList();
-        const maxFigurine = icone.length * 4; // 4 varianti per giocatore
+        const maxFigurine = icone.length * 5; // 5 varianti per icona
         const unique = this.countUniqueFigurine(collection);
         return Math.round((unique / maxFigurine) * 100);
+    },
+
+    /**
+     * Calcola percentuale di completamento per una collezione specifica
+     */
+    getCollectionCompletionPercentage(collections, collectionId) {
+        const coll = collections?.[collectionId];
+        if (!coll) return 0;
+
+        const files = this.getCollectionFiles(collectionId);
+        const collectionDef = this.COLLECTIONS[collectionId];
+        const variants = collectionDef?.variants || ['base'];
+        const maxFigurine = Object.keys(files).length * variants.length;
+
+        if (maxFigurine === 0) return 0;
+
+        const unique = this.countCollectionUnique(collections, collectionId);
+        return Math.round((unique / maxFigurine) * 100);
+    },
+
+    /**
+     * Ottiene i file per una collezione specifica
+     */
+    getCollectionFiles(collectionId) {
+        switch (collectionId) {
+            case 'icone': return this.FIGURINE_FILES;
+            case 'giocatori_seri': return this.GIOCATORI_SERI_FILES;
+            case 'allenatori': return this.ALLENATORI_FILES;
+            default: return {};
+        }
     },
 
     // ==================== PACCHETTI ====================
@@ -530,88 +749,146 @@ window.FigurineSystem = {
     },
 
     /**
-     * Estrae una figurina casuale
+     * Estrae una figurina casuale dalla collezione Icone
      */
     extractRandomFigurina() {
-        const icone = this.getIconeList();
-        const randomIcona = icone[Math.floor(Math.random() * icone.length)];
+        return this.extractRandomFromCollection('icone');
+    },
 
-        // Determina tipo figurina (probabilita cumulative)
-        const roll = Math.random();
-        let rarity = 'normale';
-
-        // Ultimate: 5%, Alternative: 15%, Evoluto: 25%, Normale: 55%
-        if (roll < this.RARITIES.ultimate.probability) {
-            rarity = 'ultimate';
-        } else if (roll < this.RARITIES.ultimate.probability + this.RARITIES.alternative.probability) {
-            rarity = 'alternative';
-        } else if (roll < this.RARITIES.ultimate.probability + this.RARITIES.alternative.probability + this.RARITIES.evoluto.probability) {
-            rarity = 'evoluto';
+    /**
+     * Estrae una figurina casuale da una collezione specifica
+     * @param {string} collectionId - ID della collezione (icone, giocatori_seri, allenatori)
+     */
+    extractRandomFromCollection(collectionId) {
+        const collectionDef = this.COLLECTIONS[collectionId];
+        if (!collectionDef) {
+            console.error('[Figurine] Collezione non trovata:', collectionId);
+            return null;
         }
 
+        const files = this.getCollectionFiles(collectionId);
+        const itemIds = Object.keys(files);
+
+        if (itemIds.length === 0) {
+            console.warn('[Figurine] Collezione vuota:', collectionId);
+            return null;
+        }
+
+        // Seleziona un elemento casuale dalla collezione
+        const randomId = itemIds[Math.floor(Math.random() * itemIds.length)];
+        const variants = collectionDef.variants;
+
+        let variant = variants[0]; // Default alla prima variante
+
+        if (collectionId === 'icone') {
+            // Per le Icone: determina variante con probabilita cumulative
+            // Ordine: fantasy (5%), ultimate (8%), alternative (12%), evoluto (25%), normale (50%)
+            const roll = Math.random();
+            let cumulative = 0;
+
+            cumulative += this.ICONE_RARITIES.fantasy.probability;
+            if (roll < cumulative) {
+                variant = 'fantasy';
+            } else {
+                cumulative += this.ICONE_RARITIES.ultimate.probability;
+                if (roll < cumulative) {
+                    variant = 'ultimate';
+                } else {
+                    cumulative += this.ICONE_RARITIES.alternative.probability;
+                    if (roll < cumulative) {
+                        variant = 'alternative';
+                    } else {
+                        cumulative += this.ICONE_RARITIES.evoluto.probability;
+                        if (roll < cumulative) {
+                            variant = 'evoluto';
+                        } else {
+                            variant = 'normale';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Ottieni info per collezione Icone
+        if (collectionId === 'icone') {
+            const icona = this.getIconaById(randomId);
+            return {
+                collectionId: 'icone',
+                itemId: randomId,
+                iconaId: randomId, // Legacy
+                iconaName: icona?.name || randomId,
+                iconaPhoto: icona?.photoUrl,
+                rarity: variant,
+                variant: variant,
+                rarityInfo: this.ICONE_RARITIES[variant],
+                imageUrl: this.getFigurineImageUrl(randomId, variant)
+            };
+        }
+
+        // Per altre collezioni (base only)
         return {
-            iconaId: randomIcona.id,
-            iconaName: randomIcona.name,
-            iconaPhoto: randomIcona.photoUrl,
-            rarity: rarity,
-            rarityInfo: this.RARITIES[rarity]
+            collectionId: collectionId,
+            itemId: randomId,
+            variant: 'base',
+            rarity: 'base',
+            rarityInfo: this.BASE_RARITIES.base,
+            imageUrl: `${collectionDef.baseUrl}${encodeURIComponent(files[randomId]?.base || '')}`
         };
     },
 
     /**
-     * Apre un pacchetto di figurine
-     * Costa 1 CSS (Credito Super Serio)
+     * Estrae una figurina casuale da qualsiasi collezione abilitata
+     */
+    extractRandomFromAnyCollection() {
+        const enabledCollections = Object.keys(this.COLLECTIONS).filter(id => {
+            const coll = this.COLLECTIONS[id];
+            const files = this.getCollectionFiles(id);
+            return coll.enabled && Object.keys(files).length > 0;
+        });
+
+        if (enabledCollections.length === 0) {
+            // Fallback a icone
+            return this.extractRandomFigurina();
+        }
+
+        // Seleziona collezione casuale
+        const randomCollectionId = enabledCollections[Math.floor(Math.random() * enabledCollections.length)];
+        return this.extractRandomFromCollection(randomCollectionId);
+    },
+
+    /**
+     * Apre un pacchetto di figurine gratis (da qualsiasi collezione)
      * 99% una figurina, 1% due figurine
      */
-    async openPack(teamId, isFree = false) {
+    async openFreePack(teamId) {
         const config = await this.loadConfig();
         const album = await this.loadTeamAlbum(teamId);
 
-        // Verifica se puo aprire
-        if (isFree && !this.canOpenFreePack(album)) {
+        // Verifica cooldown
+        if (!this.canOpenFreePack(album)) {
             throw new Error('Pacchetto gratis non ancora disponibile');
         }
 
-        if (!isFree) {
-            // Verifica CSS (Crediti Super Seri)
-            const teamData = await this.getTeamData(teamId);
-            const packCost = config.packPriceCSS || 1;
-            const currentCSS = teamData?.creditiSuperSeri || 0;
-
-            if (currentCSS < packCost) {
-                throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
-            }
-
-            // Sottrai CSS
-            await this.updateTeamCSS(teamId, -packCost);
-        }
-
         // Determina numero figurine: 99% una, 1% due
-        const bonusChance = config.bonusFigurineChance || 0.01;
+        const bonusChance = config.freePackChance2 || config.bonusFigurineChance || 0.01;
         const numFigurine = Math.random() < bonusChance ? 2 : 1;
 
-        // Estrai figurine
+        // Estrai figurine da qualsiasi collezione
         const extracted = [];
         for (let i = 0; i < numFigurine; i++) {
-            const figurina = this.extractRandomFigurina();
-            extracted.push(figurina);
-
-            // Aggiungi all'album
-            if (!album.collection[figurina.iconaId]) {
-                album.collection[figurina.iconaId] = { normale: 0, evoluto: 0, alternative: 0, ultimate: 0 };
+            const figurina = this.extractRandomFromAnyCollection();
+            if (figurina) {
+                extracted.push(figurina);
+                this.addFigurinaToAlbum(album, figurina);
             }
-            album.collection[figurina.iconaId][figurina.rarity]++;
         }
 
         // Aggiorna timestamp pacchetto gratis
-        if (isFree) {
-            album.lastFreePack = new Date().toISOString();
-        }
+        album.lastFreePack = new Date().toISOString();
 
-        // Verifica bonus completamento sezioni
+        // Verifica bonus completamento
         const prevCompleted = album.completedSections?.length || 0;
         await this.saveTeamAlbum(teamId, album);
-
         const newCompleted = album.completedSections.length;
         let bonusEarned = 0;
 
@@ -632,25 +909,151 @@ window.FigurineSystem = {
             figurine: extracted,
             album: album,
             bonusEarned: bonusEarned,
-            isFree: isFree,
+            isFree: true,
             gotBonus: numFigurine > 1
         };
+    },
+
+    /**
+     * Apre un pacchetto di figurine a pagamento per una collezione specifica
+     * @param {string} teamId - ID squadra
+     * @param {string} collectionId - ID collezione (icone, giocatori_seri, allenatori)
+     */
+    async openCollectionPack(teamId, collectionId) {
+        const config = await this.loadConfig();
+        const album = await this.loadTeamAlbum(teamId);
+
+        // Verifica che la collezione esista
+        if (!this.COLLECTIONS[collectionId]) {
+            throw new Error(`Collezione "${collectionId}" non trovata`);
+        }
+
+        // Ottieni prezzo pacchetto per questa collezione
+        const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
+
+        // Verifica CSS (Crediti Super Seri)
+        const teamData = await this.getTeamData(teamId);
+        const currentCSS = teamData?.creditiSuperSeri || 0;
+
+        if (currentCSS < packCost) {
+            throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
+        }
+
+        // Sottrai CSS
+        await this.updateTeamCSS(teamId, -packCost);
+
+        // Estrai figurina dalla collezione specifica
+        const figurina = this.extractRandomFromCollection(collectionId);
+        if (!figurina) {
+            // Rimborsa CSS se estrazione fallita
+            await this.updateTeamCSS(teamId, packCost);
+            throw new Error(`Impossibile estrarre da collezione "${collectionId}"`);
+        }
+
+        // Aggiungi all'album
+        this.addFigurinaToAlbum(album, figurina);
+
+        // Verifica bonus completamento
+        const prevCompleted = album.completedSections?.length || 0;
+        await this.saveTeamAlbum(teamId, album);
+        const newCompleted = album.completedSections.length;
+        let bonusEarned = 0;
+
+        if (newCompleted > prevCompleted) {
+            bonusEarned = (newCompleted - prevCompleted) * config.sectionBonus;
+            await this.updateTeamBudget(teamId, bonusEarned);
+        }
+
+        // Verifica album completo
+        if (album.albumComplete && !album.completionBonusAwarded) {
+            await this.updateTeamBudget(teamId, config.completionBonus);
+            album.completionBonusAwarded = true;
+            await this.saveTeamAlbum(teamId, album);
+            bonusEarned += config.completionBonus;
+        }
+
+        return {
+            figurine: [figurina],
+            album: album,
+            bonusEarned: bonusEarned,
+            collectionId: collectionId,
+            cssCost: packCost,
+            isFree: false
+        };
+    },
+
+    /**
+     * Aggiunge una figurina all'album (helper interno)
+     */
+    addFigurinaToAlbum(album, figurina) {
+        const collectionId = figurina.collectionId || 'icone';
+        const itemId = figurina.itemId || figurina.iconaId;
+        const variant = figurina.variant || figurina.rarity;
+
+        // Inizializza struttura collections se non esiste
+        if (!album.collections) {
+            album.collections = {
+                icone: album.collection || {},
+                giocatori_seri: {},
+                allenatori: {}
+            };
+        }
+
+        // Assicurati che la collezione esista
+        if (!album.collections[collectionId]) {
+            album.collections[collectionId] = {};
+        }
+
+        // Assicurati che l'item esista nella collezione
+        if (!album.collections[collectionId][itemId]) {
+            const collDef = this.COLLECTIONS[collectionId];
+            const variants = collDef?.variants || ['base'];
+            album.collections[collectionId][itemId] = {};
+            variants.forEach(v => {
+                album.collections[collectionId][itemId][v] = 0;
+            });
+        }
+
+        // Incrementa il contatore
+        album.collections[collectionId][itemId][variant] = (album.collections[collectionId][itemId][variant] || 0) + 1;
+
+        // Aggiorna anche collection legacy per le icone
+        if (collectionId === 'icone') {
+            if (!album.collection) album.collection = {};
+            if (!album.collection[itemId]) {
+                album.collection[itemId] = { normale: 0, evoluto: 0, alternative: 0, ultimate: 0, fantasy: 0 };
+            }
+            album.collection[itemId][variant] = (album.collection[itemId][variant] || 0) + 1;
+        }
+    },
+
+    /**
+     * Legacy: Apre un pacchetto di figurine
+     * Usa openFreePack o openCollectionPack invece
+     */
+    async openPack(teamId, isFree = false) {
+        if (isFree) {
+            return this.openFreePack(teamId);
+        }
+        // Default a icone per retrocompatibilita
+        return this.openCollectionPack(teamId, 'icone');
     },
 
     // ==================== SCAMBIO FIGURINE ====================
 
     /**
-     * Conta le figurine duplicate scambiabili per rarita
+     * Conta le figurine duplicate scambiabili per rarita (collezione Icone)
      * Duplicate = quelle oltre la prima (quella nell'album)
      * @param {Object} collection - La collezione dell'album
-     * @returns {Object} { normale: X, evoluto: Y, alternative: Z, ultimate: W }
+     * @returns {Object} { normale: X, evoluto: Y, alternative: Z, ultimate: W, fantasy: V }
      */
     countTradableDuplicates(collection) {
         const duplicates = {
             normale: 0,
             evoluto: 0,
             alternative: 0,
-            ultimate: 0
+            ultimate: 0,
+            fantasy: 0
         };
 
         Object.values(collection).forEach(iconaCounts => {
@@ -659,6 +1062,30 @@ window.FigurineSystem = {
             if (iconaCounts.evoluto > 1) duplicates.evoluto += iconaCounts.evoluto - 1;
             if (iconaCounts.alternative > 1) duplicates.alternative += iconaCounts.alternative - 1;
             if (iconaCounts.ultimate > 1) duplicates.ultimate += iconaCounts.ultimate - 1;
+            if (iconaCounts.fantasy > 1) duplicates.fantasy += iconaCounts.fantasy - 1;
+        });
+
+        return duplicates;
+    },
+
+    /**
+     * Conta figurine duplicate per una collezione specifica
+     */
+    countCollectionDuplicates(collections, collectionId) {
+        const coll = collections?.[collectionId];
+        if (!coll) return {};
+
+        const collectionDef = this.COLLECTIONS[collectionId];
+        const variants = collectionDef?.variants || ['base'];
+        const duplicates = {};
+        variants.forEach(v => duplicates[v] = 0);
+
+        Object.values(coll).forEach(item => {
+            variants.forEach(v => {
+                if ((item[v] || 0) > 1) {
+                    duplicates[v] += item[v] - 1;
+                }
+            });
         });
 
         return duplicates;
@@ -672,10 +1099,12 @@ window.FigurineSystem = {
      */
     countPossibleTrades(duplicates, requiredCount = 3) {
         return {
-            normale: Math.floor(duplicates.normale / requiredCount),
-            evoluto: Math.floor(duplicates.evoluto / requiredCount),
-            alternative: Math.floor(duplicates.alternative / requiredCount),
-            ultimate: Math.floor(duplicates.ultimate / requiredCount)
+            normale: Math.floor((duplicates.normale || 0) / requiredCount),
+            evoluto: Math.floor((duplicates.evoluto || 0) / requiredCount),
+            alternative: Math.floor((duplicates.alternative || 0) / requiredCount),
+            ultimate: Math.floor((duplicates.ultimate || 0) / requiredCount),
+            fantasy: Math.floor((duplicates.fantasy || 0) / requiredCount),
+            base: Math.floor((duplicates.base || 0) / requiredCount)
         };
     },
 

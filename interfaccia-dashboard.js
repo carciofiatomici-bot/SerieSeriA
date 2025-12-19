@@ -2351,7 +2351,7 @@ window.InterfacciaDashboard = {
         const currentVariant = currentTeamData.iconaVariant || 'normale';
 
         // Carica l'album figurine per vedere quali varianti possiede
-        let ownedVariants = { normale: 1, evoluto: 0, alternative: 0, ultimate: 0 };
+        let ownedVariants = { normale: 1, evoluto: 0, alternative: 0, ultimate: 0, fantasy: 0 };
 
         if (window.FigurineSystem) {
             try {
@@ -2375,13 +2375,14 @@ window.InterfacciaDashboard = {
         const existingModal = document.getElementById('icona-variant-modal');
         if (existingModal) existingModal.remove();
 
-        // Crea il modal
-        const variants = ['normale', 'evoluto', 'alternative', 'ultimate'];
+        // Crea il modal (5 varianti)
+        const variants = ['normale', 'evoluto', 'alternative', 'ultimate', 'fantasy'];
         const variantLabels = {
             normale: { name: 'Normale', color: 'gray-400', border: 'gray-500' },
             evoluto: { name: 'Evoluto', color: 'blue-400', border: 'blue-500' },
             alternative: { name: 'Alternative', color: 'purple-400', border: 'purple-500' },
-            ultimate: { name: 'Ultimate', color: 'yellow-400', border: 'yellow-500' }
+            ultimate: { name: 'Ultimate', color: 'yellow-400', border: 'yellow-500' },
+            fantasy: { name: 'Fantasy', color: 'pink-400', border: 'pink-500' }
         };
 
         let variantsHtml = '';
@@ -2440,7 +2441,7 @@ window.InterfacciaDashboard = {
                     <p class="text-gray-400 text-sm mb-4">
                         Seleziona una variante per il tuo avatar. Le varianti bloccate richiedono la figurina nell'album.
                     </p>
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                         ${variantsHtml}
                     </div>
                 </div>
@@ -2474,7 +2475,7 @@ window.InterfacciaDashboard = {
 
     /**
      * Salva la variante icona selezionata
-     * @param {string} variant - La variante da salvare (normale, evoluto, alternative, ultimate)
+     * @param {string} variant - La variante da salvare (normale, evoluto, alternative, ultimate, fantasy)
      * @param {string} iconaId - ID dell'icona
      */
     async saveIconaVariant(variant, iconaId) {
