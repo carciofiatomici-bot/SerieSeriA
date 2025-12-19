@@ -107,6 +107,12 @@ window.AdminDataSync = {
         document.getElementById('btn-sync-data')?.addEventListener('click', () => this.repairData());
         document.getElementById('btn-close-sync-panel')?.addEventListener('click', () => {
             // Torna alla vista admin principale
+            // Ricarica il pannello admin ricreando il container e poi renderizzando
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent) {
+                // Ricrea la struttura base del container
+                adminContent.innerHTML = '<div id="admin-dashboard-container" class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl"></div>';
+            }
             if (window.renderAdminDashboardLayout) {
                 window.renderAdminDashboardLayout();
             }
