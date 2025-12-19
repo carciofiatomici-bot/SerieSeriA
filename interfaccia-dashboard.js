@@ -558,10 +558,24 @@ window.InterfacciaDashboard = {
             teamNameBox.style.borderColor = color;
         }
 
-        // Colore testo nome squadra
+        // Colore testo nome squadra (usa gradiente per effetto fancy)
         const teamTitle = document.getElementById('team-dashboard-title');
         if (teamTitle) {
-            teamTitle.style.color = color;
+            // Genera varianti del colore per il gradiente
+            const lighterColor = this.lightenColor(color, 20);
+            const darkerColor = this.darkenColor(color, 10);
+
+            // Applica il gradiente
+            teamTitle.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
+            teamTitle.style.webkitBackgroundClip = 'text';
+            teamTitle.style.backgroundClip = 'text';
+            teamTitle.style.webkitTextFillColor = 'transparent';
+
+            // Aggiorna le ombre
+            const rgbaColor = this.hexToRgba(color, 0.4);
+            const rgbaColorLight = this.hexToRgba(color, 0.2);
+            teamTitle.style.textShadow = `0 0 20px ${rgbaColor}, 0 0 40px ${rgbaColorLight}`;
+            teamTitle.style.filter = `drop-shadow(0 0 8px ${this.hexToRgba(color, 0.3)})`;
         }
 
         // Bordo box Lega Privata
@@ -632,7 +646,41 @@ window.InterfacciaDashboard = {
             console.error('Errore nel salvataggio del colore primario:', error);
         }
     },
-    
+
+    /**
+     * Converte hex in rgba
+     */
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    },
+
+    /**
+     * Schiarisce un colore hex
+     */
+    lightenColor(hex, percent) {
+        const num = parseInt(hex.slice(1), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+    },
+
+    /**
+     * Scurisce un colore hex
+     */
+    darkenColor(hex, percent) {
+        const num = parseInt(hex.slice(1), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+    },
+
     /**
      * NUOVO: Aggiorna l'UI del toggle partecipazione campionato
      */
