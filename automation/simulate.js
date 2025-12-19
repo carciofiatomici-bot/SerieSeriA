@@ -158,9 +158,10 @@ function simulateMatch(homeTeam, awayTeam) {
 
 /**
  * Trova la prossima giornata da simulare
+ * NOTA: Usa la stessa struttura del client (full_schedule con matches[].matches[])
  */
 async function findNextMatchday(db, appId) {
-    const scheduleRef = db.collection(`artifacts/${appId}/public/data/schedule`).doc('championship');
+    const scheduleRef = db.collection(`artifacts/${appId}/public/data/schedule`).doc('full_schedule');
     const scheduleDoc = await scheduleRef.get();
 
     if (!scheduleDoc.exists) {
@@ -168,16 +169,16 @@ async function findNextMatchday(db, appId) {
         return null;
     }
 
-    const schedule = scheduleDoc.data();
-    const matchdays = schedule.matchdays || [];
+    const scheduleData = scheduleDoc.data();
+    const rounds = scheduleData.matches || [];
 
-    // Trova la prima giornata non completata
-    for (let i = 0; i < matchdays.length; i++) {
-        const matchday = matchdays[i];
-        const hasUnplayedMatches = matchday.matches?.some(m => !m.played);
+    // Trova la prima giornata non completata (result === null significa non giocata)
+    for (let i = 0; i < rounds.length; i++) {
+        const round = rounds[i];
+        const hasUnplayedMatches = round.matches?.some(m => m.result === null);
 
         if (hasUnplayedMatches) {
-            return { matchdayIndex: i, matchday, schedule };
+            return { roundIndex: i, round, scheduleData };
         }
     }
 
@@ -187,6 +188,7 @@ async function findNextMatchday(db, appId) {
 
 /**
  * Simula una giornata di campionato
+ * NOTA: Usa la stessa struttura del client
  */
 async function simulateChampionshipMatchday(db, appId) {
     console.log('\n[Campionato] Ricerca prossima giornata...');
@@ -194,8 +196,8 @@ async function simulateChampionshipMatchday(db, appId) {
     const result = await findNextMatchday(db, appId);
     if (!result) return false;
 
-    const { matchdayIndex, matchday, schedule } = result;
-    console.log(`[Campionato] Simulazione Giornata ${matchday.matchdayNumber}`);
+    const { roundIndex, round, scheduleData } = result;
+    console.log(`[Campionato] Simulazione Giornata ${round.round}`);
 
     // Carica tutte le squadre
     const teamsSnapshot = await db.collection(`artifacts/${appId}/public/data/teams`).get();
@@ -205,38 +207,60 @@ async function simulateChampionshipMatchday(db, appId) {
     });
 
     // Simula ogni partita della giornata
-    for (const match of matchday.matches) {
-        if (match.played) continue;
+    for (const match of round.matches) {
+        // Salta partite gia giocate (result !== null)
+        if (match.result !== null) continue;
 
-        const homeTeam = teamsMap[match.homeTeamId];
-        const awayTeam = teamsMap[match.awayTeamId];
+        // NOTA: Il client usa homeId/awayId, non homeTeamId/awayTeamId
+        const homeTeam = teamsMap[match.homeId];
+        const awayTeam = teamsMap[match.awayId];
 
         if (!homeTeam || !awayTeam) {
-            console.log(`  Partita saltata: squadra mancante (${match.homeTeamId} vs ${match.awayTeamId})`);
+            console.log(`  Partita saltata: squadra mancante (${match.homeId} vs ${match.awayId})`);
             continue;
         }
 
-        const result = simulateMatch(homeTeam, awayTeam);
+        const simResult = simulateMatch(homeTeam, awayTeam);
 
-        // Aggiorna il match
-        match.homeScore = result.homeGoals;
-        match.awayScore = result.awayGoals;
-        match.played = true;
-        match.playedAt = new Date().toISOString();
+        // Aggiorna il match nel formato del client: result = "homeGoals-awayGoals"
+        match.result = `${simResult.homeGoals}-${simResult.awayGoals}`;
 
-        // Invia notifiche alle squadre
+        // Invia notifiche e salva nella Hall of Fame
         if (!DRY_RUN) {
-            await sendMatchNotifications(db, appId, homeTeam, awayTeam, result.homeGoals, result.awayGoals, 'Campionato');
+            await sendMatchNotifications(db, appId, homeTeam, awayTeam, simResult.homeGoals, simResult.awayGoals, 'Campionato');
+
+            // Salva nella Hall of Fame (matchHistory) per entrambe le squadre
+            await saveMatchToHistory(db, appId, homeTeam.id, {
+                type: 'campionato',
+                homeTeam: { id: homeTeam.id, name: homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
+                awayTeam: { id: awayTeam.id, name: awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
+                homeScore: simResult.homeGoals,
+                awayScore: simResult.awayGoals,
+                isHome: true,
+                details: { round: round.round }
+            });
+            await saveMatchToHistory(db, appId, awayTeam.id, {
+                type: 'campionato',
+                homeTeam: { id: homeTeam.id, name: homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
+                awayTeam: { id: awayTeam.id, name: awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
+                homeScore: simResult.homeGoals,
+                awayScore: simResult.awayGoals,
+                isHome: false,
+                details: { round: round.round }
+            });
         }
     }
 
     if (!DRY_RUN) {
-        // Salva il calendario aggiornato
-        await db.collection(`artifacts/${appId}/public/data/schedule`).doc('championship').set(schedule);
+        // Salva il calendario aggiornato (stessa struttura del client)
+        await db.collection(`artifacts/${appId}/public/data/schedule`).doc('full_schedule').set({
+            matches: scheduleData.matches,
+            lastUpdated: new Date().toISOString()
+        });
         console.log('[Campionato] Calendario salvato');
 
         // Aggiorna la classifica
-        await updateLeaderboard(db, appId, schedule);
+        await updateLeaderboard(db, appId, scheduleData);
 
         // Resetta la forma dei giocatori
         await resetPlayersForm(db, appId, teamsMap);
@@ -247,48 +271,54 @@ async function simulateChampionshipMatchday(db, appId) {
 
 /**
  * Aggiorna la classifica del campionato
+ * NOTA: Usa la stessa struttura del client (scheduleData.matches[])
  */
-async function updateLeaderboard(db, appId, schedule) {
+async function updateLeaderboard(db, appId, scheduleData) {
     const standings = {};
 
     // Calcola punti e statistiche da tutte le partite giocate
-    for (const matchday of schedule.matchdays || []) {
-        for (const match of matchday.matches || []) {
-            if (!match.played) continue;
+    for (const round of scheduleData.matches || []) {
+        for (const match of round.matches || []) {
+            // result === null significa non giocata
+            if (match.result === null) continue;
 
-            const homeId = match.homeTeamId;
-            const awayId = match.awayTeamId;
+            // Il client usa homeId/awayId
+            const homeId = match.homeId;
+            const awayId = match.awayId;
+
+            // Parse del risultato (formato "homeGoals-awayGoals")
+            const [homeScore, awayScore] = match.result.split('-').map(Number);
 
             // Inizializza se necessario
             if (!standings[homeId]) {
-                standings[homeId] = { teamId: homeId, points: 0, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+                standings[homeId] = { teamId: homeId, points: 0, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 };
             }
             if (!standings[awayId]) {
-                standings[awayId] = { teamId: awayId, points: 0, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+                standings[awayId] = { teamId: awayId, points: 0, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 };
             }
 
             // Aggiorna statistiche
             standings[homeId].played++;
             standings[awayId].played++;
-            standings[homeId].goalsFor += match.homeScore;
-            standings[homeId].goalsAgainst += match.awayScore;
-            standings[awayId].goalsFor += match.awayScore;
-            standings[awayId].goalsAgainst += match.homeScore;
+            standings[homeId].goalsFor += homeScore;
+            standings[homeId].goalsAgainst += awayScore;
+            standings[awayId].goalsFor += awayScore;
+            standings[awayId].goalsAgainst += homeScore;
 
             // Punti
-            if (match.homeScore > match.awayScore) {
+            if (homeScore > awayScore) {
                 standings[homeId].points += 3;
-                standings[homeId].won++;
-                standings[awayId].lost++;
-            } else if (match.homeScore < match.awayScore) {
+                standings[homeId].wins++;
+                standings[awayId].losses++;
+            } else if (homeScore < awayScore) {
                 standings[awayId].points += 3;
-                standings[awayId].won++;
-                standings[homeId].lost++;
+                standings[awayId].wins++;
+                standings[homeId].losses++;
             } else {
                 standings[homeId].points += 1;
                 standings[awayId].points += 1;
-                standings[homeId].drawn++;
-                standings[awayId].drawn++;
+                standings[homeId].draws++;
+                standings[awayId].draws++;
             }
         }
     }
@@ -446,10 +476,30 @@ async function simulateCupRound(db, appId) {
 
         const result = simulateMatch(actualHome, actualAway);
 
-        // Invia notifiche alle squadre
+        // Invia notifiche alle squadre e salva nella Hall of Fame
         if (!DRY_RUN) {
             const legLabel = legType === 'leg1' ? 'Andata' : 'Ritorno';
             await sendMatchNotifications(db, appId, actualHome, actualAway, result.homeGoals, result.awayGoals, `Coppa - ${round.roundName} (${legLabel})`);
+
+            // Salva nella Hall of Fame (matchHistory) per entrambe le squadre
+            await saveMatchToHistory(db, appId, match.homeTeam.teamId, {
+                type: 'coppa',
+                homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
+                awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
+                homeScore: result.homeGoals,
+                awayScore: result.awayGoals,
+                isHome: true,
+                details: { round: round.roundName, leg: legLabel }
+            });
+            await saveMatchToHistory(db, appId, match.awayTeam.teamId, {
+                type: 'coppa',
+                homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
+                awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
+                homeScore: result.homeGoals,
+                awayScore: result.awayGoals,
+                isHome: false,
+                details: { round: round.roundName, leg: legLabel }
+            });
         }
 
         // Salva risultato
@@ -598,6 +648,62 @@ async function sendMatchNotifications(db, appId, homeTeam, awayTeam, homeGoals, 
         sendMatchNotification(db, appId, homeTeam.id, homeTeam.teamName, awayTeam.teamName, homeGoals, awayGoals, matchType),
         sendMatchNotification(db, appId, awayTeam.id, awayTeam.teamName, homeTeam.teamName, awayGoals, homeGoals, matchType)
     ]);
+}
+
+// ============ HALL OF FAME (MATCH HISTORY) ============
+
+/**
+ * Salva una partita nello storico della squadra (Hall of Fame)
+ * @param {Firestore} db - Istanza Firestore
+ * @param {string} appId - App ID
+ * @param {string} teamId - ID della squadra
+ * @param {Object} matchData - Dati della partita
+ */
+async function saveMatchToHistory(db, appId, teamId, matchData) {
+    const MAX_HISTORY_SIZE = 100;
+
+    try {
+        const teamRef = db.collection(`artifacts/${appId}/public/data/teams`).doc(teamId);
+        const teamDoc = await teamRef.get();
+
+        if (!teamDoc.exists) {
+            console.log(`  [MatchHistory] Squadra ${teamId} non trovata`);
+            return false;
+        }
+
+        const teamData = teamDoc.data();
+        let matchHistory = teamData.matchHistory || [];
+
+        // Crea record partita (stesso formato del client)
+        const matchRecord = {
+            id: `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            date: new Date().toISOString(),
+            type: matchData.type || 'campionato',
+            homeTeam: matchData.homeTeam,
+            awayTeam: matchData.awayTeam,
+            homeScore: matchData.homeScore || 0,
+            awayScore: matchData.awayScore || 0,
+            isHome: matchData.isHome !== undefined ? matchData.isHome : true,
+            details: matchData.details || null,
+            betAmount: matchData.betAmount || 0,
+            creditsWon: matchData.creditsWon || 0
+        };
+
+        // Aggiungi in testa (piu recenti prima)
+        matchHistory.unshift(matchRecord);
+
+        // Limita dimensione storico
+        if (matchHistory.length > MAX_HISTORY_SIZE) {
+            matchHistory = matchHistory.slice(0, MAX_HISTORY_SIZE);
+        }
+
+        // Salva
+        await teamRef.update({ matchHistory });
+        return true;
+    } catch (error) {
+        console.error(`  [MatchHistory] Errore salvataggio per squadra ${teamId}:`, error);
+        return false;
+    }
 }
 
 // ============ UTILITIES ============

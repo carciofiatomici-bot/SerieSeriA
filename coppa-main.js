@@ -327,6 +327,11 @@ window.CoppaMain = {
         // Salva il tabellone aggiornato
         await window.CoppaSchedule.updateCupSchedule(bracket);
 
+        // FIX: Invalida cache per sincronizzare immediatamente i dati
+        if (window.FirestoreCache?.invalidate) {
+            window.FirestoreCache.invalidate('SCHEDULE', 'coppa_schedule');
+        }
+
         // Ricarica l'UI se disponibile
         if (window.CoppaAdminPanel && window.CoppaAdminPanel.refresh) {
             window.CoppaAdminPanel.refresh();
