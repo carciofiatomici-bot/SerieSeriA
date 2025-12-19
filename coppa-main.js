@@ -332,6 +332,11 @@ window.CoppaMain = {
             window.FirestoreCache.invalidate('SCHEDULE', 'coppa_schedule');
         }
 
+        // Invalida anche LeaderboardListener per aggiornamento istantaneo
+        if (window.LeaderboardListener?.invalidateCache) {
+            window.LeaderboardListener.invalidateCache();
+        }
+
         // Ricarica l'UI se disponibile
         if (window.CoppaAdminPanel && window.CoppaAdminPanel.refresh) {
             window.CoppaAdminPanel.refresh();

@@ -173,6 +173,12 @@ window.ChampionshipMain = {
                 }
             }
 
+            // Processa XP formazione (se feature attiva)
+            if (window.FeatureFlags?.isEnabled('formationXp')) {
+                await this.addFormationXp(match.homeId, homeTeamData.formation?.modulo);
+                await this.addFormationXp(match.awayId, awayTeamData.formation?.modulo);
+            }
+
             // REPLAY: Mostra replay SOLO se non e admin E flag attivo
                 const isAdmin = window.InterfacciaCore?.currentTeamId === 'admin';
                 const replayEnabled = window.FeatureFlags?.isEnabled('matchReplay') !== false;
@@ -257,6 +263,12 @@ window.ChampionshipMain = {
 
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
+
+            // Invalida anche FirestoreCache per aggiornamento istantaneo
+            if (window.FirestoreCache?.invalidate) {
+                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule');
+                window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
+            }
 
             // 8. Dispatch evento matchSimulated per notifiche push
             document.dispatchEvent(new CustomEvent('matchSimulated', {
@@ -574,6 +586,12 @@ window.ChampionshipMain = {
 
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
+
+            // Invalida anche FirestoreCache per aggiornamento istantaneo
+            if (window.FirestoreCache?.invalidate) {
+                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule');
+                window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
+            }
 
             if (renderCallback) {
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);
