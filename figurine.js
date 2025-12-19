@@ -166,7 +166,8 @@ window.FigurineSystem = {
         'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' },
         'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark' },
         'sandro_relax': { base: 'Sandro Relax.jpg', name: 'Sandro Relax' },
-        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' }
+        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' },
+        'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper' }
     },
 
     // Mapping per collezione Figurine Utenti
@@ -1668,6 +1669,71 @@ window.FigurineSystem = {
         } catch (error) {
             console.error('[Figurine] Errore aggiornamento CS:', error);
             return false;
+        }
+    },
+
+    // ==================== ADMIN UTILITIES ====================
+
+    /**
+     * Sblocca una figurina specifica per tutti i team esistenti
+     * Uso: await window.FigurineSystem.unlockFigurinaForAll('illustrazioni', 'wallpaper')
+     * @param {string} collectionId - ID collezione (es. 'illustrazioni')
+     * @param {string} itemId - ID figurina (es. 'wallpaper')
+     * @param {number} count - Quantita da assegnare (default 1)
+     */
+    async unlockFigurinaForAll(collectionId, itemId, count = 1) {
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db) {
+            console.error('[Figurine] appId o db mancante');
+            return { success: false, message: 'Database non disponibile' };
+        }
+
+        try {
+            const { collection, getDocs, doc, updateDoc, getDoc } = window.firestoreTools;
+            const figurinePath = `artifacts/${appId}/public/data/figurine`;
+            const figurineCollection = collection(window.db, figurinePath);
+            const snapshot = await getDocs(figurineCollection);
+
+            let updated = 0;
+            let errors = 0;
+
+            for (const docSnap of snapshot.docs) {
+                try {
+                    const albumData = docSnap.data();
+
+                    // Inizializza struttura se non esiste
+                    if (!albumData.collections) {
+                        albumData.collections = {};
+                    }
+                    if (!albumData.collections[collectionId]) {
+                        albumData.collections[collectionId] = {};
+                    }
+                    if (!albumData.collections[collectionId][itemId]) {
+                        albumData.collections[collectionId][itemId] = { base: 0 };
+                    }
+
+                    // Aggiorna solo se non ha gia la figurina
+                    const current = albumData.collections[collectionId][itemId]?.base || 0;
+                    if (current < count) {
+                        const updatePath = `collections.${collectionId}.${itemId}.base`;
+                        await updateDoc(doc(window.db, figurinePath, docSnap.id), {
+                            [updatePath]: count
+                        });
+                        updated++;
+                        console.log(`[Figurine] Sbloccata ${itemId} per team ${docSnap.id}`);
+                    }
+                } catch (err) {
+                    errors++;
+                    console.error(`[Figurine] Errore per team ${docSnap.id}:`, err);
+                }
+            }
+
+            const message = `Figurina "${itemId}" sbloccata per ${updated} team (${errors} errori)`;
+            console.log('[Figurine]', message);
+            return { success: true, updated, errors, message };
+        } catch (error) {
+            console.error('[Figurine] Errore sblocco globale:', error);
+            return { success: false, message: error.message };
         }
     }
 };
