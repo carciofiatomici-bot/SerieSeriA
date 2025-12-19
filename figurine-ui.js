@@ -376,8 +376,8 @@ window.FigurineUI = {
             return `<div class="p-4 text-center text-gray-500">Collezione in arrivo...</div>`;
         }
 
-        // Collezioni senza anteprima (mostra ? se non posseduta): giocatori_seri, illustrazioni, figurine_utenti
-        const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+        // Collezioni senza anteprima (mostra ? se non posseduta): giocatori_seri, figurine_utenti
+        const noPreviewCollections = ['giocatori_seri', 'figurine_utenti'];
         if (noPreviewCollections.includes(collId)) {
             const collIcon = collDef.icon || '🎴';
             let html = '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 p-3">';
@@ -393,16 +393,16 @@ window.FigurineUI = {
                 const textClass = hasAny ? rarityInfo.textClass : 'text-gray-500';
 
                 html += `
-                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} cursor-pointer hover:bg-gray-700 transition text-center"
+                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} cursor-pointer hover:bg-gray-700 transition text-center relative"
                          data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
-                        <div class="aspect-square rounded bg-gray-700 flex items-center justify-center mb-1">
+                        <div class="aspect-square rounded bg-gray-700 flex items-center justify-center mb-1 relative">
                             ${hasAny
                                 ? `<span class="text-2xl">${collIcon}</span>`
                                 : `<span class="text-3xl text-gray-500 font-bold">?</span>`
                             }
+                            <span class="absolute bottom-0 left-0 text-sm">${rarityInfo.icon}</span>
                         </div>
                         <p class="text-[10px] font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} truncate">${displayName}</p>
-                        <p class="text-[9px] ${textClass}">${rarityInfo.name}</p>
                         ${hasAny ? `<span class="text-[10px] ${textClass}">x${counts.base}</span>` : ''}
                     </div>
                 `;
@@ -411,7 +411,47 @@ window.FigurineUI = {
             return html;
         }
 
-        // Altre collezioni con anteprima
+        // Collezioni che nascondono immagine se non posseduta (mostra ? se non posseduta, immagine se posseduta)
+        const hideWhenNotOwnedCollections = ['illustrazioni'];
+        if (hideWhenNotOwnedCollections.includes(collId)) {
+            let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">';
+
+            Object.entries(files).forEach(([itemId, itemFiles]) => {
+                const counts = albumColl[itemId] || { base: 0 };
+                const hasAny = counts.base > 0;
+                const displayName = itemFiles.name || itemId;
+                const imgUrl = `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
+
+                // Ottieni rarita e colori
+                const rarityLevel = window.FigurineSystem.getFigurineRarity(collId, itemId);
+                const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
+                const borderClass = hasAny ? rarityInfo.cssClass : 'border-gray-700';
+                const textClass = hasAny ? rarityInfo.textClass : 'text-gray-500';
+
+                html += `
+                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} relative cursor-pointer hover:bg-gray-700 transition"
+                         data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
+                        <div class="aspect-square rounded overflow-hidden mb-2 relative">
+                            ${hasAny
+                                ? `<img src="${imgUrl}" alt="${displayName}" class="w-full h-full object-cover"
+                                     onerror="this.src='https://placehold.co/100x100/1f2937/6b7280?text=?'">`
+                                : `<div class="w-full h-full bg-gray-700 flex items-center justify-center">
+                                     <span class="text-4xl text-gray-500 font-bold">?</span>
+                                   </div>`
+                            }
+                            <span class="absolute bottom-0 left-0 text-sm">${rarityInfo.icon}</span>
+                        </div>
+                        <p class="text-xs font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} text-center truncate mb-1">${displayName}</p>
+                        ${hasAny ? `<span class="text-[10px] ${textClass} block text-center">x${counts.base}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        // Altre collezioni con anteprima (sempre visibile)
         let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">';
 
         Object.entries(files).forEach(([itemId, itemFiles]) => {
@@ -447,12 +487,29 @@ window.FigurineUI = {
         const icone = window.FigurineSystem.getIconeList();
         const collection = this.currentAlbum?.collection || {};
 
+        // Mapping variante -> icona rarita
+        const variantRarityIcons = {
+            normale: '⚪',
+            evoluto: '🟢',
+            alternative: '🔵',
+            ultimate: '🟣',
+            fantasy: '🟠'
+        };
+
         let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">';
 
         icone.forEach(icona => {
             const counts = collection[icona.id] || { normale: 0, evoluto: 0, alternative: 0, ultimate: 0, fantasy: 0 };
             const hasAny = counts.normale > 0 || counts.evoluto > 0 || counts.alternative > 0 || counts.ultimate > 0 || counts.fantasy > 0;
             const isComplete = counts.normale > 0 && counts.evoluto > 0 && counts.alternative > 0 && counts.ultimate > 0 && counts.fantasy > 0;
+
+            // Calcola la rarita piu alta posseduta
+            let highestRarityIcon = '⚪'; // Default: Normale
+            if (counts.fantasy > 0) highestRarityIcon = '🟠';
+            else if (counts.ultimate > 0) highestRarityIcon = '🟣';
+            else if (counts.alternative > 0) highestRarityIcon = '🔵';
+            else if (counts.evoluto > 0) highestRarityIcon = '🟢';
+            else if (counts.normale > 0) highestRarityIcon = '⚪';
 
             const figurineImg = window.FigurineSystem.getFigurineImageUrl(icona.id, 'normale');
             const imgSrc = figurineImg || icona.photoUrl || 'https://placehold.co/100x100/1f2937/6b7280?text=?';
@@ -462,14 +519,15 @@ window.FigurineUI = {
                      data-icona-id="${icona.id}" data-icona-name="${icona.name}" data-collection-id="icone">
                     ${isComplete ? '<span class="absolute -top-2 -right-2 text-lg">⭐</span>' : ''}
 
-                    <div class="aspect-square rounded overflow-hidden mb-2 ${!hasAny ? 'opacity-30 grayscale' : ''}">
+                    <div class="aspect-square rounded overflow-hidden mb-2 relative ${!hasAny ? 'opacity-30 grayscale' : ''}">
                         <img src="${imgSrc}" alt="${icona.name}" class="w-full h-full object-cover"
                              onerror="this.src='${icona.photoUrl || 'https://placehold.co/100x100/1f2937/6b7280?text=?'}'">
+                        <span class="absolute bottom-0 left-0 text-sm">${highestRarityIcon}</span>
                     </div>
 
                     <p class="text-xs font-semibold text-white text-center truncate mb-1">${icona.name}</p>
 
-                    <!-- Varianti (5 tipi) -->
+                    <!-- Varianti (5 tipi) con icone rarita -->
                     <div class="flex justify-center gap-1">
                         <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${counts.normale > 0 ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-500'}" title="Normale: ${counts.normale}">
                             ${counts.normale > 0 ? counts.normale : '○'}
@@ -551,7 +609,8 @@ window.FigurineUI = {
                         const isSpecial = v.id === 'ultimate' || v.id === 'fantasy';
                         const bonusTextColor = v.id === 'normale' ? 'text-gray-400' : 'text-green-400';
                         return `
-                            <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden">
+                            <div class="variant-card rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                                 data-variant="${v.id}" data-img-url="${showImage ? imgUrl : ''}" data-variant-name="${v.name}" data-owned="${owned}">
                                 <div class="aspect-square bg-gray-800 relative">
                                     ${showImage ? `
                                         <img src="${displayUrl}"
@@ -578,6 +637,8 @@ window.FigurineUI = {
                     }).join('')}
                 </div>
 
+                <p class="text-center text-xs text-gray-500 px-4 pb-2">Tocca una variante per ingrandirla</p>
+
                 <!-- Footer -->
                 <div class="p-4 border-t border-gray-700 text-center">
                     <button id="close-variants-btn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded-lg transition">
@@ -595,6 +656,61 @@ window.FigurineUI = {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
         });
+
+        // Click su variante per ingrandire
+        modal.querySelectorAll('.variant-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const imgUrl = card.dataset.imgUrl;
+                const variantName = card.dataset.variantName;
+                const owned = card.dataset.owned === 'true';
+
+                if (!imgUrl) {
+                    // Non posseduta e non base
+                    alert(`Non possiedi la variante ${variantName}. Trova il pacchetto giusto!`);
+                    return;
+                }
+
+                this.showFullscreenImage(imgUrl, `${iconaName} - ${variantName}`, owned);
+            });
+        });
+    },
+
+    /**
+     * Mostra immagine a schermo intero
+     */
+    showFullscreenImage(imgUrl, title, owned = true) {
+        // Rimuovi viewer esistente
+        document.getElementById('fullscreen-image-viewer')?.remove();
+
+        const viewer = document.createElement('div');
+        viewer.id = 'fullscreen-image-viewer';
+        viewer.className = 'fixed inset-0 bg-black/95 z-[1200] flex items-center justify-center p-4 cursor-pointer';
+
+        viewer.innerHTML = `
+            <div class="relative max-w-full max-h-full flex flex-col items-center">
+                <button class="absolute top-2 right-2 bg-black/50 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center text-2xl z-10">&times;</button>
+                <img src="${imgUrl}" alt="${title}"
+                     class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl ${!owned ? 'grayscale brightness-50' : ''}"
+                     onerror="this.src='https://placehold.co/400x400/1f2937/6b7280?text=Errore'">
+                <p class="mt-4 text-white text-lg font-bold text-center">${title}</p>
+                ${!owned ? '<p class="text-yellow-400 text-sm">Anteprima - Non posseduta</p>' : ''}
+            </div>
+        `;
+
+        document.body.appendChild(viewer);
+
+        // Chiudi al click ovunque
+        viewer.addEventListener('click', () => viewer.remove());
+
+        // Chiudi con ESC
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                viewer.remove();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
     },
 
     /**
@@ -606,14 +722,45 @@ window.FigurineUI = {
         const albumColl = this.currentAlbum?.collections?.[collectionId] || {};
         const counts = albumColl[itemId] || { base: 0 };
         const owned = counts.base > 0;
-        const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+        const noPreviewCollections = ['giocatori_seri', 'figurine_utenti'];
+        const hideWhenNotOwnedCollections = ['illustrazioni'];
         const hidePreview = noPreviewCollections.includes(collectionId);
+        const hideIfNotOwned = hideWhenNotOwnedCollections.includes(collectionId);
 
         const imgUrl = `${collDef.baseUrl}${encodeURIComponent(files[itemId]?.base || '')}`;
+
+        // Ottieni rarita
+        const rarityLevel = window.FigurineSystem.getFigurineRarity(collectionId, itemId);
+        const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
 
         const modal = document.createElement('div');
         modal.id = 'figurine-variants-modal';
         modal.className = 'fixed inset-0 bg-black/80 z-[1100] flex items-center justify-center p-4';
+
+        // Logica immagine: nascondi sempre per noPreview, nascondi se non posseduta per hideIfNotOwned
+        let imageContent = '';
+        let canShowFullscreen = false;
+        if (!hidePreview) {
+            if (hideIfNotOwned && !owned) {
+                // Illustrazioni non possedute: mostra ?
+                imageContent = `
+                    <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center">
+                        <span class="text-6xl text-gray-500 font-bold">?</span>
+                    </div>
+                `;
+            } else {
+                // Mostra immagine (con grayscale se non posseduta e non hideIfNotOwned)
+                canShowFullscreen = true;
+                imageContent = `
+                    <div id="figurine-image-container" class="aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform ${!owned && !hideIfNotOwned ? 'grayscale opacity-50' : ''}"
+                         data-img-url="${imgUrl}" data-owned="${owned}">
+                        <img src="${imgUrl}" alt="${itemName}" class="w-full h-full object-cover"
+                             onerror="this.src='https://placehold.co/200x200/1f2937/6b7280?text=?'">
+                    </div>
+                    <p class="text-center text-[10px] text-gray-500 mt-1">Tocca l'immagine per ingrandirla</p>
+                `;
+            }
+        }
 
         modal.innerHTML = `
             <div class="bg-gray-900 rounded-xl border-2 border-emerald-500 max-w-sm w-full overflow-hidden">
@@ -625,17 +772,13 @@ window.FigurineUI = {
 
                 <!-- Contenuto -->
                 <div class="p-6">
-                    ${hidePreview ? '' : `
-                    <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden ${!owned ? 'grayscale opacity-50' : ''}">
-                        <img src="${imgUrl}" alt="${itemName}" class="w-full h-full object-cover"
-                             onerror="this.src='https://placehold.co/200x200/1f2937/6b7280?text=?'">
-                    </div>
-                    `}
+                    ${imageContent}
                     <div class="${hidePreview ? '' : 'mt-4'} text-center">
                         <p class="text-lg font-bold ${owned ? 'text-emerald-400' : 'text-gray-500'}">
                             ${owned ? `Possedute: x${counts.base}` : 'Non posseduta'}
                         </p>
                         <p class="text-xs text-gray-400 mt-1">${collDef.description}</p>
+                        <p class="text-xs mt-2">Rarita: <span class="${rarityInfo.textClass}">${rarityInfo.icon} ${rarityInfo.name}</span></p>
                     </div>
                 </div>
 
@@ -652,6 +795,20 @@ window.FigurineUI = {
 
         document.getElementById('close-variants-modal').addEventListener('click', () => modal.remove());
         document.getElementById('close-variants-btn').addEventListener('click', () => modal.remove());
+
+        // Click su immagine per fullscreen
+        if (canShowFullscreen) {
+            const imgContainer = modal.querySelector('#figurine-image-container');
+            if (imgContainer) {
+                imgContainer.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const imgUrlData = imgContainer.dataset.imgUrl;
+                    const isOwned = imgContainer.dataset.owned === 'true';
+                    this.showFullscreenImage(imgUrlData, itemName, isOwned);
+                });
+            }
+        }
+
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
         });
@@ -741,7 +898,8 @@ window.FigurineUI = {
                             const cssPrice = collectionPrices[collId] || 1;
                             const canBuyCS = cs >= csPrice;
                             const canBuyCSS = css >= cssPrice;
-                            const variantText = collId === 'icone' ? '5 varianti con bonus' : 'variante base';
+                            // Descrizione con rarita per tutte le collezioni
+                            const variantText = '⚪🟢🔵🟣🟠 Rarita variabile';
 
                             return `
                                 <div class="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg flex-wrap gap-2">
@@ -753,12 +911,12 @@ window.FigurineUI = {
                                         </div>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button class="btn-collection-pack-cs bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm ${!canBuyCS ? 'opacity-50 cursor-not-allowed' : ''}"
-                                                data-collection="${collId}" data-price="${csPrice}" data-currency="cs" ${!canBuyCS ? 'disabled' : ''}>
+                                        <button class="btn-collection-pack-cs bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm cursor-pointer"
+                                                data-collection="${collId}" data-price="${csPrice}" data-currency="cs">
                                             ${csPrice} CS
                                         </button>
-                                        <button class="btn-collection-pack-css bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm ${!canBuyCSS ? 'opacity-50 cursor-not-allowed' : ''}"
-                                                data-collection="${collId}" data-price="${cssPrice}" data-currency="css" ${!canBuyCSS ? 'disabled' : ''}>
+                                        <button class="btn-collection-pack-css bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm cursor-pointer"
+                                                data-collection="${collId}" data-price="${cssPrice}" data-currency="css">
                                             ${cssPrice} CSS
                                         </button>
                                     </div>
@@ -864,13 +1022,25 @@ window.FigurineUI = {
             });
         });
 
-        // Bind collection pack buttons (con conferma)
+        // Bind collection pack buttons (con conferma e verifica fondi)
         // Bottoni acquisto con CS
         document.querySelectorAll('.btn-collection-pack-cs').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const collId = e.currentTarget.dataset.collection;
-                const price = parseInt(e.currentTarget.dataset.price);
+                const price = parseInt(e.currentTarget.dataset.price) || 150;
                 const collName = collections[collId]?.name || collId;
+                console.log('[FigurineUI] Click CS pack:', collId, price);
+
+                // Verifica fondi
+                const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+                const currentCS = teamData?.creditiSeri || 0;
+                if (currentCS < price) {
+                    alert(`CS insufficienti! Hai ${currentCS} CS, ne servono ${price}.`);
+                    return;
+                }
+
                 await this.confirmAndOpenCollectionPack(collId, collName, price, 'cs');
             });
         });
@@ -878,9 +1048,21 @@ window.FigurineUI = {
         // Bottoni acquisto con CSS
         document.querySelectorAll('.btn-collection-pack-css').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const collId = e.currentTarget.dataset.collection;
-                const price = parseInt(e.currentTarget.dataset.price);
+                const price = parseInt(e.currentTarget.dataset.price) || 1;
                 const collName = collections[collId]?.name || collId;
+                console.log('[FigurineUI] Click CSS pack:', collId, price);
+
+                // Verifica fondi
+                const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+                const currentCSS = teamData?.creditiSuperSeri || 0;
+                if (currentCSS < price) {
+                    alert(`CSS insufficienti! Hai ${currentCSS} CSS, ne servono ${price}.`);
+                    return;
+                }
+
                 await this.confirmAndOpenCollectionPack(collId, collName, price, 'css');
             });
         });
@@ -1054,7 +1236,7 @@ window.FigurineUI = {
             const name = fig.iconaName || fig.itemName || fig.itemId || 'Figurina';
             const imgUrl = fig.imageUrl || fig.iconaPhoto || 'https://placehold.co/80x80/1f2937/6b7280?text=?';
             const rarityName = fig.rarityInfo?.name || rarity;
-            const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+            const noPreviewCollections = ['giocatori_seri', 'figurine_utenti'];
             const hideImage = noPreviewCollections.includes(fig.collectionId);
 
             html += `

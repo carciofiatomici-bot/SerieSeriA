@@ -247,20 +247,23 @@ window.NextMatchAlert = {
      * Crea il contenuto inline nel container
      */
     createInlineContent(container, nextMatch, automationState) {
-        // Colori e icone per tipo competizione
-        let typeColor, typeIcon, typeBorder;
+        // Colori, icone e nomi per tipo competizione
+        let typeColor, typeIcon, typeBorder, typeName;
         if (nextMatch.type === 'campionato') {
             typeColor = 'green';
             typeIcon = '🏆';
             typeBorder = 'border-green-500';
+            typeName = 'SerieSeriA';
         } else if (nextMatch.type === 'supercoppa') {
             typeColor = 'yellow';
             typeIcon = '⭐';
             typeBorder = 'border-yellow-500';
+            typeName = 'SuperCoppa';
         } else {
             typeColor = 'purple';
             typeIcon = '🏅';
             typeBorder = 'border-purple-500';
+            typeName = 'CoppaSeriA';
         }
 
         // URL loghi squadre
@@ -287,7 +290,7 @@ window.NextMatchAlert = {
 
                     <!-- Intestazione -->
                     <div class="bg-gradient-to-r from-${typeColor}-800 to-${typeColor}-700 px-2 py-0.5 rounded-t-md">
-                        <p class="text-white text-[8px] font-bold text-center">${nextMatch.round}</p>
+                        <p class="text-white text-[8px] font-bold text-center">${typeName}</p>
                     </div>
 
                     <!-- Squadre -->

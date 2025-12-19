@@ -229,13 +229,14 @@ window.FigurineSystem = {
         }
     },
 
-    // Varianti per collezione Icone (5 varianti)
+    // Varianti per collezione Icone (5 varianti) - Probabilita allineate a FIGURINE_RARITIES
+    // normale=Comune(40%), evoluto=Non Comune(30%), alternative=Rara(18%), ultimate=Epica(9%), fantasy=Leggendaria(3%)
     ICONE_RARITIES: {
-        normale: { id: 'normale', name: 'Normale', color: 'gray', probability: 0.50, cssClass: 'border-gray-400' },
-        evoluto: { id: 'evoluto', name: 'Evoluto', color: 'blue', probability: 0.25, cssClass: 'border-blue-500' },
-        alternative: { id: 'alternative', name: 'Alternative', color: 'purple', probability: 0.12, cssClass: 'border-purple-500' },
-        ultimate: { id: 'ultimate', name: 'Ultimate', color: 'yellow', probability: 0.08, cssClass: 'border-yellow-400' },
-        fantasy: { id: 'fantasy', name: 'Fantasy', color: 'pink', probability: 0.05, cssClass: 'border-pink-500' }
+        normale: { id: 'normale', name: 'Comune', color: 'gray', probability: 0.40, cssClass: 'border-gray-400', textClass: 'text-gray-400', icon: '⚪', rarityLevel: 1 },
+        evoluto: { id: 'evoluto', name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400', icon: '🟢', rarityLevel: 2 },
+        alternative: { id: 'alternative', name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400', icon: '🔵', rarityLevel: 3 },
+        ultimate: { id: 'ultimate', name: 'Epica', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400', icon: '🟣', rarityLevel: 4 },
+        fantasy: { id: 'fantasy', name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400', icon: '🟠', rarityLevel: 5 }
     },
 
     // Varianti per collezioni senza bonus (solo base)
@@ -246,11 +247,11 @@ window.FigurineSystem = {
     // Rarita per figurine (Giocatori Seri, Illustrazioni, Figurine Utenti)
     // Probabilita di default: Comune 40%, Non Comune 30%, Rara 18%, Molto Rara 9%, Leggendaria 3%
     FIGURINE_RARITIES: {
-        1: { id: 1, name: 'Comune', color: 'gray', probability: 0.40, cssClass: 'border-gray-400', textClass: 'text-gray-400' },
-        2: { id: 2, name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400' },
-        3: { id: 3, name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400' },
-        4: { id: 4, name: 'Molto Rara', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400' },
-        5: { id: 5, name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400' }
+        1: { id: 1, name: 'Comune', color: 'gray', probability: 0.40, cssClass: 'border-gray-400', textClass: 'text-gray-400', icon: '⚪' },
+        2: { id: 2, name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400', icon: '🟢' },
+        3: { id: 3, name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400', icon: '🔵' },
+        4: { id: 4, name: 'Epica', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400', icon: '🟣' },
+        5: { id: 5, name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400', icon: '🟠' }
     },
 
     // Cache per rarita figurine da Firestore
@@ -1181,10 +1182,14 @@ window.FigurineSystem = {
 
         const teamData = await this.getTeamData(teamId);
 
+        // Calcola costi
+        const csPrice = config.packPriceCS || 150;
+        const cssPrice = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
+        let paidAmount = 0;
+
         // Gestisci pagamento in base alla valuta
         if (currency === 'cs') {
             // Acquisto con CS (Crediti Seri)
-            const csPrice = config.packPriceCS || 150;
             const currentCS = teamData?.creditiSeri || 0;
 
             if (currentCS < csPrice) {
@@ -1193,17 +1198,18 @@ window.FigurineSystem = {
 
             // Sottrai CS
             await this.updateTeamCS(teamId, -csPrice);
+            paidAmount = csPrice;
         } else {
             // Acquisto con CSS (Crediti Super Seri)
-            const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
             const currentCSS = teamData?.creditiSuperSeri || 0;
 
-            if (currentCSS < packCost) {
-                throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${packCost})`);
+            if (currentCSS < cssPrice) {
+                throw new Error(`CSS insufficienti (hai ${currentCSS}, servono ${cssPrice})`);
             }
 
             // Sottrai CSS
-            await this.updateTeamCSS(teamId, -packCost);
+            await this.updateTeamCSS(teamId, -cssPrice);
+            paidAmount = cssPrice;
         }
 
         // Estrai figurina dalla collezione specifica
@@ -1211,10 +1217,9 @@ window.FigurineSystem = {
         if (!figurina) {
             // Rimborsa se estrazione fallita
             if (currency === 'cs') {
-                await this.updateTeamCS(teamId, config.packPriceCS || 150);
+                await this.updateTeamCS(teamId, csPrice);
             } else {
-                const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
-                await this.updateTeamCSS(teamId, packCost);
+                await this.updateTeamCSS(teamId, cssPrice);
             }
             throw new Error(`Impossibile estrarre da collezione "${collectionId}"`);
         }
@@ -1246,7 +1251,8 @@ window.FigurineSystem = {
             album: album,
             bonusEarned: bonusEarned,
             collectionId: collectionId,
-            cssCost: packCost,
+            cost: paidAmount,
+            currency: currency,
             isFree: false
         };
     },
