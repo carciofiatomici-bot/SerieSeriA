@@ -661,7 +661,7 @@ window.FigurineUI = {
         const cs = teamData?.creditiSeri || 0;
         const collections = window.FigurineSystem.COLLECTIONS;
         const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1 };
-        const csPrice = 150; // Prezzo in CS per pacchetto
+        const csPrice = config.packPriceCS || 150; // Prezzo in CS per pacchetto
         const probs = config.iconeProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
         // Calcola duplicati scambiabili

@@ -299,11 +299,14 @@ window.FigurineSystem = {
             freePackCooldownHours: 4,   // Ore di cooldown dopo apertura pacchetto gratis
             freePackChance1: 0.99,      // 99% = 1 figurina
             freePackChance2: 0.01,      // 1% = 2 figurine
+            // Prezzo pacchetto in CS (Crediti Seri)
+            packPriceCS: 150,
             // Prezzi pacchetti specifici per collezione (in CSS)
             collectionPackPrices: {
                 icone: 1,
                 giocatori_seri: 1,
-                allenatori: 1
+                allenatori: 1,
+                illustrazioni: 1
             },
             // Probabilita varianti per collezione Icone
             iconeProbabilities: {
@@ -959,7 +962,7 @@ window.FigurineSystem = {
         // Gestisci pagamento in base alla valuta
         if (currency === 'cs') {
             // Acquisto con CS (Crediti Seri)
-            const csPrice = 150;
+            const csPrice = config.packPriceCS || 150;
             const currentCS = teamData?.creditiSeri || 0;
 
             if (currentCS < csPrice) {
@@ -986,7 +989,7 @@ window.FigurineSystem = {
         if (!figurina) {
             // Rimborsa se estrazione fallita
             if (currency === 'cs') {
-                await this.updateTeamCS(teamId, 150);
+                await this.updateTeamCS(teamId, config.packPriceCS || 150);
             } else {
                 const packCost = config.collectionPackPrices?.[collectionId] || config.packPriceCSS || 1;
                 await this.updateTeamCSS(teamId, packCost);
