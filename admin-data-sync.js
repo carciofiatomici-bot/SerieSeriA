@@ -105,16 +105,49 @@ window.AdminDataSync = {
         // Event listeners
         document.getElementById('btn-analyze-data')?.addEventListener('click', () => this.analyzeData());
         document.getElementById('btn-sync-data')?.addEventListener('click', () => this.repairData());
-        document.getElementById('btn-close-sync-panel')?.addEventListener('click', () => {
+        document.getElementById('btn-close-sync-panel')?.addEventListener('click', async () => {
             // Torna alla vista admin principale
-            // Ricarica il pannello admin ricreando il container e poi renderizzando
             const adminContent = document.getElementById('admin-content');
             if (adminContent) {
-                // Ricrea la struttura base del container
-                adminContent.innerHTML = '<div id="admin-dashboard-container" class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl"></div>';
+                // Mostra loading mentre ricarica
+                adminContent.innerHTML = `
+                    <div id="admin-dashboard-container" class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl">
+                        <div class="flex items-center justify-center p-8">
+                            <i class="fas fa-spinner fa-spin text-2xl text-blue-400 mr-3"></i>
+                            <span class="text-white">Caricamento pannello admin...</span>
+                        </div>
+                    </div>
+                `;
             }
-            if (window.renderAdminDashboardLayout) {
-                window.renderAdminDashboardLayout();
+            try {
+                if (window.renderAdminDashboardLayout) {
+                    await window.renderAdminDashboardLayout();
+                } else {
+                    console.error('[AdminDataSync] renderAdminDashboardLayout non trovata');
+                    // Fallback: ricarica la pagina
+                    if (adminContent) {
+                        adminContent.innerHTML = `
+                            <div class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl text-center">
+                                <p class="text-yellow-400 mb-4">Errore nel caricamento del pannello admin</p>
+                                <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded">
+                                    Ricarica Pagina
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('[AdminDataSync] Errore chiusura pannello:', error);
+                if (adminContent) {
+                    adminContent.innerHTML = `
+                        <div class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl text-center">
+                            <p class="text-red-400 mb-4">Errore: ${error.message}</p>
+                            <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded">
+                                Ricarica Pagina
+                            </button>
+                        </div>
+                    `;
+                }
             }
         });
     },
@@ -229,11 +262,25 @@ window.AdminDataSync = {
 
             // Carica tabellone coppa dalla posizione corretta (schedule/coppa_schedule)
             const COPPA_SCHEDULE_DOC_ID = window.CoppaConstants?.COPPA_SCHEDULE_DOC_ID || 'coppa_schedule';
+            const coppaPath = `artifacts/${appId}/public/data/schedule/${COPPA_SCHEDULE_DOC_ID}`;
+            log(`Cercando coppa in: ${coppaPath}`, 'info');
+
             const coppaRef = doc(window.db, `artifacts/${appId}/public/data/schedule`, COPPA_SCHEDULE_DOC_ID);
             const coppaDoc = await getDoc(coppaRef);
 
             if (!coppaDoc.exists()) {
-                log('Nessun tabellone Coppa trovato', 'warning');
+                log(`Nessun tabellone Coppa trovato in ${coppaPath}`, 'warning');
+                // Prova anche il vecchio percorso per retrocompatibilità
+                const oldCoppaRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'coppa');
+                const oldCoppaDoc = await getDoc(oldCoppaRef);
+                if (oldCoppaDoc.exists()) {
+                    log('Trovato tabellone nel vecchio percorso config/coppa', 'info');
+                    const coppaData = oldCoppaDoc.data();
+                    const rounds = coppaData.rounds || [];
+                    if (rounds.length > 0) {
+                        log(`Trovati ${rounds.length} turni nel vecchio percorso`, 'success');
+                    }
+                }
                 return result;
             }
 
@@ -283,6 +330,8 @@ window.AdminDataSync = {
                     }
 
                     // Controlla leg2 (ritorno)
+                    // NOTA: coppa-main.js NON inverte homeTeam/awayTeam per leg2,
+                    // mantiene sempre l'ordine del bracket
                     if (match.leg2Result) {
                         result.total++;
 
@@ -295,13 +344,13 @@ window.AdminDataSync = {
                                 round: round.roundName,
                                 leg: 'leg2',
                                 result: match.leg2Result,
-                                homeTeam: match.awayTeam, // Nel ritorno si inverte
-                                awayTeam: match.homeTeam,
+                                homeTeam: match.homeTeam, // NON invertire - coppa-main.js non inverte
+                                awayTeam: match.awayTeam,
                                 missingFor: !homeHas && !awayHas ? 'both' : (!homeHas ? 'home' : 'away'),
-                                homeTeamData: teamsMatchHistory[match.awayTeam?.teamId],
-                                awayTeamData: teamsMatchHistory[match.homeTeam?.teamId]
+                                homeTeamData: teamsMatchHistory[match.homeTeam?.teamId],
+                                awayTeamData: teamsMatchHistory[match.awayTeam?.teamId]
                             });
-                            log(`Coppa ${round.roundName} (ritorno): ${match.awayTeam?.teamName} vs ${match.homeTeam?.teamName} (${match.leg2Result}) - MANCANTE`, 'warning');
+                            log(`Coppa ${round.roundName} (ritorno): ${match.homeTeam?.teamName} vs ${match.awayTeam?.teamName} (${match.leg2Result}) - MANCANTE`, 'warning');
                         }
                     }
                 }
