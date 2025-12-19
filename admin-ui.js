@@ -198,6 +198,7 @@ window.AdminUI = {
                         </button>
                         <button id="btn-figurine-config" class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition text-sm col-span-2">
                             🃏 Figurine
+                            <span class="block text-[10px] font-normal opacity-80">👑16 ⚽17 🎨9 👤0</span>
                         </button>
                     </div>
                 </div>

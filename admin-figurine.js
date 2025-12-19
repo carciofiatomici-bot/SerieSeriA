@@ -55,9 +55,22 @@ window.AdminFigurine = {
                     </div>
                 </div>
 
+                <!-- Prezzo Pacchetti CS -->
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-bold text-yellow-300 mb-4">Prezzo Pacchetti (CS)</h4>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">💰 Prezzo per tutti i pacchetti (CS)</label>
+                            <input type="number" id="figurine-price-cs" value="${config.packPriceCS || 150}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                            <p class="text-xs text-gray-500 mt-1">Prezzo unico in Crediti Seri per qualsiasi collezione</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Prezzi Pacchetti Collezione -->
                 <div class="bg-gray-700 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold text-purple-300 mb-4">Prezzi Pacchetti per Collezione (CSS)</h4>
+                    <h4 class="text-lg font-bold text-cyan-300 mb-4">Prezzi Pacchetti per Collezione (CSS)</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">👑 Icone</label>
@@ -176,6 +189,7 @@ window.AdminFigurine = {
                         <p>Figurine Icone (5 varianti): <span class="text-white font-bold">${(window.FigurineSystem?.getIconeList()?.length || 0) * 5}</span></p>
                         <p>Giocatori Seri: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.GIOCATORI_SERI_FILES || {}).length}</span></p>
                         <p>Allenatori: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.ALLENATORI_FILES || {}).length}</span></p>
+                        <p>Illustrazioni: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.ILLUSTRAZIONI_FILES || {}).length}</span></p>
                         <p>Figurine Utenti: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.FIGURINE_UTENTI_FILES || {}).length}</span></p>
                     </div>
                 </div>
@@ -332,6 +346,7 @@ window.AdminFigurine = {
             enabled: true,
             freePackCooldownHours: parseInt(document.getElementById('figurine-cooldown')?.value) || 4,
             freePackChance2: (parseInt(document.getElementById('figurine-bonus-chance')?.value) || 1) / 100,
+            packPriceCS: parseInt(document.getElementById('figurine-price-cs')?.value) || 150,
             completionBonus: parseInt(document.getElementById('figurine-completion-bonus')?.value) || 500,
             sectionBonus: parseInt(document.getElementById('figurine-section-bonus')?.value) || 50,
             tradeRequiredCount: parseInt(document.getElementById('figurine-trade-count')?.value) || 3,
