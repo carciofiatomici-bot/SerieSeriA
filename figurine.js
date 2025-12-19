@@ -465,12 +465,17 @@ window.FigurineSystem = {
      * @param {boolean} forceRefresh - Se true, ignora la cache e ricarica da Firestore
      */
     async loadFigurineRarities(forceRefresh = false) {
+        console.log('[Figurine] loadFigurineRarities chiamata, forceRefresh:', forceRefresh);
+
         // Usa cache solo se non forzato il refresh
         if (this._figurineRarities && !forceRefresh) {
+            console.log('[Figurine] Usando cache rarita');
             return this._figurineRarities;
         }
 
         const path = this.getConfigPath();
+        console.log('[Figurine] loadFigurineRarities - path:', path);
+
         if (!path || !window.db || !window.firestoreTools) {
             console.warn('[Figurine] loadFigurineRarities: path/db/firestoreTools non disponibili');
             this._figurineRarities = this.getDefaultFigurineRarities();
@@ -479,17 +484,26 @@ window.FigurineSystem = {
 
         try {
             const { doc, getDoc } = window.firestoreTools;
+            const fullPath = `${path}/figurineRarities`;
+            console.log('[Figurine] Caricamento da path completo:', fullPath);
+
             const docRef = doc(window.db, path, 'figurineRarities');
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                console.log('[Figurine] Documento trovato, chiavi:', Object.keys(data));
                 // Rimuovi il campo updatedAt dai dati prima di usarli
                 const { updatedAt, ...rarities } = data;
                 this._figurineRarities = rarities;
                 console.log('[Figurine] Rarita caricate da Firestore:', Object.keys(rarities));
+
+                // Debug: mostra alcune rarita caricate
+                if (rarities.illustrazioni) {
+                    console.log('[Figurine] Rarita illustrazioni:', JSON.stringify(rarities.illustrazioni).substring(0, 100));
+                }
             } else {
-                console.log('[Figurine] Documento rarita non esiste, uso default');
+                console.log('[Figurine] Documento rarita NON esiste, uso default');
                 this._figurineRarities = this.getDefaultFigurineRarities();
             }
         } catch (error) {
@@ -505,17 +519,25 @@ window.FigurineSystem = {
      */
     async saveFigurineRarities(rarities) {
         const path = this.getConfigPath();
+        console.log('[Figurine] saveFigurineRarities - path:', path);
+        console.log('[Figurine] saveFigurineRarities - rarities:', JSON.stringify(rarities).substring(0, 200));
+
         if (!path || !window.db || !window.firestoreTools) {
-            console.error('[Figurine] Impossibile salvare rarita');
+            console.error('[Figurine] Impossibile salvare rarita - manca:', { path: !!path, db: !!window.db, firestoreTools: !!window.firestoreTools });
             return false;
         }
 
         try {
             const { doc, setDoc } = window.firestoreTools;
+            const fullPath = `${path}/figurineRarities`;
+            console.log('[Figurine] Salvataggio su path completo:', fullPath);
+
             const docRef = doc(window.db, path, 'figurineRarities');
-            await setDoc(docRef, { ...rarities, updatedAt: new Date().toISOString() });
+            const dataToSave = { ...rarities, updatedAt: new Date().toISOString() };
+            await setDoc(docRef, dataToSave);
+
             this._figurineRarities = rarities;
-            console.log('[Figurine] Rarita salvate');
+            console.log('[Figurine] Rarita salvate con successo su:', fullPath);
             return true;
         } catch (error) {
             console.error('[Figurine] Errore salvataggio rarita:', error);
