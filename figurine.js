@@ -122,6 +122,16 @@ window.FigurineSystem = {
         ultimate: { id: 'ultimate', name: 'Ultimate', color: 'yellow', probability: 0.05, cssClass: 'border-yellow-400' }
     },
 
+    // Bonus associati alle varianti quando usate come avatar
+    // iconaChance: bonus % alla probabilita di attivazione bonus icona (base 50%)
+    // xpBonus: bonus % all'XP formazione guadagnato dopo le partite
+    VARIANT_BONUSES: {
+        normale: { iconaChance: 0, xpBonus: 0, description: 'Nessun bonus' },
+        evoluto: { iconaChance: 5, xpBonus: 5, description: '+5% Icona | +5% XP' },
+        alternative: { iconaChance: 10, xpBonus: 10, description: '+10% Icona | +10% XP' },
+        ultimate: { iconaChance: 20, xpBonus: 20, description: '+20% Icona | +20% XP' }
+    },
+
     // Cache
     _config: null,
     _configLoaded: false,
@@ -145,6 +155,15 @@ window.FigurineSystem = {
         }
 
         return `${this.FIGURINE_BASE_URL}${encodeURIComponent(fileName)}`;
+    },
+
+    /**
+     * Ottiene i bonus associati a una variante
+     * @param {string} variant - Variante (normale, evoluto, alternative, ultimate)
+     * @returns {Object} { iconaChance, xpBonus, description }
+     */
+    getVariantBonuses(variant) {
+        return this.VARIANT_BONUSES[variant] || this.VARIANT_BONUSES.normale;
     },
 
     // ==================== CONFIGURAZIONE ====================

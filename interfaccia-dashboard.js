@@ -2390,6 +2390,10 @@ window.InterfacciaDashboard = {
             const isSelected = variant === currentVariant;
             const label = variantLabels[variant];
 
+            // Ottieni bonus dalla variante
+            const bonuses = window.FigurineSystem?.getVariantBonuses(variant);
+            const bonusText = bonuses?.description || 'Nessun bonus';
+
             // URL immagine
             let imgUrl;
             if (variant === 'normale') {
@@ -2404,6 +2408,7 @@ window.InterfacciaDashboard = {
             const cursor = owned ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed';
             const border = isSelected ? `ring-4 ring-${label.border} ring-offset-2 ring-offset-gray-900` : '';
             const lockIcon = owned ? '' : '<div class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg"><span class="text-2xl">🔒</span></div>';
+            const bonusColor = variant === 'normale' ? 'text-gray-500' : 'text-green-400';
 
             variantsHtml += `
                 <div class="variant-option relative ${opacity} ${cursor} ${border} rounded-lg overflow-hidden transition-all duration-200"
@@ -2412,8 +2417,9 @@ window.InterfacciaDashboard = {
                          class="w-full aspect-square object-cover border-2 border-${label.border} rounded-lg"
                          onerror="this.src='https://placehold.co/96x96/333/666?text=?'">
                     ${lockIcon}
-                    <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-center py-1">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-center py-1">
                         <span class="text-xs font-bold text-${label.color}">${label.name}</span>
+                        <div class="text-[10px] ${bonusColor}">${bonusText}</div>
                     </div>
                     ${isSelected ? '<div class="absolute top-1 right-1 text-green-400 text-lg">✓</div>' : ''}
                 </div>

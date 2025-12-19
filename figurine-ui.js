@@ -388,6 +388,10 @@ window.FigurineUI = {
                         // Per figurine non-base non possedute: nessuna immagine, solo placeholder
                         const showImage = owned || isBase;
                         const displayUrl = showImage ? imgUrl : 'https://placehold.co/150x150/1f2937/374151?text=';
+                        // Bonus dalla variante
+                        const bonuses = window.FigurineSystem?.getVariantBonuses(v.id);
+                        const bonusText = bonuses?.description || 'Nessun bonus';
+                        const bonusTextColor = v.id === 'normale' ? 'text-gray-400' : 'text-green-400';
                         return `
                             <div class="rounded-lg border-2 ${owned ? `border-${v.color}-500` : 'border-gray-700'} overflow-hidden">
                                 <div class="aspect-square bg-gray-800 relative">
@@ -406,6 +410,9 @@ window.FigurineUI = {
                                     <p class="text-sm font-bold ${v.id === 'ultimate' && owned ? 'text-black' : 'text-white'}">${v.name}</p>
                                     <p class="text-xs ${v.id === 'ultimate' && owned ? 'text-gray-800' : 'text-gray-300'}">
                                         ${owned ? `x${v.count}` : '???'}
+                                    </p>
+                                    <p class="text-[10px] ${v.id === 'ultimate' && owned ? 'text-gray-700' : bonusTextColor} mt-1">
+                                        ${bonusText}
                                     </p>
                                 </div>
                             </div>

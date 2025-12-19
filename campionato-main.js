@@ -30,6 +30,7 @@ window.ChampionshipMain = {
 
     /**
      * Aggiunge XP alla formazione usata in una partita
+     * Include bonus dalla variante figurina icona selezionata
      * @param {string} teamId - ID della squadra
      * @param {string} modulo - Modulo usato (es. '1-1-2-1')
      */
@@ -40,7 +41,7 @@ window.ChampionshipMain = {
         const db = window.db;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
-        const XP_PER_MATCH = window.GestioneSquadreConstants?.FORMATION_MODIFIERS?.XP_PER_MATCH || 25;
+        const BASE_XP_PER_MATCH = window.GestioneSquadreConstants?.FORMATION_MODIFIERS?.XP_PER_MATCH || 25;
 
         try {
             const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
@@ -48,6 +49,12 @@ window.ChampionshipMain = {
             if (!teamDoc.exists()) return;
 
             const teamData = teamDoc.data();
+
+            // Applica bonus XP dalla variante figurina icona
+            const iconaVariant = teamData.iconaVariant || 'normale';
+            const variantBonus = window.FigurineSystem?.getVariantBonuses(iconaVariant)?.xpBonus || 0;
+            const XP_PER_MATCH = Math.round(BASE_XP_PER_MATCH * (1 + variantBonus / 100));
+
             const formationXp = teamData.formationXp || {};
             const currentXp = formationXp[modulo] || 0;
             const newXp = currentXp + XP_PER_MATCH;
@@ -55,7 +62,8 @@ window.ChampionshipMain = {
             formationXp[modulo] = newXp;
             await updateDoc(teamDocRef, { formationXp });
 
-            console.log(`[FormationXP] Squadra ${teamId}: ${modulo} +${XP_PER_MATCH} XP (totale: ${newXp})`);
+            const bonusText = variantBonus > 0 ? ` (+${variantBonus}% da variante ${iconaVariant})` : '';
+            console.log(`[FormationXP] Squadra ${teamId}: ${modulo} +${XP_PER_MATCH} XP${bonusText} (totale: ${newXp})`);
         } catch (error) {
             console.error(`[FormationXP] Errore aggiunta XP per squadra ${teamId}:`, error);
         }

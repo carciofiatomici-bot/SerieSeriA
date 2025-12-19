@@ -2065,27 +2065,33 @@ const resetSimulationState = () => {
 };
 
 /**
- * Inizializza il bonus Icona per la partita (50% per ogni team con Icona)
+ * Inizializza il bonus Icona per la partita (base 50% + bonus variante)
  * Chiamare DOPO resetSimulationState e PRIMA della prima occasione
  * @param {boolean} teamAHasIcona - Se teamA ha l'Icona
  * @param {boolean} teamBHasIcona - Se teamB ha l'Icona
+ * @param {string} teamAVariant - Variante icona teamA (normale/evoluto/alternative/ultimate)
+ * @param {string} teamBVariant - Variante icona teamB
  */
-const initIconaBonusForMatch = (teamAHasIcona, teamBHasIcona) => {
-    // 50% di probabilità per ogni team con Icona
+const initIconaBonusForMatch = (teamAHasIcona, teamBHasIcona, teamAVariant = 'normale', teamBVariant = 'normale') => {
+    // Base 50% + bonus dalla variante figurina
     if (teamAHasIcona) {
-        iconaBonusActive.teamA = checkChance(50);
+        const bonusA = window.FigurineSystem?.getVariantBonuses(teamAVariant)?.iconaChance || 0;
+        const chanceA = 50 + bonusA;
+        iconaBonusActive.teamA = checkChance(chanceA);
         if (iconaBonusActive.teamA) {
-            console.log('⭐ Icona TeamA: bonus +1 ATTIVO per questa partita!');
+            console.log(`⭐ Icona TeamA: bonus +1 ATTIVO per questa partita! (${chanceA}% con variante ${teamAVariant})`);
         } else {
-            console.log('⭐ Icona TeamA: bonus +1 NON attivato (50% fallito)');
+            console.log(`⭐ Icona TeamA: bonus +1 NON attivato (${chanceA}% fallito, variante ${teamAVariant})`);
         }
     }
     if (teamBHasIcona) {
-        iconaBonusActive.teamB = checkChance(50);
+        const bonusB = window.FigurineSystem?.getVariantBonuses(teamBVariant)?.iconaChance || 0;
+        const chanceB = 50 + bonusB;
+        iconaBonusActive.teamB = checkChance(chanceB);
         if (iconaBonusActive.teamB) {
-            console.log('⭐ Icona TeamB: bonus +1 ATTIVO per questa partita!');
+            console.log(`⭐ Icona TeamB: bonus +1 ATTIVO per questa partita! (${chanceB}% con variante ${teamBVariant})`);
         } else {
-            console.log('⭐ Icona TeamB: bonus +1 NON attivato (50% fallito)');
+            console.log(`⭐ Icona TeamB: bonus +1 NON attivato (${chanceB}% fallito, variante ${teamBVariant})`);
         }
     }
 };
