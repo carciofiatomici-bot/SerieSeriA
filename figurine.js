@@ -826,9 +826,12 @@ window.FigurineSystem = {
         }
 
         // Per altre collezioni (base only)
+        const itemName = files[randomId]?.name || randomId;
         return {
             collectionId: collectionId,
             itemId: randomId,
+            itemName: itemName,
+            iconaName: itemName, // Legacy compatibility
             variant: 'base',
             rarity: 'base',
             rarityInfo: this.BASE_RARITIES.base,

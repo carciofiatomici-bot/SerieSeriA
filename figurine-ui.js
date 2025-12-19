@@ -376,6 +376,29 @@ window.FigurineUI = {
             return `<div class="p-4 text-center text-gray-500">Collezione in arrivo...</div>`;
         }
 
+        // Giocatori Seri: lista compatta senza anteprime
+        if (collId === 'giocatori_seri') {
+            let html = '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3">';
+            Object.entries(files).forEach(([itemId, itemFiles]) => {
+                const counts = albumColl[itemId] || { base: 0 };
+                const hasAny = counts.base > 0;
+                const displayName = itemFiles.name || itemId;
+
+                html += `
+                    <div class="figurine-card bg-gray-800 rounded-lg px-3 py-2 border ${hasAny ? 'border-emerald-500' : 'border-gray-700'} cursor-pointer hover:bg-gray-700 transition flex items-center justify-between gap-2"
+                         data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
+                        <p class="text-xs font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} truncate flex-1">${displayName}</p>
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${hasAny ? 'bg-emerald-500 text-white' : 'bg-gray-700 text-gray-500'}">
+                            ${hasAny ? counts.base : '○'}
+                        </span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        // Altre collezioni con anteprima
         let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">';
 
         Object.entries(files).forEach(([itemId, itemFiles]) => {
@@ -570,6 +593,7 @@ window.FigurineUI = {
         const albumColl = this.currentAlbum?.collections?.[collectionId] || {};
         const counts = albumColl[itemId] || { base: 0 };
         const owned = counts.base > 0;
+        const hidePreview = collectionId === 'giocatori_seri';
 
         const imgUrl = `${collDef.baseUrl}${encodeURIComponent(files[itemId]?.base || '')}`;
 
@@ -585,13 +609,15 @@ window.FigurineUI = {
                     <button id="close-variants-modal" class="text-white hover:text-emerald-200 text-2xl">&times;</button>
                 </div>
 
-                <!-- Immagine -->
+                <!-- Contenuto -->
                 <div class="p-6">
+                    ${hidePreview ? '' : `
                     <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden ${!owned ? 'grayscale opacity-50' : ''}">
                         <img src="${imgUrl}" alt="${itemName}" class="w-full h-full object-cover"
                              onerror="this.src='https://placehold.co/200x200/1f2937/6b7280?text=?'">
                     </div>
-                    <div class="mt-4 text-center">
+                    `}
+                    <div class="${hidePreview ? '' : 'mt-4'} text-center">
                         <p class="text-lg font-bold ${owned ? 'text-emerald-400' : 'text-gray-500'}">
                             ${owned ? `Possedute: x${counts.base}` : 'Non posseduta'}
                         </p>
@@ -948,16 +974,23 @@ window.FigurineUI = {
 
         result.figurine.forEach(fig => {
             const rarity = fig.rarity || fig.variant || 'base';
-            const name = fig.iconaName || fig.itemId || 'Figurina';
+            const name = fig.iconaName || fig.itemName || fig.itemId || 'Figurina';
             const imgUrl = fig.imageUrl || fig.iconaPhoto || 'https://placehold.co/80x80/1f2937/6b7280?text=?';
             const rarityName = fig.rarityInfo?.name || rarity;
+            const hideImage = fig.collectionId === 'giocatori_seri';
 
             html += `
                 <div class="rounded-lg p-2 ${rarityColors[rarity] || rarityColors.base} border-2 text-center">
-                    <img src="${imgUrl}"
-                         alt="${name}"
-                         class="w-16 h-16 mx-auto rounded object-cover mb-1"
-                         onerror="this.src='https://placehold.co/80x80/1f2937/6b7280?text=?'">
+                    ${hideImage ? `
+                        <div class="w-16 h-16 mx-auto rounded bg-emerald-900/50 flex items-center justify-center mb-1">
+                            <span class="text-2xl">⚽</span>
+                        </div>
+                    ` : `
+                        <img src="${imgUrl}"
+                             alt="${name}"
+                             class="w-16 h-16 mx-auto rounded object-cover mb-1"
+                             onerror="this.src='https://placehold.co/80x80/1f2937/6b7280?text=?'">
+                    `}
                     <p class="text-xs font-semibold text-white truncate">${name}</p>
                     <p class="text-xs ${textColors[rarity] || textColors.base}">${rarityName}</p>
                 </div>
