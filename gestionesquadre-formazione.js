@@ -1583,16 +1583,14 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message',
                 `${player.name} ha recuperato la forma! (-${cost} CS)`, 'success');
 
-            // 6. Chiudi modal dopo un breve delay e re-render
-            setTimeout(() => {
-                this.closeFormRecoveryModal();
-                this.renderFieldSlots(teamData, context);
+            // 6. Chiudi modal e aggiorna UI immediatamente
+            this.closeFormRecoveryModal();
+            this.renderFieldSlots(teamData, context);
 
-                // Aggiorna anche la UI del budget se visibile altrove
-                if (window.InterfacciaCore?.setCurrentTeamData) {
-                    window.InterfacciaCore.setCurrentTeamData(teamData);
-                }
-            }, 1000);
+            // Aggiorna anche la UI del budget se visibile altrove
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
 
         } catch (error) {
             console.error('Errore nel recupero forma:', error);
@@ -1998,20 +1996,18 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message',
                 `${player.name} e stato guarito e puo tornare in campo! (-${cost} CS)`, 'success');
 
-            // 5. Chiudi modal dopo un breve delay e re-render
-            setTimeout(() => {
-                this.closeInstantHealingModal();
+            // 5. Chiudi modal e aggiorna UI immediatamente
+            this.closeInstantHealingModal();
 
-                // Re-render del pannello formazione per aggiornare l'infermeria
-                if (context.squadraToolsContainer) {
-                    this.render(teamData, context);
-                }
+            // Re-render del pannello formazione per aggiornare l'infermeria
+            if (context.squadraToolsContainer) {
+                this.render(teamData, context);
+            }
 
-                // Aggiorna anche la UI del budget se visibile altrove
-                if (window.InterfacciaCore?.setCurrentTeamData) {
-                    window.InterfacciaCore.setCurrentTeamData(teamData);
-                }
-            }, 1000);
+            // Aggiorna anche la UI del budget se visibile altrove
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
 
         } catch (error) {
             console.error('Errore nella guarigione istantanea:', error);
