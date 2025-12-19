@@ -604,6 +604,12 @@ window.ChampionshipMain = {
                 await window.AutomazioneSimulazioni.advanceSimulationType('campionato');
             }
 
+            // Riabilita il pulsante dopo il successo
+            if (button) {
+                button.disabled = false;
+                button.textContent = `Simula Tutta la Giornata ${round.round}`;
+            }
+
         } catch (error) {
             console.error("Errore durante la simulazione completa della giornata:", error);
             // FIX: Riabilita il pulsante solo se esiste

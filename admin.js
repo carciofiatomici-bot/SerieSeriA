@@ -789,7 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnAdminLeaderboard = document.getElementById('btn-admin-leaderboard');
         if (btnAdminLeaderboard) {
             btnAdminLeaderboard.addEventListener('click', async () => {
+                 console.log('[Admin] Click su Classifica');
                  const userCampionatoContent = document.getElementById('user-campionato-content');
+                 console.log('[Admin] userCampionatoContent:', userCampionatoContent);
                  if (userCampionatoContent) {
                      window.showScreen(userCampionatoContent);
                      // Carica il campionato (include classifica)
@@ -798,8 +800,12 @@ document.addEventListener('DOMContentLoaded', () => {
                      }
                      const backBtn = document.getElementById('user-campionato-back-button');
                      if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
+                 } else {
+                     console.error('[Admin] user-campionato-content non trovato!');
                  }
             });
+        } else {
+            console.warn('[Admin] btn-admin-leaderboard non trovato nel DOM');
         }
 
         const btnAdminSchedule = document.getElementById('btn-admin-schedule');
