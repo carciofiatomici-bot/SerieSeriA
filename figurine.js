@@ -17,116 +17,116 @@ window.FigurineSystem = {
     // Formato: { normale, evoluto, alternative, ultimate, fantasy }
     FIGURINE_FILES: {
         'croc': {
-            normale: 'Croccante.jpg',
-            evoluto: 'Croccante Evoluto.jpg',
-            alternative: 'Croccante Alternative.jpg',
-            ultimate: 'Croccante Ultimate.jpg',
+            normale: 'Icone/Croccante.jpg',
+            evoluto: 'Icone/Croccante Evoluto.jpg',
+            alternative: 'Icone/Croccante Alternative.jpg',
+            ultimate: 'Icone/Croccante Ultimate.jpg',
             fantasy: 'Icone Fantasy/Croccante Fantasy.jpg'
         },
         'shik': {
-            normale: 'shikanto.jpg',
-            evoluto: 'shikanto evoluto.jpg',
-            alternative: 'shikanto alternative.jpg',
-            ultimate: 'shikanto ultimate.jpg',
+            normale: 'Icone/shikanto.jpg',
+            evoluto: 'Icone/shikanto evoluto.jpg',
+            alternative: 'Icone/shikanto alternative.jpg',
+            ultimate: 'Icone/shikanto ultimate.jpg',
             fantasy: 'Icone Fantasy/Shikanto Fantasy.jpg'
         },
         'ilcap': {
-            normale: 'cap.jpg',
-            evoluto: 'cap evoluto.jpg',
-            alternative: 'cap alternative.jpg',
-            ultimate: 'cap ultimate.jpg',
+            normale: 'Icone/cap.jpg',
+            evoluto: 'Icone/cap evoluto.jpg',
+            alternative: 'Icone/cap alternative.jpg',
+            ultimate: 'Icone/cap ultimate.jpg',
             fantasy: 'Icone Fantasy/Cap Fantasy.jpg'
         },
         'simo': {
-            normale: 'simone.jpg',
-            evoluto: 'simone evolved.jpg',
-            alternative: 'simone alternative.jpg',
-            ultimate: 'simone ultimate.jpg',
+            normale: 'Icone/simone.jpg',
+            evoluto: 'Icone/simone evolved.jpg',
+            alternative: 'Icone/simone alternative.jpg',
+            ultimate: 'Icone/simone ultimate.jpg',
             fantasy: 'Icone Fantasy/Simone Fantasy.jpg'
         },
         'dappi': {
-            normale: 'dappino.png',
-            evoluto: 'dappino evolved.jpg',
-            alternative: 'dappino alternative.jpg',
-            ultimate: 'dappino ultimate.jpg',
+            normale: 'Icone/dappino.png',
+            evoluto: 'Icone/dappino evolved.jpg',
+            alternative: 'Icone/dappino alternative.jpg',
+            ultimate: 'Icone/dappino ultimate.jpg',
             fantasy: 'Icone Fantasy/Dappino Fantasy.jpg'
         },
         'gladio': {
-            normale: 'gladio.jpg',
-            evoluto: 'gladio evoluto.jpg',
-            alternative: 'gladio alternative.jpg',
-            ultimate: 'gladio ultimate.jpg',
+            normale: 'Icone/gladio.jpg',
+            evoluto: 'Icone/gladio evoluto.jpg',
+            alternative: 'Icone/gladio alternative.jpg',
+            ultimate: 'Icone/gladio ultimate.jpg',
             fantasy: 'Icone Fantasy/Gladio Fantasy.jpg'
         },
         'amedemo': {
-            normale: 'amedemo.jpg',
-            evoluto: 'amedemo evolved.jpg',
-            alternative: 'amedemo alternative.jpg',
-            ultimate: 'amedemo ultimate.jpg',
+            normale: 'Icone/amedemo.jpg',
+            evoluto: 'Icone/amedemo evolved.jpg',
+            alternative: 'Icone/amedemo alternative.jpg',
+            ultimate: 'Icone/amedemo ultimate.jpg',
             fantasy: 'Icone Fantasy/Amedemo Fantasy.jpg'
         },
         'flavio': {
-            normale: 'elficario.jpg',
-            evoluto: 'elficario evoluto.jpg',
-            alternative: 'elficario alternative.jpg',
-            ultimate: 'elficario ultimate.jpg',
-            fantasy: 'Icone Fantasy/Elficario Medievale.jpg'
+            normale: 'Icone/elficario.jpg',
+            evoluto: 'Icone/elficario evoluto.jpg',
+            alternative: 'Icone/elficario alternative.jpg',
+            ultimate: 'Icone/elficario ultimate.jpg',
+            fantasy: 'Icone Fantasy/Elficario Fantasy.jpg'
         },
         'luka': {
-            normale: 'luca.jpg',
-            evoluto: 'luca evolved.jpg',
-            alternative: 'luca alternative.jpg',
-            ultimate: 'luca ultimate.jpg',
+            normale: 'Icone/luca.jpg',
+            evoluto: 'Icone/luca evolved.jpg',
+            alternative: 'Icone/luca alternative.jpg',
+            ultimate: 'Icone/luca ultimate.jpg',
             fantasy: 'Icone Fantasy/Luka Fantasy.jpg'
         },
         'melio': {
-            normale: 'Mel.jpg',
-            evoluto: 'mel evolved.jpg',
-            alternative: 'mel alternative.jpg',
-            ultimate: 'mel ultimate.jpg',
+            normale: 'Icone/Mel.jpg',
+            evoluto: 'Icone/mel evolved.jpg',
+            alternative: 'Icone/mel alternative.jpg',
+            ultimate: 'Icone/mel ultimate.jpg',
             fantasy: 'Icone Fantasy/Mel Fantasy.jpg'
         },
         'markf': {
-            normale: 'Mark Falco.jpg',
-            evoluto: 'mark falco evoluto.jpg',
-            alternative: 'mark falco alternative.jpg',
-            ultimate: 'mark falco ultimate.jpg',
+            normale: 'Icone/Mark Falco.jpg',
+            evoluto: 'Icone/mark falco evoluto.jpg',
+            alternative: 'Icone/mark falco alternative.jpg',
+            ultimate: 'Icone/mark falco ultimate.jpg',
             fantasy: 'Icone Fantasy/Mark Falco Fantasy.jpg'
         },
         'sandro': {
-            normale: 'sandro.jpg',
-            evoluto: 'sandro evoluto.jpg',
-            alternative: 'sandro alternative.jpg',
-            ultimate: 'sandro ultimate.jpg',
+            normale: 'Icone/sandro.jpg',
+            evoluto: 'Icone/sandro evoluto.jpg',
+            alternative: 'Icone/sandro alternative.jpg',
+            ultimate: 'Icone/sandro ultimate.jpg',
             fantasy: 'Icone Fantasy/Sandro Diaz Fantasy.jpg'
         },
         'fosco': {
-            normale: 'Fosco.jpg',
-            evoluto: 'fosco evoluto.jpg',
-            alternative: 'fosco alternative.jpg',
-            ultimate: 'fosco ultimate.jpg',
-            fantasy: 'Icone Fantasy/Fosco Medievale.jpg'
+            normale: 'Icone/Fosco.jpg',
+            evoluto: 'Icone/fosco evoluto.jpg',
+            alternative: 'Icone/fosco alternative.jpg',
+            ultimate: 'Icone/fosco ultimate.jpg',
+            fantasy: 'Icone Fantasy/Fosco Fantasy.jpg'
         },
         'cocco': {
-            normale: 'cocco.jpg',
-            evoluto: 'Cocco evoluto.jpg',
-            alternative: 'Cocco alternative.jpg',
-            ultimate: 'cocco ultimate.jpg',
+            normale: 'Icone/cocco.jpg',
+            evoluto: 'Icone/Cocco evoluto.jpg',
+            alternative: 'Icone/Cocco alternative.jpg',
+            ultimate: 'Icone/cocco ultimate.jpg',
             fantasy: 'Icone Fantasy/Cocco Fantasy.jpg'
         },
         'blatta': {
-            normale: 'Bemolle.jpg',
-            evoluto: 'Bemolle Evoluto.jpg',
-            alternative: 'Bemolle Alternative.jpg',
-            ultimate: 'Bemolle Ultimate.jpg',
+            normale: 'Icone/Bemolle.jpg',
+            evoluto: 'Icone/Bemolle Evoluto.jpg',
+            alternative: 'Icone/Bemolle Alternative.jpg',
+            ultimate: 'Icone/Bemolle Ultimate.jpg',
             fantasy: 'Icone Fantasy/Bemolle Fantasy.jpg'
         },
         'antony': {
-            normale: 'antony.jpg',
-            evoluto: 'Antony Evoluto.jpg',
-            alternative: 'Antony Alternative.jpg',
-            ultimate: 'Antony Ultimate.jpg',
-            fantasy: 'Icone Fantasy/Antony Medievale.jpg'
+            normale: 'Icone/antony.jpg',
+            evoluto: 'Icone/Antony Evoluto.jpg',
+            alternative: 'Icone/Antony Alternative.jpg',
+            ultimate: 'Icone/Antony Ultimate.jpg',
+            fantasy: 'Icone Fantasy/Antony Fantasy.jpg'
         }
     },
 
