@@ -823,9 +823,24 @@ window.FigurineUI = {
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
         const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
 
-        const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+        // Carica sempre dati freschi per CS/CSS (importante per acquisti recenti)
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        let teamData = await window.FigurineSystem.getTeamData(teamId);
+        // Fallback a currentTeamData se query fallisce
+        if (!teamData) {
+            teamData = window.InterfacciaCore?.currentTeamData;
+            console.warn('[FigurineUI] Fallback a currentTeamData per CS/CSS');
+        }
+        // Debug: mostra struttura dati team
+        console.log('[FigurineUI] teamData per CS/CSS:', {
+            teamId,
+            budget: teamData?.budget,
+            creditiSuperSeri: teamData?.creditiSuperSeri,
+            hasTeamData: !!teamData,
+            allKeys: teamData ? Object.keys(teamData) : []
+        });
         const css = teamData?.creditiSuperSeri || 0;
-        const cs = teamData?.creditiSeri || 0;
+        const cs = teamData?.budget || 0;
         const collections = window.FigurineSystem.COLLECTIONS;
         const enabledCollections = window.FigurineSystem.getEnabledCollectionsWithItems();
         const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1, figurine_utenti: 1 };
@@ -1033,9 +1048,12 @@ window.FigurineUI = {
                 const collName = collections[collId]?.name || collId;
                 console.log('[FigurineUI] Click CS pack:', collId, price);
 
-                // Verifica fondi
-                const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
-                const currentCS = teamData?.creditiSeri || 0;
+                // Verifica fondi - usa currentTeamData già caricato
+                let teamData = window.InterfacciaCore?.currentTeamData;
+                if (!teamData) {
+                    teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+                }
+                const currentCS = teamData?.budget || 0;
                 if (currentCS < price) {
                     alert(`CS insufficienti! Hai ${currentCS} CS, ne servono ${price}.`);
                     return;
@@ -1055,8 +1073,11 @@ window.FigurineUI = {
                 const collName = collections[collId]?.name || collId;
                 console.log('[FigurineUI] Click CSS pack:', collId, price);
 
-                // Verifica fondi
-                const teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+                // Verifica fondi - usa currentTeamData già caricato
+                let teamData = window.InterfacciaCore?.currentTeamData;
+                if (!teamData) {
+                    teamData = await window.FigurineSystem.getTeamData(window.InterfacciaCore?.currentTeamId);
+                }
                 const currentCSS = teamData?.creditiSuperSeri || 0;
                 if (currentCSS < price) {
                     alert(`CSS insufficienti! Hai ${currentCSS} CSS, ne servono ${price}.`);

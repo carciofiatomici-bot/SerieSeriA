@@ -740,6 +740,110 @@ window.FigurineSystem = {
         return unique;
     },
 
+    // ==================== BONUS FIGURINE ====================
+
+    // Cache per album team (usato per calcoli sincroni durante simulazioni)
+    _albumCache: {},
+    _albumCacheTimestamp: {},
+    ALBUM_CACHE_TTL: 5 * 60 * 1000, // 5 minuti
+
+    /**
+     * Conta il totale delle figurine uniche di un team incluse tutte le collezioni
+     * @param {Object} album - Album del team
+     * @returns {number} Numero totale di figurine uniche
+     */
+    countAllUniqueFigurine(album) {
+        if (!album) return 0;
+
+        let totalUnique = 0;
+
+        // Conta figurine uniche dalla collezione Icone
+        totalUnique += this.countUniqueFigurine(album.collection || {});
+
+        // Conta figurine uniche dalle altre collezioni
+        const collections = album.collections || {};
+        Object.keys(collections).forEach(collId => {
+            if (collId !== 'icone') { // icone gia contato sopra
+                totalUnique += this.countCollectionUnique(collections, collId);
+            }
+        });
+
+        return totalUnique;
+    },
+
+    /**
+     * Calcola il bonus EXP basato sulle figurine uniche
+     * @param {Object} album - Album del team
+     * @returns {number} Bonus percentuale (es. 0.42 per 42 figurine uniche = 0.42%)
+     */
+    getUniqueFigurineExpBonus(album) {
+        if (!album) return 0;
+        const uniqueCount = this.countAllUniqueFigurine(album);
+        return uniqueCount * 0.01; // 0.01% per figurina unica
+    },
+
+    /**
+     * Calcola il bonus simulazione basato sulle figurine uniche
+     * @param {Object} album - Album del team
+     * @returns {number} Bonus modificatore (es. 0.42 per 42 figurine uniche)
+     */
+    getUniqueFigurineSimBonus(album) {
+        if (!album) return 0;
+        const uniqueCount = this.countAllUniqueFigurine(album);
+        return uniqueCount * 0.01; // +0.01 per figurina unica
+    },
+
+    /**
+     * Carica e mette in cache l'album di un team
+     * @param {string} teamId - ID del team
+     * @returns {Promise<Object>} Album del team
+     */
+    async loadAndCacheTeamAlbum(teamId) {
+        if (!teamId) return null;
+
+        const album = await this.loadTeamAlbum(teamId);
+        if (album) {
+            this._albumCache[teamId] = album;
+            this._albumCacheTimestamp[teamId] = Date.now();
+        }
+        return album;
+    },
+
+    /**
+     * Ottiene il conteggio delle figurine uniche in modo sincrono (usa cache)
+     * @param {string} teamId - ID del team
+     * @returns {number} Numero di figurine uniche (0 se non in cache)
+     */
+    getUniqueFigurineCountSync(teamId) {
+        if (!teamId) return 0;
+
+        const cached = this._albumCache[teamId];
+        const timestamp = this._albumCacheTimestamp[teamId] || 0;
+
+        // Controlla se la cache e valida
+        if (cached && (Date.now() - timestamp) < this.ALBUM_CACHE_TTL) {
+            return this.countAllUniqueFigurine(cached);
+        }
+
+        // Cache scaduta o non presente - avvia caricamento asincrono per prossima volta
+        this.loadAndCacheTeamAlbum(teamId);
+
+        // Ritorna il valore cached (anche se scaduto) o 0
+        return cached ? this.countAllUniqueFigurine(cached) : 0;
+    },
+
+    /**
+     * Pre-carica gli album di piu team (utile prima delle simulazioni)
+     * @param {Array<string>} teamIds - Array di ID team
+     */
+    async preloadTeamAlbums(teamIds) {
+        if (!teamIds || !Array.isArray(teamIds)) return;
+
+        const loadPromises = teamIds.map(id => this.loadAndCacheTeamAlbum(id));
+        await Promise.all(loadPromises);
+        console.log(`[Figurine] Precaricati ${teamIds.length} album team`);
+    },
+
     /**
      * Conta totale figurine per una collezione specifica
      */
@@ -1190,7 +1294,7 @@ window.FigurineSystem = {
         // Gestisci pagamento in base alla valuta
         if (currency === 'cs') {
             // Acquisto con CS (Crediti Seri)
-            const currentCS = teamData?.creditiSeri || 0;
+            const currentCS = teamData?.budget || 0; // FIX: era creditiSeri, il campo corretto e budget
 
             if (currentCS < csPrice) {
                 throw new Error(`CS insufficienti (hai ${currentCS}, servono ${csPrice})`);
@@ -1471,13 +1575,24 @@ window.FigurineSystem = {
      */
     async getTeamData(teamId) {
         const appId = window.firestoreTools?.appId;
-        if (!appId || !window.db) return null;
+        if (!appId || !window.db) {
+            console.warn('[Figurine] getTeamData: appId o db mancante', { appId, hasDb: !!window.db });
+            return null;
+        }
+        if (!teamId) {
+            console.warn('[Figurine] getTeamData: teamId mancante');
+            return null;
+        }
 
         try {
             const { doc, getDoc } = window.firestoreTools;
             const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
             const teamSnap = await getDoc(teamRef);
-            return teamSnap.exists() ? teamSnap.data() : null;
+            const data = teamSnap.exists() ? teamSnap.data() : null;
+            if (!data) {
+                console.warn('[Figurine] getTeamData: documento non trovato per', teamId);
+            }
+            return data;
         } catch (error) {
             console.error('[Figurine] Errore caricamento team:', error);
             return null;
@@ -1546,8 +1661,9 @@ window.FigurineSystem = {
 
             if (!teamSnap.exists()) return false;
 
-            const currentCS = teamSnap.data().creditiSeri || 0;
-            await updateDoc(teamRef, { creditiSeri: currentCS + amount });
+            // FIX: era creditiSeri, il campo corretto e budget
+            const currentCS = teamSnap.data().budget || 0;
+            await updateDoc(teamRef, { budget: currentCS + amount });
             return true;
         } catch (error) {
             console.error('[Figurine] Errore aggiornamento CS:', error);
