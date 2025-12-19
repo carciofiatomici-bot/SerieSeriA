@@ -1056,6 +1056,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Gestione Rarita Figurine
+        const btnFigurineRarity = document.getElementById('btn-figurine-rarity');
+        const rarityPanelContainer = document.getElementById('figurine-rarity-container');
+        const btnCloseRarityPanel = document.getElementById('btn-close-rarity-panel');
+
+        if (btnFigurineRarity) {
+            btnFigurineRarity.addEventListener('click', () => {
+                if (window.AdminFigurine) {
+                    window.AdminFigurine.openRarityPanel();
+                }
+            });
+        }
+
+        if (btnCloseRarityPanel && rarityPanelContainer) {
+            btnCloseRarityPanel.addEventListener('click', () => {
+                rarityPanelContainer.classList.add('hidden');
+            });
+        }
+
         // Accesso rapido Dashboard squadre
         const btnDashboardMucche = document.getElementById('btn-dashboard-mucche');
         if (btnDashboardMucche) {

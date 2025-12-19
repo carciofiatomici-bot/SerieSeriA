@@ -555,6 +555,166 @@ window.AdminFigurine = {
         if (panel) {
             panel.classList.add('hidden');
         }
+    },
+
+    // ==================== GESTIONE RARITA ====================
+
+    /**
+     * Apre il pannello rarita
+     */
+    async openRarityPanel() {
+        const panel = document.getElementById('figurine-rarity-container');
+        const content = document.getElementById('figurine-rarity-content');
+
+        if (panel && content) {
+            panel.classList.remove('hidden');
+            await this.renderRarityPanel(content);
+        }
+    },
+
+    /**
+     * Chiude il pannello rarita
+     */
+    closeRarityPanel() {
+        const panel = document.getElementById('figurine-rarity-container');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Renderizza pannello gestione rarita
+     */
+    async renderRarityPanel(container) {
+        if (!window.FigurineSystem) {
+            container.innerHTML = '<p class="text-red-400">Sistema figurine non disponibile</p>';
+            return;
+        }
+
+        // Carica rarita attuali
+        const rarities = await window.FigurineSystem.loadFigurineRarities();
+        const RARITIES = window.FigurineSystem.FIGURINE_RARITIES;
+
+        // Collezioni da gestire (escluse Icone che usano varianti)
+        const collectionsToManage = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+
+        let html = `
+            <div class="space-y-6">
+                <!-- Legenda -->
+                <div class="bg-gray-700 p-3 rounded-lg">
+                    <p class="text-sm text-gray-400 mb-2">Legenda Rarita:</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${Object.values(RARITIES).map(r => `
+                            <span class="px-2 py-1 rounded text-xs ${r.cssClass} border ${r.textClass}">${r.name}</span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Collezioni -->
+                ${collectionsToManage.map(collId => {
+                    const collDef = window.FigurineSystem.COLLECTIONS[collId];
+                    if (!collDef?.enabled) return '';
+
+                    const files = window.FigurineSystem.getCollectionFiles(collId);
+                    if (Object.keys(files).length === 0) return '';
+
+                    const collRarities = rarities[collId] || {};
+
+                    return `
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h4 class="text-lg font-bold ${collDef.icon === '⚽' ? 'text-green-400' : collDef.icon === '🎨' ? 'text-pink-400' : 'text-blue-400'} mb-3">
+                                ${collDef.icon} ${collDef.name}
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                                ${Object.entries(files).map(([itemId, itemData]) => {
+                                    const currentRarity = collRarities[itemId] || 1;
+                                    const itemName = itemData.name || itemId;
+                                    return `
+                                        <div class="flex items-center justify-between bg-gray-600 p-2 rounded">
+                                            <span class="text-sm text-white truncate flex-1 mr-2">${itemName}</span>
+                                            <select class="rarity-select bg-gray-800 text-white text-xs p-1 rounded border border-gray-500"
+                                                    data-collection="${collId}" data-item="${itemId}">
+                                                ${Object.values(RARITIES).map(r => `
+                                                    <option value="${r.id}" ${currentRarity === r.id ? 'selected' : ''}>${r.name}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+
+                <!-- Messaggio -->
+                <p id="rarity-save-msg" class="text-center text-sm"></p>
+
+                <!-- Bottoni -->
+                <div class="flex justify-end gap-3">
+                    <button id="btn-save-rarities" class="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition">
+                        💾 Salva Rarita
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Bind eventi
+        document.getElementById('btn-save-rarities')?.addEventListener('click', () => this.saveRarities());
+    },
+
+    /**
+     * Salva le rarita configurate
+     */
+    async saveRarities() {
+        const msgEl = document.getElementById('rarity-save-msg');
+        const btn = document.getElementById('btn-save-rarities');
+
+        try {
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Salvataggio...';
+            }
+
+            // Raccogli tutti i valori dai select
+            const rarities = await window.FigurineSystem.loadFigurineRarities();
+
+            document.querySelectorAll('.rarity-select').forEach(select => {
+                const collId = select.dataset.collection;
+                const itemId = select.dataset.item;
+                const rarityValue = parseInt(select.value);
+
+                if (!rarities[collId]) {
+                    rarities[collId] = {};
+                }
+                rarities[collId][itemId] = rarityValue;
+            });
+
+            // Salva su Firestore
+            const success = await window.FigurineSystem.saveFigurineRarities(rarities);
+
+            if (success) {
+                if (msgEl) {
+                    msgEl.textContent = 'Rarita salvate con successo!';
+                    msgEl.className = 'text-center text-sm text-green-400';
+                }
+            } else {
+                throw new Error('Errore salvataggio');
+            }
+
+        } catch (error) {
+            console.error('[AdminFigurine] Errore salvataggio rarita:', error);
+            if (msgEl) {
+                msgEl.textContent = `Errore: ${error.message}`;
+                msgEl.className = 'text-center text-sm text-red-400';
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 Salva Rarita';
+            }
+        }
     }
 };
 

@@ -9,7 +9,7 @@ window.FigurineUI = {
     isOpen: false,
     currentTab: 'album', // album, pack
     currentAlbum: null,
-    expandedCollections: { icone: true }, // Collezioni espanse
+    expandedCollections: {}, // Collezioni espanse (tutte chiuse di default)
 
     /**
      * Inizializza UI
@@ -386,8 +386,14 @@ window.FigurineUI = {
                 const hasAny = counts.base > 0;
                 const displayName = itemFiles.name || itemId;
 
+                // Ottieni rarita e colori
+                const rarityLevel = window.FigurineSystem.getFigurineRarity(collId, itemId);
+                const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
+                const borderClass = hasAny ? rarityInfo.cssClass : 'border-gray-700';
+                const textClass = hasAny ? rarityInfo.textClass : 'text-gray-500';
+
                 html += `
-                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border ${hasAny ? 'border-emerald-500' : 'border-gray-700'} cursor-pointer hover:bg-gray-700 transition text-center"
+                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} cursor-pointer hover:bg-gray-700 transition text-center"
                          data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
                         <div class="aspect-square rounded bg-gray-700 flex items-center justify-center mb-1">
                             ${hasAny
@@ -396,7 +402,8 @@ window.FigurineUI = {
                             }
                         </div>
                         <p class="text-[10px] font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} truncate">${displayName}</p>
-                        ${hasAny ? `<span class="text-[10px] text-emerald-400">x${counts.base}</span>` : ''}
+                        <p class="text-[9px] ${textClass}">${rarityInfo.name}</p>
+                        ${hasAny ? `<span class="text-[10px] ${textClass}">x${counts.base}</span>` : ''}
                     </div>
                 `;
             });
@@ -663,6 +670,7 @@ window.FigurineUI = {
         const css = teamData?.creditiSuperSeri || 0;
         const cs = teamData?.creditiSeri || 0;
         const collections = window.FigurineSystem.COLLECTIONS;
+        const enabledCollections = window.FigurineSystem.getEnabledCollectionsWithItems();
         const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1, figurine_utenti: 1 };
         const csPrice = config.packPriceCS || 150; // Prezzo in CS per pacchetto
         const probs = config.iconeProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
@@ -691,26 +699,34 @@ window.FigurineUI = {
 
                 <!-- Pacchetto Gratis -->
                 <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-lg font-bold text-green-400 flex items-center gap-2">
-                                🎁 Pacchetto Giornaliero
-                            </h3>
-                            <p class="text-sm text-gray-300 mt-1">
-                                1 figurina (${100 - bonusChance}%) o 2 (${bonusChance}%) da qualsiasi collezione
-                            </p>
-                            <p class="text-xs text-gray-500 mt-1">Disponibile ogni ${config.freePackCooldownHours || 4} ore</p>
-                        </div>
-                        ${canFree ?
-                            `<button id="btn-free-pack" class="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-lg transition animate-pulse">
-                                APRI GRATIS
-                            </button>` :
-                            `<div class="text-right">
-                                <p class="text-sm text-gray-400">Prossimo tra:</p>
-                                <p class="text-xl font-bold text-green-400">${timeLeft?.formatted || '--'}</p>
-                            </div>`
-                        }
+                    <div class="mb-3">
+                        <h3 class="text-lg font-bold text-green-400 flex items-center gap-2">
+                            🎁 Pacchetto Giornaliero
+                        </h3>
+                        <p class="text-sm text-gray-300 mt-1">
+                            1 figurina (${100 - bonusChance}%) o 2 (${bonusChance}%) - Scegli la collezione!
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">Disponibile ogni ${config.freePackCooldownHours || 4} ore</p>
                     </div>
+                    ${canFree ? `
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            ${enabledCollections.map(collId => {
+                                const collDef = collections[collId];
+                                return `
+                                    <button class="btn-free-pack-collection bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-2"
+                                            data-collection="${collId}">
+                                        <span class="text-xl">${collDef.icon}</span>
+                                        <span class="text-xs">${collDef.name}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : `
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Prossimo tra:</p>
+                            <p class="text-2xl font-bold text-green-400">${timeLeft?.formatted || '--'}</p>
+                        </div>
+                    `}
                 </div>
 
                 <!-- Pacchetti per Collezione -->
@@ -840,8 +856,13 @@ window.FigurineUI = {
             </div>
         `;
 
-        // Bind buttons
-        document.getElementById('btn-free-pack')?.addEventListener('click', () => this.openPack(true));
+        // Bind bottoni pacchetto gratis (scelta collezione)
+        document.querySelectorAll('.btn-free-pack-collection').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const collId = e.currentTarget.dataset.collection;
+                await this.openFreePackFromCollection(collId);
+            });
+        });
 
         // Bind collection pack buttons (con conferma)
         // Bottoni acquisto con CS
@@ -958,7 +979,25 @@ window.FigurineUI = {
     },
 
     /**
-     * Apre un pacchetto
+     * Apre un pacchetto gratis da una collezione specifica
+     */
+    async openFreePackFromCollection(collectionId) {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) return;
+
+        try {
+            const result = await window.FigurineSystem.openFreePack(teamId, collectionId);
+            this.currentAlbum = result.album;
+            this.updateStats();
+            this.showPackResult(result);
+            this.checkFreePack();
+        } catch (error) {
+            alert(error.message);
+        }
+    },
+
+    /**
+     * Apre un pacchetto (legacy)
      */
     async openPack(isFree) {
         const teamId = window.InterfacciaCore?.currentTeamId;

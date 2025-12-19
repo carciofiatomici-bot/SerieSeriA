@@ -196,9 +196,13 @@ window.AdminUI = {
                         <button id="btn-schedina-config" class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 rounded-lg hover:from-green-500 hover:to-emerald-400 transition text-sm">
                             🎯 Schedina
                         </button>
-                        <button id="btn-figurine-config" class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition text-sm col-span-2">
+                        <button id="btn-figurine-config" class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition text-sm">
                             🃏 Figurine
-                            <span class="block text-[10px] font-normal opacity-80">👑16 ⚽17 🎨9 👤0</span>
+                            <span class="block text-[10px] font-normal opacity-80">Config</span>
+                        </button>
+                        <button id="btn-figurine-rarity" class="bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-bold py-2 rounded-lg hover:from-amber-500 hover:to-yellow-400 transition text-sm">
+                            ⭐ Rarita
+                            <span class="block text-[10px] font-normal opacity-80">Figurine</span>
                         </button>
                     </div>
                 </div>
@@ -334,6 +338,17 @@ window.AdminUI = {
                     <button id="btn-close-figurine-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
                 <div id="figurine-panel-content">
+                    <p class="text-gray-400">Caricamento...</p>
+                </div>
+            </div>
+
+            <!-- PANNELLO RARITA FIGURINE (inizialmente nascosto) -->
+            <div id="figurine-rarity-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-amber-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-amber-400">⭐ Gestione Rarita Figurine</h3>
+                    <button id="btn-close-rarity-panel" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="figurine-rarity-content">
                     <p class="text-gray-400">Caricamento...</p>
                 </div>
             </div>

@@ -243,6 +243,19 @@ window.FigurineSystem = {
         base: { id: 'base', name: 'Base', color: 'emerald', probability: 1.0, cssClass: 'border-emerald-500' }
     },
 
+    // Rarita per figurine (Giocatori Seri, Illustrazioni, Figurine Utenti)
+    // Probabilita di default: Comune 40%, Non Comune 30%, Rara 18%, Molto Rara 9%, Leggendaria 3%
+    FIGURINE_RARITIES: {
+        1: { id: 1, name: 'Comune', color: 'gray', probability: 0.40, cssClass: 'border-gray-400', textClass: 'text-gray-400' },
+        2: { id: 2, name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400' },
+        3: { id: 3, name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400' },
+        4: { id: 4, name: 'Molto Rara', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400' },
+        5: { id: 5, name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400' }
+    },
+
+    // Cache per rarita figurine da Firestore
+    _figurineRarities: null,
+
     // Alias per retrocompatibilita
     get RARITIES() {
         return this.ICONE_RARITIES;
@@ -356,6 +369,14 @@ window.FigurineSystem = {
                 ultimate: 300,
                 fantasy: 300,           // Stesso valore di ultimate
                 base: 25                // Per collezioni senza varianti
+            },
+            // Probabilita rarita figurine (non-Icone)
+            figurineRarityProbabilities: {
+                1: 40,  // Comune
+                2: 30,  // Non Comune
+                3: 18,  // Rara
+                4: 9,   // Molto Rara
+                5: 3    // Leggendaria
             }
         };
     },
@@ -432,6 +453,113 @@ window.FigurineSystem = {
      */
     isEnabled() {
         return window.FeatureFlags?.isEnabled('figurine') || false;
+    },
+
+    // ==================== RARITA FIGURINE ====================
+
+    /**
+     * Carica le rarita delle figurine da Firestore
+     * Formato: { collectionId: { itemId: rarityLevel, ... }, ... }
+     */
+    async loadFigurineRarities() {
+        if (this._figurineRarities) {
+            return this._figurineRarities;
+        }
+
+        const path = this.getConfigPath();
+        if (!path || !window.db || !window.firestoreTools) {
+            this._figurineRarities = this.getDefaultFigurineRarities();
+            return this._figurineRarities;
+        }
+
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const docRef = doc(window.db, path, 'figurineRarities');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                this._figurineRarities = docSnap.data();
+            } else {
+                this._figurineRarities = this.getDefaultFigurineRarities();
+            }
+        } catch (error) {
+            console.error('[Figurine] Errore caricamento rarita:', error);
+            this._figurineRarities = this.getDefaultFigurineRarities();
+        }
+
+        return this._figurineRarities;
+    },
+
+    /**
+     * Salva le rarita delle figurine su Firestore
+     */
+    async saveFigurineRarities(rarities) {
+        const path = this.getConfigPath();
+        if (!path || !window.db || !window.firestoreTools) {
+            console.error('[Figurine] Impossibile salvare rarita');
+            return false;
+        }
+
+        try {
+            const { doc, setDoc } = window.firestoreTools;
+            const docRef = doc(window.db, path, 'figurineRarities');
+            await setDoc(docRef, { ...rarities, updatedAt: new Date().toISOString() });
+            this._figurineRarities = rarities;
+            console.log('[Figurine] Rarita salvate');
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore salvataggio rarita:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Ottiene rarita di default (tutte Comune = 1)
+     */
+    getDefaultFigurineRarities() {
+        const rarities = {};
+
+        // Giocatori Seri
+        rarities.giocatori_seri = {};
+        Object.keys(this.GIOCATORI_SERI_FILES).forEach(id => {
+            rarities.giocatori_seri[id] = 1; // Comune
+        });
+
+        // Illustrazioni
+        rarities.illustrazioni = {};
+        Object.keys(this.ILLUSTRAZIONI_FILES).forEach(id => {
+            rarities.illustrazioni[id] = 1; // Comune
+        });
+
+        // Figurine Utenti
+        rarities.figurine_utenti = {};
+        Object.keys(this.FIGURINE_UTENTI_FILES).forEach(id => {
+            rarities.figurine_utenti[id] = 1; // Comune
+        });
+
+        return rarities;
+    },
+
+    /**
+     * Ottiene la rarita di una figurina specifica
+     * @param {string} collectionId - ID collezione
+     * @param {string} itemId - ID figurina
+     * @returns {number} Livello rarita (1-5)
+     */
+    getFigurineRarity(collectionId, itemId) {
+        if (!this._figurineRarities) {
+            return 1; // Default: Comune
+        }
+        return this._figurineRarities[collectionId]?.[itemId] || 1;
+    },
+
+    /**
+     * Ottiene info rarita per livello
+     * @param {number} level - Livello rarita (1-5)
+     * @returns {Object} Info rarita
+     */
+    getRarityInfo(level) {
+        return this.FIGURINE_RARITIES[level] || this.FIGURINE_RARITIES[1];
     },
 
     // ==================== ICONE ====================
@@ -883,17 +1011,56 @@ window.FigurineSystem = {
             };
         }
 
-        // Per altre collezioni (base only)
-        const itemName = files[randomId]?.name || randomId;
+        // Per altre collezioni: usa sistema rarita
+        // 1. Determina rarita in base alle probabilita configurate
+        const config = this._config || this.getDefaultConfig();
+        const rarityProbs = config.figurineRarityProbabilities || { 1: 40, 2: 30, 3: 18, 4: 9, 5: 3 };
+
+        // Roll per la rarita (dal piu raro al meno raro)
+        const roll = Math.random() * 100;
+        let targetRarity = 1; // Default: Comune
+        let cumulative = 0;
+
+        // Ordine: Leggendaria (5) -> Molto Rara (4) -> Rara (3) -> Non Comune (2) -> Comune (1)
+        for (let r = 5; r >= 1; r--) {
+            cumulative += rarityProbs[r] || 0;
+            if (roll < cumulative) {
+                targetRarity = r;
+                break;
+            }
+        }
+
+        // 2. Trova figurine di quella rarita nella collezione
+        const figurinesOfRarity = itemIds.filter(id => {
+            const figRarity = this.getFigurineRarity(collectionId, id);
+            return figRarity === targetRarity;
+        });
+
+        // 3. Se ci sono figurine di quella rarita, pesca da quelle; altrimenti pesca casuale
+        let selectedId;
+        let actualRarity;
+        if (figurinesOfRarity.length > 0) {
+            selectedId = figurinesOfRarity[Math.floor(Math.random() * figurinesOfRarity.length)];
+            actualRarity = targetRarity;
+        } else {
+            // Fallback: pesca casuale e usa la rarita assegnata
+            selectedId = itemIds[Math.floor(Math.random() * itemIds.length)];
+            actualRarity = this.getFigurineRarity(collectionId, selectedId);
+        }
+
+        const itemName = files[selectedId]?.name || selectedId;
+        const rarityInfo = this.getRarityInfo(actualRarity);
+
         return {
             collectionId: collectionId,
-            itemId: randomId,
+            itemId: selectedId,
             itemName: itemName,
             iconaName: itemName, // Legacy compatibility
             variant: 'base',
-            rarity: 'base',
-            rarityInfo: this.BASE_RARITIES.base,
-            imageUrl: `${collectionDef.baseUrl}${encodeURIComponent(files[randomId]?.base || '')}`
+            rarity: actualRarity,
+            rarityLevel: actualRarity,
+            rarityInfo: rarityInfo,
+            imageUrl: `${collectionDef.baseUrl}${encodeURIComponent(files[selectedId]?.base || '')}`
         };
     },
 
@@ -901,27 +1068,39 @@ window.FigurineSystem = {
      * Estrae una figurina casuale da qualsiasi collezione abilitata
      */
     extractRandomFromAnyCollection() {
-        const enabledCollections = Object.keys(this.COLLECTIONS).filter(id => {
-            const coll = this.COLLECTIONS[id];
-            const files = this.getCollectionFiles(id);
-            return coll.enabled && Object.keys(files).length > 0;
-        });
-
-        if (enabledCollections.length === 0) {
-            // Fallback a icone
-            return this.extractRandomFigurina();
-        }
-
-        // Seleziona collezione casuale
-        const randomCollectionId = enabledCollections[Math.floor(Math.random() * enabledCollections.length)];
+        const randomCollectionId = this.getRandomEnabledCollection();
         return this.extractRandomFromCollection(randomCollectionId);
     },
 
     /**
-     * Apre un pacchetto di figurine gratis (da qualsiasi collezione)
-     * 99% una figurina, 1% due figurine
+     * Ottiene una collezione casuale tra quelle abilitate con elementi
      */
-    async openFreePack(teamId) {
+    getRandomEnabledCollection() {
+        const enabledCollections = this.getEnabledCollectionsWithItems();
+        if (enabledCollections.length === 0) {
+            return 'icone'; // Fallback
+        }
+        return enabledCollections[Math.floor(Math.random() * enabledCollections.length)];
+    },
+
+    /**
+     * Ottiene lista di collezioni abilitate con almeno un elemento
+     */
+    getEnabledCollectionsWithItems() {
+        return Object.keys(this.COLLECTIONS).filter(id => {
+            const coll = this.COLLECTIONS[id];
+            const files = this.getCollectionFiles(id);
+            return coll.enabled && Object.keys(files).length > 0;
+        });
+    },
+
+    /**
+     * Apre un pacchetto di figurine gratis da una collezione specifica
+     * 99% una figurina, 1% due figurine
+     * @param {string} teamId - ID squadra
+     * @param {string} collectionId - ID collezione scelta dall'utente
+     */
+    async openFreePack(teamId, collectionId = null) {
         const config = await this.loadConfig();
         const album = await this.loadTeamAlbum(teamId);
 
@@ -930,14 +1109,25 @@ window.FigurineSystem = {
             throw new Error('Pacchetto gratis non ancora disponibile');
         }
 
+        // Se non specificata una collezione, usa estrazione casuale (legacy)
+        if (!collectionId) {
+            collectionId = this.getRandomEnabledCollection();
+        }
+
+        // Verifica che la collezione sia valida e abbia elementi
+        const files = this.getCollectionFiles(collectionId);
+        if (Object.keys(files).length === 0) {
+            throw new Error('Collezione non disponibile');
+        }
+
         // Determina numero figurine: 99% una, 1% due
         const bonusChance = config.freePackChance2 || config.bonusFigurineChance || 0.01;
         const numFigurine = Math.random() < bonusChance ? 2 : 1;
 
-        // Estrai figurine da qualsiasi collezione
+        // Estrai figurine dalla collezione scelta
         const extracted = [];
         for (let i = 0; i < numFigurine; i++) {
-            const figurina = this.extractRandomFromAnyCollection();
+            const figurina = this.extractRandomFromCollection(collectionId);
             if (figurina) {
                 extracted.push(figurina);
                 this.addFigurinaToAlbum(album, figurina);
