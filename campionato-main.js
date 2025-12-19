@@ -140,15 +140,21 @@ window.ChampionshipMain = {
             }
 
             // 3.6. Processa EXP giocatori
+            console.log('[EXP Debug] PlayerExp esiste:', !!window.PlayerExp);
+            console.log('[EXP Debug] homeTeamData.players:', homeTeamData.players?.length || 0, 'giocatori');
+            console.log('[EXP Debug] awayTeamData.players:', awayTeamData.players?.length || 0, 'giocatori');
             if (window.PlayerExp) {
                 const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
                 const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+                console.log('[EXP Debug] homeExpResults:', homeExpResults.length, 'risultati');
+                console.log('[EXP Debug] awayExpResults:', awayExpResults.length, 'risultati');
 
                 // Salva EXP aggiornata su Firestore
                 const { updateDoc, doc, appId } = window.firestoreTools;
                 const teamsPath = `artifacts/${appId}/public/data/teams`;
 
                 // Salva players home team con EXP aggiornata
+                console.log('[EXP Debug] Condizione salvataggio home:', homeTeamData.players && homeExpResults.length > 0);
                 if (homeTeamData.players && homeExpResults.length > 0) {
                     await updateDoc(doc(window.db, teamsPath, match.homeId), {
                         players: homeTeamData.players,
