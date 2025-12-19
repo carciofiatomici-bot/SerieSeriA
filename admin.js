@@ -660,14 +660,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const configDoc = await getDoc(configDocRef);
         const configData = configDoc.exists() ? configDoc.data() : {};
-        
+
         const teamsSnapshot = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
-        const allTeams = teamsSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
+        const allTeams = teamsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
         }));
 
-        await window.AdminUI.renderAdminDashboard(adminDashboardContainer, configData, allTeams);
+        // Prendi sempre una reference fresca al container (potrebbe essere stato ricreato)
+        const container = document.getElementById('admin-dashboard-container') || adminDashboardContainer;
+        if (!container) {
+            console.error('[Admin] Container admin-dashboard-container non trovato');
+            return;
+        }
+
+        await window.AdminUI.renderAdminDashboard(container, configData, allTeams);
         setupAdminDashboardEvents();
     };
 
