@@ -159,7 +159,9 @@ window.FigurineSystem = {
     // Mapping per collezione Illustrazioni
     ILLUSTRAZIONI_FILES: {
         'antony_vs_croccante': { base: 'Antony vs Croccante.jpg', name: 'Antony vs Croccante' },
-        'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' }
+        'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' },
+        'ame_vs_fosco': { base: 'Ame vs Fosco.jpg', name: 'Ame vs Fosco' },
+        'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark' }
     },
 
     // Mapping per collezione Figurine Utenti
