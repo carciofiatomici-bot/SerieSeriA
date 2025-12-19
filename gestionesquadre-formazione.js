@@ -2097,11 +2097,16 @@ window.GestioneSquadreFormazione = {
             }
             return true;
         }).map(p => {
-            // Arricchisci il giocatore con il modificatore di forma
+            // Arricchisci il giocatore con il modificatore di forma e livello effettivo
             const formData = playersFormStatus[p.id];
+            const formMod = formData?.mod ?? 0;
+            const baseLevel = p.level || 1;
+            // Calcola livello effettivo (base + forma), clampato tra 1 e 30
+            const effectiveLevel = Math.min(30, Math.max(1, baseLevel + formMod));
             return {
                 ...p,
-                formModifier: formData?.mod ?? 0
+                formModifier: formMod,
+                effectiveLevel: effectiveLevel
             };
         });
 
@@ -2222,14 +2227,16 @@ window.GestioneSquadreFormazione = {
 
     /**
      * Calcola il punteggio di un giocatore per la selezione automatica
-     * @param {Object} player - Dati del giocatore
+     * @param {Object} player - Dati del giocatore (con effectiveLevel se disponibile)
      * @returns {number} Punteggio
      */
     calculatePlayerScore(player) {
         let score = 0;
 
-        // Base: livello (peso maggiore)
-        const level = player.level || player.currentLevel || 1;
+        // Base: usa effectiveLevel (livello + forma) se disponibile, altrimenti livello base
+        // Questo garantisce che un giocatore Lv5 con +2 forma (=7 effettivo)
+        // abbia punteggio maggiore di un Lv7 con -1 forma (=6 effettivo)
+        const level = player.effectiveLevel || player.level || player.currentLevel || 1;
         score += level * 10;
 
         // Bonus per Icona
@@ -2259,10 +2266,6 @@ window.GestioneSquadreFormazione = {
         if (player.isCaptain) {
             score += 15;
         }
-
-        // Considera la forma se disponibile
-        const formMod = player.formModifier || 0;
-        score += formMod * 3;
 
         return score;
     },
