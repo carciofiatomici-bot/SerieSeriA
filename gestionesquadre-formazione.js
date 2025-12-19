@@ -2079,7 +2079,7 @@ window.GestioneSquadreFormazione = {
     },
 
     /**
-     * Calcola la formazione ottimale considerando livello, tipologia, abilita e infortuni
+     * Calcola la formazione ottimale considerando livello, tipologia, abilita, infortuni e FORMA
      * @param {Object} teamData - Dati della squadra
      * @returns {Object|null} Formazione ottimale {titolari, panchina, modulo}
      */
@@ -2087,12 +2087,22 @@ window.GestioneSquadreFormazione = {
         const { MODULI } = window.GestioneSquadreConstants;
         const players = teamData.players || [];
 
-        // Filtra giocatori disponibili (non infortunati)
+        // Recupera i modificatori di forma salvati
+        const playersFormStatus = teamData.playersFormStatus || {};
+
+        // Filtra giocatori disponibili (non infortunati) e arricchisci con forma
         const availablePlayers = players.filter(p => {
             if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(p)) {
                 return false;
             }
             return true;
+        }).map(p => {
+            // Arricchisci il giocatore con il modificatore di forma
+            const formData = playersFormStatus[p.id];
+            return {
+                ...p,
+                formModifier: formData?.mod ?? 0
+            };
         });
 
         if (availablePlayers.length < 5) {
@@ -2107,7 +2117,7 @@ window.GestioneSquadreFormazione = {
             A: availablePlayers.filter(p => p.role === 'A')
         };
 
-        // Calcola punteggio per ogni giocatore
+        // Calcola punteggio per ogni giocatore (ora include la forma)
         const scoredPlayers = availablePlayers.map(p => ({
             ...p,
             score: this.calculatePlayerScore(p)
