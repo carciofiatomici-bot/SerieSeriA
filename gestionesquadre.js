@@ -116,6 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.InterfacciaCore.currentTeamData = teamDoc.data();
             currentTeamData = teamDoc.data();
 
+            // Applica EXP dal nuovo campo playersExp ai giocatori
+            if (window.PlayerExp?.applyExpFromFirestore) {
+                window.PlayerExp.applyExpFromFirestore(window.InterfacciaCore.currentTeamData);
+                window.PlayerExp.applyExpFromFirestore(currentTeamData);
+            }
+
             // Procedi con il rendering
             loadTeamDataAndRender(mode);
 

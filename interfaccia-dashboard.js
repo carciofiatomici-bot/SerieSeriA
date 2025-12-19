@@ -912,6 +912,10 @@ window.InterfacciaDashboard = {
 
             if (teamDoc.exists()) {
                 window.InterfacciaCore.currentTeamData = teamDoc.data();
+                // Applica EXP dal nuovo campo playersExp ai giocatori
+                if (window.PlayerExp?.applyExpFromFirestore) {
+                    window.PlayerExp.applyExpFromFirestore(window.InterfacciaCore.currentTeamData);
+                }
                 this.updateTeamUI(
                     window.InterfacciaCore.currentTeamData.teamName,
                     teamDocRef.id,

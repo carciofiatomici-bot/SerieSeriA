@@ -139,51 +139,17 @@ window.ChampionshipMain = {
                 });
             }
 
-            // 3.6. Processa EXP giocatori
-            console.log('[EXP Debug] PlayerExp esiste:', !!window.PlayerExp);
-            console.log('[EXP Debug] homeTeamData.players:', homeTeamData.players?.length || 0, 'giocatori');
-            console.log('[EXP Debug] awayTeamData.players:', awayTeamData.players?.length || 0, 'giocatori');
+            // 3.6. Processa EXP giocatori (NUOVO SISTEMA)
             if (window.PlayerExp) {
                 const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
                 const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
-                console.log('[EXP Debug] homeExpResults:', homeExpResults.length, 'risultati');
-                console.log('[EXP Debug] awayExpResults:', awayExpResults.length, 'risultati');
 
-                // Salva EXP aggiornata su Firestore
-                const { updateDoc, doc, appId } = window.firestoreTools;
-                const teamsPath = `artifacts/${appId}/public/data/teams`;
-
-                // Salva players home team con EXP aggiornata
-                console.log('[EXP Debug] Condizione salvataggio home:', homeTeamData.players && homeExpResults.length > 0);
-                console.log('[EXP Debug] Primo giocatore home PRIMA:', JSON.stringify(homeTeamData.players[0]?.exp));
-                console.log('[EXP Debug] EXP risultati home:', homeExpResults.map(r => ({ name: r.player?.name || r.player?.nome, exp: r.expGained })));
-                if (homeTeamData.players && homeExpResults.length > 0) {
-                    console.log('[EXP Debug] Salvataggio home team in corso...');
-                    try {
-                        await updateDoc(doc(window.db, teamsPath, match.homeId), {
-                            players: homeTeamData.players,
-                            coach: homeTeamData.coach || null
-                        });
-                        console.log('[EXP Debug] Salvataggio home completato!');
-                    } catch (err) {
-                        console.error('[EXP Debug] ERRORE salvataggio home:', err);
-                    }
+                // NUOVO: Salva EXP in campo separato 'playersExp'
+                if (homeExpResults.length > 0) {
+                    await window.PlayerExp.saveExpToFirestore(match.homeId, homeExpResults);
                 }
-
-                // Salva players away team con EXP aggiornata
-                console.log('[EXP Debug] Condizione salvataggio away:', awayTeamData.players && awayExpResults.length > 0);
-                console.log('[EXP Debug] EXP risultati away:', awayExpResults.map(r => ({ name: r.player?.name || r.player?.nome, exp: r.expGained })));
-                if (awayTeamData.players && awayExpResults.length > 0) {
-                    console.log('[EXP Debug] Salvataggio away team in corso...');
-                    try {
-                        await updateDoc(doc(window.db, teamsPath, match.awayId), {
-                            players: awayTeamData.players,
-                            coach: awayTeamData.coach || null
-                        });
-                        console.log('[EXP Debug] Salvataggio away completato!');
-                    } catch (err) {
-                        console.error('[EXP Debug] ERRORE salvataggio away:', err);
-                    }
+                if (awayExpResults.length > 0) {
+                    await window.PlayerExp.saveExpToFirestore(match.awayId, awayExpResults);
                 }
 
                 // Mostra notifiche level-up
@@ -434,26 +400,17 @@ window.ChampionshipMain = {
                     });
                 }
 
-                // Processa EXP giocatori
+                // Processa EXP giocatori (NUOVO SISTEMA)
                 if (window.PlayerExp) {
                     const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
                     const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
 
-                    // Salva EXP aggiornata su Firestore
-                    const { updateDoc, doc, appId } = window.firestoreTools;
-                    const teamsPath = `artifacts/${appId}/public/data/teams`;
-
-                    if (homeTeamData.players && homeExpResults.length > 0) {
-                        await updateDoc(doc(window.db, teamsPath, match.homeId), {
-                            players: homeTeamData.players,
-                            coach: homeTeamData.coach || null
-                        });
+                    // NUOVO: Salva EXP in campo separato 'playersExp'
+                    if (homeExpResults.length > 0) {
+                        await window.PlayerExp.saveExpToFirestore(match.homeId, homeExpResults);
                     }
-                    if (awayTeamData.players && awayExpResults.length > 0) {
-                        await updateDoc(doc(window.db, teamsPath, match.awayId), {
-                            players: awayTeamData.players,
-                            coach: awayTeamData.coach || null
-                        });
+                    if (awayExpResults.length > 0) {
+                        await window.PlayerExp.saveExpToFirestore(match.awayId, awayExpResults);
                     }
 
                     // Mostra notifiche level-up

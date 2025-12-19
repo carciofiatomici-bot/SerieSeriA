@@ -906,6 +906,114 @@
     }
 
     // ========================================
+    // NUOVO SISTEMA: SALVATAGGIO EXP SEPARATO
+    // ========================================
+
+    /**
+     * Salva l'EXP dei giocatori in un campo separato 'playersExp' su Firestore
+     * Questo evita problemi di serializzazione dell'array players
+     * @param {string} teamId - ID della squadra
+     * @param {Array} expResults - Risultati da processMatchExp
+     * @returns {Promise<boolean>} true se salvato con successo
+     */
+    async function saveExpToFirestore(teamId, expResults) {
+        if (!teamId || !expResults || expResults.length === 0) {
+            console.log('[PlayerExp] Nessun risultato EXP da salvare');
+            return false;
+        }
+
+        try {
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+
+            // Carica playersExp esistente
+            const teamDocRef = doc(window.db, teamsPath, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (!teamDoc.exists()) {
+                console.error('[PlayerExp] Team non trovato:', teamId);
+                return false;
+            }
+
+            const existingPlayersExp = teamDoc.data().playersExp || {};
+            const existingCoachExp = teamDoc.data().coachExp || null;
+
+            // Aggiorna playersExp con i nuovi valori
+            const updatedPlayersExp = { ...existingPlayersExp };
+            let updatedCoachExp = existingCoachExp;
+
+            expResults.forEach(result => {
+                if (result.type === 'coach' && result.coach) {
+                    // Salva EXP coach
+                    updatedCoachExp = {
+                        exp: result.coach.exp || 0,
+                        level: result.coach.level || 1,
+                        expToNextLevel: result.coach.expToNextLevel || 0
+                    };
+                } else if (result.player && result.playerId) {
+                    // Salva EXP giocatore
+                    updatedPlayersExp[result.playerId] = {
+                        exp: result.player.exp || 0,
+                        level: result.player.level || 1,
+                        expToNextLevel: result.player.expToNextLevel || 0,
+                        totalMatchesPlayed: result.player.totalMatchesPlayed || 0
+                    };
+                }
+            });
+
+            // Salva su Firestore
+            const updateData = { playersExp: updatedPlayersExp };
+            if (updatedCoachExp) {
+                updateData.coachExp = updatedCoachExp;
+            }
+
+            await updateDoc(teamDocRef, updateData);
+            console.log(`[PlayerExp] EXP salvata per ${Object.keys(updatedPlayersExp).length} giocatori del team ${teamId}`);
+            return true;
+
+        } catch (error) {
+            console.error('[PlayerExp] Errore salvataggio EXP:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Carica l'EXP dei giocatori dal campo 'playersExp' e la applica all'array players
+     * @param {Object} teamData - Dati squadra con players array
+     * @returns {Object} teamData con EXP applicata ai giocatori
+     */
+    function applyExpFromFirestore(teamData) {
+        if (!teamData) return teamData;
+
+        const playersExp = teamData.playersExp || {};
+        const coachExp = teamData.coachExp || null;
+        const players = teamData.players || [];
+
+        // Applica EXP ai giocatori
+        players.forEach(player => {
+            if (!player || !player.id) return;
+
+            const expData = playersExp[player.id];
+            if (expData) {
+                player.exp = expData.exp || 0;
+                player.level = expData.level || player.level || 1;
+                player.expToNextLevel = expData.expToNextLevel || 0;
+                player.totalMatchesPlayed = expData.totalMatchesPlayed || 0;
+            }
+        });
+
+        // Applica EXP al coach
+        if (teamData.coach && coachExp) {
+            teamData.coach.exp = coachExp.exp || 0;
+            teamData.coach.level = coachExp.level || teamData.coach.level || 1;
+            teamData.coach.expToNextLevel = coachExp.expToNextLevel || 0;
+        }
+
+        return teamData;
+    }
+
+    // ========================================
     // ESPOSIZIONE MODULO
     // ========================================
 
@@ -944,6 +1052,10 @@
         getPlayersNearLevelUp,
         formatExp,
         getConfig,
+
+        // NUOVO: Salvataggio EXP separato
+        saveExpToFirestore,
+        applyExpFromFirestore,
 
         // Costanti esposte
         CONFIG: EXP_CONFIG
