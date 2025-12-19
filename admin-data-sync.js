@@ -227,12 +227,13 @@ window.AdminDataSync = {
             const { doc, getDoc, collection, getDocs } = window.firestoreTools;
             const appId = window.firestoreTools.appId;
 
-            // Carica stato coppa
-            const coppaRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'coppa');
+            // Carica tabellone coppa dalla posizione corretta (schedule/coppa_schedule)
+            const COPPA_SCHEDULE_DOC_ID = window.CoppaConstants?.COPPA_SCHEDULE_DOC_ID || 'coppa_schedule';
+            const coppaRef = doc(window.db, `artifacts/${appId}/public/data/schedule`, COPPA_SCHEDULE_DOC_ID);
             const coppaDoc = await getDoc(coppaRef);
 
             if (!coppaDoc.exists()) {
-                log('Nessun dato Coppa trovato', 'warning');
+                log('Nessun tabellone Coppa trovato', 'warning');
                 return result;
             }
 
@@ -256,20 +257,20 @@ window.AdminDataSync = {
             // Analizza ogni turno
             for (const round of rounds) {
                 for (const match of round.matches || []) {
-                    // Controlla leg1
+                    // Controlla leg1 (andata)
                     if (match.leg1Result) {
                         result.total++;
-                        const matchKey = `coppa_${round.roundName}_leg1_${match.homeTeam?.teamId}_${match.awayTeam?.teamId}`;
 
                         // Verifica se esiste nello storico di entrambe le squadre
-                        const homeHas = this.hasMatchInHistory(teamsMatchHistory[match.homeTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'andata');
-                        const awayHas = this.hasMatchInHistory(teamsMatchHistory[match.awayTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'andata');
+                        // Nota: coppa-main.js salva leg come 'leg1' o 'leg2'
+                        const homeHas = this.hasMatchInHistory(teamsMatchHistory[match.homeTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'leg1');
+                        const awayHas = this.hasMatchInHistory(teamsMatchHistory[match.awayTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'leg1');
 
                         if (!homeHas || !awayHas) {
                             result.missing.push({
                                 type: 'coppa',
                                 round: round.roundName,
-                                leg: 'andata',
+                                leg: 'leg1',
                                 result: match.leg1Result,
                                 homeTeam: match.homeTeam,
                                 awayTeam: match.awayTeam,
@@ -277,22 +278,22 @@ window.AdminDataSync = {
                                 homeTeamData: teamsMatchHistory[match.homeTeam?.teamId],
                                 awayTeamData: teamsMatchHistory[match.awayTeam?.teamId]
                             });
-                            log(`Coppa ${round.roundName} andata: ${match.homeTeam?.teamName} vs ${match.awayTeam?.teamName} (${match.leg1Result}) - MANCANTE`, 'warning');
+                            log(`Coppa ${round.roundName} (andata): ${match.homeTeam?.teamName} vs ${match.awayTeam?.teamName} (${match.leg1Result}) - MANCANTE`, 'warning');
                         }
                     }
 
-                    // Controlla leg2
+                    // Controlla leg2 (ritorno)
                     if (match.leg2Result) {
                         result.total++;
 
-                        const homeHas = this.hasMatchInHistory(teamsMatchHistory[match.homeTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'ritorno');
-                        const awayHas = this.hasMatchInHistory(teamsMatchHistory[match.awayTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'ritorno');
+                        const homeHas = this.hasMatchInHistory(teamsMatchHistory[match.homeTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'leg2');
+                        const awayHas = this.hasMatchInHistory(teamsMatchHistory[match.awayTeam?.teamId]?.history, 'coppa', match.homeTeam?.teamId, match.awayTeam?.teamId, round.roundName, 'leg2');
 
                         if (!homeHas || !awayHas) {
                             result.missing.push({
                                 type: 'coppa',
                                 round: round.roundName,
-                                leg: 'ritorno',
+                                leg: 'leg2',
                                 result: match.leg2Result,
                                 homeTeam: match.awayTeam, // Nel ritorno si inverte
                                 awayTeam: match.homeTeam,
@@ -300,7 +301,7 @@ window.AdminDataSync = {
                                 homeTeamData: teamsMatchHistory[match.awayTeam?.teamId],
                                 awayTeamData: teamsMatchHistory[match.homeTeam?.teamId]
                             });
-                            log(`Coppa ${round.roundName} ritorno: ${match.awayTeam?.teamName} vs ${match.homeTeam?.teamName} (${match.leg2Result}) - MANCANTE`, 'warning');
+                            log(`Coppa ${round.roundName} (ritorno): ${match.awayTeam?.teamName} vs ${match.homeTeam?.teamName} (${match.leg2Result}) - MANCANTE`, 'warning');
                         }
                     }
                 }
