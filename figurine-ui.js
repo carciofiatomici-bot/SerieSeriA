@@ -376,8 +376,10 @@ window.FigurineUI = {
             return `<div class="p-4 text-center text-gray-500">Collezione in arrivo...</div>`;
         }
 
-        // Giocatori Seri: card con ? se non posseduta
-        if (collId === 'giocatori_seri') {
+        // Collezioni senza anteprima (mostra ? se non posseduta): giocatori_seri, illustrazioni, figurine_utenti
+        const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+        if (noPreviewCollections.includes(collId)) {
+            const collIcon = collDef.icon || '🎴';
             let html = '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 p-3">';
             Object.entries(files).forEach(([itemId, itemFiles]) => {
                 const counts = albumColl[itemId] || { base: 0 };
@@ -389,7 +391,7 @@ window.FigurineUI = {
                          data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
                         <div class="aspect-square rounded bg-gray-700 flex items-center justify-center mb-1">
                             ${hasAny
-                                ? `<span class="text-2xl">⚽</span>`
+                                ? `<span class="text-2xl">${collIcon}</span>`
                                 : `<span class="text-3xl text-gray-500 font-bold">?</span>`
                             }
                         </div>
@@ -597,7 +599,8 @@ window.FigurineUI = {
         const albumColl = this.currentAlbum?.collections?.[collectionId] || {};
         const counts = albumColl[itemId] || { base: 0 };
         const owned = counts.base > 0;
-        const hidePreview = collectionId === 'giocatori_seri';
+        const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+        const hidePreview = noPreviewCollections.includes(collectionId);
 
         const imgUrl = `${collDef.baseUrl}${encodeURIComponent(files[itemId]?.base || '')}`;
 
@@ -660,7 +663,7 @@ window.FigurineUI = {
         const css = teamData?.creditiSuperSeri || 0;
         const cs = teamData?.creditiSeri || 0;
         const collections = window.FigurineSystem.COLLECTIONS;
-        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1 };
+        const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1, figurine_utenti: 1 };
         const csPrice = config.packPriceCS || 150; // Prezzo in CS per pacchetto
         const probs = config.iconeProbabilities || { normale: 50, evoluto: 25, alternative: 12, ultimate: 8, fantasy: 5 };
 
@@ -1012,7 +1015,8 @@ window.FigurineUI = {
             const name = fig.iconaName || fig.itemName || fig.itemId || 'Figurina';
             const imgUrl = fig.imageUrl || fig.iconaPhoto || 'https://placehold.co/80x80/1f2937/6b7280?text=?';
             const rarityName = fig.rarityInfo?.name || rarity;
-            const hideImage = fig.collectionId === 'giocatori_seri';
+            const noPreviewCollections = ['giocatori_seri', 'illustrazioni', 'figurine_utenti'];
+            const hideImage = noPreviewCollections.includes(fig.collectionId);
 
             html += `
                 <div class="rounded-lg p-2 ${rarityColors[rarity] || rarityColors.base} border-2 text-center">

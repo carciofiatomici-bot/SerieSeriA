@@ -161,6 +161,11 @@ window.FigurineSystem = {
         // Esempio: 'illustrazione1': { base: 'NomeIllustrazione.jpg', name: 'Nome Illustrazione' }
     },
 
+    // Mapping per collezione Figurine Utenti
+    FIGURINE_UTENTI_FILES: {
+        // Esempio: 'utente1': { base: 'NomeUtente.jpg', name: 'Nome Utente' }
+    },
+
     // ==================== COLLEZIONI ====================
     // Sistema multi-collezione per figurine
     COLLECTIONS: {
@@ -203,6 +208,16 @@ window.FigurineSystem = {
             hasBonus: false,  // Solo collezionabili
             variants: ['base'],
             baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/'
+        },
+        figurine_utenti: {
+            id: 'figurine_utenti',
+            name: 'Figurine Utenti',
+            description: 'Le figurine create dagli utenti',
+            icon: '👤',
+            enabled: true,
+            hasBonus: false,  // Solo collezionabili
+            variants: ['base'],
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Figurine%20Utenti/'
         }
     },
 
@@ -306,7 +321,8 @@ window.FigurineSystem = {
                 icone: 1,
                 giocatori_seri: 1,
                 allenatori: 1,
-                illustrazioni: 1
+                illustrazioni: 1,
+                figurine_utenti: 1
             },
             // Probabilita varianti per collezione Icone
             iconeProbabilities: {
@@ -502,6 +518,12 @@ window.FigurineSystem = {
             illustrazioniCollection[id] = { base: 0 };
         });
 
+        // Collezione Figurine Utenti (solo base)
+        const figurineUtentiCollection = {};
+        Object.keys(this.FIGURINE_UTENTI_FILES).forEach(id => {
+            figurineUtentiCollection[id] = { base: 0 };
+        });
+
         return {
             teamId,
             // Legacy (retrocompatibilita)
@@ -511,7 +533,8 @@ window.FigurineSystem = {
                 icone: iconeCollection,
                 giocatori_seri: giocatoriSeriCollection,
                 allenatori: allenatoriCollection,
-                illustrazioni: illustrazioniCollection
+                illustrazioni: illustrazioniCollection,
+                figurine_utenti: figurineUtentiCollection
             },
             totalFigurine: 0,
             uniqueFigurine: 0,
@@ -697,6 +720,7 @@ window.FigurineSystem = {
             case 'giocatori_seri': return this.GIOCATORI_SERI_FILES;
             case 'allenatori': return this.ALLENATORI_FILES;
             case 'illustrazioni': return this.ILLUSTRAZIONI_FILES;
+            case 'figurine_utenti': return this.FIGURINE_UTENTI_FILES;
             default: return {};
         }
     },

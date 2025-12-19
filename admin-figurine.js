@@ -79,6 +79,11 @@ window.AdminFigurine = {
                             <input type="number" id="figurine-price-illustrazioni" value="${collectionPrices.illustrazioni || 1}"
                                    class="w-full p-2 rounded bg-gray-600 text-white" min="0">
                         </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">👤 Figurine Utenti</label>
+                            <input type="number" id="figurine-price-utenti" value="${collectionPrices.figurine_utenti || 1}"
+                                   class="w-full p-2 rounded bg-gray-600 text-white" min="0">
+                        </div>
                     </div>
                 </div>
 
@@ -171,6 +176,7 @@ window.AdminFigurine = {
                         <p>Figurine Icone (5 varianti): <span class="text-white font-bold">${(window.FigurineSystem?.getIconeList()?.length || 0) * 5}</span></p>
                         <p>Giocatori Seri: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.GIOCATORI_SERI_FILES || {}).length}</span></p>
                         <p>Allenatori: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.ALLENATORI_FILES || {}).length}</span></p>
+                        <p>Figurine Utenti: <span class="text-white font-bold">${Object.keys(window.FigurineSystem?.FIGURINE_UTENTI_FILES || {}).length}</span></p>
                     </div>
                 </div>
 
@@ -208,7 +214,8 @@ window.AdminFigurine = {
                 icone: 1,
                 giocatori_seri: 1,
                 allenatori: 1,
-                illustrazioni: 1
+                illustrazioni: 1,
+                figurine_utenti: 1
             },
             iconeProbabilities: {
                 normale: 50,
@@ -332,7 +339,8 @@ window.AdminFigurine = {
                 icone: parseInt(document.getElementById('figurine-price-icone')?.value) || 1,
                 giocatori_seri: parseInt(document.getElementById('figurine-price-giocatori')?.value) || 1,
                 allenatori: parseInt(document.getElementById('figurine-price-allenatori')?.value) || 1,
-                illustrazioni: parseInt(document.getElementById('figurine-price-illustrazioni')?.value) || 1
+                illustrazioni: parseInt(document.getElementById('figurine-price-illustrazioni')?.value) || 1,
+                figurine_utenti: parseInt(document.getElementById('figurine-price-utenti')?.value) || 1
             },
             iconeProbabilities: {
                 normale: parseInt(document.getElementById('figurine-prob-normale')?.value) || 50,
@@ -446,7 +454,9 @@ window.AdminFigurine = {
                 collectionPackPrices: {
                     icone: 1,
                     giocatori_seri: 1,
-                    allenatori: 1
+                    allenatori: 1,
+                    illustrazioni: 1,
+                    figurine_utenti: 1
                 },
                 iconeProbabilities: {
                     normale: 50,
