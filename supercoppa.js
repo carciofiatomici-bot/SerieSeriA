@@ -157,6 +157,12 @@ window.Supercoppa = {
         const homeTeamData = homeTeamDoc.data();
         const awayTeamData = awayTeamDoc.data();
 
+        // Applica EXP dai campi playersExp (importante per non perdere progressi)
+        if (window.PlayerExp?.applyExpFromFirestore) {
+            window.PlayerExp.applyExpFromFirestore(homeTeamData);
+            window.PlayerExp.applyExpFromFirestore(awayTeamData);
+        }
+
         // Espandi formazione per avere nomi giocatori (per telecronaca)
         const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
         if (expandFormation) {
@@ -215,14 +221,17 @@ window.Supercoppa = {
             }
         }
 
-        // Applica crediti per gol (come nella coppa)
-        await this.applyMatchCredits(
-            supercoppaBracket.homeTeam.teamId,
-            supercoppaBracket.awayTeam.teamId,
-            matchResult.homeGoals,
-            matchResult.awayGoals,
-            winner.teamId
-        );
+        // Applica crediti per gol (usa utility centralizzata)
+        if (window.MatchCredits) {
+            await window.MatchCredits.applyMatchCredits(
+                supercoppaBracket.homeTeam.teamId,
+                supercoppaBracket.awayTeam.teamId,
+                matchResult.homeGoals,
+                matchResult.awayGoals,
+                winner.teamId,
+                { competition: 'supercoppa' }
+            );
+        }
 
         // Processa EXP giocatori (NUOVO SISTEMA)
         if (window.PlayerExp) {
@@ -406,75 +415,12 @@ window.Supercoppa = {
         }
     },
 
-    /**
-     * Applica i crediti per gol e vittoria
-     * @param {string} homeTeamId - ID squadra casa
-     * @param {string} awayTeamId - ID squadra ospite
-     * @param {number} homeGoals - Gol casa
-     * @param {number} awayGoals - Gol ospite
-     * @param {string} winnerId - ID del vincitore
-     */
-    async applyMatchCredits(homeTeamId, awayTeamId, homeGoals, awayGoals, winnerId) {
-        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare crediti
-        if (window.AdminRewards?.areRewardsDisabled()) {
-            console.log('[Supercoppa] Reward DISABILITATI - nessun CS assegnato');
-            return { homeCredits: 0, awayCredits: 0 };
-        }
-
-        const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
-        const db = window.db;
-
-        // Usa le stesse costanti della coppa
-        const GOAL_CS = window.CoppaConstants?.REWARDS?.GOAL_CS || 5;
-        const MATCH_WIN_CS = window.CoppaConstants?.REWARDS?.MATCH_WIN_CS || 25;
-
-        // Calcola crediti: gol * GOAL_CS + bonus vittoria
-        let homeCredits = homeGoals * GOAL_CS;
-        let awayCredits = awayGoals * GOAL_CS;
-
-        // Bonus vittoria
-        if (winnerId === homeTeamId) {
-            homeCredits += MATCH_WIN_CS;
-        } else if (winnerId === awayTeamId) {
-            awayCredits += MATCH_WIN_CS;
-        }
-
-        // Applica crediti a home team
-        if (homeCredits > 0) {
-            const homeRef = doc(db, `artifacts/${appId}/public/data/teams`, homeTeamId);
-            const homeDoc = await getDoc(homeRef);
-            if (homeDoc.exists()) {
-                await updateDoc(homeRef, {
-                    budget: (homeDoc.data().budget || 0) + homeCredits
-                });
-            }
-        }
-
-        // Applica crediti a away team
-        if (awayCredits > 0) {
-            const awayRef = doc(db, `artifacts/${appId}/public/data/teams`, awayTeamId);
-            const awayDoc = await getDoc(awayRef);
-            if (awayDoc.exists()) {
-                await updateDoc(awayRef, {
-                    budget: (awayDoc.data().budget || 0) + awayCredits
-                });
-            }
-        }
-
-        console.log(`[Supercoppa] Crediti assegnati - Casa: ${homeCredits} CS, Ospite: ${awayCredits} CS`);
-        return { homeCredits, awayCredits };
-    },
+    // applyMatchCredits rimossa - ora usa window.MatchCredits.applyMatchCredits()
 
     /**
      * Applica il premio CSS al vincitore
      */
     async applyReward(teamId) {
-        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare premi
-        if (window.AdminRewards?.areRewardsDisabled()) {
-            console.log('[Supercoppa] Reward DISABILITATI - nessun premio CSS assegnato');
-            return;
-        }
-
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
 

@@ -130,8 +130,18 @@ window.ChampionshipSimulation = {
             isIconaActive: isIconaActive,
             Panchina: groupedPlayers.Panchina
         };
-        
+
         groupedPlayers.coachLevel = coachLevel;
+
+        // Bonus figurine uniche (+0.01 al modificatore per figurina unica)
+        groupedPlayers.figurineBonus = 0;
+        if (window.FigurineSystem?.getUniqueFigurineCountSync) {
+            const teamId = teamData.id || teamData.teamId;
+            if (teamId) {
+                const uniqueCount = window.FigurineSystem.getUniqueFigurineCountSync(teamId);
+                groupedPlayers.figurineBonus = uniqueCount * 0.01; // +0.01 per figurina
+            }
+        }
 
         return groupedPlayers;
     },
@@ -174,7 +184,7 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 50; // Aggiornato v4.0: da 40 a 50 occasioni
+        const totalOccasions = 30; // Bilanciamento v4.1: da 50 a 30 occasioni per risultati piu realistici
 
         for (let i = 0; i < totalOccasions; i++) {
             if (simulateOneOccasion(teamA, teamB, i + 1)) {
@@ -249,7 +259,7 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 50; // Aggiornato v4.0: da 40 a 50 occasioni
+        const totalOccasions = 30; // Bilanciamento v4.1: da 50 a 30 occasioni
         const log = [];
         const matchEvents = []; // Array per eventi partita strutturati
 
@@ -299,7 +309,7 @@ window.ChampionshipSimulation = {
         // ==================== OCCASIONI SQUADRA CASA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${homeTeamData.teamName} (50 occasioni)`);
+        log.push(`# ATTACCO ${homeTeamData.teamName} (30 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {
@@ -325,7 +335,7 @@ window.ChampionshipSimulation = {
         // ==================== OCCASIONI SQUADRA TRASFERTA ====================
         log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${awayTeamData.teamName} (50 occasioni)`);
+        log.push(`# ATTACCO ${awayTeamData.teamName} (30 occasioni)`);
         log.push('#'.repeat(70));
 
         for (let i = 0; i < totalOccasions; i++) {

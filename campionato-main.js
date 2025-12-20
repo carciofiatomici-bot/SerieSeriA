@@ -106,9 +106,15 @@ window.ChampionshipMain = {
             // UTILIZZA I DATI FRESCHI DEL DOC (aggiungi ID per PlayerSeasonStats)
             const homeTeamData = homeTeamDoc.exists() ? { ...homeTeamDoc.data(), id: match.homeId } : null;
             const awayTeamData = awayTeamDoc.exists() ? { ...awayTeamDoc.data(), id: match.awayId } : null;
-            
+
             if (!homeTeamData || !awayTeamData) {
                 throw new Error(`Dati squadra mancanti per ${match.homeName} o ${match.awayName}.`);
+            }
+
+            // Applica EXP dai campi playersExp (importante per non perdere progressi)
+            if (window.PlayerExp?.applyExpFromFirestore) {
+                window.PlayerExp.applyExpFromFirestore(homeTeamData);
+                window.PlayerExp.applyExpFromFirestore(awayTeamData);
             }
             
             // 3. Simula partita
@@ -357,6 +363,12 @@ window.ChampionshipMain = {
                 if (!homeTeamData || !awayTeamData) {
                     console.warn(`Dati squadra mancanti per il match ${match.homeName} vs ${match.awayName}. Salto.`);
                     continue;
+                }
+
+                // Applica EXP dai campi playersExp (importante per non perdere progressi)
+                if (window.PlayerExp?.applyExpFromFirestore) {
+                    window.PlayerExp.applyExpFromFirestore(homeTeamData);
+                    window.PlayerExp.applyExpFromFirestore(awayTeamData);
                 }
 
                 // Espandi formazione per avere nomi giocatori (per telecronaca)

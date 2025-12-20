@@ -2,7 +2,7 @@
 // ====================================================================
 // AUTOMAZIONE-SIMULAZIONI.JS - Sistema di simulazione automatica
 // ====================================================================
-// Simula partite di campionato e coppa alle 20:30 in alternanza:
+// Simula partite di campionato e coppa alle 12:00 e 20:30 in alternanza:
 // Andata coppa -> Campionato -> Ritorno coppa -> Campionato -> ...
 // ====================================================================
 //
@@ -14,8 +14,13 @@ window.AutomazioneSimulazioni = {
     _lastCheckTime: null,
 
     /**
-     * Orario di simulazione (20:30)
+     * Orari di simulazione (12:00 e 20:30)
      */
+    SIMULATION_TIMES: [
+        { hour: 12, minute: 0 },   // 12:00
+        { hour: 20, minute: 30 }   // 20:30
+    ],
+    // Legacy: mantieni per compatibilita'
     SIMULATION_HOUR: 20,
     SIMULATION_MINUTE: 30,
 
@@ -561,19 +566,34 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
-     * Calcola il tempo rimanente alla prossima simulazione (20:30)
+     * Calcola il tempo rimanente alla prossima simulazione (12:00 o 20:30)
      */
     getTimeUntilNextSimulation() {
         const now = new Date();
-        const target = new Date();
-        target.setHours(this.SIMULATION_HOUR, this.SIMULATION_MINUTE, 0, 0);
+        let nextTarget = null;
 
-        // Se l'orario e' gia' passato oggi, calcola per domani
-        if (now >= target) {
-            target.setDate(target.getDate() + 1);
+        // Trova il prossimo orario di simulazione
+        for (const time of this.SIMULATION_TIMES) {
+            const target = new Date();
+            target.setHours(time.hour, time.minute, 0, 0);
+
+            if (now < target) {
+                // Questo orario e' nel futuro oggi
+                if (!nextTarget || target < nextTarget) {
+                    nextTarget = target;
+                }
+            }
         }
 
-        const diff = target - now;
+        // Se nessun orario e' nel futuro oggi, prendi il primo di domani
+        if (!nextTarget) {
+            const firstTime = this.SIMULATION_TIMES[0]; // 12:00
+            nextTarget = new Date();
+            nextTarget.setDate(nextTarget.getDate() + 1);
+            nextTarget.setHours(firstTime.hour, firstTime.minute, 0, 0);
+        }
+
+        const diff = nextTarget - now;
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -583,7 +603,8 @@ window.AutomazioneSimulazioni = {
             hours,
             minutes,
             seconds,
-            formatted: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+            formatted: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+            nextTime: nextTarget
         };
     },
 

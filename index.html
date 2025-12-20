@@ -1632,7 +1632,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // *** IMPORTAZIONE CRITICA: Importa TUTTE le funzioni necessarie per l'oggetto firestoreTools ***
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, writeBatch, enableIndexedDbPersistence, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Imposta il livello di log (utile per il debug)
@@ -1674,7 +1674,7 @@
         // *** ESPOSIZIONE CRITICA (CORREZIONE) ***
         // Espone TUTTE le funzioni di Firestore a window.firestoreTools al momento dell'importazione.
         // Questo è il punto chiave che garantisce la disponibilitÃƒÆ’Ã‚Â  di 'where'.
-        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, writeBatch, appId }; 
+        window.firestoreTools = { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, writeBatch, increment, appId }; 
         
         // Funzione globale per cambiare schermata
         window.showScreen = (elementToShow) => {
@@ -1784,6 +1784,7 @@
     <script src="tutorial.js"></script>
     <script src="changelog.js"></script>
     <script src="match-history.js"></script>
+    <script src="match-credits.js"></script>
     <script src="sponsor-system.js"></script>
     <script src="private-leagues.js"></script>
     <script src="private-leagues-ui.js"></script>

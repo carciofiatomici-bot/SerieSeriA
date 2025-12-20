@@ -121,10 +121,12 @@ window.GestioneSquadreRosa = {
 
         // Marker Giocatore Base (immune agli infortuni)
         let basePlayerMarker = '';
+        const playerLevel = player.level || 1;
+        const playerCost = player.cost || 0;
         const isBasePlayer = player.isBase ||
                             player.isBasePlayer ||
                             (player.name?.includes('Base')) ||
-                            ((player.level || 1) === 1 && (player.cost || 0) === 0 && !isIcona);
+                            (((playerLevel === 1) || (playerLevel === 5)) && playerCost === 0 && !isIcona);
         if (isBasePlayer) {
             basePlayerMarker = ' <span class="bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Base - immune agli infortuni">🌱</span>';
         }

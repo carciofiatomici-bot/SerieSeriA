@@ -18,9 +18,10 @@
 
     // Funzione per ottenere valori EXP dinamici da RewardsConfig
     function getExpValues() {
+        const starterExp = window.RewardsConfig?.expPartitaTitolare || 50;
         return {
-            MATCH_STARTER: window.RewardsConfig?.expPartitaTitolare || 50,
-            MATCH_BENCH: window.RewardsConfig?.expPartitaPanchina || 10,
+            MATCH_STARTER: starterExp,
+            MATCH_BENCH: window.RewardsConfig?.expPartitaPanchina || Math.floor(starterExp * 0.2), // 20% del titolare
             GOAL: window.RewardsConfig?.expGoal || 30,
             ASSIST: window.RewardsConfig?.expAssist || 20,
             CLEAN_SHEET_GK: window.RewardsConfig?.expCleanSheetGK || 40,
@@ -102,12 +103,15 @@
                        (player.abilities && player.abilities.includes('Icona'));
         if (isIcon) return EXP_CONFIG.MAX_LEVEL_ICON;
 
-        // Verifica se e un giocatore base (iniziale)
-        // Base players hanno: isBase=true, o nome che contiene "Base", o ID tipo p001/d001/c001/a001
+        // Verifica se e un giocatore base (iniziale o acquisito gratis)
+        // Base players: isBase=true, nome contiene "Base", ID pattern base, o livello 1/5 con costo 0
+        const playerLevel = player.level || 1;
+        const playerCost = player.cost || 0;
         const isBase = player.isBase ||
                        (player.nome && player.nome.includes('Base')) ||
                        (player.name && player.name.includes('Base')) ||
-                       (player.id && /^[pdca]00[1-9]$/.test(player.id));
+                       (player.id && /^[pdca]00[1-9]$/.test(player.id)) ||
+                       ((playerLevel === 1 || playerLevel === 5) && playerCost === 0);
 
         if (isBase) return EXP_CONFIG.MAX_LEVEL_BASE;
 
@@ -303,7 +307,8 @@
             if (player.exp >= expNeededForNext) {
                 player.level++;
                 levelsGained++;
-                console.log(`[PlayerExp] ${player.nome || player.name} sale al livello ${player.level}!`);
+                const playerName = player.nome || player.name || 'Giocatore';
+                console.log(`[PlayerExp] ${playerName} sale al livello ${player.level}!`);
             } else {
                 break;
             }
@@ -333,14 +338,10 @@
      * @returns {Array} Array di risultati per ogni giocatore
      */
     function processMatchExp(teamData, matchResult) {
-        // CHECK: Se l'EXP e' disabilitata, ritorna senza assegnare EXP
-        // Usa il flag dedicato isExpDisabled() (separato dai reward monetari)
-        if (window.AdminRewards?.isExpDisabled()) {
-            console.log('[PlayerExp] EXP DISABILITATA - nessun EXP assegnato');
-            return [];
-        }
-
         if (!teamData || !matchResult) return [];
+
+        const teamName = teamData.teamName || teamData.id || 'unknown';
+        console.log(`[PlayerExp] === Processando EXP per squadra: ${teamName} ===`);
 
         const results = [];
 
@@ -394,6 +395,14 @@
             }
         }
 
+        // Bonus EXP da allenatore (+0.5% per livello dell'allenatore)
+        // Es: allenatore livello 10 = +5% EXP, livello 20 = +10% EXP
+        const coachForBonus = teamData.coach || teamData.allenatore;
+        const coachLevel = (coachForBonus && typeof coachForBonus === 'object') ? (coachForBonus.level || 1) : 1;
+        const coachExpBonusPercent = coachLevel / 2; // 0.5% per livello
+        expBonusMultiplier += coachExpBonusPercent / 100; // Converti in moltiplicatore (es. 5% = 0.05)
+        console.log(`[PlayerExp] Bonus EXP allenatore: +${coachExpBonusPercent.toFixed(1)}% (livello ${coachLevel})`);
+
         // Determina risultato partita
         const teamGoals = matchResult.isHome ? matchResult.homeGoals : matchResult.awayGoals;
         const opponentGoals = matchResult.isHome ? matchResult.awayGoals : matchResult.homeGoals;
@@ -414,12 +423,20 @@
             if (!formPlayer) return;
 
             const playerId = formPlayer.id || formPlayer.visitorId;
+            if (!playerId) return;
+
             const stats = playerStats[playerId] || {};
 
             // Trova il giocatore originale nella rosa
-            const rosterPlayer = roster.find(p => (p.id === playerId) || (p.visitorId === playerId));
+            const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
             // Usa il player della rosa se esiste, altrimenti usa quello della formazione
             const playerToUpdate = rosterPlayer || formPlayer;
+
+            if (!playerToUpdate) return;
+
+            const playerName = rosterPlayer?.nome || rosterPlayer?.name ||
+                               playerToUpdate?.nome || playerToUpdate?.name || 'Sconosciuto';
+            console.log(`[PlayerExp] Titolare: ${playerName} (ID: ${playerId}) - trovato in rosa: ${!!rosterPlayer}`);
 
             const matchData = {
                 isStarter: true,
@@ -434,6 +451,8 @@
             const expGained = calculateMatchExp(playerToUpdate, matchData, expBonusMultiplier);
             const applyResult = applyExp(playerToUpdate, expGained);
 
+            console.log(`[PlayerExp] ${playerName}: +${expGained} EXP, Lv.${playerToUpdate.level}, totale EXP: ${playerToUpdate.exp}`);
+
             results.push({
                 player: playerToUpdate,
                 playerId: playerId,
@@ -442,16 +461,33 @@
             });
         });
 
-        // Processa panchina (giocatori in rosa ma non in formazione)
+        // Processa panchina (giocatori nella panchina della formazione, NON tutta la rosa)
         const formationIds = new Set(formation.filter(p => p).map(p => p.id || p.visitorId));
 
-        roster.forEach(player => {
-            if (!player) return;
+        // Ottieni la panchina dalla formazione (non dalla rosa completa)
+        let benchPlayers = [];
+        const formationObj = teamData.formazione || teamData.formation || {};
+        if (formationObj.panchina && Array.isArray(formationObj.panchina)) {
+            benchPlayers = formationObj.panchina;
+        }
 
-            const playerId = player.id || player.visitorId;
+        console.log(`[PlayerExp] Giocatori in panchina: ${benchPlayers.length}`);
 
-            // Salta se e in formazione (gia processato)
-            if (formationIds.has(playerId)) return;
+        benchPlayers.forEach(benchPlayer => {
+            if (!benchPlayer) return;
+
+            const playerId = benchPlayer.id || benchPlayer.visitorId;
+            if (!playerId) return;
+
+            // Trova il giocatore originale nella rosa per avere tutti i dati
+            const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+            const playerToUpdate = rosterPlayer || benchPlayer;
+
+            if (!playerToUpdate) return;
+
+            const playerName = rosterPlayer?.nome || rosterPlayer?.name ||
+                               playerToUpdate?.nome || playerToUpdate?.name || 'Sconosciuto';
+            console.log(`[PlayerExp] Panchina: ${playerName} (ID: ${playerId})`);
 
             const matchData = {
                 isStarter: false,
@@ -463,16 +499,26 @@
                 isCaptain: false
             };
 
-            const expGained = calculateMatchExp(player, matchData, expBonusMultiplier);
-            const applyResult = applyExp(player, expGained);
+            const expGained = calculateMatchExp(playerToUpdate, matchData, expBonusMultiplier);
+            const applyResult = applyExp(playerToUpdate, expGained);
+
+            console.log(`[PlayerExp] ${playerName} (panchina): +${expGained} EXP`);
 
             results.push({
-                player: player,
+                player: playerToUpdate,
                 playerId: playerId,
                 expGained: expGained,
                 ...applyResult
             });
         });
+
+        // I giocatori nella rosa ma NON in formazione (ne titolari ne panchina) NON ricevono EXP
+        const allFormationIds = new Set([
+            ...formation.filter(p => p).map(p => p.id || p.visitorId),
+            ...benchPlayers.filter(p => p).map(p => p.id || p.visitorId)
+        ]);
+        const excludedCount = roster.filter(p => p && !allFormationIds.has(p.id || p.visitorId)).length;
+        console.log(`[PlayerExp] Giocatori esclusi (non in formazione): ${excludedCount}`);
 
         // Processa allenatore (solo con vittorie)
         const coach = teamData.coach || teamData.allenatore;
@@ -514,7 +560,8 @@
         player.expToNextLevel = expForLevel(currentLevel);
         player.totalMatchesPlayed = player.totalMatchesPlayed || 0;
 
-        console.log(`[PlayerExp] Migrato giocatore ${player.nome || player.name}: Lv.${currentLevel}, EXP: ${player.exp}`);
+        const playerName = player.nome || player.name || `ID:${player.id}` || 'Sconosciuto';
+        console.log(`[PlayerExp] Migrato giocatore ${playerName}: Lv.${currentLevel}, EXP: ${player.exp}`);
     }
 
     /**
@@ -712,7 +759,7 @@
 
     /**
      * Verifica se un giocatore e' soggetto al sistema secretMaxLevel
-     * Esclude: Icone e giocatori Base (liv.1 con costo 0)
+     * Esclude: Icone e giocatori Base (liv.1 o liv.5 con costo 0)
      * @param {Object} player - Oggetto giocatore
      * @param {Object} teamData - Dati squadra (opzionale, per verificare iconaId)
      * @returns {boolean}
@@ -726,10 +773,14 @@
                         player.isIcon || player.icon || player.tipo === 'icona';
         if (isIcona) return false;
 
-        // Escludi giocatori Base (livello 1 con costo 0)
-        const isBase = ((player.level || 1) === 1 && (player.cost || 0) === 0) ||
-                       player.isBase ||
-                       (player.id && /^[pdca]00[1-9]$/.test(player.id));
+        // Escludi giocatori Base (livello 1 o 5 con costo 0)
+        const playerLevel = player.level || 1;
+        const playerCost = player.cost || 0;
+        const isBase = player.isBase ||
+                       (player.nome && player.nome.includes('Base')) ||
+                       (player.name && player.name.includes('Base')) ||
+                       (player.id && /^[pdca]00[1-9]$/.test(player.id)) ||
+                       ((playerLevel === 1 || playerLevel === 5) && playerCost === 0);
         if (isBase) return false;
 
         return true;
@@ -917,6 +968,8 @@
      * @returns {Promise<boolean>} true se salvato con successo
      */
     async function saveExpToFirestore(teamId, expResults) {
+        console.log(`[PlayerExp] saveExpToFirestore chiamata per team: ${teamId}, risultati: ${expResults?.length || 0}`);
+
         if (!teamId || !expResults || expResults.length === 0) {
             console.log('[PlayerExp] Nessun risultato EXP da salvare');
             return false;
@@ -968,8 +1021,51 @@
                 updateData.coachExp = updatedCoachExp;
             }
 
+            // IMPORTANTE: Aggiorna anche l'array players su Firestore
+            // Questo garantisce che l'EXP sia immediatamente visibile ovunque
+            const currentPlayers = teamDoc.data().players || [];
+            if (currentPlayers.length > 0) {
+                const updatedPlayers = currentPlayers.map(player => {
+                    if (!player) return player;
+                    const playerId = player.id || player.visitorId;
+                    if (playerId && updatedPlayersExp[playerId]) {
+                        const expData = updatedPlayersExp[playerId];
+                        return {
+                            ...player,
+                            exp: expData.exp,
+                            level: expData.level,
+                            expToNextLevel: expData.expToNextLevel,
+                            totalMatchesPlayed: expData.totalMatchesPlayed || player.totalMatchesPlayed || 0
+                        };
+                    }
+                    return player;
+                });
+                updateData.players = updatedPlayers;
+                console.log(`[PlayerExp] Aggiornato anche array players con EXP per ${updatedPlayers.filter(p => p && updatedPlayersExp[p.id || p.visitorId]).length} giocatori`);
+            }
+
+            // Aggiorna anche il coach nell'oggetto teamData se presente
+            if (updatedCoachExp) {
+                const currentCoach = teamDoc.data().coach;
+                if (currentCoach) {
+                    updateData.coach = {
+                        ...currentCoach,
+                        exp: updatedCoachExp.exp,
+                        level: updatedCoachExp.level,
+                        expToNextLevel: updatedCoachExp.expToNextLevel
+                    };
+                }
+            }
+
             await updateDoc(teamDocRef, updateData);
             console.log(`[PlayerExp] EXP salvata per ${Object.keys(updatedPlayersExp).length} giocatori del team ${teamId}`);
+
+            // Invalida la cache per questo team
+            if (window.FirestoreCache?.invalidate) {
+                window.FirestoreCache.invalidate('team', teamId);
+                console.log(`[PlayerExp] Cache invalidata per team ${teamId}`);
+            }
+
             return true;
 
         } catch (error) {
@@ -990,18 +1086,45 @@
         const coachExp = teamData.coachExp || null;
         const players = teamData.players || [];
 
-        // Applica EXP ai giocatori
-        players.forEach(player => {
-            if (!player || !player.id) return;
+        // Debug: mostra chiavi playersExp disponibili
+        const expKeys = Object.keys(playersExp);
+        if (expKeys.length > 0) {
+            console.log(`[PlayerExp] Chiavi playersExp disponibili (${expKeys.length}):`, expKeys);
+        }
 
-            const expData = playersExp[player.id];
+        // Applica EXP ai giocatori
+        // NOTA: Supporta sia 'id' che 'visitorId' come identificatore
+        let appliedCount = 0;
+        let notFoundCount = 0;
+
+        players.forEach(player => {
+            if (!player) return;
+
+            // Prova prima con id, poi con visitorId
+            const playerId = player.id || player.visitorId;
+            if (!playerId) return;
+
+            const expData = playersExp[playerId];
             if (expData) {
+                // Usa EXP da playersExp
                 player.exp = expData.exp || 0;
                 player.level = expData.level || player.level || 1;
                 player.expToNextLevel = expData.expToNextLevel || 0;
                 player.totalMatchesPlayed = expData.totalMatchesPlayed || 0;
+                appliedCount++;
+            } else if (player.exp !== undefined && player.exp > 0) {
+                // Mantieni l'EXP gia presente nel giocatore (da array players su Firestore)
+                // Non fare nulla, l'EXP e gia nel giocatore
+                appliedCount++;
+            } else {
+                // Nessun EXP trovato - il giocatore verra migrato quando necessario
+                notFoundCount++;
             }
         });
+
+        if (appliedCount > 0 || notFoundCount > 0) {
+            console.log(`[PlayerExp] EXP applicata: ${appliedCount} giocatori, ${notFoundCount} senza EXP salvata`);
+        }
 
         // Applica EXP al coach
         if (teamData.coach && coachExp) {

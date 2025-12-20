@@ -131,7 +131,7 @@ window.AdminUI = {
                     <!-- Automazione -->
                     <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500">
                         <h4 class="text-lg font-bold text-teal-400 mb-3 flex items-center">🤖 Automazione Simulazioni</h4>
-                        <p class="text-gray-400 text-xs mb-2">Simula automaticamente alle 20:30</p>
+                        <p class="text-gray-400 text-xs mb-2">Simula automaticamente alle 12:00 e 20:30</p>
                         <div id="automation-status-container">
                             <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
                         </div>

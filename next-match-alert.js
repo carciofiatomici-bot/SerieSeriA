@@ -208,16 +208,41 @@ window.NextMatchAlert = {
     },
 
     /**
-     * Calcola il prossimo orario di simulazione (20:30)
+     * Calcola il prossimo orario di simulazione (12:00 o 20:30)
      */
     getNextSimulationTime() {
-        const now = new Date();
-        const next = new Date();
-        next.setHours(20, 30, 0, 0);
-        if (now >= next) {
-            next.setDate(next.getDate() + 1);
+        // Usa il sistema centralizzato se disponibile
+        if (window.AutomazioneSimulazioni?.getTimeUntilNextSimulation) {
+            const result = window.AutomazioneSimulazioni.getTimeUntilNextSimulation();
+            return result.nextTime;
         }
-        return next;
+
+        // Fallback: orari hardcoded
+        const SIMULATION_TIMES = [
+            { hour: 12, minute: 0 },
+            { hour: 20, minute: 30 }
+        ];
+
+        const now = new Date();
+        let nextTarget = null;
+
+        for (const time of SIMULATION_TIMES) {
+            const target = new Date();
+            target.setHours(time.hour, time.minute, 0, 0);
+            if (now < target) {
+                if (!nextTarget || target < nextTarget) {
+                    nextTarget = target;
+                }
+            }
+        }
+
+        if (!nextTarget) {
+            nextTarget = new Date();
+            nextTarget.setDate(nextTarget.getDate() + 1);
+            nextTarget.setHours(12, 0, 0, 0);
+        }
+
+        return nextTarget;
     },
 
     /**
@@ -314,7 +339,7 @@ window.NextMatchAlert = {
                         </div>
                         ${automationState?.isEnabled ? `
                             <div class="mt-1 text-center border-t border-gray-700 pt-1">
-                                <span class="text-gray-500 text-[6px]">Sim 20:30</span>
+                                <span class="text-gray-500 text-[6px]">Prossima sim</span>
                                 <span id="next-match-countdown" class="text-${typeColor}-400 font-mono font-bold text-[8px] ml-1">--:--:--</span>
                             </div>
                         ` : ''}

@@ -2092,7 +2092,7 @@ window.InterfacciaDashboard = {
                     }
 
                     // Per ora mostriamo un messaggio generico per l'avversario
-                    opponentEl.textContent = 'Simulazione alle 20:30';
+                    opponentEl.textContent = 'Prossima simulazione';
                 } else {
                     competitionEl.textContent = 'COMPETIZIONI';
                     infoEl.textContent = 'Automazione disattivata';
@@ -2575,6 +2575,38 @@ window.InterfacciaDashboard = {
                 }
             } catch (error) {
                 console.warn('[Dashboard] Errore validazione variante icona:', error);
+            }
+        }
+    },
+
+    // ====================================================================
+    // NAVIGAZIONE CLASSIFICA E CALENDARIO
+    // ====================================================================
+
+    /**
+     * Naviga alla schermata campionato e mostra la classifica
+     */
+    loadLeaderboard() {
+        const campionatoContent = document.getElementById('user-campionato-content');
+        if (campionatoContent && window.showScreen) {
+            window.showScreen(campionatoContent);
+            // Carica i dati del campionato (che include la classifica)
+            if (window.UserCompetitions?.loadCampionatoScreen) {
+                window.UserCompetitions.loadCampionatoScreen();
+            }
+        }
+    },
+
+    /**
+     * Naviga alla schermata campionato e mostra il calendario
+     */
+    loadSchedule() {
+        const campionatoContent = document.getElementById('user-campionato-content');
+        if (campionatoContent && window.showScreen) {
+            window.showScreen(campionatoContent);
+            // Carica i dati del campionato (che include il calendario)
+            if (window.UserCompetitions?.loadCampionatoScreen) {
+                window.UserCompetitions.loadCampionatoScreen();
             }
         }
     }

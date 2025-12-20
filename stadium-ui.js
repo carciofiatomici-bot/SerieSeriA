@@ -618,6 +618,11 @@ window.StadiumUI = {
             this._stadiumData = window.Stadium._currentStadium;
             this._teamData.budget -= result.costPaid;
 
+            // Aggiorna anche InterfacciaCore per sincronizzare la dashboard
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.budget = this._teamData.budget;
+            }
+
             // Mostra messaggio successo
             this.showMessage(`${result.structure.name} costruito! Bonus casa: +${result.newBonus.toFixed(2)}`, 'success');
 
@@ -745,6 +750,11 @@ window.StadiumUI = {
                 // Aggiorna dati locali
                 this._stadiumData = window.Stadium._currentStadium;
                 this._teamData.budget -= result.cost;
+
+                // Aggiorna anche InterfacciaCore per sincronizzare la dashboard
+                if (window.InterfacciaCore?.currentTeamData) {
+                    window.InterfacciaCore.currentTeamData.budget = this._teamData.budget;
+                }
 
                 // Aggiorna anche il locker room nei dati team per il calcolo EXP
                 if (!this._teamData.stadium) {

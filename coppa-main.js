@@ -105,6 +105,12 @@ window.CoppaMain = {
         const homeTeamData = homeTeamDoc.data();
         const awayTeamData = awayTeamDoc.data();
 
+        // Applica EXP dai campi playersExp (importante per non perdere progressi)
+        if (window.PlayerExp?.applyExpFromFirestore) {
+            window.PlayerExp.applyExpFromFirestore(homeTeamData);
+            window.PlayerExp.applyExpFromFirestore(awayTeamData);
+        }
+
         // Espandi formazione per avere nomi giocatori (per telecronaca)
         const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
         if (expandFormation) {
@@ -164,8 +170,20 @@ window.CoppaMain = {
             match.leg2Result = result.resultString;
         }
 
+        // Estrai i gol dal risultato
+        const { homeGoals, awayGoals } = window.MatchCredits.parseResultString(result.resultString);
+
         // SEMPRE: Applica i crediti per gol (il bonus vittoria viene assegnato solo se c'e un vincitore)
-        await this.applyMatchCredits(match.homeTeam.teamId, match.awayTeam.teamId, result);
+        if (window.MatchCredits) {
+            await window.MatchCredits.applyMatchCredits(
+                match.homeTeam.teamId,
+                match.awayTeam.teamId,
+                homeGoals,
+                awayGoals,
+                result.winner?.teamId,
+                { competition: 'coppa' }
+            );
+        }
 
         // SEMPRE: Processa XP formazione (se feature attiva)
         if (window.FeatureFlags?.isEnabled('formationXp') && window.ChampionshipMain?.addFormationXp) {
@@ -176,9 +194,6 @@ window.CoppaMain = {
         // SEMPRE: Processa EXP giocatori (NUOVO SISTEMA)
         console.log('[Coppa EXP] Inizio processamento EXP');
         if (window.PlayerExp) {
-            const parts = result.resultString.split(' ')[0].split('-');
-            const homeGoals = parseInt(parts[0]) || 0;
-            const awayGoals = parseInt(parts[1]) || 0;
             console.log('[Coppa EXP] Risultato:', homeGoals, '-', awayGoals);
 
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
@@ -342,65 +357,7 @@ window.CoppaMain = {
         return result;
     },
 
-    /**
-     * Applica i crediti per gol e vittoria partita coppa
-     */
-    async applyMatchCredits(homeTeamId, awayTeamId, result) {
-        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare crediti
-        if (window.AdminRewards?.areRewardsDisabled()) {
-            console.log('[CoppaMain] Reward DISABILITATI - nessun CS assegnato');
-            return { homeCredits: 0, awayCredits: 0 };
-        }
-
-        const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
-        const db = window.db;
-        const { REWARDS } = window.CoppaConstants;
-
-        // Estrai i gol dal risultato
-        let homeGoals = 0;
-        let awayGoals = 0;
-
-        if (result.resultString) {
-            const parts = result.resultString.split(' ')[0].split('-');
-            homeGoals = parseInt(parts[0]) || 0;
-            awayGoals = parseInt(parts[1]) || 0;
-        }
-
-        // Calcola crediti: 1 CS per gol + 25 CS per vittoria
-        let homeCredits = homeGoals * REWARDS.GOAL_CS;
-        let awayCredits = awayGoals * REWARDS.GOAL_CS;
-
-        // Bonus vittoria (chi passa il turno)
-        if (result.winner) {
-            if (result.winner.teamId === homeTeamId) {
-                homeCredits += REWARDS.MATCH_WIN_CS;
-            } else if (result.winner.teamId === awayTeamId) {
-                awayCredits += REWARDS.MATCH_WIN_CS;
-            }
-        }
-
-        // Applica crediti a home team
-        if (homeCredits > 0) {
-            const homeRef = doc(db, `artifacts/${appId}/public/data/teams`, homeTeamId);
-            const homeDoc = await getDoc(homeRef);
-            if (homeDoc.exists()) {
-                await updateDoc(homeRef, {
-                    budget: (homeDoc.data().budget || 0) + homeCredits
-                });
-            }
-        }
-
-        // Applica crediti a away team
-        if (awayCredits > 0) {
-            const awayRef = doc(db, `artifacts/${appId}/public/data/teams`, awayTeamId);
-            const awayDoc = await getDoc(awayRef);
-            if (awayDoc.exists()) {
-                await updateDoc(awayRef, {
-                    budget: (awayDoc.data().budget || 0) + awayCredits
-                });
-            }
-        }
-    },
+    // applyMatchCredits rimossa - ora usa window.MatchCredits.applyMatchCredits()
 
     /**
      * Resetta la forma dei giocatori dopo una partita
@@ -421,12 +378,6 @@ window.CoppaMain = {
      * Applica i premi finali della coppa
      */
     async applyCupRewards() {
-        // CHECK: Se i reward sono disabilitati, ritorna senza assegnare premi
-        if (window.AdminRewards?.areRewardsDisabled()) {
-            console.log('[CoppaMain] Reward DISABILITATI - nessun premio coppa assegnato');
-            return;
-        }
-
         const bracket = await window.CoppaSchedule.loadCupSchedule();
 
         if (!bracket || bracket.status !== 'completed') {

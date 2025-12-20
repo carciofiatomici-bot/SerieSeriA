@@ -210,23 +210,36 @@ window.UserCompetitions = {
         }
         html += `</div>`;
 
-        // SEZIONE 2: Classifica
+        // SEZIONE 2: Classifica (accordion minimizzato di default)
+        // Trova la posizione della squadra corrente per mostrarla nel titolo
+        const myPosition = standings.findIndex(t => t.teamId === currentTeamId) + 1;
+        const myTeamStanding = standings.find(t => t.teamId === currentTeamId);
+        const positionText = myPosition > 0 ? `${myPosition}° posto - ${myTeamStanding?.points || 0} pt` : '';
+
         html += `
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-4 border-2 border-blue-500 shadow-lg">
-                <h3 class="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
-                    <span>📊</span> Classifica
-                </h3>
+            <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border-2 border-blue-500 shadow-lg overflow-hidden">
+                <div class="p-3 cursor-pointer select-none hover:bg-black hover:bg-opacity-20 transition"
+                     onclick="window.UserCompetitions.toggleAccordion('classifica-accordion')">
+                    <h3 class="text-xl font-bold text-blue-400 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span>📊</span> Classifica
+                            ${positionText ? `<span class="ml-2 text-sm font-normal text-gray-400">- ${positionText}</span>` : ''}
+                        </span>
+                        <span id="classifica-accordion-icon" class="text-gray-400 transition-transform">▼</span>
+                    </h3>
+                </div>
+                <div id="classifica-accordion" class="hidden">
         `;
 
         if (standings.length === 0) {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center mx-3 mb-3">
                     <p class="text-gray-400">Classifica non ancora disponibile.</p>
                 </div>
             `;
         } else {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg overflow-x-auto">
+                <div class="bg-black bg-opacity-30 rounded-lg overflow-x-auto mx-3 mb-3">
                     <table class="w-full text-sm min-w-[400px]">
                         <thead class="bg-gray-800">
                             <tr>
@@ -265,7 +278,7 @@ window.UserCompetitions = {
                         <td class="py-2 px-2 text-center text-cyan-400 text-xs font-semibold">${avgLevel}</td>
                         <td class="py-2 px-3 ${textClass}">${team.teamName}</td>
                         <td class="py-2 px-3 text-center font-bold ${textClass}">${team.points || 0}</td>
-                        <td class="py-2 px-3 text-center text-gray-400">${team.gamesPlayed || 0}</td>
+                        <td class="py-2 px-3 text-center text-gray-400">${team.played || 0}</td>
                         <td class="py-2 px-3 text-center text-green-400">${team.wins || 0}</td>
                         <td class="py-2 px-3 text-center text-yellow-400">${team.draws || 0}</td>
                         <td class="py-2 px-3 text-center text-red-400">${team.losses || 0}</td>
@@ -280,19 +293,32 @@ window.UserCompetitions = {
                 </div>
             `;
         }
-        html += `</div>`;
+        html += `</div></div>`;
 
-        // SEZIONE 3: Calendario
+        // SEZIONE 3: Calendario (accordion minimizzato di default)
+        // Calcola quante giornate sono state giocate per mostrarle nel titolo
+        const playedRounds = scheduleData.filter(r => r.matches.every(m => m.result !== null)).length;
+        const totalRounds = scheduleData.length;
+        const calendarText = totalRounds > 0 ? `${playedRounds}/${totalRounds} giornate` : '';
+
         html += `
-            <div class="bg-gradient-to-r from-teal-900 to-teal-800 rounded-lg p-4 border-2 border-teal-500 shadow-lg">
-                <h3 class="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
-                    <span>📅</span> Calendario Completo
-                </h3>
+            <div class="bg-gradient-to-r from-teal-900 to-teal-800 rounded-lg border-2 border-teal-500 shadow-lg overflow-hidden">
+                <div class="p-3 cursor-pointer select-none hover:bg-black hover:bg-opacity-20 transition"
+                     onclick="window.UserCompetitions.toggleAccordion('calendario-accordion')">
+                    <h3 class="text-xl font-bold text-teal-400 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span>📅</span> Calendario Completo
+                            ${calendarText ? `<span class="ml-2 text-sm font-normal text-gray-400">- ${calendarText}</span>` : ''}
+                        </span>
+                        <span id="calendario-accordion-icon" class="text-gray-400 transition-transform">▼</span>
+                    </h3>
+                </div>
+                <div id="calendario-accordion" class="hidden">
         `;
 
         if (scheduleData.length === 0) {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
+                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center mx-3 mb-3">
                     <p class="text-gray-400">Calendario non ancora generato.</p>
                 </div>
             `;
@@ -305,7 +331,7 @@ window.UserCompetitions = {
                 return aComplete ? 1 : -1; // Completate in fondo
             });
 
-            html += `<div class="max-h-96 overflow-y-auto space-y-2" id="calendar-accordion">`;
+            html += `<div class="max-h-96 overflow-y-auto space-y-2 mx-3 mb-3" id="calendar-rounds">`;
 
             sortedSchedule.forEach((round, index) => {
                 const roundComplete = round.matches.every(m => m.result !== null);
@@ -350,7 +376,7 @@ window.UserCompetitions = {
 
             html += `</div>`;
         }
-        html += `</div>`;
+        html += `</div></div>`;
 
         // SEZIONE 4: Ultima Partita Giocata
         const lastPlayedMatch = this.findLastPlayedMatch(scheduleData, currentTeamId);
@@ -589,12 +615,28 @@ window.UserCompetitions = {
         }
         html += `</div>`;
 
-        // SEZIONE 2: Tabellone Completo (stile calendario campionato con accordion)
+        // SEZIONE 2: Tabellone Completo (accordion minimizzato di default)
+        // Calcola quanti turni completati
+        let completedRounds = 0;
+        let totalRounds = 0;
+        if (bracket && bracket.rounds) {
+            totalRounds = bracket.rounds.length;
+            completedRounds = bracket.rounds.filter(r => r.matches.every(m => m.winner !== null && m.winner !== undefined)).length;
+        }
+        const bracketSummary = bracket ? `${completedRounds}/${totalRounds} turni completati` : 'Non disponibile';
+
         html += `
             <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
-                <h3 class="text-xl font-bold text-indigo-400 mb-3 flex items-center gap-2">
-                    <span>📋</span> Tabellone Completo
-                </h3>
+                <div class="flex justify-between items-center cursor-pointer" onclick="window.UserCompetitions.toggleAccordion('coppa-tabellone-content')">
+                    <h3 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
+                        <span>📋</span> Tabellone Completo
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-indigo-300">${bracketSummary}</span>
+                        <span id="coppa-tabellone-content-icon" class="text-indigo-400 text-lg">▼</span>
+                    </div>
+                </div>
+                <div id="coppa-tabellone-content" class="hidden mt-3">
         `;
 
         // Vincitore se presente (in alto)
@@ -692,8 +734,9 @@ window.UserCompetitions = {
             `;
         }
 
-        html += `</div>`;
-        html += `</div>`;
+        html += `</div>`; // chiude coppa-accordion
+        html += `</div>`; // chiude coppa-tabellone-content
+        html += `</div>`; // chiude box principale tabellone
 
         // SEZIONE 3: Ultima Partita Giocata in Coppa
         const lastCupMatch = this.findLastPlayedCupMatch(bracket, currentTeamId);
@@ -1002,6 +1045,26 @@ window.UserCompetitions = {
                 });
             }
         });
+    },
+
+    /**
+     * Toggle accordion per classifica e calendario
+     */
+    toggleAccordion(accordionId) {
+        const content = document.getElementById(accordionId);
+        const icon = document.getElementById(`${accordionId}-icon`);
+
+        if (content && icon) {
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                icon.textContent = '▲';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▼';
+            }
+        }
     }
 };
 

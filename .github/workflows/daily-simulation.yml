@@ -1,11 +1,11 @@
-# Workflow per simulazione automatica partite alle 20:30 (ora italiana)
+# Workflow per simulazione automatica partite alle 12:00 e 20:30 (ora italiana)
 name: Daily Match Simulation
 
 on:
   schedule:
-    # Esegue alle 19:30 UTC = 20:30 ora italiana (CET/CEST)
-    # Nota: GitHub Actions usa UTC, quindi 19:30 UTC = 20:30 CET (inverno) o 21:30 CEST (estate)
-    # Per l'ora legale italiana (CEST), usa 18:30 UTC
+    # Esegue alle 11:00 UTC = 12:00 ora italiana (CET)
+    - cron: '0 11 * * *'   # Ogni giorno alle 11:00 UTC (12:00 CET)
+    # Esegue alle 19:30 UTC = 20:30 ora italiana (CET)
     - cron: '30 19 * * *'  # Ogni giorno alle 19:30 UTC (20:30 CET)
 
   # Permette esecuzione manuale per test

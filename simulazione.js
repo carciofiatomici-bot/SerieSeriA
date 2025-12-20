@@ -1289,6 +1289,10 @@ const phaseConstruction = (teamA, teamB) => {
     const homeBonusA = teamA.homeBonus || 0;
     const homeBonusB = teamB.homeBonus || 0;
 
+    // Bonus figurine uniche (+0.01 per figurina unica)
+    const figurineBonusA = teamA.figurineBonus || 0;
+    const figurineBonusB = teamB.figurineBonus || 0;
+
     // Rilancio Laser: +2 in Fase 1 dopo parata del proprio portiere
     let rilancioBonus = 0;
     if (rilancioLaserActive[teamAKey]) {
@@ -1299,8 +1303,8 @@ const phaseConstruction = (teamA, teamB) => {
     // Bonus formazione (Fase 1: Costruzione)
     const formationBonusA = getFormationBonus(teamA, 'costruzione');
 
-    const totalA = rollA + modA_D + modA_C + coachA + homeBonusA + rilancioBonus + formationBonusA;
-    const totalB = rollB + modB_C + coachB + homeBonusB;
+    const totalA = rollA + modA_D + modA_C + coachA + homeBonusA + figurineBonusA + rilancioBonus + formationBonusA;
+    const totalB = rollB + modB_C + coachB + homeBonusB + figurineBonusB;
 
     // Calcola % successo
     const successChance = Math.max(5, Math.min(95, totalA - totalB + 50)); // Centrato a 50%
@@ -1326,8 +1330,8 @@ const phaseConstruction = (teamA, teamB) => {
         }
     }
 
-    // 5% di passare comunque
-    if (!success && checkChance(5)) return true;
+    // 2% di passare comunque (bilanciamento v4.1: ridotto da 5%)
+    if (!success && checkChance(2)) return true;
 
     return success;
 };
@@ -1422,12 +1426,16 @@ const phaseAttack = (teamA, teamB) => {
     const homeBonusA = teamA.homeBonus || 0;
     const homeBonusB = teamB.homeBonus || 0;
 
+    // Bonus figurine uniche (+0.01 per figurina unica)
+    const figurineBonusA = teamA.figurineBonus || 0;
+    const figurineBonusB = teamB.figurineBonus || 0;
+
     // Bonus formazione (Fase 2: Attacco/Difesa)
     const formationBonusA = getFormationBonus(teamA, 'costruzione'); // Attaccanti usano bonus costruzione in attacco
     const formationBonusB = getFormationBonus(teamB, 'difesa');
 
-    const totalA = rollA + modA_C + modA_A + coachA + homeBonusA + registaBonus;
-    const totalB = rollB + modB_D + modB_C + coachB + homeBonusB + formationBonusB;
+    const totalA = rollA + modA_C + modA_A + coachA + homeBonusA + figurineBonusA + registaBonus;
+    const totalB = rollB + modB_D + modB_C + coachB + homeBonusB + figurineBonusB + formationBonusB;
 
     let result = totalA - totalB;
 
@@ -1707,13 +1715,19 @@ const phaseShot = (teamA, teamB, attackResult) => {
     const homeBonusA = teamA.homeBonus || 0;
     const homeBonusB = teamB.homeBonus || 0;
 
-    const totalPortiere = rollP + modPortiere + coachB + homeBonusB;
+    // Bonus figurine uniche (+0.01 per figurina unica)
+    const figurineBonusA = teamA.figurineBonus || 0;
+    const figurineBonusB = teamB.figurineBonus || 0;
+
+    // Bilanciamento v4.1: +2 bonus base portiere per più parate
+    const GOALKEEPER_BASE_BONUS = 2;
+    const totalPortiere = rollP + modPortiere + coachB + homeBonusB + figurineBonusB + GOALKEEPER_BASE_BONUS;
 
     // Bonus formazione (Fase 3: Tiro)
     const formationBonusTiro = getFormationBonus(teamA, 'tiro');
 
     // Calcola totale tiro: 1d10 (o 1d6) + Valore Tiro Fase 2 + bonus
-    let totalShot = shotRoll + finalAttackResult + homeBonusA + formationBonusTiro;
+    let totalShot = shotRoll + finalAttackResult + homeBonusA + figurineBonusA + formationBonusTiro;
 
     // Tiro dalla porta (Portiere attaccante): 5% di aggiungere +2 al tiro del compagno
     const portiereAttaccante = teamA.P?.[0];
@@ -1786,13 +1800,13 @@ const phaseShot = (teamA, teamB, attackResult) => {
                 skipNextConstruction = true;
             }
         }
-        // 5% di gol comunque (critico) - modificato da abilità uniche
-        // TIRO DRITTO (Amedemo): 6% se unico attaccante
+        // 2% di gol comunque (critico) - bilanciamento v4.1: ridotto da 5%
+        // TIRO DRITTO (Amedemo): 3% se unico attaccante (ridotto da 6%)
         // CONTINUA A PROVARE (Gladio): 0% (no critico)
         // PARATA LASER (Simone): 1% se portiere ha l'abilita
         // PARA-RIGORI: 0% critico
         // SARACINESCA: 0% critico dopo aver subito goal
-        let criticoChance = 5;
+        let criticoChance = 2; // Bilanciamento v4.1: ridotto da 5%
         const hasTiroDritto = teamA.A?.length === 1 && teamA.A[0]?.abilities?.includes('Tiro Dritto');
         const hasContinuaProvareCritico = teamA.A?.some(p =>
             p.abilities?.includes('Continua a provare') &&
@@ -1803,7 +1817,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
         } else if (hasParataLaser) {
             criticoChance = 1; // Critico ridotto a 1%
         } else if (hasTiroDritto) {
-            criticoChance = 6; // Critico aumentato
+            criticoChance = 3; // Critico aumentato (ridotto da 6%)
         }
 
         // Colpo d'anca annulla questa probabilita
@@ -1812,7 +1826,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
             if (portiere.abilities?.includes('Respinta') && !nullifiedAbilities.has(portiere.id) && checkChance(10)) {
                 // Attaccante ritira il dado, potrebbe non essere piu goal
                 const newShotRoll = rollDice(1, shotDie);
-                const newTotalShot = newShotRoll + finalAttackResult + homeBonusA;
+                const newTotalShot = newShotRoll + finalAttackResult + homeBonusA + figurineBonusA;
                 const newSaveResult = totalPortiere - newTotalShot;
                 if (newSaveResult >= 0) {
                     // Parata Laser: incrementa bonus su parata
@@ -1915,7 +1929,7 @@ const phaseShot = (teamA, teamB, attackResult) => {
         // Respinta (Portiere): 10% di far ritirare il dado all'attaccante
         if (portiere.abilities?.includes('Respinta') && !nullifiedAbilities.has(portiere.id) && checkChance(10)) {
             const newShotRoll = rollDice(1, shotDie);
-            const newTotalShot = newShotRoll + finalAttackResult + homeBonusA;
+            const newTotalShot = newShotRoll + finalAttackResult + homeBonusA + figurineBonusA;
             const newSaveResult = totalPortiere - newTotalShot;
             if (newSaveResult >= 0) {
                 // Parata Laser: incrementa bonus su parata
