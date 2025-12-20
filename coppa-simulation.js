@@ -30,18 +30,19 @@ window.CoppaSimulation = {
 
     /**
      * Simula i rigori tra due squadre
-     * Usa il livello del portiere vs livello degli attaccanti
+     * Sistema: 1d20 + modificatore tiratore vs 1d20 + modificatore portiere
+     * Include bonus abilita fase 3 (tiro) e abilita portiere
      * @param {Object} homeTeamData - Dati squadra casa
      * @param {Object} awayTeamData - Dati squadra trasferta
-     * @returns {Object} {homeGoals, awayGoals, shootout: [{shooter, keeper, scored}]}
+     * @returns {Object} {homeGoals, awayGoals, shootout: [{shooter, keeper, scored, details}]}
      */
     simulatePenaltyShootout(homeTeamData, awayTeamData) {
         const homeTeam = window.ChampionshipSimulation.prepareTeamForSimulation(homeTeamData);
         const awayTeam = window.ChampionshipSimulation.prepareTeamForSimulation(awayTeamData);
 
         // Portieri
-        const homeKeeper = homeTeam.P[0] || { currentLevel: 1, name: 'Portiere Casa' };
-        const awayKeeper = awayTeam.P[0] || { currentLevel: 1, name: 'Portiere Ospite' };
+        const homeKeeper = homeTeam.P[0] || { currentLevel: 1, name: 'Portiere Casa', abilities: [] };
+        const awayKeeper = awayTeam.P[0] || { currentLevel: 1, name: 'Portiere Ospite', abilities: [] };
 
         // Attaccanti (tutti i giocatori di movimento ordinati per livello)
         const getShooters = (team) => {
@@ -59,25 +60,27 @@ window.CoppaSimulation = {
         // Serie iniziale di 5 rigori
         for (let i = 0; i < 5; i++) {
             // Rigore casa
-            const homeShooter = homeShooters[i % homeShooters.length] || { currentLevel: 1, name: 'Tiratore' };
-            const homeScored = this.simulateSinglePenalty(homeShooter, awayKeeper);
-            if (homeScored) homeGoals++;
+            const homeShooter = homeShooters[i % homeShooters.length] || { currentLevel: 1, name: 'Tiratore', role: 'C', abilities: [] };
+            const homeResult = this.simulateSinglePenalty(homeShooter, awayKeeper, homeTeam);
+            if (homeResult.scored) homeGoals++;
             shootoutLog.push({
                 team: 'home',
                 shooter: homeShooter.name,
                 keeper: awayKeeper.name,
-                scored: homeScored
+                scored: homeResult.scored,
+                details: `${homeShooter.name}: 1d20(${homeResult.shooterRoll})+${homeResult.shooterMod}=${homeResult.shooterTotal} vs ${awayKeeper.name}: 1d20(${homeResult.keeperRoll})+${homeResult.keeperMod}=${homeResult.keeperTotal}`
             });
 
             // Rigore ospite
-            const awayShooter = awayShooters[i % awayShooters.length] || { currentLevel: 1, name: 'Tiratore' };
-            const awayScored = this.simulateSinglePenalty(awayShooter, homeKeeper);
-            if (awayScored) awayGoals++;
+            const awayShooter = awayShooters[i % awayShooters.length] || { currentLevel: 1, name: 'Tiratore', role: 'C', abilities: [] };
+            const awayResult = this.simulateSinglePenalty(awayShooter, homeKeeper, awayTeam);
+            if (awayResult.scored) awayGoals++;
             shootoutLog.push({
                 team: 'away',
                 shooter: awayShooter.name,
                 keeper: homeKeeper.name,
-                scored: awayScored
+                scored: awayResult.scored,
+                details: `${awayShooter.name}: 1d20(${awayResult.shooterRoll})+${awayResult.shooterMod}=${awayResult.shooterTotal} vs ${homeKeeper.name}: 1d20(${awayResult.keeperRoll})+${awayResult.keeperMod}=${awayResult.keeperTotal}`
             });
 
             // Verifica se c'e gia un vincitore (impossibile recuperare)
@@ -93,31 +96,33 @@ window.CoppaSimulation = {
             const shooterIndex = 5 + suddenDeathRound;
 
             // Rigore casa
-            const homeShooter = homeShooters[shooterIndex % homeShooters.length] || { currentLevel: 1, name: 'Tiratore' };
-            const homeScored = this.simulateSinglePenalty(homeShooter, awayKeeper);
-            if (homeScored) homeGoals++;
+            const homeShooter = homeShooters[shooterIndex % homeShooters.length] || { currentLevel: 1, name: 'Tiratore', role: 'C', abilities: [] };
+            const homeResult = this.simulateSinglePenalty(homeShooter, awayKeeper, homeTeam);
+            if (homeResult.scored) homeGoals++;
             shootoutLog.push({
                 team: 'home',
                 shooter: homeShooter.name,
                 keeper: awayKeeper.name,
-                scored: homeScored,
-                suddenDeath: true
+                scored: homeResult.scored,
+                suddenDeath: true,
+                details: `${homeShooter.name}: 1d20(${homeResult.shooterRoll})+${homeResult.shooterMod}=${homeResult.shooterTotal} vs ${awayKeeper.name}: 1d20(${homeResult.keeperRoll})+${homeResult.keeperMod}=${homeResult.keeperTotal}`
             });
 
             // Rigore ospite
-            const awayShooter = awayShooters[shooterIndex % awayShooters.length] || { currentLevel: 1, name: 'Tiratore' };
-            const awayScored = this.simulateSinglePenalty(awayShooter, homeKeeper);
-            if (awayScored) awayGoals++;
+            const awayShooter = awayShooters[shooterIndex % awayShooters.length] || { currentLevel: 1, name: 'Tiratore', role: 'C', abilities: [] };
+            const awayResult = this.simulateSinglePenalty(awayShooter, homeKeeper, awayTeam);
+            if (awayResult.scored) awayGoals++;
             shootoutLog.push({
                 team: 'away',
                 shooter: awayShooter.name,
                 keeper: homeKeeper.name,
-                scored: awayScored,
-                suddenDeath: true
+                scored: awayResult.scored,
+                suddenDeath: true,
+                details: `${awayShooter.name}: 1d20(${awayResult.shooterRoll})+${awayResult.shooterMod}=${awayResult.shooterTotal} vs ${homeKeeper.name}: 1d20(${awayResult.keeperRoll})+${awayResult.keeperMod}=${awayResult.keeperTotal}`
             });
 
             // In sudden death, se uno segna e l'altro no, finisce
-            if (homeScored !== awayScored) {
+            if (homeResult.scored !== awayResult.scored) {
                 break;
             }
 
@@ -133,26 +138,87 @@ window.CoppaSimulation = {
     },
 
     /**
-     * Simula un singolo rigore
-     * Probabilita di segnare basata su livello tiratore vs livello portiere
+     * Simula un singolo rigore con sistema 1d20 + modificatore
+     * Include bonus abilita fase 3 (tiro) per il tiratore
      * @param {Object} shooter - Giocatore che tira
      * @param {Object} keeper - Portiere
-     * @returns {boolean} True se gol
+     * @param {Object} shooterTeam - Squadra del tiratore (per bonus formazione)
+     * @returns {Object} {scored: boolean, shooterRoll, keeperRoll, shooterTotal, keeperTotal}
      */
-    simulateSinglePenalty(shooter, keeper) {
+    simulateSinglePenalty(shooter, keeper, shooterTeam = null) {
+        // Funzione per tirare 1d20
+        const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
+
+        // Calcola modificatore tiratore basato su livello
         const shooterLevel = shooter.currentLevel || shooter.level || 1;
+        const shooterMod = window.GameConstants?.getLevelModifier?.(shooterLevel) || (shooterLevel - 1) * 0.5;
+
+        // Calcola modificatore portiere basato su livello
         const keeperLevel = keeper.currentLevel || keeper.level || 1;
+        const keeperMod = window.GameConstants?.getLevelModifier?.(keeperLevel) || (keeperLevel - 1) * 0.5;
 
-        // Formula: probabilita base 70%, modificata dalla differenza di livello
-        // Ogni livello di differenza modifica del 3%
-        const levelDiff = shooterLevel - keeperLevel;
-        const baseProb = 0.70;
-        const modifier = levelDiff * 0.03;
+        // Bonus abilita fase 3 (tiro) per il tiratore
+        let shooterAbilityBonus = 0;
+        if (shooter.abilities && window.getAbilityBonus) {
+            const bonuses = window.getAbilityBonus(shooter);
+            shooterAbilityBonus = bonuses.fase3 || 0;
+        }
 
-        // Probabilita finale tra 40% e 95%
-        const finalProb = Math.max(0.40, Math.min(0.95, baseProb + modifier));
+        // Abilita specifiche per rigori:
+        // - Specialista Tiro: +1 in fase 3
+        if (shooter.abilities?.includes('Specialista Tiro')) {
+            shooterAbilityBonus += 1;
+        }
+        // - Bomber: +1 al tiro (attaccanti)
+        if (shooter.abilities?.includes('Bomber') && shooter.role === 'A') {
+            shooterAbilityBonus += 1;
+        }
+        // - Tiro Dritto: +2 se unico attaccante (semplificato per rigori)
+        if (shooter.abilities?.includes('Tiro Dritto') && shooter.role === 'A') {
+            shooterAbilityBonus += 2;
+        }
 
-        return Math.random() < finalProb;
+        // Bonus abilita portiere
+        let keeperAbilityBonus = 0;
+        if (keeper.abilities && window.getAbilityBonus) {
+            const bonuses = window.getAbilityBonus(keeper);
+            keeperAbilityBonus = bonuses.portiere || 0;
+        }
+
+        // Abilita specifiche portiere per rigori:
+        // - Paratutto: +1.5 generico
+        if (keeper.abilities?.includes('Paratutto')) {
+            keeperAbilityBonus += 1.5;
+        }
+        // - Riflessi Felini: +1
+        if (keeper.abilities?.includes('Riflessi Felini')) {
+            keeperAbilityBonus += 1;
+        }
+        // - Muro: +1
+        if (keeper.abilities?.includes('Muro')) {
+            keeperAbilityBonus += 1;
+        }
+
+        // Tira i dadi
+        const shooterRoll = roll1d20();
+        const keeperRoll = roll1d20();
+
+        // Calcola totali
+        const shooterTotal = shooterRoll + shooterMod + shooterAbilityBonus;
+        const keeperTotal = keeperRoll + keeperMod + keeperAbilityBonus;
+
+        // Il tiratore segna se il suo totale e maggiore o uguale
+        const scored = shooterTotal >= keeperTotal;
+
+        return {
+            scored,
+            shooterRoll,
+            keeperRoll,
+            shooterTotal: Math.round(shooterTotal * 10) / 10,
+            keeperTotal: Math.round(keeperTotal * 10) / 10,
+            shooterMod: Math.round((shooterMod + shooterAbilityBonus) * 10) / 10,
+            keeperMod: Math.round((keeperMod + keeperAbilityBonus) * 10) / 10
+        };
     },
 
     /**
@@ -255,11 +321,13 @@ window.CoppaSimulation = {
             const teamName = kick.team === 'home' ? 'Casa' : 'Ospite';
             const resultIcon = kick.scored ? '⚽ GOL!' : '❌ PARATO!';
             const suddenDeathText = kick.suddenDeath ? ' [Sudden Death]' : '';
+            const detailsText = kick.details ? ` (${kick.details})` : '';
 
             log.push({
                 type: kick.scored ? 'goal' : 'save',
                 team: kick.team,
-                message: `${teamName}: ${kick.shooter} vs ${kick.keeper} - ${resultIcon}${suddenDeathText}`
+                message: `${teamName}: ${kick.shooter} vs ${kick.keeper} - ${resultIcon}${suddenDeathText}`,
+                details: kick.details || null
             });
         });
 

@@ -148,29 +148,35 @@ document.addEventListener('DOMContentLoaded', () => {
             // Variabile per la mappa delle forme (usata in modalità formazione)
             let formsToSave = null;
 
-            // Logica forma (modalita formazione)
-            if (mode === 'formazione') {
-                const persistedForms = new Map(Object.entries(teamData.playersFormStatus || {}));
-                formsToSave = new Map(persistedForms);
+            // Logica forma (sia rosa che formazione)
+            // Le forme vengono generate e salvate per entrambe le modalita
+            // per garantire che i colori siano sempre aggiornati
+            const persistedForms = new Map(Object.entries(teamData.playersFormStatus || {}));
+            formsToSave = new Map(persistedForms);
 
-                // Applica le forme ai giocatori
-                playersForRendering = playersForRendering.map(player => {
-                    return applyFormForDisplay(player, formsToSave);
+            // Applica le forme ai giocatori
+            playersForRendering = playersForRendering.map(player => {
+                return applyFormForDisplay(player, formsToSave);
+            });
+
+            // Salva le forme generate se necessario (nuovi giocatori o forme mancanti)
+            if (formsToSave.size > persistedForms.size || Object.keys(teamData.playersFormStatus || {}).length === 0) {
+                const savedFormsObject = Object.fromEntries(formsToSave);
+
+                await updateDoc(teamDocRef, {
+                    playersFormStatus: savedFormsObject
                 });
 
-                // Salva le forme generate se necessario
-                if (formsToSave.size > persistedForms.size || Object.keys(teamData.playersFormStatus || {}).length === 0) {
-                    const savedFormsObject = Object.fromEntries(formsToSave);
+                window.InterfacciaCore.currentTeamData.playersFormStatus = savedFormsObject;
+                currentTeamData.playersFormStatus = savedFormsObject;
+                console.log("[GestioneSquadre] Forma giocatore salvata/aggiornata in Firestore.");
+            }
 
-                    await updateDoc(teamDocRef, {
-                        playersFormStatus: savedFormsObject
-                    });
+            // Aggiorna teamData.players con le forme per la visualizzazione rosa
+            teamData.players = playersForRendering;
 
-                    window.InterfacciaCore.currentTeamData.playersFormStatus = savedFormsObject;
-                    currentTeamData.playersFormStatus = savedFormsObject;
-                    console.log("Forma giocatore salvata/aggiornata in Firestore.");
-                }
-
+            // Logica aggiuntiva solo per modalita formazione
+            if (mode === 'formazione') {
                 // Aggiorna titolari e panchina con i dati di forma
                 const updateFormationWithForm = (list) => list.map(p => {
                     return playersForRendering.find(rp => rp.id === p.id) || p;
@@ -180,14 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 teamData.formation.titolari = updateFormationWithForm(validPlayersInFormation(teamData.formation.titolari));
                 teamData.formation.panchina = updateFormationWithForm(validPlayersInFormation(teamData.formation.panchina));
-                teamData.players = playersForRendering;
             }
 
             // Aggiorna il contesto globale per i sotto-moduli
             window.GestioneSquadreContext = buildContext();
 
-            // Aggiungi formsMap al contesto (per modalità formazione)
-            if (mode === 'formazione' && formsToSave) {
+            // Aggiungi formsMap al contesto (per entrambe le modalita)
+            if (formsToSave) {
                 window.GestioneSquadreContext.formsMap = formsToSave;
             }
 
@@ -219,6 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ascolta l'evento di caricamento del pannello squadra
     document.addEventListener('squadraPanelLoaded', initializeSquadraPanel);
+
+    // Ascolta l'evento dashboardNeedsUpdate per aggiornare i dati in tempo reale
+    // Questo permette di aggiornare i colori della forma dei giocatori senza ricaricare la pagina
+    document.addEventListener('dashboardNeedsUpdate', () => {
+        // Verifica se siamo nella pagina squadra (rosa o formazione)
+        if (currentTeamId && squadraContent && !squadraContent.classList.contains('hidden')) {
+            const mode = localStorage.getItem('fanta_squadra_mode') || 'rosa';
+            console.log('[GestioneSquadre] dashboardNeedsUpdate - Ricarico dati per aggiornare colori forma');
+            loadTeamDataFromFirestore(currentTeamId, mode);
+        }
+    });
 
     // Espone globalmente la funzione per il caricamento squadra (usato da CSS per icona-swap)
     window.GestioneSquadre = window.GestioneSquadre || {};

@@ -270,6 +270,7 @@ window.CoppaUI = {
                             <div class="text-right">
                                 ${statusHtml}
                                 ${match.leg1Result ? `<p class="text-white font-bold">${match.leg1Result}</p>` : ''}
+                                ${match.penalties ? `<p class="text-xs text-yellow-400">Rigori: ${match.penalties.homeGoals}-${match.penalties.awayGoals}</p>` : ''}
                             </div>
                         </div>
                     </div>
@@ -336,6 +337,10 @@ window.CoppaUI = {
                         resultText = `<span class="text-gray-400 text-[10px]">${match.leg1Result} / ${match.leg2Result}</span>`;
                     } else if (match.leg1Result) {
                         resultText = `<span class="text-gray-400 text-[10px]">${match.leg1Result}</span>`;
+                    }
+                    // Mostra rigori se presenti
+                    if (match.penalties) {
+                        resultText += `<br><span class="text-yellow-400 text-[10px]">⚽ Rigori: ${match.penalties.homeGoals}-${match.penalties.awayGoals}</span>`;
                     }
                 }
 

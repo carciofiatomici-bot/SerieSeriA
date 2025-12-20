@@ -211,6 +211,21 @@
 
         isSpinning = true;
         spinBtn.disabled = true;
+        spinBtn.textContent = '🔒 Bloccando...';
+
+        // IMPORTANTE: Blocca SUBITO la ruota su Firebase PRIMA dell'animazione
+        // Questo previene exploit di ricarica pagina durante l'animazione
+        const locked = await window.DailyWheel.lockWheel(teamId);
+        if (!locked) {
+            if (window.Toast) {
+                window.Toast.error('Errore di connessione. Riprova.');
+            }
+            isSpinning = false;
+            spinBtn.disabled = false;
+            spinBtn.textContent = '🎲 GIRA LA RUOTA!';
+            return;
+        }
+
         spinBtn.textContent = '🎰 Girando...';
 
         // Estrai premio (ora async per caricare config da Firestore)

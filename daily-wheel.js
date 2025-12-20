@@ -147,6 +147,61 @@
     }
 
     /**
+     * Blocca immediatamente la ruota salvando il timestamp su Firebase
+     * DEVE essere chiamato PRIMA dell'animazione per evitare exploit
+     * @param {string} teamId - ID squadra
+     * @returns {Promise<boolean>} true se bloccato con successo
+     */
+    async function lockWheel(teamId) {
+        console.log('[DailyWheel] lockWheel - Blocco immediato ruota per:', teamId);
+
+        const firestoreTools = window.firestoreTools;
+        if (!firestoreTools) {
+            console.error('[DailyWheel] firestoreTools non disponibile');
+            return false;
+        }
+
+        const { doc, updateDoc } = firestoreTools;
+        const db = window.db;
+        const appId = firestoreTools.appId;
+
+        if (!db || !appId) {
+            console.error('[DailyWheel] db o appId non disponibile');
+            return false;
+        }
+
+        const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
+
+        try {
+            const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
+            const nowTimestamp = Date.now();
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // Salva SUBITO il timestamp per bloccare ulteriori tentativi
+            await updateDoc(teamDocRef, {
+                'dailyWheel.lastSpinDate': today,
+                'dailyWheel.lastSpinTimestamp': nowTimestamp
+            });
+
+            // Aggiorna anche i dati locali per prevenire click multipli
+            if (window.InterfacciaCore?.currentTeamData) {
+                if (!window.InterfacciaCore.currentTeamData.dailyWheel) {
+                    window.InterfacciaCore.currentTeamData.dailyWheel = {};
+                }
+                window.InterfacciaCore.currentTeamData.dailyWheel.lastSpinDate = today;
+                window.InterfacciaCore.currentTeamData.dailyWheel.lastSpinTimestamp = nowTimestamp;
+            }
+
+            console.log('[DailyWheel] Ruota bloccata con successo, timestamp:', nowTimestamp);
+            return true;
+        } catch (error) {
+            console.error('[DailyWheel] Errore blocco ruota:', error);
+            return false;
+        }
+    }
+
+    /**
      * Assegna il premio alla squadra
      * @param {Object} prize - Premio da assegnare
      * @param {string} teamId - ID squadra
@@ -276,6 +331,7 @@
         RANDOM_OBJECTS,
         canSpinToday,
         spin,
+        lockWheel,
         awardPrize,
         getPrizeIndex,
         isEnabled,

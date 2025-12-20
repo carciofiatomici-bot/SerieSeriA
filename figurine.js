@@ -339,7 +339,7 @@ window.FigurineSystem = {
         return {
             enabled: true,
             // Pacchetto gratis (tutte le collezioni)
-            freePackCooldownHours: 4,   // Ore di cooldown dopo apertura pacchetto gratis
+            freePackCooldownHours: 6,   // Ore di cooldown dopo apertura pacchetto gratis
             freePackChance1: 0.99,      // 99% = 1 figurina
             freePackChance2: 0.01,      // 1% = 2 figurine
             // Prezzo pacchetto in CS (Crediti Seri)
@@ -1257,6 +1257,48 @@ window.FigurineSystem = {
     },
 
     /**
+     * Blocca immediatamente il pacchetto gratis salvando il timestamp su Firebase
+     * DEVE essere chiamato PRIMA dell'estrazione per evitare exploit
+     * @param {string} teamId - ID squadra
+     * @returns {Promise<boolean>} true se bloccato con successo
+     */
+    async lockFreePack(teamId) {
+        console.log('[Figurine] lockFreePack - Blocco immediato pacchetto per:', teamId);
+
+        const path = this.getTeamFigurinePath(teamId);
+        if (!path || !window.db || !window.firestoreTools) {
+            console.error('[Figurine] Impossibile bloccare pacchetto');
+            return false;
+        }
+
+        try {
+            const { doc, getDoc, setDoc } = window.firestoreTools;
+            const docRef = doc(window.db, path, teamId);
+            const nowTimestamp = new Date().toISOString();
+
+            // Carica album esistente o crea nuovo
+            const docSnap = await getDoc(docRef);
+            let album;
+            if (docSnap.exists()) {
+                album = docSnap.data();
+            } else {
+                album = this.createEmptyAlbum(teamId);
+            }
+
+            // Salva SUBITO il timestamp per bloccare ulteriori tentativi
+            album.lastFreePack = nowTimestamp;
+            album.updatedAt = nowTimestamp;
+
+            await setDoc(docRef, album);
+            console.log('[Figurine] Pacchetto bloccato con successo, timestamp:', nowTimestamp);
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore blocco pacchetto:', error);
+            return false;
+        }
+    },
+
+    /**
      * Apre un pacchetto di figurine gratis da una collezione specifica
      * 99% una figurina, 1% due figurine
      * @param {string} teamId - ID squadra
@@ -1282,6 +1324,16 @@ window.FigurineSystem = {
             throw new Error('Collezione non disponibile');
         }
 
+        // IMPORTANTE: Blocca SUBITO il pacchetto su Firebase PRIMA dell'estrazione
+        // Questo previene exploit di ricarica pagina
+        const locked = await this.lockFreePack(teamId);
+        if (!locked) {
+            throw new Error('Errore di connessione. Riprova.');
+        }
+
+        // Aggiorna timestamp locale nell'album (gia salvato su Firebase)
+        album.lastFreePack = new Date().toISOString();
+
         // Determina numero figurine: 99% una, 1% due
         const bonusChance = config.freePackChance2 || config.bonusFigurineChance || 0.01;
         const numFigurine = Math.random() < bonusChance ? 2 : 1;
@@ -1295,9 +1347,6 @@ window.FigurineSystem = {
                 this.addFigurinaToAlbum(album, figurina);
             }
         }
-
-        // Aggiorna timestamp pacchetto gratis
-        album.lastFreePack = new Date().toISOString();
 
         // Verifica bonus completamento
         const prevCompleted = album.completedSections?.length || 0;

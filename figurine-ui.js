@@ -180,6 +180,9 @@ window.FigurineUI = {
         document.getElementById('figurine-modal')?.classList.remove('hidden');
         this.isOpen = true;
 
+        // Carica le rarita delle figurine da Firestore (forza refresh per avere dati aggiornati)
+        await window.FigurineSystem.loadFigurineRarities(true);
+
         // Carica album
         await this.loadAlbum();
         this.switchTab('album');
