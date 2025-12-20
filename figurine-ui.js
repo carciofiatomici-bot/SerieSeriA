@@ -1414,18 +1414,12 @@ window.DashboardBackground = {
             return;
         }
 
-        // Crea container per sfondo con overlay
-        const bgContainer = document.createElement('div');
-        bgContainer.id = 'dashboard-bg-container';
-        bgContainer.className = 'absolute inset-0 -z-10 overflow-hidden rounded-xl';
-        bgContainer.innerHTML = `
-            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${bg.imageUrl}')"></div>
-            <div class="absolute inset-0 bg-gray-900" style="opacity: ${this.OVERLAY_OPACITY}"></div>
-        `;
-
-        // Assicurati che il parent abbia position relative
-        element.style.position = 'relative';
-        element.insertBefore(bgContainer, element.firstChild);
+        // Applica sfondo direttamente all'elemento come background-image
+        element.style.backgroundImage = `linear-gradient(rgba(17, 24, 39, ${this.OVERLAY_OPACITY}), rgba(17, 24, 39, ${this.OVERLAY_OPACITY})), url('${bg.imageUrl}')`;
+        element.style.backgroundSize = 'cover';
+        element.style.backgroundPosition = 'center';
+        element.style.backgroundRepeat = 'no-repeat';
+        element.dataset.hasBackground = 'true';
 
         console.log('[DashboardBackground] Sfondo applicato:', bg.itemId);
     },
@@ -1434,9 +1428,13 @@ window.DashboardBackground = {
      * Rimuove lo sfondo dalla dashboard
      */
     remove() {
-        const existing = document.getElementById('dashboard-bg-container');
-        if (existing) {
-            existing.remove();
+        const element = document.getElementById(this.DASHBOARD_ELEMENT_ID);
+        if (element && element.dataset.hasBackground) {
+            element.style.backgroundImage = '';
+            element.style.backgroundSize = '';
+            element.style.backgroundPosition = '';
+            element.style.backgroundRepeat = '';
+            delete element.dataset.hasBackground;
         }
     },
 
