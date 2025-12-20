@@ -376,46 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Calcola statistiche stagione
             const seasonStats = calculateSeasonStats(schedule);
 
-            // HTML per sezione Reward
-            const rewardsHtml = `
-                <div class="p-4 bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg border-2 border-yellow-500 shadow-md">
-                    <h4 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
-                        <span class="mr-2">💰</span> Tabella Premi
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Campionato -->
-                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
-                            <h5 class="text-green-400 font-bold mb-2 border-b border-green-600 pb-1">🏆 Campionato</h5>
-                            <ul class="text-sm space-y-1">
-                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Primi 3 posti:</span><span class="text-green-400">150 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Ultimi 3 posti:</span><span class="text-green-400">200 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Altre posizioni:</span><span class="text-green-400">100 CS</span></li>
-                            </ul>
-                        </div>
-                        <!-- CoppaSeriA -->
-                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
-                            <h5 class="text-purple-400 font-bold mb-2 border-b border-purple-600 pb-1">🏆 CoppaSeriA</h5>
-                            <ul class="text-sm space-y-1">
-                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Vittoria partita:</span><span class="text-green-400">25 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">Goal segnato:</span><span class="text-green-400">5 CS</span></li>
-                                <li class="flex justify-between"><span class="text-gray-300">2°, 3°, 4° posto:</span><span class="text-green-400">100 CS</span></li>
-                            </ul>
-                        </div>
-                        <!-- Supercoppa -->
-                        <div class="bg-black bg-opacity-30 rounded-lg p-3">
-                            <h5 class="text-orange-400 font-bold mb-2 border-b border-orange-600 pb-1">⭐ Supercoppa</h5>
-                            <ul class="text-sm space-y-1">
-                                <li class="flex justify-between"><span class="text-gray-300">Vincitore:</span><span class="text-yellow-300 font-bold">1 CSS</span></li>
-                            </ul>
-                            <p class="text-xs text-gray-400 mt-2">1° Campionato vs Vincitore Coppa</p>
-                        </div>
-                    </div>
-                </div>
-            `;
 
             // HTML per statistiche stagione
             const statsHtml = totalRounds > 0 ? `
@@ -484,9 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <!-- SEZIONE: Premi Individuali (Capocannoniere, Assistman, Clean Sheets) -->
                     <div id="season-individual-stats-container"></div>
-
-                    <!-- SEZIONE: Tabella Premi -->
-                    ${rewardsHtml}
 
                     <!-- SEZIONE: Generazione & Calendario -->
                     <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">

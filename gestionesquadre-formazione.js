@@ -635,6 +635,9 @@ window.GestioneSquadreFormazione = {
         if (targetRole === 'ROSALIBERA') {
             if (playerInSlot) removePlayerFromPosition(playerInSlot.id, context.currentTeamData);
             displayMessage('formation-message', `${player.name} liberato.`, 'success');
+            // Re-render dopo rimozione
+            this.renderFieldSlots(context.currentTeamData, context);
+            return;
 
         } else if (targetRole === 'B') {
             if (playerInSlot) {

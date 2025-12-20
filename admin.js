@@ -1500,6 +1500,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     teamModified = true;
                 }
 
+                // Reset anche playersExp e coachExp (campi separati)
+                updates.playersExp = {};
+                updates.coachExp = null;
+
                 // Salva le modifiche
                 if (teamModified) {
                     await updateDoc(doc(db, teamsCollectionPath, teamDoc.id), updates);

@@ -819,9 +819,6 @@ window.SponsorSystem = {
                             <button id="btn-change-sponsorship" class="flex-1 py-3 px-4 bg-${color}-600 hover:bg-${color}-500 rounded-lg font-semibold transition">
                                 Cambia (-${this.penaltyCost} CS + costo)
                             </button>
-                            <button id="btn-cancel-sponsorship" class="py-3 px-4 bg-red-600 hover:bg-red-500 rounded-lg font-semibold transition">
-                                Annulla
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -916,28 +913,6 @@ window.SponsorSystem = {
             btnChange.addEventListener('click', () => {
                 modal.remove();
                 this.renderChangeModal(type, teamId);
-            });
-        }
-
-        // Annulla contratto
-        const btnCancel = modal.querySelector('#btn-cancel-sponsorship');
-        if (btnCancel) {
-            btnCancel.addEventListener('click', async () => {
-                if (confirm(`Sei sicuro di voler annullare il contratto ${title}?`)) {
-                    try {
-                        if (isMedia) {
-                            await this.cancelMedia(teamId);
-                        } else {
-                            await this.cancelSponsor(teamId);
-                        }
-                        modal.remove();
-                        if (window.DashboardFeatures) {
-                            window.DashboardFeatures.updateSponsorshipStatus();
-                        }
-                    } catch (error) {
-                        this.showToast(error.message, 'error');
-                    }
-                }
             });
         }
     },

@@ -19,6 +19,9 @@ window.Notifications = {
     _lastServerFetch: 0,
     _serverNotificationsLoaded: false,
 
+    // ID delle notifiche eliminate (per non ricaricarle dal server)
+    _deletedIds: new Set(),
+
     // Configurazione
     config: {
         maxNotifications: 50,
@@ -194,6 +197,16 @@ window.Notifications = {
         const saved = localStorage.getItem('fanta_notifications');
         const lastFetch = parseInt(localStorage.getItem('fanta_notifications_fetch') || '0');
 
+        // Carica ID delle notifiche eliminate
+        const deletedIds = localStorage.getItem('fanta_notifications_deleted');
+        if (deletedIds) {
+            try {
+                this._deletedIds = new Set(JSON.parse(deletedIds));
+            } catch (e) {
+                this._deletedIds = new Set();
+            }
+        }
+
         if (saved) {
             try {
                 this.notifications = JSON.parse(saved);
@@ -256,7 +269,8 @@ window.Notifications = {
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const existing = this.notifications.find(n => n.id === doc.id);
-                if (!existing) {
+                // Salta notifiche gia presenti o eliminate dall'utente
+                if (!existing && !this._deletedIds.has(doc.id)) {
                     this.notifications.unshift({
                         id: doc.id,
                         ...data,
@@ -311,7 +325,8 @@ window.Notifications = {
                         const doc = change.doc;
                         const data = doc.data();
                         const existing = this.notifications.find(n => n.id === doc.id);
-                        if (!existing) {
+                        // Salta notifiche gia presenti o eliminate dall'utente
+                        if (!existing && !this._deletedIds.has(doc.id)) {
                             const notif = {
                                 id: doc.id,
                                 ...data,
@@ -725,6 +740,9 @@ window.Notifications = {
      * Pulisci tutte le notifiche
      */
     clearAll() {
+        // Aggiungi tutti gli ID alla lista eliminati per non ricaricarli dal server
+        this.notifications.forEach(n => this._deletedIds.add(n.id));
+        this.saveDeletedIds();
         this.notifications = [];
         this.saveToLocalStorage();
         this.updateUI();
@@ -734,9 +752,19 @@ window.Notifications = {
      * Elimina una singola notifica
      */
     deleteNotification(notifId) {
+        // Aggiungi l'ID alla lista eliminati per non ricaricarlo dal server
+        this._deletedIds.add(notifId);
+        this.saveDeletedIds();
         this.notifications = this.notifications.filter(n => n.id !== notifId);
         this.saveToLocalStorage();
         this.updateUI();
+    },
+
+    /**
+     * Salva gli ID delle notifiche eliminate in localStorage
+     */
+    saveDeletedIds() {
+        localStorage.setItem('fanta_notifications_deleted', JSON.stringify([...this._deletedIds]));
     },
 
     /**

@@ -107,11 +107,11 @@
                     <p class="text-gray-400 text-sm">${leveledUp.length} giocatori sono saliti di livello</p>
                 </div>
                 <div class="space-y-2 max-h-64 overflow-y-auto">
-                    ${leveledUp.map(r => `
+                    ${leveledUp.filter(r => r && r.player).map(r => `
                         <div class="flex items-center justify-between bg-gray-700 rounded-lg px-3 py-2">
-                            <span class="text-white font-medium">${r.player.nome || r.player.name}</span>
+                            <span class="text-white font-medium">${r.player.nome || r.player.name || 'Giocatore'}</span>
                             <span class="text-yellow-400 font-bold">
-                                Lv. ${r.oldLevel} → ${r.newLevel}
+                                Lv. ${r.oldLevel || '?'} → ${r.newLevel || '?'}
                             </span>
                         </div>
                     `).join('')}

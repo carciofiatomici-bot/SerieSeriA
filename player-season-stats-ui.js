@@ -213,11 +213,18 @@ window.PlayerSeasonStatsUI = {
     },
 
     /**
-     * Renderizza una card di classifica.
+     * Renderizza una card di classifica (accordion minimizzato di default).
      */
     renderRankingCard(title, players, statKey, bgClass, borderClass, getLogoHtml) {
         const emoji = statKey === 'goals' ? '⚽' : (statKey === 'assists' ? '🎯' : '🧤');
         const statLabel = statKey === 'goals' ? 'Gol' : (statKey === 'assists' ? 'Assist' : 'CS');
+        const accordionId = `ranking-accordion-${statKey}`;
+
+        // Mostra il leader nel titolo quando chiuso
+        let leaderText = '';
+        if (players && players.length > 0) {
+            leaderText = `${players[0].playerName} (${players[0][statKey]})`;
+        }
 
         let rowsHtml = '';
 
@@ -259,12 +266,17 @@ window.PlayerSeasonStatsUI = {
 
         return `
             <div class="${bgClass} rounded-lg border-2 ${borderClass} shadow-lg overflow-hidden">
-                <div class="p-3 border-b border-gray-700">
-                    <h4 class="text-lg font-bold text-white flex items-center">
-                        <span class="mr-2">${emoji}</span> ${title}
+                <div class="p-3 cursor-pointer select-none hover:bg-black hover:bg-opacity-20 transition"
+                     onclick="window.PlayerSeasonStatsUI.toggleAccordion('${accordionId}')">
+                    <h4 class="text-lg font-bold text-white flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="mr-2">${emoji}</span> ${title}
+                            ${leaderText ? `<span class="ml-2 text-sm font-normal text-gray-400">- ${leaderText}</span>` : ''}
+                        </span>
+                        <span id="${accordionId}-icon" class="text-gray-400 transition-transform">▼</span>
                     </h4>
                 </div>
-                <div class="overflow-x-auto">
+                <div id="${accordionId}" class="hidden overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-black bg-opacity-30">
                             <tr>
@@ -281,6 +293,28 @@ window.PlayerSeasonStatsUI = {
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Toggle dell'accordion per le classifiche individuali.
+     */
+    toggleAccordion(accordionId) {
+        const content = document.getElementById(accordionId);
+        const icon = document.getElementById(`${accordionId}-icon`);
+
+        if (content && icon) {
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
     },
 
     /**

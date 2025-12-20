@@ -456,12 +456,6 @@ window.Schedina = {
      * Applica i premi alle squadre
      */
     async applyRewards(roundNumber) {
-        // Verifica che i rewards siano abilitati globalmente
-        if (window.AdminRewards?.areRewardsDisabled()) {
-            console.log('[Schedina] Rewards disabilitati globalmente');
-            return { rewarded: 0 };
-        }
-
         if (!window.db || !window.firestoreTools) {
             console.error('[Schedina] Firestore non disponibile');
             return { rewarded: 0 };
