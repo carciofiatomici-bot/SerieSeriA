@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.25',
+    currentVersion: '2.2.27',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,34 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.27',
+            date: '2025-12-20',
+            time: '17:30',
+            title: 'Ruota 12 ore e Fix Bonus',
+            changes: [
+                { text: 'Ruota della Fortuna: ora gira ogni 12 ore invece di 24', adminOnly: false },
+                { text: 'Fix bonus EXP figurine: ora +0.1% per figurina (era sbagliato)', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
+        {
+            version: '2.2.26',
+            date: '2025-12-20',
+            time: '15:00',
+            title: 'Bilanciamento Simulazione e Miglioramenti',
+            changes: [
+                { text: 'Simulazione automatica alle 12:00 e 20:30 (due volte al giorno)', adminOnly: false },
+                { text: 'Bilanciamento partite: meno gol, risultati piu realistici (3-2, 4-3)', adminOnly: false },
+                { text: 'Album: mostra bonus EXP e Mod ottenuti dalle figurine', adminOnly: false },
+                { text: 'Album: legenda rarita aggiornata (Comune, Non Comune, Rara, Epica, Leggendaria)', adminOnly: false },
+                { text: 'Bonus EXP allenatore: +0.5% per ogni livello', adminOnly: false },
+                { text: 'Fix acquisti stadio: crediti ora scalati correttamente', adminOnly: false },
+                { text: 'Fix EXP giocatori: progressi non piu persi tra le partite', adminOnly: true },
+                { text: 'Coppa: box Tabellone Completo ora accordion minimizzato', adminOnly: false }
+            ],
+            type: 'improvement'
+        },
         {
             version: '2.2.25',
             date: '2025-12-18',

@@ -9,15 +9,25 @@
     let isSpinning = false;
     let currentRotation = 0;
 
+    // Costante per il cooldown (12 ore in millisecondi)
+    const WHEEL_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+
     /**
-     * Calcola il tempo rimanente fino a mezzanotte
+     * Calcola il tempo rimanente fino al prossimo spin (cooldown 12 ore)
+     * @param {Object} teamData - Dati della squadra (opzionale)
      * @returns {Object} { hours, minutes, seconds, formatted }
      */
-    function getTimeUntilMidnight() {
-        const now = new Date();
-        const midnight = new Date(now);
-        midnight.setHours(24, 0, 0, 0);
-        const diff = midnight - now;
+    function getTimeUntilNextSpin(teamData) {
+        let diff = 0;
+
+        if (teamData?.dailyWheel?.lastSpinTimestamp) {
+            const lastSpin = teamData.dailyWheel.lastSpinTimestamp;
+            const nextSpinTime = lastSpin + WHEEL_COOLDOWN_MS;
+            diff = Math.max(0, nextSpinTime - Date.now());
+        } else {
+            // Fallback: nessun cooldown attivo
+            diff = 0;
+        }
 
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -126,7 +136,7 @@
                     ` : `
                     <div class="flex-1 bg-gray-700 text-center py-3 px-6 rounded-xl">
                         <p class="text-gray-400 text-sm">Prossimo giro disponibile tra:</p>
-                        <p id="wheel-countdown" class="text-yellow-400 font-bold text-xl">${getTimeUntilMidnight().formatted}</p>
+                        <p id="wheel-countdown" class="text-yellow-400 font-bold text-xl">${getTimeUntilNextSpin(teamData).formatted}</p>
                     </div>
                     `}
                     <button id="btn-close-wheel"
@@ -173,7 +183,7 @@
                         clearInterval(countdownInterval);
                         return;
                     }
-                    const time = getTimeUntilMidnight();
+                    const time = getTimeUntilNextSpin(teamData);
                     countdownEl.textContent = time.formatted;
                 }, 1000);
             }
@@ -189,7 +199,7 @@
         // Doppio check di sicurezza: verifica se puo' ancora girare
         if (!window.DailyWheel.canSpinToday(teamData)) {
             if (window.Toast) {
-                window.Toast.error('Hai gia girato la ruota oggi! Torna domani.');
+                window.Toast.error('Hai gia girato la ruota! Riprova tra 12 ore.');
             }
             return;
         }

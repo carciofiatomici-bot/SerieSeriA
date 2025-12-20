@@ -87,8 +87,11 @@
         }
     }
 
+    // Costante per il cooldown della ruota (12 ore in millisecondi)
+    const WHEEL_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+
     /**
-     * Verifica se l'utente puo girare oggi
+     * Verifica se l'utente puo girare (cooldown 12 ore)
      * @param {Object} teamData - Dati della squadra
      * @returns {boolean}
      */
@@ -96,14 +99,19 @@
         if (!teamData) return false;
 
         const wheelData = teamData.dailyWheel || {};
-        const lastSpinDate = wheelData.lastSpinDate;
+        const lastSpinTimestamp = wheelData.lastSpinTimestamp;
 
-        if (!lastSpinDate) return true; // Mai girato
+        // Fallback per vecchi dati: se c'è lastSpinDate ma non lastSpinTimestamp
+        if (!lastSpinTimestamp && wheelData.lastSpinDate) {
+            // Considera che possono girare (nuova logica)
+            return true;
+        }
 
-        // Usa data locale (reset alle 00:00 ora locale dell'utente)
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        return lastSpinDate !== today;
+        if (!lastSpinTimestamp) return true; // Mai girato
+
+        // Verifica se sono passate 12 ore dall'ultimo spin
+        const now = Date.now();
+        return (now - lastSpinTimestamp) >= WHEEL_COOLDOWN_MS;
     }
 
     /**
@@ -179,7 +187,8 @@
             }
 
             const teamData = teamDoc.data();
-            // Usa data locale (coerente con canSpinToday)
+            // Timestamp per cooldown 12 ore + data per storico
+            const nowTimestamp = Date.now();
             const now = new Date();
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const wheelData = teamData.dailyWheel || { totalSpins: 0, history: [] };
@@ -187,6 +196,7 @@
             // Prepara aggiornamento
             const updates = {
                 'dailyWheel.lastSpinDate': today,
+                'dailyWheel.lastSpinTimestamp': nowTimestamp,
                 'dailyWheel.totalSpins': (wheelData.totalSpins || 0) + 1
             };
 

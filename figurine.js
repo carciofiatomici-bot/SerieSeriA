@@ -166,8 +166,9 @@ window.FigurineSystem = {
         'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' },
         'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark' },
         'sandro_relax': { base: 'Sandro Relax.jpg', name: 'Sandro Relax' },
-        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' },
-        'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper' }
+        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' }
+        // TODO: Aggiungere 'wallpaper' quando l'immagine sara' caricata su GitHub
+        // 'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper' }
     },
 
     // Mapping per collezione Figurine Utenti
@@ -636,7 +637,7 @@ window.FigurineSystem = {
         }
 
         try {
-            const { doc, getDoc } = window.firestoreTools;
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
             const docRef = doc(window.db, path, teamId);
             const docSnap = await getDoc(docRef);
 

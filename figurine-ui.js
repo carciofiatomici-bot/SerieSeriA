@@ -100,7 +100,11 @@ window.FigurineUI = {
                                 <span id="figurine-progress" class="text-purple-300">Completamento: 0%</span>
                                 <span id="figurine-count" class="text-gray-400">0/64 figurine</span>
                             </div>
-                            <div id="figurine-free-pack" class="text-green-400 text-xs"></div>
+                            <div class="flex items-center gap-3">
+                                <span id="figurine-exp-bonus" class="text-teal-400 text-xs" title="Bonus EXP per partita">📈 +0% EXP</span>
+                                <span id="figurine-mod-bonus" class="text-yellow-400 text-xs" title="Bonus modificatore partita">⚔️ +0.00 Mod</span>
+                                <div id="figurine-free-pack" class="text-green-400 text-xs"></div>
+                            </div>
                         </div>
                         <div class="mt-2 bg-gray-700 rounded-full h-2 overflow-hidden">
                             <div id="figurine-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
@@ -216,10 +220,20 @@ window.FigurineUI = {
         const countEl = document.getElementById('figurine-count');
         const progressBarEl = document.getElementById('figurine-progress-bar');
         const freePackEl = document.getElementById('figurine-free-pack');
+        const expBonusEl = document.getElementById('figurine-exp-bonus');
+        const modBonusEl = document.getElementById('figurine-mod-bonus');
 
         if (progressEl) progressEl.textContent = `Completamento: ${percentage}%`;
         if (countEl) countEl.textContent = `${unique}/${maxFigurine} figurine`;
         if (progressBarEl) progressBarEl.style.width = `${percentage}%`;
+
+        // Calcola bonus EXP: +0.1% per figurina unica
+        const expBonusPercent = (unique * 0.1).toFixed(1);
+        if (expBonusEl) expBonusEl.textContent = `📈 +${expBonusPercent}% EXP`;
+
+        // Calcola bonus Mod partita: +0.01 per figurina unica
+        const modBonus = (unique * 0.01).toFixed(2);
+        if (modBonusEl) modBonusEl.textContent = `⚔️ +${modBonus} Mod`;
 
         // Free pack
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
@@ -309,16 +323,16 @@ window.FigurineUI = {
             `;
         });
 
-        // Legenda
+        // Legenda con rarita coerenti
         html += `
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs text-gray-400">
                 <p class="font-semibold mb-1">Tocca una figurina per vedere tutte le varianti</p>
                 <div class="flex flex-wrap gap-2 mt-2">
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-500 mr-1"></span> Normale</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> Evoluto</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> Alternative</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> Ultimate</span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-pink-500 mr-1"></span> Fantasy</span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span> <span class="text-gray-400">Comune</span></span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> <span class="text-green-400">Non Comune</span></span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> <span class="text-blue-400">Rara</span></span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> <span class="text-purple-400">Epica</span></span>
+                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span> <span class="text-yellow-400">Leggendaria</span></span>
                 </div>
             </div>
         `;
