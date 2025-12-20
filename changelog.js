@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.27',
+    currentVersion: '2.2.28',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,17 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.28',
+            date: '2025-12-20',
+            time: '18:00',
+            title: 'Wallpaper Gratuito e Fix Sfondo',
+            changes: [
+                { text: 'Illustrazione Wallpaper gratuita per tutti gli utenti', adminOnly: false },
+                { text: 'Fix cambio sfondo dashboard dalle illustrazioni', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.27',
             date: '2025-12-20',

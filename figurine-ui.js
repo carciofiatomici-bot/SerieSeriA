@@ -434,7 +434,7 @@ window.FigurineUI = {
                 const counts = albumColl[itemId] || { base: 0 };
                 const hasAny = counts.base > 0;
                 const displayName = itemFiles.name || itemId;
-                const imgUrl = `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
+                const imgUrl = itemFiles.customUrl || `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
 
                 // Ottieni rarita e colori
                 const rarityLevel = window.FigurineSystem.getFigurineRarity(collId, itemId);
@@ -471,7 +471,7 @@ window.FigurineUI = {
         Object.entries(files).forEach(([itemId, itemFiles]) => {
             const counts = albumColl[itemId] || { base: 0 };
             const hasAny = counts.base > 0;
-            const imgUrl = `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
+            const imgUrl = itemFiles.customUrl || `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
 
             html += `
                 <div class="figurine-card bg-gray-800 rounded-lg p-2 border ${hasAny ? 'border-emerald-500' : 'border-gray-700'} relative cursor-pointer hover:bg-gray-700 transition"
@@ -741,7 +741,8 @@ window.FigurineUI = {
         const hidePreview = noPreviewCollections.includes(collectionId);
         const hideIfNotOwned = hideWhenNotOwnedCollections.includes(collectionId);
 
-        const imgUrl = `${collDef.baseUrl}${encodeURIComponent(files[itemId]?.base || '')}`;
+        const itemFiles = files[itemId] || {};
+        const imgUrl = itemFiles.customUrl || `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
 
         // Ottieni rarita
         const rarityLevel = window.FigurineSystem.getFigurineRarity(collectionId, itemId);

@@ -166,9 +166,13 @@ window.FigurineSystem = {
         'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' },
         'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark' },
         'sandro_relax': { base: 'Sandro Relax.jpg', name: 'Sandro Relax' },
-        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' }
-        // TODO: Aggiungere 'wallpaper' quando l'immagine sara' caricata su GitHub
-        // 'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper' }
+        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' },
+        'wallpaper': {
+            base: 'Wallpaper.jpg',
+            name: 'Wallpaper',
+            // Path alternativo: il file e' in Giocatori Seri/Illustrazioni/
+            customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Giocatori%20Seri/Illustrazioni/Wallpaper.jpg'
+        }
     },
 
     // Mapping per collezione Figurine Utenti
@@ -642,7 +646,27 @@ window.FigurineSystem = {
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                return docSnap.data();
+                const album = docSnap.data();
+
+                // Assegna automaticamente il Wallpaper se non ce l'ha
+                if (!album.collections?.illustrazioni?.wallpaper?.base) {
+                    if (!album.collections) album.collections = {};
+                    if (!album.collections.illustrazioni) album.collections.illustrazioni = {};
+                    if (!album.collections.illustrazioni.wallpaper) album.collections.illustrazioni.wallpaper = {};
+                    album.collections.illustrazioni.wallpaper.base = 1;
+
+                    // Salva l'aggiornamento
+                    try {
+                        await updateDoc(docRef, {
+                            'collections.illustrazioni.wallpaper.base': 1
+                        });
+                        console.log('[Figurine] Wallpaper assegnato automaticamente a', teamId);
+                    } catch (e) {
+                        console.warn('[Figurine] Errore assegnazione wallpaper:', e);
+                    }
+                }
+
+                return album;
             }
             return this.createEmptyAlbum(teamId);
         } catch (error) {
@@ -682,9 +706,10 @@ window.FigurineSystem = {
         });
 
         // Collezione Illustrazioni (solo base)
+        // Wallpaper e' gratuito per tutti
         const illustrazioniCollection = {};
         Object.keys(this.ILLUSTRAZIONI_FILES).forEach(id => {
-            illustrazioniCollection[id] = { base: 0 };
+            illustrazioniCollection[id] = { base: id === 'wallpaper' ? 1 : 0 };
         });
 
         // Collezione Figurine Utenti (solo base)
@@ -1722,8 +1747,10 @@ window.FigurineSystem = {
             const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
 
             if (itemId) {
-                // Salva sfondo
-                const imgUrl = `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(this.ILLUSTRAZIONI_FILES[itemId]?.base || '')}`;
+                // Salva sfondo - usa customUrl se disponibile
+                const itemData = this.ILLUSTRAZIONI_FILES[itemId];
+                const imgUrl = itemData?.customUrl ||
+                    `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(itemData?.base || '')}`;
                 await updateDoc(teamRef, {
                     dashboardBackground: {
                         itemId: itemId,
@@ -1731,7 +1758,7 @@ window.FigurineSystem = {
                         updatedAt: new Date().toISOString()
                     }
                 });
-                console.log('[Figurine] Sfondo salvato:', itemId);
+                console.log('[Figurine] Sfondo salvato:', itemId, imgUrl);
             } else {
                 // Rimuovi sfondo
                 await updateDoc(teamRef, { dashboardBackground: null });
@@ -1740,9 +1767,12 @@ window.FigurineSystem = {
 
             // Aggiorna anche currentTeamData
             if (window.InterfacciaCore?.currentTeamData) {
+                const itemData = this.ILLUSTRAZIONI_FILES[itemId];
+                const imgUrl = itemData?.customUrl ||
+                    `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(itemData?.base || '')}`;
                 window.InterfacciaCore.currentTeamData.dashboardBackground = itemId ? {
                     itemId,
-                    imageUrl: `${this.COLLECTIONS.illustrazioni.baseUrl}${encodeURIComponent(this.ILLUSTRAZIONI_FILES[itemId]?.base || '')}`
+                    imageUrl: imgUrl
                 } : null;
             }
 
