@@ -336,6 +336,27 @@ window.CoppaMain = {
                     ? finalMatch.awayTeam
                     : finalMatch.homeTeam;
             }
+
+            // NUOVO: Assegna premi automaticamente alla fine della coppa
+            try {
+                // Salva prima il bracket con i piazzamenti
+                await window.CoppaSchedule.updateCupSchedule(bracket);
+
+                // Poi applica i premi
+                const rewardsResult = await this.applyCupRewards();
+                console.log('[CoppaMain] Premi coppa assegnati automaticamente:', rewardsResult);
+
+                // Notifica l'utente
+                if (window.Toast) {
+                    window.Toast.success(`🏆 Premi CoppaSeriA assegnati!\n1° ${bracket.winner.teamName}`);
+                }
+            } catch (rewardError) {
+                console.error('[CoppaMain] Errore assegnazione premi automatica:', rewardError);
+                // Non blocchiamo - l'admin puo assegnare manualmente
+                if (window.Toast) {
+                    window.Toast.warning('Premi non assegnati automaticamente. Usa il bottone manuale.');
+                }
+            }
         }
 
         // Resetta la forma dei giocatori delle squadre coinvolte
@@ -386,12 +407,25 @@ window.CoppaMain = {
 
     /**
      * Applica i premi finali della coppa
+     * @param {boolean} forceReapply - Se true, riapplica i premi anche se gia assegnati
      */
-    async applyCupRewards() {
+    async applyCupRewards(forceReapply = false) {
         const bracket = await window.CoppaSchedule.loadCupSchedule();
 
         if (!bracket || bracket.status !== 'completed') {
             throw new Error('La CoppaSeriA non e ancora completata.');
+        }
+
+        // Controlla se i premi sono gia stati assegnati
+        if (bracket.rewardsApplied && !forceReapply) {
+            console.log('[CoppaMain] Premi gia assegnati. Usa forceReapply=true per riassegnare.');
+            return {
+                alreadyApplied: true,
+                winner: bracket.winner,
+                runnerUp: bracket.runnerUp,
+                thirdPlace: bracket.thirdPlace,
+                fourthPlace: bracket.fourthPlace
+            };
         }
 
         const { REWARDS } = window.CoppaConstants;
@@ -431,11 +465,18 @@ window.CoppaMain = {
             }
         }
 
+        // Segna i premi come assegnati nel bracket
+        bracket.rewardsApplied = true;
+        bracket.rewardsAppliedAt = new Date().toISOString();
+        await window.CoppaSchedule.updateCupSchedule(bracket);
+
         // Aggiorna config
         await this.updateCupConfig({
             isCupOver: true,
             cupWinner: bracket.winner ? bracket.winner.teamId : null
         });
+
+        console.log('[CoppaMain] Premi coppa assegnati con successo.');
 
         return {
             winner: bracket.winner,

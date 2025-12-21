@@ -445,15 +445,22 @@ window.CoppaUI = {
 
         if (roundInfo.isCompleted) {
             // Coppa completata
+            const rewardsApplied = bracket?.rewardsApplied || false;
+            const rewardsBtnText = rewardsApplied ? '✅ Premi Assegnati (Riassegna)' : '💰 Assegna Premi Coppa';
+            const rewardsBtnClass = rewardsApplied
+                ? 'bg-gray-600 hover:bg-gray-500'
+                : 'bg-green-600 hover:bg-green-500';
+
             html += `
                 <div class="mb-4 p-4 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-lg text-center">
                     <p class="text-2xl font-extrabold text-white mb-2">🏆 COPPA COMPLETATA</p>
                     <p class="text-xl text-white">Vincitore: ${roundInfo.winner?.teamName || 'N/A'}</p>
                     ${roundInfo.runnerUp ? `<p class="text-gray-200">2° posto: ${roundInfo.runnerUp.teamName}</p>` : ''}
+                    ${rewardsApplied ? '<p class="text-green-300 text-sm mt-2">✓ Premi distribuiti automaticamente</p>' : ''}
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-apply-cup-rewards" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg">
-                        💰 Assegna Premi Coppa
+                    <button id="btn-apply-cup-rewards" class="${rewardsBtnClass} text-white font-bold py-3 rounded-lg">
+                        ${rewardsBtnText}
                     </button>
                     <button id="btn-reset-cup" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg">
                         🗑️ Elimina Tabellone
@@ -668,21 +675,40 @@ window.CoppaUI = {
             });
         }
 
-        // Assegna premi
+        // Assegna premi (manuale)
         const rewardsBtn = document.getElementById('btn-apply-cup-rewards');
         if (rewardsBtn) {
             rewardsBtn.addEventListener('click', async () => {
-                if (!confirm('Assegnare i premi della CoppaSeriA?\n\n• 1 CSS al vincitore\n• 100 CS al 2°, 3°, 4° posto')) return;
+                // Verifica se i premi sono gia stati assegnati
+                const bracket = await window.CoppaSchedule.loadCupSchedule();
+                let forceReapply = false;
+
+                if (bracket?.rewardsApplied) {
+                    const reapply = confirm(
+                        '⚠️ I premi sono gia stati assegnati automaticamente!\n\n' +
+                        'Vuoi riassegnarli comunque?\n' +
+                        '(I premi verranno AGGIUNTI a quelli gia dati)'
+                    );
+                    if (!reapply) return;
+                    forceReapply = true;
+                } else {
+                    if (!confirm('Assegnare i premi della CoppaSeriA?\n\n• 1 CSS al vincitore\n• 100 CS al 2°, 3°, 4° posto')) return;
+                }
 
                 rewardsBtn.disabled = true;
                 rewardsBtn.textContent = 'Assegnazione...';
 
                 try {
-                    const result = await window.CoppaMain.applyCupRewards();
-                    alert(`Premi assegnati!\n\n🥇 ${result.winner?.teamName}\n🥈 ${result.runnerUp?.teamName}\n🥉 ${result.thirdPlace?.teamName}\n4° ${result.fourthPlace?.teamName}`);
+                    const result = await window.CoppaMain.applyCupRewards(forceReapply);
 
-                    const bracket = await window.CoppaSchedule.loadCupSchedule();
-                    this.renderSimulationPanel(bracket, container);
+                    if (result.alreadyApplied) {
+                        alert('I premi erano gia stati assegnati.');
+                    } else {
+                        alert(`Premi assegnati!\n\n🥇 ${result.winner?.teamName}\n🥈 ${result.runnerUp?.teamName}\n🥉 ${result.thirdPlace?.teamName}\n4° ${result.fourthPlace?.teamName}`);
+                    }
+
+                    const updatedBracket = await window.CoppaSchedule.loadCupSchedule();
+                    this.renderSimulationPanel(updatedBracket, container);
                 } catch (error) {
                     console.error('Errore assegnazione premi:', error);
                     alert('Errore: ' + error.message);
