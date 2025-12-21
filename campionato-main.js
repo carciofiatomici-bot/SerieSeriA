@@ -117,8 +117,9 @@ window.ChampionshipMain = {
                 window.PlayerExp.applyExpFromFirestore(awayTeamData);
             }
             
-            // 3. Simula partita
-            const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
+            // 3. Simula partita con highlights
+            const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
+            const { homeGoals, awayGoals, highlightsText, scorers, assists, matchEvents } = simResult;
 
             // 3.5. Registra statistiche stagionali (goal, assist, clean sheets)
             if (window.PlayerSeasonStats) {
@@ -126,23 +127,24 @@ window.ChampionshipMain = {
             }
 
             // 3.5b. Registra statistiche avanzate giocatori (se feature attiva)
+            // NUOVO: Usa matchEvents per statistiche REALI dalla simulazione
             if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats) {
-                await window.PlayerStats.recordTeamMatchStats(match.homeId, homeTeamData, {
+                await window.PlayerStats.recordMatchStatsFromEvents(match.homeId, homeTeamData, {
                     opponentId: match.awayId,
                     opponentName: awayTeamData.teamName,
                     goalsFor: homeGoals,
                     goalsAgainst: awayGoals,
                     isHome: true,
                     matchType: 'campionato'
-                });
-                await window.PlayerStats.recordTeamMatchStats(match.awayId, awayTeamData, {
+                }, matchEvents);
+                await window.PlayerStats.recordMatchStatsFromEvents(match.awayId, awayTeamData, {
                     opponentId: match.homeId,
                     opponentName: homeTeamData.teamName,
                     goalsFor: awayGoals,
                     goalsAgainst: homeGoals,
                     isHome: false,
                     matchType: 'campionato'
-                });
+                }, matchEvents);
             }
 
             // 3.6. Processa EXP giocatori (NUOVO SISTEMA)
@@ -171,6 +173,20 @@ window.ChampionshipMain = {
             if (window.FeatureFlags?.isEnabled('formationXp')) {
                 await this.addFormationXp(match.homeId, homeTeamData.formation?.modulo);
                 await this.addFormationXp(match.awayId, awayTeamData.formation?.modulo);
+            }
+
+            // 3.7. Processa infortuni a fine partita (se feature attiva)
+            if (window.ChampionshipSimulation?.processMatchInjuries) {
+                const injuries = await window.ChampionshipSimulation.processMatchInjuries(
+                    match.homeId, homeTeamData,
+                    match.awayId, awayTeamData
+                );
+                if (injuries.homeInjury) {
+                    console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${injuries.homeInjury.playerName} (${injuries.homeInjury.duration} partite)`);
+                }
+                if (injuries.awayInjury) {
+                    console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${injuries.awayInjury.playerName} (${injuries.awayInjury.duration} partite)`);
+                }
             }
 
             // REPLAY: Mostra replay SOLO se non e admin E flag attivo
@@ -371,21 +387,8 @@ window.ChampionshipMain = {
                     window.PlayerExp.applyExpFromFirestore(awayTeamData);
                 }
 
-                // Espandi formazione per avere nomi giocatori (per telecronaca)
-                const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
-                if (expandFormation) {
-                    homeTeamData.formation.titolari = expandFormation(homeTeamData.formation.titolari || [], homeTeamData.players || []);
-                    awayTeamData.formation.titolari = expandFormation(awayTeamData.formation.titolari || [], awayTeamData.players || []);
-                }
-
-                const { homeGoals, awayGoals } = window.ChampionshipSimulation.runSimulation(homeTeamData, awayTeamData);
-
-                // Genera log telecronaca (indipendente dalla simulazione principale)
-                let matchLog = null;
-                if (window.SimulazioneNuoveRegole) {
-                    const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(homeTeamData, awayTeamData);
-                    matchLog = logResult.log;
-                }
+                const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
+                const { homeGoals, awayGoals, highlightsText, scorers, assists, matchEvents } = simResult;
 
                 // Registra statistiche stagionali (goal, assist, clean sheets)
                 if (window.PlayerSeasonStats) {
@@ -393,23 +396,24 @@ window.ChampionshipMain = {
                 }
 
                 // Registra statistiche avanzate giocatori (se feature attiva)
+                // NUOVO: Usa matchEvents per statistiche REALI dalla simulazione
                 if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats) {
-                    await window.PlayerStats.recordTeamMatchStats(match.homeId, homeTeamData, {
+                    await window.PlayerStats.recordMatchStatsFromEvents(match.homeId, homeTeamData, {
                         opponentId: match.awayId,
                         opponentName: awayTeamData.teamName,
                         goalsFor: homeGoals,
                         goalsAgainst: awayGoals,
                         isHome: true,
                         matchType: 'campionato'
-                    });
-                    await window.PlayerStats.recordTeamMatchStats(match.awayId, awayTeamData, {
+                    }, matchEvents);
+                    await window.PlayerStats.recordMatchStatsFromEvents(match.awayId, awayTeamData, {
                         opponentId: match.homeId,
                         opponentName: homeTeamData.teamName,
                         goalsFor: awayGoals,
                         goalsAgainst: homeGoals,
                         isHome: false,
                         matchType: 'campionato'
-                    });
+                    }, matchEvents);
                 }
 
                 // Processa EXP giocatori (NUOVO SISTEMA)
@@ -438,6 +442,20 @@ window.ChampionshipMain = {
                 if (window.FeatureFlags?.isEnabled('formationXp')) {
                     await this.addFormationXp(match.homeId, homeTeamData.formation?.modulo);
                     await this.addFormationXp(match.awayId, awayTeamData.formation?.modulo);
+                }
+
+                // Processa infortuni a fine partita (se feature attiva)
+                if (window.ChampionshipSimulation?.processMatchInjuries) {
+                    const injuries = await window.ChampionshipSimulation.processMatchInjuries(
+                        match.homeId, homeTeamData,
+                        match.awayId, awayTeamData
+                    );
+                    if (injuries.homeInjury) {
+                        console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${injuries.homeInjury.playerName} (${injuries.homeInjury.duration} partite)`);
+                    }
+                    if (injuries.awayInjury) {
+                        console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${injuries.awayInjury.playerName} (${injuries.awayInjury.duration} partite)`);
+                    }
                 }
 
                 // REPLAY: Mostra replay SOLO se non e admin E flag attivo
@@ -508,6 +526,13 @@ window.ChampionshipMain = {
 
                 // Salva nello storico partite per entrambe le squadre
                 if (window.MatchHistory) {
+                    // Prepara dettagli con highlights
+                    const matchDetails = {
+                        highlights: highlightsText,
+                        scorers: scorers || [],
+                        assists: assists || []
+                    };
+
                     // Salva per squadra di casa
                     await window.MatchHistory.saveMatch(match.homeId, {
                         type: 'campionato',
@@ -524,7 +549,7 @@ window.ChampionshipMain = {
                         homeScore: homeGoals,
                         awayScore: awayGoals,
                         isHome: true,
-                        details: matchLog ? { matchLog } : null
+                        details: matchDetails
                     });
 
                     // Salva per squadra ospite
@@ -543,7 +568,7 @@ window.ChampionshipMain = {
                         homeScore: homeGoals,
                         awayScore: awayGoals,
                         isHome: false,
-                        details: matchLog ? { matchLog } : null
+                        details: matchDetails
                     });
                 }
 

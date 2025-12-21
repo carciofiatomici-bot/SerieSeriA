@@ -163,22 +163,8 @@ window.Supercoppa = {
             window.PlayerExp.applyExpFromFirestore(awayTeamData);
         }
 
-        // Espandi formazione per avere nomi giocatori (per telecronaca)
-        const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
-        if (expandFormation) {
-            homeTeamData.formation.titolari = expandFormation(homeTeamData.formation?.titolari || [], homeTeamData.players || []);
-            awayTeamData.formation.titolari = expandFormation(awayTeamData.formation?.titolari || [], awayTeamData.players || []);
-        }
-
-        // Genera log telecronaca
-        let matchLog = null;
-        if (window.SimulazioneNuoveRegole) {
-            const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(homeTeamData, awayTeamData);
-            matchLog = logResult.log;
-        }
-
-        // Simula la partita
-        const matchResult = window.CoppaSimulation.runMatch(homeTeamData, awayTeamData);
+        // Simula la partita con highlights
+        const matchResult = window.CoppaSimulation.runMatchWithHighlights(homeTeamData, awayTeamData);
 
         let finalResult = `${matchResult.homeGoals}-${matchResult.awayGoals}`;
         let winner;
@@ -216,6 +202,36 @@ window.Supercoppa = {
                     matchResult.awayGoals,
                     'supercoppa'
                 );
+
+                // Registra statistiche avanzate giocatori (se feature attiva)
+                if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats && matchResult.matchEvents) {
+                    await window.PlayerStats.recordMatchStatsFromEvents(
+                        supercoppaBracket.homeTeam.teamId,
+                        homeTeamData,
+                        {
+                            opponentId: supercoppaBracket.awayTeam.teamId,
+                            opponentName: awayTeamData.teamName,
+                            goalsFor: matchResult.homeGoals,
+                            goalsAgainst: matchResult.awayGoals,
+                            isHome: true,
+                            matchType: 'supercoppa'
+                        },
+                        matchResult.matchEvents
+                    );
+                    await window.PlayerStats.recordMatchStatsFromEvents(
+                        supercoppaBracket.awayTeam.teamId,
+                        awayTeamData,
+                        {
+                            opponentId: supercoppaBracket.homeTeam.teamId,
+                            opponentName: homeTeamData.teamName,
+                            goalsFor: matchResult.awayGoals,
+                            goalsAgainst: matchResult.homeGoals,
+                            isHome: false,
+                            matchType: 'supercoppa'
+                        },
+                        matchResult.matchEvents
+                    );
+                }
             } catch (statsError) {
                 console.warn('[Supercoppa] Errore registrazione stats:', statsError);
             }
@@ -285,6 +301,14 @@ window.Supercoppa = {
 
         // Salva nello storico partite per entrambe le squadre
         if (window.MatchHistory) {
+            // Prepara dettagli con highlights
+            const matchDetails = {
+                highlights: matchResult.highlightsText || null,
+                scorers: matchResult.scorers || [],
+                assists: matchResult.assists || [],
+                penalties: penalties || null
+            };
+
             // Salva per squadra di casa
             await window.MatchHistory.saveMatch(supercoppaBracket.homeTeam.teamId, {
                 type: 'supercoppa',
@@ -301,10 +325,7 @@ window.Supercoppa = {
                 homeScore: matchResult.homeGoals,
                 awayScore: matchResult.awayGoals,
                 isHome: true,
-                details: {
-                    matchLog: matchLog,
-                    penalties: penalties
-                }
+                details: matchDetails
             });
 
             // Salva per squadra ospite
@@ -323,10 +344,7 @@ window.Supercoppa = {
                 homeScore: matchResult.homeGoals,
                 awayScore: matchResult.awayGoals,
                 isHome: false,
-                details: {
-                    matchLog: matchLog,
-                    penalties: penalties
-                }
+                details: matchDetails
             });
 
             // Dispatch evento matchSimulated per notifiche push

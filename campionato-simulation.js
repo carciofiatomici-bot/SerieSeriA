@@ -184,17 +184,31 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 30; // Bilanciamento v4.1: da 50 a 30 occasioni per risultati piu realistici
+        const occasionsPerTeam = 25; // v5.0: 25 occasioni per squadra = 50 totali
 
-        for (let i = 0; i < totalOccasions; i++) {
-            if (simulateOneOccasion(teamA, teamB, i + 1)) {
-                homeGoals++;
-            }
+        // Genera 50 occasioni con minuti casuali (1-90), alternando le squadre
+        const allOccasions = [];
+        for (let i = 0; i < occasionsPerTeam; i++) {
+            allOccasions.push({ team: 'home', occasionIndex: i + 1 });
+            allOccasions.push({ team: 'away', occasionIndex: i + 1 });
         }
 
-        for (let i = 0; i < totalOccasions; i++) {
-            if (simulateOneOccasion(teamB, teamA, i + 1)) {
-                awayGoals++;
+        // Assegna minuti casuali (1-90) e ordina cronologicamente
+        allOccasions.forEach((occ, idx) => {
+            occ.minute = Math.floor(Math.random() * 90) + 1;
+        });
+        allOccasions.sort((a, b) => a.minute - b.minute);
+
+        // Esegui occasioni in ordine cronologico
+        for (const occ of allOccasions) {
+            if (occ.team === 'home') {
+                if (simulateOneOccasion(teamA, teamB, occ.occasionIndex)) {
+                    homeGoals++;
+                }
+            } else {
+                if (simulateOneOccasion(teamB, teamA, occ.occasionIndex)) {
+                    awayGoals++;
+                }
             }
         }
 
@@ -259,7 +273,7 @@ window.ChampionshipSimulation = {
 
         let homeGoals = 0;
         let awayGoals = 0;
-        const totalOccasions = 30; // Bilanciamento v4.1: da 50 a 30 occasioni
+        const occasionsPerTeam = 25; // v5.0: 25 occasioni per squadra = 50 totali
         const log = [];
         const matchEvents = []; // Array per eventi partita strutturati
 
@@ -306,54 +320,49 @@ window.ChampionshipSimulation = {
         });
         log.push('');
 
-        // ==================== OCCASIONI SQUADRA CASA ====================
-        log.push('');
-        log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${homeTeamData.teamName} (30 occasioni)`);
-        log.push('#'.repeat(70));
-
-        for (let i = 0; i < totalOccasions; i++) {
-            const result = simulateOneOccasionWithLog(teamA, teamB, i + 1);
-            if (result.goal) {
-                homeGoals++;
-            }
-            // Aggiungi il log dettagliato di questa occasione
-            log.push(...result.log);
-            log.push(`  >> Parziale ${homeTeamData.teamName}: ${homeGoals} gol su ${i + 1} occasioni`);
-
-            // Aggiungi evento strutturato
-            if (result.eventData) {
-                matchEvents.push({
-                    ...result.eventData,
-                    attackingTeam: homeTeamData.teamName,
-                    defendingTeam: awayTeamData.teamName,
-                    side: 'home'
-                });
-            }
+        // ==================== GENERA OCCASIONI CRONOLOGICHE ====================
+        // Genera 50 occasioni (25 per squadra) con minuti casuali (1-90)
+        const allOccasions = [];
+        for (let i = 0; i < occasionsPerTeam; i++) {
+            allOccasions.push({ team: 'home', occasionIndex: i + 1 });
+            allOccasions.push({ team: 'away', occasionIndex: i + 1 });
         }
+        allOccasions.forEach(occ => {
+            occ.minute = Math.floor(Math.random() * 90) + 1;
+        });
+        allOccasions.sort((a, b) => a.minute - b.minute);
 
-        // ==================== OCCASIONI SQUADRA TRASFERTA ====================
-        log.push('');
         log.push('#'.repeat(70));
-        log.push(`# ATTACCO ${awayTeamData.teamName} (30 occasioni)`);
+        log.push(`# PARTITA (50 occasioni in ordine cronologico)`);
         log.push('#'.repeat(70));
 
-        for (let i = 0; i < totalOccasions; i++) {
-            const result = simulateOneOccasionWithLog(teamB, teamA, i + 1);
+        // Esegui occasioni in ordine cronologico
+        for (const occ of allOccasions) {
+            const attackingTeam = occ.team === 'home' ? teamA : teamB;
+            const defendingTeam = occ.team === 'home' ? teamB : teamA;
+            const attackingName = occ.team === 'home' ? homeTeamData.teamName : awayTeamData.teamName;
+            const defendingName = occ.team === 'home' ? awayTeamData.teamName : homeTeamData.teamName;
+
+            const result = simulateOneOccasionWithLog(attackingTeam, defendingTeam, occ.occasionIndex);
+
             if (result.goal) {
-                awayGoals++;
+                if (occ.team === 'home') homeGoals++;
+                else awayGoals++;
             }
-            // Aggiungi il log dettagliato di questa occasione
+
+            // Aggiungi il log dettagliato con minuto
+            log.push(`\n[${occ.minute}'] ${attackingName} attacca`);
             log.push(...result.log);
-            log.push(`  >> Parziale ${awayTeamData.teamName}: ${awayGoals} gol su ${i + 1} occasioni`);
+            log.push(`  >> Parziale: ${homeTeamData.teamName} ${homeGoals} - ${awayGoals} ${awayTeamData.teamName}`);
 
             // Aggiungi evento strutturato
             if (result.eventData) {
                 matchEvents.push({
                     ...result.eventData,
-                    attackingTeam: awayTeamData.teamName,
-                    defendingTeam: homeTeamData.teamName,
-                    side: 'away'
+                    minute: occ.minute,
+                    attackingTeam: attackingName,
+                    defendingTeam: defendingName,
+                    side: occ.team
                 });
             }
         }
@@ -458,6 +467,220 @@ window.ChampionshipSimulation = {
     },
 
     /**
+     * Genera gli highlights ("Azioni Salienti") dai matchEvents.
+     * @param {Array} matchEvents - Array di eventi dalle occasioni
+     * @param {string} homeTeamName - Nome squadra casa
+     * @param {string} awayTeamName - Nome squadra trasferta
+     * @param {number} homeGoals - Gol squadra casa
+     * @param {number} awayGoals - Gol squadra trasferta
+     * @returns {Object} - { highlights, scorers, assists }
+     */
+    generateHighlights(matchEvents, homeTeamName, awayTeamName, homeGoals, awayGoals) {
+        const SimHighlights = window.SimulationHighlights;
+        if (!SimHighlights) {
+            console.warn('SimulationHighlights non disponibile');
+            return { highlights: [], highlightsText: '', scorers: [], assists: [] };
+        }
+
+        const allHighlights = [];
+        const scorers = [];
+        const assists = [];
+
+        // Header partita
+        allHighlights.push(`${'='.repeat(50)}`);
+        allHighlights.push(`⚽ AZIONI SALIENTI`);
+        allHighlights.push(`${homeTeamName} vs ${awayTeamName}`);
+        allHighlights.push(`${'='.repeat(50)}`);
+
+        // Genera highlights per ogni occasione che ha portato a un gol
+        const goalEvents = matchEvents.filter(e => e.result === 'goal');
+
+        if (goalEvents.length === 0) {
+            allHighlights.push(`\n🚫 Nessun gol segnato in questa partita.`);
+        } else {
+            goalEvents.forEach((event, index) => {
+                const attackingTeamName = event.attackingTeam;
+                const defendingTeamName = event.defendingTeam;
+
+                const result = SimHighlights.generateHighlights(event, attackingTeamName, defendingTeamName);
+                allHighlights.push(...result.highlights);
+
+                if (result.scorer) {
+                    scorers.push({
+                        name: result.scorer,
+                        team: attackingTeamName,
+                        occasion: event.occasionNumber
+                    });
+                }
+                if (result.assister) {
+                    assists.push({
+                        name: result.assister,
+                        team: attackingTeamName,
+                        occasion: event.occasionNumber
+                    });
+                }
+            });
+        }
+
+        // Riepilogo finale
+        allHighlights.push(`\n${'='.repeat(50)}`);
+        allHighlights.push(`📋 RISULTATO FINALE`);
+        allHighlights.push(`${homeTeamName} ${homeGoals} - ${awayGoals} ${awayTeamName}`);
+        allHighlights.push(`${'='.repeat(50)}`);
+
+        // Statistiche marcatori
+        if (scorers.length > 0) {
+            const homeScorers = scorers.filter(s => s.team === homeTeamName);
+            const awayScorers = scorers.filter(s => s.team === awayTeamName);
+
+            if (homeScorers.length > 0) {
+                allHighlights.push(`\n⚽ Gol ${homeTeamName}:`);
+                homeScorers.forEach(s => {
+                    const assist = assists.find(a => a.team === homeTeamName && a.occasion === s.occasion);
+                    const assistText = assist ? ` (assist: ${assist.name})` : '';
+                    allHighlights.push(`   - ${s.name}${assistText}`);
+                });
+            }
+
+            if (awayScorers.length > 0) {
+                allHighlights.push(`\n⚽ Gol ${awayTeamName}:`);
+                awayScorers.forEach(s => {
+                    const assist = assists.find(a => a.team === awayTeamName && a.occasion === s.occasion);
+                    const assistText = assist ? ` (assist: ${assist.name})` : '';
+                    allHighlights.push(`   - ${s.name}${assistText}`);
+                });
+            }
+        }
+
+        return {
+            highlights: allHighlights,
+            highlightsText: allHighlights.join('\n'),
+            scorers,
+            assists
+        };
+    },
+
+    /**
+     * Esegue simulazione con highlights (senza log debug).
+     * Usata per campionato, coppa, supercoppa.
+     */
+    runSimulationWithHighlights(homeTeamData, awayTeamData) {
+        const { simulateOneOccasionWithLog, resetSimulationState, initIconaBonusForMatch, initAbilitiesForMatch } = window.simulationLogic || {};
+
+        if (!simulateOneOccasionWithLog) {
+            console.error("ERRORE CRITICO: Modulo simulazione.js non caricato correttamente.");
+            return { homeGoals: 0, awayGoals: 0, highlights: [] };
+        }
+
+        // Check forfait
+        const homeTitolari = homeTeamData.formation?.titolari?.length || 0;
+        const awayTitolari = awayTeamData.formation?.titolari?.length || 0;
+
+        if (homeTitolari < 5 && awayTitolari < 5) {
+            return {
+                homeGoals: 0, awayGoals: 0, forfeit: 'both',
+                highlights: ['FORFAIT DOPPIO: Entrambe le squadre hanno meno di 5 titolari'],
+                highlightsText: 'FORFAIT DOPPIO'
+            };
+        }
+        if (homeTitolari < 5) {
+            return {
+                homeGoals: 0, awayGoals: 3, forfeit: 'home',
+                highlights: [`FORFAIT: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari - perde 0-3`],
+                highlightsText: `FORFAIT: ${homeTeamData.teamName} perde 0-3`
+            };
+        }
+        if (awayTitolari < 5) {
+            return {
+                homeGoals: 3, awayGoals: 0, forfeit: 'away',
+                highlights: [`FORFAIT: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari - perde 3-0`],
+                highlightsText: `FORFAIT: ${awayTeamData.teamName} perde 3-0`
+            };
+        }
+
+        // Reset stato simulazione
+        if (resetSimulationState) resetSimulationState();
+
+        const teamA = this.prepareTeamForSimulation(homeTeamData);
+        const teamB = this.prepareTeamForSimulation(awayTeamData);
+
+        // Inizializza bonus Icona
+        if (initIconaBonusForMatch) {
+            initIconaBonusForMatch(teamA);
+            initIconaBonusForMatch(teamB);
+        }
+        if (initAbilitiesForMatch) {
+            initAbilitiesForMatch(teamA);
+            initAbilitiesForMatch(teamB);
+        }
+
+        // Applica bonus casa
+        if (window.Stadium?.isEnabled() && homeTeamData.stadium?.totalBonus) {
+            teamA.homeBonus = homeTeamData.stadium.totalBonus;
+        }
+
+        let homeGoals = 0;
+        let awayGoals = 0;
+        const occasionsPerTeam = 25; // v5.0: 25 occasioni per squadra = 50 totali
+        const matchEvents = [];
+
+        // Genera 50 occasioni (25 per squadra) con minuti casuali (1-90)
+        const allOccasions = [];
+        for (let i = 0; i < occasionsPerTeam; i++) {
+            allOccasions.push({ team: 'home', occasionIndex: i + 1 });
+            allOccasions.push({ team: 'away', occasionIndex: i + 1 });
+        }
+        allOccasions.forEach(occ => {
+            occ.minute = Math.floor(Math.random() * 90) + 1;
+        });
+        allOccasions.sort((a, b) => a.minute - b.minute);
+
+        // Esegui occasioni in ordine cronologico
+        for (const occ of allOccasions) {
+            const attackingTeam = occ.team === 'home' ? teamA : teamB;
+            const defendingTeam = occ.team === 'home' ? teamB : teamA;
+            const attackingName = occ.team === 'home' ? homeTeamData.teamName : awayTeamData.teamName;
+            const defendingName = occ.team === 'home' ? awayTeamData.teamName : homeTeamData.teamName;
+
+            const result = simulateOneOccasionWithLog(attackingTeam, defendingTeam, occ.occasionIndex);
+
+            if (result.goal) {
+                if (occ.team === 'home') homeGoals++;
+                else awayGoals++;
+            }
+
+            if (result.eventData) {
+                matchEvents.push({
+                    ...result.eventData,
+                    minute: occ.minute,
+                    attackingTeam: attackingName,
+                    defendingTeam: defendingName,
+                    side: occ.team
+                });
+            }
+        }
+
+        // Genera highlights
+        const highlightsResult = this.generateHighlights(
+            matchEvents,
+            homeTeamData.teamName,
+            awayTeamData.teamName,
+            homeGoals,
+            awayGoals
+        );
+
+        return {
+            homeGoals,
+            awayGoals,
+            highlights: highlightsResult.highlights,
+            highlightsText: highlightsResult.highlightsText,
+            scorers: highlightsResult.scorers,
+            assists: highlightsResult.assists,
+            matchEvents
+        };
+    },
+
+    /**
      * Aggiorna le statistiche di classifica dopo una partita.
      */
     updateStandingsStats(homeStats, awayStats, homeGoals, awayGoals) {
@@ -484,5 +707,251 @@ window.ChampionshipSimulation = {
         }
 
         return { homeStats, awayStats };
+    },
+
+    /**
+     * Esegue simulazione con highlights E debug log (solo per test simulazione).
+     * Include tutti i dettagli per debug: log dettagliato, highlights, eventi.
+     */
+    runSimulationWithHighlightsAndDebug(homeTeamData, awayTeamData) {
+        const { simulateOneOccasionWithLog, resetSimulationState, initIconaBonusForMatch, initAbilitiesForMatch } = window.simulationLogic || {};
+        const SimHighlights = window.SimulationHighlights;
+
+        if (!simulateOneOccasionWithLog) {
+            console.error("ERRORE CRITICO: Modulo simulazione.js non caricato correttamente.");
+            return { homeGoals: 0, awayGoals: 0, highlights: [], debugLog: [] };
+        }
+
+        // Check forfait
+        const homeTitolari = homeTeamData.formation?.titolari?.length || 0;
+        const awayTitolari = awayTeamData.formation?.titolari?.length || 0;
+
+        if (homeTitolari < 5 && awayTitolari < 5) {
+            return {
+                homeGoals: 0, awayGoals: 0, forfeit: 'both',
+                highlights: ['FORFAIT DOPPIO'],
+                highlightsText: 'FORFAIT DOPPIO',
+                debugLog: ['FORFAIT DOPPIO: Entrambe le squadre hanno meno di 5 titolari']
+            };
+        }
+        if (homeTitolari < 5) {
+            return {
+                homeGoals: 0, awayGoals: 3, forfeit: 'home',
+                highlights: [`FORFAIT: ${homeTeamData.teamName}`],
+                highlightsText: `FORFAIT: ${homeTeamData.teamName} perde 0-3`,
+                debugLog: [`FORFAIT: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari`]
+            };
+        }
+        if (awayTitolari < 5) {
+            return {
+                homeGoals: 3, awayGoals: 0, forfeit: 'away',
+                highlights: [`FORFAIT: ${awayTeamData.teamName}`],
+                highlightsText: `FORFAIT: ${awayTeamData.teamName} perde 3-0`,
+                debugLog: [`FORFAIT: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari`]
+            };
+        }
+
+        // Reset stato simulazione
+        if (resetSimulationState) resetSimulationState();
+
+        const teamA = this.prepareTeamForSimulation(homeTeamData);
+        const teamB = this.prepareTeamForSimulation(awayTeamData);
+
+        // Inizializza bonus Icona
+        if (initIconaBonusForMatch) {
+            initIconaBonusForMatch(teamA);
+            initIconaBonusForMatch(teamB);
+        }
+        if (initAbilitiesForMatch) {
+            initAbilitiesForMatch(teamA);
+            initAbilitiesForMatch(teamB);
+        }
+
+        // Applica bonus casa
+        if (window.Stadium?.isEnabled() && homeTeamData.stadium?.totalBonus) {
+            teamA.homeBonus = homeTeamData.stadium.totalBonus;
+        }
+
+        let homeGoals = 0;
+        let awayGoals = 0;
+        const occasionsPerTeam = 25; // v5.0: 25 occasioni per squadra = 50 totali
+        const matchEvents = [];
+        const allDebugLogs = [];
+
+        // Header debug
+        allDebugLogs.push('='.repeat(70));
+        allDebugLogs.push(`DEBUG SIMULAZIONE: ${homeTeamData.teamName} vs ${awayTeamData.teamName}`);
+        allDebugLogs.push('='.repeat(70));
+
+        // Genera 50 occasioni (25 per squadra) con minuti casuali (1-90)
+        const allOccasions = [];
+        for (let i = 0; i < occasionsPerTeam; i++) {
+            allOccasions.push({ team: 'home', occasionIndex: i + 1 });
+            allOccasions.push({ team: 'away', occasionIndex: i + 1 });
+        }
+        allOccasions.forEach(occ => {
+            occ.minute = Math.floor(Math.random() * 90) + 1;
+        });
+        allOccasions.sort((a, b) => a.minute - b.minute);
+
+        allDebugLogs.push(`\n${'#'.repeat(50)}`);
+        allDebugLogs.push(`# PARTITA (50 occasioni in ordine cronologico)`);
+        allDebugLogs.push(`${'#'.repeat(50)}`);
+
+        // Esegui occasioni in ordine cronologico
+        for (const occ of allOccasions) {
+            const attackingTeam = occ.team === 'home' ? teamA : teamB;
+            const defendingTeam = occ.team === 'home' ? teamB : teamA;
+            const attackingName = occ.team === 'home' ? homeTeamData.teamName : awayTeamData.teamName;
+            const defendingName = occ.team === 'home' ? awayTeamData.teamName : homeTeamData.teamName;
+
+            const result = simulateOneOccasionWithLog(attackingTeam, defendingTeam, occ.occasionIndex);
+
+            if (result.goal) {
+                if (occ.team === 'home') homeGoals++;
+                else awayGoals++;
+            }
+
+            if (result.eventData) {
+                matchEvents.push({
+                    ...result.eventData,
+                    minute: occ.minute,
+                    attackingTeam: attackingName,
+                    defendingTeam: defendingName,
+                    side: occ.team
+                });
+                // Genera debug log per questa occasione
+                if (SimHighlights?.generateDebugLog) {
+                    allDebugLogs.push(`\n[${occ.minute}'] ${attackingName} attacca`);
+                    const debugLines = SimHighlights.generateDebugLog(result.eventData, attackingTeam, defendingTeam);
+                    allDebugLogs.push(...debugLines);
+                }
+            }
+        }
+
+        // Footer debug
+        allDebugLogs.push(`\n${'='.repeat(70)}`);
+        allDebugLogs.push(`RISULTATO FINALE: ${homeTeamData.teamName} ${homeGoals} - ${awayGoals} ${awayTeamData.teamName}`);
+        allDebugLogs.push('='.repeat(70));
+
+        // Genera highlights
+        const highlightsResult = this.generateHighlights(
+            matchEvents,
+            homeTeamData.teamName,
+            awayTeamData.teamName,
+            homeGoals,
+            awayGoals
+        );
+
+        return {
+            homeGoals,
+            awayGoals,
+            highlights: highlightsResult.highlights,
+            highlightsText: highlightsResult.highlightsText,
+            scorers: highlightsResult.scorers,
+            assists: highlightsResult.assists,
+            matchEvents,
+            debugLog: allDebugLogs,
+            debugText: allDebugLogs.join('\n')
+        };
+    },
+
+    // ====================================================================
+    // SISTEMA INFORTUNI A FINE PARTITA
+    // ====================================================================
+
+    /**
+     * Processa gli infortuni a fine partita.
+     * - 1% di probabilita per ogni giocatore (titolari + panchina)
+     * - Max 1 infortunio per squadra per partita
+     * - Durata: 1-10 partite
+     * - Solo se il feature flag 'injuries' e' attivo
+     *
+     * @param {string} teamId - ID della squadra
+     * @param {Object} teamData - Dati squadra con formation.titolari e formation.panchina
+     * @returns {Object|null} - { playerId, playerName, duration } o null se nessun infortunio
+     */
+    async processPostMatchInjuries(teamId, teamData) {
+        // Verifica feature flag
+        if (!window.FeatureFlags?.isEnabled('injuries')) {
+            return null;
+        }
+
+        const allPlayers = [
+            ...(teamData.formation?.titolari || []),
+            ...(teamData.formation?.panchina || [])
+        ];
+
+        if (allPlayers.length === 0) return null;
+
+        // Verifica limite infortuni (max 1/4 della rosa)
+        const currentInjuries = (teamData.players || []).filter(p => p.injuredUntil > 0).length;
+        const maxInjuries = Math.floor((teamData.players || []).length / 4);
+        if (currentInjuries >= maxInjuries) {
+            console.log(`[Injuries] ${teamData.teamName}: limite infortuni raggiunto (${currentInjuries}/${maxInjuries})`);
+            return null;
+        }
+
+        // 1% di probabilita per ogni giocatore, max 1 per partita
+        let injuredPlayer = null;
+        for (const player of allPlayers) {
+            if (!player || !player.id) continue;
+
+            // Skip se gia infortunato
+            if (player.injuredUntil > 0) continue;
+
+            // 1% di probabilita
+            if (Math.random() * 100 < 1) {
+                const duration = Math.floor(Math.random() * 10) + 1; // 1-10 partite
+                injuredPlayer = {
+                    playerId: player.id,
+                    playerName: player.name || 'Giocatore',
+                    duration: duration
+                };
+                break; // Max 1 infortunio per partita
+            }
+        }
+
+        if (!injuredPlayer) return null;
+
+        // Salva infortunio su Firestore
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
+            const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+
+            // Aggiorna il giocatore nell'array players
+            const updatedPlayers = (teamData.players || []).map(p => {
+                if (p.id === injuredPlayer.playerId) {
+                    return { ...p, injuredUntil: injuredPlayer.duration };
+                }
+                return p;
+            });
+
+            await updateDoc(teamDocRef, { players: updatedPlayers });
+
+            console.log(`[Injuries] ${teamData.teamName}: ${injuredPlayer.playerName} infortunato per ${injuredPlayer.duration} partite`);
+        } catch (error) {
+            console.error('[Injuries] Errore salvataggio infortunio:', error);
+        }
+
+        return injuredPlayer;
+    },
+
+    /**
+     * Processa infortuni per entrambe le squadre dopo una partita.
+     * @param {string} homeTeamId - ID squadra casa
+     * @param {Object} homeTeamData - Dati squadra casa
+     * @param {string} awayTeamId - ID squadra trasferta
+     * @param {Object} awayTeamData - Dati squadra trasferta
+     * @returns {Object} - { homeInjury, awayInjury }
+     */
+    async processMatchInjuries(homeTeamId, homeTeamData, awayTeamId, awayTeamData) {
+        const homeInjury = await this.processPostMatchInjuries(homeTeamId, homeTeamData);
+        const awayInjury = await this.processPostMatchInjuries(awayTeamId, awayTeamData);
+
+        return { homeInjury, awayInjury };
     }
 };

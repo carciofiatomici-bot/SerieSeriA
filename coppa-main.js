@@ -111,13 +111,6 @@ window.CoppaMain = {
             window.PlayerExp.applyExpFromFirestore(awayTeamData);
         }
 
-        // Espandi formazione per avere nomi giocatori (per telecronaca)
-        const expandFormation = window.GestioneSquadreUtils?.expandFormationFromRosa;
-        if (expandFormation) {
-            homeTeamData.formation.titolari = expandFormation(homeTeamData.formation?.titolari || [], homeTeamData.players || []);
-            awayTeamData.formation.titolari = expandFormation(awayTeamData.formation?.titolari || [], awayTeamData.players || []);
-        }
-
         // Per il ritorno, inverti casa/trasferta
         let actualHome = homeTeamData;
         let actualAway = awayTeamData;
@@ -125,13 +118,6 @@ window.CoppaMain = {
         if (legType === 'leg2') {
             actualHome = awayTeamData;
             actualAway = homeTeamData;
-        }
-
-        // Genera log telecronaca
-        let matchLog = null;
-        if (window.SimulazioneNuoveRegole) {
-            const logResult = window.SimulazioneNuoveRegole.runSimulationWithLog(actualHome, actualAway);
-            matchLog = logResult.log;
         }
 
         // Aggiungi roundName al match per i controlli di sicurezza
@@ -158,6 +144,29 @@ window.CoppaMain = {
                 const awayWithId = { ...actualAway, id: legType === 'leg2' ? match.homeTeam.teamId : match.awayTeam.teamId };
 
                 await window.PlayerSeasonStats.recordMatchStats(homeWithId, awayWithId, homeGoals, awayGoals, 'coppa');
+
+                // Registra statistiche avanzate giocatori (se feature attiva)
+                if (window.FeatureFlags?.isEnabled('playerStats') && window.PlayerStats && result.matchEvents) {
+                    const homeTeamId = legType === 'leg2' ? match.awayTeam.teamId : match.homeTeam.teamId;
+                    const awayTeamId = legType === 'leg2' ? match.homeTeam.teamId : match.awayTeam.teamId;
+
+                    await window.PlayerStats.recordMatchStatsFromEvents(homeTeamId, actualHome, {
+                        opponentId: awayTeamId,
+                        opponentName: actualAway.teamName,
+                        goalsFor: homeGoals,
+                        goalsAgainst: awayGoals,
+                        isHome: true,
+                        matchType: 'coppa'
+                    }, result.matchEvents);
+                    await window.PlayerStats.recordMatchStatsFromEvents(awayTeamId, actualAway, {
+                        opponentId: homeTeamId,
+                        opponentName: actualHome.teamName,
+                        goalsFor: awayGoals,
+                        goalsAgainst: homeGoals,
+                        isHome: false,
+                        matchType: 'coppa'
+                    }, result.matchEvents);
+                }
             } catch (statsError) {
                 console.warn('[CoppaMain] Errore registrazione stats coppa:', statsError);
             }
@@ -226,6 +235,15 @@ window.CoppaMain = {
             const awayGoals = parseInt(parts[1]) || 0;
 
             // Salva per squadra di casa
+            // Prepara dettagli con highlights
+            const matchDetails = {
+                round: round.roundName,
+                leg: legType,
+                highlights: result.highlights || null,
+                scorers: result.scorers || [],
+                assists: result.assists || []
+            };
+
             await window.MatchHistory.saveMatch(match.homeTeam.teamId, {
                 type: 'coppa',
                 homeTeam: {
@@ -241,11 +259,7 @@ window.CoppaMain = {
                 homeScore: homeGoals,
                 awayScore: awayGoals,
                 isHome: true,
-                details: {
-                    round: round.roundName,
-                    leg: legType,
-                    matchLog: matchLog
-                }
+                details: matchDetails
             });
 
             // Salva per squadra ospite
@@ -264,11 +278,7 @@ window.CoppaMain = {
                 homeScore: homeGoals,
                 awayScore: awayGoals,
                 isHome: false,
-                details: {
-                    round: round.roundName,
-                    leg: legType,
-                    matchLog: matchLog
-                }
+                details: matchDetails
             });
 
             // Dispatch evento matchSimulated per notifiche push

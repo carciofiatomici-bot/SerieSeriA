@@ -712,6 +712,447 @@ window.PlayerStats = {
         }
 
         return assignments;
+    },
+
+    // ====================================================================
+    // NUOVO: STATISTICHE REALI DA MATCH EVENTS
+    // ====================================================================
+
+    /**
+     * Seleziona un giocatore in base alle probabilità per ruolo.
+     * @param {Array} players - Array di giocatori disponibili
+     * @param {Object} weights - Pesi per ruolo { D: 0.25, C: 0.70, A: 0.05 }
+     * @returns {Object|null} - Giocatore selezionato
+     */
+    selectPlayerByWeight(players, weights) {
+        if (!players || players.length === 0) return null;
+
+        // Raggruppa giocatori per ruolo
+        const byRole = { D: [], C: [], A: [], P: [] };
+        players.forEach(p => {
+            const role = p.role || 'C';
+            if (byRole[role]) byRole[role].push(p);
+        });
+
+        // Calcola pesi effettivi (solo per ruoli presenti)
+        const availableRoles = [];
+        let totalWeight = 0;
+        for (const [role, weight] of Object.entries(weights)) {
+            if (byRole[role] && byRole[role].length > 0) {
+                availableRoles.push({ role, weight, players: byRole[role] });
+                totalWeight += weight;
+            }
+        }
+
+        if (availableRoles.length === 0) return null;
+
+        // Normalizza pesi e seleziona ruolo
+        const roll = Math.random() * totalWeight;
+        let cumulative = 0;
+        let selectedRole = availableRoles[0];
+
+        for (const entry of availableRoles) {
+            cumulative += entry.weight;
+            if (roll <= cumulative) {
+                selectedRole = entry;
+                break;
+            }
+        }
+
+        // Seleziona un giocatore random dal ruolo scelto
+        const rolePlayers = selectedRole.players;
+        return rolePlayers[Math.floor(Math.random() * rolePlayers.length)];
+    },
+
+    /**
+     * Estrae statistiche REALI dai matchEvents della simulazione.
+     * Usa probabilità pesate per ruolo come da regolamento:
+     * - COSTRUZIONE (attacco): D 25%, C 70%, A 5%
+     * - ATTACCO (difesa per contrasto): D 50%, C 45%, A 5%
+     * - TIRO (marcatore): A 75%, C 15%, D 5%
+     *
+     * @param {Array} matchEvents - Array di eventi dalle occasioni
+     * @param {string} teamId - ID della squadra per cui estrarre le stats
+     * @param {string} teamName - Nome della squadra
+     * @returns {Object} - { goals, assists, interceptions, saves, passesSuccessful, passesFailed }
+     */
+    extractStatsFromEvents(matchEvents, teamId, teamName) {
+        const stats = {
+            goals: [],           // [{playerId, playerName}]
+            assists: [],         // [{playerId, playerName}]
+            interceptions: [],   // [{playerId, playerName}] - contrasti riusciti
+            saves: [],           // [{playerId, playerName}] - parate
+            passesSuccessful: [],// [{playerId, playerName}] - passaggi riusciti (costruzione)
+            passesFailed: []     // [{playerId, playerName}] - passaggi falliti (costruzione)
+        };
+
+        if (!matchEvents || matchEvents.length === 0) return stats;
+
+        // Probabilità per ruolo in ogni fase
+        const WEIGHTS = {
+            construction: { D: 0.25, C: 0.70, A: 0.05 },  // Chi fa il passaggio in costruzione
+            defense: { D: 0.50, C: 0.45, A: 0.05 },       // Chi effettua il contrasto
+            shot: { A: 0.75, C: 0.15, D: 0.05 }           // Chi segna il gol
+        };
+
+        matchEvents.forEach(event => {
+            const isTeamAttacking = event.attackingTeam === teamName;
+            const isTeamDefending = event.defendingTeam === teamName;
+
+            // ===== FASE COSTRUZIONE =====
+            const construction = event.phases?.construction;
+            if (construction && !construction.skipped) {
+                if (isTeamAttacking) {
+                    // Squadra attacca in costruzione
+                    const attackers = construction.players?.attacker || [];
+                    if (attackers.length > 0) {
+                        const player = this.selectPlayerByWeight(attackers, WEIGHTS.construction);
+                        if (player) {
+                            if (construction.result === 'success' || construction.result === 'lucky') {
+                                stats.passesSuccessful.push({ playerName: player.name, playerRole: player.role });
+                            } else if (construction.result === 'fail') {
+                                stats.passesFailed.push({ playerName: player.name, playerRole: player.role });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===== FASE ATTACCO =====
+            const attack = event.phases?.attack;
+            if (attack && !attack.interrupted) {
+                if (isTeamDefending) {
+                    // Squadra difende in attacco
+                    // Se la difesa vince (attacco fallisce), è un contrasto
+                    if (attack.result === 'fail') {
+                        const defenders = attack.players?.defender || [];
+                        if (defenders.length > 0) {
+                            const player = this.selectPlayerByWeight(defenders, WEIGHTS.defense);
+                            if (player) {
+                                stats.interceptions.push({ playerName: player.name, playerRole: player.role });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===== FASE TIRO =====
+            const shot = event.phases?.shot;
+            if (shot) {
+                // GOL: solo se la squadra attacca e segna
+                if (isTeamAttacking && event.result === 'goal') {
+                    const attackers = attack?.players?.attacker || [];
+
+                    // Seleziona il marcatore con probabilità pesate
+                    const scorer = this.selectPlayerByWeight(attackers, WEIGHTS.shot);
+
+                    if (scorer) {
+                        stats.goals.push({ playerName: scorer.name, playerRole: scorer.role });
+
+                        // ASSIST: chi ha vinto la fase attacco, se diverso dal marcatore
+                        // Selezioniamo un altro giocatore dalla fase attacco come assistman
+                        const potentialAssisters = attackers.filter(p => p.name !== scorer.name);
+                        if (potentialAssisters.length > 0) {
+                            // Per l'assist, usa le probabilità della fase attacco (C più probabile)
+                            const assister = this.selectPlayerByWeight(potentialAssisters, { C: 0.45, A: 0.50, D: 0.05 });
+                            if (assister) {
+                                stats.assists.push({ playerName: assister.name, playerRole: assister.role });
+                            }
+                        }
+                        // Se non ci sono altri giocatori, niente assist (gol in solitaria)
+                    }
+                }
+
+                // PARATA: solo se la squadra difende e il portiere para
+                if (isTeamDefending && shot.goalkeeper) {
+                    const saveResults = ['save', 'draw_save', 'miracolo_save'];
+                    if (saveResults.includes(shot.result)) {
+                        stats.saves.push({
+                            playerName: shot.goalkeeper.name,
+                            playerRole: 'P'
+                        });
+                    }
+                }
+            }
+        });
+
+        return stats;
+    },
+
+    /**
+     * Registra statistiche per una squadra usando i dati REALI dai matchEvents.
+     * Sostituisce/integra recordTeamMatchStats per usare dati reali.
+     *
+     * @param {string} teamId - ID squadra
+     * @param {Object} teamData - Dati squadra (con formation.titolari e players)
+     * @param {Object} matchInfo - { opponentId, opponentName, goalsFor, goalsAgainst, isHome, matchType }
+     * @param {Array} matchEvents - Array di eventi dalla simulazione
+     */
+    async recordMatchStatsFromEvents(teamId, teamData, matchInfo, matchEvents) {
+        const { doc, getDoc, setDoc, writeBatch } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+
+        const titolari = teamData.formation?.titolari || [];
+        const panchina = teamData.formation?.panchina || [];
+        const teamName = teamData.teamName || 'Squadra';
+
+        if (titolari.length === 0) {
+            console.warn('[PlayerStats] Nessun titolare, skip registrazione stats');
+            return;
+        }
+
+        // Estrai statistiche reali dai matchEvents
+        const realStats = this.extractStatsFromEvents(matchEvents, teamId, teamName);
+        console.log(`[PlayerStats] Stats reali estratte per ${teamName}:`, {
+            goals: realStats.goals.length,
+            assists: realStats.assists.length,
+            interceptions: realStats.interceptions.length,
+            saves: realStats.saves.length,
+            passesSuccessful: realStats.passesSuccessful.length,
+            passesFailed: realStats.passesFailed.length
+        });
+
+        // Determina risultato
+        const goalsFor = matchInfo.goalsFor;
+        const goalsAgainst = matchInfo.goalsAgainst;
+        const outcome = goalsFor > goalsAgainst ? 'win' : goalsFor < goalsAgainst ? 'loss' : 'draw';
+        const cleanSheet = goalsAgainst === 0;
+
+        // Crea batch per ottimizzare scritture
+        const batch = writeBatch(db);
+        const statsBasePath = `artifacts/${appId}/public/data/teams/${teamId}/playerStats`;
+
+        // Calcola rating base per risultato
+        const baseRating = outcome === 'win' ? 6.5 : outcome === 'draw' ? 6.0 : 5.5;
+
+        // Mappa per contare stats per giocatore
+        const playerStatsMap = new Map();
+
+        // Conta goal per giocatore
+        realStats.goals.forEach(g => {
+            const key = g.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).goals++;
+        });
+
+        // Conta assist per giocatore
+        realStats.assists.forEach(a => {
+            const key = a.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).assists++;
+        });
+
+        // Conta contrasti per giocatore
+        realStats.interceptions.forEach(i => {
+            const key = i.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).interceptions++;
+        });
+
+        // Conta parate per giocatore
+        realStats.saves.forEach(s => {
+            const key = s.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).saves++;
+        });
+
+        // Conta passaggi riusciti
+        realStats.passesSuccessful.forEach(p => {
+            const key = p.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).passesOk++;
+        });
+
+        // Conta passaggi falliti
+        realStats.passesFailed.forEach(p => {
+            const key = p.playerName;
+            if (!playerStatsMap.has(key)) playerStatsMap.set(key, { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 });
+            playerStatsMap.get(key).passesFail++;
+        });
+
+        // Processa ogni titolare
+        for (const player of titolari) {
+            if (!player || !player.id) continue;
+
+            const playerId = player.id;
+            const playerName = player.name || 'Giocatore';
+            const playerRole = player.role || 'C';
+
+            const statsPath = `${statsBasePath}/${playerId}`;
+            const statsRef = doc(db, statsPath);
+
+            // Carica stats esistenti
+            const statsDoc = await getDoc(statsRef);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(playerId, playerName, playerRole);
+
+            if (!stats.matchHistory) stats.matchHistory = [];
+
+            // Ottieni stats reali per questo giocatore
+            const playerRealStats = playerStatsMap.get(playerName) || { goals: 0, assists: 0, interceptions: 0, saves: 0, passesOk: 0, passesFail: 0 };
+
+            // Calcola rating individuale basato su azioni reali
+            let playerRating = baseRating;
+            playerRating += playerRealStats.goals * 1.0;        // +1 per gol
+            playerRating += playerRealStats.assists * 0.5;      // +0.5 per assist
+            playerRating += playerRealStats.interceptions * 0.3; // +0.3 per contrasto
+            playerRating += playerRealStats.saves * 0.4;        // +0.4 per parata
+            playerRating += playerRealStats.passesOk * 0.1;     // +0.1 per passaggio riuscito
+            playerRating -= playerRealStats.passesFail * 0.1;   // -0.1 per passaggio fallito
+            if (playerRole === 'P' && cleanSheet) playerRating += 1.0;
+            playerRating = Math.max(4.0, Math.min(10.0, playerRating + (Math.random() - 0.5) * 0.5));
+
+            // Aggiorna stats cumulative
+            stats.matchesPlayed = (stats.matchesPlayed || 0) + 1;
+            stats.matchesStarting = (stats.matchesStarting || 0) + 1;
+            stats.goalsScored = (stats.goalsScored || 0) + playerRealStats.goals;
+            stats.assists = (stats.assists || 0) + playerRealStats.assists;
+            stats.interceptions = (stats.interceptions || 0) + playerRealStats.interceptions;
+            stats.successfulPasses = (stats.successfulPasses || 0) + playerRealStats.passesOk;
+            stats.failedPasses = (stats.failedPasses || 0) + playerRealStats.passesFail;
+
+            if (playerRole === 'P') {
+                stats.saves = (stats.saves || 0) + playerRealStats.saves;
+                if (cleanSheet) stats.cleanSheets = (stats.cleanSheets || 0) + 1;
+            }
+
+            // Performance media
+            stats.totalContribution = (stats.totalContribution || 0) + playerRating;
+            stats.avgPerformance = stats.totalContribution / stats.matchesPlayed;
+
+            // MVP: chi ha il rating più alto nella partita
+            const isMVP = playerRealStats.goals >= 2 || (playerRealStats.goals >= 1 && playerRealStats.assists >= 1);
+            if (isMVP) stats.mvpCount = (stats.mvpCount || 0) + 1;
+
+            // Aggiungi a storico partite
+            const matchRecord = {
+                matchId: `${matchInfo.matchType || 'match'}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                date: new Date().toISOString(),
+                type: matchInfo.matchType || 'campionato',
+                opponent: {
+                    id: matchInfo.opponentId || 'unknown',
+                    name: matchInfo.opponentName || 'Avversario'
+                },
+                result: {
+                    goalsFor: goalsFor || 0,
+                    goalsAgainst: goalsAgainst || 0,
+                    isHome: matchInfo.isHome || false,
+                    outcome: outcome || 'draw'
+                },
+                performance: {
+                    isStarting: true,
+                    rating: parseFloat(playerRating.toFixed(1)),
+                    goalsScored: playerRealStats.goals,
+                    assists: playerRealStats.assists,
+                    interceptions: playerRealStats.interceptions,
+                    saves: playerRealStats.saves,
+                    passesSuccessful: playerRealStats.passesOk,
+                    passesFailed: playerRealStats.passesFail,
+                    isMVP: isMVP
+                }
+            };
+
+            if (playerRole === 'P') {
+                matchRecord.performance.cleanSheet = cleanSheet;
+            }
+
+            stats.matchHistory.unshift(matchRecord);
+            if (stats.matchHistory.length > 30) {
+                stats.matchHistory = stats.matchHistory.slice(0, 30);
+            }
+
+            stats.lastUpdated = Date.now();
+            batch.set(statsRef, stats);
+        }
+
+        // Registra anche i panchinari
+        for (const player of panchina) {
+            if (!player || !player.id) continue;
+
+            const playerId = player.id;
+            const playerName = player.name || 'Giocatore';
+            const playerRole = player.role || 'C';
+
+            const statsPath = `${statsBasePath}/${playerId}`;
+            const statsRef = doc(db, statsPath);
+
+            const statsDoc = await getDoc(statsRef);
+            let stats = statsDoc.exists() ? statsDoc.data() : this.initPlayerStats(playerId, playerName, playerRole);
+
+            if (!stats.matchHistory) stats.matchHistory = [];
+
+            stats.matchesPlayed = (stats.matchesPlayed || 0) + 1;
+            stats.matchesBench = (stats.matchesBench || 0) + 1;
+            stats.lastUpdated = Date.now();
+
+            batch.set(statsRef, stats);
+        }
+
+        try {
+            await batch.commit();
+            console.log(`[PlayerStats] Stats REALI registrate per ${titolari.length} titolari + ${panchina.length} panchinari di ${teamName}`);
+        } catch (error) {
+            console.error('[PlayerStats] Errore batch commit:', error);
+        }
+    },
+
+    // ====================================================================
+    // ADMIN: RESET STATISTICHE AVANZATE
+    // ====================================================================
+
+    /**
+     * Resetta tutte le statistiche avanzate di tutte le squadre.
+     * ATTENZIONE: Questa operazione è irreversibile!
+     * @returns {Object} - { teamsReset, playersReset }
+     */
+    async resetAllAdvancedStats() {
+        const { collection, getDocs, doc, deleteDoc, writeBatch } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+
+        const teamsPath = `artifacts/${appId}/public/data/teams`;
+        const teamsSnapshot = await getDocs(collection(db, teamsPath));
+
+        let teamsReset = 0;
+        let playersReset = 0;
+
+        for (const teamDoc of teamsSnapshot.docs) {
+            const teamId = teamDoc.id;
+            const playerStatsPath = `${teamsPath}/${teamId}/playerStats`;
+
+            try {
+                const playerStatsSnapshot = await getDocs(collection(db, playerStatsPath));
+
+                if (playerStatsSnapshot.docs.length > 0) {
+                    const batch = writeBatch(db);
+                    let batchCount = 0;
+
+                    for (const playerStatDoc of playerStatsSnapshot.docs) {
+                        batch.delete(playerStatDoc.ref);
+                        playersReset++;
+                        batchCount++;
+
+                        // Firestore batch limit è 500
+                        if (batchCount >= 450) {
+                            await batch.commit();
+                            batchCount = 0;
+                        }
+                    }
+
+                    if (batchCount > 0) {
+                        await batch.commit();
+                    }
+
+                    teamsReset++;
+                    console.log(`[PlayerStats] Reset stats per squadra ${teamId}: ${playerStatsSnapshot.docs.length} giocatori`);
+                }
+            } catch (error) {
+                console.error(`[PlayerStats] Errore reset stats per squadra ${teamId}:`, error);
+            }
+        }
+
+        console.log(`[PlayerStats] Reset completato: ${teamsReset} squadre, ${playersReset} giocatori`);
+        return { teamsReset, playersReset };
     }
 };
 

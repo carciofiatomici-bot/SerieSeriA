@@ -43,6 +43,10 @@ Prima dell’inizio delle fasi di gioco, al livello di ogni giocatore viene appl
 Le abilità dei giocatori in campo (e della panchina, se previsto) possono modificare le formule di calcolo.
 Nota: alcune abilità non sono cumulabili.
 
+### 1.5 Bonus Album
+
+I modificatori sono aumentati di un valore pari a quello che l'album di figure aggiunge
+
 ---
 
 ## 2. MODIFICATORI TATTICI E SITUAZIONALI
@@ -56,16 +60,16 @@ Tutti i seguenti modificatori vengono applicati prima dell’inizio delle fasi d
 Il confronto tra tipologie genera bonus e penalità fissi al modificatore:
 
  Potenza vs Tecnica
-  Potenza: +1,5 al modificatore
-  Tecnica: -1,5 al modificatore
+  Potenza: +2,5 al modificatore
+  Tecnica: -2,5 al modificatore
 
  Tecnica vs Velocità
-  Tecnica: +1,5 al modificatore
-  Velocità: -1,5 al modificatore
+  Tecnica: +2,5 al modificatore
+  Velocità: -2,5 al modificatore
 
  Velocità vs Potenza
-  Velocità: +1,5 al modificatore
-  Potenza: -1,5 al modificatore
+  Velocità: +2,5 al modificatore
+  Potenza: -2,5 al modificatore
 
 Gerarchia: Potenza > Tecnica > Velocità > Potenza
 
@@ -93,7 +97,7 @@ La squadra che gioca in casa beneficia dei modificatori forniti dallo stadio, in
 
 ## 3. SVOLGIMENTO DELLA PARTITA
 
-La simulazione è composta da 50 occasioni per squadra.
+La simulazione è composta da 25 occasioni per squadra.
 Ogni occasione è suddivisa in 3 fasi sequenziali.
 
 Esempio: Squadra A (attacco) vs Squadra B (difesa)
@@ -105,10 +109,15 @@ Esempio: Squadra A (attacco) vs Squadra B (difesa)
 Partecipanti:
  Squadra A (attacco):
    Difensore (25%) oppure
-   Centrocampista (75%)
+   Centrocampista (70%) oppure
+   Attaccante (5%)
+   Portiere (se ha abilità che lo permettono)
+
  Squadra B (difesa):
-   Centrocampista (85%) oppure
-   Attaccante (15%)
+   Centrocampista (80%) oppure
+   Attaccante (15%) oppure
+   Difensore (5%)
+   Portiere (se ha abilità che lo permettono)
 
 Formula:
 
@@ -128,8 +137,10 @@ Esito:
 (Solo se la Fase 1 è superata)
 
 Partecipanti:
- Squadra A (attacco): Attaccante (50%) o Centrocampista (50%)
- Squadra B (difesa): Difensore (50%) o Centrocampista (50%)
+ Squadra A (attacco): Attaccante (50%) o Centrocampista (45%) o Difensore (5%) o Portiere (se ha abilità che lo permettono)
+
+ Squadra B (difesa): Difensore (50%) o Centrocampista (45%) o Attaccante (5%) o Portiere (se ha abilità che lo permettono)
+
 
 Formula:
 
@@ -151,7 +162,7 @@ Partecipanti:
    Attaccante (75%)
    Centrocampista (15%)
    Difensore (5%)
-
+   Portiere (se ha abilità che lo permettono)
 Formula:
 
 (1d20 + Mod. Portiere B (considerare abilità giocatore)) − (1d20 + Mod. giocatore scelto Squadra A (considerare abilità giocatore))

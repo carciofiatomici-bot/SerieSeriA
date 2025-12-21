@@ -384,11 +384,11 @@ window.AdminUI = {
                         <div id="test-simulation-score" class="text-center text-3xl font-extrabold text-yellow-400 mb-4"></div>
                         <div id="test-simulation-details" class="text-sm text-gray-300 max-h-64 overflow-y-auto"></div>
                         <div class="flex gap-2 mt-4">
-                            <button id="btn-toggle-simple-log" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-lg">
-                                Log Ristretto
+                            <button id="btn-toggle-simple-log" class="flex-1 bg-yellow-700 hover:bg-yellow-600 text-white font-bold py-2 rounded-lg">
+                                <i class="fas fa-star mr-2"></i>Azioni Salienti
                             </button>
                             <button id="btn-toggle-detailed-log" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">
-                                Log Dettagliato
+                                <i class="fas fa-bug mr-2"></i>Debug Log
                             </button>
                         </div>
                         <div id="test-simulation-animation-buttons" class="hidden flex gap-2 mt-4">
@@ -400,11 +400,11 @@ window.AdminUI = {
                             </button>
                         </div>
                         <div id="test-simulation-simple-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
-                            <h5 class="text-sm font-bold text-blue-400 mb-2">Log Ristretto</h5>
+                            <h5 class="text-sm font-bold text-yellow-400 mb-2"><i class="fas fa-star mr-2"></i>Azioni Salienti</h5>
                             <pre id="test-simulation-simple-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
                         <div id="test-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
-                            <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
+                            <h5 class="text-sm font-bold text-purple-400 mb-2"><i class="fas fa-bug mr-2"></i>Debug Log</h5>
                             <pre id="test-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
                         <!-- Espandi Eventi Partita -->
@@ -423,13 +423,13 @@ window.AdminUI = {
                 <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-purple-500">
                     <h3 class="text-xl font-bold text-purple-400 mb-4">🧪 Test Simulazione - Nuove Regole</h3>
                     <div class="bg-purple-900/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
-                        <p class="font-bold mb-1">Differenze dalle regole attuali:</p>
+                        <p class="font-bold mb-1">Differenze dalle regole attuali (30 occasioni):</p>
                         <ul class="list-disc list-inside text-xs space-y-1">
-                            <li>40 occasioni per squadra</li>
-                            <li>Sistema a probabilita percentuale per passaggi fase</li>
-                            <li>5% di passare comunque alla fase successiva su fallimento</li>
-                            <li>Modificatori livello rivisti (Liv 29 = +17.5, Liv 30 = +18.5)</li>
-                            <li>Tipologia: penalita variabile 5-25% (invece di fisso 25%)</li>
+                            <li>40 occasioni per squadra (invece di 30)</li>
+                            <li>Modificatori livello aumentati (Liv 29 = +17.5, Liv 30 = +19.5 vs +8 e +9)</li>
+                            <li>Tipologia: bonus variabile 5-25% (invece di fisso)</li>
+                            <li>5% di passare alla fase successiva anche su fallimento</li>
+                            <li>5% di segnare comunque anche su parata</li>
                         </ul>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
@@ -458,19 +458,19 @@ window.AdminUI = {
                         <h4 class="text-lg font-bold text-white mb-2">Risultato</h4>
                         <div id="test-new-simulation-score" class="text-center text-3xl font-extrabold text-yellow-400 mb-4"></div>
                         <div class="flex gap-2 mt-4">
-                            <button id="btn-toggle-new-simple-log" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-lg">
-                                Log Ristretto
+                            <button id="btn-toggle-new-simple-log" class="flex-1 bg-yellow-700 hover:bg-yellow-600 text-white font-bold py-2 rounded-lg">
+                                <i class="fas fa-star mr-2"></i>Azioni Salienti
                             </button>
                             <button id="btn-toggle-new-detailed-log" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">
-                                Log Dettagliato
+                                <i class="fas fa-bug mr-2"></i>Debug Log
                             </button>
                         </div>
                         <div id="test-new-simulation-simple-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
-                            <h5 class="text-sm font-bold text-blue-400 mb-2">Log Ristretto</h5>
+                            <h5 class="text-sm font-bold text-yellow-400 mb-2"><i class="fas fa-star mr-2"></i>Azioni Salienti</h5>
                             <pre id="test-new-simulation-simple-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
                         <div id="test-new-simulation-detailed-log" class="hidden mt-4 bg-gray-900 rounded-lg p-3 max-h-96 overflow-y-auto">
-                            <h5 class="text-sm font-bold text-purple-400 mb-2">Log Dettagliato</h5>
+                            <h5 class="text-sm font-bold text-purple-400 mb-2"><i class="fas fa-bug mr-2"></i>Debug Log</h5>
                             <pre id="test-new-simulation-detailed-log-content" class="text-xs text-gray-300 whitespace-pre-wrap font-mono"></pre>
                         </div>
                         <!-- Espandi Eventi Partita -->
@@ -1342,7 +1342,7 @@ window.AdminUI = {
                 <h4 class="text-lg font-bold text-orange-400 mb-3">🔧 Strumenti di Riparazione</h4>
                 <p class="text-xs text-gray-400 mb-3">Correggi automaticamente i livelli e l'esperienza di tutti i giocatori.</p>
                 <p id="fix-all-levels-message" class="text-center text-sm mb-3"></p>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-3 gap-3 mb-3">
                     <button id="btn-fix-all-teams-levels"
                             class="bg-orange-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150">
                         🔧 Fix Livelli
@@ -1355,6 +1355,13 @@ window.AdminUI = {
                     <button id="btn-reset-all-players-exp"
                             class="bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150">
                         🔄 Reset XP
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                    <button id="btn-reset-advanced-stats"
+                            class="bg-red-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150"
+                            title="Cancella tutte le statistiche avanzate (goal, assist, contrasti, parate) per ricominciare">
+                        🗑️ Reset Statistiche Avanzate
                     </button>
                 </div>
             </div>

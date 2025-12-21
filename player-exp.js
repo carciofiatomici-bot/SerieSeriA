@@ -923,11 +923,31 @@
 
         const changes = [];
         const playerName = player.name || player.nome || 'Sconosciuto';
+        const currentLevel = player.level || 1;
 
         // Migra se necessario
         if (player.exp === undefined) {
             migratePlayer(player);
             changes.push(`Migrato (exp inizializzata)`);
+        }
+
+        // IMPORTANTE: Assicura che l'EXP sia almeno quella necessaria per il livello attuale
+        // Questo corregge giocatori con EXP "guadagnata" invece che "cumulativa"
+        const minExpForCurrentLevel = totalExpForLevel(currentLevel);
+        if (player.exp < minExpForCurrentLevel) {
+            const oldExp = player.exp;
+            // Conserva l'EXP guadagnata come progresso nel livello attuale
+            const earnedExp = player.exp || 0;
+            player.exp = minExpForCurrentLevel + earnedExp;
+            changes.push(`EXP corretta: ${oldExp} -> ${player.exp} (min per Lv.${currentLevel} = ${minExpForCurrentLevel}, guadagnata = ${earnedExp})`);
+        }
+
+        // Aggiorna expToNextLevel
+        const expNeededForNext = totalExpForLevel(currentLevel + 1);
+        const correctExpToNext = Math.max(0, expNeededForNext - player.exp);
+        if (player.expToNextLevel !== correctExpToNext) {
+            player.expToNextLevel = correctExpToNext;
+            changes.push(`expToNextLevel corretto: ${correctExpToNext}`);
         }
 
         const maxLevel = getMaxLevel(player);
@@ -987,7 +1007,16 @@
         let playersFixed = 0;
         const allChanges = [];
 
-        const updatedPlayers = (teamData.players || []).map(player => {
+        // Carica playersExp esistente
+        const existingPlayersExp = teamData.playersExp || {};
+        const updatedPlayersExp = { ...existingPlayersExp };
+
+        const updatedPlayers = (teamData.players || []).map(originalPlayer => {
+            // PROTEZIONE: Preserva TUTTI i campi originali del giocatore
+            // Campi importanti da non perdere: secretMaxLevel, isBase, isSeriousPlayer,
+            // abilities, ruolo, tipo, icon, isIcon, stats originali, ecc.
+            const player = { ...originalPlayer };
+
             const result = normalizePlayerExp(player);
             if (result.fixed) {
                 playersFixed++;
@@ -996,12 +1025,29 @@
                     changes: result.changes
                 });
             }
+
+            // IMPORTANTE: Aggiorna anche playersExp per mantenere la sincronizzazione
+            const playerId = player.id || player.visitorId;
+            if (playerId) {
+                updatedPlayersExp[playerId] = {
+                    exp: player.exp || 0,
+                    level: player.level || 1,
+                    expToNextLevel: player.expToNextLevel || 0,
+                    totalMatchesPlayed: player.totalMatchesPlayed || 0
+                };
+            }
+
+            // Ritorna il giocatore con tutti i campi originali preservati + EXP aggiornata
             return player;
         });
 
-        if (playersFixed > 0) {
-            await updateDoc(teamDocRef, { players: updatedPlayers });
-            console.log(`[PlayerExp] Repair EXP: ${teamName} - ${playersFixed} giocatori corretti`);
+        if (playersFixed > 0 || Object.keys(updatedPlayersExp).length > 0) {
+            // Salva sia players che playersExp
+            await updateDoc(teamDocRef, {
+                players: updatedPlayers,
+                playersExp: updatedPlayersExp
+            });
+            console.log(`[PlayerExp] Repair EXP: ${teamName} - ${playersFixed} giocatori corretti, playersExp sincronizzato`);
         }
 
         return { playersFixed, changes: allChanges, teamName };

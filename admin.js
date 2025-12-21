@@ -2145,14 +2145,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`${awayTeamData.teamName} non ha una formazione impostata`);
                 }
 
-                // Esegui la simulazione usando ChampionshipSimulation con log
-                const result = window.ChampionshipSimulation.runSimulationWithLog(homeTeamData, awayTeamData);
+                // Esegui la simulazione usando ChampionshipSimulation con highlights E debug
+                const result = window.ChampionshipSimulation.runSimulationWithHighlightsAndDebug(homeTeamData, awayTeamData);
 
                 // Mostra risultato
                 resultContainer.classList.remove('hidden');
                 scoreDiv.textContent = `${homeTeamData.teamName} ${result.homeGoals} - ${result.awayGoals} ${awayTeamData.teamName}`;
 
-                // Popola i log
+                // Popola i log (ora con highlights e debug)
                 const simpleLogContent = document.getElementById('test-simulation-simple-log-content');
                 const simpleLogContainer = document.getElementById('test-simulation-simple-log');
                 const detailedLogContent = document.getElementById('test-simulation-detailed-log-content');
@@ -2160,18 +2160,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const btnSimpleLog = document.getElementById('btn-toggle-simple-log');
                 const btnDetailedLog = document.getElementById('btn-toggle-detailed-log');
 
-                if (simpleLogContent && result.simpleLog) {
-                    simpleLogContent.textContent = result.simpleLog.join('\n');
+                // Il log ristretto ora mostra gli Highlights (Azioni Salienti)
+                if (simpleLogContent && result.highlightsText) {
+                    simpleLogContent.textContent = result.highlightsText;
                 }
-                if (detailedLogContent && result.log) {
-                    detailedLogContent.textContent = result.log.join('\n');
+                // Il log dettagliato ora mostra il Debug Log
+                if (detailedLogContent && result.debugText) {
+                    detailedLogContent.textContent = result.debugText;
+                }
+
+                // Aggiorna i titoli dei bottoni
+                if (btnSimpleLog) {
+                    btnSimpleLog.innerHTML = '<i class="fas fa-star mr-2"></i>Azioni Salienti';
+                }
+                if (btnDetailedLog) {
+                    btnDetailedLog.innerHTML = '<i class="fas fa-bug mr-2"></i>Debug Log';
                 }
 
                 // Reset stato log
                 if (simpleLogContainer) simpleLogContainer.classList.add('hidden');
                 if (detailedLogContainer) detailedLogContainer.classList.add('hidden');
 
-                // Handler bottone log ristretto
+                // Handler bottone Azioni Salienti
                 if (btnSimpleLog) {
                     btnSimpleLog.onclick = () => {
                         const isHidden = simpleLogContainer.classList.contains('hidden');
@@ -2183,7 +2193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 }
 
-                // Handler bottone log dettagliato
+                // Handler bottone Debug Log
                 if (btnDetailedLog) {
                     btnDetailedLog.onclick = () => {
                         const isHidden = detailedLogContainer.classList.contains('hidden');
@@ -4727,6 +4737,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (button) {
                     button.disabled = false;
                     button.textContent = '📊 Repair EXP';
+                }
+            }
+        });
+
+        // Handler Reset Statistiche Avanzate (PlayerStats)
+        document.getElementById('btn-reset-advanced-stats')?.addEventListener('click', async () => {
+            const msgElement = document.getElementById('fix-all-levels-message');
+            const button = document.getElementById('btn-reset-advanced-stats');
+
+            if (!window.PlayerStats?.resetAllAdvancedStats) {
+                if (msgElement) {
+                    msgElement.textContent = 'Modulo PlayerStats non disponibile.';
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+                return;
+            }
+
+            // Conferma doppia per sicurezza
+            if (!confirm('⚠️ ATTENZIONE ⚠️\n\nVuoi CANCELLARE tutte le statistiche avanzate?\n\nQuesto eliminerà:\n- Goal, Assist, Contrasti, Parate\n- Storico partite\n- Performance medie\n\nL\'operazione è IRREVERSIBILE!')) {
+                return;
+            }
+
+            if (!confirm('Sei SICURO di voler procedere?\n\nTutte le statistiche verranno azzerate.')) {
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = '⏳ Reset in corso...';
+            }
+            if (msgElement) {
+                msgElement.textContent = 'Reset statistiche in corso...';
+                msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+            }
+
+            try {
+                const result = await window.PlayerStats.resetAllAdvancedStats();
+
+                if (msgElement) {
+                    msgElement.innerHTML = `<span class="text-green-400">✅ Reset completato!</span><br>
+                        <span class="text-white">Squadre: ${result.teamsReset} | Giocatori: ${result.playersReset}</span>`;
+                    msgElement.className = 'text-center text-sm mb-3';
+                }
+            } catch (error) {
+                console.error('[Admin] Errore reset statistiche:', error);
+                if (msgElement) {
+                    msgElement.textContent = `Errore: ${error.message}`;
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = '🗑️ Reset Statistiche Avanzate';
                 }
             }
         });

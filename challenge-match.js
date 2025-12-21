@@ -434,6 +434,8 @@ window.ChallengeMatch = {
             : matchData.awayTeamName;
 
         try {
+            // Rimuovi eventLog per non salvarlo permanentemente
+            const { deleteField } = window.firestoreTools || {};
             await updateDoc(doc(window.db, matchPath), {
                 status: 'abandoned',
                 completedAt: Timestamp.now(),
@@ -442,13 +444,7 @@ window.ChallengeMatch = {
                 // Vittoria a tavolino 3-0
                 homeScore: winnerId === matchData.homeTeamId ? 3 : 0,
                 awayScore: winnerId === matchData.awayTeamId ? 3 : 0,
-                eventLog: [...(matchData.eventLog || []), {
-                    timestamp: Timestamp.now(),
-                    occasion: matchData.currentOccasion,
-                    phase: 'abandoned',
-                    message: `Partita abbandonata! ${winnerName} vince 3-0 a tavolino.`,
-                    type: 'system'
-                }]
+                eventLog: deleteField ? deleteField() : []
             });
         } catch (e) {
             console.error("[ChallengeMatch] Errore gestione abbandono:", e);
@@ -1737,18 +1733,14 @@ window.ChallengeMatch = {
             resultMessage = `Pareggio ${matchData.homeScore}-${matchData.awayScore}!`;
         }
 
+        // Rimuovi eventLog per non salvarlo permanentemente (usa deleteField)
+        const { deleteField } = window.firestoreTools || {};
         await updateDoc(doc(window.db, matchPath), {
             status: 'completed',
             completedAt: Timestamp.now(),
             winnerId: winnerId,
             'diceState.waitingFor': null,
-            eventLog: [...(matchData.eventLog || []), {
-                timestamp: Timestamp.now(),
-                occasion: this.config.TOTAL_OCCASIONS,
-                phase: 'end',
-                message: `FINE PARTITA! ${resultMessage}`,
-                type: 'system'
-            }]
+            eventLog: deleteField ? deleteField() : []
         });
 
         // Processa scommessa

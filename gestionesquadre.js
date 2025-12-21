@@ -145,6 +145,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clona l'array players per evitare modifiche indesiderate
             let playersForRendering = JSON.parse(JSON.stringify(teamData.players));
 
+            // IMPORTANTE: Applica EXP da playersExp ai giocatori clonati
+            // Questo garantisce che l'EXP sia sempre aggiornata da Firebase
+            const playersExp = teamData.playersExp || {};
+            let expAppliedCount = 0;
+            if (Object.keys(playersExp).length > 0) {
+                playersForRendering = playersForRendering.map(player => {
+                    if (!player) return player;
+                    const playerId = player.id || player.visitorId;
+                    const expData = playersExp[playerId];
+                    if (expData) {
+                        player.exp = expData.exp || 0;
+                        player.level = expData.level || player.level || 1;
+                        player.expToNextLevel = expData.expToNextLevel || 0;
+                        player.totalMatchesPlayed = expData.totalMatchesPlayed || 0;
+                        expAppliedCount++;
+                    }
+                    return player;
+                });
+                console.log(`[GestioneSquadre] EXP caricata da Firebase per ${expAppliedCount}/${playersForRendering.length} giocatori`);
+            }
+
             // Variabile per la mappa delle forme (usata in modalità formazione)
             let formsToSave = null;
 

@@ -29,6 +29,17 @@ window.CoppaSimulation = {
     },
 
     /**
+     * Simula una partita di coppa con highlights (Azioni Salienti)
+     * @param {Object} homeTeamData - Dati squadra casa
+     * @param {Object} awayTeamData - Dati squadra trasferta
+     * @returns {Object} Risultato {homeGoals, awayGoals, highlights, highlightsText, scorers, assists}
+     */
+    runMatchWithHighlights(homeTeamData, awayTeamData) {
+        // Riutilizza il motore di simulazione del campionato con highlights
+        return window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
+    },
+
+    /**
      * Simula i rigori tra due squadre
      * Sistema: 1d20 + modificatore tiratore vs 1d20 + modificatore portiere
      * Include bonus abilita fase 3 (tiro) e abilita portiere
@@ -232,9 +243,8 @@ window.CoppaSimulation = {
      * @returns {Object} Risultato completo
      */
     async simulateCupMatch(match, homeTeamData, awayTeamData, isSingleMatch, legType = 'leg1', withLog = false) {
-        const result = withLog
-            ? this.runMatchWithLog(homeTeamData, awayTeamData)
-            : this.runMatch(homeTeamData, awayTeamData);
+        // Usa sempre highlights per avere le Azioni Salienti
+        const result = this.runMatchWithHighlights(homeTeamData, awayTeamData);
 
         const matchResult = {
             homeGoals: result.homeGoals,
@@ -242,8 +252,9 @@ window.CoppaSimulation = {
             resultString: `${result.homeGoals}-${result.awayGoals}`,
             penalties: null,
             winner: null,
-            log: result.log || null,
-            simpleLog: result.simpleLog || null,
+            highlights: result.highlightsText || null,
+            scorers: result.scorers || [],
+            assists: result.assists || [],
             matchEvents: result.matchEvents || null
         };
 

@@ -63,25 +63,25 @@ const TYPE_ADVANTAGE = {
 };
 
 // Bonus/Malus tipologia (valori assoluti, non percentuali)
-const TYPE_ADVANTAGE_BONUS = 3.0;   // Chi vince il confronto tipologia
-const TYPE_ADVANTAGE_MALUS = -3.0;  // Chi perde il confronto tipologia
+const TYPE_ADVANTAGE_BONUS = 2.5;   // Chi vince il confronto tipologia
+const TYPE_ADVANTAGE_MALUS = -2.5;  // Chi perde il confronto tipologia
 
 /**
  * Calcola bonus/malus tipologia per un giocatore
  * @param {string} playerType - Tipologia del giocatore (Potenza/Tecnica/Velocita)
  * @param {string} opponentType - Tipologia dell'avversario
- * @returns {number} Bonus (+3.0), Malus (-3.0) o 0 se stesso tipo
+ * @returns {number} Bonus (+2.5), Malus (-2.5) o 0 se stesso tipo
  */
 const getTypeModifier = (playerType, opponentType) => {
     if (!playerType || !opponentType || playerType === opponentType) return 0;
 
     // Il giocatore batte l'avversario?
     if (TYPE_ADVANTAGE[playerType] === opponentType) {
-        return TYPE_ADVANTAGE_BONUS; // +3.0
+        return TYPE_ADVANTAGE_BONUS; // +2.5
     }
     // L'avversario batte il giocatore?
     if (TYPE_ADVANTAGE[opponentType] === playerType) {
-        return TYPE_ADVANTAGE_MALUS; // -3.0
+        return TYPE_ADVANTAGE_MALUS; // -2.5
     }
     return 0;
 };
