@@ -409,9 +409,9 @@ window.SchedinaUI = {
                     <p class="text-white text-lg font-bold">
                         ${results.isPerfect ? '🎉 SCHEDINA PERFETTA!' : `${results.correctPredictions}/${results.totalMatches} Corretti`}
                     </p>
-                    ${results.totalReward > 0 ? `
-                        <p class="text-green-300 text-2xl font-bold mt-2">+${results.totalReward} CS</p>
-                        ${results.bonusReward > 0 ? `<p class="text-yellow-300 text-sm">(include bonus perfetta: +${results.bonusReward})</p>` : ''}
+                    ${results.totalReward > 0 || results.cssBonus > 0 ? `
+                        <p class="text-green-300 text-2xl font-bold mt-2">+${results.totalReward} CS${results.cssBonus > 0 ? ` <span class="text-amber-400">+${results.cssBonus} CSS</span>` : ''}</p>
+                        ${results.bonusReward > 0 ? `<p class="text-yellow-300 text-sm">(include bonus perfetta: +${results.bonusReward} CS${results.cssBonus > 0 ? ` +${results.cssBonus} CSS` : ''})</p>` : ''}
                     ` : `
                         <p class="text-gray-300 text-sm mt-2">Nessun premio questa volta</p>
                     `}

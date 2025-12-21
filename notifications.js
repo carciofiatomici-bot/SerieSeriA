@@ -190,21 +190,39 @@ window.Notifications = {
     },
 
     /**
+     * Ottiene la chiave localStorage specifica per la squadra corrente
+     */
+    getStorageKey(suffix = '') {
+        const teamId = window.InterfacciaCore?.currentTeamId || 'unknown';
+        return `fanta_notifications_${teamId}${suffix}`;
+    },
+
+    /**
      * Carica notifiche da localStorage (e opzionalmente Firestore)
      */
     async loadNotifications() {
-        // Carica da localStorage
-        const saved = localStorage.getItem('fanta_notifications');
-        const lastFetch = parseInt(localStorage.getItem('fanta_notifications_fetch') || '0');
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) {
+            console.log('[Notifiche] Nessuna squadra selezionata, skip caricamento');
+            this.notifications = [];
+            this.updateUI();
+            return;
+        }
 
-        // Carica ID delle notifiche eliminate
-        const deletedIds = localStorage.getItem('fanta_notifications_deleted');
+        // Carica da localStorage con chiave specifica per squadra
+        const saved = localStorage.getItem(this.getStorageKey());
+        const lastFetch = parseInt(localStorage.getItem(this.getStorageKey('_fetch')) || '0');
+
+        // Carica ID delle notifiche eliminate (specifiche per squadra)
+        const deletedIds = localStorage.getItem(this.getStorageKey('_deleted'));
         if (deletedIds) {
             try {
                 this._deletedIds = new Set(JSON.parse(deletedIds));
             } catch (e) {
                 this._deletedIds = new Set();
             }
+        } else {
+            this._deletedIds = new Set();
         }
 
         if (saved) {
@@ -216,9 +234,12 @@ window.Notifications = {
             } catch (e) {
                 this.notifications = [];
             }
+        } else {
+            this.notifications = [];
         }
 
         this._lastServerFetch = lastFetch;
+        this._serverNotificationsLoaded = false; // Reset per nuova squadra
 
         // Se lazyLoad e' attivo, NON caricare da server all'avvio
         // Le notifiche server verranno caricate al primo click sulla campanella
@@ -280,10 +301,10 @@ window.Notifications = {
                 }
             });
 
-            // Aggiorna timestamp fetch
+            // Aggiorna timestamp fetch (specifico per squadra)
             this._lastServerFetch = Date.now();
             this._serverNotificationsLoaded = true;
-            localStorage.setItem('fanta_notifications_fetch', this._lastServerFetch.toString());
+            localStorage.setItem(this.getStorageKey('_fetch'), this._lastServerFetch.toString());
 
             if (newCount > 0) {
                 console.log(`[Notifiche] Caricate ${newCount} nuove notifiche dal server`);
@@ -377,14 +398,26 @@ window.Notifications = {
     },
 
     /**
-     * Salva notifiche in localStorage
+     * Salva notifiche in localStorage (specifico per squadra)
      */
     saveToLocalStorage() {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) return; // Non salvare se non c'è squadra
+
         // Mantieni solo le ultime N
         if (this.notifications.length > this.config.maxNotifications) {
             this.notifications = this.notifications.slice(0, this.config.maxNotifications);
         }
-        localStorage.setItem('fanta_notifications', JSON.stringify(this.notifications));
+        localStorage.setItem(this.getStorageKey(), JSON.stringify(this.notifications));
+    },
+
+    /**
+     * Salva gli ID delle notifiche eliminate (specifico per squadra)
+     */
+    saveDeletedIds() {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        if (!teamId) return;
+        localStorage.setItem(this.getStorageKey('_deleted'), JSON.stringify([...this._deletedIds]));
     },
 
     /**
@@ -761,13 +794,6 @@ window.Notifications = {
     },
 
     /**
-     * Salva gli ID delle notifiche eliminate in localStorage
-     */
-    saveDeletedIds() {
-        localStorage.setItem('fanta_notifications_deleted', JSON.stringify([...this._deletedIds]));
-    },
-
-    /**
      * Accetta sfida dalla notifica
      */
     async acceptChallenge(notifId, challengeId) {
@@ -965,6 +991,26 @@ window.Notifications = {
                 this.notify.challengeReceived(e.detail.fromTeam, e.detail.betAmount || 0);
             }
         });
+
+        // Ascolta cambio squadra (se implementato altrove)
+        document.addEventListener('teamChanged', () => {
+            console.log('[Notifiche] Cambio squadra rilevato, ricarico notifiche');
+            this.stopRealtimeListener();
+            this._serverNotificationsLoaded = false;
+            this.loadNotifications();
+        });
+    },
+
+    /**
+     * Ricarica notifiche per la squadra corrente (chiamare dopo cambio squadra)
+     */
+    reloadForCurrentTeam() {
+        console.log('[Notifiche] Ricarico notifiche per nuova squadra');
+        this.stopRealtimeListener();
+        this._serverNotificationsLoaded = false;
+        this._deletedIds = new Set();
+        this.notifications = [];
+        this.loadNotifications();
     },
 
     /**

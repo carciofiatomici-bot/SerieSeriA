@@ -45,7 +45,8 @@ window.Schedina = {
         return {
             enabled: true,
             baseRewardPerCorrect: 5,          // CS per pronostico corretto
-            perfectBonusReward: 50,           // Bonus schedina perfetta
+            perfectBonusReward: 50,           // Bonus CS schedina perfetta
+            perfectBonusCss: 1,               // Bonus CSS schedina perfetta
             minCorrectToWin: 0,               // Minimo corretti per vincere (0 = nessuna soglia)
             closingMinutesBeforeSimulation: 60
         };
@@ -416,6 +417,7 @@ window.Schedina = {
                 const meetsThreshold = correctCount >= config.minCorrectToWin;
                 const baseReward = meetsThreshold ? correctCount * config.baseRewardPerCorrect : 0;
                 const bonusReward = (meetsThreshold && isPerfect) ? config.perfectBonusReward : 0;
+                const cssBonus = (meetsThreshold && isPerfect) ? (config.perfectBonusCss || 1) : 0;
                 const totalReward = baseReward + bonusReward;
 
                 // Aggiorna documento
@@ -429,6 +431,7 @@ window.Schedina = {
                         meetsThreshold,
                         baseReward,
                         bonusReward,
+                        cssBonus,
                         totalReward,
                         rewarded: false,
                         rewardedAt: null
@@ -440,6 +443,7 @@ window.Schedina = {
                     teamName: predData.teamName,
                     correctPredictions: correctCount,
                     totalReward,
+                    cssBonus,
                     isPerfect
                 });
             }
@@ -484,17 +488,31 @@ window.Schedina = {
 
                 const predData = predSnap.data();
                 if (!predData.results || predData.results.rewarded) continue;
-                if (predData.results.totalReward <= 0) continue;
+
+                const totalReward = predData.results.totalReward || 0;
+                const cssBonus = predData.results.cssBonus || 0;
+
+                // Skip se non ci sono premi da assegnare
+                if (totalReward <= 0 && cssBonus <= 0) continue;
 
                 // Assegna crediti
                 const teamDocRef = doc(window.db, TEAMS_PATH, teamId);
                 const teamSnap = await getDoc(teamDocRef);
                 if (!teamSnap.exists()) continue;
 
-                const currentBudget = teamSnap.data().budget || 0;
-                await updateDoc(teamDocRef, {
-                    budget: currentBudget + predData.results.totalReward
-                });
+                const teamData = teamSnap.data();
+                const currentBudget = teamData.budget || 0;
+                const currentCss = teamData.creditiSuperSeri || 0;
+
+                const updateData = {};
+                if (totalReward > 0) {
+                    updateData.budget = currentBudget + totalReward;
+                }
+                if (cssBonus > 0) {
+                    updateData.creditiSuperSeri = currentCss + cssBonus;
+                }
+
+                await updateDoc(teamDocRef, updateData);
 
                 // Marca come premiato
                 await updateDoc(predDocRef, {
@@ -503,7 +521,8 @@ window.Schedina = {
                 });
 
                 rewardedCount++;
-                console.log(`[Schedina] Premio ${predData.results.totalReward} CS assegnato a ${teamId}`);
+                const cssText = cssBonus > 0 ? ` + ${cssBonus} CSS` : '';
+                console.log(`[Schedina] Premio ${totalReward} CS${cssText} assegnato a ${teamId}`);
             }
 
             console.log(`[Schedina] Premi assegnati: ${rewardedCount} squadre`);
