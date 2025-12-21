@@ -8,7 +8,7 @@
 // - Lanci di dado in tempo reale con animazioni
 // - Sincronizzazione via Firestore onSnapshot
 // - Sistema presenza/heartbeat per rilevare disconnessioni
-// - 10 occasioni totali con confronto allenatori per determinare chi attacca (v4.0)
+// - 50 occasioni totali (25 per squadra) con confronto allenatori per determinare chi attacca (v5.0)
 //
 
 window.ChallengeMatch = {
@@ -25,12 +25,12 @@ window.ChallengeMatch = {
     myTeamId: null,
 
     // Configurazione (ottimizzata per ridurre scritture Firestore)
-    // AGGIORNATA v4.0: 10 occasioni totali, confronto allenatori per determinare chi attacca
+    // AGGIORNATA v5.0: 50 occasioni totali (25 per squadra), confronto allenatori per determinare chi attacca
     config: {
         HEARTBEAT_INTERVAL_MS: 60000,       // Heartbeat ogni 60 secondi (era 5s, -92% scritture)
         DICE_TIMEOUT_MS: 30000,             // 30 secondi per lanciare dado
         DISCONNECT_THRESHOLD_MS: 180000,    // 3 minuti = disconnessione
-        TOTAL_OCCASIONS: 10,                // 10 occasioni totali (v4.0)
+        TOTAL_OCCASIONS: 50,                // 50 occasioni totali = 25 per squadra (v5.0)
         CRITICAL_SUCCESS_CHANCE: 15         // 15% successo critico (v4.0, era 5%)
     },
 
@@ -53,14 +53,14 @@ window.ChallengeMatch = {
         29: 8.0, 30: 9.0
     },
 
-    // Sistema sasso-carta-forbice (AGGIORNATO v4.0 - bonus/malus fisso ±3)
+    // Sistema sasso-carta-forbice (AGGIORNATO v5.0 - bonus/malus fisso ±2.5)
     TYPE_ADVANTAGE: {
         'Potenza': 'Tecnica',    // Potenza batte Tecnica
         'Tecnica': 'Velocita',   // Tecnica batte Velocità
         'Velocita': 'Potenza'    // Velocità batte Potenza
     },
-    TYPE_ADVANTAGE_BONUS: 3.0,   // Chi vince il confronto tipologia
-    TYPE_ADVANTAGE_MALUS: -3.0,  // Chi perde il confronto tipologia
+    TYPE_ADVANTAGE_BONUS: 2.5,   // Chi vince il confronto tipologia
+    TYPE_ADVANTAGE_MALUS: -2.5,  // Chi perde il confronto tipologia
 
     // ====================================================================
     // PATH HELPERS
@@ -690,7 +690,7 @@ window.ChallengeMatch = {
     // ====================================================================
 
     /**
-     * Calcola bonus/malus tipologia per un giocatore (v4.0 - ±3)
+     * Calcola bonus/malus tipologia per un giocatore (v5.0 - ±2.5)
      * @param {string} playerType - Tipologia del giocatore
      * @param {string} opponentType - Tipologia dell'avversario
      * @returns {number} Bonus (+3), Malus (-3) o 0
@@ -735,7 +735,7 @@ window.ChallengeMatch = {
             modifier += 1.0;
         }
 
-        // Tipologia (AGGIORNATO v4.0 - bonus/malus fisso ±3)
+        // Tipologia (AGGIORNATO v5.0 - bonus/malus fisso ±2.5)
         if (player.type && opposingPlayers.length > 0) {
             const mainOpponent = opposingPlayers.find(opp => opp.type);
             if (mainOpponent) {
@@ -751,9 +751,9 @@ window.ChallengeMatch = {
                     typeBonus = -typeBonus;
                 }
 
-                // Prevedibile: malus aumentato a -4.5 (1.5x del normale -3)
+                // Prevedibile: malus aumentato a -3.75 (1.5x del normale -2.5)
                 if (player.abilities?.includes('Prevedibile') && typeBonus < 0) {
-                    typeBonus = -4.5;
+                    typeBonus = -3.75;
                 }
 
                 modifier += typeBonus;
@@ -1548,11 +1548,11 @@ window.ChallengeMatch = {
 
     /**
      * Calcola il minuto di gioco in base all'occasione
-     * 20 occasioni = 90 minuti, con varianza
+     * 50 occasioni = 90 minuti, con varianza
      */
     calculateMatchMinute(occasion) {
-        // Base: occasione 1 = minuto ~5, occasione 20 = minuto ~90
-        const baseMinute = Math.floor((occasion / 20) * 90);
+        // Base: occasione 1 = minuto ~2, occasione 50 = minuto ~90
+        const baseMinute = Math.floor((occasion / this.config.TOTAL_OCCASIONS) * 90);
         // Aggiungi varianza casuale (-2 a +2 minuti)
         const variance = Math.floor(Math.random() * 5) - 2;
         return Math.max(1, Math.min(90 + 4, baseMinute + variance)); // Max 94' (recupero)
