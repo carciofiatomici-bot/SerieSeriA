@@ -604,14 +604,16 @@ window.ChampionshipSimulation = {
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
-        // Inizializza bonus Icona
+        // Inizializza bonus Icona (base 50% + bonus variante figurina)
         if (initIconaBonusForMatch) {
-            initIconaBonusForMatch(teamA);
-            initIconaBonusForMatch(teamB);
+            const teamAHasIcona = teamA.formationInfo?.isIconaActive || false;
+            const teamBHasIcona = teamB.formationInfo?.isIconaActive || false;
+            const teamAVariant = homeTeamData.iconaVariant || 'normale';
+            const teamBVariant = awayTeamData.iconaVariant || 'normale';
+            initIconaBonusForMatch(teamAHasIcona, teamBHasIcona, teamAVariant, teamBVariant);
         }
         if (initAbilitiesForMatch) {
-            initAbilitiesForMatch(teamA);
-            initAbilitiesForMatch(teamB);
+            initAbilitiesForMatch(teamA, teamB);
         }
 
         // Applica bonus casa
@@ -757,14 +759,16 @@ window.ChampionshipSimulation = {
         const teamA = this.prepareTeamForSimulation(homeTeamData);
         const teamB = this.prepareTeamForSimulation(awayTeamData);
 
-        // Inizializza bonus Icona
+        // Inizializza bonus Icona (base 50% + bonus variante figurina)
         if (initIconaBonusForMatch) {
-            initIconaBonusForMatch(teamA);
-            initIconaBonusForMatch(teamB);
+            const teamAHasIcona = teamA.formationInfo?.isIconaActive || false;
+            const teamBHasIcona = teamB.formationInfo?.isIconaActive || false;
+            const teamAVariant = homeTeamData.iconaVariant || 'normale';
+            const teamBVariant = awayTeamData.iconaVariant || 'normale';
+            initIconaBonusForMatch(teamAHasIcona, teamBHasIcona, teamAVariant, teamBVariant);
         }
         if (initAbilitiesForMatch) {
-            initAbilitiesForMatch(teamA);
-            initAbilitiesForMatch(teamB);
+            initAbilitiesForMatch(teamA, teamB);
         }
 
         // Applica bonus casa
