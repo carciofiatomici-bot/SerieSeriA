@@ -303,6 +303,83 @@ window.GestioneSquadreFormazione = {
                     </div>
                 </div>
             </div>
+
+            <!-- Modal Info Giocatore (unificato) -->
+            <div id="player-info-modal"
+                 class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999]">
+                <div class="bg-gray-800 border-2 border-blue-500 rounded-lg shadow-2xl p-5 max-w-sm mx-4 w-full">
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-3">
+                        <h3 id="player-info-header" class="text-blue-400 font-bold text-lg flex items-center gap-2">
+                            <span>📊</span> <span id="player-info-name">Giocatore</span>
+                        </h3>
+                        <button id="player-info-close" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                    </div>
+
+                    <!-- Mini Stats -->
+                    <div class="bg-gray-700 rounded-lg p-3 mb-4">
+                        <p class="text-gray-400 text-xs mb-2 text-center font-semibold">STATISTICHE STAGIONE</p>
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div>
+                                <p id="player-info-goals" class="text-white font-bold text-lg">-</p>
+                                <p class="text-gray-400 text-xs">Gol</p>
+                            </div>
+                            <div>
+                                <p id="player-info-assists" class="text-white font-bold text-lg">-</p>
+                                <p class="text-gray-400 text-xs">Assist</p>
+                            </div>
+                            <div>
+                                <p id="player-info-saves" class="text-white font-bold text-lg">-</p>
+                                <p class="text-gray-400 text-xs">Parate</p>
+                            </div>
+                            <div>
+                                <p id="player-info-rating" class="text-yellow-400 font-bold text-lg">-</p>
+                                <p class="text-gray-400 text-xs">Voto</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Forma -->
+                    <div id="player-info-form-section" class="bg-gray-700 rounded-lg p-3 mb-3">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-gray-400 text-xs font-semibold">FORMA</p>
+                                <p id="player-info-form-value" class="text-white font-bold">0</p>
+                            </div>
+                            <button id="btn-player-info-cure-form"
+                                    class="hidden bg-yellow-600 text-white text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-yellow-500 transition">
+                                💪 Cura (<span id="player-info-form-cost">0</span> CS)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Infortunio -->
+                    <div id="player-info-injury-section" class="bg-gray-700 rounded-lg p-3 mb-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-gray-400 text-xs font-semibold">INFORTUNIO</p>
+                                <p id="player-info-injury-value" class="text-white font-bold">0 partite</p>
+                            </div>
+                            <button id="btn-player-info-cure-injury"
+                                    class="hidden bg-green-600 text-white text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-green-500 transition">
+                                🏥 Cura (<span id="player-info-injury-cost">0</span> CS)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messaggio -->
+                    <p id="player-info-message" class="text-center text-sm mb-3"></p>
+
+                    <!-- Budget -->
+                    <p id="player-info-budget" class="text-gray-400 text-xs text-center mb-3"></p>
+
+                    <!-- Bottone Chiudi -->
+                    <button id="btn-player-info-close"
+                            class="w-full bg-gray-600 text-white font-bold py-2.5 rounded-lg hover:bg-gray-500 transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
         `;
 
         this.attachEventListeners(teamData, context);
@@ -394,6 +471,30 @@ window.GestioneSquadreFormazione = {
         document.getElementById('instant-healing-modal')?.addEventListener('click', (e) => {
             if (e.target.id === 'instant-healing-modal') {
                 this.closeInstantHealingModal();
+            }
+        });
+
+        // Player Info Modal: Event listeners
+        document.getElementById('player-info-close')?.addEventListener('click', () => {
+            this.closePlayerInfoModal();
+        });
+
+        document.getElementById('btn-player-info-close')?.addEventListener('click', () => {
+            this.closePlayerInfoModal();
+        });
+
+        document.getElementById('btn-player-info-cure-form')?.addEventListener('click', () => {
+            this.handlePlayerInfoCureForm(context);
+        });
+
+        document.getElementById('btn-player-info-cure-injury')?.addEventListener('click', () => {
+            this.handlePlayerInfoCureInjury(context);
+        });
+
+        // Chiudi modal cliccando fuori
+        document.getElementById('player-info-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'player-info-modal') {
+                this.closePlayerInfoModal();
             }
         });
     },
@@ -1361,7 +1462,7 @@ window.GestioneSquadreFormazione = {
 
     /**
      * Gestisce il click su un giocatore schierato
-     * Se la forma e negativa, apre il modal di recupero
+     * Apre sempre il modal info giocatore con stats, forma e infortunio
      * @param {Event} event - Evento click
      * @param {string} playerId - ID del giocatore
      */
@@ -1391,10 +1492,8 @@ window.GestioneSquadreFormazione = {
         // Determina la forma del giocatore
         const formModifier = formData?.mod ?? player.formModifier ?? 0;
 
-        // Se la forma e negativa, apri il modal di recupero
-        if (formModifier < 0) {
-            this.openFormRecoveryModal(player, formModifier, teamData);
-        }
+        // Apri sempre il modal info giocatore
+        this.openPlayerInfoModal(player, formModifier, teamData);
     },
 
     /**
@@ -2022,6 +2121,296 @@ window.GestioneSquadreFormazione = {
             if (payBtn) {
                 payBtn.disabled = false;
                 payBtn.textContent = '💊 Paga e Guarisci';
+            }
+        }
+    },
+
+    // ========================================
+    // PLAYER INFO MODAL SYSTEM (Unificato)
+    // ========================================
+
+    // Variabili per il modal info giocatore
+    _playerInfoPlayerId: null,
+    _playerInfoFormCost: 0,
+    _playerInfoInjuryCost: 0,
+
+    /**
+     * Apre il modal info giocatore con stats, forma e infortunio
+     * @param {Object} player - Dati del giocatore
+     * @param {number} formModifier - Modificatore forma
+     * @param {Object} teamData - Dati della squadra
+     */
+    async openPlayerInfoModal(player, formModifier, teamData) {
+        const modal = document.getElementById('player-info-modal');
+        if (!modal) return;
+
+        this._playerInfoPlayerId = player.id;
+
+        // Aggiorna nome giocatore
+        document.getElementById('player-info-name').textContent = `${player.name} (${player.role})`;
+
+        // Carica e mostra statistiche
+        await this.loadPlayerInfoStats(player.id, teamData);
+
+        // Sezione FORMA
+        const formValue = document.getElementById('player-info-form-value');
+        const formBtn = document.getElementById('btn-player-info-cure-form');
+        const formCostEl = document.getElementById('player-info-form-cost');
+
+        if (formModifier < 0) {
+            formValue.textContent = formModifier.toString();
+            formValue.className = 'text-red-400 font-bold';
+            // Costo: 5 CS per livello di forma negativa
+            const formCost = Math.abs(formModifier) * 5;
+            this._playerInfoFormCost = formCost;
+            formCostEl.textContent = formCost;
+            formBtn.classList.remove('hidden');
+        } else {
+            formValue.textContent = formModifier >= 0 ? `+${formModifier}` : formModifier.toString();
+            formValue.className = formModifier > 0 ? 'text-green-400 font-bold' : 'text-white font-bold';
+            formBtn.classList.add('hidden');
+            this._playerInfoFormCost = 0;
+        }
+
+        // Sezione INFORTUNIO
+        const injuryValue = document.getElementById('player-info-injury-value');
+        const injuryBtn = document.getElementById('btn-player-info-cure-injury');
+        const injuryCostEl = document.getElementById('player-info-injury-cost');
+
+        const isInjured = window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player);
+        const remainingMatches = isInjured ? window.Injuries.getRemainingMatches(player) : 0;
+
+        injuryValue.textContent = `${remainingMatches} ${remainingMatches === 1 ? 'partita' : 'partite'}`;
+
+        if (isInjured && remainingMatches > 0) {
+            injuryValue.className = 'text-red-400 font-bold';
+            // Costo: 10 CS per partita
+            const injuryCost = remainingMatches * 10;
+            this._playerInfoInjuryCost = injuryCost;
+            injuryCostEl.textContent = injuryCost;
+            injuryBtn.classList.remove('hidden');
+        } else {
+            injuryValue.className = 'text-green-400 font-bold';
+            injuryBtn.classList.add('hidden');
+            this._playerInfoInjuryCost = 0;
+        }
+
+        // Mostra budget
+        const currentBudget = teamData.budget || 0;
+        document.getElementById('player-info-budget').textContent = `Saldo: ${currentBudget} CS`;
+
+        // Pulisci messaggi
+        const msgEl = document.getElementById('player-info-message');
+        if (msgEl) {
+            msgEl.textContent = '';
+            msgEl.className = 'text-center text-sm mb-3';
+        }
+
+        // Mostra modal
+        modal.classList.remove('hidden');
+    },
+
+    /**
+     * Carica le statistiche del giocatore
+     */
+    async loadPlayerInfoStats(playerId, teamData) {
+        const goalsEl = document.getElementById('player-info-goals');
+        const assistsEl = document.getElementById('player-info-assists');
+        const savesEl = document.getElementById('player-info-saves');
+        const ratingEl = document.getElementById('player-info-rating');
+
+        // Reset a loading
+        goalsEl.textContent = '...';
+        assistsEl.textContent = '...';
+        savesEl.textContent = '...';
+        ratingEl.textContent = '...';
+
+        try {
+            const teamId = window.InterfacciaCore?.currentTeamId;
+            if (!teamId || !window.PlayerStats) {
+                goalsEl.textContent = '-';
+                assistsEl.textContent = '-';
+                savesEl.textContent = '-';
+                ratingEl.textContent = '-';
+                return;
+            }
+
+            const stats = await window.PlayerStats.getPlayerStats(teamId, playerId);
+
+            if (stats) {
+                goalsEl.textContent = stats.goals || 0;
+                assistsEl.textContent = stats.assists || 0;
+                savesEl.textContent = stats.saves || 0;
+                // Calcola media voto
+                const avgRating = stats.matchesPlayed > 0
+                    ? (stats.totalContribution / stats.matchesPlayed).toFixed(1)
+                    : '-';
+                ratingEl.textContent = avgRating;
+            } else {
+                goalsEl.textContent = '0';
+                assistsEl.textContent = '0';
+                savesEl.textContent = '0';
+                ratingEl.textContent = '-';
+            }
+        } catch (error) {
+            console.error('Errore caricamento stats giocatore:', error);
+            goalsEl.textContent = '-';
+            assistsEl.textContent = '-';
+            savesEl.textContent = '-';
+            ratingEl.textContent = '-';
+        }
+    },
+
+    /**
+     * Chiude il modal info giocatore
+     */
+    closePlayerInfoModal() {
+        const modal = document.getElementById('player-info-modal');
+        if (modal) modal.classList.add('hidden');
+
+        this._playerInfoPlayerId = null;
+        this._playerInfoFormCost = 0;
+        this._playerInfoInjuryCost = 0;
+    },
+
+    /**
+     * Gestisce la cura della forma dal modal info
+     */
+    async handlePlayerInfoCureForm(context) {
+        const { displayMessage } = window.GestioneSquadreUtils;
+        const { doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+
+        const playerId = this._playerInfoPlayerId;
+        const cost = this._playerInfoFormCost;
+        const msgEl = document.getElementById('player-info-message');
+
+        if (!playerId || !context?.currentTeamData) return;
+
+        const teamData = context.currentTeamData;
+        const currentBudget = teamData.budget || 0;
+
+        if (currentBudget < cost) {
+            if (msgEl) {
+                msgEl.textContent = '❌ Fondi insufficienti!';
+                msgEl.className = 'text-center text-sm mb-3 text-red-400';
+            }
+            return;
+        }
+
+        try {
+            // Aggiorna budget
+            const newBudget = currentBudget - cost;
+            teamData.budget = newBudget;
+
+            // Resetta forma a 0
+            const player = teamData.players.find(p => p.id === playerId);
+            if (player) player.formModifier = 0;
+
+            // Aggiorna playersFormStatus
+            if (!teamData.playersFormStatus) teamData.playersFormStatus = {};
+            if (teamData.playersFormStatus[playerId]) {
+                teamData.playersFormStatus[playerId].mod = 0;
+                teamData.playersFormStatus[playerId].level = player?.level || 1;
+            }
+
+            // Salva su Firestore
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            if (currentTeamId) {
+                const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
+                await updateDoc(teamDocRef, {
+                    budget: newBudget,
+                    players: teamData.players,
+                    playersFormStatus: teamData.playersFormStatus
+                });
+            }
+
+            if (msgEl) {
+                msgEl.textContent = `✅ Forma curata! -${cost} CS`;
+                msgEl.className = 'text-center text-sm mb-3 text-green-400';
+            }
+
+            displayMessage('formation-message', `Forma di ${player?.name || 'giocatore'} ripristinata! (-${cost} CS)`, 'success');
+
+            // Chiudi e aggiorna
+            setTimeout(() => {
+                this.closePlayerInfoModal();
+                this.render(teamData, context);
+            }, 1000);
+
+        } catch (error) {
+            console.error('Errore cura forma:', error);
+            if (msgEl) {
+                msgEl.textContent = `❌ Errore: ${error.message}`;
+                msgEl.className = 'text-center text-sm mb-3 text-red-400';
+            }
+        }
+    },
+
+    /**
+     * Gestisce la cura dell'infortunio dal modal info
+     */
+    async handlePlayerInfoCureInjury(context) {
+        const { displayMessage } = window.GestioneSquadreUtils;
+        const { doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+
+        const playerId = this._playerInfoPlayerId;
+        const cost = this._playerInfoInjuryCost;
+        const msgEl = document.getElementById('player-info-message');
+
+        if (!playerId || !context?.currentTeamData) return;
+
+        const teamData = context.currentTeamData;
+        const currentBudget = teamData.budget || 0;
+
+        if (currentBudget < cost) {
+            if (msgEl) {
+                msgEl.textContent = '❌ Fondi insufficienti!';
+                msgEl.className = 'text-center text-sm mb-3 text-red-400';
+            }
+            return;
+        }
+
+        try {
+            // Aggiorna budget
+            const newBudget = currentBudget - cost;
+            teamData.budget = newBudget;
+
+            // Rimuovi infortunio
+            const player = teamData.players.find(p => p.id === playerId);
+            if (player && player.injury) {
+                delete player.injury;
+            }
+
+            // Salva su Firestore
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            if (currentTeamId) {
+                const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
+                await updateDoc(teamDocRef, {
+                    budget: newBudget,
+                    players: teamData.players
+                });
+            }
+
+            if (msgEl) {
+                msgEl.textContent = `✅ Infortunio guarito! -${cost} CS`;
+                msgEl.className = 'text-center text-sm mb-3 text-green-400';
+            }
+
+            displayMessage('formation-message', `${player?.name || 'Giocatore'} e guarito! (-${cost} CS)`, 'success');
+
+            // Chiudi e aggiorna
+            setTimeout(() => {
+                this.closePlayerInfoModal();
+                this.render(teamData, context);
+            }, 1000);
+
+        } catch (error) {
+            console.error('Errore guarigione infortunio:', error);
+            if (msgEl) {
+                msgEl.textContent = `❌ Errore: ${error.message}`;
+                msgEl.className = 'text-center text-sm mb-3 text-red-400';
             }
         }
     },
