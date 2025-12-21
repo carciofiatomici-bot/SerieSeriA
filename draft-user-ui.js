@@ -481,11 +481,12 @@ window.DraftUserUI = {
                 if (player.secretMaxLevel !== undefined) {
                     const maxLvl = player.secretMaxLevel;
                     let potenziale, potenzialColor;
-                    if (maxLvl <= 10) { potenziale = 'Dilettante'; potenzialColor = 'text-gray-400'; }
+                    if (maxLvl <= 5) { potenziale = 'Dilettante'; potenzialColor = 'text-gray-400'; }
+                    else if (maxLvl <= 10) { potenziale = 'Accettabile'; potenzialColor = 'text-white'; }
                     else if (maxLvl <= 15) { potenziale = 'Professionista'; potenzialColor = 'text-green-400'; }
                     else if (maxLvl <= 19) { potenziale = 'Fuoriclasse'; potenzialColor = 'text-blue-400'; }
                     else if (maxLvl <= 24) { potenziale = 'Leggenda'; potenzialColor = 'text-purple-400'; }
-                    else { potenziale = 'GOAT'; potenzialColor = 'text-yellow-400'; }
+                    else { potenziale = 'GOAT'; potenzialColor = 'text-orange-400'; }
                     potenzialText = `<span class="${potenzialColor} text-xs font-semibold ml-2">[${potenziale}]</span>`;
                 }
 

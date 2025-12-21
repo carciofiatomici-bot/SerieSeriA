@@ -185,9 +185,12 @@ window.GestioneSquadreRosa = {
             if (maxLvl !== null) {
                 let potenziale = '';
                 let potenzialColor = '';
-                if (maxLvl <= 10) {
+                if (maxLvl <= 5) {
                     potenziale = 'Dilettante';
                     potenzialColor = 'text-gray-400';
+                } else if (maxLvl <= 10) {
+                    potenziale = 'Accettabile';
+                    potenzialColor = 'text-white';
                 } else if (maxLvl <= 15) {
                     potenziale = 'Professionista';
                     potenzialColor = 'text-green-400';
@@ -199,7 +202,7 @@ window.GestioneSquadreRosa = {
                     potenzialColor = 'text-purple-400';
                 } else {
                     potenziale = 'GOAT';
-                    potenzialColor = 'text-yellow-400';
+                    potenzialColor = 'text-orange-400';
                 }
                 // Mostra livello max segreto se admin ha il flag attivo
                 const showSecretLevel = window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');

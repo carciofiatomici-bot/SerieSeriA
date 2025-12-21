@@ -412,7 +412,7 @@ window.Changelog = {
                 { text: 'NUOVO: Sistema Auto-Formazione - schiera automaticamente la formazione migliore', adminOnly: false },
                 { text: 'NUOVO: Giocatori Base Gratuiti nel Mercato - acquista P, D, C, A di livello 1 a 0 CS', adminOnly: false },
                 { text: 'I Giocatori Base non hanno cooldown e possono essere acquistati a volonta', adminOnly: false },
-                { text: 'NUOVO: Potenziale visibile nella Gestione Rosa (Dilettante, Professionista, Fuoriclasse, Leggenda, GOAT)', adminOnly: false },
+                { text: 'NUOVO: Potenziale visibile nella Gestione Rosa (Dilettante, Accettabile, Professionista, Fuoriclasse, Leggenda, GOAT)', adminOnly: false },
                 { text: 'NUOVO: Potenziale visibile anche nella lista Draft per scegliere meglio i giocatori', adminOnly: false },
                 { text: 'Nuovo limite livello massimo: Giocatori Base fino a Lv.25, Icone fino a Lv.30', adminOnly: false },
                 { text: 'NUOVO: Alert sul bottone Gestione Formazione se la formazione puo essere migliorata', adminOnly: false },

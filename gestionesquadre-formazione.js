@@ -373,6 +373,12 @@ window.GestioneSquadreFormazione = {
                     <!-- Budget -->
                     <p id="player-info-budget" class="text-gray-400 text-xs text-center mb-3"></p>
 
+                    <!-- Bottone Rimuovi dal campo -->
+                    <button id="btn-player-info-remove"
+                            class="hidden w-full bg-red-600 text-white font-bold py-2.5 rounded-lg hover:bg-red-500 transition mb-2">
+                        🔄 Rimuovi dal campo
+                    </button>
+
                     <!-- Bottone Chiudi -->
                     <button id="btn-player-info-close"
                             class="w-full bg-gray-600 text-white font-bold py-2.5 rounded-lg hover:bg-gray-500 transition">
@@ -489,6 +495,10 @@ window.GestioneSquadreFormazione = {
 
         document.getElementById('btn-player-info-cure-injury')?.addEventListener('click', () => {
             this.handlePlayerInfoCureInjury(context);
+        });
+
+        document.getElementById('btn-player-info-remove')?.addEventListener('click', () => {
+            this.handlePlayerInfoRemove(context);
         });
 
         // Chiudi modal cliccando fuori
@@ -1114,6 +1124,16 @@ window.GestioneSquadreFormazione = {
 
         const finalTargetRole = actualDropSlot.dataset.role || targetRole;
 
+        // Trova la posizione originale del giocatore trascinato PRIMA di rimuoverlo
+        let originalPosition = null;
+        const wasInTitolari = context.currentTeamData.formation.titolari?.find(p => p.id === droppedId);
+        const wasInPanchina = context.currentTeamData.formation.panchina?.find(p => p.id === droppedId);
+        if (wasInTitolari) {
+            originalPosition = { type: 'titolari', role: wasInTitolari.assignedPosition || player.role };
+        } else if (wasInPanchina) {
+            originalPosition = { type: 'panchina' };
+        }
+
         let playerInSlotBeforeDrop = null;
         if (actualDropSlot.classList.contains('player-card') || (actualDropSlot.classList.contains('slot-target') && actualDropSlot.dataset.id)) {
             const occupiedPlayerId = actualDropSlot.dataset.id || droppedId;
@@ -1129,7 +1149,14 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message', `${player.name} liberato da campo/panchina.`, 'success');
 
         } else if (finalTargetRole === 'B') {
-            if (playerInSlotBeforeDrop) {
+            // Se c'è un giocatore nella posizione e il giocatore trascinato veniva dal campo, scambia
+            if (playerInSlotBeforeDrop && originalPosition?.type === 'titolari') {
+                removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
+                // Metti il giocatore dello slot nella posizione originale del trascinato
+                playerInSlotBeforeDrop.assignedPosition = originalPosition.role;
+                context.currentTeamData.formation.titolari.push(playerInSlotBeforeDrop);
+                displayMessage('formation-message', `Scambio: ${player.name} ↔ ${playerInSlotBeforeDrop.name}`, 'success');
+            } else if (playerInSlotBeforeDrop) {
                 removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
                 displayMessage('formation-message', `${player.name} in panchina. ${playerInSlotBeforeDrop.name} liberato.`, 'info');
             } else if (context.currentTeamData.formation.panchina.length >= 3) {
@@ -1137,12 +1164,29 @@ window.GestioneSquadreFormazione = {
             }
 
             context.currentTeamData.formation.panchina.push(player);
-            displayMessage('formation-message', `${player.name} spostato in panchina.`, 'success');
+            if (!playerInSlotBeforeDrop) {
+                displayMessage('formation-message', `${player.name} spostato in panchina.`, 'success');
+            }
 
         } else {
+            // Slot in campo
             if (playerInSlotBeforeDrop) {
                 removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
-                displayMessage('formation-message', `${player.name} ha preso il posto di ${playerInSlotBeforeDrop.name}.`, 'info');
+
+                // Se il giocatore trascinato veniva da una posizione (campo o panchina), scambia
+                if (originalPosition) {
+                    if (originalPosition.type === 'titolari') {
+                        // Scambio campo-campo: metti il giocatore dello slot nella posizione originale
+                        playerInSlotBeforeDrop.assignedPosition = originalPosition.role;
+                        context.currentTeamData.formation.titolari.push(playerInSlotBeforeDrop);
+                    } else if (originalPosition.type === 'panchina') {
+                        // Scambio panchina-campo: metti il giocatore dello slot in panchina
+                        context.currentTeamData.formation.panchina.push(playerInSlotBeforeDrop);
+                    }
+                    displayMessage('formation-message', `Scambio: ${player.name} ↔ ${playerInSlotBeforeDrop.name}`, 'success');
+                } else {
+                    displayMessage('formation-message', `${player.name} ha preso il posto di ${playerInSlotBeforeDrop.name}.`, 'info');
+                }
             } else {
                 displayMessage('formation-message', `${player.name} messo in campo come ${finalTargetRole}.`, 'success');
             }
@@ -1542,8 +1586,8 @@ window.GestioneSquadreFormazione = {
         const modal = document.getElementById('form-recovery-modal');
         if (!modal) return;
 
-        // Calcola il costo: 10 + (5 * valore_assoluto_della_forma)
-        const cost = 10 + (5 * Math.abs(formModifier));
+        // Calcola il costo: 50 CS per livello di forma negativa
+        const cost = Math.abs(formModifier) * 50;
 
         // Salva i dati per l'elaborazione
         this._formRecoveryPlayerId = player.id;
@@ -1853,7 +1897,9 @@ window.GestioneSquadreFormazione = {
         const playersHtml = injuredPlayers.map(p => {
             const remaining = p.injury.remainingMatches;
             const playerLevel = p.level || p.currentLevel || 1;
-            const healingCost = 10 * remaining; // Formula: Costo = 10 * Giornate rimaste
+            // Costo: 100 * Giornate rimaste (0 se ha Fatto d'acciaio)
+            const hasFattoDAcciaio = p.abilities?.includes("Fatto d'acciaio");
+            const healingCost = hasFattoDAcciaio ? 0 : 100 * remaining;
 
             const roleColors = {
                 'P': 'bg-yellow-600 text-yellow-100',
@@ -1915,7 +1961,9 @@ window.GestioneSquadreFormazione = {
 
         const playersHtml = injuredPlayers.map(p => {
             const remaining = p.injury.remainingMatches;
-            const healingCost = 10 * remaining;
+            // Costo: 100 * Giornate rimaste (0 se ha Fatto d'acciaio)
+            const hasFattoDAcciaio = p.abilities?.includes("Fatto d'acciaio");
+            const healingCost = hasFattoDAcciaio ? 0 : 100 * remaining;
 
             const roleColors = {
                 'P': 'text-yellow-400',
@@ -1978,8 +2026,9 @@ window.GestioneSquadreFormazione = {
         const playerLevel = player.level || player.currentLevel || 1;
         const remainingMatches = player.injury.remainingMatches;
 
-        // Calcola il costo: 10 * Giornate rimaste
-        const cost = 10 * remainingMatches;
+        // Calcola il costo: 100 * Giornate rimaste (0 se ha Fatto d'acciaio)
+        const hasFattoDAcciaio = player.abilities?.includes("Fatto d'acciaio");
+        const cost = hasFattoDAcciaio ? 0 : 100 * remainingMatches;
 
         // Salva i dati per l'elaborazione
         this._instantHealingPlayerId = playerId;
@@ -2171,8 +2220,8 @@ window.GestioneSquadreFormazione = {
         if (formModifier < 0) {
             formValue.textContent = formModifier.toString();
             formValue.className = 'text-red-400 font-bold';
-            // Costo: 5 CS per livello di forma negativa
-            const formCost = Math.abs(formModifier) * 5;
+            // Costo: 50 CS per livello di forma negativa
+            const formCost = Math.abs(formModifier) * 50;
             this._playerInfoFormCost = formCost;
             formCostEl.textContent = formCost;
             formBtn.classList.remove('hidden');
@@ -2195,8 +2244,9 @@ window.GestioneSquadreFormazione = {
 
         if (isInjured && remainingMatches > 0) {
             injuryValue.className = 'text-red-400 font-bold';
-            // Costo: 10 CS per partita
-            const injuryCost = remainingMatches * 10;
+            // Costo: 100 CS per partita (0 se ha Fatto d'acciaio)
+            const hasFattoDAcciaio = player.abilities?.includes("Fatto d'acciaio");
+            const injuryCost = hasFattoDAcciaio ? 0 : remainingMatches * 100;
             this._playerInfoInjuryCost = injuryCost;
             injuryCostEl.textContent = injuryCost;
             injuryBtn.classList.remove('hidden');
@@ -2215,6 +2265,19 @@ window.GestioneSquadreFormazione = {
         if (msgEl) {
             msgEl.textContent = '';
             msgEl.className = 'text-center text-sm mb-3';
+        }
+
+        // Mostra/nascondi bottone rimuovi dal campo
+        const removeBtn = document.getElementById('btn-player-info-remove');
+        const isInTitolari = teamData.formation?.titolari?.some(p => p.id === player.id);
+        const isInPanchina = teamData.formation?.panchina?.some(p => p.id === player.id);
+        if (removeBtn) {
+            if (isInTitolari || isInPanchina) {
+                removeBtn.classList.remove('hidden');
+                removeBtn.textContent = isInTitolari ? '🔄 Rimuovi dal campo' : '🔄 Rimuovi dalla panchina';
+            } else {
+                removeBtn.classList.add('hidden');
+            }
         }
 
         // Mostra modal
@@ -2446,6 +2509,30 @@ window.GestioneSquadreFormazione = {
                 msgEl.className = 'text-center text-sm mb-3 text-red-400';
             }
         }
+    },
+
+    /**
+     * Rimuove il giocatore dal campo/panchina e lo riporta alla rosa disponibile
+     */
+    handlePlayerInfoRemove(context) {
+        const { removePlayerFromPosition } = window.GestioneSquadreUtils;
+        const { displayMessage } = window.GestioneSquadreUtils;
+
+        const playerId = this._playerInfoPlayerId;
+        if (!playerId || !context?.currentTeamData) return;
+
+        const teamData = context.currentTeamData;
+        const player = teamData.players?.find(p => p.id === playerId);
+        if (!player) return;
+
+        // Rimuovi dalla posizione corrente
+        removePlayerFromPosition(playerId, teamData);
+
+        // Chiudi modal e aggiorna UI
+        this.closePlayerInfoModal();
+        this.renderFieldSlots(teamData, context);
+
+        displayMessage('formation-message', `${player.name} rimosso e disponibile in rosa.`, 'success');
     },
 
     /**
