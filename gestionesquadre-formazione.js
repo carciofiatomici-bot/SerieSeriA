@@ -1685,6 +1685,14 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message',
                 `${player.name} ha recuperato la forma! (-${cost} CS)`, 'success');
 
+            // Aggiorna budget display immediatamente
+            this.updateBudgetDisplay(newBudget);
+
+            // Aggiorna InterfacciaCore per sincronizzare globalmente
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
+
             // 6. Chiudi modal e aggiorna UI immediatamente
             this.closeFormRecoveryModal();
             this.renderFieldSlots(teamData, context);
@@ -2098,17 +2106,20 @@ window.GestioneSquadreFormazione = {
             displayMessage('formation-message',
                 `${player.name} e stato guarito e puo tornare in campo! (-${cost} CS)`, 'success');
 
+            // Aggiorna budget display immediatamente
+            this.updateBudgetDisplay(newBudget);
+
+            // Aggiorna InterfacciaCore per sincronizzare globalmente
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
+
             // 5. Chiudi modal e aggiorna UI immediatamente
             this.closeInstantHealingModal();
 
             // Re-render del pannello formazione per aggiornare l'infermeria
             if (context.squadraToolsContainer) {
                 this.render(teamData, context);
-            }
-
-            // Aggiorna anche la UI del budget se visibile altrove
-            if (window.InterfacciaCore?.setCurrentTeamData) {
-                window.InterfacciaCore.setCurrentTeamData(teamData);
             }
 
         } catch (error) {
@@ -2330,6 +2341,17 @@ window.GestioneSquadreFormazione = {
                 msgEl.className = 'text-center text-sm mb-3 text-green-400';
             }
 
+            // Aggiorna budget nel modal immediatamente
+            document.getElementById('player-info-budget').textContent = `Saldo: ${newBudget} CS`;
+
+            // Aggiorna InterfacciaCore per sincronizzare globalmente
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
+
+            // Aggiorna header budget se presente
+            this.updateBudgetDisplay(newBudget);
+
             displayMessage('formation-message', `Forma di ${player?.name || 'giocatore'} ripristinata! (-${cost} CS)`, 'success');
 
             // Chiudi e aggiorna
@@ -2398,6 +2420,17 @@ window.GestioneSquadreFormazione = {
                 msgEl.className = 'text-center text-sm mb-3 text-green-400';
             }
 
+            // Aggiorna budget nel modal immediatamente
+            document.getElementById('player-info-budget').textContent = `Saldo: ${newBudget} CS`;
+
+            // Aggiorna InterfacciaCore per sincronizzare globalmente
+            if (window.InterfacciaCore?.setCurrentTeamData) {
+                window.InterfacciaCore.setCurrentTeamData(teamData);
+            }
+
+            // Aggiorna header budget se presente
+            this.updateBudgetDisplay(newBudget);
+
             displayMessage('formation-message', `${player?.name || 'Giocatore'} e guarito! (-${cost} CS)`, 'success');
 
             // Chiudi e aggiorna
@@ -2413,6 +2446,40 @@ window.GestioneSquadreFormazione = {
                 msgEl.className = 'text-center text-sm mb-3 text-red-400';
             }
         }
+    },
+
+    /**
+     * Aggiorna il display del budget in tutti i punti dell'interfaccia
+     * @param {number} newBudget - Nuovo valore del budget
+     */
+    updateBudgetDisplay(newBudget) {
+        // Aggiorna squadra-subtitle se presente (vista rosa)
+        const squadraSubtitle = document.getElementById('squadra-subtitle');
+        if (squadraSubtitle && squadraSubtitle.textContent.includes('Budget')) {
+            const teamData = window.GestioneSquadreContext?.currentTeamData;
+            if (teamData) {
+                const playerCount = window.getPlayerCountExcludingIcona ?
+                    window.getPlayerCountExcludingIcona(teamData.players) :
+                    (teamData.players?.length || 0);
+                const maxPlayers = window.InterfacciaConstants?.MAX_ROSA_PLAYERS || 12;
+                squadraSubtitle.textContent = `Budget Rimanente: ${newBudget} Crediti Seri | Giocatori in rosa: ${playerCount}/${maxPlayers} (+ Icona)`;
+            }
+        }
+
+        // Aggiorna form-recovery-budget se aperto
+        const formRecoveryBudget = document.getElementById('form-recovery-budget');
+        if (formRecoveryBudget) {
+            formRecoveryBudget.textContent = `Il tuo saldo attuale: ${newBudget} CS`;
+        }
+
+        // Aggiorna instant-healing-budget se aperto
+        const instantHealingBudget = document.getElementById('instant-healing-budget');
+        if (instantHealingBudget) {
+            instantHealingBudget.textContent = `Il tuo saldo attuale: ${newBudget} CS`;
+        }
+
+        // Emetti evento per altri componenti
+        window.dispatchEvent(new CustomEvent('budgetUpdated', { detail: { budget: newBudget } }));
     },
 
     // ========================================
