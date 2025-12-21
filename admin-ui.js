@@ -1342,10 +1342,15 @@ window.AdminUI = {
                 <h4 class="text-lg font-bold text-orange-400 mb-3">🔧 Strumenti di Riparazione</h4>
                 <p class="text-xs text-gray-400 mb-3">Correggi automaticamente i livelli e l'esperienza di tutti i giocatori.</p>
                 <p id="fix-all-levels-message" class="text-center text-sm mb-3"></p>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <button id="btn-fix-all-teams-levels"
                             class="bg-orange-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-orange-500 transition duration-150">
                         🔧 Fix Livelli
+                    </button>
+                    <button id="btn-repair-all-exp"
+                            class="bg-purple-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-purple-500 transition duration-150"
+                            title="Applica level-up pendenti e normalizza EXP">
+                        📊 Repair EXP
                     </button>
                     <button id="btn-reset-all-players-exp"
                             class="bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-yellow-500 transition duration-150">

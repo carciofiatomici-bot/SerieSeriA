@@ -1456,40 +1456,41 @@ window.AdminTeams = {
         const playersMap = new Map();
         players.forEach(p => playersMap.set(p.id, p));
 
+        // Funzione helper per sincronizzare un giocatore
+        const syncPlayer = (formationPlayer) => {
+            const updatedPlayer = playersMap.get(formationPlayer.id);
+            const synced = {
+                ...formationPlayer,
+                name: updatedPlayer.name,
+                role: updatedPlayer.role,
+                type: updatedPlayer.type,
+                age: updatedPlayer.age,
+                level: updatedPlayer.level,
+                abilities: updatedPlayer.abilities || [],
+                cost: updatedPlayer.cost || 0,
+                isCaptain: updatedPlayer.isCaptain || false
+            };
+            // Copia campi opzionali importanti dal player aggiornato
+            if (updatedPlayer.photoUrl) synced.photoUrl = updatedPlayer.photoUrl;
+            if (updatedPlayer.exp !== undefined) synced.exp = updatedPlayer.exp;
+            if (updatedPlayer.expToNextLevel !== undefined) synced.expToNextLevel = updatedPlayer.expToNextLevel;
+            if (updatedPlayer.totalMatchesPlayed !== undefined) synced.totalMatchesPlayed = updatedPlayer.totalMatchesPlayed;
+            if (updatedPlayer.secretMaxLevel !== undefined) synced.secretMaxLevel = updatedPlayer.secretMaxLevel;
+            if (updatedPlayer.isBase !== undefined) synced.isBase = updatedPlayer.isBase;
+            if (updatedPlayer.isSeriousPlayer !== undefined) synced.isSeriousPlayer = updatedPlayer.isSeriousPlayer;
+            if (updatedPlayer.contract !== undefined) synced.contract = updatedPlayer.contract;
+            return synced;
+        };
+
         // Aggiorna titolari: mantieni solo quelli ancora nella rosa e aggiorna i loro dati
         const updatedTitolari = (formation.titolari || [])
-            .filter(t => playersMap.has(t.id)) // Rimuovi giocatori eliminati
-            .map(t => {
-                const updatedPlayer = playersMap.get(t.id);
-                // Aggiorna i dati del giocatore mantenendo eventuali proprieta specifiche della formazione
-                return {
-                    ...t,
-                    name: updatedPlayer.name,
-                    role: updatedPlayer.role,
-                    type: updatedPlayer.type,
-                    age: updatedPlayer.age,
-                    level: updatedPlayer.level,
-                    abilities: updatedPlayer.abilities || [],
-                    cost: updatedPlayer.cost || 0
-                };
-            });
+            .filter(t => playersMap.has(t.id))
+            .map(syncPlayer);
 
         // Aggiorna panchina: mantieni solo quelli ancora nella rosa e aggiorna i loro dati
         const updatedPanchina = (formation.panchina || [])
-            .filter(p => playersMap.has(p.id)) // Rimuovi giocatori eliminati
-            .map(p => {
-                const updatedPlayer = playersMap.get(p.id);
-                return {
-                    ...p,
-                    name: updatedPlayer.name,
-                    role: updatedPlayer.role,
-                    type: updatedPlayer.type,
-                    age: updatedPlayer.age,
-                    level: updatedPlayer.level,
-                    abilities: updatedPlayer.abilities || [],
-                    cost: updatedPlayer.cost || 0
-                };
-            });
+            .filter(p => playersMap.has(p.id))
+            .map(syncPlayer);
 
         return {
             modulo: formation.modulo || '1-1-2-1',
@@ -1514,10 +1515,11 @@ window.AdminTeams = {
 
     /**
      * Ripara automaticamente i dati della squadra:
-     * - Icona: livello fissato a 12
+     * - Icona: mantiene il livello attuale (default 5 se non definito)
      * - Giocatori Base: livello fissato a 1
      * - Rimuove levelRange, levelMin, levelMax obsoleti
      * - Converte tutto in formato level singolo
+     * - Preserva i campi EXP
      */
     repairTeam() {
         const msgElement = document.getElementById('repair-message');
@@ -1544,7 +1546,9 @@ window.AdminTeams = {
             // Determina il livello corretto
             let correctLevel;
             if (isIcona) {
-                correctLevel = 12;
+                // Icone: mantieni il livello attuale, default 5 se non definito
+                // NON usare levelRange per le icone (era un bug)
+                correctLevel = player.level !== undefined ? player.level : 5;
             } else if (isBasePlayer) {
                 correctLevel = 1;
             } else {
@@ -1588,13 +1592,24 @@ window.AdminTeams = {
                 cost: player.cost || 0,
                 level: correctLevel,
                 abilities: player.abilities || [],
-                isCaptain: this.isPlayerIcona(player)
+                isCaptain: player.isCaptain || false
             };
 
             // Mantieni photoUrl se presente (per Icone)
             if (player.photoUrl) {
                 repairedPlayer.photoUrl = player.photoUrl;
             }
+
+            // Mantieni campi EXP se presenti
+            if (player.exp !== undefined) repairedPlayer.exp = player.exp;
+            if (player.expToNextLevel !== undefined) repairedPlayer.expToNextLevel = player.expToNextLevel;
+            if (player.totalMatchesPlayed !== undefined) repairedPlayer.totalMatchesPlayed = player.totalMatchesPlayed;
+
+            // Mantieni altri campi importanti
+            if (player.secretMaxLevel !== undefined) repairedPlayer.secretMaxLevel = player.secretMaxLevel;
+            if (player.isBase !== undefined) repairedPlayer.isBase = player.isBase;
+            if (player.isSeriousPlayer !== undefined) repairedPlayer.isSeriousPlayer = player.isSeriousPlayer;
+            if (player.contract !== undefined) repairedPlayer.contract = player.contract;
 
             return repairedPlayer;
         });
@@ -1733,7 +1748,9 @@ window.AdminTeams = {
                     // Determina il livello corretto
                     let correctLevel;
                     if (isIcona) {
-                        correctLevel = 12;
+                        // Icone: mantieni il livello attuale, default 5 se non definito
+                        // NON usare levelRange per le icone (era un bug)
+                        correctLevel = player.level !== undefined ? player.level : 5;
                     } else if (isBasePlayer) {
                         correctLevel = 1;
                     } else {
@@ -1770,13 +1787,24 @@ window.AdminTeams = {
                         cost: player.cost || 0,
                         level: correctLevel,
                         abilities: player.abilities || [],
-                        isCaptain: this.isPlayerIcona(player)
+                        isCaptain: player.isCaptain || false
                     };
 
                     // Mantieni photoUrl se presente (per Icone)
                     if (player.photoUrl) {
                         repairedPlayer.photoUrl = player.photoUrl;
                     }
+
+                    // Mantieni campi EXP se presenti
+                    if (player.exp !== undefined) repairedPlayer.exp = player.exp;
+                    if (player.expToNextLevel !== undefined) repairedPlayer.expToNextLevel = player.expToNextLevel;
+                    if (player.totalMatchesPlayed !== undefined) repairedPlayer.totalMatchesPlayed = player.totalMatchesPlayed;
+
+                    // Mantieni altri campi importanti
+                    if (player.secretMaxLevel !== undefined) repairedPlayer.secretMaxLevel = player.secretMaxLevel;
+                    if (player.isBase !== undefined) repairedPlayer.isBase = player.isBase;
+                    if (player.isSeriousPlayer !== undefined) repairedPlayer.isSeriousPlayer = player.isSeriousPlayer;
+                    if (player.contract !== undefined) repairedPlayer.contract = player.contract;
 
                     return repairedPlayer;
                 });

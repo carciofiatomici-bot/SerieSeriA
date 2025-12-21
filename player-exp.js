@@ -265,6 +265,12 @@
 
         // Se gia al massimo, non aggiungere EXP
         if (player.level >= maxLevel) {
+            // Normalizza EXP se necessario
+            const maxExp = totalExpForLevel(maxLevel);
+            if (player.exp > maxExp) {
+                player.exp = maxExp;
+            }
+            player.expToNextLevel = 0;
             return { leveledUp: false, oldLevel, newLevel: oldLevel, expGained: 0 };
         }
 
@@ -278,6 +284,15 @@
 
         // Verifica level-up
         const levelUpResult = checkLevelUp(player);
+
+        // Se dopo il level-up siamo al massimo, normalizza EXP
+        if (player.level >= maxLevel) {
+            const maxExp = totalExpForLevel(maxLevel);
+            if (player.exp > maxExp) {
+                player.exp = maxExp;
+            }
+            player.expToNextLevel = 0;
+        }
 
         return {
             leveledUp: levelUpResult.leveledUp,
@@ -893,6 +908,155 @@
     }
 
     // ========================================
+    // FIX/REPAIR EXP
+    // ========================================
+
+    /**
+     * Normalizza l'EXP di un singolo giocatore:
+     * - Applica level-up pendenti
+     * - Limita EXP al massimo per giocatori al livello max
+     * @param {Object} player - Giocatore da normalizzare
+     * @returns {Object} {fixed: boolean, changes: string[]}
+     */
+    function normalizePlayerExp(player) {
+        if (!player) return { fixed: false, changes: [] };
+
+        const changes = [];
+        const playerName = player.name || player.nome || 'Sconosciuto';
+
+        // Migra se necessario
+        if (player.exp === undefined) {
+            migratePlayer(player);
+            changes.push(`Migrato (exp inizializzata)`);
+        }
+
+        const maxLevel = getMaxLevel(player);
+        const oldLevel = player.level;
+
+        // Applica level-up pendenti
+        const levelUpResult = checkLevelUp(player);
+        if (levelUpResult.leveledUp) {
+            changes.push(`Level-up: ${oldLevel} -> ${player.level} (+${levelUpResult.levelsGained})`);
+        }
+
+        // Normalizza EXP per giocatori al livello massimo
+        if (player.level >= maxLevel) {
+            const maxExp = totalExpForLevel(maxLevel);
+            if (player.exp > maxExp) {
+                const oldExp = player.exp;
+                player.exp = maxExp;
+                changes.push(`EXP normalizzata: ${oldExp} -> ${maxExp} (max level ${maxLevel})`);
+            }
+            if (player.expToNextLevel !== 0) {
+                player.expToNextLevel = 0;
+                changes.push(`expToNextLevel azzerato (max level)`);
+            }
+        }
+
+        return {
+            fixed: changes.length > 0,
+            changes: changes,
+            playerName: playerName
+        };
+    }
+
+    /**
+     * Ripara l'EXP di tutti i giocatori di una squadra
+     * @param {string} teamId - ID della squadra
+     * @returns {Promise<{playersFixed: number, changes: Array}>}
+     */
+    async function repairTeamExp(teamId) {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('[PlayerExp] Firestore non disponibile per repair EXP');
+            return { playersFixed: 0, changes: [] };
+        }
+
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const db = window.db;
+
+        const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            return { playersFixed: 0, changes: [] };
+        }
+
+        const teamData = teamDoc.data();
+        const teamName = teamData.teamName || teamId;
+        let playersFixed = 0;
+        const allChanges = [];
+
+        const updatedPlayers = (teamData.players || []).map(player => {
+            const result = normalizePlayerExp(player);
+            if (result.fixed) {
+                playersFixed++;
+                allChanges.push({
+                    player: result.playerName,
+                    changes: result.changes
+                });
+            }
+            return player;
+        });
+
+        if (playersFixed > 0) {
+            await updateDoc(teamDocRef, { players: updatedPlayers });
+            console.log(`[PlayerExp] Repair EXP: ${teamName} - ${playersFixed} giocatori corretti`);
+        }
+
+        return { playersFixed, changes: allChanges, teamName };
+    }
+
+    /**
+     * Ripara l'EXP di TUTTE le squadre
+     * @returns {Promise<{totalFixed: number, teamsProcessed: number, details: Array}>}
+     */
+    async function repairAllTeamsExp() {
+        if (!window.db || !window.firestoreTools) {
+            console.warn('[PlayerExp] Firestore non disponibile per repair EXP');
+            return { totalFixed: 0, teamsProcessed: 0, details: [] };
+        }
+
+        const { collection, getDocs } = window.firestoreTools;
+        const appId = window.firestoreTools.appId;
+        const db = window.db;
+
+        try {
+            const teamsRef = collection(db, `artifacts/${appId}/public/data/teams`);
+            const teamsSnapshot = await getDocs(teamsRef);
+
+            let totalFixed = 0;
+            let teamsProcessed = 0;
+            const details = [];
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const result = await repairTeamExp(teamDoc.id);
+                if (result.playersFixed > 0) {
+                    totalFixed += result.playersFixed;
+                    details.push({
+                        team: result.teamName,
+                        fixed: result.playersFixed,
+                        changes: result.changes
+                    });
+                }
+                teamsProcessed++;
+            }
+
+            if (totalFixed > 0) {
+                console.log(`[PlayerExp] Repair EXP completato: ${totalFixed} giocatori corretti in ${teamsProcessed} squadre`);
+            } else {
+                console.log(`[PlayerExp] Repair EXP: nessuna correzione necessaria (${teamsProcessed} squadre controllate)`);
+            }
+
+            return { totalFixed, teamsProcessed, details };
+
+        } catch (error) {
+            console.error('[PlayerExp] Errore repair EXP:', error);
+            return { totalFixed: 0, teamsProcessed: 0, details: [] };
+        }
+    }
+
+    // ========================================
     // UTILITY
     // ========================================
 
@@ -1096,6 +1260,7 @@
         // NOTA: Supporta sia 'id' che 'visitorId' come identificatore
         let appliedCount = 0;
         let notFoundCount = 0;
+        let levelUpsApplied = 0;
 
         players.forEach(player => {
             if (!player) return;
@@ -1120,10 +1285,33 @@
                 // Nessun EXP trovato - il giocatore verra migrato quando necessario
                 notFoundCount++;
             }
+
+            // IMPORTANTE: Verifica e applica level-up pendenti
+            // Questo corregge giocatori con EXP sufficiente ma livello non aggiornato
+            if (player.exp !== undefined && player.exp > 0) {
+                const result = checkLevelUp(player);
+                if (result.leveledUp) {
+                    levelUpsApplied += result.levelsGained;
+                }
+
+                // Normalizza EXP per giocatori al livello massimo
+                const maxLevel = getMaxLevel(player);
+                if (player.level >= maxLevel) {
+                    // Cap EXP al minimo necessario per il livello massimo
+                    const maxExp = totalExpForLevel(maxLevel);
+                    if (player.exp > maxExp) {
+                        player.exp = maxExp;
+                    }
+                    player.expToNextLevel = 0;
+                }
+            }
         });
 
         if (appliedCount > 0 || notFoundCount > 0) {
             console.log(`[PlayerExp] EXP applicata: ${appliedCount} giocatori, ${notFoundCount} senza EXP salvata`);
+        }
+        if (levelUpsApplied > 0) {
+            console.log(`[PlayerExp] Level-up pendenti applicati: ${levelUpsApplied}`);
         }
 
         // Applica EXP al coach
@@ -1131,6 +1319,9 @@
             teamData.coach.exp = coachExp.exp || 0;
             teamData.coach.level = coachExp.level || teamData.coach.level || 1;
             teamData.coach.expToNextLevel = coachExp.expToNextLevel || 0;
+
+            // Verifica level-up coach
+            checkCoachLevelUp(teamData.coach);
         }
 
         return teamData;
@@ -1170,6 +1361,11 @@
         generateSecretMaxLevel,
         applySecretMaxLevelToTeam,
         applySecretMaxLevelToAllTeams,
+
+        // Repair/Fix EXP
+        normalizePlayerExp,
+        repairTeamExp,
+        repairAllTeamsExp,
 
         // Utility
         getPlayersNearLevelUp,

@@ -4673,6 +4673,64 @@ document.addEventListener('DOMContentLoaded', () => {
             resetAllPlayersExp(TEAMS_COLLECTION_PATH);
         });
 
+        // Handler Repair EXP (normalizza EXP e applica level-up pendenti)
+        document.getElementById('btn-repair-all-exp').addEventListener('click', async () => {
+            const msgElement = document.getElementById('fix-all-levels-message');
+            const button = document.getElementById('btn-repair-all-exp');
+
+            if (!window.PlayerExp?.repairAllTeamsExp) {
+                if (msgElement) {
+                    msgElement.textContent = 'Modulo PlayerExp non disponibile.';
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+                return;
+            }
+
+            // Conferma
+            if (!confirm('Vuoi riparare l\'EXP di tutte le squadre?\n\nQuesto:\n- Applica level-up pendenti\n- Normalizza EXP per giocatori al max\n- Corregge expToNextLevel')) {
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = '⏳ Riparazione...';
+            }
+            if (msgElement) {
+                msgElement.textContent = 'Riparazione EXP in corso...';
+                msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+            }
+
+            try {
+                const result = await window.PlayerExp.repairAllTeamsExp();
+
+                if (msgElement) {
+                    if (result.totalFixed > 0) {
+                        const detailsHtml = result.details.map(d =>
+                            `${d.team}: ${d.fixed} fix`
+                        ).join(', ');
+                        msgElement.innerHTML = `<span class="text-green-400">✅ Completato!</span><br>
+                            <span class="text-white">Giocatori corretti: ${result.totalFixed}</span><br>
+                            <span class="text-gray-400 text-xs">${detailsHtml}</span>`;
+                        msgElement.className = 'text-center text-sm mb-3';
+                    } else {
+                        msgElement.textContent = `✅ Nessuna correzione necessaria (${result.teamsProcessed} squadre controllate)`;
+                        msgElement.className = 'text-center text-sm mb-3 text-green-400';
+                    }
+                }
+            } catch (error) {
+                console.error('[Admin] Errore repair EXP:', error);
+                if (msgElement) {
+                    msgElement.textContent = `Errore: ${error.message}`;
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = '📊 Repair EXP';
+                }
+            }
+        });
+
         if (window.AdminTeams.teamsListContainer) {
             window.AdminTeams.teamsListContainer.addEventListener('click', (e) => {
                 window.AdminTeams.handleTeamAction(e, TEAMS_COLLECTION_PATH, () => {
