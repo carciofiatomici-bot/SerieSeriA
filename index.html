@@ -840,120 +840,207 @@
             </div>
         </div>
 
-        <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra -->
+        <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra con 4 Tab -->
         <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative overflow-visible">
 
-            <!-- BOX RISORSE IN CIMA (Negozio, CS, CSS, Album, Ruota) -->
-            <div id="risorse-box" class="mb-1 p-0.5 rounded border border-amber-500/40 bg-amber-900/10">
-                <div class="flex items-center justify-between gap-0.5 flex-nowrap">
-                    <!-- GRUPPO SINISTRA: Album e Ruota -->
-                    <div class="flex items-center gap-0.5">
-                        <!-- Separatore prima album -->
-                        <span id="risorse-separator-start" class="hidden text-gray-500 text-xs">|</span>
-                        <!-- Album -->
-                        <div id="risorse-pacchetti" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
-                            <span class="text-base">🎴</span>
-                            <span class="text-[10px] text-purple-300 font-bold">ALBUM</span>
-                            <span class="hidden" id="risorse-pacchetti-count"></span>
-                            <!-- Alert pacchetto gratis -->
-                            <span id="album-free-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-gray-900"></span>
+            <!-- ========== HEADER FISSO (sempre visibile) ========== -->
+            <div id="dashboard-fixed-header" class="mb-1">
+                <!-- Riga 1: Nome Squadra + Menu + Color Picker -->
+                <div id="team-name-box" class="mb-1 px-1 py-1.5 rounded-lg border border-green-500/50 bg-gray-900/30 relative">
+                    <!-- Nome Squadra (centro assoluto) -->
+                    <h2 id="team-dashboard-title" class="text-sm sm:text-lg md:text-xl font-extrabold text-center uppercase team-name-fancy leading-none py-0.5">NOME SQUADRA</h2>
+                    <!-- Menu Hamburger (sinistra assoluto) -->
+                    <div class="absolute left-1 top-1/2 -translate-y-1/2">
+                        <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
+                            <span class="text-xs text-white">☰</span>
+                        </button>
+                        <!-- Dropdown Menu (posizionato via JS) -->
+                        <div id="dashboard-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
+                            <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📖</span> Tutorial
+                            </button>
+                            <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📋</span> Changelog
+                            </button>
+                            <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>🔑</span> Cambia Password
+                            </button>
+                            <button id="menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>🎨</span> Colore Squadra
+                            </button>
+                            <div class="border-t border-gray-700"></div>
+                            <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
+                                <span>🔧</span> Pannello Admin
+                            </button>
+                            <button id="menu-homepage" class="w-full px-4 py-2 text-left text-sm text-blue-400 hover:bg-gray-700 flex items-center gap-2">
+                                <span>🏠</span> Homepage
+                            </button>
+                            <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
+                                <span>🚪</span> Logout
+                            </button>
+                            <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
+                                <span>🗑️</span> Elimina Squadra
+                            </button>
                         </div>
-                        <!-- Separatore centrale -->
-                        <span id="risorse-separator" class="hidden text-gray-500 text-xs">|</span>
-                        <!-- Ruota -->
-                        <div id="risorse-ruota" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
-                            <span class="text-base">🎡</span>
-                            <span class="text-[10px] text-orange-300 font-bold">RUOTA</span>
-                            <span class="hidden" id="risorse-ruota-status"></span>
-                            <!-- Alert ruota disponibile -->
-                            <span id="wheel-available-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse border border-gray-900"></span>
-                        </div>
-                        <!-- Separatore dopo ruota -->
-                        <span id="risorse-separator-end" class="hidden text-gray-500 text-xs">|</span>
                     </div>
-                    <!-- GRUPPO DESTRA: CS, CSS, Negozio -->
-                    <div class="flex items-center gap-0.5">
-                        <!-- Separatore prima CS -->
-                        <span class="text-gray-500 text-xs">|</span>
-                        <!-- Crediti Seri -->
-                        <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
-                            <span class="text-sm">💰</span>
-                            <span id="risorse-cs" class="text-[11px] text-green-400 font-bold">0</span>
-                            <span class="text-[10px] text-gray-400">CS</span>
+                    <!-- Selettore Colore (destra assoluto) -->
+                    <div id="team-color-picker-container" class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <span class="text-[10px] text-gray-400 hidden sm:inline">🎨</span>
+                        <input type="color" id="team-color-picker"
+                               class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
+                               title="Scegli il colore primario della squadra"
+                               value="#22c55e">
+                    </div>
+                </div>
+
+                <!-- Riga 2: Budget + Album/Ruota/Negozio -->
+                <div id="risorse-box" class="p-0.5 rounded border border-amber-500/40 bg-amber-900/10">
+                    <div class="flex items-center justify-between gap-0.5 flex-nowrap">
+                        <!-- GRUPPO SINISTRA: Album e Ruota -->
+                        <div class="flex items-center gap-0.5">
+                            <!-- Separatore prima album -->
+                            <span id="risorse-separator-start" class="hidden text-gray-500 text-xs">|</span>
+                            <!-- Album -->
+                            <div id="risorse-pacchetti" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
+                                <span class="text-base">🎴</span>
+                                <span class="text-[10px] text-purple-300 font-bold">ALBUM</span>
+                                <span class="hidden" id="risorse-pacchetti-count"></span>
+                                <!-- Alert pacchetto gratis -->
+                                <span id="album-free-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-gray-900"></span>
+                            </div>
+                            <!-- Separatore centrale -->
+                            <span id="risorse-separator" class="hidden text-gray-500 text-xs">|</span>
+                            <!-- Ruota -->
+                            <div id="risorse-ruota" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
+                                <span class="text-base">🎡</span>
+                                <span class="text-[10px] text-orange-300 font-bold">RUOTA</span>
+                                <span class="hidden" id="risorse-ruota-status"></span>
+                                <!-- Alert ruota disponibile -->
+                                <span id="wheel-available-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse border border-gray-900"></span>
+                            </div>
+                            <!-- Separatore dopo ruota -->
+                            <span id="risorse-separator-end" class="hidden text-gray-500 text-xs">|</span>
                         </div>
-                        <!-- Crediti Super Seri -->
-                        <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
-                            <span class="text-sm">💎</span>
-                            <span id="risorse-css" class="text-[11px] text-yellow-400 font-bold">0</span>
-                            <span class="text-[10px] text-gray-400">CSS</span>
-                        </div>
-                        <!-- Negozio -->
-                        <div id="risorse-negozio" class="hidden h-6 px-1 flex items-center justify-center rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
-                            <span class="text-sm">🛒</span>
+                        <!-- GRUPPO DESTRA: CS, CSS, Negozio -->
+                        <div class="flex items-center gap-0.5">
+                            <!-- Separatore prima CS -->
+                            <span class="text-gray-500 text-xs">|</span>
+                            <!-- Crediti Seri -->
+                            <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
+                                <span class="text-sm">💰</span>
+                                <span id="risorse-cs" class="text-[11px] text-green-400 font-bold">0</span>
+                                <span class="text-[10px] text-gray-400">CS</span>
+                            </div>
+                            <!-- Crediti Super Seri -->
+                            <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
+                                <span class="text-sm">💎</span>
+                                <span id="risorse-css" class="text-[11px] text-yellow-400 font-bold">0</span>
+                                <span class="text-[10px] text-gray-400">CSS</span>
+                            </div>
+                            <!-- Negozio -->
+                            <div id="risorse-negozio" class="hidden h-6 px-1 flex items-center justify-center rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
+                                <span class="text-sm">🛒</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- BOX NOME SQUADRA + MENU HAMBURGER -->
-            <div id="team-name-box" class="mb-1 px-1 py-1.5 rounded-lg border border-green-500/50 bg-gray-900/30 relative">
-                <!-- Nome Squadra (centro assoluto) -->
-                <h2 id="team-dashboard-title" class="text-sm sm:text-lg md:text-xl font-extrabold text-center uppercase team-name-fancy leading-none py-0.5">NOME SQUADRA</h2>
-                <!-- Menu Hamburger (sinistra assoluto) -->
-                <div class="absolute left-1 top-1/2 -translate-y-1/2">
-                    <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
-                        <span class="text-xs text-white">☰</span>
-                    </button>
-                    <!-- Dropdown Menu (posizionato via JS) -->
-                    <div id="dashboard-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
-                        <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                            <span>📖</span> Tutorial
-                        </button>
-                        <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                            <span>📋</span> Changelog
-                        </button>
-                        <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                            <span>🔑</span> Cambia Password
-                        </button>
-                        <button id="menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                            <span>🎨</span> Colore Squadra
-                        </button>
-                        <div class="border-t border-gray-700"></div>
-                        <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
-                            <span>🔧</span> Pannello Admin
-                        </button>
-                        <button id="menu-homepage" class="w-full px-4 py-2 text-left text-sm text-blue-400 hover:bg-gray-700 flex items-center gap-2">
-                            <span>🏠</span> Homepage
-                        </button>
-                        <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
-                            <span>🚪</span> Logout
-                        </button>
-                        <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
-                            <span>🗑️</span> Elimina Squadra
-                        </button>
-                    </div>
-                </div>
-                <!-- Selettore Colore (destra assoluto) -->
-                <div id="team-color-picker-container" class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <span class="text-[10px] text-gray-400 hidden sm:inline">🎨</span>
-                    <input type="color" id="team-color-picker"
-                           class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
-                           title="Scegli il colore primario della squadra"
-                           value="#22c55e">
-                </div>
+            <!-- ========== TAB BAR ========== -->
+            <div id="dashboard-tabs" class="flex border-b border-gray-700 mb-2">
+                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-green-600 text-white border-b-2 border-green-400 transition hover:bg-green-500" data-tab="home">
+                    🏠 Home
+                </button>
+                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="squad">
+                    👥 Squadra
+                </button>
+                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="competitions">
+                    🏆 Gare
+                </button>
+                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="shop">
+                    🛒 Shop
+                </button>
             </div>
 
-            <!-- BOX SPONSOR-MEDIA -->
-            <div id="sponsor-media-box" class="px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-lg border border-green-500 bg-gray-900/20">
-                <!-- RIGA PROSSIMA PARTITA + DIVISA + LIVELLO ROSA (flex con 3 zone) -->
-                <div class="flex items-center justify-between mb-0.5">
-                    <!-- BOX PROSSIMA PARTITA (sinistra) -->
-                    <div id="next-match-inline-box" class="flex-1 min-w-0">
+            <!-- ========== TAB 1: HOME (Dashboard) ========== -->
+            <div id="tab-home" class="tab-content">
+                <!-- Logo, Icona, Sponsor -->
+                <div id="sponsor-media-box" class="px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-lg border border-green-500 bg-gray-900/20">
+                    <!-- Timer Prossima Partita -->
+                    <div id="next-match-inline-box" class="mb-1">
                         <!-- Contenuto generato da next-match-alert.js -->
                     </div>
-                    <!-- BOX DIVISA SQUADRA (centro fisso) -->
-                    <div id="team-uniform-box" class="flex-shrink-0 mx-2 flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
-                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-6 h-6 sm:w-7 sm:h-7">
+                    <!-- MEDIA, LOGO, ICONA E SPONSOR - Riga principale -->
+                    <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-1.5 md:gap-2 overflow-visible">
+                        <!-- BOX MEDIA (sinistra del logo) -->
+                        <div id="media-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
+                            <img id="media-image"
+                                 src="https://placehold.co/128x128/831843/f9a8d4?text=📺"
+                                 alt="Media Partner"
+                                 class="w-full h-full rounded-lg border-2 border-pink-500 shadow-md object-contain bg-gray-800 p-0.5 hover:border-pink-400"
+                                 title="Media Partner">
+                        </div>
+                        <!-- LOGO SQUADRA -->
+                        <div id="team-logo-wrapper" class="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0">
+                            <img id="team-logo"
+                                 src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
+                                 alt="Logo Squadra Modificabile"
+                                 class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-md object-cover"
+                                 style="border-color: #22c55e;"
+                                 title="Clicca per cambiare il logo (Inserisci URL)">
+                        </div>
+                        <!-- ICONA SQUADRA -->
+                        <div class="relative group flex-shrink-0">
+                            <img id="team-icona-avatar"
+                                 src="https://placehold.co/128x128/facc15/000?text=?"
+                                 alt="Avatar Icona"
+                                 class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-md object-cover cursor-pointer">
+                            <!-- Tooltip personalizzato -->
+                            <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
+                                <p id="icona-tooltip-level">Livello: --</p>
+                                <p id="icona-tooltip-role">Ruolo: --</p>
+                                <p id="icona-tooltip-type">Tipo: --</p>
+                            </div>
+                        </div>
+                        <!-- BOX SPONSOR (destra dell'icona) -->
+                        <div id="sponsor-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
+                            <img id="sponsor-image"
+                                 src="https://placehold.co/128x128/78350f/fcd34d?text=🤝"
+                                 alt="Sponsor"
+                                 class="w-full h-full rounded-lg border-2 border-yellow-500 shadow-md object-contain bg-gray-800 p-0.5 hover:border-yellow-400"
+                                 title="Sponsor">
+                        </div>
+                    </div>
+                    <!-- Elementi nascosti per compatibilita JS -->
+                    <div id="figurine-box" class="hidden"></div>
+                    <div id="daily-wheel-box" class="hidden"></div>
+                </div>
+
+                <!-- Box Ultima Partita Giocata -->
+                <div id="last-match-box" class="mt-2 p-2 rounded-lg border border-cyan-500/50 bg-gray-900/30">
+                    <p class="text-[10px] sm:text-xs text-gray-400 text-center mb-1">📺 Ultima Partita</p>
+                    <div id="last-match-content" class="text-center">
+                        <p class="text-xs text-gray-500">Nessuna partita giocata</p>
+                    </div>
+                </div>
+
+                <!-- Bottone Schedina -->
+                <div id="schedina-box" class="mt-2">
+                    <button id="btn-schedina"
+                            class="w-full bg-gradient-to-r from-cyan-600 to-teal-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-cyan-500 hover:to-teal-400 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        <span>📝</span> Schedina Pronostici
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== TAB 2: GESTIONE SQUADRA ========== -->
+            <div id="tab-squad" class="tab-content hidden">
+                <!-- Divisa + Livello Rosa -->
+                <div class="flex items-center justify-between mb-2 p-2 rounded-lg border border-green-500/50 bg-gray-900/20">
+                    <!-- BOX DIVISA SQUADRA -->
+                    <div id="team-uniform-box" class="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
+                        <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-10 h-10 sm:w-12 sm:h-12">
                             <defs></defs>
                             <!-- Maglia stile jersey.xml -->
                             <g id="shirt-preview" transform="translate(0, 5)">
@@ -971,60 +1058,45 @@
                                     fill="#ffffff" stroke="#1a1a2e" stroke-width="1"/>
                             </g>
                         </svg>
+                        <span class="ml-2 text-[10px] text-gray-400">Clicca per modificare</span>
                     </div>
-                    <!-- BOX LIVELLO MEDIO ROSA (destra) -->
-                    <div class="flex-1 min-w-0 flex justify-end">
-                        <div class="px-1 sm:px-1.5 flex flex-col items-center justify-center">
-                            <p class="text-[7px] sm:text-[8px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
-                            <p class="leading-none"><span id="stat-rosa-level" class="text-[10px] sm:text-xs font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[6px] sm:text-[8px] text-gray-400">(0)</span></p>
-                        </div>
-                    </div>
-                </div>
-                <!-- MEDIA, LOGO, ICONA E SPONSOR - Riga principale -->
-                <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-1.5 md:gap-2 overflow-visible">
-                    <!-- BOX MEDIA (sinistra del logo) -->
-                    <div id="media-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
-                        <img id="media-image"
-                             src="https://placehold.co/128x128/831843/f9a8d4?text=📺"
-                             alt="Media Partner"
-                             class="w-full h-full rounded-lg border-2 border-pink-500 shadow-md object-contain bg-gray-800 p-0.5 hover:border-pink-400"
-                             title="Media Partner">
-                    </div>
-                    <!-- LOGO SQUADRA -->
-                    <div id="team-logo-wrapper" class="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0">
-                        <img id="team-logo"
-                             src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
-                             alt="Logo Squadra Modificabile"
-                             class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-md object-cover"
-                             style="border-color: #22c55e;"
-                             title="Clicca per cambiare il logo (Inserisci URL)">
-                    </div>
-                    <!-- ICONA SQUADRA -->
-                    <div class="relative group flex-shrink-0">
-                        <img id="team-icona-avatar"
-                             src="https://placehold.co/128x128/facc15/000?text=?"
-                             alt="Avatar Icona"
-                             class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-md object-cover cursor-pointer">
-                        <!-- Tooltip personalizzato -->
-                        <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                            <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
-                            <p id="icona-tooltip-level">Livello: --</p>
-                            <p id="icona-tooltip-role">Ruolo: --</p>
-                            <p id="icona-tooltip-type">Tipo: --</p>
-                        </div>
-                    </div>
-                    <!-- BOX SPONSOR (destra dell'icona) -->
-                    <div id="sponsor-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
-                        <img id="sponsor-image"
-                             src="https://placehold.co/128x128/78350f/fcd34d?text=🤝"
-                             alt="Sponsor"
-                             class="w-full h-full rounded-lg border-2 border-yellow-500 shadow-md object-contain bg-gray-800 p-0.5 hover:border-yellow-400"
-                             title="Sponsor">
+                    <!-- BOX LIVELLO MEDIO ROSA -->
+                    <div class="px-2 flex flex-col items-center justify-center">
+                        <p class="text-[8px] sm:text-[10px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
+                        <p class="leading-none"><span id="stat-rosa-level" class="text-sm sm:text-base font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[8px] sm:text-[10px] text-gray-400">(0)</span></p>
                     </div>
                 </div>
-                <!-- Elementi nascosti per compatibilita JS -->
-                <div id="figurine-box" class="hidden"></div>
-                <div id="daily-wheel-box" class="hidden"></div>
+
+                <!-- BOX GESTIONE ROSA E FORMAZIONE -->
+                <div id="gestione-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-1.5 sm:space-y-2">
+                    <!-- Riga Rosa e Formazione -->
+                    <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                        <button id="btn-gestione-rosa"
+                                class="w-full bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            👥 Rosa
+                        </button>
+                        <button id="btn-gestione-formazione"
+                                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            📋 Formazione
+                        </button>
+                    </div>
+                    <!-- Riga Stadio e Hall of Fame -->
+                    <div id="stadio-hall-row" class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                        <button id="btn-stadium"
+                                class="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-emerald-500 hover:to-green-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            🏟️ Stadio
+                        </button>
+                        <button id="btn-hall-of-fame"
+                                class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-amber-500 hover:to-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            🏛️ Hall of Fame
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
+                <div id="near-level-up-widget-container" class="mt-2">
+                    <!-- Il widget EXP viene renderizzato qui dinamicamente -->
+                </div>
 
                 <!-- Statistica nascosta per compatibilita JS -->
                 <div class="hidden">
@@ -1032,133 +1104,109 @@
                 </div>
             </div>
 
-            <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-            <div id="gestione-box" class="mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-1.5 sm:space-y-2">
-                <!-- Riga Rosa e Formazione -->
-                <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    <button id="btn-gestione-rosa"
-                            class="w-full bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        👥 Rosa
-                    </button>
-                    <button id="btn-gestione-formazione"
-                            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-indigo-500 hover:to-purple-500 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        📋 Formazione
-                    </button>
-                </div>
-                <!-- Riga Stadio e Hall of Fame -->
-                <div id="stadio-hall-row" class="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    <button id="btn-stadium"
-                            class="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-emerald-500 hover:to-green-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        🏟️ Stadio
-                    </button>
-                    <button id="btn-hall-of-fame"
-                            class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-amber-500 hover:to-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        🏛️ Hall of Fame
-                    </button>
-                </div>
-            </div>
-
-            <!-- BOX COMPETIZIONI (con toggle integrati) -->
-            <div id="competizioni-box" class="mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20">
-                <div class="space-y-1.5">
-                    <!-- SerieSeriA con toggle -->
-                    <div class="flex items-stretch gap-1.5">
-                        <button id="btn-user-campionato"
-                                class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-1.5 sm:py-2 rounded-md shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                            <span class="text-sm sm:text-base">🏅</span>
-                            <span class="text-xs sm:text-sm">SerieSeriA</span>
-                        </button>
-                        <div class="flex items-center bg-green-800/50 rounded-md px-1.5" title="Partecipa al campionato">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                                <div class="relative w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- CoppaSeriA con toggle -->
-                    <div class="flex items-stretch gap-1.5">
-                        <button id="btn-user-coppa"
-                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-1.5 sm:py-2 rounded-md shadow-lg hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                            <span class="text-sm sm:text-base">🏆</span>
-                            <span class="text-xs sm:text-sm">CoppaSeriA</span>
-                        </button>
-                        <div class="flex items-center bg-purple-800/50 rounded-md px-1.5" title="Partecipa alla coppa">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                                <div class="relative w-8 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- Super CoppaSeriA (senza toggle) -->
-                    <button id="btn-user-supercoppa"
-                            class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-1.5 sm:py-2 rounded-md shadow-lg hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                        <span class="text-sm sm:text-base">⭐</span>
-                        <span class="text-xs sm:text-sm">Super CoppaSeriA</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- PULSANTI DRAFT E MERCATO - Mobile Optimized -->
-            <div id="draft-mercato-container" class="mt-2 sm:mt-3 relative">
-                <!-- BOX DRAFT/MERCATO/SFIDA/SCAMBI -->
-                <div id="draft-scambi-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20">
-                    <!-- Riga 1: Draft e Mercato -->
-                    <div class="grid grid-cols-2 gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                        <!-- Contenitore Draft con Toggle -->
-                        <div id="btn-draft-container"
-                             class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-xs sm:text-sm rounded-md shadow-lg hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
-                            <!-- Parte cliccabile per navigazione -->
-                            <button id="btn-draft-utente"
-                                    class="flex-1 py-2 px-1.5 text-left flex items-center justify-center gap-1 hover:bg-white/10 transition active:scale-95">
-                                📝 Draft
+            <!-- ========== TAB 3: COMPETIZIONI ========== -->
+            <div id="tab-competitions" class="tab-content hidden">
+                <!-- BOX COMPETIZIONI (con toggle integrati) -->
+                <div id="competizioni-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20">
+                    <div class="space-y-1.5">
+                        <!-- SerieSeriA con toggle -->
+                        <div class="flex items-stretch gap-1.5">
+                            <button id="btn-user-campionato"
+                                    class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
+                                <span class="text-base sm:text-lg">🏅</span>
+                                <span class="text-sm sm:text-base">SerieSeriA</span>
                             </button>
-                            <!-- Separatore -->
-                            <div class="w-px h-6 bg-yellow-800/50"></div>
-                            <!-- Toggle Switch per partecipazione Draft -->
-                            <div id="draft-toggle-container" class="px-1.5 sm:px-2 py-1.5 flex items-center" title="Partecipa al Draft">
+                            <div class="flex items-center bg-green-800/50 rounded-md px-2" title="Partecipa al campionato">
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
-                                    <div class="w-8 h-4 sm:w-9 sm:h-5 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
-                                                peer-checked:after:translate-x-full peer-checked:after:border-white
-                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                                after:bg-white after:border-gray-300 after:border after:rounded-full
-                                                after:h-3 after:w-3 sm:after:h-4 sm:after:w-4 after:transition-all
-                                                peer-checked:bg-green-500"></div>
+                                    <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                                    <div class="relative w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                                 </label>
                             </div>
                         </div>
-                        <button id="btn-mercato-utente"
-                                class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-2 text-xs sm:text-sm rounded-md shadow-lg hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.01] active:scale-95">
-                            💰 Mercato
+                        <!-- CoppaSeriA con toggle -->
+                        <div class="flex items-stretch gap-1.5">
+                            <button id="btn-user-coppa"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
+                                <span class="text-base sm:text-lg">🏆</span>
+                                <span class="text-sm sm:text-base">CoppaSeriA</span>
+                            </button>
+                            <div class="flex items-center bg-purple-800/50 rounded-md px-2" title="Partecipa alla coppa">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                                    <div class="relative w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Super CoppaSeriA (senza toggle) -->
+                        <button id="btn-user-supercoppa"
+                                class="w-full bg-gradient-to-r from-orange-700 to-amber-600 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-orange-600 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
+                            <span class="text-base sm:text-lg">⭐</span>
+                            <span class="text-sm sm:text-base">Super CoppaSeriA</span>
                         </button>
                     </div>
-                    <!-- Riga 2: Sfida e Scambi -->
-                    <div id="actions-buttons-grid" class="grid grid-cols-2 gap-1.5 sm:gap-2">
-                        <button id="btn-challenge"
-                                class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-2 text-xs sm:text-sm rounded-md shadow-lg hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                            <span>⚔️</span> Sfida
-                        </button>
-                        <button id="btn-trades"
-                                class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-2 text-xs sm:text-sm rounded-md shadow-lg hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                            <span>🔄</span> Scambi
-                        </button>
-                    </div>
-                    <!-- Widget CSS rimosso - ora nel box risorse in cima -->
-                    <div id="css-dashboard-widget" class="hidden"></div>
+                </div>
+
+                <!-- Sfida -->
+                <div class="mt-2">
+                    <button id="btn-challenge"
+                            class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        <span>⚔️</span> Sfida Amichevole
+                    </button>
+                </div>
+
+                <!-- BOX LEGA PRIVATA -->
+                <div id="private-leagues-box" class="hidden mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 flex justify-center">
+                    <button id="btn-private-leagues"
+                            class="flex-1 max-w-xs bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                        👥 Lega Privata
+                    </button>
                 </div>
             </div>
 
-            <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
-            <div id="near-level-up-widget-container" class="mt-2">
-                <!-- Il widget EXP viene renderizzato qui dinamicamente -->
-            </div>
+            <!-- ========== TAB 4: SHOP ========== -->
+            <div id="tab-shop" class="tab-content hidden">
+                <!-- BOX DRAFT/MERCATO/SCAMBI -->
+                <div id="draft-scambi-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-2">
+                    <!-- Draft con Toggle -->
+                    <div id="btn-draft-container"
+                         class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-md shadow-lg hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
+                        <!-- Parte cliccabile per navigazione -->
+                        <button id="btn-draft-utente"
+                                class="flex-1 py-2.5 sm:py-3 px-2 text-left flex items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95">
+                            📝 Draft Calciatori
+                        </button>
+                        <!-- Separatore -->
+                        <div class="w-px h-8 bg-yellow-800/50"></div>
+                        <!-- Toggle Switch per partecipazione Draft -->
+                        <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
+                                <div class="w-9 h-5 sm:w-10 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
+                                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                            after:bg-white after:border-gray-300 after:border after:rounded-full
+                                            after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
+                                            peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                    </div>
 
-            <!-- BOX LEGA PRIVATA -->
-            <div id="private-leagues-box" class="hidden mt-1.5 sm:mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 flex justify-center">
-                <button id="btn-private-leagues"
-                        class="flex-1 max-w-xs bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                    👥 Lega Privata
-                </button>
+                    <!-- Mercato -->
+                    <button id="btn-mercato-utente"
+                            class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold py-2.5 sm:py-3 text-sm sm:text-base rounded-md shadow-lg hover:from-blue-500 hover:to-cyan-400 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        💰 Mercato Svincolati
+                    </button>
+
+                    <!-- Scambi -->
+                    <button id="btn-trades"
+                            class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold py-2.5 sm:py-3 text-sm sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-indigo-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        🔄 Scambi tra Squadre
+                    </button>
+                </div>
+
+                <!-- Widget CSS rimosso - ora nel box risorse in cima -->
+                <div id="css-dashboard-widget" class="hidden"></div>
+                <div id="draft-mercato-container" class="hidden"></div>
             </div>
 
             <!-- Toggle ora integrati nel box competizioni sopra -->
@@ -1875,6 +1923,7 @@
     <script src="challenges.js"></script>
     <script src="challenge-match.js"></script>
     <script src="dashboard-features.js"></script>
+    <script src="dashboard-tabs.js"></script>
     <script src="next-match-alert.js"></script>
     <script src="tutorial.js"></script>
     <script src="changelog.js"></script>
