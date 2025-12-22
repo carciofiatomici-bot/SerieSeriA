@@ -169,18 +169,36 @@ window.AbilitaEffects = {
      * Inizializza lo stato per una nuova partita
      * @param {Object} homeTeam - Dati squadra casa
      * @param {Object} awayTeam - Dati squadra ospite
+     * @param {Object} preCalculated - Dati pre-calcolati da simulazione.js (opzionale)
      */
-    initMatch(homeTeam, awayTeam) {
-        this.state.reset();
+    initMatch(homeTeam, awayTeam, preCalculated = null) {
+        // Non fare reset - viene gia fatto da simulazione.js
+        // this.state.reset();
 
-        // Inizializza abilita che richiedono setup a inizio partita
-        this.initLunatico(homeTeam, 'home');
-        this.initLunatico(awayTeam, 'away');
-        this.initIconaBonus(homeTeam, awayTeam);
-        this.initPiantagrane(homeTeam, 'home');
-        this.initPiantagrane(awayTeam, 'away');
-
-        console.log('[AbilitaEffects] Match inizializzato');
+        // Se ci sono dati pre-calcolati, usali
+        if (preCalculated) {
+            // Copia lunaticoModifier
+            if (preCalculated.lunaticoModifier) {
+                for (const [playerId, mod] of Object.entries(preCalculated.lunaticoModifier)) {
+                    this.setPlayerTracking(playerId, 'lunaticoMod', mod);
+                }
+            }
+            // Copia piantagraneVictim
+            if (preCalculated.piantagraneVictim) {
+                for (const [playerId, victimId] of Object.entries(preCalculated.piantagraneVictim)) {
+                    this.setPlayerTracking(playerId, 'piantagraneVictim', victimId);
+                }
+            }
+            console.log('[AbilitaEffects] Match inizializzato con dati pre-calcolati');
+        } else {
+            // Fallback: calcola autonomamente
+            this.initLunatico(homeTeam, 'home');
+            this.initLunatico(awayTeam, 'away');
+            this.initIconaBonus(homeTeam, awayTeam);
+            this.initPiantagrane(homeTeam, 'home');
+            this.initPiantagrane(awayTeam, 'away');
+            console.log('[AbilitaEffects] Match inizializzato (calcolo autonomo)');
+        }
     },
 
     /**
@@ -250,11 +268,16 @@ window.AbilitaEffects = {
     /**
      * Chiamato dopo un goal
      * @param {Object} scorer - Giocatore che ha segnato
-     * @param {string} teamKey - 'home' o 'away'
+     * @param {Object|string} teamOrKey - Team object o 'home'/'away'
      */
-    onGoal(scorer, teamKey) {
-        // Aggiorna punteggio
-        this.state.score[teamKey]++;
+    onGoal(scorer, teamOrKey) {
+        // Determina teamKey se passato un oggetto team
+        const teamKey = typeof teamOrKey === 'string' ? teamOrKey : null;
+
+        // Aggiorna punteggio solo se abbiamo teamKey
+        if (teamKey) {
+            this.state.score[teamKey]++;
+        }
 
         // Tiro Dritto: incrementa counter goal
         if (scorer?.id) {
@@ -262,26 +285,22 @@ window.AbilitaEffects = {
             data.tiroDrittoGoals++;
         }
 
-        // Parata Laser: resetta bonus del portiere avversario
-        const opponentKey = teamKey === 'home' ? 'away' : 'home';
-        // (resettiamo tutti i portieri avversari)
-        this.state.playerData.forEach((data, playerId) => {
-            // Il reset specifico verra fatto quando conosciamo il portiere
-        });
-
-        // Guerriero: attiva per il portiere che ha subito
-        // (gestito separatamente quando conosciamo il portiere)
+        // Assist-man: incrementa counter per l'assist (gestito altrove)
+        // Parata Laser: resetta bonus del portiere avversario (gestito in simulazione.js)
+        // Guerriero: attiva per il portiere che ha subito (gestito in simulazione.js)
     },
 
     /**
      * Chiamato dopo una parata
      * @param {Object} goalkeeper - Portiere che ha parato
-     * @param {string} teamKey - 'home' o 'away'
+     * @param {Object} shooter - Attaccante che ha tirato (opzionale)
+     * @param {Object|string} teamOrKey - Team object o 'home'/'away' (opzionale)
      */
-    onSave(goalkeeper, teamKey) {
+    onSave(goalkeeper, shooter = null, teamOrKey = null) {
         if (!goalkeeper?.id) return;
 
         const data = this.getPlayerTracking(goalkeeper.id);
+        const teamKey = typeof teamOrKey === 'string' ? teamOrKey : null;
 
         // Parata Laser: incrementa bonus (max 5)
         if (goalkeeper.abilities?.includes('Parata Laser')) {
@@ -289,18 +308,24 @@ window.AbilitaEffects = {
         }
 
         // Rilancio Laser: attiva bonus per prossima Fase 1
-        if (goalkeeper.abilities?.includes('Rilancio Laser')) {
+        if (goalkeeper.abilities?.includes('Rilancio Laser') && teamKey) {
             this.state.rilancioLaserActive[teamKey] = true;
         }
 
         // Regista Difensivo: attiva skip + bonus
-        if (goalkeeper.abilities?.includes('Regista Difensivo')) {
+        if (goalkeeper.abilities?.includes('Regista Difensivo') && teamKey) {
             this.state.registaDifensivoActive[teamKey] = true;
         }
 
         // Presa Sicura: skip prossima costruzione avversaria
         if (goalkeeper.abilities?.includes('Presa Sicura')) {
             this.state.skipNextConstruction = true;
+        }
+
+        // Continua a Provare: incrementa bonus per l'attaccante che ha fallito
+        if (shooter?.id && shooter.abilities?.includes('Continua a provare')) {
+            const shooterData = this.getPlayerTracking(shooter.id);
+            shooterData.continuaProvareBonus = Math.min(3, shooterData.continuaProvareBonus + 1);
         }
     },
 

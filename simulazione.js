@@ -2014,6 +2014,11 @@ const simulateOneOccasion = (attackingTeam, defendingTeam, occasionNumber = 1) =
     // Imposta il numero di occasione corrente (per "Lento a carburare")
     currentOccasionNumber = occasionNumber;
 
+    // Sincronizza con AbilitaEffects
+    if (window.AbilitaEffects) {
+        window.AbilitaEffects.onOccasionStart();
+    }
+
     // Fase 1: Costruzione
     if (!phaseConstruction(attackingTeam, defendingTeam)) {
         return false;
@@ -2051,6 +2056,11 @@ const resetSimulationState = () => {
     skipNextConstruction = false;
     teletrasportoCount = { teamA: 0, teamB: 0 };
     formaSmaglianteApplied.clear();
+
+    // Sincronizza con AbilitaEffects
+    if (window.AbilitaEffects?.state) {
+        window.AbilitaEffects.state.reset();
+    }
 
     // Reset abilità uniche Icone
     iconaBonusActive = { teamA: false, teamB: false };
@@ -2146,6 +2156,14 @@ const initAbilitiesForMatch = (teamA, teamB) => {
                 piantagraneVictim[playerId] = victim.id || victim.odine;
             }
         }
+    }
+
+    // Sincronizza con AbilitaEffects - passa anche i dati calcolati
+    if (window.AbilitaEffects) {
+        window.AbilitaEffects.initMatch(teamA, teamB, {
+            lunaticoModifier,
+            piantagraneVictim
+        });
     }
 };
 
@@ -2304,6 +2322,11 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     nullifiedAbilities.clear();
     contrastoDurisismoUsed.clear();
     currentOccasionNumber = occasionNumber;
+
+    // Sincronizza con AbilitaEffects
+    if (window.AbilitaEffects) {
+        window.AbilitaEffects.onOccasionStart();
+    }
 
     const hasIconaA = attackingTeam.formationInfo?.isIconaActive || false;
     const hasIconaB = defendingTeam.formationInfo?.isIconaActive || false;
@@ -2651,6 +2674,15 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
 
     log.push(`\n  *** RISULTATO: ${goal ? 'GOL!' : 'PARATO/FALLITO'} ***`);
 
+    // Sincronizza eventi con AbilitaEffects
+    if (window.AbilitaEffects) {
+        if (goal) {
+            window.AbilitaEffects.onGoal(attaccante, attackingTeam);
+        } else {
+            window.AbilitaEffects.onSave(portiere, attaccante, defendingTeam);
+        }
+    }
+
     eventData.result = goal ? 'goal' : 'no_goal';
     return { goal, log, eventData };
 };
@@ -2671,7 +2703,9 @@ window.simulationLogic = {
     rollDice,
     LEVEL_MODIFIERS,
     updateScore: (teamKey, goals) => { currentScore[teamKey] = goals; },
-    setTotalOccasions: (total) => { totalOccasionsInMatch = total; }
+    setTotalOccasions: (total) => { totalOccasionsInMatch = total; },
+    // Accesso al modulo abilita
+    getAbilitaEffects: () => window.AbilitaEffects
 };
 
-console.log("Simulazione.js v3.1 caricato - 60+ abilita + Abilita Uniche Icone + log dettagliato");
+console.log("Simulazione.js v3.2 caricato - Integrazione AbilitaEffects");
