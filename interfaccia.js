@@ -17,47 +17,56 @@ document.addEventListener('DOMContentLoaded', () => {
     let initRetryCount = 0;
     const MAX_INIT_RETRIES = 10;
     
+    // Funzione per mostrare errore critico nella homepage
+    const showCriticalError = (message) => {
+        console.error("ERRORE CRITICO:", message);
+        const loginBox = document.getElementById('login-box');
+        const loginHeader = document.getElementById('login-header');
+        if (loginBox && loginHeader) {
+            // Mostra la homepage con messaggio di errore
+            loginBox.classList.remove('hidden-on-load', 'hidden');
+            // Aggiungi messaggio di errore nel login box
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'rounded-lg border border-red-500/50 p-4 mb-3 text-center';
+            errorDiv.innerHTML = `
+                <h2 class="text-xl font-bold text-red-400 mb-2">Errore di Caricamento</h2>
+                <p class="text-gray-300 mb-4 text-sm">${message}</p>
+                <button onclick="location.reload()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-400">
+                    Ricarica Pagina
+                </button>
+            `;
+            loginHeader.insertAdjacentElement('afterend', errorDiv);
+        }
+    };
+
     const attemptInitialization = () => {
         // Verifica che gli oggetti globali Firebase siano disponibili
         if (typeof window.auth === 'undefined' || typeof window.db === 'undefined' || typeof window.firestoreTools === 'undefined' || typeof window.showScreen === 'undefined') {
             if (initRetryCount >= MAX_INIT_RETRIES) {
-                console.error("ERRORE CRITICO: Impossibile inizializzare Firebase dopo", MAX_INIT_RETRIES, "tentativi.");
-                const gateBox = document.getElementById('gate-box');
-                if (gateBox) {
-                    gateBox.innerHTML = `
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-red-400 mb-4">Errore di Inizializzazione</h2>
-                            <p class="text-gray-300 mb-4">Impossibile caricare i servizi Firebase.</p>
-                            <button onclick="location.reload()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-400">
-                                Ricarica Pagina
-                            </button>
-                        </div>
-                    `;
-                    gateBox.classList.remove('hidden-on-load');
-                }
+                showCriticalError("Impossibile caricare i servizi Firebase. Controlla la connessione internet.");
                 return;
             }
-            
+
             initRetryCount++;
             console.warn("Servizi Firebase non pronti, ritento caricamento interfaccia... (tentativo", initRetryCount, "di", MAX_INIT_RETRIES, ")");
             setTimeout(attemptInitialization, 100);
             return;
         }
-        
+
         // Verifica che tutti i moduli siano caricati
-        if (!window.InterfacciaCore || !window.InterfacciaAuth || !window.InterfacciaDashboard || 
+        if (!window.InterfacciaCore || !window.InterfacciaAuth || !window.InterfacciaDashboard ||
             !window.InterfacciaNavigation || !window.InterfacciaOnboarding || !window.InterfacciaTeam) {
             if (initRetryCount >= MAX_INIT_RETRIES) {
-                console.error("ERRORE CRITICO: Impossibile caricare i moduli dell'interfaccia dopo", MAX_INIT_RETRIES, "tentativi.");
+                showCriticalError("Impossibile caricare i moduli dell'interfaccia. Ricarica la pagina.");
                 return;
             }
-            
+
             initRetryCount++;
             console.warn("Moduli interfaccia non ancora caricati, ritento... (tentativo", initRetryCount, "di", MAX_INIT_RETRIES, ")");
             setTimeout(attemptInitialization, 100);
             return;
         }
-        
+
         // Inizializzazione riuscita - continua con il setup
         initializeApplication();
     };
