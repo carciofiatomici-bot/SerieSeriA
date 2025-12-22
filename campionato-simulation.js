@@ -14,6 +14,15 @@ window.ChampionshipSimulation = {
         const getRandomInt = window.getRandomInt;
         let titolari = teamData.formation?.titolari || [];
         const panchina = teamData.formation?.panchina || [];
+
+        // Join titolari con players per recuperare dati completi (incluso name)
+        // La formazione salvata non include il campo 'name' per ridurre dimensioni Firestore
+        const allPlayers = teamData.players || [];
+        titolari = titolari.map(t => {
+            const fullPlayer = allPlayers.find(p => p.id === t.id);
+            // Unisce i dati: prende tutto da fullPlayer, ma sovrascrive con i dati di t (formazione)
+            return fullPlayer ? { ...fullPlayer, ...t } : t;
+        });
         const iconaId = teamData.iconaId;
         const coachLevel = teamData.coach?.level || 1;
         
@@ -83,12 +92,13 @@ window.ChampionshipSimulation = {
                 formModifier = persistedForm.mod;
                 currentLevel = Math.min(30, Math.max(1, persistedForm.level));
             } else {
-                // In simulazione, se la forma non è stata salvata, usiamo Livello Base (Livello 1)
-                // e mod 0 per prevenire simulazioni errate con forme casuali non salvate.
-                // L'utente DEVE aprire il pannello Formazione prima di simulare.
-                formModifier = 0;
-                currentLevel = Math.min(30, Math.max(1, p.level || 1));
-                console.warn(`Forma mancante per ${p.name}. Usato Livello Base ${currentLevel} in simulazione.`);
+                // Forma non salvata in playersFormStatus
+                // Usa currentLevel se gia' calcolato (dal join con players), altrimenti level base
+                formModifier = p.formModifier || 0;
+                currentLevel = Math.min(30, Math.max(1, p.currentLevel || p.level || 1));
+                if (!p.currentLevel) {
+                    console.warn(`Forma mancante per ${p.name}. Usato Livello ${currentLevel} in simulazione.`);
+                }
             }
 
             return {
@@ -502,7 +512,10 @@ window.ChampionshipSimulation = {
                 const attackingTeamName = event.attackingTeam;
                 const defendingTeamName = event.defendingTeam;
 
-                const result = SimHighlights.generateHighlights(event, attackingTeamName, defendingTeamName);
+                // Determina se l'attaccante e' la squadra di casa (per colori)
+                const attackerIsHome = (attackingTeamName === homeTeamName);
+
+                const result = SimHighlights.generateHighlights(event, attackingTeamName, defendingTeamName, attackerIsHome);
                 allHighlights.push(...result.highlights);
 
                 if (result.scorer) {

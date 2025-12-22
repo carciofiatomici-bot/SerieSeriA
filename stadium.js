@@ -288,7 +288,7 @@ window.Stadium = {
             position: 'prestige_1',
             cost: 1000,
             bonus: 0,
-            maxLevel: 3,
+            maxLevel: 1,
             icon: '🏛️',
             requires: null,
             description: 'Sblocca Hall of Fame e Storia Club',

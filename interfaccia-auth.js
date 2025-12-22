@@ -1027,8 +1027,13 @@ window.InterfacciaAuth = {
                 // Sanitizza URL per convertire vecchi formati GitHub
                 const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
-                // Trova l'icona (capitano)
-                const icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
+                // Trova l'icona (capitano) - prima per abilita, poi per iconaId
+                let icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
+
+                // Fallback: cerca usando iconaId della squadra
+                if (!icona && squadra.iconaId) {
+                    icona = players.find(p => p.id === squadra.iconaId);
+                }
 
                 // Cerca il photoUrl corretto: prima dal template ICONE, poi dal giocatore salvato
                 let iconaPhoto = 'https://placehold.co/40x40/374151/9ca3af?text=?';
@@ -1041,6 +1046,12 @@ window.InterfacciaAuth = {
                         iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
                     } else if (icona.photoUrl) {
                         iconaPhoto = window.sanitizeGitHubUrl(icona.photoUrl);
+                    }
+                } else if (squadra.iconaId) {
+                    // Fallback: cerca direttamente nel template usando iconaId
+                    const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t => t.id === squadra.iconaId);
+                    if (iconaTemplate && iconaTemplate.photoUrl) {
+                        iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
                     }
                 }
 

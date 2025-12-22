@@ -83,8 +83,11 @@ function calculateTeamStrength(teamData) {
     let totalStrength = 0;
     let playerCount = 0;
 
-    for (const playerId of formation) {
-        const player = players.find(p => p.id === playerId);
+    // formation.titolari contiene oggetti giocatore, non solo ID
+    for (const formationPlayer of formation) {
+        // Cerca il giocatore completo nella rosa usando l'ID
+        const playerId = formationPlayer.id || formationPlayer;
+        const player = players.find(p => p.id === playerId) || formationPlayer;
         if (player) {
             const formMod = formStatus[playerId]?.mod || 0;
             totalStrength += calculatePlayerStrength(player, formMod);

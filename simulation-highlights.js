@@ -32,11 +32,22 @@
 
     /**
      * Formatta un giocatore per il log: "Nome [Lv.X]"
+     * @param {Object} player - Dati giocatore
+     * @param {string} team - 'home' per squadra casa (blu), 'away' per squadra ospite (rosso)
      */
-    const formatPlayer = (player) => {
+    const formatPlayer = (player, team = null) => {
         if (!player) return '???';
         const level = player.level || player.currentLevel || 1;
-        return `${player.name} [Lv.${level}]`;
+        const name = player.name || 'Giocatore';
+        const text = `${name} [Lv.${level}]`;
+
+        // Se specificato un team, colora il testo
+        if (team === 'home') {
+            return `<span class="text-blue-400">${text}</span>`;
+        } else if (team === 'away') {
+            return `<span class="text-red-400">${text}</span>`;
+        }
+        return text;
     };
 
     /**
@@ -78,13 +89,18 @@
      * @param {Object} eventData - I dati dell'occasione dalla simulazione
      * @param {string} attackingTeamName - Nome squadra attaccante
      * @param {string} defendingTeamName - Nome squadra difendente
+     * @param {boolean} attackerIsHome - true se l'attaccante e' la squadra di casa (blu), false se ospite (rosso)
      * @returns {Object} - { highlights: string[], isGoal: boolean, scorer: string|null, assister: string|null }
      */
-    const generateHighlights = (eventData, attackingTeamName = 'ATT', defendingTeamName = 'DIF') => {
+    const generateHighlights = (eventData, attackingTeamName = 'ATT', defendingTeamName = 'DIF', attackerIsHome = true) => {
         const highlights = [];
         let scorer = null;
         let assister = null;
         const isGoal = eventData.result === 'goal';
+
+        // Determina i colori: attaccante e difensore
+        const attackerTeam = attackerIsHome ? 'home' : 'away';
+        const defenderTeam = attackerIsHome ? 'away' : 'home';
 
         highlights.push(`\n🎯 OCCASIONE ${eventData.occasionNumber} - ${attackingTeamName}`);
 
@@ -117,8 +133,8 @@
                 const coachB = construction.coach?.defender || 0;
                 const totalB = construction.totals?.defender || (rollB + modB + coachB);
 
-                highlights.push(`⚔️ ${formatPlayer(mainAttacker)} (🎲${rollA} +${modA.toFixed(1)}) = ${totalA.toFixed(1)}`);
-                highlights.push(`   VS ${formatPlayer(mainDefender)} (🎲${rollB} +${modB.toFixed(1)}) = ${totalB.toFixed(1)}`);
+                highlights.push(`⚔️ ${formatPlayer(mainAttacker, attackerTeam)} (🎲${rollA} +${modA.toFixed(1)}) = ${totalA.toFixed(1)}`);
+                highlights.push(`   VS ${formatPlayer(mainDefender, defenderTeam)} (🎲${rollB} +${modB.toFixed(1)}) = ${totalB.toFixed(1)}`);
 
                 const emoji = getResultEmoji('construction', construction.result);
                 const resultText = construction.result === 'success' ? 'Superata!' :
@@ -162,8 +178,8 @@
             const coachB = attack.coach?.defender || 0;
             const totalB = attack.totals?.defender || (rollB + modB + coachB);
 
-            highlights.push(`⚔️ ${formatPlayer(mainAttacker)} (🎲${rollA} +${modA.toFixed(1)}) = ${totalA.toFixed(1)}`);
-            highlights.push(`   VS ${formatPlayer(mainDefender)} (🎲${rollB} +${modB.toFixed(1)}) = ${totalB.toFixed(1)}`);
+            highlights.push(`⚔️ ${formatPlayer(mainAttacker, attackerTeam)} (🎲${rollA} +${modA.toFixed(1)}) = ${totalA.toFixed(1)}`);
+            highlights.push(`   VS ${formatPlayer(mainDefender, defenderTeam)} (🎲${rollB} +${modB.toFixed(1)}) = ${totalB.toFixed(1)}`);
 
             const attackResult = attack.attackResult || (totalA - totalB);
             const emoji = getResultEmoji('attack', attack.result);
@@ -215,14 +231,14 @@
 
             // Trova l'attaccante che ha tirato (il migliore dalla fase attacco)
             const shooter = getMainPlayer(attack?.players?.attacker, 'A');
-            scorer = shooter?.name || assister;
+            scorer = shooter?.name || assister || 'Attaccante';
 
             // Abilità speciali portiere
             let gkAbilities = '';
             if (shot.kamikazeActive) gkAbilities += ' 🦸';
 
-            highlights.push(`⚔️ ${formatPlayer(shooter)} (Tiro: ${attackValue.toFixed(1)}${attackBonus > 0 ? ` +${attackBonus}🎯` : ''})`);
-            highlights.push(`   VS ${formatPlayer(goalkeeper)}${gkAbilities} (🎲${rollP} +${modP.toFixed(1)}) = ${totalP.toFixed(1)}`);
+            highlights.push(`⚔️ ${formatPlayer(shooter, attackerTeam)} (Tiro: ${attackValue.toFixed(1)}${attackBonus > 0 ? ` +${attackBonus}🎯` : ''})`);
+            highlights.push(`   VS ${formatPlayer(goalkeeper, defenderTeam)}${gkAbilities} (🎲${rollP} +${modP.toFixed(1)}) = ${totalP.toFixed(1)}`);
 
             const saveResult = shot.saveResult || 0;
             const emoji = getResultEmoji('shot', shot.result);
@@ -235,13 +251,13 @@
             } else if (shot.result === 'draw_goal') {
                 resultText = `GOAL! (50/50) ${scorer} segna!`;
             } else if (shot.result === 'save') {
-                resultText = `PARATO da ${goalkeeper?.name}!`;
+                resultText = `PARATO da ${goalkeeper?.name || 'Portiere'}!`;
                 scorer = null;
             } else if (shot.result === 'draw_save') {
-                resultText = `PARATO! (50/50) ${goalkeeper?.name} salva!`;
+                resultText = `PARATO! (50/50) ${goalkeeper?.name || 'Portiere'} salva!`;
                 scorer = null;
             } else if (shot.result === 'miracolo_save') {
-                resultText = `MIRACOLO! ${goalkeeper?.name} para l'impossibile!`;
+                resultText = `MIRACOLO! ${goalkeeper?.name || 'Portiere'} para l'impossibile!`;
                 scorer = null;
             } else {
                 resultText = shot.result || 'Esito sconosciuto';
@@ -258,6 +274,68 @@
         }
 
         return { highlights, isGoal, scorer, assister };
+    };
+
+    /**
+     * Genera un riassunto breve di una singola occasione
+     * Esempio output: "Goal di Rossi, assist di Bianchi" o "Parata di Buffon"
+     * @param {Object} eventData - Dati dell'occasione dalla simulazione
+     * @param {string} attackingTeamName - Nome squadra attaccante
+     * @param {string} defendingTeamName - Nome squadra difendente
+     * @returns {string} - Riassunto breve dell'occasione
+     */
+    const generateEventSummary = (eventData, attackingTeamName = 'ATT', defendingTeamName = 'DIF') => {
+        const result = eventData.result;
+        const construction = eventData.phases?.construction;
+        const attack = eventData.phases?.attack;
+        const shot = eventData.phases?.shot;
+
+        // Gol segnato
+        if (result === 'goal' || result === 'lucky_goal' || result === 'draw_goal') {
+            const shooter = getMainPlayer(attack?.players?.attacker, 'A');
+            const scorer = shooter?.name || 'Attaccante';
+            const assisterPlayer = getMainPlayer(construction?.players?.attacker, 'C');
+            const assister = assisterPlayer?.name;
+
+            let summaryText = `Goal di ${scorer}`;
+            if (result === 'lucky_goal') {
+                summaryText = `Goal fortunato di ${scorer}`;
+            }
+            if (assister && assister !== scorer) {
+                summaryText += `, assist di ${assister}`;
+            }
+            return summaryText;
+        }
+
+        // Costruzione fallita
+        if (construction?.result === 'fail') {
+            const defender = getMainPlayer(construction?.players?.defender, 'C');
+            const defenderName = defender?.name || 'Difensore';
+            return `Contrasto di ${defenderName}`;
+        }
+
+        // Attacco fallito (difesa vince)
+        if (attack?.result === 'fail') {
+            const defender = getMainPlayer(attack?.players?.defender, 'D');
+            const defenderName = defender?.name || 'Difensore';
+            return `Contrasto di ${defenderName}`;
+        }
+
+        // Parata del portiere
+        if (shot?.result === 'save') {
+            const gk = shot?.goalkeeper?.name || 'Portiere';
+            return `Parata di ${gk}`;
+        }
+        if (shot?.result === 'draw_save') {
+            const gk = shot?.goalkeeper?.name || 'Portiere';
+            return `Parata di ${gk} (50/50)`;
+        }
+        if (shot?.result === 'miracolo_save') {
+            const gk = shot?.goalkeeper?.name || 'Portiere';
+            return `Miracolo di ${gk}`;
+        }
+
+        return 'Occasione sprecata';
     };
 
     /**
@@ -404,8 +482,9 @@
             // Simula l'occasione
             const result = logic.simulateOneOccasionWithLog(attackingTeam, defendingTeam, i);
 
-            // Genera highlights
-            const highlightResult = generateHighlights(result.eventData, attackingTeamName, defendingTeamName);
+            // Genera highlights (teamA = home/blu, teamB = away/rosso)
+            const attackerIsHome = isTeamAAttacking;
+            const highlightResult = generateHighlights(result.eventData, attackingTeamName, defendingTeamName, attackerIsHome);
             highlightResult.occasionNumber = i;
             highlightResult.attackingTeam = isTeamAAttacking ? 'A' : 'B';
 
@@ -458,6 +537,7 @@
         runSimulationWithHighlights,
         generateHighlights,
         createHighlightsFromEvent,
+        generateEventSummary,
 
         // Utilities
         generateMatchSummary,
