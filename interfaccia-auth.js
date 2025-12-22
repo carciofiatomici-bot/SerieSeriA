@@ -867,7 +867,6 @@ window.InterfacciaAuth = {
                          class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400">
                     <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
                     <p class="text-sm text-yellow-400">${icona.role} - ${icona.type}</p>
-                    <p class="text-xs text-gray-400">Livello: ${icona.levelRange ? icona.levelRange[0] + '-' + icona.levelRange[1] : icona.level}</p>
                     <div class="mt-2 space-y-1">
                         <p class="text-xs text-amber-400 font-semibold">Icona</p>
                         ${uniqueAbility ? `<p class="text-xs text-amber-300 font-bold">${uniqueAbility}</p>` : ''}
