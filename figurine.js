@@ -1007,6 +1007,49 @@ window.FigurineSystem = {
     },
 
     /**
+     * Calcola il totale figurine di tutte le collezioni abilitate
+     * Si aggiorna automaticamente quando si aggiungono nuove figurine/collezioni
+     */
+    getTotalFigurineCount() {
+        let total = 0;
+
+        Object.entries(this.COLLECTIONS).forEach(([collId, collDef]) => {
+            if (!collDef.enabled) return;
+
+            const files = this.getCollectionFiles(collId);
+            const variants = collDef.variants || ['base'];
+            total += Object.keys(files).length * variants.length;
+        });
+
+        return total;
+    },
+
+    /**
+     * Conta le figurine uniche possedute in tutte le collezioni
+     */
+    countAllCollectionsUnique(collections) {
+        let total = 0;
+
+        Object.entries(this.COLLECTIONS).forEach(([collId, collDef]) => {
+            if (!collDef.enabled) return;
+            total += this.countCollectionUnique(collections, collId);
+        });
+
+        return total;
+    },
+
+    /**
+     * Calcola la percentuale di completamento globale (tutte le collezioni)
+     */
+    getGlobalCompletionPercentage(collections) {
+        const maxFigurine = this.getTotalFigurineCount();
+        if (maxFigurine === 0) return 0;
+
+        const unique = this.countAllCollectionsUnique(collections);
+        return Math.round((unique / maxFigurine) * 100);
+    },
+
+    /**
      * Calcola la percentuale di completamento - collezione Icone
      */
     getCompletionPercentage(collection) {

@@ -213,11 +213,10 @@ window.FigurineUI = {
     updateStats() {
         if (!this.currentAlbum) return;
 
-        const collection = this.currentAlbum.collection;
-        const icone = window.FigurineSystem.getIconeList();
-        const maxFigurine = icone.length * 5; // 5 varianti per giocatore (inclusa fantasy)
-        const unique = window.FigurineSystem.countUniqueFigurine(collection);
-        const percentage = window.FigurineSystem.getCompletionPercentage(collection);
+        const collections = this.currentAlbum.collections || { icone: this.currentAlbum.collection };
+        const maxFigurine = window.FigurineSystem.getTotalFigurineCount();
+        const unique = window.FigurineSystem.countAllCollectionsUnique(collections);
+        const percentage = window.FigurineSystem.getGlobalCompletionPercentage(collections);
 
         const progressEl = document.getElementById('figurine-progress');
         const countEl = document.getElementById('figurine-count');
