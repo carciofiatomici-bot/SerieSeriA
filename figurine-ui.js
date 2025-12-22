@@ -161,13 +161,13 @@ window.FigurineUI = {
      */
     async open() {
         if (!window.FigurineSystem?.isEnabled()) {
-            alert('Album Figurine non disponibile');
+            window.Toast?.warning('Album Figurine non disponibile');
             return;
         }
 
         const teamId = window.InterfacciaCore?.currentTeamId;
         if (!teamId) {
-            alert('Seleziona prima una squadra');
+            window.Toast?.warning('Seleziona prima una squadra');
             return;
         }
 
@@ -743,7 +743,7 @@ window.FigurineUI = {
 
                 if (!imgUrl) {
                     // Non posseduta e non base
-                    alert(`Non possiedi la variante ${variantName}. Trova il pacchetto giusto!`);
+                    window.Toast?.info(`Non possiedi la variante ${variantName}. Trova il pacchetto giusto!`);
                     return;
                 }
 
@@ -805,7 +805,7 @@ window.FigurineUI = {
                 e.stopPropagation();
                 const teamId = window.InterfacciaCore?.currentTeamId;
                 if (!teamId) {
-                    alert('Errore: team non trovato');
+                    window.Toast?.error('Errore: team non trovato');
                     return;
                 }
 
@@ -816,17 +816,17 @@ window.FigurineUI = {
                     if (isCurrentBackground) {
                         // Rimuovi sfondo
                         await window.FigurineSystem.saveDashboardBackground(teamId, null);
-                        alert('Sfondo rimosso!');
+                        window.Toast?.success('Sfondo rimosso!');
                     } else {
                         // Imposta sfondo con URL diretto
                         await window.FigurineSystem.saveDashboardBackgroundDirect(teamId, imgUrl, title);
-                        alert('Sfondo impostato! Torna alla dashboard per vederlo.');
+                        window.Toast?.success('Sfondo impostato! Torna alla dashboard per vederlo.');
                     }
                     viewer.remove();
                     window.DashboardBackground?.apply();
                 } catch (error) {
                     console.error('[FigurineUI] Errore impostazione sfondo:', error);
-                    alert('Errore nel salvataggio dello sfondo');
+                    window.Toast?.error('Errore nel salvataggio dello sfondo');
                     bgBtn.disabled = false;
                     bgBtn.innerHTML = isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo';
                 }
@@ -968,18 +968,18 @@ window.FigurineUI = {
                     if (isCurrentBackground) {
                         // Rimuovi sfondo
                         await window.FigurineSystem.saveDashboardBackground(teamId, null);
-                        alert('Sfondo rimosso!');
+                        window.Toast?.success('Sfondo rimosso!');
                     } else {
                         // Imposta sfondo
                         await window.FigurineSystem.saveDashboardBackground(teamId, itemId);
-                        alert('Sfondo impostato! Torna alla dashboard per vederlo.');
+                        window.Toast?.success('Sfondo impostato! Torna alla dashboard per vederlo.');
                     }
                     modal.remove();
                     // Aggiorna dashboard se visibile
                     window.DashboardBackground?.apply();
                 } catch (error) {
                     console.error('[FigurineUI] Errore impostazione sfondo:', error);
-                    alert('Errore nel salvataggio dello sfondo');
+                    window.Toast?.error('Errore nel salvataggio dello sfondo');
                     btn.disabled = false;
                     btn.innerHTML = isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo';
                 }
@@ -1231,7 +1231,7 @@ window.FigurineUI = {
                 }
                 const currentCS = teamData?.budget || 0;
                 if (currentCS < price) {
-                    alert(`CS insufficienti! Hai ${currentCS} CS, ne servono ${price}.`);
+                    window.Toast?.warning(`CS insufficienti! Hai ${currentCS} CS, ne servono ${price}.`);
                     return;
                 }
 
@@ -1256,7 +1256,7 @@ window.FigurineUI = {
                 }
                 const currentCSS = teamData?.creditiSuperSeri || 0;
                 if (currentCSS < price) {
-                    alert(`CSS insufficienti! Hai ${currentCSS} CSS, ne servono ${price}.`);
+                    window.Toast?.warning(`CSS insufficienti! Hai ${currentCSS} CSS, ne servono ${price}.`);
                     return;
                 }
 
@@ -1312,7 +1312,7 @@ window.FigurineUI = {
             this.updateStats();
             this.showPackResult(result);
         } catch (error) {
-            alert(error.message);
+            window.Toast?.error(error.message);
         }
     },
 
@@ -1371,7 +1371,7 @@ window.FigurineUI = {
             this.showPackResult(result);
             this.checkFreePack();
         } catch (error) {
-            alert(error.message);
+            window.Toast?.error(error.message);
         }
     },
 
@@ -1393,7 +1393,7 @@ window.FigurineUI = {
                 this.checkFreePack();
             }
         } catch (error) {
-            alert(error.message);
+            window.Toast?.error(error.message);
         }
     },
 

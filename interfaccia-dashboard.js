@@ -584,10 +584,73 @@ window.InterfacciaDashboard = {
             privateLeaguesBox.style.borderColor = color;
         }
 
+        // Bordo box Prossima Partita
+        const nextMatchBox = document.getElementById('next-match-inline-box');
+        if (nextMatchBox) {
+            nextMatchBox.style.borderColor = color;
+        }
+
+        // Bordo box Schedina
+        const schedinaBox = document.getElementById('schedina-box');
+        if (schedinaBox) {
+            schedinaBox.style.borderColor = color;
+        }
+
         // Bordo box Stadio-Hall of Fame
         const stadioHallBox = document.getElementById('stadio-hall-box');
         if (stadioHallBox) {
             stadioHallBox.style.borderColor = color;
+        }
+
+        // NUOVO: Applica colore team a tutti i bottoni principali dei tab
+        const lighterColor = this.lightenColor(color, 15);
+        const darkerColor = this.darkenColor(color, 15);
+        const tabPanelButtons = document.querySelectorAll(
+            '#tab-home button:not(.dashboard-tab), ' +
+            '#tab-squad button:not(.dashboard-tab), ' +
+            '#tab-competitions button:not(.dashboard-tab), ' +
+            '#tab-shop button:not(.dashboard-tab)'
+        );
+        tabPanelButtons.forEach(btn => {
+            // Solo i bottoni principali (non toggle o menu)
+            if (btn.classList.contains('bg-gradient-to-r') ||
+                btn.id?.startsWith('btn-') ||
+                btn.closest('#gestione-box') ||
+                btn.closest('#competizioni-box') ||
+                btn.closest('#draft-scambi-box')) {
+                btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+                btn.style.borderColor = lighterColor;
+                // Effetto hover
+                btn.onmouseenter = () => {
+                    btn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+                };
+                btn.onmouseleave = () => {
+                    btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+                };
+            }
+        });
+
+        // Colore testo SerieSeriA nel tab home (btn-user-campionato)
+        const btnCampionato = document.getElementById('btn-user-campionato');
+        if (btnCampionato) {
+            const serieSeriaText = btnCampionato.querySelector('span:last-child');
+            if (serieSeriaText) {
+                serieSeriaText.style.color = color;
+                serieSeriaText.style.textShadow = `0 0 10px ${this.hexToRgba(color, 0.5)}`;
+            }
+        }
+
+        // Colore bottone schedina
+        const schedinaBtn = document.getElementById('next-match-schedina-btn');
+        if (schedinaBtn) {
+            schedinaBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            schedinaBtn.style.borderColor = lighterColor;
+            schedinaBtn.onmouseenter = () => {
+                schedinaBtn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+            };
+            schedinaBtn.onmouseleave = () => {
+                schedinaBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            };
         }
 
         // Aggiorna il color picker

@@ -180,16 +180,16 @@
                     <p class="text-white font-bold text-sm">Installa Serie SeriA</p>
                     <p class="text-green-300 text-xs">Accesso rapido dalla home del tuo dispositivo</p>
                 </div>
-                <button onclick="window.hideInstallBanner()"
+                <button onclick="window.hideInstallBanner(true)"
                         class="text-green-300 hover:text-white p-1"
-                        title="Chiudi">
+                        title="Chiudi (non mostrare per 15 giorni)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
             <div class="flex gap-2 mt-3">
-                <button onclick="window.hideInstallBanner()"
+                <button onclick="window.hideInstallBanner(true)"
                         class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
                     Non ora
                 </button>
@@ -845,12 +845,12 @@
 
             <!-- ========== HEADER FISSO (sempre visibile) ========== -->
             <div id="dashboard-fixed-header" class="mb-1">
-                <!-- Riga 1: Nome Squadra + Menu + Color Picker -->
-                <div id="team-name-box" class="mb-1 px-1 py-1.5 rounded-lg border border-green-500/50 bg-gray-900/30 relative">
-                    <!-- Nome Squadra (centro assoluto) -->
-                    <h2 id="team-dashboard-title" class="text-sm sm:text-lg md:text-xl font-extrabold text-center uppercase team-name-fancy leading-none py-0.5">NOME SQUADRA</h2>
+                <!-- Box unificato: Nome Squadra + Risorse -->
+                <div id="team-name-box" class="rounded-lg border border-green-500/50 relative">
+                    <!-- Nome Squadra (centro) -->
+                    <h2 id="team-dashboard-title" class="text-base sm:text-xl md:text-2xl font-extrabold text-center uppercase team-name-fancy leading-none py-1">NOME SQUADRA</h2>
                     <!-- Menu Hamburger (sinistra assoluto) -->
-                    <div class="absolute left-1 top-1/2 -translate-y-1/2">
+                    <div class="absolute left-1 top-3 sm:top-4">
                         <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
                             <span class="text-xs text-white">☰</span>
                         </button>
@@ -884,111 +884,67 @@
                         </div>
                     </div>
                     <!-- Selettore Colore (destra assoluto) -->
-                    <div id="team-color-picker-container" class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                        <span class="text-[10px] text-gray-400 hidden sm:inline">🎨</span>
+                    <div id="team-color-picker-container" class="absolute right-1.5 top-3 sm:top-4">
                         <input type="color" id="team-color-picker"
                                class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
                                title="Scegli il colore primario della squadra"
                                value="#22c55e">
                     </div>
-                </div>
-
-                <!-- Riga 2: Budget + Album/Ruota/Negozio -->
-                <div id="risorse-box" class="p-0.5 rounded border border-amber-500/40 bg-amber-900/10">
-                    <div class="flex items-center justify-between gap-0.5 flex-nowrap">
-                        <!-- GRUPPO SINISTRA: Album e Ruota -->
-                        <div class="flex items-center gap-0.5">
-                            <!-- Separatore prima album -->
-                            <span id="risorse-separator-start" class="hidden text-gray-500 text-xs">|</span>
+                    <!-- Risorse (sotto il nome squadra) -->
+                    <div id="risorse-box" class="mt-1 pt-1 border-t border-gray-700/50">
+                        <div class="flex items-center justify-center gap-1 flex-wrap">
                             <!-- Album -->
-                            <div id="risorse-pacchetti" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
+                            <div id="risorse-pacchetti" class="relative hidden h-6 px-1.5 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-purple-800/30 transition" title="Album Figurine">
                                 <span class="text-base">🎴</span>
                                 <span class="text-[10px] text-purple-300 font-bold">ALBUM</span>
                                 <span class="hidden" id="risorse-pacchetti-count"></span>
-                                <!-- Alert pacchetto gratis -->
                                 <span id="album-free-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-gray-900"></span>
                             </div>
-                            <!-- Separatore centrale -->
-                            <span id="risorse-separator" class="hidden text-gray-500 text-xs">|</span>
                             <!-- Ruota -->
-                            <div id="risorse-ruota" class="relative hidden h-6 px-1 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
+                            <div id="risorse-ruota" class="relative hidden h-6 px-1.5 flex items-center justify-center gap-0.5 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
                                 <span class="text-base">🎡</span>
                                 <span class="text-[10px] text-orange-300 font-bold">RUOTA</span>
                                 <span class="hidden" id="risorse-ruota-status"></span>
-                                <!-- Alert ruota disponibile -->
                                 <span id="wheel-available-alert" class="hidden absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse border border-gray-900"></span>
                             </div>
-                            <!-- Separatore dopo ruota -->
-                            <span id="risorse-separator-end" class="hidden text-gray-500 text-xs">|</span>
-                        </div>
-                        <!-- GRUPPO DESTRA: CS, CSS, Negozio -->
-                        <div class="flex items-center gap-0.5">
-                            <!-- Separatore prima CS -->
-                            <span class="text-gray-500 text-xs">|</span>
                             <!-- Crediti Seri -->
-                            <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
+                            <div class="h-6 px-1.5 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
                                 <span class="text-sm">💰</span>
                                 <span id="risorse-cs" class="text-[11px] text-green-400 font-bold">0</span>
                                 <span class="text-[10px] text-gray-400">CS</span>
                             </div>
                             <!-- Crediti Super Seri -->
-                            <div class="h-6 px-1 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
+                            <div class="h-6 px-1.5 flex items-center gap-0.5 bg-gray-800/40 rounded border border-amber-500/60">
                                 <span class="text-sm">💎</span>
                                 <span id="risorse-css" class="text-[11px] text-yellow-400 font-bold">0</span>
                                 <span class="text-[10px] text-gray-400">CSS</span>
                             </div>
                             <!-- Negozio -->
-                            <div id="risorse-negozio" class="hidden h-6 px-1 flex items-center justify-center rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
+                            <div id="risorse-negozio" class="hidden h-6 px-1.5 flex items-center justify-center rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
                                 <span class="text-sm">🛒</span>
                             </div>
                         </div>
                     </div>
+                    <!-- Separatori nascosti per compatibilita JS -->
+                    <span id="risorse-separator-start" class="hidden"></span>
+                    <span id="risorse-separator" class="hidden"></span>
+                    <span id="risorse-separator-end" class="hidden"></span>
                 </div>
-            </div>
-
-            <!-- ========== TAB BAR (BOTTOM NAVIGATION - FIXED) ========== -->
-            <div id="dashboard-tabs" class="fixed bottom-0 left-0 right-0 z-50 flex bg-gray-900 border-t border-gray-700 shadow-lg">
-                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
-                    <span class="text-base sm:text-lg">🏠</span>
-                    <span>Home</span>
-                </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
-                    <span class="text-base sm:text-lg">👥</span>
-                    <span>Squadra</span>
-                </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
-                    <span class="text-base sm:text-lg">🏆</span>
-                    <span>Gare</span>
-                </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
-                    <span class="text-base sm:text-lg">🛒</span>
-                    <span>Shop</span>
-                </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="rules">
-                    <span class="text-base sm:text-lg">📖</span>
-                    <span>Regole</span>
-                </button>
             </div>
 
             <!-- ========== TAB 1: HOME (Dashboard) ========== -->
             <div id="tab-home" class="tab-content">
-                <!-- Logo SerieSeriA -->
-                <div class="flex justify-center mb-2">
-                    <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
-                         alt="Serie SeriA Logo"
-                         class="w-24 h-24 sm:w-32 sm:h-32 object-contain">
-                </div>
 
-                <!-- Logo, Icona, Sponsor -->
-                <div id="sponsor-media-box" class="px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-lg border border-green-500 bg-gray-900/20">
-                    <!-- Timer Prossima Partita -->
-                    <div id="next-match-inline-box" class="mb-1">
-                        <!-- Contenuto generato da next-match-alert.js -->
-                    </div>
+                <!-- Box Squadra: Logo, Icona, Sponsor -->
+                <div id="sponsor-media-box" class="rounded-lg border border-green-500/50">
                     <!-- MEDIA, LOGO, ICONA E SPONSOR - Riga principale -->
-                    <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-1 sm:gap-1.5 md:gap-2 overflow-visible">
-                        <!-- BOX MEDIA (sinistra del logo) -->
-                        <div id="media-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
+                    <div id="team-logo-container" class="flex flex-row flex-nowrap justify-center items-center gap-2 sm:gap-3 md:gap-4 overflow-visible">
+                        <!-- LOGO SERIE SERIA (sinistra) -->
+                        <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+                             alt="Serie SeriA Logo"
+                             class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain flex-shrink-0">
+                        <!-- BOX MEDIA -->
+                        <div id="media-box" class="hidden relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Media Partner">
                             <img id="media-image"
                                  src="https://placehold.co/128x128/831843/f9a8d4?text=📺"
                                  alt="Media Partner"
@@ -996,11 +952,11 @@
                                  title="Media Partner">
                         </div>
                         <!-- LOGO SQUADRA -->
-                        <div id="team-logo-wrapper" class="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0">
+                        <div id="team-logo-wrapper" class="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0">
                             <img id="team-logo"
                                  src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg"
                                  alt="Logo Squadra Modificabile"
-                                 class="w-full h-full rounded-full border-2 cursor-pointer hover:opacity-80 transition duration-150 shadow-md object-cover"
+                                 class="w-full h-full rounded-full border-3 cursor-pointer hover:opacity-80 transition duration-150 shadow-lg object-cover"
                                  style="border-color: #22c55e;"
                                  title="Clicca per cambiare il logo (Inserisci URL)">
                         </div>
@@ -1009,7 +965,7 @@
                             <img id="team-icona-avatar"
                                  src="https://placehold.co/128x128/facc15/000?text=?"
                                  alt="Avatar Icona"
-                                 class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-md object-cover cursor-pointer">
+                                 class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full border-3 border-yellow-400 shadow-lg object-cover cursor-pointer">
                             <!-- Tooltip personalizzato -->
                             <div id="icona-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                                 <p id="icona-tooltip-name" class="font-bold text-yellow-400">Icona</p>
@@ -1019,7 +975,7 @@
                             </div>
                         </div>
                         <!-- BOX SPONSOR (destra dell'icona) -->
-                        <div id="sponsor-box" class="hidden relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
+                        <div id="sponsor-box" class="hidden relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-150" title="Clicca per scegliere Sponsor">
                             <img id="sponsor-image"
                                  src="https://placehold.co/128x128/78350f/fcd34d?text=🤝"
                                  alt="Sponsor"
@@ -1032,27 +988,41 @@
                     <div id="daily-wheel-box" class="hidden"></div>
                 </div>
 
-                <!-- Box Ultima Partita Giocata -->
-                <div id="last-match-box" class="mt-2 p-2 rounded-lg border border-cyan-500/50 bg-gray-900/30">
-                    <p class="text-[10px] sm:text-xs text-gray-400 text-center mb-1">📺 Ultima Partita</p>
-                    <div id="last-match-content" class="text-center">
-                        <p class="text-xs text-gray-500">Nessuna partita giocata</p>
+                <!-- BOX PROSSIMA PARTITA (Espanso) - Contenuto diretto da next-match-alert.js -->
+                <div id="next-match-inline-box" class="mt-3 rounded-lg border border-green-500/50">
+                    <h3 class="text-sm sm:text-base font-bold text-cyan-400 mb-2 flex items-center gap-2">
+                        <span>⚽</span> Prossima Partita
+                    </h3>
+                    <div id="next-match-content">
+                        <!-- Contenuto generato da next-match-alert.js -->
+                        <p class="text-xs text-gray-500 text-center py-2">Caricamento...</p>
                     </div>
                 </div>
 
-                <!-- Bottone Schedina -->
-                <div id="schedina-box" class="mt-2">
-                    <button id="btn-schedina"
-                            class="w-full bg-gradient-to-r from-cyan-600 to-teal-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-cyan-500 hover:to-teal-400 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-                        <span>📝</span> Schedina Pronostici
-                    </button>
+                <!-- BOX SCHEDINA PRONOSTICI (Espanso) -->
+                <div id="schedina-box" class="mt-3 rounded-lg border border-green-500/50">
+                    <h3 class="text-sm sm:text-base font-bold text-green-400 mb-2 flex items-center gap-2">
+                        <span>🎯</span> Schedina Pronostici
+                    </h3>
+                    <!-- Container per bottone schedina (gestito da next-match-alert.js) -->
+                    <div id="schedina-inline-container" class="hidden">
+                        <button id="next-match-schedina-btn"
+                                class="w-full py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-bold flex items-center justify-center gap-2 transition">
+                            <span>🎯</span> Compila Schedina
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Elementi nascosti per compatibilita JS -->
+                <div id="last-match-box" class="hidden">
+                    <div id="last-match-content"></div>
                 </div>
             </div>
 
             <!-- ========== TAB 2: GESTIONE SQUADRA ========== -->
             <div id="tab-squad" class="tab-content hidden">
                 <!-- Divisa + Livello Rosa -->
-                <div class="flex items-center justify-between mb-2 p-2 rounded-lg border border-green-500/50 bg-gray-900/20">
+                <div class="flex items-center justify-between mb-2 p-2 sm:p-3 rounded-lg border border-green-500/50 bg-gray-900/30">
                     <!-- BOX DIVISA SQUADRA -->
                     <div id="team-uniform-box" class="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
                         <svg id="uniform-preview-svg" viewBox="15 0 170 165" class="w-10 h-10 sm:w-12 sm:h-12">
@@ -1083,7 +1053,7 @@
                 </div>
 
                 <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-                <div id="gestione-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-1.5 sm:space-y-2">
+                <div id="gestione-box" class="rounded-lg border border-green-500/50 space-y-1.5 sm:space-y-2">
                     <!-- Riga Rosa e Formazione -->
                     <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
                         <button id="btn-gestione-rosa"
@@ -1122,7 +1092,7 @@
             <!-- ========== TAB 3: COMPETIZIONI ========== -->
             <div id="tab-competitions" class="tab-content hidden">
                 <!-- BOX COMPETIZIONI (con toggle integrati) -->
-                <div id="competizioni-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20">
+                <div id="competizioni-box" class="rounded-lg border border-green-500/50">
                     <div class="space-y-1.5">
                         <!-- SerieSeriA con toggle -->
                         <div class="flex items-stretch gap-1.5">
@@ -1170,7 +1140,7 @@
                 </div>
 
                 <!-- BOX LEGA PRIVATA -->
-                <div id="private-leagues-box" class="hidden mt-2 p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 flex justify-center">
+                <div id="private-leagues-box" class="hidden mt-2 rounded-lg border border-green-500/50 flex justify-center">
                     <button id="btn-private-leagues"
                             class="flex-1 max-w-xs bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
                         👥 Lega Privata
@@ -1180,16 +1150,9 @@
 
             <!-- ========== TAB 4: SHOP ========== -->
             <div id="tab-shop" class="tab-content hidden">
-                <!-- Bottone Pannello Admin (solo per admin) -->
-                <div id="admin-panel-tab-btn" class="hidden mb-2">
-                    <button id="btn-goto-admin-from-tab"
-                            class="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold py-2.5 sm:py-3 text-sm sm:text-base rounded-md shadow-lg hover:from-red-500 hover:to-rose-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-                        🔧 Pannello Admin
-                    </button>
-                </div>
 
                 <!-- BOX DRAFT/MERCATO/SCAMBI -->
-                <div id="draft-scambi-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-2">
+                <div id="draft-scambi-box" class="rounded-lg border border-green-500/50 space-y-2">
                     <!-- Draft con Toggle -->
                     <div id="btn-draft-container"
                          class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-md shadow-lg hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
@@ -1232,6 +1195,164 @@
                 <div id="draft-mercato-container" class="hidden"></div>
             </div>
 
+            <!-- ========== TAB 5: REGOLE ========== -->
+            <div id="tab-rules" class="tab-content hidden">
+                <!-- Header Regole -->
+                <div class="rounded-lg p-4 mb-3 border-b-2 border-yellow-500/50">
+                    <h2 class="text-2xl font-bold text-white text-center">Regole del Gioco</h2>
+                    <p class="text-gray-300 text-center text-sm mt-1">Serie SeriA - Fantacalcio</p>
+                </div>
+
+                <!-- Contenuto Regole (Accordion) -->
+                <div class="space-y-2">
+
+                    <!-- Sezione Squadra -->
+                    <div class="bg-gray-900/60 rounded-lg border border-yellow-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">⚽</span>
+                                <h3 class="text-base font-bold text-yellow-400">La Squadra</h3>
+                            </div>
+                            <span class="text-yellow-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-yellow-700/50 bg-gray-800/30">
+                            <ul class="text-gray-300 space-y-1.5 text-sm">
+                                <li>• Ogni squadra ha <strong class="text-white">15 giocatori + 1 Icona</strong></li>
+                                <li>• <strong class="text-white">Formazione:</strong> 5 titolari + 3 panchina</li>
+                                <li>• <strong class="text-white">Moduli:</strong> 1-2-2, 1-1-2-1, 1-3-1, 1-1-3</li>
+                                <li>• Ruoli: <span class="text-blue-400">P</span>, <span class="text-green-400">D</span>, <span class="text-yellow-400">C</span>, <span class="text-red-400">A</span></li>
+                                <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Livelli -->
+                    <div class="bg-gray-900/60 rounded-lg border border-sky-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">📊</span>
+                                <h3 class="text-base font-bold text-sky-400">Livelli e Modificatori</h3>
+                            </div>
+                            <span class="text-sky-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-sky-700/50 bg-gray-800/30">
+                            <p class="text-gray-300 text-sm mb-2">Il livello determina il modificatore bonus ai tiri.</p>
+                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div class="space-y-0.5">
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 1-2</span><span class="text-white">0.5</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 5-6</span><span class="text-white">1.5</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 9-10</span><span class="text-white">2.5</span></div>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 13-14</span><span class="text-white">3.5</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 17-18</span><span class="text-white">4.5</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 21-22</span><span class="text-white">5.5</span></div>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <div class="flex justify-between"><span class="text-gray-400">Liv 25-26</span><span class="text-white">6.5</span></div>
+                                    <div class="flex justify-between"><span class="text-yellow-400">Liv 29</span><span class="text-yellow-400">8.0</span></div>
+                                    <div class="flex justify-between"><span class="text-yellow-400">Liv 30</span><span class="text-yellow-400">9.0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Partita -->
+                    <div class="bg-gray-900/60 rounded-lg border border-green-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🎮</span>
+                                <h3 class="text-base font-bold text-green-400">La Partita</h3>
+                            </div>
+                            <span class="text-green-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-green-700/50 bg-gray-800/30">
+                            <ul class="text-gray-300 space-y-1.5 text-sm">
+                                <li>• <strong class="text-white">50 occasioni</strong> per partita (25 per squadra)</li>
+                                <li>• 3 fasi: <span class="text-cyan-400">Costruzione</span> → <span class="text-orange-400">Attacco</span> → <span class="text-red-400">Tiro</span></li>
+                                <li>• Le abilita si attivano automaticamente</li>
+                                <li>• La forma modifica il livello effettivo</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Forma -->
+                    <div class="bg-gray-900/60 rounded-lg border border-orange-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">💪</span>
+                                <h3 class="text-base font-bold text-orange-400">Sistema Forma</h3>
+                            </div>
+                            <span class="text-orange-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-orange-700/50 bg-gray-800/30">
+                            <p class="text-gray-300 text-sm mb-2">Range: <strong>-3</strong> a <strong>+3</strong></p>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between text-green-400"><span>Gol/Assist/Clean sheet</span><span>+1</span></div>
+                                <div class="flex justify-between text-red-400"><span>Panchina consecutiva</span><span>-1 (chance)</span></div>
+                                <div class="flex justify-between text-purple-400"><span>Random dopo partita</span><span>±1 (20%)</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Valute -->
+                    <div class="bg-gray-900/60 rounded-lg border border-amber-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">💰</span>
+                                <h3 class="text-base font-bold text-amber-400">Valute</h3>
+                            </div>
+                            <span class="text-amber-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-amber-700/50 bg-gray-800/30">
+                            <ul class="text-gray-300 space-y-1.5 text-sm">
+                                <li>• <strong class="text-white">CS</strong>: Crediti per acquisti giocatori</li>
+                                <li>• <strong class="text-amber-400">CSS</strong>: Premium per potenziamenti</li>
+                                <li>• CS: vinci partite e stagioni</li>
+                                <li>• CSS: vinci trofei (Campionato, Coppa)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Competizioni -->
+                    <div class="bg-gray-900/60 rounded-lg border border-purple-500/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🏆</span>
+                                <h3 class="text-base font-bold text-purple-400">Competizioni</h3>
+                            </div>
+                            <span class="text-purple-400">▶</span>
+                        </button>
+                        <div class="hidden p-3 border-t border-purple-700/50 bg-gray-800/30">
+                            <ul class="text-gray-300 space-y-1.5 text-sm">
+                                <li>• <span class="text-green-400">SerieSeriA</span>: Girone unico, tutti vs tutti</li>
+                                <li>• <span class="text-purple-400">CoppaSeriA</span>: Eliminazione diretta</li>
+                                <li>• <span class="text-yellow-400">Supercoppa</span>: Campione vs Coppa</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Enciclopedia -->
+                    <div class="bg-gray-900/60 rounded-lg border border-pink-500/50 overflow-hidden">
+                        <button onclick="if(window.AbilitiesEncyclopediaUI?.open) window.AbilitiesEncyclopediaUI.open();"
+                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">📔</span>
+                                <h3 class="text-base font-bold text-pink-400">Enciclopedia Abilita</h3>
+                            </div>
+                            <span class="text-pink-400">→</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- Toggle ora integrati nel box competizioni sopra -->
 
             <span id="team-firestore-id" class="hidden">N/A</span>
@@ -1260,7 +1381,7 @@
         </div>
         
         <!-- 4. CONTENUTO AREA AMMINISTRATORE - Dashboard Principale -->
-        <div id="admin-content" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load">
+        <div id="admin-content" class="football-box w-full max-w-3xl transition duration-500 hidden-on-load pb-20">
             <!-- Contenitore per i pulsanti principali e liste squadre -->
             <div id="admin-dashboard-container" class="p-6 bg-gray-700 rounded-lg border-2 border-red-500 shadow-xl">
                 <!-- Il layout è generato da admin.js -->
@@ -1290,7 +1411,7 @@
         </div>
         
         <!-- 5. CONTENUTO AREA DRAFT (Utente) - NASCOSTO -->
-        <div id="draft-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="draft-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Draft Calciatori</h2>
              <!-- CONTAINER DRAFT STATUS BOX (giocatori disponibili e ordine draft) - SOPRA il box turno -->
              <div id="draft-status-box-container" class="mt-6 hidden">
@@ -1306,7 +1427,7 @@
         </div>
         
         <!-- 6. CONTENUTO AREA CLASSIFICA - NASCOSTO -->
-        <div id="leaderboard-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+        <div id="leaderboard-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-blue-400 text-center mb-4 border-b-4 border-blue-700 pb-2">Classifica Generale Lega</h2>
              <p class="text-center text-lg text-gray-300">Qui vedrai la classifica aggiornata di tutte le squadre.</p>
              <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-blue-500 text-center shadow-lg">
@@ -1319,7 +1440,7 @@
         </div>
         
         <!-- 7. CONTENUTO AREA CALENDARIO - NASCOSTO -->
-        <div id="schedule-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+        <div id="schedule-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-teal-400 text-center mb-4 border-b-4 border-teal-700 pb-2">Calendario Partite</h2>
              <p class="text-center text-lg text-gray-300">Consulta qui le sfide e i risultati di ogni giornata.</p>
              <div class="mt-8 p-6 bg-gray-700 rounded-lg border-2 border-teal-500 text-center shadow-lg">
@@ -1332,7 +1453,7 @@
         </div>
         
         <!-- 7B. CONTENUTO AREA CAMPIONATO UTENTE (NUOVA) -->
-        <div id="user-campionato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="user-campionato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">🏆 SerieSeriA</h2>
              <p class="text-center text-lg text-gray-300 mb-6">Prossima partita, classifica e calendario</p>
              <div id="user-campionato-container" class="mt-6 space-y-6">
@@ -1345,7 +1466,7 @@
         </div>
 
         <!-- 7C. CONTENUTO AREA COPPA UTENTE (NUOVA) -->
-        <div id="user-coppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="user-coppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 CoppaSeriA</h2>
              <p class="text-center text-lg text-gray-300 mb-6">Prossima partita e tabellone</p>
              <div id="user-coppa-container" class="mt-6 space-y-6">
@@ -1358,7 +1479,7 @@
         </div>
 
         <!-- 7D. CONTENUTO AREA SUPERCOPPA UTENTE (NUOVA) -->
-        <div id="user-supercoppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="user-supercoppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">⭐ Super CoppaSeriA</h2>
              <p class="text-center text-lg text-gray-300 mb-6">Stato e risultato della Super CoppaSeriA</p>
              <div id="user-supercoppa-container" class="mt-6 space-y-6">
@@ -1371,7 +1492,7 @@
         </div>
 
         <!-- 7E. CONTENUTO AREA CAMPIONATO UTENTE (VECCHIO - DA RIMUOVERE) -->
-        <div id="user-championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="user-championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 Gestione Campionato</h2>
              <p class="text-center text-lg text-gray-300 mb-6">Simula le partite della tua lega e segui l'andamento</p>
              <div id="user-championship-tools-container" class="mt-6">
@@ -1384,7 +1505,7 @@
         </div>
 
         <!-- 8. CONTENUTO AREA IMPOSTAZIONI CAMPIONATO - NASCOSTO -->
-        <div id="championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-orange-400 text-center mb-4 border-b-4 border-orange-700 pb-2">Impostazioni e Regole Campionato</h2>
              <div id="championship-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Strumenti di gestione Campionato in caricamento...</p>
@@ -1396,7 +1517,7 @@
         </div>
 
         <!-- 9. CONTENUTO AREA GESTIONE SQUADRA (Rosa e Formazione) -->
-        <div id="squadra-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
+        <div id="squadra-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load pb-20">
              <h2 id="squadra-main-title" class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">Gestione Rosa</h2>
              <p id="squadra-subtitle" class="text-center text-lg text-gray-300 mb-6">Visualizza e gestisci i tuoi calciatori.</p>
              
@@ -1412,7 +1533,7 @@
         </div>
 
         <!-- 10. CONTENUTO AREA MERCATO (Acquisti Liberi) - NASCOSTO -->
-        <div id="mercato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="mercato-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-blue-400 text-center mb-4 border-b-4 border-blue-700 pb-2">Mercato Fuori Lista</h2>
              <div id="mercato-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Contenuto Mercato in caricamento...</p>
@@ -1424,7 +1545,7 @@
         </div>
 
         <!-- 10b. CONTENUTO HALL OF FAME (Storico Partite) - NASCOSTO -->
-        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-amber-400 text-center mb-4 border-b-4 border-amber-600 pb-2">🏛️ Hall of Fame</h2>
              <div id="match-history-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento storico partite...</p>
@@ -1436,13 +1557,13 @@
         </div>
 
         <!-- 10c. CONTENUTO STADIO - NASCOSTO -->
-        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load">
+        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load pb-20">
             <!-- Il contenuto e' iniettato da stadium-ui.js -->
             <p class="text-center text-gray-400 p-8">Caricamento stadio...</p>
         </div>
 
         <!-- 10d. CONTENUTO LEGHE PRIVATE - NASCOSTO -->
-        <div id="private-leagues-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load">
+        <div id="private-leagues-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load pb-20">
             <div class="flex items-center justify-between p-4 border-b border-gray-700">
                 <h2 class="text-2xl font-bold text-purple-400">
                     <i class="fas fa-users mr-2"></i>Leghe Private
@@ -1459,7 +1580,7 @@
         </div>
 
         <!-- 11. CONTENUTO: GESTIONE GIOCATORI ADMIN -->
-        <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="player-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-yellow-400 text-center mb-4 border-b-4 border-yellow-700 pb-2">Gestione Calciatori (Creazione e Liste)</h2>
              
              <!-- Il contenuto è iniettato da admin.js -->
@@ -1474,7 +1595,7 @@
         </div>
 
         <!-- 12. NUOVO CONTENUTO: GESTIONE SQUADRE ADMIN -->
-        <div id="team-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="team-management-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-blue-500 text-center mb-4 border-b-4 border-blue-700 pb-2">Gestione Squadre Registrate</h2>
              
              <!-- Il contenuto è iniettato da admin.js -->
@@ -1489,7 +1610,7 @@
         </div>
 
         <!-- 12b. NUOVO CONTENUTO: GESTIONE FEATURE FLAGS -->
-        <div id="feature-flags-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load">
+        <div id="feature-flags-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-purple-500 text-center mb-4 border-b-4 border-purple-700 pb-2">
                 <i class="fas fa-flag mr-2"></i> Gestione Feature Flags
              </h2>
@@ -1785,13 +1906,6 @@
 
     </main>
 
-    <!-- Logo che Scorrerà con la Pagina - SPOSTATO ALL'INTERNO DI <main> -->
-    <img id="footer-logo"
-         src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
-         alt="Logo in fondo alla pagina"
-         loading="lazy"
-         decoding="async">
-
     <!-- INIZIALIZZAZIONE FIREBASE e AUTH/DB -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1877,6 +1991,8 @@
                 elementToShow.classList.remove('hidden');
                 elementToShow.classList.remove('hidden-on-load');
             }
+            // NOTA: La gestione della tab bar e' delegata a LayoutManager
+            // che wrappa questa funzione e applica il layout appropriato
         };
 
 
@@ -1946,6 +2062,7 @@
     <script src="challenges.js"></script>
     <script src="challenge-match.js"></script>
     <script src="dashboard-features.js"></script>
+    <script src="layout-manager.js"></script>
     <script src="dashboard-tabs.js"></script>
     <script src="next-match-alert.js"></script>
     <script src="tutorial.js"></script>
@@ -2117,6 +2234,34 @@
             </div>
 
         </div>
+    </div>
+
+    <!-- ========== GLOBAL TAB BAR (BOTTOM NAVIGATION - FIXED) ========== -->
+    <div id="dashboard-tabs" class="hidden fixed bottom-0 left-0 right-0 z-50 flex bg-gray-900/70 border-t border-gray-700 shadow-lg">
+        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
+            <span class="text-base sm:text-lg">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
+            <span class="text-base sm:text-lg">👥</span>
+            <span>Squadra</span>
+        </button>
+        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
+            <span class="text-base sm:text-lg">🏆</span>
+            <span>Gare</span>
+        </button>
+        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
+            <span class="text-base sm:text-lg">🛒</span>
+            <span>Shop</span>
+        </button>
+        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="rules">
+            <span class="text-base sm:text-lg">📖</span>
+            <span>Regole</span>
+        </button>
+        <button id="dashboard-tab-admin" class="dashboard-tab hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="admin">
+            <span class="text-base sm:text-lg">🔧</span>
+            <span>Admin</span>
+        </button>
     </div>
 
 </body>

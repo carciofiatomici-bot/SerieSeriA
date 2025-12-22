@@ -26,12 +26,21 @@ window.NextMatchAlert = {
         if (!currentTeamId) return;
 
         const container = document.getElementById('next-match-inline-box');
+        const contentContainer = document.getElementById('next-match-content');
         if (!container) return;
 
         // Carica la prossima partita
         const nextMatch = await this.getNextMatch(currentTeamId);
         if (!nextMatch) {
-            container.innerHTML = '';
+            // Mostra messaggio "nessuna partita" nel content container
+            if (contentContainer) {
+                contentContainer.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-500 text-sm">Nessuna partita in programma</p>
+                        <p class="text-gray-600 text-xs mt-1">Iscriviti a SerieSeriA o CoppaSeriA</p>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -269,25 +278,22 @@ window.NextMatchAlert = {
     },
 
     /**
-     * Crea il contenuto inline nel container
+     * Crea il contenuto inline nel container (versione espansa diretta)
      */
     createInlineContent(container, nextMatch, automationState) {
         // Colori, icone e nomi per tipo competizione
-        let typeColor, typeIcon, typeBorder, typeName;
+        let typeColor, typeIcon, typeName;
         if (nextMatch.type === 'campionato') {
             typeColor = 'green';
             typeIcon = '🏆';
-            typeBorder = 'border-green-500';
             typeName = 'SerieSeriA';
         } else if (nextMatch.type === 'supercoppa') {
             typeColor = 'yellow';
             typeIcon = '⭐';
-            typeBorder = 'border-yellow-500';
             typeName = 'SuperCoppa';
         } else {
             typeColor = 'purple';
             typeIcon = '🏅';
-            typeBorder = 'border-purple-500';
             typeName = 'CoppaSeriA';
         }
 
@@ -295,69 +301,60 @@ window.NextMatchAlert = {
         const homeLogoUrl = this.getTeamLogoUrl(nextMatch.homeId);
         const awayLogoUrl = this.getTeamLogoUrl(nextMatch.awayId);
 
-        // Carica stato espansione salvato
-        const savedExpanded = localStorage.getItem('fanta_next_match_expanded') === 'true';
-        this._isExpanded = savedExpanded;
+        // Trova il container next-match-content (dentro next-match-inline-box)
+        const contentContainer = document.getElementById('next-match-content') || container;
 
-        container.innerHTML = `
-            <div class="relative">
-                <!-- Header compatto - sempre visibile -->
-                <div id="next-match-header"
-                     class="inline-flex items-center gap-0.5 cursor-pointer select-none px-1 py-0.5 rounded border ${typeBorder} bg-gray-800/80 hover:bg-gray-700/80 transition"
-                     title="Clicca per ${this._isExpanded ? 'chiudere' : 'espandere'}">
-                    <span class="text-xs">${typeIcon}</span>
-                    <span id="next-match-toggle-icon" class="text-[8px] text-gray-400">${this._isExpanded ? '▼' : '▶'}</span>
+        contentContainer.innerHTML = `
+            <!-- Badge Competizione -->
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <span class="text-2xl">${typeIcon}</span>
+                <span class="text-base sm:text-lg font-bold text-${typeColor}-400">${typeName}</span>
+                ${nextMatch.round ? `<span class="text-sm text-gray-400">- ${nextMatch.round}</span>` : ''}
+            </div>
+
+            <!-- Squadre VS -->
+            <div class="flex items-center justify-between px-2 sm:px-4">
+                <!-- Squadra Casa -->
+                <div class="flex flex-col items-center flex-1">
+                    <img src="${homeLogoUrl}" alt="${nextMatch.homeName}"
+                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${nextMatch.isHome ? 'border-yellow-400 shadow-yellow-400/30' : 'border-gray-600'} object-cover shadow-lg"
+                         loading="lazy" decoding="async">
+                    <span class="text-sm sm:text-base font-bold mt-2 max-w-[100px] sm:max-w-[120px] truncate text-center ${nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.homeName}</span>
+                    <span class="text-xs text-gray-400 mt-0.5">Lv. ${nextMatch.homeAvg}</span>
                 </div>
 
-                <!-- Pannello espanso - posizione assoluta (si sovrappone) -->
-                <div id="next-match-expanded"
-                     class="absolute top-full left-0 mt-1 z-50 bg-gray-900 rounded-lg border ${typeBorder} shadow-xl min-w-[160px] ${this._isExpanded ? '' : 'hidden'}">
+                <!-- VS -->
+                <div class="flex flex-col items-center px-3">
+                    <span class="text-2xl sm:text-3xl font-black text-gray-500">VS</span>
+                </div>
 
-                    <!-- Intestazione -->
-                    <div class="bg-gradient-to-r from-${typeColor}-800 to-${typeColor}-700 px-2 py-0.5 rounded-t-md">
-                        <p class="text-white text-[8px] font-bold text-center">${typeName}</p>
-                    </div>
-
-                    <!-- Squadre -->
-                    <div class="px-2 py-1">
-                        <div class="flex items-center justify-center gap-2">
-                            <div class="flex flex-col items-center">
-                                <img src="${homeLogoUrl}" alt="${nextMatch.homeName}"
-                                     class="w-5 h-5 rounded-full border border-gray-600 object-cover"
-                                     loading="lazy" decoding="async">
-                                <span class="text-[7px] font-bold max-w-[45px] truncate ${nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.homeName}</span>
-                                <span class="text-[6px] text-gray-400">Lv.${nextMatch.homeAvg}</span>
-                            </div>
-                            <span class="text-gray-500 text-[9px] font-bold">vs</span>
-                            <div class="flex flex-col items-center">
-                                <img src="${awayLogoUrl}" alt="${nextMatch.awayName}"
-                                     class="w-5 h-5 rounded-full border border-gray-600 object-cover"
-                                     loading="lazy" decoding="async">
-                                <span class="text-[7px] font-bold max-w-[45px] truncate ${!nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.awayName}</span>
-                                <span class="text-[6px] text-gray-400">Lv.${nextMatch.awayAvg}</span>
-                            </div>
-                        </div>
-                        ${automationState?.isEnabled ? `
-                            <div class="mt-1 text-center border-t border-gray-700 pt-1">
-                                <span class="text-gray-500 text-[6px]">Prossima sim</span>
-                                <span id="next-match-countdown" class="text-${typeColor}-400 font-mono font-bold text-[8px] ml-1">--:--:--</span>
-                            </div>
-                        ` : ''}
-                        <div id="next-match-schedina-container" class="mt-1 hidden">
-                            <button id="next-match-schedina-btn"
-                                    class="w-full py-0.5 bg-green-600 hover:bg-green-500 rounded text-white text-[8px] font-bold flex items-center justify-center gap-1 transition">
-                                <span>🎯</span> Schedina
-                            </button>
-                        </div>
-                    </div>
+                <!-- Squadra Trasferta -->
+                <div class="flex flex-col items-center flex-1">
+                    <img src="${awayLogoUrl}" alt="${nextMatch.awayName}"
+                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${!nextMatch.isHome ? 'border-yellow-400 shadow-yellow-400/30' : 'border-gray-600'} object-cover shadow-lg"
+                         loading="lazy" decoding="async">
+                    <span class="text-sm sm:text-base font-bold mt-2 max-w-[100px] sm:max-w-[120px] truncate text-center ${!nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.awayName}</span>
+                    <span class="text-xs text-gray-400 mt-0.5">Lv. ${nextMatch.awayAvg}</span>
                 </div>
             </div>
+
+            <!-- Countdown -->
+            ${automationState?.isEnabled ? `
+                <div class="mt-4 pt-4 border-t border-cyan-500/30 flex flex-col items-center">
+                    <p class="text-xs sm:text-sm text-gray-400 mb-1">Prossima simulazione tra</p>
+                    <p id="next-match-countdown" class="text-2xl sm:text-3xl font-bold text-white countdown-title">--:--:--</p>
+                </div>
+            ` : `
+                <div class="mt-4 pt-4 border-t border-gray-700/50 flex flex-col items-center">
+                    <p class="text-sm text-gray-500">Simulazione automatica disattivata</p>
+                </div>
+            `}
         `;
 
-        // Bind eventi
+        // Bind eventi (semplificato - niente toggle)
         this.bindEvents(container);
 
-        // Aggiorna bottone schedina
+        // Aggiorna bottone schedina (se esiste)
         this.updateSchedinaButton();
     },
 
@@ -365,23 +362,15 @@ window.NextMatchAlert = {
      * Collega gli eventi
      */
     bindEvents(container) {
-        const header = container.querySelector('#next-match-header');
-        const schedinaBtn = container.querySelector('#next-match-schedina-btn');
-
-        // Toggle espansione
-        if (header) {
-            header.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleExpand();
-            });
-        }
-
-        // Bottone schedina
+        // Bottone schedina (nel box schedina-box separato)
+        const schedinaBtn = document.getElementById('next-match-schedina-btn');
         if (schedinaBtn) {
             schedinaBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (window.SchedinaUI) {
+                if (window.SchedinaUI?.open) {
                     window.SchedinaUI.open();
+                } else if (window.SchedinaUI?.openModal) {
+                    window.SchedinaUI.openModal();
                 } else {
                     window.Toast?.warning('Schedina non disponibile');
                 }
@@ -390,51 +379,10 @@ window.NextMatchAlert = {
     },
 
     /**
-     * Toggle espansione
-     */
-    toggleExpand() {
-        this._isExpanded = !this._isExpanded;
-
-        const expanded = document.getElementById('next-match-expanded');
-        const toggleIcon = document.getElementById('next-match-toggle-icon');
-
-        if (expanded) {
-            if (this._isExpanded) {
-                expanded.classList.remove('hidden');
-            } else {
-                expanded.classList.add('hidden');
-            }
-        }
-
-        if (toggleIcon) {
-            toggleIcon.textContent = this._isExpanded ? '▼' : '▶';
-        }
-
-        // Salva stato
-        localStorage.setItem('fanta_next_match_expanded', this._isExpanded.toString());
-    },
-
-    /**
-     * Collassa il pannello
-     */
-    collapse() {
-        if (!this._isExpanded) return;
-        this._isExpanded = false;
-
-        const expanded = document.getElementById('next-match-expanded');
-        const toggleIcon = document.getElementById('next-match-toggle-icon');
-
-        if (expanded) expanded.classList.add('hidden');
-        if (toggleIcon) toggleIcon.textContent = '▶';
-
-        localStorage.setItem('fanta_next_match_expanded', 'false');
-    },
-
-    /**
      * Aggiorna visibilita bottone schedina
      */
     updateSchedinaButton() {
-        const container = document.getElementById('next-match-schedina-container');
+        const container = document.getElementById('schedina-inline-container');
         if (!container) return;
 
         const isSchedinaEnabled = window.FeatureFlags?.isEnabled('schedina');

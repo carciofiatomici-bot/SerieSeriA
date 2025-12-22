@@ -268,12 +268,32 @@ document.addEventListener('DOMContentLoaded', setupPWAUpdateButton);
 
 let deferredInstallPrompt = null;
 
+// Cookie helper functions
+function setInstallDismissedCookie() {
+    const days = 15;
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `pwa_install_dismissed=true; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+    console.log('[PWA] Cookie installazione impostato per 15 giorni');
+}
+
+function isInstallDismissed() {
+    return document.cookie.split(';').some(c => c.trim().startsWith('pwa_install_dismissed='));
+}
+
 // Cattura l'evento beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
     // Previeni il prompt automatico del browser
     e.preventDefault();
     // Salva l'evento per usarlo dopo
     deferredInstallPrompt = e;
+
+    // Controlla se l'utente ha gia' rifiutato
+    if (isInstallDismissed()) {
+        console.log('[PWA] Utente ha rifiutato installazione, non mostro banner');
+        return;
+    }
+
     // Mostra il banner di installazione
     showInstallBanner();
     console.log('[PWA] App installabile, banner mostrato');
@@ -281,17 +301,26 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // Mostra il banner di installazione
 function showInstallBanner() {
+    // Controlla di nuovo il cookie prima di mostrare
+    if (isInstallDismissed()) {
+        return;
+    }
+
     const banner = document.getElementById('pwa-install-banner');
     if (banner) {
         banner.classList.remove('hidden');
     }
 }
 
-// Nascondi il banner
-function hideInstallBanner() {
+// Nascondi il banner (con opzione di salvare preferenza)
+function hideInstallBanner(savePreference = false) {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) {
         banner.classList.add('hidden');
+    }
+
+    if (savePreference) {
+        setInstallDismissedCookie();
     }
 }
 

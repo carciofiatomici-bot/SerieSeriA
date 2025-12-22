@@ -193,16 +193,6 @@ main {
     }
 }
 
-/* 2. Stile per l'immagine che non e' piu' fissa, ma scorre col contenuto */
-#footer-logo {
-    /* Rimosso position: fixed; */
-    margin: 40px auto; /* Aggiunge spazio sopra e sotto e lo centra */
-    display: block;    /* Assicura che sia un blocco per il margin: auto */
-    max-width: 256px;
-    height: auto;
-    z-index: 10;
-}
-
 /* 3. Nuovo Stile per i Box (Tema Calcistico/Gaming) */
 .football-box {
     background-color: rgba(31, 41, 55, 0.7); /* Grigio scuro con trasparenza 30% */
@@ -459,12 +449,6 @@ html {
 
     #rules-global-btn span {
         font-size: 16px !important;
-    }
-
-    /* Footer logo piu piccolo */
-    #footer-logo {
-        max-width: 180px;
-        margin: 24px auto;
     }
 
     /* Font sizes scalati per mobile */
@@ -763,11 +747,6 @@ html {
     #lista-icone-container,
     #captain-candidates-container {
         grid-template-columns: repeat(3, 1fr) !important;
-    }
-
-    /* Footer logo */
-    #footer-logo {
-        max-width: 220px;
     }
 
     /* Max width per tablet */
@@ -2200,11 +2179,6 @@ html {
     .fixed.inset-0 .football-box {
         max-height: 85vh !important;
     }
-
-    /* Logo footer nascosto in landscape */
-    #footer-logo {
-        display: none;
-    }
 }
 
 /* ===================== SAFE AREA (NOTCH / DYNAMIC ISLAND) ===================== */
@@ -2427,11 +2401,6 @@ body {
 
 /* Quando la tastiera e' aperta su mobile */
 @media (max-height: 500px) and (pointer: coarse) {
-    /* Riduci elementi non essenziali */
-    #footer-logo {
-        display: none;
-    }
-
     #rules-global-btn {
         bottom: 8px !important;
         padding: 6px 12px !important;
@@ -3055,11 +3024,6 @@ html, body {
         overflow-y: auto;
     }
 
-    /* Nascondi elementi non essenziali */
-    #footer-logo {
-        display: none;
-    }
-
     /* Riduci dimensioni box */
     .football-box {
         padding: 8px !important;
@@ -3107,7 +3071,6 @@ html, body {
     }
 
     /* Nascondi elementi che occupano spazio */
-    #footer-logo,
     #rules-global-btn,
     #pwa-install-banner {
         display: none !important;
@@ -3288,7 +3251,6 @@ html, body {
     #team-name-box {
         flex: 1 1 auto !important;
         min-width: 0 !important;
-        padding: 6px 10px !important;
         overflow: hidden;
     }
 
@@ -4108,4 +4070,269 @@ html, body {
     #challenge-match-modal .flex.gap-4 {
         gap: 8px !important;
     }
+}
+
+/* ===================== UX IMPROVEMENTS - DICEMBRE 2025 ===================== */
+
+/*
+ * SEZIONE 15: UX IMPROVEMENTS
+ * Miglioramenti di leggibilità, feedback visivo e consistenza
+ * NON modifica funzionalità, solo esperienza utente
+ */
+
+/* ==================== 15.1 TYPOGRAPHY IMPROVEMENTS ==================== */
+
+/* Font size minimi per leggibilità */
+.dashboard-tab span:last-child {
+    font-size: 10px !important;
+    letter-spacing: 0.3px;
+}
+
+@media (min-width: 360px) {
+    .dashboard-tab span:last-child {
+        font-size: 11px !important;
+    }
+}
+
+@media (min-width: 640px) {
+    .dashboard-tab span:last-child {
+        font-size: 12px !important;
+    }
+}
+
+/* Icone tab più grandi per touch */
+.dashboard-tab span:first-child {
+    font-size: 20px !important;
+}
+
+@media (min-width: 640px) {
+    .dashboard-tab span:first-child {
+        font-size: 24px !important;
+    }
+}
+
+/* ==================== 15.2 BOTTOM NAVIGATION IMPROVEMENTS ==================== */
+
+/* Migliore contrasto tab attivo */
+#dashboard-tabs {
+    background: linear-gradient(to top, #111827 0%, #1f2937 100%);
+    border-top-width: 2px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-tab {
+    position: relative;
+    transition: all 0.2s ease;
+    padding-top: 8px !important;
+    padding-bottom: calc(8px + var(--safe-bottom, 0px)) !important;
+}
+
+/* Indicatore tab attivo (pill effect) */
+.dashboard-tab::after {
+    content: '';
+    position: absolute;
+    bottom: calc(4px + var(--safe-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: width 0.2s ease;
+}
+
+.dashboard-tab.text-white::after {
+    width: 60%;
+}
+
+/* Hover effect più evidente su tab inattivi */
+.dashboard-tab:not(.text-white):hover {
+    background: rgba(75, 85, 99, 0.5) !important;
+}
+
+/* ==================== 15.3 BUTTON FEEDBACK IMPROVEMENTS ==================== */
+
+/* Feedback visivo bottoni principali */
+#tab-home button,
+#tab-squad button,
+#tab-competitions button,
+#tab-shop button {
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ripple effect simulato */
+#tab-home button:active::after,
+#tab-squad button:active::after,
+#tab-competitions button:active::after,
+#tab-shop button:active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2);
+    animation: ripple 0.3s ease-out;
+}
+
+@keyframes ripple {
+    0% { opacity: 1; transform: scale(0.8); }
+    100% { opacity: 0; transform: scale(1.2); }
+}
+
+/* Hover più evidente sui bottoni */
+#tab-home button:hover,
+#tab-squad button:hover,
+#tab-competitions button:hover,
+#tab-shop button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#tab-home button:active,
+#tab-squad button:active,
+#tab-competitions button:active,
+#tab-shop button:active {
+    transform: translateY(0) scale(0.98);
+    filter: brightness(0.95);
+}
+
+/* ==================== 15.4 CARD CONSISTENCY ==================== */
+
+/* Box uniformi nei tab */
+/* Stile unificato per tutti i box dell'app */
+#gestione-box,
+#competizioni-box,
+#draft-scambi-box,
+#sponsor-media-box,
+#team-name-box,
+#next-match-inline-box,
+#schedina-box,
+#private-leagues-box,
+#last-match-box,
+#risorse-box,
+#toggle-partecipazione-box,
+#stadio-hall-box {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+}
+
+@media (min-width: 640px) {
+    #gestione-box,
+    #competizioni-box,
+    #draft-scambi-box,
+    #sponsor-media-box,
+    #team-name-box,
+    #next-match-inline-box,
+    #schedina-box,
+    #private-leagues-box,
+    #last-match-box,
+    #risorse-box,
+    #toggle-partecipazione-box,
+    #stadio-hall-box {
+        padding: 16px !important;
+    }
+}
+
+/* ==================== 15.5 HEADER IMPROVEMENTS ==================== */
+
+/* Nome squadra più leggibile */
+#team-dashboard-title {
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 20px var(--team-primary-color, #22c55e);
+    letter-spacing: 1px;
+}
+
+/* Countdown prossima partita - stesso stile del titolo squadra */
+.countdown-title {
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(34, 211, 238, 0.6);
+    letter-spacing: 2px;
+}
+
+/* Header fisso migliorato */
+/* Header fisso - senza sfondo per coerenza con gli altri box */
+#dashboard-fixed-header {
+    /* Nessun background - il team-name-box ha gia il suo stile */
+}
+
+/* ==================== 15.6 SPACING IMPROVEMENTS ==================== */
+
+/* Più spazio tra elementi nei tab */
+.tab-content > div {
+    margin-bottom: 12px;
+}
+
+.tab-content > div:last-child {
+    margin-bottom: 0;
+}
+
+/* Padding bottom per evitare overlap con bottom nav */
+.tab-content {
+    padding-bottom: calc(70px + var(--safe-bottom, 0px)) !important;
+}
+
+/* ==================== 15.7 VISUAL HIERARCHY ==================== */
+
+/* Separatori visivi tra sezioni */
+#tab-competitions #competizioni-box {
+    border-left: 3px solid var(--team-primary-color, #22c55e);
+}
+
+#tab-shop #draft-scambi-box {
+    border-left: 3px solid var(--team-primary-color, #22c55e);
+}
+
+/* ==================== 15.8 LOADING FEEDBACK ==================== */
+
+/* Pulsante in stato loading */
+button[disabled],
+button.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+button.loading::after {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-left: 8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==================== 15.9 FOCUS STATES (Accessibility) ==================== */
+
+/* Focus ring visibile per navigazione keyboard */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--team-primary-color, #22c55e);
+    outline-offset: 2px;
+}
+
+/* ==================== 15.10 SMOOTH TRANSITIONS ==================== */
+
+/* Transizioni fluide su elementi interattivi */
+button,
+input,
+select,
+.dashboard-tab,
+[role="button"] {
+    transition: background-color 0.15s ease,
+                transform 0.15s ease,
+                box-shadow 0.15s ease,
+                border-color 0.15s ease,
+                opacity 0.15s ease;
 }

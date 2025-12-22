@@ -15,36 +15,12 @@ window.DashboardTabs = {
             tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
         });
 
-        // Listener per il bottone schedina
-        const btnSchedina = document.getElementById('btn-schedina');
-        if (btnSchedina) {
-            btnSchedina.addEventListener('click', () => {
-                if (window.SchedinaUI?.openModal) {
-                    window.SchedinaUI.openModal();
-                } else {
-                    console.warn('[DashboardTabs] SchedinaUI non disponibile');
-                }
-            });
-        }
-
-        // Listener per il bottone admin nel tab shop
-        const btnAdminFromTab = document.getElementById('btn-goto-admin-from-tab');
-        if (btnAdminFromTab) {
-            btnAdminFromTab.addEventListener('click', () => {
-                // Usa lo stesso handler del menu admin
-                const adminContent = document.getElementById('admin-content');
-                if (adminContent && window.showScreen) {
-                    window.showScreen(adminContent);
-                }
-            });
-        }
-
         // Nascondi il bottone regole flottante quando la dashboard e visibile
         this.hideFloatingRulesButton();
 
         // Carica il tab salvato o usa 'home' come default
         const savedTab = localStorage.getItem('dashboard_current_tab');
-        if (savedTab && ['home', 'squad', 'competitions', 'shop'].includes(savedTab)) {
+        if (savedTab && ['home', 'squad', 'competitions', 'shop', 'rules'].includes(savedTab)) {
             this.switchTab(savedTab);
         }
 
@@ -53,21 +29,43 @@ window.DashboardTabs = {
 
     /**
      * Cambia il tab attivo
-     * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop', 'rules'
+     * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop', 'rules', 'admin'
      */
     switchTab(tabName) {
-        // Se e il tab regole, apri il pannello regole invece di switchare tab
-        if (tabName === 'rules') {
-            if (window.RulesPanel?.toggle) {
-                window.RulesPanel.toggle();
+        // Gestione speciale per tab admin - apre il pannello admin
+        if (tabName === 'admin') {
+            const adminContent = document.getElementById('admin-content');
+            if (adminContent && window.showScreen) {
+                // Imposta flag per mostrare "Torna alla Dashboard"
+                const currentTeamData = window.InterfacciaCore?.currentTeamData;
+                const currentTeamId = window.InterfacciaCore?.currentTeamId;
+                const teamName = currentTeamData?.teamName;
+                if (teamName && teamName.toLowerCase() !== 'serieseria') {
+                    window.adminTeamAccessingPanel = {
+                        teamId: currentTeamId,
+                        teamName: teamName
+                    };
+                }
+                window.showScreen(adminContent);
+                // Trigger evento per inizializzare il pannello admin
+                document.dispatchEvent(new CustomEvent('adminLoggedIn'));
             }
             return;
         }
 
+        // Se siamo in una schermata diversa da app-content (es. admin-content),
+        // torniamo prima alla dashboard
+        const appContent = document.getElementById('app-content');
+        if (appContent && appContent.classList.contains('hidden')) {
+            window.showScreen(appContent);
+        }
+
         this.currentTab = tabName;
 
-        // Salva in localStorage per persistenza
-        localStorage.setItem('dashboard_current_tab', tabName);
+        // Salva in localStorage per persistenza (escludi rules che non ha persistenza)
+        if (tabName !== 'rules') {
+            localStorage.setItem('dashboard_current_tab', tabName);
+        }
 
         // Nascondi tutti i contenuti tab
         document.querySelectorAll('.tab-content').forEach(content => {
@@ -80,16 +78,24 @@ window.DashboardTabs = {
             targetTab.classList.remove('hidden');
         }
 
+        // Ottieni il colore team dal color picker o usa default
+        const colorPicker = document.getElementById('team-color-picker');
+        const teamColor = colorPicker?.value || window.InterfacciaCore?.currentTeamData?.primaryColor || '#22c55e';
+
         // Aggiorna stili dei bottoni tab (bottom navigation con border-top)
         document.querySelectorAll('.dashboard-tab').forEach(tab => {
             if (tab.dataset.tab === tabName) {
-                // Tab attivo
-                tab.classList.add('bg-green-600', 'text-white', 'border-green-400');
+                // Tab attivo - usa colore team
                 tab.classList.remove('bg-gray-900', 'text-gray-400', 'border-transparent');
+                tab.classList.add('text-white');
+                tab.style.backgroundColor = teamColor;
+                tab.style.borderTopColor = this.lightenColor(teamColor, 20);
             } else {
                 // Tab inattivo
-                tab.classList.remove('bg-green-600', 'text-white', 'border-green-400');
+                tab.classList.remove('text-white');
                 tab.classList.add('bg-gray-900', 'text-gray-400', 'border-transparent');
+                tab.style.backgroundColor = '';
+                tab.style.borderTopColor = '';
             }
         });
 
@@ -97,6 +103,19 @@ window.DashboardTabs = {
         document.dispatchEvent(new CustomEvent('dashboardTabChanged', {
             detail: { tab: tabName }
         }));
+    },
+
+    /**
+     * Schiarisce un colore hex
+     */
+    lightenColor(hex, percent) {
+        if (!hex || hex.length < 7) return hex;
+        const num = parseInt(hex.slice(1), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
     },
 
     /**
