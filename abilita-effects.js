@@ -691,6 +691,126 @@ window.AbilitaEffects = {
             // Mod dimezzato vs Tecnica
             const hasTecnica = context.opponents?.some(p => p.type === 'Tecnica');
             return hasTecnica ? -997 : 0; // Flag dimezza
+        },
+
+        // ========================================
+        // ABILITA CON TRACKING (Fase 3)
+        // ========================================
+
+        'Lunatico': function(player, context) {
+            // Bonus/malus determinato a inizio partita
+            const data = this.getPlayerTracking(player.id);
+            return data.lunaticoMod || 0;
+        },
+
+        'Contrattura Cronica': function(player, context) {
+            // Mod dimezzato dopo 15 partecipazioni
+            const data = this.getPlayerTracking(player.id);
+            data.partecipazioni = (data.partecipazioni || 0) + 1;
+            if (data.partecipazioni > 15) {
+                return -996; // Flag speciale: dimezza totale
+            }
+            return 0;
+        },
+
+        'Guerriero': function(player, context) {
+            // +1 per 3 occasioni dopo aver subito goal (portiere)
+            if (player.role !== 'P') return 0;
+            const data = this.getPlayerTracking(player.id);
+            if (data.guerrieroOccasions > 0) {
+                data.guerrieroOccasions--;
+                return 1;
+            }
+            return 0;
+        },
+
+        'Stazionario': function(player, context) {
+            // Bonus accumulato per fasi saltate
+            const data = this.getPlayerTracking(player.id);
+            const bonus = data.stazionarioBonus || 0;
+            // Reset quando partecipa
+            data.stazionarioBonus = 0;
+            return bonus;
+        },
+
+        'Relax': function(player, context) {
+            // Modificatore dinamico: +1 attacco, -1 difesa
+            const data = this.getPlayerTracking(player.id);
+            const currentMod = data.relaxMod || 0;
+            // Aggiorna per prossima fase
+            if (context.isAttacking) {
+                data.relaxMod = Math.min(5, currentMod + 1);
+            } else {
+                data.relaxMod = Math.max(-5, currentMod - 1);
+            }
+            return currentMod;
+        },
+
+        'Scheggia impazzita': function(player, context) {
+            // +0.2 per ogni Fase 2 (max +5)
+            if (context.phase !== 'attack') return 0;
+            const data = this.getPlayerTracking(player.id);
+            const bonus = data.scheggiaBonus || 0;
+            // Accumula per prossima volta
+            data.scheggiaBonus = Math.min(5, bonus + 0.2);
+            return bonus;
+        },
+
+        'Continua a provare': function(player, context) {
+            // Bonus accumulato per fasi fallite (+0.5, max +6)
+            const data = this.getPlayerTracking(player.id);
+            return Math.min(6, data.continuaProvareBonus || 0);
+        },
+
+        'Tiro Dritto': function(player, context) {
+            // +3.5, cala di 0.5 per ogni goal (solo attaccante singolo)
+            if (player.role !== 'A') return 0;
+            const teamAtt = context.team?.A || [];
+            if (teamAtt.length !== 1) return 0;
+
+            const data = this.getPlayerTracking(player.id);
+            const goalsScored = data.tiroDrittoGoals || 0;
+            return Math.max(0, 3.5 - (goalsScored * 0.5));
+        },
+
+        'Assist-man': function(player, context) {
+            // +1 per ogni assist fatto
+            const data = this.getPlayerTracking(player.id);
+            return data.assistManCount || 0;
+        },
+
+        'Parata Laser': function(player, context) {
+            // Bonus cumulativo per parate (max 5, resetta con goal)
+            if (player.role !== 'P' || context.phase !== 'shot') return 0;
+            const data = this.getPlayerTracking(player.id);
+            return data.parataLaserBonus || 0;
+        },
+
+        'Saracinesca': function(player, context) {
+            // Attivo dopo aver subito goal: 0% critico avversario
+            // (gestito separatamente nel calcolo critico)
+            return 0;
+        },
+
+        'Veterano': function(player, context) {
+            // +2 nelle ultime 5 occasioni
+            const lastOccasions = this.state.totalOccasions - 5;
+            if (this.state.currentOccasion > lastOccasions) {
+                return 2;
+            }
+            return 0;
+        },
+
+        'Lento a carburare': function(player, context) {
+            // -1 nelle prime 10 occasioni, +1 nelle ultime 10
+            if (this.state.currentOccasion <= 10) {
+                return -1;
+            }
+            const lastOccasions = this.state.totalOccasions - 10;
+            if (this.state.currentOccasion > lastOccasions) {
+                return 1;
+            }
+            return 0;
         }
     },
 
