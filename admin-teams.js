@@ -507,9 +507,9 @@ window.AdminTeams = {
                 role: selectedIcona.role,
                 type: selectedIcona.type,
                 age: selectedIcona.age,
-                level: selectedIcona.level || 12,
+                level: selectedIcona.level || 5, // Livello base icone da icone.js
                 cost: 0,
-                abilities: ['Icona'],
+                abilities: selectedIcona.abilities || ['Icona'], // Mantieni abilita originali (es. Tiro Dritto)
                 isCaptain: true,
                 photoUrl: selectedIcona.photoUrl
             };

@@ -201,13 +201,14 @@ window.InterfacciaOnboarding = {
                 if (player.role === iconaRole && !playerReplaced) {
                     playerReplaced = true;
                     finalIconaId = player.id;
-                    return { ...selectedCaptain, id: finalIconaId, isCaptain: true, abilities: ['Icona'] };
+                    // Mantieni le abilities originali dell'icona (es. Tiro Dritto, Continua a provare)
+                    return { ...selectedCaptain, id: finalIconaId, isCaptain: true, abilities: selectedCaptain.abilities || ['Icona'] };
                 }
                 return player;
             });
-            
+
             if (!playerReplaced) {
-                finalSquad.push({ ...selectedCaptain, id: crypto.randomUUID(), isCaptain: true, abilities: ['Icona'] });
+                finalSquad.push({ ...selectedCaptain, id: crypto.randomUUID(), isCaptain: true, abilities: selectedCaptain.abilities || ['Icona'] });
                 console.warn("ATTENZIONE: Nessun giocatore base con ruolo corrispondente trovato. Rosa allungata.");
             }
 

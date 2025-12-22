@@ -158,7 +158,7 @@ window.GestioneSquadreIcona = {
                         id: currentIcona.id,
                         isCaptain: p.isCaptain,
                         level: newIcona.level,
-                        abilities: ['Icona']
+                        abilities: newIcona.abilities || ['Icona'] // Mantieni abilita originali dell'icona
                     };
                 }
                 return p;
