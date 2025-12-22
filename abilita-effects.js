@@ -334,14 +334,364 @@ window.AbilitaEffects = {
      *   - teamKey: 'home' | 'away'
      *   - opponents: Array di giocatori avversari
      *   - hasHomeAdvantage: boolean
+     *   - team: Oggetto squadra
      * @returns {number} Modificatore da aggiungere
      */
     effects: {
-        // Le abilita verranno migrate qui nelle fasi successive
-        // Esempio di struttura:
-        // 'Fortunato': function(player, context) {
-        //     return this.checkChance(5) ? 3 : 0;
-        // }
+        // ========================================
+        // ABILITA MULTI-RUOLO (Semplici)
+        // ========================================
+
+        'Fortunato': function(player, context) {
+            return this.checkChance(5) ? 3 : 0;
+        },
+
+        'Effetto Caos': function(player, context) {
+            return this.rollDice(-3, 3);
+        },
+
+        'Cuore Impavido': function(player, context) {
+            // +1.5 se gioca fuori casa
+            return !context.hasHomeAdvantage ? 1.5 : 0;
+        },
+
+        'Rivalsa': function(player, context) {
+            // +2 se in svantaggio di 2+ goal
+            const teamKey = this.getTeamKey(context.teamKey);
+            const opponentKey = teamKey === 'home' ? 'away' : 'home';
+            const behindBy = this.state.score[opponentKey] - this.state.score[teamKey];
+            return behindBy >= 2 ? 2 : 0;
+        },
+
+        'Specialista Costruzione': function(player, context) {
+            // +1 in Fase 1 attacco, -0.5 altre fasi
+            if (context.phase === 'construction' && context.isAttacking) {
+                return 1;
+            }
+            return -0.5;
+        },
+
+        'Specialista Difesa': function(player, context) {
+            // +1 in Fase 2 difesa, -0.5 altre fasi
+            if (context.phase === 'attack' && !context.isAttacking) {
+                return 1;
+            }
+            return -0.5;
+        },
+
+        'Specialista Tiro': function(player, context) {
+            // +1 in Fase 3 attacco, -0.5 altre fasi
+            if (context.phase === 'shot' && context.isAttacking) {
+                return 1;
+            }
+            return -0.5;
+        },
+
+        // ========================================
+        // ABILITA NEGATIVE GENERALI
+        // ========================================
+
+        'Meteoropatico': function(player, context) {
+            // -1 se gioca fuori casa
+            return !context.hasHomeAdvantage ? -1 : 0;
+        },
+
+        'Senza Fiato': function(player, context) {
+            // -1 dopo la 30esima occasione
+            return this.state.currentOccasion > 30 ? -1 : 0;
+        },
+
+        'Demotivato': function(player, context) {
+            // -1 se squadra in svantaggio
+            const teamKey = this.getTeamKey(context.teamKey);
+            const opponentKey = teamKey === 'home' ? 'away' : 'home';
+            const behind = this.state.score[opponentKey] > this.state.score[teamKey];
+            return behind ? -1 : 0;
+        },
+
+        'Scaramantico': function(player, context) {
+            // Modificatore 0 nelle occasioni 13-17
+            const occ = this.state.currentOccasion;
+            return (occ >= 13 && occ <= 17) ? -999 : 0; // -999 = azzera (gestito separatamente)
+        },
+
+        'Fuori Posizione': function(player, context) {
+            // 2.5% regala +2 alla squadra avversaria (= -2 proprio)
+            if (context.phase !== 'shot' && this.checkChance(2.5)) {
+                return -2;
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA ICONE (Semplici)
+        // ========================================
+
+        'Avanti un altro': function(player, context) {
+            // +2 in difesa Fase 2
+            if (context.phase === 'attack' && !context.isAttacking) {
+                return 2;
+            }
+            return 0;
+        },
+
+        'Contrasto di gomito': function(player, context) {
+            // +2 fisso in difesa (tutte le fasi)
+            return !context.isAttacking ? 2 : 0;
+        },
+
+        'Amici di panchina': function(player, context) {
+            // +2 in attacco costruzione
+            if (context.phase === 'construction' && context.isAttacking) {
+                return 2;
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA CENTROCAMPISTA (Costruzione)
+        // ========================================
+
+        'Tocco Di Velluto': function(player, context) {
+            // 5% aggiunge +3 in Fase 1
+            if (player.role === 'C' && context.phase === 'construction' && this.checkChance(5)) {
+                return 3;
+            }
+            return 0;
+        },
+
+        'Passaggio Corto': function(player, context) {
+            // +1 in Fase 1
+            if (player.role === 'C' && context.phase === 'construction') {
+                return 1;
+            }
+            return 0;
+        },
+
+        'Geometra': function(player, context) {
+            // +1 se d20 pari (50% chance)
+            if (player.role === 'C' && context.phase === 'construction' && this.checkChance(50)) {
+                return 1;
+            }
+            return 0;
+        },
+
+        'Pressing Alto': function(player, context) {
+            // +1 equivalente (-1 avversario) in Fase 1 difesa
+            if (player.role === 'C' && context.phase === 'construction' && !context.isAttacking) {
+                return 1;
+            }
+            return 0;
+        },
+
+        'Metronomo': function(player, context) {
+            // Minimo 8 sul d20 → bonus medio +1
+            if (player.role === 'C' && context.phase === 'construction') {
+                return 1;
+            }
+            return 0;
+        },
+
+        'Passaggio Telefonato': function(player, context) {
+            // -1 (equivalente a +1 avversario) in Fase 1 attacco
+            if (player.role === 'C' && context.phase === 'construction' && context.isAttacking) {
+                return -1;
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA CENTROCAMPISTA (Negative)
+        // ========================================
+
+        'Impreciso': function(player, context) {
+            // 5% inverte il modificatore in Fase 1
+            if (player.role === 'C' && context.phase === 'construction' && this.checkChance(5)) {
+                return -999; // Flag speciale: inversione (gestito separatamente)
+            }
+            return 0;
+        },
+
+        'Ingabbiato': function(player, context) {
+            // 5% non aggiunge nulla in Fase 1
+            if (player.role === 'C' && context.phase === 'construction' && this.checkChance(5)) {
+                return -998; // Flag speciale: azzera (gestito separatamente)
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA DIFENSORE (Fase 2)
+        // ========================================
+
+        'Muro': function(player, context) {
+            // 5% aggiunge +3 quando difende
+            if (player.role === 'D' && context.phase === 'attack' && this.checkChance(5)) {
+                return 3;
+            }
+            return 0;
+        },
+
+        'Spazzata': function(player, context) {
+            // 5% +1 al modificatore in Fase 2
+            if (player.role === 'D' && context.phase === 'attack' && this.checkChance(5)) {
+                return 1;
+            }
+            return 0;
+        },
+
+        'Guardia': function(player, context) {
+            // +3 se unico difensore
+            if (player.role === 'D' && context.phase === 'attack') {
+                const teamDef = context.team?.D || [];
+                if (teamDef.length === 1) {
+                    return 3;
+                }
+            }
+            return 0;
+        },
+
+        'Spallata': function(player, context) {
+            // +1 extra vs Tecnica in Fase 2 difesa
+            if (player.role === 'D' && context.phase === 'attack' && !context.isAttacking) {
+                const hasTecnica = context.opponents?.some(p => p.type === 'Tecnica');
+                return hasTecnica ? 1 : 0;
+            }
+            return 0;
+        },
+
+        'Blocco Fisico': function(player, context) {
+            // +1 vs Velocita in Fase 2 difesa
+            if (player.role === 'D' && context.phase === 'attack' && !context.isAttacking) {
+                const hasVelocita = context.opponents?.some(p => p.type === 'Velocita');
+                return hasVelocita ? 1 : 0;
+            }
+            return 0;
+        },
+
+        'Intercetto': function(player, context) {
+            // 5% vince automaticamente vs Centrocampista
+            if (player.role === 'D' && context.phase === 'attack' && !context.isAttacking) {
+                const hasCentro = context.opponents?.some(p => p.role === 'C');
+                if (hasCentro && this.checkChance(5)) {
+                    return 20; // Bonus enorme
+                }
+            }
+            return 0;
+        },
+
+        'Intercettatore': function(player, context) {
+            // +2 vs Centrocampista in Fase 2 difesa
+            if (player.role === 'C' && context.phase === 'attack' && !context.isAttacking) {
+                const hasCentro = context.opponents?.some(p => p.role === 'C');
+                return hasCentro ? 2 : 0;
+            }
+            return 0;
+        },
+
+        "Polmoni d'Acciaio": function(player, context) {
+            // +2 nelle ultime 10 occasioni
+            if (player.role === 'C' && context.phase === 'attack') {
+                const lastOccasions = this.state.totalOccasions - 10;
+                if (this.state.currentOccasion > lastOccasions) {
+                    return 2;
+                }
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA DIFENSORE (Negative)
+        // ========================================
+
+        'Falloso': function(player, context) {
+            // 5% inverte il modificatore in Fase 2
+            if (player.role === 'D' && context.phase === 'attack' && this.checkChance(5)) {
+                return -999; // Flag inversione
+            }
+            return 0;
+        },
+
+        'Insicuro': function(player, context) {
+            // 5% non aggiunge nulla in Fase 2
+            if (player.role === 'D' && context.phase === 'attack' && this.checkChance(5)) {
+                return -998; // Flag azzera
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA ATTACCANTE (Fase 2)
+        // ========================================
+
+        'Pivot': function(player, context) {
+            // +3 se unico attaccante
+            if (player.role === 'A' && context.phase === 'attack') {
+                const teamAtt = context.team?.A || [];
+                if (teamAtt.length === 1) {
+                    return 3;
+                }
+            }
+            return 0;
+        },
+
+        'Doppio Scatto': function(player, context) {
+            // 5% aggiunge +3 in Fase 2
+            if (player.role === 'A' && context.phase === 'attack' && this.checkChance(5)) {
+                return 3;
+            }
+            return 0;
+        },
+
+        'Solista': function(player, context) {
+            // -2 quando partecipa a Fase 2 attacco
+            if (player.role === 'A' && context.phase === 'attack' && context.isAttacking) {
+                return -2;
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA ATTACCANTE (Negative)
+        // ========================================
+
+        'Piedi a banana': function(player, context) {
+            // 5% inverte il modificatore
+            if (player.role === 'A' && context.phase === 'attack' && this.checkChance(5)) {
+                return -999; // Flag inversione
+            }
+            return 0;
+        },
+
+        'Eccesso di sicurezza': function(player, context) {
+            // 5% non aggiunge nulla
+            if (player.role === 'A' && context.phase === 'attack' && this.checkChance(5)) {
+                return -998; // Flag azzera
+            }
+            return 0;
+        },
+
+        // ========================================
+        // ABILITA TIPOLOGIA (Negative)
+        // ========================================
+
+        'Lento': function(player, context) {
+            // Mod dimezzato vs Velocita
+            const hasVelocita = context.opponents?.some(p => p.type === 'Velocita');
+            return hasVelocita ? -997 : 0; // Flag dimezza
+        },
+
+        'Debole': function(player, context) {
+            // Mod dimezzato vs Potenza
+            const hasPotenza = context.opponents?.some(p => p.type === 'Potenza');
+            return hasPotenza ? -997 : 0; // Flag dimezza
+        },
+
+        'Impreparato': function(player, context) {
+            // Mod dimezzato vs Tecnica
+            const hasTecnica = context.opponents?.some(p => p.type === 'Tecnica');
+            return hasTecnica ? -997 : 0; // Flag dimezza
+        }
     },
 
     /**
