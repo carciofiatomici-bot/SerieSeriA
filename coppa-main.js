@@ -492,6 +492,11 @@ window.CoppaMain = {
 
         console.log('[CoppaMain] Premi coppa assegnati con successo.');
 
+        // Verifica e crea automaticamente la Supercoppa se possibile
+        if (window.Supercoppa?.checkAndCreateSupercoppa) {
+            await window.Supercoppa.checkAndCreateSupercoppa();
+        }
+
         return {
             winner: bracket.winner,
             runnerUp: bracket.runnerUp,
@@ -506,6 +511,11 @@ window.CoppaMain = {
     async terminateCupWithoutRewards() {
         await window.CoppaSchedule.deleteCupSchedule();
         await this.updateCupConfig({ isCupOver: true, cupWinner: null });
+
+        // Verifica e crea automaticamente la Supercoppa se possibile
+        if (window.Supercoppa?.checkAndCreateSupercoppa) {
+            await window.Supercoppa.checkAndCreateSupercoppa();
+        }
     },
 
     /**

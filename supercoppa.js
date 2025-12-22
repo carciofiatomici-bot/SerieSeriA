@@ -126,6 +126,32 @@ window.Supercoppa = {
     },
 
     /**
+     * Verifica automaticamente se creare la Supercoppa
+     * Da chiamare dopo la chiusura del campionato o della coppa
+     */
+    async checkAndCreateSupercoppa() {
+        const status = await this.canCreateSupercoppa();
+        if (status.canCreate) {
+            console.log('[Supercoppa] Creazione automatica Supercoppa...');
+            try {
+                const bracket = await this.createSupercoppa();
+                console.log(`[Supercoppa] Creata: ${bracket.homeTeam.teamName} vs ${bracket.awayTeam.teamName}`);
+
+                // Notifica UI se disponibile
+                if (window.Toast) {
+                    window.Toast.success(`Supercoppa creata: ${bracket.homeTeam.teamName} vs ${bracket.awayTeam.teamName}`);
+                }
+
+                return { created: true, bracket };
+            } catch (error) {
+                console.error('[Supercoppa] Errore creazione automatica:', error);
+                return { created: false, error: error.message };
+            }
+        }
+        return { created: false, reason: status.reason };
+    },
+
+    /**
      * Simula la Supercoppa
      */
     async simulateSupercoppa() {

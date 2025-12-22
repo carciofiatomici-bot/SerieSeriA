@@ -108,11 +108,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Resetta lastAutoSimulatedDate a 0
             await setDoc(configDocRef, { isSeasonOver: true, isDraftOpen: false, isMarketOpen: false, lastAutoSimulatedDate: 0 }, { merge: true });
 
+            // Verifica e crea automaticamente la Supercoppa se possibile
+            let supercoppaMess = '';
+            if (window.Supercoppa?.checkAndCreateSupercoppa) {
+                const supercoppResult = await window.Supercoppa.checkAndCreateSupercoppa();
+                if (supercoppResult.created) {
+                    supercoppaMess = ` Supercoppa creata: ${supercoppResult.bracket.homeTeam.teamName} vs ${supercoppResult.bracket.awayTeam.teamName}!`;
+                }
+            }
+
             displayConfigMessage(
-                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${levelUps} allenatori sono saliti di livello (20% chance).${contractsMessage} Calendario eliminato.`,
+                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${levelUps} allenatori sono saliti di livello (20% chance).${contractsMessage}${supercoppaMess} Calendario eliminato.`,
                 'success'
             );
-            
+
             renderChampionshipPanel();
 
         } catch (error) {
