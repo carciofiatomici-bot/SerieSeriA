@@ -156,24 +156,49 @@ window.FigurineSystem = {
         // Esempio: 'allenatore1': { base: 'NomeAllenatore.jpg' }
     },
 
-    // Mapping per collezione Illustrazioni
+    // Mapping per collezione Illustrazioni con sottocategorie
     ILLUSTRAZIONI_FILES: {
-        'ame_vs_fosco': { base: 'Ame vs Fosco.jpg', name: 'Ame vs Fosco' },
-        'antony_vs_croccante': { base: 'Antony vs Croccante.jpg', name: 'Antony vs Croccante' },
-        'bemolle_trick': { base: 'Bemolle Trick.jpg', name: 'Bemolle Trick' },
-        'cocco_vs_luka': { base: 'Cocco vs luka.jpg', name: 'Cocco vs Luka' },
-        'contrasto_croccante': { base: 'Contrasto Croccante.jpg', name: 'Contrasto Croccante' },
-        'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy' },
-        'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark' },
-        'sandro_relax': { base: 'Sandro Relax.jpg', name: 'Sandro Relax' },
-        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone' },
-        'wallpaper': {
-            base: 'Wallpaper.jpg',
-            name: 'Wallpaper',
-            // Path alternativo: il file e' in Giocatori Seri/Illustrazioni/
-            customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Giocatori%20Seri/Illustrazioni/Wallpaper.jpg'
-        }
+        // === CATEGORIA PRINCIPALE ===
+        'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper', category: null },
+
+        // === CATEGORIA: VS ===
+        'ame_vs_fosco': { base: 'VS/Ame vs Fosco.jpg', name: 'Ame vs Fosco', category: 'VS' },
+        'antony_vs_croccante': { base: 'VS/Antony vs Croccante.jpg', name: 'Antony vs Croccante', category: 'VS' },
+        'cocco_vs_luka': { base: 'VS/Cocco vs luka.jpg', name: 'Cocco vs Luka', category: 'VS' },
+        'gladio_vs_croccante_fantasy': { base: 'VS/Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy', category: 'VS' },
+
+        // === CATEGORIA: Varie ===
+        'bemolle_trick': { base: 'Varie/Bemolle Trick.jpg', name: 'Bemolle Trick', category: 'Varie' },
+        'contrasto_croccante': { base: 'Varie/Contrasto Croccante.jpg', name: 'Contrasto Croccante', category: 'Varie' },
+        'salvataggio_mark': { base: 'Varie/Salvataggio Mark.jpg', name: 'Salvataggio Mark', category: 'Varie' },
+        'sandro_relax': { base: 'Varie/Sandro Relax.jpg', name: 'Sandro Relax', category: 'Varie' },
+        'tiro_simone': { base: 'Varie/Tiro Simone.jpg', name: 'Tiro Simone', category: 'Varie' },
+
+        // === CATEGORIA: Abilita Icone ===
+        'abilita_amedemo': { base: 'Abilità icone/Amedemo - Tiro Dritto.jpg', name: 'Amedemo - Tiro Dritto', category: 'Abilita Icone' },
+        'abilita_antony': { base: 'Abilità icone/Antony - avanti un altro.jpg', name: 'Antony - Avanti un Altro', category: 'Abilita Icone' },
+        'abilita_bemolle': { base: 'Abilità icone/Bemolle - scheggia impazzita.jpg', name: 'Bemolle - Scheggia Impazzita', category: 'Abilita Icone' },
+        'abilita_croccante': { base: 'Abilità icone/Croccante - Fatto d\'acciaio.jpg', name: 'Croccante - Fatto d\'Acciaio', category: 'Abilita Icone' },
+        'abilita_fosco': { base: 'Abilità icone/Fosco - l\'uomo in più.jpg', name: 'Fosco - L\'Uomo in Piu', category: 'Abilita Icone' },
+        'abilita_sandro': { base: 'Abilità icone/Sandro - relax.jpg', name: 'Sandro - Relax', category: 'Abilita Icone' },
+        'abilita_simone': { base: 'Abilità icone/Simone - Parata efficiente.jpg', name: 'Simone - Parata Efficiente', category: 'Abilita Icone' },
+        'abilita_cap': { base: 'Abilità icone/cap - calcolo delle probabilità.jpg', name: 'Cap - Calcolo delle Probabilita', category: 'Abilita Icone' },
+        'abilita_cocco': { base: 'Abilità icone/cocco - stazionario.jpg', name: 'Cocco - Stazionario', category: 'Abilita Icone' },
+        'abilita_gladio': { base: 'Abilità icone/gladio - continua a provare.jpg', name: 'Gladio - Continua a Provare', category: 'Abilita Icone' },
+        'abilita_luka': { base: 'Abilità icone/luka - contrasto di gomito.jpg', name: 'Luka - Contrasto di Gomito', category: 'Abilita Icone' },
+        'abilita_mark': { base: 'Abilità icone/mark falco - osservatore.jpg', name: 'Mark Falco - Osservatore', category: 'Abilita Icone' },
+        'abilita_mel': { base: 'Abilità icone/mel assistman.jpg', name: 'Mel - Assist-man', category: 'Abilita Icone' },
+        'abilita_shikanto': { base: 'Abilità icone/shikanto - amici di panchina.jpg', name: 'Shikanto - Amici di Panchina', category: 'Abilita Icone' }
     },
+
+    // Categorie illustrazioni per UI (ordine e nomi visualizzati)
+    // Le sottocategorie vengono mostrate PRIMA della cartella principale
+    ILLUSTRAZIONI_CATEGORIES: [
+        { id: 'VS', name: 'VS', icon: '⚔️' },
+        { id: 'Varie', name: 'Varie', icon: '🎨' },
+        { id: 'Abilita Icone', name: 'Abilita Icone', icon: '✨' },
+        { id: null, name: 'Generali', icon: '🖼️' }
+    ],
 
     // Mapping per collezione Figurine Utenti
     FIGURINE_UTENTI_FILES: {
@@ -242,7 +267,7 @@ window.FigurineSystem = {
         evoluto: { id: 'evoluto', name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400', icon: '🟢', rarityLevel: 2 },
         alternative: { id: 'alternative', name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400', icon: '🔵', rarityLevel: 3 },
         ultimate: { id: 'ultimate', name: 'Epica', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400', icon: '🟣', rarityLevel: 4 },
-        fantasy: { id: 'fantasy', name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400', icon: '🟠', rarityLevel: 5 }
+        fantasy: { id: 'fantasy', name: 'Leggendaria', color: 'orange', probability: 0.03, cssClass: 'border-orange-400', textClass: 'text-orange-400', icon: '🟠', rarityLevel: 5 }
     },
 
     // Varianti per collezioni senza bonus (solo base)
@@ -257,7 +282,7 @@ window.FigurineSystem = {
         2: { id: 2, name: 'Non Comune', color: 'green', probability: 0.30, cssClass: 'border-green-500', textClass: 'text-green-400', icon: '🟢' },
         3: { id: 3, name: 'Rara', color: 'blue', probability: 0.18, cssClass: 'border-blue-500', textClass: 'text-blue-400', icon: '🔵' },
         4: { id: 4, name: 'Epica', color: 'purple', probability: 0.09, cssClass: 'border-purple-500', textClass: 'text-purple-400', icon: '🟣' },
-        5: { id: 5, name: 'Leggendaria', color: 'yellow', probability: 0.03, cssClass: 'border-yellow-400', textClass: 'text-yellow-400', icon: '🟠' }
+        5: { id: 5, name: 'Leggendaria', color: 'orange', probability: 0.03, cssClass: 'border-orange-400', textClass: 'text-orange-400', icon: '🟠' }
     },
 
     // Cache per rarita figurine da Firestore

@@ -74,6 +74,13 @@ window.StadiumUI = {
                             <div class="bg-green-500 h-2 rounded-full transition-all" style="width: ${stats.percentage}%"></div>
                         </div>
                     </div>
+                    <div class="bg-gray-800 rounded-lg p-4 border border-blue-600">
+                        <p class="text-gray-400 text-sm">Livelli Totali</p>
+                        <p class="text-2xl font-bold text-blue-400">${stats.totalLevels} / ${stats.maxPossibleLevels}</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                            <div class="bg-blue-500 h-2 rounded-full transition-all" style="width: ${stats.levelPercentage}%"></div>
+                        </div>
+                    </div>
                     <div class="bg-gray-800 rounded-lg p-4 border border-green-600">
                         <p class="text-gray-400 text-sm">Bonus Casa Attuale</p>
                         <p class="text-2xl font-bold text-green-400">+${stats.bonus.toFixed(2)}</p>
@@ -82,10 +89,6 @@ window.StadiumUI = {
                     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
                         <p class="text-gray-400 text-sm">Budget Disponibile</p>
                         <p class="text-2xl font-bold text-yellow-400">${this._teamData?.budget || 0} CS</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <p class="text-gray-400 text-sm">Costo Completamento</p>
-                        <p class="text-2xl font-bold text-orange-400">${window.Stadium.getRemainingCost(this._stadiumData)} CS</p>
                     </div>
                 </div>
 
@@ -105,8 +108,16 @@ window.StadiumUI = {
                             <h4 class="text-lg font-bold text-gray-300 mb-3">Legenda</h4>
                             <div class="flex flex-wrap gap-4 text-sm">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-green-600 border-2 border-green-400 flex items-center justify-center text-xs">✓</div>
-                                    <span class="text-gray-400">Costruito</span>
+                                    <div class="w-6 h-6 rounded bg-green-700 border-2 border-green-400 flex items-center justify-center text-xs text-white font-bold">1</div>
+                                    <span class="text-gray-400">Lv.1</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded bg-green-700 border-2 border-blue-400 flex items-center justify-center text-xs text-white font-bold">2</div>
+                                    <span class="text-gray-400">Lv.2</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded bg-gradient-to-br from-yellow-700 to-yellow-900 border-2 border-purple-400 flex items-center justify-center text-xs text-yellow-300 font-bold">M</div>
+                                    <span class="text-gray-400">Lv.MAX</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="w-6 h-6 rounded bg-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-xs">+</div>
@@ -168,6 +179,30 @@ window.StadiumUI = {
                             </button>
                         </div>
                         <p id="demolish-error-message" class="text-center mt-3 text-sm text-red-400"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Upgrade/Demolisci -->
+            <div id="stadium-upgrade-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                <div class="bg-gray-900 rounded-lg w-full max-w-md mx-4 border-2 border-blue-500">
+                    <div class="bg-gradient-to-r from-blue-700 to-blue-500 p-4 rounded-t-lg">
+                        <h3 class="text-xl font-bold text-white" id="upgrade-modal-title">Gestisci Struttura</h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="upgrade-modal-info" class="mb-4"></div>
+                        <div class="flex flex-col gap-3">
+                            <button id="btn-confirm-upgrade" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition">
+                                Migliora
+                            </button>
+                            <button id="btn-demolish-from-upgrade" class="bg-red-600/50 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition text-sm">
+                                Demolisci Struttura
+                            </button>
+                            <button id="btn-cancel-upgrade" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg transition text-sm">
+                                Annulla
+                            </button>
+                        </div>
+                        <p id="upgrade-error-message" class="text-center mt-3 text-sm text-red-400"></p>
                     </div>
                 </div>
             </div>
@@ -315,48 +350,75 @@ window.StadiumUI = {
      * Renderizza il campo da calcio con tutti gli slot
      */
     renderStadiumField() {
-        const built = this._stadiumData?.built || [];
+        const budget = this._teamData?.budget || 0;
 
         // Helper per creare uno slot struttura
         const createSlot = (structureId) => {
             const structure = window.Stadium.STRUCTURES[structureId];
             if (!structure) return '';
 
-            const isBuilt = built.includes(structureId);
+            const level = window.Stadium.getStructureLevel(structureId, this._stadiumData);
+            const isBuilt = level > 0;
             const canBuildResult = window.Stadium.canBuild(structureId, this._stadiumData);
             const isLocked = !isBuilt && !canBuildResult.canBuild;
+            const maxLevel = structure.maxLevel || window.Stadium.MAX_STRUCTURE_LEVEL;
+            const isMaxed = level >= maxLevel;
+            const currentBonus = window.Stadium.calculateStructureBonus(structureId, level);
+
+            // Colori bordo in base al livello
+            const levelBorderColors = {
+                1: 'border-green-400',
+                2: 'border-blue-400',
+                3: 'border-purple-400'
+            };
 
             let slotClass, content, title;
 
             if (isBuilt) {
-                const canDemolishResult = window.Stadium.canDemolish(structureId, this._stadiumData);
-                const canDemolish = canDemolishResult.canDemolish;
-                slotClass = canDemolish
-                    ? 'bg-green-700 border-green-400 hover:border-red-400 hover:bg-red-900/50 cursor-pointer'
-                    : 'bg-green-700 border-green-400 cursor-not-allowed';
-                content = `<span class="text-2xl">${structure.icon}</span>`;
-                title = canDemolish
-                    ? `${structure.name} (Clicca per demolire - Rimborso: ${Math.floor(structure.cost / 2)} CS)`
-                    : `${structure.name} - ${canDemolishResult.reason}`;
+                const borderColor = levelBorderColors[level] || 'border-green-400';
+                const canUpgradeResult = window.Stadium.canUpgradeStructure(structureId, budget, this._stadiumData);
+
+                if (isMaxed) {
+                    // Livello massimo - sfondo dorato
+                    slotClass = `bg-gradient-to-br from-yellow-700 to-yellow-900 ${borderColor} cursor-pointer`;
+                    title = `${structure.name} Lv.MAX - Bonus: +${currentBonus.toFixed(2)}`;
+                } else if (canUpgradeResult.canUpgrade) {
+                    // Puo essere migliorata
+                    slotClass = `bg-green-700 ${borderColor} hover:border-blue-400 hover:bg-blue-900/50 cursor-pointer`;
+                    title = `${structure.name} Lv.${level} - Clicca per migliorare (${canUpgradeResult.upgradeCost} CS)`;
+                } else {
+                    // Costruita ma non migliorabile (fondi insufficienti)
+                    slotClass = `bg-green-700 ${borderColor} cursor-pointer`;
+                    title = `${structure.name} Lv.${level} - +${currentBonus.toFixed(2)} bonus`;
+                }
+
+                content = `
+                    <span class="text-2xl">${structure.icon}</span>
+                    <span class="text-xs font-bold ${isMaxed ? 'text-yellow-300' : 'text-white'} mt-0.5">
+                        ${isMaxed ? 'MAX' : 'Lv.' + level}
+                    </span>
+                `;
             } else if (isLocked) {
                 slotClass = 'bg-gray-800 border-red-900 opacity-50 cursor-not-allowed';
                 content = `<span class="text-lg">🔒</span>`;
                 title = `${structure.name} - ${canBuildResult.reason}`;
             } else {
+                const buildCost = window.Stadium.getUpgradeCost(structureId, 1);
                 slotClass = 'bg-gray-700 border-dashed border-gray-500 hover:border-green-400 hover:bg-gray-600 cursor-pointer';
                 content = `<span class="text-xl opacity-50">${structure.icon}</span>`;
-                title = `${structure.name} - ${structure.cost} CS (+${structure.bonus} bonus)`;
+                title = `${structure.name} - ${buildCost} CS (+${structure.bonus} bonus)`;
             }
 
             return `
                 <div class="structure-slot w-16 h-16 md:w-20 md:h-20 rounded-lg border-2 ${slotClass}
                             flex flex-col items-center justify-center transition-all"
                      data-structure-id="${structureId}"
+                     data-level="${level}"
                      data-is-built="${isBuilt}"
+                     data-is-maxed="${isMaxed}"
                      data-is-locked="${isLocked}"
                      title="${title}">
                     ${content}
-                    <span class="text-xs text-gray-300 mt-1 hidden md:block">${isBuilt ? '+' + structure.bonus : ''}</span>
                 </div>
             `;
         };
@@ -440,6 +502,141 @@ window.StadiumUI = {
                 </div>
 
             </div>
+
+            <!-- Sezione Strutture Speciali -->
+            <div class="mt-6 pt-6 border-t-2 border-gray-700">
+                <h3 class="text-xl font-bold text-gray-300 mb-4 text-center">Strutture Speciali</h3>
+
+                <!-- Strutture Premium -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                    ${this.renderSpecialStructureCard('stadium_roof')}
+                    ${this.renderSpecialStructureCard('giant_screen')}
+                    ${this.renderSpecialStructureCard('ultras_section')}
+                    ${this.renderSpecialStructureCard('scouting_center')}
+                    ${this.renderSpecialStructureCard('observers_center')}
+                </div>
+
+                <!-- Facilities -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    ${this.renderSpecialStructureCard('medical_center')}
+                    ${this.renderSpecialStructureCard('gym')}
+                    ${this.renderSpecialStructureCard('tactical_room')}
+                    ${this.renderSpecialStructureCard('warmup_area')}
+                </div>
+
+                <!-- Commerciali e Prestigio -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    ${this.renderSpecialStructureCard('shop')}
+                    ${this.renderSpecialStructureCard('museum')}
+                    ${this.renderSpecialStructureCard('conference_room')}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza una card per struttura speciale
+     * @param {string} structureId - ID struttura
+     */
+    renderSpecialStructureCard(structureId) {
+        const structure = window.Stadium.STRUCTURES[structureId];
+        if (!structure) return '';
+
+        const level = window.Stadium.getStructureLevel(structureId, this._stadiumData);
+        const isBuilt = level > 0;
+        const canBuildResult = window.Stadium.canBuild(structureId, this._stadiumData);
+        const maxLevel = structure.maxLevel || window.Stadium.MAX_STRUCTURE_LEVEL;
+        const isMaxed = level >= maxLevel;
+        const budget = this._teamData?.budget || 0;
+
+        // Calcola costo e bonus
+        const buildCost = window.Stadium.getUpgradeCost(structureId, 1);
+        const upgradeCost = isBuilt && !isMaxed ? window.Stadium.getUpgradeCost(structureId, level + 1) : 0;
+        const currentBonus = window.Stadium.calculateStructureBonus(structureId, level);
+
+        // Colori in base allo stato
+        let cardClass, statusBadge, actionButton;
+
+        if (isBuilt) {
+            if (isMaxed) {
+                // MAX level
+                cardClass = 'bg-gradient-to-br from-yellow-900/50 to-yellow-700/30 border-yellow-500';
+                statusBadge = `<span class="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">MAX</span>`;
+                actionButton = '';
+            } else {
+                // Costruita, puo migliorare
+                const canAffordUpgrade = budget >= upgradeCost;
+                cardClass = 'bg-gray-800 border-green-500';
+                statusBadge = `<span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Lv.${level}</span>`;
+                actionButton = `
+                    <button class="structure-upgrade-btn w-full mt-2 ${canAffordUpgrade ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-600 cursor-not-allowed'}
+                                   text-white text-xs font-bold py-1.5 px-2 rounded transition"
+                            data-structure-id="${structureId}"
+                            ${canAffordUpgrade ? '' : 'disabled'}>
+                        Migliora Lv.${level + 1} - ${upgradeCost} CS
+                    </button>
+                `;
+            }
+        } else if (canBuildResult.canBuild) {
+            // Disponibile per costruzione
+            const canAfford = budget >= buildCost;
+            cardClass = 'bg-gray-800 border-gray-600 hover:border-green-500';
+            statusBadge = `<span class="bg-gray-600 text-gray-300 text-xs px-2 py-0.5 rounded-full">Non costruito</span>`;
+            actionButton = `
+                <button class="structure-build-btn w-full mt-2 ${canAfford ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}
+                               text-white text-xs font-bold py-1.5 px-2 rounded transition"
+                        data-structure-id="${structureId}"
+                        ${canAfford ? '' : 'disabled'}>
+                    Costruisci - ${buildCost} CS
+                </button>
+            `;
+        } else {
+            // Bloccato
+            cardClass = 'bg-gray-900 border-red-900/50 opacity-60';
+            statusBadge = `<span class="bg-red-900 text-red-300 text-xs px-2 py-0.5 rounded-full">Bloccato</span>`;
+            actionButton = `
+                <p class="text-xs text-red-400 mt-2 text-center">${canBuildResult.reason}</p>
+            `;
+        }
+
+        // Descrizione effetto speciale
+        const specialEffects = {
+            'injury_reduction': '-1/-1/-2 giornate infortunio',
+            'training_bonus': '+2/4/6% EXP allenamento',
+            'tactical_bonus': 'Bonus tattico partite',
+            'form_bonus': '-0.25/0.50/0.75 malus forma',
+            'passive_income': '+50/100/150 CS/settimana',
+            'prestige': 'Storia del Club',
+            'away_bonus': '+0.50/1.00/1.50 trasferta',
+            'market_discount': '-5/-10/-15% costo mercato'
+        };
+        const effectText = specialEffects[structure.specialEffect] || structure.description;
+
+        return `
+            <div class="special-structure-card p-3 rounded-lg border-2 ${cardClass} transition-all"
+                 data-structure-id="${structureId}">
+                <div class="flex items-start justify-between mb-2">
+                    <span class="text-3xl">${structure.icon}</span>
+                    ${statusBadge}
+                </div>
+                <h4 class="font-bold text-white text-sm">${structure.name}</h4>
+                <p class="text-xs text-gray-400 mt-1">${effectText}</p>
+                ${structure.bonus > 0 ? `
+                    <p class="text-xs text-green-400 mt-1">
+                        Bonus: +${isBuilt ? currentBonus.toFixed(2) : structure.bonus}
+                        ${isBuilt && !isMaxed ? ` → +${window.Stadium.calculateStructureBonus(structureId, level + 1).toFixed(2)}` : ''}
+                    </p>
+                ` : ''}
+                ${isBuilt ? `
+                    <!-- Barra livello -->
+                    <div class="flex gap-0.5 mt-2">
+                        ${[1, 2, 3].map(lvl => `
+                            <div class="flex-1 h-1.5 rounded ${lvl <= level ? 'bg-green-500' : 'bg-gray-700'}"></div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                ${actionButton}
+            </div>
         `;
     },
 
@@ -465,19 +662,26 @@ window.StadiumUI = {
             });
         }
 
-        // Click sugli slot struttura
+        // Click sugli slot struttura (campo)
         const slots = document.querySelectorAll('.structure-slot');
         slots.forEach(slot => {
             slot.addEventListener('click', () => {
                 const structureId = slot.dataset.structureId;
                 const isBuilt = slot.dataset.isBuilt === 'true';
                 const isLocked = slot.dataset.isLocked === 'true';
+                const isMaxed = slot.dataset.isMaxed === 'true';
+                const level = parseInt(slot.dataset.level) || 0;
 
                 if (isBuilt) {
-                    // Apri modal demolizione se puo essere demolita
-                    const canDemolish = window.Stadium.canDemolish(structureId, this._stadiumData);
-                    if (canDemolish.canDemolish) {
-                        this.showDemolishConfirmModal(structureId);
+                    if (isMaxed) {
+                        // Mostra opzione demolizione
+                        const canDemolish = window.Stadium.canDemolish(structureId, this._stadiumData);
+                        if (canDemolish.canDemolish) {
+                            this.showDemolishConfirmModal(structureId);
+                        }
+                    } else {
+                        // Mostra opzione upgrade o demolizione
+                        this.showUpgradeOrDemolishModal(structureId);
                     }
                     return;
                 }
@@ -485,6 +689,26 @@ window.StadiumUI = {
                 if (isLocked) return;
 
                 this.showBuildConfirmModal(structureId);
+            });
+        });
+
+        // Pulsanti costruisci nelle card strutture speciali
+        const buildBtns = document.querySelectorAll('.structure-build-btn');
+        buildBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const structureId = btn.dataset.structureId;
+                this.showBuildConfirmModal(structureId);
+            });
+        });
+
+        // Pulsanti upgrade nelle card strutture speciali
+        const upgradeBtns = document.querySelectorAll('.structure-upgrade-btn');
+        upgradeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const structureId = btn.dataset.structureId;
+                this.showUpgradeConfirmModal(structureId);
             });
         });
 
@@ -533,6 +757,40 @@ window.StadiumUI = {
                 demolishModal.classList.add('hidden');
             }
         });
+
+        // Modal upgrade
+        const btnConfirmUpgrade = document.getElementById('btn-confirm-upgrade');
+        const btnCancelUpgrade = document.getElementById('btn-cancel-upgrade');
+        const btnDemolishFromUpgrade = document.getElementById('btn-demolish-from-upgrade');
+        const upgradeModal = document.getElementById('stadium-upgrade-modal');
+
+        if (btnCancelUpgrade) {
+            btnCancelUpgrade.addEventListener('click', () => {
+                upgradeModal?.classList.add('hidden');
+            });
+        }
+
+        if (btnConfirmUpgrade) {
+            btnConfirmUpgrade.addEventListener('click', async () => {
+                await this.handleUpgradeConfirm();
+            });
+        }
+
+        if (btnDemolishFromUpgrade) {
+            btnDemolishFromUpgrade.addEventListener('click', () => {
+                const structureId = upgradeModal?.dataset.structureId;
+                upgradeModal?.classList.add('hidden');
+                if (structureId) {
+                    this.showDemolishConfirmModal(structureId);
+                }
+            });
+        }
+
+        upgradeModal?.addEventListener('click', (e) => {
+            if (e.target === upgradeModal) {
+                upgradeModal.classList.add('hidden');
+            }
+        });
     },
 
     /**
@@ -551,7 +809,9 @@ window.StadiumUI = {
         title.textContent = `Costruisci ${structure.name}`;
 
         const budget = this._teamData?.budget || 0;
-        const canAfford = budget >= structure.cost;
+        const buildCost = window.Stadium.getUpgradeCost(structureId, 1);
+        const canAfford = budget >= buildCost;
+        const maxLevel = structure.maxLevel || window.Stadium.MAX_STRUCTURE_LEVEL;
 
         info.innerHTML = `
             <div class="text-center mb-4">
@@ -567,18 +827,23 @@ window.StadiumUI = {
                     <span class="text-gray-300 text-sm">${structure.description}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-400">Costo:</span>
-                    <span class="${canAfford ? 'text-yellow-400' : 'text-red-400'} font-bold">${structure.cost} CS</span>
+                    <span class="text-gray-400">Costo Lv.1:</span>
+                    <span class="${canAfford ? 'text-yellow-400' : 'text-red-400'} font-bold">${buildCost} CS</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-400">Bonus Casa:</span>
+                    <span class="text-gray-400">Bonus Casa Lv.1:</span>
                     <span class="text-green-400 font-bold">+${structure.bonus}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Livello Massimo:</span>
+                    <span class="text-blue-400 font-bold">Lv.${maxLevel}</span>
                 </div>
                 <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
                     <span class="text-gray-400">Il tuo budget:</span>
                     <span class="${canAfford ? 'text-green-400' : 'text-red-400'} font-bold">${budget} CS</span>
                 </div>
             </div>
+            <p class="text-xs text-gray-500 text-center mt-2">Potrai migliorare la struttura fino a Lv.${maxLevel}</p>
         `;
 
         if (!canAfford) {
@@ -650,13 +915,22 @@ window.StadiumUI = {
         const info = document.getElementById('demolish-modal-info');
         const errorMsg = document.getElementById('demolish-error-message');
 
-        title.textContent = `Demolisci ${structure.name}`;
+        const level = window.Stadium.getStructureLevel(structureId, this._stadiumData);
+        const currentBonus = window.Stadium.calculateStructureBonus(structureId, level);
 
-        const refund = Math.floor(structure.cost / 2);
+        // Calcola rimborso totale (50% di tutto l'investito)
+        let totalInvested = 0;
+        for (let lvl = 1; lvl <= level; lvl++) {
+            totalInvested += window.Stadium.getUpgradeCost(structureId, lvl);
+        }
+        const refund = Math.floor(totalInvested / 2);
+
+        title.textContent = `Demolisci ${structure.name}`;
 
         info.innerHTML = `
             <div class="text-center mb-4">
                 <span class="text-5xl">${structure.icon}</span>
+                <span class="block text-lg font-bold text-white mt-2">Livello ${level}</span>
             </div>
             <div class="bg-gray-800 rounded-lg p-4 space-y-2">
                 <div class="flex justify-between">
@@ -665,7 +939,11 @@ window.StadiumUI = {
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-400">Bonus attuale:</span>
-                    <span class="text-green-400 font-bold">+${structure.bonus}</span>
+                    <span class="text-green-400 font-bold">+${currentBonus.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Totale investito:</span>
+                    <span class="text-gray-300">${totalInvested} CS</span>
                 </div>
                 <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
                     <span class="text-gray-400">Rimborso (50%):</span>
@@ -673,7 +951,7 @@ window.StadiumUI = {
                 </div>
             </div>
             <p class="text-center text-red-300 text-sm mt-3">
-                ⚠️ Questa azione è irreversibile!
+                Perderai tutti i livelli della struttura!
             </p>
         `;
 
@@ -683,6 +961,152 @@ window.StadiumUI = {
         modal.dataset.structureId = structureId;
 
         modal.classList.remove('hidden');
+    },
+
+    /**
+     * Mostra il modal per upgrade o demolizione
+     * @param {string} structureId - ID struttura
+     */
+    showUpgradeOrDemolishModal(structureId) {
+        // Usa direttamente il modal upgrade
+        this.showUpgradeConfirmModal(structureId);
+    },
+
+    /**
+     * Mostra il modal di conferma upgrade
+     * @param {string} structureId - ID struttura
+     */
+    showUpgradeConfirmModal(structureId) {
+        const structure = window.Stadium.STRUCTURES[structureId];
+        if (!structure) return;
+
+        const modal = document.getElementById('stadium-upgrade-modal');
+        const title = document.getElementById('upgrade-modal-title');
+        const info = document.getElementById('upgrade-modal-info');
+        const errorMsg = document.getElementById('upgrade-error-message');
+        const btnUpgrade = document.getElementById('btn-confirm-upgrade');
+        const btnDemolish = document.getElementById('btn-demolish-from-upgrade');
+
+        const level = window.Stadium.getStructureLevel(structureId, this._stadiumData);
+        const maxLevel = structure.maxLevel || window.Stadium.MAX_STRUCTURE_LEVEL;
+        const budget = this._teamData?.budget || 0;
+
+        const currentBonus = window.Stadium.calculateStructureBonus(structureId, level);
+        const nextBonus = window.Stadium.calculateStructureBonus(structureId, level + 1);
+        const upgradeCost = window.Stadium.getUpgradeCost(structureId, level + 1);
+        const canAfford = budget >= upgradeCost;
+
+        const canDemolishResult = window.Stadium.canDemolish(structureId, this._stadiumData);
+
+        title.textContent = `${structure.name} - Livello ${level}`;
+
+        info.innerHTML = `
+            <div class="text-center mb-4">
+                <span class="text-5xl">${structure.icon}</span>
+                <!-- Barra livello -->
+                <div class="flex gap-1 justify-center mt-3 max-w-32 mx-auto">
+                    ${[1, 2, 3].map(lvl => `
+                        <div class="flex-1 h-2 rounded ${lvl <= level ? 'bg-green-500' : lvl === level + 1 ? 'bg-blue-500/50' : 'bg-gray-700'}"></div>
+                    `).join('')}
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Lv.${level} / ${maxLevel}</p>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Bonus attuale:</span>
+                    <span class="text-green-400 font-bold">+${currentBonus.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Bonus Lv.${level + 1}:</span>
+                    <span class="text-blue-400 font-bold">+${nextBonus.toFixed(2)} <span class="text-xs text-green-400">(+${(nextBonus - currentBonus).toFixed(2)})</span></span>
+                </div>
+                <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
+                    <span class="text-gray-400">Costo upgrade:</span>
+                    <span class="${canAfford ? 'text-yellow-400' : 'text-red-400'} font-bold">${upgradeCost} CS</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Il tuo budget:</span>
+                    <span class="${canAfford ? 'text-green-400' : 'text-red-400'} font-bold">${budget} CS</span>
+                </div>
+            </div>
+        `;
+
+        // Configura pulsante upgrade
+        if (canAfford) {
+            btnUpgrade.disabled = false;
+            btnUpgrade.className = 'bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition';
+            btnUpgrade.innerHTML = `Migliora a Lv.${level + 1} - ${upgradeCost} CS`;
+        } else {
+            btnUpgrade.disabled = true;
+            btnUpgrade.className = 'bg-gray-600 cursor-not-allowed text-white font-bold py-3 rounded-lg';
+            btnUpgrade.innerHTML = `Fondi insufficienti (${upgradeCost} CS)`;
+        }
+
+        // Configura pulsante demolisci
+        if (canDemolishResult.canDemolish) {
+            btnDemolish.disabled = false;
+            btnDemolish.className = 'bg-red-600/50 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition text-sm';
+        } else {
+            btnDemolish.disabled = true;
+            btnDemolish.className = 'bg-gray-700 cursor-not-allowed text-gray-500 font-bold py-2 rounded-lg text-sm';
+            btnDemolish.title = canDemolishResult.reason;
+        }
+
+        errorMsg.textContent = '';
+
+        // Salva l'ID per il confirm
+        modal.dataset.structureId = structureId;
+
+        modal.classList.remove('hidden');
+    },
+
+    /**
+     * Gestisce la conferma di upgrade
+     */
+    async handleUpgradeConfirm() {
+        const modal = document.getElementById('stadium-upgrade-modal');
+        const structureId = modal?.dataset.structureId;
+        const btnConfirm = document.getElementById('btn-confirm-upgrade');
+        const errorMsg = document.getElementById('upgrade-error-message');
+
+        if (!structureId) return;
+
+        const originalText = btnConfirm.innerHTML;
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Migliorando...';
+
+        const result = await window.Stadium.upgradeStructure(
+            this._teamId,
+            structureId,
+            this._teamData?.budget || 0
+        );
+
+        if (result.success) {
+            // Aggiorna dati locali
+            this._stadiumData = window.Stadium._currentStadium;
+            this._teamData.budget -= result.costPaid;
+
+            // Aggiorna anche InterfacciaCore per sincronizzare la dashboard
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.budget = this._teamData.budget;
+            }
+
+            // Mostra messaggio successo
+            const maxedText = result.maxed ? ' (LIVELLO MAX!)' : '';
+            this.showMessage(
+                `${result.structure.name} migliorato a Lv.${result.newLevel}${maxedText}! Bonus casa: +${result.newBonus.toFixed(2)}`,
+                'success'
+            );
+
+            // Chiudi modal e re-render
+            modal.classList.add('hidden');
+            this.render();
+
+        } else {
+            errorMsg.textContent = result.error;
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = originalText;
+        }
     },
 
     /**

@@ -116,14 +116,23 @@
                     </svg>
                 </div>
 
-                <!-- Legenda premi -->
-                <div class="grid grid-cols-3 gap-2 mb-4 text-xs">
-                    ${PRIZES.map(prize => `
-                        <div class="flex items-center gap-1">
-                            <span class="w-3 h-3 rounded-full" style="background: ${prize.color}"></span>
-                            <span class="text-gray-300">${prize.label}</span>
-                        </div>
-                    `).join('')}
+                <!-- Legenda premi con percentuali -->
+                <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
+                    ${(() => {
+                        const totalProb = PRIZES.reduce((sum, p) => sum + p.probability, 0);
+                        return PRIZES.map(prize => {
+                            const percent = ((prize.probability / totalProb) * 100).toFixed(0);
+                            return `
+                                <div class="flex items-center justify-between gap-1 bg-gray-800/50 px-2 py-1 rounded">
+                                    <div class="flex items-center gap-1">
+                                        <span class="w-3 h-3 rounded-full" style="background: ${prize.color}"></span>
+                                        <span class="text-gray-300">${prize.label}</span>
+                                    </div>
+                                    <span class="text-yellow-400 font-bold">${percent}%</span>
+                                </div>
+                            `;
+                        }).join('');
+                    })()}
                 </div>
 
                 <!-- Bottoni -->

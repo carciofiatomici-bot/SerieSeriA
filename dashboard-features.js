@@ -269,12 +269,25 @@ window.DashboardFeatures = {
         const appContent = document.getElementById('app-content');
 
         if (btnHallOfFame) {
-            btnHallOfFame.addEventListener('click', () => {
+            btnHallOfFame.addEventListener('click', async () => {
                 // Verifica se lo storico e' abilitato
                 if (!window.FeatureFlags?.isEnabled('matchHistory')) {
                     if (window.Toast) window.Toast.info("Hall of Fame non disponibile");
                     return;
                 }
+
+                // Verifica se il Museo del Club e' costruito
+                const teamData = window.InterfacciaCore?.getCurrentTeam?.();
+                if (teamData && window.Stadium) {
+                    const museumLevel = window.Stadium.getStructureLevel('museum', teamData.stadium);
+                    if (museumLevel <= 0) {
+                        if (window.Toast) {
+                            window.Toast.info("Costruisci il Museo del Club nello Stadio per sbloccare la Hall of Fame!");
+                        }
+                        return;
+                    }
+                }
+
                 if (window.MatchHistory && matchHistoryContent) {
                     window.showScreen(matchHistoryContent);
                     window.MatchHistory.render();

@@ -350,6 +350,20 @@ window.FigurineUI = {
             });
         });
 
+        // Event listener per toggle sottocategorie illustrazioni
+        content.querySelectorAll('.category-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const categoryContent = btn.nextElementSibling;
+                const arrow = btn.querySelector('.category-arrow');
+                if (categoryContent) {
+                    categoryContent.classList.toggle('hidden');
+                }
+                if (arrow) {
+                    arrow.classList.toggle('rotate-180');
+                }
+            });
+        });
+
         // Event listener per aprire il modal delle varianti
         content.querySelectorAll('.figurine-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -431,35 +445,81 @@ window.FigurineUI = {
         // Collezioni che nascondono immagine se non posseduta (mostra ? se non posseduta, immagine se posseduta)
         const hideWhenNotOwnedCollections = ['illustrazioni'];
         if (hideWhenNotOwnedCollections.includes(collId)) {
-            let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">';
+            // Raggruppa per categoria
+            const categories = window.FigurineSystem.ILLUSTRAZIONI_CATEGORIES || [{ id: null, name: 'Generali', icon: '🖼️' }];
+            const groupedItems = {};
 
+            // Inizializza gruppi
+            categories.forEach(cat => {
+                groupedItems[cat.id === null ? '__main__' : cat.id] = [];
+            });
+
+            // Raggruppa items per categoria
             Object.entries(files).forEach(([itemId, itemFiles]) => {
-                const counts = albumColl[itemId] || { base: 0 };
-                const hasAny = counts.base > 0;
-                const displayName = itemFiles.name || itemId;
-                const imgUrl = itemFiles.customUrl || `${collDef.baseUrl}${encodeURIComponent(itemFiles.base || '')}`;
+                const category = itemFiles.category || null;
+                const key = category === null ? '__main__' : category;
+                if (!groupedItems[key]) groupedItems[key] = [];
+                groupedItems[key].push({ itemId, ...itemFiles });
+            });
 
-                // Ottieni rarita e colori
-                const rarityLevel = window.FigurineSystem.getFigurineRarity(collId, itemId);
-                const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
-                const borderClass = hasAny ? rarityInfo.cssClass : 'border-gray-700';
-                const textClass = hasAny ? rarityInfo.textClass : 'text-gray-500';
+            let html = '<div class="p-3 space-y-4">';
+
+            categories.forEach(cat => {
+                const key = cat.id === null ? '__main__' : cat.id;
+                const items = groupedItems[key] || [];
+                if (items.length === 0) return;
+
+                // Conta possedute
+                const ownedCount = items.filter(item => (albumColl[item.itemId]?.base || 0) > 0).length;
 
                 html += `
-                    <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} relative cursor-pointer hover:bg-gray-700 transition"
-                         data-icona-id="${itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
-                        <div class="aspect-square rounded overflow-hidden mb-2 relative">
-                            ${hasAny
-                                ? `<img src="${imgUrl}" alt="${displayName}" class="w-full h-full object-cover"
-                                     onerror="this.src='https://placehold.co/100x100/1f2937/6b7280?text=?'">`
-                                : `<div class="w-full h-full bg-gray-700 flex items-center justify-center">
-                                     <span class="text-4xl text-gray-500 font-bold">?</span>
-                                   </div>`
-                            }
-                            <span class="absolute bottom-0 left-0 text-sm">${rarityInfo.icon}</span>
+                    <div class="illustrazioni-category">
+                        <button class="category-toggle w-full flex items-center justify-between p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition"
+                                data-category="${key}">
+                            <span class="font-bold text-white flex items-center gap-2">
+                                ${cat.icon} ${cat.name}
+                                <span class="text-xs text-gray-400">(${ownedCount}/${items.length})</span>
+                            </span>
+                            <span class="category-arrow text-gray-400 transition-transform ${key === '__main__' ? '' : 'rotate-180'}">▼</span>
+                        </button>
+                        <div class="category-content ${key === '__main__' ? '' : 'hidden'} mt-2">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                `;
+
+                items.forEach(item => {
+                    const counts = albumColl[item.itemId] || { base: 0 };
+                    const hasAny = counts.base > 0;
+                    const displayName = item.name || item.itemId;
+                    const imgUrl = item.customUrl || `${collDef.baseUrl}${encodeURIComponent(item.base || '')}`;
+
+                    // Ottieni rarita e colori
+                    const rarityLevel = window.FigurineSystem.getFigurineRarity(collId, item.itemId);
+                    const rarityInfo = window.FigurineSystem.getRarityInfo(rarityLevel);
+                    const borderClass = hasAny ? rarityInfo.cssClass : 'border-gray-700';
+                    const textClass = hasAny ? rarityInfo.textClass : 'text-gray-500';
+
+                    html += `
+                        <div class="figurine-card bg-gray-800 rounded-lg p-2 border-2 ${borderClass} relative cursor-pointer hover:bg-gray-700 transition"
+                             data-icona-id="${item.itemId}" data-icona-name="${displayName}" data-collection-id="${collId}">
+                            <div class="aspect-square rounded overflow-hidden mb-2 relative">
+                                ${hasAny
+                                    ? `<img src="${imgUrl}" alt="${displayName}" class="w-full h-full object-cover"
+                                         onerror="this.src='https://placehold.co/100x100/1f2937/6b7280?text=?'">`
+                                    : `<div class="w-full h-full bg-gray-700 flex items-center justify-center">
+                                         <span class="text-4xl text-gray-500 font-bold">?</span>
+                                       </div>`
+                                }
+                                <span class="absolute bottom-0 left-0 text-sm">${rarityInfo.icon}</span>
+                            </div>
+                            <p class="text-xs font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} text-center truncate mb-1">${displayName}</p>
+                            ${hasAny ? `<span class="text-[10px] ${textClass} block text-center">x${counts.base}</span>` : ''}
                         </div>
-                        <p class="text-xs font-semibold ${hasAny ? 'text-white' : 'text-gray-500'} text-center truncate mb-1">${displayName}</p>
-                        ${hasAny ? `<span class="text-[10px] ${textClass} block text-center">x${counts.base}</span>` : ''}
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
                     </div>
                 `;
             });
@@ -1339,85 +1399,137 @@ window.FigurineUI = {
     },
 
     /**
-     * Mostra risultato apertura pacchetto
+     * Mostra risultato apertura pacchetto in overlay fullscreen
      */
     showPackResult(result) {
-        const container = document.getElementById('pack-result');
-        if (!container) return;
+        // Rimuovi overlay esistente
+        const existing = document.getElementById('pack-result-overlay');
+        if (existing) existing.remove();
 
         const rarityColors = {
-            normale: 'border-gray-500 bg-gray-800',
-            evoluto: 'border-blue-500 bg-blue-900/30',
-            alternative: 'border-purple-500 bg-purple-900/30',
-            ultimate: 'border-yellow-500 bg-yellow-900/30',
-            fantasy: 'border-pink-500 bg-pink-900/30',
-            base: 'border-emerald-500 bg-emerald-900/30'
+            normale: 'from-gray-600 to-gray-800 border-gray-400',
+            evoluto: 'from-green-600 to-green-900 border-green-400',
+            alternative: 'from-blue-600 to-blue-900 border-blue-400',
+            ultimate: 'from-purple-600 to-purple-900 border-purple-400',
+            fantasy: 'from-yellow-500 to-amber-700 border-yellow-300',
+            base: 'from-emerald-600 to-emerald-900 border-emerald-400'
         };
 
-        const textColors = {
-            normale: 'text-gray-400',
-            evoluto: 'text-blue-400',
-            alternative: 'text-purple-400',
-            ultimate: 'text-yellow-400',
-            fantasy: 'text-pink-400',
-            base: 'text-emerald-400'
+        const bgGlow = {
+            normale: 'shadow-gray-500/50',
+            evoluto: 'shadow-green-500/50',
+            alternative: 'shadow-blue-500/50',
+            ultimate: 'shadow-purple-500/50',
+            fantasy: 'shadow-yellow-400/70',
+            base: 'shadow-emerald-500/50'
         };
 
-        let html = `
-            <div class="bg-gradient-to-b from-purple-900 to-gray-900 rounded-xl p-4 border-2 border-purple-400 animate-pulse">
-                <h3 class="text-center text-lg font-bold text-white mb-4">🎉 Hai ottenuto:</h3>
-                <div class="grid grid-cols-${Math.min(result.figurine.length, 3)} gap-3">
-        `;
+        // Crea overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'pack-result-overlay';
+        overlay.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center';
+        overlay.style.animation = 'fadeIn 0.3s ease-out';
 
-        result.figurine.forEach(fig => {
-            const rarity = fig.rarity || fig.variant || 'base';
-            const name = fig.iconaName || fig.itemName || fig.itemId || 'Figurina';
-            const imgUrl = fig.imageUrl || fig.iconaPhoto || 'https://placehold.co/80x80/1f2937/6b7280?text=?';
-            const rarityName = fig.rarityInfo?.name || rarity;
-            const noPreviewCollections = ['giocatori_seri', 'figurine_utenti'];
-            const hideImage = noPreviewCollections.includes(fig.collectionId);
+        const fig = result.figurine[0]; // Mostra la prima carta
+        const rarity = fig.rarity || fig.variant || 'base';
+        const name = fig.iconaName || fig.itemName || fig.itemId || 'Figurina';
+        const imgUrl = fig.imageUrl || fig.iconaPhoto || 'https://placehold.co/200x200/1f2937/6b7280?text=?';
+        const rarityName = fig.rarityInfo?.name || rarity;
+        const noPreviewCollections = ['giocatori_seri', 'figurine_utenti'];
+        const hideImage = noPreviewCollections.includes(fig.collectionId);
 
-            html += `
-                <div class="rounded-lg p-2 ${rarityColors[rarity] || rarityColors.base} border-2 text-center">
-                    ${hideImage ? `
-                        <div class="w-16 h-16 mx-auto rounded bg-emerald-900/50 flex items-center justify-center mb-1">
-                            <span class="text-2xl">⚽</span>
+        overlay.innerHTML = `
+            <div class="text-center p-6 max-w-sm w-full">
+                <!-- Titolo -->
+                <h2 class="text-3xl font-bold text-white mb-6 animate-pulse">
+                    🎉 Hai trovato!
+                </h2>
+
+                <!-- Card della figurina -->
+                <div class="relative inline-block">
+                    <div class="bg-gradient-to-b ${rarityColors[rarity] || rarityColors.base} rounded-2xl p-4 border-4 shadow-2xl ${bgGlow[rarity] || bgGlow.base}"
+                         style="animation: cardReveal 0.6s ease-out; min-width: 200px;">
+                        <!-- Immagine -->
+                        <div class="aspect-square rounded-xl overflow-hidden mb-4 bg-gray-900/50">
+                            ${hideImage ? `
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <span class="text-6xl">⚽</span>
+                                </div>
+                            ` : `
+                                <img src="${imgUrl}"
+                                     alt="${name}"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.src='https://placehold.co/200x200/1f2937/6b7280?text=?'">
+                            `}
                         </div>
-                    ` : `
-                        <img src="${imgUrl}"
-                             alt="${name}"
-                             class="w-16 h-16 mx-auto rounded object-cover mb-1"
-                             onerror="this.src='https://placehold.co/80x80/1f2937/6b7280?text=?'">
-                    `}
-                    <p class="text-xs font-semibold text-white truncate">${name}</p>
-                    <p class="text-xs ${textColors[rarity] || textColors.base}">${rarityName}</p>
+
+                        <!-- Nome -->
+                        <p class="text-xl font-bold text-white mb-1">${name}</p>
+
+                        <!-- Rarita -->
+                        <p class="text-lg font-semibold" style="color: var(--rarity-color, #fff);">
+                            ${fig.rarityInfo?.icon || '⭐'} ${rarityName}
+                        </p>
+                    </div>
+
+                    <!-- Effetto sparkle per rarita alte -->
+                    ${['fantasy', 'ultimate'].includes(rarity) ? `
+                        <div class="absolute inset-0 pointer-events-none">
+                            <div class="absolute top-0 left-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                            <div class="absolute top-1/4 right-0 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.3s;"></div>
+                            <div class="absolute bottom-1/4 left-0 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.6s;"></div>
+                        </div>
+                    ` : ''}
                 </div>
-            `;
-        });
 
-        html += '</div>';
+                ${result.figurine.length > 1 ? `
+                    <p class="text-green-400 font-bold mt-4">🍀 +${result.figurine.length - 1} figurina bonus!</p>
+                ` : ''}
 
-        if (result.bonusEarned > 0) {
-            html += `<p class="text-center text-green-400 font-bold mt-3">+${result.bonusEarned} CS Bonus!</p>`;
-        }
+                ${result.bonusEarned > 0 ? `
+                    <p class="text-green-400 font-bold mt-2">+${result.bonusEarned} CS Bonus!</p>
+                ` : ''}
 
-        if (result.cssCost) {
-            html += `<p class="text-center text-gray-400 text-xs mt-1">-${result.cssCost} CSS</p>`;
-        }
-
-        html += `
-                <button id="btn-close-result" class="w-full mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-lg">
-                    Continua
+                <!-- Pulsante chiudi -->
+                <button id="btn-close-pack-overlay"
+                        class="mt-8 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-lg rounded-xl shadow-lg transform transition hover:scale-105">
+                    ✨ Continua
                 </button>
             </div>
+
+            <style>
+                @keyframes cardReveal {
+                    0% { transform: scale(0.5) rotateY(180deg); opacity: 0; }
+                    50% { transform: scale(1.1) rotateY(0deg); opacity: 1; }
+                    100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            </style>
         `;
 
-        container.innerHTML = html;
-        container.classList.remove('hidden');
+        document.body.appendChild(overlay);
 
-        document.getElementById('btn-close-result')?.addEventListener('click', () => {
-            container.classList.add('hidden');
-            this.renderPacks();
+        // Event listener per chiudere
+        document.getElementById('btn-close-pack-overlay')?.addEventListener('click', () => {
+            overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+            setTimeout(() => {
+                overlay.remove();
+                this.renderPacks();
+            }, 200);
+        });
+
+        // Chiudi anche cliccando fuori
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+                setTimeout(() => {
+                    overlay.remove();
+                    this.renderPacks();
+                }, 200);
+            }
         });
     }
 };

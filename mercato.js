@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cache giocatori disponibili
     let availablePlayersCache = [];
     let currentBudgetCache = 0;
+    let marketDiscountCache = 0; // Sconto stadio (0.05 = 5%, 0.10 = 10%, 0.15 = 15%)
 
     // === GIOCATORI BASE GRATUITI ===
     const BASE_PLAYER_NAMES = [
@@ -510,15 +511,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filteredPlayers = filterAndSortMarketPlayers(availablePlayersCache);
         const budgetRimanente = currentBudgetCache;
+        const discount = marketDiscountCache;
 
         listContainer.innerHTML = filteredPlayers.length > 0
             ? filteredPlayers.map(player => {
                 const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
-                const isAffordable = budgetRimanente >= player.cost;
+                const originalCost = player.cost || 0;
+                const discountedCost = discount > 0 ? Math.floor(originalCost * (1 - discount)) : originalCost;
+                const isAffordable = budgetRimanente >= discountedCost;
                 const canBuy = isAffordable;
 
                 const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
-                let buttonText = isAffordable ? `Acquista (${player.cost} CS)` : `Costo ${player.cost} CS (No Budget)`;
+
+                // Mostra prezzo scontato se c'e' sconto
+                let priceDisplay = `${discountedCost} CS`;
+                if (discount > 0 && originalCost > 0) {
+                    priceDisplay = `<span class="line-through text-gray-500">${originalCost}</span> <span class="text-green-400">${discountedCost} CS</span>`;
+                }
+                let buttonText = isAffordable ? `Acquista (${discountedCost} CS)` : `Costo ${discountedCost} CS (No Budget)`;
 
                 // Mostra abilita se presenti
                 const abilitiesText = player.abilities && player.abilities.length > 0
@@ -885,6 +895,12 @@ document.addEventListener('DOMContentLoaded', () => {
             availablePlayersCache = availablePlayers;
             currentBudgetCache = budgetRimanente;
 
+            // Calcola sconto stadio (Centro degli Osservatori)
+            marketDiscountCache = 0;
+            if (window.Stadium && teamData.stadium) {
+                marketDiscountCache = window.Stadium.getMarketDiscount(teamData.stadium);
+            }
+
             // Applica filtri iniziali
             const filteredPlayers = filterAndSortMarketPlayers(availablePlayers);
 
@@ -911,20 +927,23 @@ document.addEventListener('DOMContentLoaded', () => {
             `);
 
             // Renderizza la lista dei giocatori
+            const discount = marketDiscountCache;
             if (filteredPlayers.length > 0) {
                  playersListContainer.innerHTML = filteredPlayers.map(player => {
                     // Nel mercato i giocatori hanno level fisso (non range)
                     const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
-                    const isAffordable = budgetRimanente >= player.cost;
+                    const originalCost = player.cost || 0;
+                    const discountedCost = discount > 0 ? Math.floor(originalCost * (1 - discount)) : originalCost;
+                    const isAffordable = budgetRimanente >= discountedCost;
                     const canBuy = isAffordable && !disableAcquisition;
 
                     const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
                     let buttonText;
 
                     if (!isAffordable) {
-                        buttonText = `Costo ${player.cost} CS (No Budget)`;
+                        buttonText = `Costo ${discountedCost} CS (No Budget)`;
                     } else {
-                         buttonText = `Acquista (${player.cost} CS)`;
+                         buttonText = `Acquista (${discountedCost} CS)`;
                     }
 
                     // Mostra abilita se presenti
@@ -1037,8 +1056,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // *** SICUREZZA: Usa SEMPRE i dati dal server, MAI dal DOM ***
                     // I valori nel dataset HTML possono essere manipolati da DevTools
-                    const serverPlayerCost = playerMarketData.cost || 0;
+                    let serverPlayerCost = playerMarketData.cost || 0;
                     const serverPlayerLevel = playerMarketData.level || 1;
+
+                    // *** SCONTO STADIO: Centro degli Osservatori ***
+                    let discountPercent = 0;
+                    if (window.Stadium && teamData.stadium) {
+                        discountPercent = window.Stadium.getMarketDiscount(teamData.stadium);
+                        if (discountPercent > 0) {
+                            const discountAmount = Math.floor(serverPlayerCost * discountPercent);
+                            serverPlayerCost = serverPlayerCost - discountAmount;
+                            console.log(`[Mercato] Sconto stadio applicato: -${Math.round(discountPercent * 100)}% (-${discountAmount} CS)`);
+                        }
+                    }
                     const serverPlayerName = playerMarketData.name || 'Sconosciuto';
                     const serverPlayerRole = playerMarketData.role || 'C';
                     const serverPlayerAge = playerMarketData.age || 18;

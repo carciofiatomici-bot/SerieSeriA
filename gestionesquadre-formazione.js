@@ -2390,8 +2390,9 @@ window.GestioneSquadreFormazione = {
 
             // Salva su Firestore
             const currentTeamId = window.InterfacciaCore?.currentTeamId;
-            if (currentTeamId) {
-                const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
+            const appId = window.firestoreTools?.appId;
+            if (currentTeamId && appId) {
+                const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, currentTeamId);
                 await updateDoc(teamDocRef, {
                     budget: newBudget,
                     players: teamData.players,
@@ -2470,8 +2471,9 @@ window.GestioneSquadreFormazione = {
 
             // Salva su Firestore
             const currentTeamId = window.InterfacciaCore?.currentTeamId;
-            if (currentTeamId) {
-                const teamDocRef = doc(db, `artifacts/${window.appId}/public/data/teams`, currentTeamId);
+            const appId = window.firestoreTools?.appId;
+            if (currentTeamId && appId) {
+                const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, currentTeamId);
                 await updateDoc(teamDocRef, {
                     budget: newBudget,
                     players: teamData.players

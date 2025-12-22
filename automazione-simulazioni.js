@@ -232,6 +232,9 @@ window.AutomazioneSimulazioni = {
             const roundNumber = schedule[nextRoundIndex].round;
             console.log(`[Automazione] Simulata giornata ${roundNumber} del campionato`);
 
+            // Processa automaticamente le schedine per questa giornata
+            await this.processSchedinaForRound(roundNumber);
+
             return {
                 success: true,
                 type: 'campionato',
@@ -388,6 +391,44 @@ window.AutomazioneSimulazioni = {
         return lastDate.getFullYear() === today.getFullYear() &&
                lastDate.getMonth() === today.getMonth() &&
                lastDate.getDate() === today.getDate();
+    },
+
+    /**
+     * Processa le schedine per una giornata specifica (chiamato dopo simulazione)
+     * @param {number} roundNumber - Numero della giornata da processare
+     */
+    async processSchedinaForRound(roundNumber) {
+        if (!window.Schedina || !window.FeatureFlags?.isEnabled('schedina')) {
+            console.log('[Automazione] Schedina non abilitata, skip processo');
+            return { success: false, reason: 'disabled' };
+        }
+
+        try {
+            console.log(`[Automazione] Calcolo risultati schedina per giornata ${roundNumber}...`);
+
+            // Calcola risultati
+            const calcResult = await window.Schedina.calculateResults(roundNumber);
+            if (!calcResult.success) {
+                console.error('[Automazione] Errore calcolo schedina:', calcResult.error);
+                return { success: false, reason: 'calc_error', error: calcResult.error };
+            }
+
+            console.log(`[Automazione] Risultati calcolati: ${calcResult.participants?.length || 0} partecipanti`);
+
+            // Assegna premi
+            const rewardResult = await window.Schedina.applyRewards(roundNumber);
+            console.log(`[Automazione] Premi schedina assegnati: ${rewardResult.rewarded} squadre`);
+
+            return {
+                success: true,
+                round: roundNumber,
+                participants: calcResult.participants?.length || 0,
+                rewarded: rewardResult.rewarded
+            };
+        } catch (error) {
+            console.error('[Automazione] Errore processo schedina per giornata:', error);
+            return { success: false, reason: 'exception', error: error.message };
+        }
     },
 
     /**
@@ -683,6 +724,13 @@ window.AutomazioneSimulazioni = {
             this.startPeriodicCheck();
         }
         console.log('[Automazione] Modulo inizializzato');
+    },
+
+    /**
+     * Alias per simulateChampionship (compatibilita' con admin.js)
+     */
+    async simulateChampionshipRound() {
+        return await this.simulateChampionship();
     }
 };
 
