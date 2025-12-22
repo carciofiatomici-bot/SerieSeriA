@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.28',
+    currentVersion: '2.2.29',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,18 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.29',
+            date: '2025-12-22',
+            time: '12:00',
+            title: 'Homepage e Fix Icone',
+            changes: [
+                { text: 'Nuovo bottone Homepage nel menu hamburger per tornare alla home senza logout', adminOnly: false },
+                { text: 'Sessione mantenuta attiva: clicca sul tuo team per rientrare', adminOnly: false },
+                { text: 'Fix foto Bemolle nella lista Icone', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.28',
             date: '2025-12-20',
