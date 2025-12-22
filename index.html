@@ -1729,8 +1729,8 @@
         import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, deleteField, onSnapshot, orderBy, limit, Timestamp, runTransaction, writeBatch, enableIndexedDbPersistence, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Imposta il livello di log (utile per il debug)
-        setLogLevel('debug');
+        // Imposta il livello di log (solo errori per ridurre output console)
+        setLogLevel('error');
 
         // Variabili globali fornite dall'ambiente Canvas
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
