@@ -1427,7 +1427,7 @@ window.FigurineUI = {
         // Crea overlay
         const overlay = document.createElement('div');
         overlay.id = 'pack-result-overlay';
-        overlay.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center';
+        overlay.className = 'fixed inset-0 z-[10000] bg-black/90 flex items-center justify-center';
         overlay.style.animation = 'fadeIn 0.3s ease-out';
 
         const fig = result.figurine[0]; // Mostra la prima carta
