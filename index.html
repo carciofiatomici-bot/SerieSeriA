@@ -683,9 +683,79 @@
             </div>
 
             <!-- Header Team Name (mostrato quando loggato - copia del team-name-box dalla dashboard) -->
-            <div id="home-team-header" class="hidden mb-3">
+            <div id="home-team-header" class="hidden mb-1">
+                <!-- Box unificato: Nome Squadra + Risorse (copia per homepage) -->
                 <div id="home-team-name-box" class="rounded-lg border border-green-500/50 relative">
+                    <!-- Nome Squadra (centro) -->
                     <h2 id="home-team-name" class="text-base sm:text-xl md:text-2xl font-extrabold text-center uppercase team-name-fancy leading-none py-1">NOME SQUADRA</h2>
+                    <!-- Menu Hamburger (sinistra assoluto) -->
+                    <div class="absolute left-1 top-3 sm:top-4">
+                        <button id="home-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
+                            <span class="text-xs text-white">☰</span>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="home-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
+                            <button id="home-menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📖</span> Tutorial
+                            </button>
+                            <button id="home-menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>📋</span> Changelog
+                            </button>
+                            <button id="home-menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>🔑</span> Cambia Password
+                            </button>
+                            <button id="home-menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                                <span>🎨</span> Colore Squadra
+                            </button>
+                            <div class="border-t border-gray-700"></div>
+                            <button id="home-menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
+                                <span>🗑️</span> Elimina Squadra
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Selettore Colore (destra assoluto) -->
+                    <div class="absolute right-1.5 top-3 sm:top-4">
+                        <input type="color" id="home-color-picker"
+                               class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
+                               title="Scegli il colore primario della squadra"
+                               value="#22c55e">
+                    </div>
+                    <!-- Risorse (sotto il nome squadra) -->
+                    <div id="home-risorse-box" class="mt-1 pt-1 border-t border-gray-700/50">
+                        <div class="flex items-center justify-between w-full">
+                            <!-- Album e Ruota (sinistra) -->
+                            <div class="flex items-center gap-1">
+                                <button id="home-risorse-pacchetti" class="relative hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Album Figurine">
+                                    <span class="text-lg">🎴</span>
+                                    <span class="text-xs text-yellow-300 font-bold">ALBUM</span>
+                                </button>
+                                <button id="home-risorse-ruota" class="relative hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
+                                    <span class="text-lg">🎡</span>
+                                    <span class="text-xs text-orange-300 font-bold">RUOTA</span>
+                                </button>
+                            </div>
+                            <!-- CS e CSS (centro) -->
+                            <div class="flex items-center justify-center gap-2 flex-1">
+                                <!-- Crediti Seri -->
+                                <div class="h-8 px-3 flex items-center gap-1 bg-gray-800/40 rounded border border-amber-500/60">
+                                    <span class="text-base">💰</span>
+                                    <span id="home-risorse-cs" class="text-sm text-green-400 font-bold">0</span>
+                                    <span class="text-xs text-gray-400">CS</span>
+                                </div>
+                                <!-- Crediti Super Seri -->
+                                <div class="h-8 px-3 flex items-center gap-1 bg-gray-800/40 rounded border border-amber-500/60">
+                                    <span class="text-base">💎</span>
+                                    <span id="home-risorse-css" class="text-sm text-yellow-400 font-bold">0</span>
+                                    <span class="text-xs text-gray-400">CSS</span>
+                                </div>
+                            </div>
+                            <!-- Negozio (destra) -->
+                            <button id="home-risorse-negozio" class="hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Negozio CSS">
+                                <span class="text-lg">🛒</span>
+                                <span class="text-xs text-yellow-300 font-bold">SHOP</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

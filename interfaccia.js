@@ -232,15 +232,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Tenta di ripristinare la sessione salvata
-        const sessionRestored = await window.InterfacciaAuth.restoreSession(elements);
-
-        if (!sessionRestored) {
-            // Nessuna sessione salvata - mostra direttamente il login (gate rimosso)
+        // Funzione per mostrare la homepage (fallback)
+        const showHomepage = () => {
+            console.log('[App] Mostro homepage');
             if (elements.loginBox) {
                 elements.loginBox.classList.remove('hidden-on-load');
                 window.showScreen(elements.loginBox);
             }
+        };
+
+        try {
+            // Timeout di sicurezza: se il ripristino sessione impiega piu di 10 secondi, mostra homepage
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Timeout ripristino sessione')), 10000);
+            });
+
+            // Tenta di ripristinare la sessione salvata con timeout
+            const sessionRestored = await Promise.race([
+                window.InterfacciaAuth.restoreSession(elements),
+                timeoutPromise
+            ]);
+
+            console.log('[App] sessionRestored:', sessionRestored);
+
+            if (!sessionRestored) {
+                // Nessuna sessione salvata o sessione non valida - mostra la homepage (login-box)
+                showHomepage();
+            }
+            // Se sessionRestored e' true, restoreSession ha gia mostrato la dashboard
+        } catch (error) {
+            console.error('[App] Errore durante ripristino sessione:', error);
+            // In caso di errore o timeout, mostra sempre la homepage
+            showHomepage();
         }
     };
 
