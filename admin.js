@@ -4837,14 +4837,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     msgElement.textContent = 'Abilita Icone corrette! Controlla console per dettagli.';
                     msgElement.className = 'text-center text-sm mb-3 text-green-400';
                 }
-                window.showToast('Abilita Icone corrette con successo!', 'success');
+                if (window.Toast) window.Toast.success('Abilita Icone corrette con successo!');
             } catch (error) {
                 console.error('Errore correzione abilita:', error);
                 if (msgElement) {
                     msgElement.textContent = `Errore: ${error.message}`;
                     msgElement.className = 'text-center text-sm mb-3 text-red-400';
                 }
-                window.showToast('Errore durante la correzione', 'error');
+                if (window.Toast) window.Toast.error('Errore durante la correzione');
             } finally {
                 if (button) {
                     button.disabled = false;
