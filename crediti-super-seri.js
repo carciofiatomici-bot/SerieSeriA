@@ -453,6 +453,11 @@ window.CreditiSuperSeri = {
 
             console.log(`Potenziato ${player.name} da Lv${livelloAttuale} a Lv${nuovoLivello}. Costo: ${costo} CSS`);
 
+            // NUOVO: Applica penalità forma (-1) dopo allenamento/potenziamento
+            if (window.GestioneSquadreUtils?.applyTrainingFormPenalty) {
+                await window.GestioneSquadreUtils.applyTrainingFormPenalty(teamId, playerId);
+            }
+
             return {
                 success: true,
                 nuovoLivello,
