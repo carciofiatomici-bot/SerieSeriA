@@ -1741,11 +1741,10 @@ window.GestioneSquadreFormazione = {
 
             // 6. Chiudi modal e aggiorna UI immediatamente
             this.closeFormRecoveryModal();
-            this.renderFieldSlots(teamData, context);
 
-            // Aggiorna anche la UI del budget se visibile altrove
-            if (window.InterfacciaCore?.setCurrentTeamData) {
-                window.InterfacciaCore.setCurrentTeamData(teamData);
+            // Re-render completo del pannello per aggiornare la lista giocatori
+            if (context.squadraToolsContainer) {
+                this.render(teamData, context);
             }
 
         } catch (error) {
