@@ -1906,7 +1906,7 @@ window.AdminTeams = {
 
     /**
      * Aggiorna le abilita delle icone esistenti con le nuove abilita uniche
-     * da icone.js
+     * da icone.js (legge da CAPTAIN_CANDIDATES_TEMPLATES)
      */
     async updateIconeAbilities() {
         const TEAMS_COLLECTION_PATH = window.AdminTeams?.TEAMS_COLLECTION_PATH ||
@@ -1915,28 +1915,27 @@ window.AdminTeams = {
         const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
         const db = window.db;
 
-        // Mappa delle abilita uniche per ogni icona (da icone.js)
-        const ICONE_ABILITIES = {
-            'croc': ['Icona', 'Fatto d\'acciaio'],
-            'shik': ['Icona', 'Amici di panchina'],
-            'ilcap': ['Icona', 'Calcolo delle probabilita'],
-            'simo': ['Icona'],
-            'dappi': ['Icona'],
-            'blatta': ['Icona', 'Scheggia impazzita'],
-            'antony': ['Icona', 'Avanti un altro'],
-            'gladio': ['Icona', 'Continua a provare'],
-            'amedemo': ['Icona', 'Tiro Dritto'],
-            'flavio': ['Icona'],
-            'luka': ['Icona', 'Contrasto di gomito'],
-            'melio': ['Icona', 'Assist-man'],
-            'markf': ['Icona', 'Osservatore'],
-            'sandro': ['Icona', 'Relax'],
-            'fosco': ['Icona', 'L\'uomo in piu'],
-            'cocco': ['Icona', 'Stazionario']
-        };
+        // Leggi direttamente da CAPTAIN_CANDIDATES_TEMPLATES (icone.js)
+        const iconeTemplates = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+        if (iconeTemplates.length === 0) {
+            console.error('❌ CAPTAIN_CANDIDATES_TEMPLATES non disponibile!');
+            alert('❌ Errore: CAPTAIN_CANDIDATES_TEMPLATES non caricato');
+            return;
+        }
+
+        // Crea mappa ID -> abilities dai template
+        const ICONE_ABILITIES = {};
+        iconeTemplates.forEach(icona => {
+            ICONE_ABILITIES[icona.id] = icona.abilities || ['Icona'];
+            // Aggiungi anche per nome (fallback)
+            ICONE_ABILITIES[icona.name.toLowerCase()] = icona.abilities || ['Icona'];
+        });
+
+        console.log('📋 Mappa abilita icone:', ICONE_ABILITIES);
 
         let updatedCount = 0;
         let teamsUpdated = [];
+        let details = [];
 
         try {
             console.log('🔄 Inizio aggiornamento abilita icone...');
@@ -1955,17 +1954,26 @@ window.AdminTeams = {
                 const updatedPlayers = teamData.players.map(player => {
                     // Controlla se e un'icona
                     if (player.abilities && player.abilities.includes('Icona')) {
-                        // Trova l'id dell'icona
+                        // Trova l'id dell'icona (prova ID, poi nome lowercase)
                         const iconaId = player.id;
-                        if (ICONE_ABILITIES[iconaId]) {
-                            const newAbilities = ICONE_ABILITIES[iconaId];
+                        const iconaNameLower = (player.name || '').toLowerCase();
+
+                        let newAbilities = ICONE_ABILITIES[iconaId] || ICONE_ABILITIES[iconaNameLower];
+
+                        if (newAbilities) {
                             // Controlla se le abilita sono diverse
                             const currentAbilities = player.abilities || [];
-                            if (JSON.stringify(currentAbilities.sort()) !== JSON.stringify(newAbilities.sort())) {
-                                console.log(`  Aggiornando ${player.name} (${iconaId}): ${currentAbilities.join(', ')} -> ${newAbilities.join(', ')}`);
+                            const currentSorted = [...currentAbilities].sort().join(',');
+                            const newSorted = [...newAbilities].sort().join(',');
+
+                            if (currentSorted !== newSorted) {
+                                console.log(`  Aggiornando ${player.name} (${iconaId}): [${currentAbilities.join(', ')}] -> [${newAbilities.join(', ')}]`);
+                                details.push(`${teamData.teamName}: ${player.name} [${currentAbilities.join(', ')}] -> [${newAbilities.join(', ')}]`);
                                 iconaUpdated = true;
                                 return { ...player, abilities: newAbilities };
                             }
+                        } else {
+                            console.warn(`  ⚠️ Icona non trovata in template: ${player.name} (${iconaId})`);
                         }
                     }
                     return player;
@@ -1983,8 +1991,13 @@ window.AdminTeams = {
             if (teamsUpdated.length > 0) {
                 console.log(`   Squadre: ${teamsUpdated.join(', ')}`);
             }
+            if (details.length > 0) {
+                console.log('📝 Dettagli modifiche:');
+                details.forEach(d => console.log(`   ${d}`));
+            }
 
-            alert(`✅ Aggiornamento abilita icone completato!\n\n${updatedCount} squadre aggiornate:\n${teamsUpdated.join('\n') || 'Nessuna'}`);
+            const detailsText = details.length > 0 ? `\n\nDettagli:\n${details.join('\n')}` : '';
+            alert(`✅ Aggiornamento abilita icone completato!\n\n${updatedCount} squadre aggiornate:\n${teamsUpdated.join('\n') || 'Nessuna (tutte gia corrette)'}${detailsText}`);
 
             // Ricarica la lista
             if (this.teamsListContainer) {
