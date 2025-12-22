@@ -1,0 +1,45 @@
+Agisci come senior software engineer + code auditor.
+
+Obiettivo: individuare bug, errori logici, edge case e potenziali crash nel codebase, senza modificare nulla.
+
+Procedura obbligatoria:
+
+Scansiona l’intero progetto partendo dai punti di ingresso (init, main, bootstrap, service worker, router).
+
+Individua:
+
+errori runtime potenziali
+
+variabili o funzioni non definite
+
+race condition
+
+async/await gestiti male
+
+side-effect non controllati
+
+memory leak
+
+dipendenze non usate o rotte
+
+codice morto
+
+errori tipici PWA (cache, SW, lifecycle)
+
+Per ogni problema trovato, restituisci solo:
+
+file e riga (o funzione)
+
+tipo di bug
+
+spiegazione secca del perché è un problema
+
+impatto reale (crash, bug silenzioso, rischio futuro)
+
+Non proporre fix, non riscrivere codice, non ottimizzare.
+
+Se qualcosa sembra sbagliato ma non sei certo al 100%, segnalo come “sospetto”, non come bug.
+
+Output: elenco numerato, asciutto, tecnico. Niente teoria.
+Tratta il codice come codice legacy in produzione con utenti reali.
+Assumi che ogni ambiguità sia un potenziale bug finché non dimostrato il contrario.

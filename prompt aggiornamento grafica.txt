@@ -1,0 +1,35 @@
+Agisci come senior frontend engineer specializzato in responsive design e PWA.
+
+Obiettivo:
+aggiornare e migliorare la versione mobile e PWA del progetto ESISTENTE,
+senza alterare l’aspetto visivo attuale né rompere layout, spacing, colori o tipografia.
+
+Vincoli NON negoziabili:
+- Non modificare classi CSS esistenti se non strettamente necessario
+- Non cambiare colori, font, dimensioni, margini o proporzioni visive
+- Non riscrivere layout desktop
+- Non introdurre nuove librerie UI
+- Non rimuovere media query esistenti
+- Non fare refactor “di pulizia” non richiesti
+
+Procedura obbligatoria:
+1. Analizza solo i file coinvolti in mobile/PWA (CSS, manifest, service worker, viewport, touch)
+2. Elenca i problemi mobile/PWA RISCONTRATI prima di cambiare codice
+3. Proponi per ogni problema una modifica minima e localizzata
+4. Applica le modifiche UNA ALLA VOLTA
+5. Dopo ogni modifica, spiega perché NON impatta la grafica esistente
+
+Ambito di intervento consentito:
+- media queries mobile
+- viewport e safe-area (notch)
+- touch target e overflow
+- manifest.json (icone, display, theme_color)
+- service worker (cache, offline, update strategy)
+- performance mobile (senza cambiare UI)
+
+Output richiesto:
+- elenco file modificati
+- diff chiaro per ogni file
+- nessuna modifica non esplicitata
+
+Se una modifica può rompere la grafica, DEVI fermarti e segnalarlo.
