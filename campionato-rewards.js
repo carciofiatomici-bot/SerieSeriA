@@ -41,6 +41,9 @@ window.ChampionshipRewards = {
         const db = window.db;
         const TEAMS_COLLECTION_PATH = `artifacts/${window.firestoreTools.appId}/public/data/teams`;
 
+        // Moltiplicatore doppi premi (evento speciale)
+        const rewardMultiplier = window.FeatureFlags?.isEnabled('doubleRewardsEvent') ? 2 : 1;
+
         // Calcola i crediti guadagnati
         let homeCreditsEarned = homeGoals * this.GOAL_CS; // 5 CS per gol
         let awayCreditsEarned = awayGoals * this.GOAL_CS; // 5 CS per gol
@@ -50,6 +53,13 @@ window.ChampionshipRewards = {
             homeCreditsEarned += 25;
         } else if (homeGoals < awayGoals) {
             awayCreditsEarned += 25;
+        }
+
+        // Applica moltiplicatore evento doppi premi
+        if (rewardMultiplier > 1) {
+            homeCreditsEarned *= rewardMultiplier;
+            awayCreditsEarned *= rewardMultiplier;
+            console.log('[Rewards] Evento Doppi Premi attivo! Premi x2');
         }
 
         // Aggiorna il budget in Firestore
@@ -82,6 +92,12 @@ window.ChampionshipRewards = {
         const rewardsMap = new Map();
         const numTeams = standings.length;
 
+        // Moltiplicatore doppi premi (evento speciale)
+        const rewardMultiplier = window.FeatureFlags?.isEnabled('doubleRewardsEvent') ? 2 : 1;
+        if (rewardMultiplier > 1) {
+            console.log('[Rewards] Evento Doppi Premi attivo per premi fine stagione! x2');
+        }
+
         standings.forEach((team, index) => {
             let reward;
 
@@ -98,7 +114,8 @@ window.ChampionshipRewards = {
                 reward = this.REWARD_ALTRI;
             }
 
-            rewardsMap.set(team.teamId, reward);
+            // Applica moltiplicatore
+            rewardsMap.set(team.teamId, reward * rewardMultiplier);
         });
 
         return rewardsMap;

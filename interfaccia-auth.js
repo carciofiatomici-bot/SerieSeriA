@@ -10,6 +10,48 @@ window.InterfacciaAuth = {
     SESSION_EXPIRY_MS: 24 * 60 * 60 * 1000,
 
     /**
+     * Controlla se la modalita manutenzione e attiva.
+     * Se attiva e l'utente non e admin, mostra messaggio di manutenzione.
+     * @param {Object} teamData - Dati della squadra corrente
+     * @param {Object} elements - Elementi DOM
+     * @returns {boolean} - true se l'utente deve essere bloccato
+     */
+    checkMaintenanceMode(teamData, elements) {
+        // Verifica se il flag maintenanceMode e attivo
+        if (!window.FeatureFlags?.isEnabled('maintenanceMode')) {
+            return false; // Manutenzione non attiva, continua normalmente
+        }
+
+        // Controlla se l'utente e admin
+        const isAdmin = window.isTeamAdmin?.(teamData?.teamName, teamData);
+        if (isAdmin) {
+            return false; // Admin puo sempre accedere
+        }
+
+        // Utente non-admin durante manutenzione - mostra messaggio
+        console.log('[Manutenzione] Accesso bloccato per utente non-admin');
+
+        if (elements?.loginMessage) {
+            elements.loginMessage.innerHTML = `
+                <div class="text-center">
+                    <span class="text-4xl">🔧</span>
+                    <p class="text-xl font-bold text-yellow-400 mt-2">Manutenzione in corso</p>
+                    <p class="text-gray-300 mt-2">L'app e temporaneamente non disponibile per aggiornamenti.</p>
+                    <p class="text-gray-400 text-sm mt-2">Riprova tra qualche minuto.</p>
+                </div>
+            `;
+            elements.loginMessage.classList.remove('text-green-500', 'text-red-400');
+        }
+
+        // Mostra la schermata di login con il messaggio
+        if (elements?.loginBox && window.showScreen) {
+            window.showScreen(elements.loginBox);
+        }
+
+        return true; // Blocca l'utente
+    },
+
+    /**
      * Salva i dati della sessione in localStorage.
      */
     saveSession(teamId, userType, teamName = null, logoUrl = null) {
@@ -510,6 +552,11 @@ window.InterfacciaAuth = {
                 return;
             }
 
+            // CHECK MANUTENZIONE: blocca utenti non-admin se flag attivo
+            if (this.checkMaintenanceMode(teamData, elements)) {
+                return; // Utente bloccato per manutenzione
+            }
+
             this.saveSession(teamDocId, 'user', teamNameForDisplay, teamData.logoUrl);
             localStorage.removeItem('fanta_needs_coach');
             localStorage.removeItem('fanta_needs_icona');
@@ -670,6 +717,11 @@ window.InterfacciaAuth = {
             // Carica i loghi delle squadre
             if (window.fetchAllTeamLogos) {
                 await window.fetchAllTeamLogos();
+            }
+
+            // CHECK MANUTENZIONE: blocca utenti non-admin se flag attivo
+            if (this.checkMaintenanceMode(teamData, elements)) {
+                return; // Utente bloccato per manutenzione
             }
 
             // Aggiorna la UI della dashboard

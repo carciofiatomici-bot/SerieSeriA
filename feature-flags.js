@@ -578,6 +578,89 @@ window.FeatureFlags = {
                     <li>Album con visualizzazione collezione completa</li>
                 </ul>
                 <p class="mt-2 text-yellow-400">Completa l'album per diventare un vero collezionista!</p>`
+        },
+
+        // ========== NUOVI FLAG ADMIN/SISTEMA ==========
+
+        maintenanceMode: {
+            id: 'maintenanceMode',
+            name: 'Modalita Manutenzione',
+            description: 'Blocca accesso agli utenti non-admin durante manutenzione',
+            icon: '🔧',
+            enabled: false,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Blocca l'accesso a tutti gli utenti non-admin</li>
+                    <li>Mostra messaggio di manutenzione in corso</li>
+                    <li>Gli admin possono continuare a usare l'app normalmente</li>
+                    <li>Utile per aggiornamenti o fix urgenti</li>
+                </ul>
+                <p class="mt-2 text-red-400">ATTENZIONE: Attivare solo quando necessario!</p>`
+        },
+        debugMode: {
+            id: 'debugMode',
+            name: 'Modalita Debug',
+            description: 'Attiva logging esteso e metriche di performance per troubleshooting',
+            icon: '🐛',
+            enabled: false,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Logging dettagliato in console per tutte le operazioni</li>
+                    <li>Metriche di performance (tempi di caricamento, query)</li>
+                    <li>Informazioni extra su errori e warning</li>
+                    <li>Utile per diagnosticare problemi</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Visibile solo nella console del browser (F12).</p>`
+        },
+        automatedSimulations: {
+            id: 'automatedSimulations',
+            name: 'Simulazioni Automatiche',
+            description: 'Controllo globale per abilitare/disabilitare le simulazioni automatiche',
+            icon: '⏰',
+            enabled: true,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Controlla tutte le simulazioni automatiche (campionato, coppa)</li>
+                    <li>Se disabilitato, le partite NON vengono simulate automaticamente</li>
+                    <li>Utile per pause tecniche o manutenzione</li>
+                    <li>Le simulazioni manuali rimangono sempre disponibili</li>
+                </ul>
+                <p class="mt-2 text-green-400">Di default ABILITATO per funzionamento normale.</p>`
+        },
+        doubleRewardsEvent: {
+            id: 'doubleRewardsEvent',
+            name: 'Evento Doppi Premi',
+            description: 'Moltiplica x2 tutti i premi (CS, CSS, EXP) durante eventi speciali',
+            icon: '🎉',
+            enabled: false,
+            category: 'economy',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Tutti i premi CS vengono raddoppiati</li>
+                    <li>Tutti i premi CSS vengono raddoppiati</li>
+                    <li>L'EXP guadagnata viene raddoppiata</li>
+                    <li>Applicato automaticamente a tutte le fonti di premi</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Perfetto per eventi speciali e festivita!</p>`
+        },
+        betaTestingMode: {
+            id: 'betaTestingMode',
+            name: 'Modalita Beta Testing',
+            description: 'Sblocca feature sperimentali per utenti beta tester',
+            icon: '🧪',
+            enabled: false,
+            category: 'admin',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Accesso anticipato a feature in sviluppo</li>
+                    <li>Possibilita di testare nuove funzionalita</li>
+                    <li>Feedback diretto sulle novita</li>
+                    <li>Feature potrebbero essere instabili</li>
+                </ul>
+                <p class="mt-2 text-orange-400">Le feature beta potrebbero cambiare o essere rimosse!</p>`
         }
     },
 

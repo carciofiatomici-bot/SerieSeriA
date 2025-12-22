@@ -311,6 +311,12 @@ window.AutomazioneSimulazioni = {
      * Esegue la simulazione automatica
      */
     async executeSimulation() {
+        // CHECK FLAG: se automatedSimulations e disabilitato, blocca tutte le simulazioni auto
+        if (window.FeatureFlags?.isEnabled('automatedSimulations') === false) {
+            console.log('[Automazione] Simulazioni automatiche disabilitate via Feature Flag');
+            return null;
+        }
+
         const state = await this.loadAutomationState();
         if (!state || !state.isEnabled) {
             console.log('[Automazione] Automazione disabilitata');

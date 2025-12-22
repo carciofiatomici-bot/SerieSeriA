@@ -216,6 +216,28 @@ window.checkCurrentTeamIsAdmin = async function() {
     return false;
 };
 
+/**
+ * Verifica se la modalita Beta Testing e attiva.
+ * Utile per abilitare feature sperimentali solo quando il flag e attivo.
+ * @returns {boolean}
+ */
+window.isBetaTestingEnabled = function() {
+    return window.FeatureFlags?.isEnabled('betaTestingMode') === true;
+};
+
+/**
+ * Helper per mostrare elementi UI solo in beta mode.
+ * @param {string} featureName - Nome della feature beta (per logging)
+ * @returns {boolean}
+ */
+window.showIfBeta = function(featureName) {
+    const isBeta = window.isBetaTestingEnabled();
+    if (isBeta && featureName) {
+        console.log(`[Beta] Feature "${featureName}" visibile in modalita beta`);
+    }
+    return isBeta;
+};
+
 // --- ROSA INIZIALE (5 GIOCATORI: P, D, C, C, A) ---
 window.INITIAL_SQUAD = [
     { id: 'p001', name: 'Portiere Base', role: 'P', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },

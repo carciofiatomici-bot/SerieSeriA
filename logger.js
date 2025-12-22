@@ -10,14 +10,15 @@
 (function() {
     'use strict';
 
-    // Determina se siamo in ambiente di sviluppo
+    // Determina se siamo in ambiente di sviluppo o debug mode attivo
     const isDevelopment = () => {
         const hostname = window.location?.hostname || '';
         return hostname === 'localhost' ||
                hostname === '127.0.0.1' ||
                hostname === '' || // file://
                hostname.includes('192.168.') || // LAN locale
-               localStorage.getItem('debug_mode') === 'true';
+               localStorage.getItem('debug_mode') === 'true' ||
+               window.FeatureFlags?.isEnabled('debugMode'); // Flag da admin panel
     };
 
     // Livelli di log
