@@ -4803,6 +4803,56 @@ document.addEventListener('DOMContentLoaded', () => {
             window.AdminTeams.fixAllTeamsLevels(TEAMS_COLLECTION_PATH);
         });
 
+        // Handler Fix Abilita Icone
+        document.getElementById('btn-fix-icone-abilities').addEventListener('click', async () => {
+            const msgElement = document.getElementById('fix-all-levels-message');
+            const button = document.getElementById('btn-fix-icone-abilities');
+
+            if (!window.updateIconeAbilities) {
+                if (msgElement) {
+                    msgElement.textContent = 'Funzione updateIconeAbilities non disponibile.';
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+                return;
+            }
+
+            // Conferma
+            if (!confirm('Vuoi correggere le abilita delle Icone per tutte le squadre?\n\nQuesto aggiungera le abilita mancanti (es. Tiro Dritto per Amedemo).')) {
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = '⏳ Correzione...';
+            }
+            if (msgElement) {
+                msgElement.textContent = 'Correzione abilita Icone in corso...';
+                msgElement.className = 'text-center text-sm mb-3 text-yellow-400';
+            }
+
+            try {
+                await window.updateIconeAbilities();
+
+                if (msgElement) {
+                    msgElement.textContent = 'Abilita Icone corrette! Controlla console per dettagli.';
+                    msgElement.className = 'text-center text-sm mb-3 text-green-400';
+                }
+                window.showToast('Abilita Icone corrette con successo!', 'success');
+            } catch (error) {
+                console.error('Errore correzione abilita:', error);
+                if (msgElement) {
+                    msgElement.textContent = `Errore: ${error.message}`;
+                    msgElement.className = 'text-center text-sm mb-3 text-red-400';
+                }
+                window.showToast('Errore durante la correzione', 'error');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = '⚡ Fix Abilita Icone';
+                }
+            }
+        });
+
         // Handler Reset XP Tutti i Giocatori
         document.getElementById('btn-reset-all-players-exp').addEventListener('click', () => {
             resetAllPlayersExp(TEAMS_COLLECTION_PATH);

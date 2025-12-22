@@ -1385,7 +1385,12 @@ window.AdminUI = {
                         🔄 Reset XP
                     </button>
                 </div>
-                <div class="grid grid-cols-1 gap-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-fix-icone-abilities"
+                            class="bg-cyan-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-cyan-500 transition duration-150"
+                            title="Corregge le abilita mancanti delle Icone (es. Tiro Dritto per Amedemo)">
+                        ⚡ Fix Abilita Icone
+                    </button>
                     <button id="btn-reset-advanced-stats"
                             class="bg-red-600 text-white font-bold py-3 rounded-lg shadow-xl hover:bg-red-500 transition duration-150"
                             title="Cancella tutte le statistiche avanzate (goal, assist, contrasti, parate) per ricominciare">
