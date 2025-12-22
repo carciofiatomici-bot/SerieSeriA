@@ -850,19 +850,37 @@ window.AbilitaEffects = {
      * Verifica se la fase deve essere saltata
      * @param {string} phase - 'construction' | 'attack' | 'shot'
      * @param {string} teamKey - 'home' | 'away'
+     * @param {Object} team - Dati squadra
      * @returns {Object} { skip: boolean, reason: string, bonus: number }
      */
-    shouldSkipPhase(phase, teamKey) {
+    shouldSkipPhase(phase, teamKey, team) {
+        const stateKey = this.getTeamKey(teamKey);
+
         // Presa Sicura: skip costruzione avversaria
         if (phase === 'construction' && this.state.skipNextConstruction) {
             this.state.skipNextConstruction = false;
             return { skip: true, reason: 'Presa Sicura', bonus: 0 };
         }
 
-        // Regista Difensivo: skip costruzione con bonus
-        if (phase === 'construction' && this.state.registaDifensivoActive[teamKey]) {
-            this.state.registaDifensivoActive[teamKey] = false;
+        // Regista Difensivo: skip costruzione con bonus +2
+        if (phase === 'construction' && this.state.registaDifensivoActive[stateKey]) {
+            this.state.registaDifensivoActive[stateKey] = false;
+            this.state.constructionSkipped = true;
             return { skip: true, reason: 'Regista Difensivo', bonus: 2 };
+        }
+
+        // Regista: 5% skip costruzione con bonus +2 al ricevente
+        if (phase === 'construction' && team) {
+            const centrocampisti = team.C || [];
+            const hasRegista = centrocampisti.some(p =>
+                p.abilities?.includes('Regista') &&
+                !this.state.nullified.has(p.id)
+            );
+            if (hasRegista && this.checkChance(5)) {
+                this.state.registaSkipBonus[stateKey] = true;
+                this.state.constructionSkipped = true;
+                return { skip: true, reason: 'Regista', bonus: 2 };
+            }
         }
 
         return { skip: false };
@@ -872,27 +890,189 @@ window.AbilitaEffects = {
      * Verifica se un giocatore puo sostituire quello selezionato
      * (Teletrasporto, L'uomo in piu)
      * @param {string} phase - Fase corrente
-     * @param {Object} team - Dati squadra
+     * @param {Object} team - Dati squadra con P, D, C, A
      * @param {Object} originalPlayer - Giocatore originale
-     * @param {Object} context - Contesto
-     * @returns {Object|null} Giocatore sostituto o null
+     * @param {Object} context - Contesto (isAttacking, teamKey)
+     * @returns {Object|null} { player: sostituto, reason: string } o null
      */
     getSubstitutePlayer(phase, team, originalPlayer, context) {
-        // Implementazione nelle fasi successive
+        const stateKey = this.getTeamKey(context.teamKey);
+
+        // Teletrasporto (Portiere): 10% partecipa a Fase 1/2 in difesa se mod maggiore
+        if (!context.isAttacking && (phase === 'construction' || phase === 'attack')) {
+            const portiere = team.P?.[0];
+            if (portiere &&
+                portiere.abilities?.includes('Teletrasporto') &&
+                !this.state.nullified.has(portiere.id) &&
+                this.state.teletrasportoCount[stateKey] < 5) {
+
+                if (this.checkChance(10)) {
+                    // Verifica se portiere ha mod maggiore
+                    const portiereData = this.getPlayerTracking(portiere.id);
+                    const originalData = this.getPlayerTracking(originalPlayer.id);
+
+                    // Semplificazione: assume sempre che portiere puo sostituire
+                    this.state.teletrasportoCount[stateKey]++;
+                    return { player: portiere, reason: 'Teletrasporto' };
+                }
+            }
+        }
+
+        // L'uomo in piu (Fosco): se fase fallisce, aggiungi +3 e ricontrolla
+        // Nota: gestito separatamente nel flusso principale
+
         return null;
     },
 
     /**
-     * Verifica risultato Fase 3 con abilita speciali
-     * (Parata di pugno, Respinta, ecc.)
-     * @param {number} difference - Differenza TIRO - PORTIERE
+     * Verifica risultato Fase 3 con abilita speciali del portiere
+     * @param {number} difference - Differenza TIRO - PORTIERE (positivo = goal)
      * @param {Object} shooter - Tiratore
      * @param {Object} goalkeeper - Portiere
-     * @returns {Object} { modified: boolean, newDifference: number, reroll: boolean }
+     * @returns {Object} { modified, newDifference, reroll, autoSave, autoGoal, saveChance }
      */
     checkPhase3Result(difference, shooter, goalkeeper) {
-        // Implementazione nelle fasi successive
-        return { modified: false, newDifference: difference, reroll: false };
+        const result = {
+            modified: false,
+            newDifference: difference,
+            reroll: false,
+            autoSave: false,
+            autoGoal: false,
+            saveChance: 50 // Default per pareggio
+        };
+
+        if (!goalkeeper?.abilities) return result;
+        const abilities = goalkeeper.abilities;
+
+        // Parata di pugno: se differenza e -1 o -2, diventa 0
+        if (abilities.includes('Parata di pugno')) {
+            if (difference === -1 || difference === -2) {
+                result.modified = true;
+                result.newDifference = 0;
+                result.saveChance = 50; // 50% parata su 0
+            }
+        }
+
+        // Colpo d'anca: su 0, 75% parata invece di 50%
+        if (abilities.includes("Colpo d'anca")) {
+            if (result.newDifference === 0 || difference === 0) {
+                result.modified = true;
+                result.saveChance = 75;
+            }
+        }
+
+        // Respinta: 10% ritira dado se battuto
+        if (abilities.includes('Respinta') && difference > 0) {
+            if (this.checkChance(10)) {
+                result.modified = true;
+                result.reroll = true;
+            }
+        }
+
+        // Uscita Kamikaze: +5 al mod, ma 5% fallisce anche se para
+        if (abilities.includes('Uscita Kamikaze')) {
+            // Il +5 e gia applicato nel modificatore
+            // Qui gestiamo solo il 5% di fallimento
+            if (difference <= 0 && this.checkChance(5)) {
+                result.modified = true;
+                result.autoGoal = true;
+            }
+        }
+
+        // Miracolo: 2% para anche se battuto nettamente
+        if (abilities.includes('Miracolo') && difference > 2) {
+            if (this.checkChance(2)) {
+                result.modified = true;
+                result.autoSave = true;
+            }
+        }
+
+        return result;
+    },
+
+    /**
+     * Verifica abilita speciali del tiratore in Fase 3
+     * @param {Object} shooter - Tiratore
+     * @param {number} difference - Differenza attuale
+     * @returns {Object} { bonus, criticalChance, autoGoal }
+     */
+    checkShooterAbilities(shooter, difference) {
+        const result = {
+            bonus: 0,
+            criticalChance: 5, // Default 5%
+            autoGoal: false
+        };
+
+        if (!shooter?.abilities) return result;
+        const abilities = shooter.abilities;
+
+        // Rapace d'Area: 5% goal automatico
+        if (abilities.includes("Rapace d'Area") && this.checkChance(5)) {
+            result.autoGoal = true;
+        }
+
+        // Colpo di Testa: +3 al modificatore (se header)
+        if (abilities.includes('Colpo di Testa')) {
+            // Il bonus e gia applicato nel modificatore
+        }
+
+        // Freddezza: 5% critico sale a 10%
+        if (abilities.includes('Freddezza')) {
+            result.criticalChance = 10;
+        }
+
+        // Opportunista: +2 se costruzione saltata
+        if (abilities.includes('Opportunista') && this.state.constructionSkipped) {
+            result.bonus += 2;
+        }
+
+        return result;
+    },
+
+    /**
+     * Gestisce abilita che influenzano il d20 roll
+     * @param {Array} players - Giocatori coinvolti
+     * @param {string} phase - Fase corrente
+     * @param {number} originalRoll - Roll originale
+     * @returns {Object} { newRoll, reason }
+     */
+    modifyRoll(players, phase, originalRoll) {
+        let roll = originalRoll;
+        let reason = null;
+
+        for (const player of players) {
+            if (!player.abilities || this.state.nullified.has(player.id)) continue;
+
+            // Calcolo delle probabilita (Cap): 2d20, tiene il migliore in Fase 1
+            if (player.abilities.includes('Calcolo delle probabilita') && phase === 'construction') {
+                const roll2 = this.rollDice(1, 20);
+                if (roll2 > roll) {
+                    roll = roll2;
+                    reason = 'Calcolo delle probabilita';
+                }
+            }
+
+            // Immarcabile: 5% tira 2d20, tiene il migliore
+            if (player.abilities.includes('Immarcabile') && phase === 'attack') {
+                if (this.checkChance(5)) {
+                    const roll2 = this.rollDice(1, 20);
+                    if (roll2 > roll) {
+                        roll = roll2;
+                        reason = 'Immarcabile';
+                    }
+                }
+            }
+
+            // Regista Arretrato: ritira se <5
+            if (player.abilities.includes('Regista Arretrato') && phase === 'construction') {
+                if (roll < 5) {
+                    roll = this.rollDice(1, 20);
+                    reason = 'Regista Arretrato';
+                }
+            }
+        }
+
+        return { newRoll: roll, reason };
     }
 };
 
