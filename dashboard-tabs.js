@@ -32,6 +32,41 @@ window.DashboardTabs = {
      * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop', 'rules', 'admin'
      */
     switchTab(tabName) {
+        // Gestione speciale per tab login - porta alla schermata login/home
+        if (tabName === 'login') {
+            const loginBox = document.getElementById('login-box');
+            if (loginBox && window.showScreen) {
+                window.showScreen(loginBox);
+
+                // Gestisci header e box in base allo stato di login
+                const isLoggedIn = !!(window.InterfacciaCore?.currentTeamId);
+                const normalLoginBox = document.getElementById('normal-login-box');
+                const loginHeader = document.getElementById('login-header');
+                const homeTeamHeader = document.getElementById('home-team-header');
+                const homeTeamName = document.getElementById('home-team-name');
+
+                if (isLoggedIn) {
+                    // Utente loggato: mostra team-name-box, nascondi logo Serie SeriA e login box
+                    if (normalLoginBox) normalLoginBox.classList.add('hidden');
+                    if (loginHeader) loginHeader.classList.add('hidden');
+                    if (homeTeamHeader) {
+                        homeTeamHeader.classList.remove('hidden');
+                        // Aggiorna il nome squadra
+                        const teamName = window.InterfacciaCore?.currentTeamData?.teamName || 'SQUADRA';
+                        if (homeTeamName) homeTeamName.textContent = teamName;
+                    }
+                } else {
+                    // Utente non loggato: mostra logo Serie SeriA e login box
+                    if (normalLoginBox) normalLoginBox.classList.remove('hidden');
+                    if (loginHeader) loginHeader.classList.remove('hidden');
+                    if (homeTeamHeader) homeTeamHeader.classList.add('hidden');
+                }
+            }
+            // Aggiorna stili tab per evidenziare "login" come attivo
+            this.updateTabStyles('login');
+            return;
+        }
+
         // Gestione speciale per tab admin - apre il pannello admin
         if (tabName === 'admin') {
             const adminContent = document.getElementById('admin-content');
@@ -50,6 +85,8 @@ window.DashboardTabs = {
                 // Trigger evento per inizializzare il pannello admin
                 document.dispatchEvent(new CustomEvent('adminLoggedIn'));
             }
+            // Aggiorna stili tab per evidenziare "admin" come attivo
+            this.updateTabStyles('admin');
             return;
         }
 
@@ -78,13 +115,27 @@ window.DashboardTabs = {
             targetTab.classList.remove('hidden');
         }
 
+        // Aggiorna stili dei bottoni tab
+        this.updateTabStyles(tabName);
+
+        // Emetti evento per eventuali listener esterni
+        document.dispatchEvent(new CustomEvent('dashboardTabChanged', {
+            detail: { tab: tabName }
+        }));
+    },
+
+    /**
+     * Aggiorna gli stili visivi dei bottoni tab (bottom navigation)
+     * @param {string} activeTab - Nome del tab attivo
+     */
+    updateTabStyles(activeTab) {
         // Ottieni il colore team dal color picker o usa default
         const colorPicker = document.getElementById('team-color-picker');
         const teamColor = colorPicker?.value || window.InterfacciaCore?.currentTeamData?.primaryColor || '#22c55e';
 
         // Aggiorna stili dei bottoni tab (bottom navigation con border-top)
         document.querySelectorAll('.dashboard-tab').forEach(tab => {
-            if (tab.dataset.tab === tabName) {
+            if (tab.dataset.tab === activeTab) {
                 // Tab attivo - usa colore team
                 tab.classList.remove('bg-gray-900', 'text-gray-400', 'border-transparent');
                 tab.classList.add('text-white');
@@ -98,11 +149,6 @@ window.DashboardTabs = {
                 tab.style.borderTopColor = '';
             }
         });
-
-        // Emetti evento per eventuali listener esterni
-        document.dispatchEvent(new CustomEvent('dashboardTabChanged', {
-            detail: { tab: tabName }
-        }));
     },
 
     /**

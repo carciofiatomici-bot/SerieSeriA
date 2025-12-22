@@ -213,6 +213,13 @@ window.InterfacciaAuth = {
                 const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, teamId);
                 const teamDoc = await getDoc(teamDocRef);
 
+                if (!teamDoc.exists()) {
+                    // Documento squadra non trovato - sessione non valida
+                    console.warn('[Session] Documento squadra non trovato per teamId:', teamId);
+                    this.clearSession();
+                    return false;
+                }
+
                 if (teamDoc.exists()) {
                     const teamData = teamDoc.data();
                     window.InterfacciaCore.currentTeamData = teamData;
@@ -291,7 +298,23 @@ window.InterfacciaAuth = {
 
                     // Assicura che l'ultima schermata salvata sia un contenuto Utente valido
                     localStorage.setItem('fanta_last_screen', targetScreenId);
-                    
+
+                    // Aggiorna i tab della navbar dopo il ripristino sessione
+                    if (window.LayoutManager?.updateAuthRequiredTabs) {
+                        window.LayoutManager.updateAuthRequiredTabs();
+                    }
+
+                    // Applica il colore della squadra se presente
+                    const teamColor = teamData.primaryColor || '#22c55e';
+                    if (window.LayoutManager?.setPrimaryColor) {
+                        window.LayoutManager.setPrimaryColor(teamColor);
+                    }
+                    // Aggiorna anche il color picker
+                    const colorPicker = document.getElementById('team-color-picker');
+                    if (colorPicker) {
+                        colorPicker.value = teamColor;
+                    }
+
                     console.log(`Sessione Utente ripristinata su: ${targetScreenId}`);
                     return true;
                 }
@@ -574,6 +597,22 @@ window.InterfacciaAuth = {
                 }
                 window.showScreen(elements.appContent);
                 elements.loginPasswordInput.value = '';
+
+                // Aggiorna i tab della navbar dopo il login
+                if (window.LayoutManager?.updateAuthRequiredTabs) {
+                    window.LayoutManager.updateAuthRequiredTabs();
+                }
+
+                // Applica il colore della squadra se presente
+                const teamColor = teamData.primaryColor || '#22c55e';
+                if (window.LayoutManager?.setPrimaryColor) {
+                    window.LayoutManager.setPrimaryColor(teamColor);
+                }
+                // Aggiorna anche il color picker
+                const colorPicker = document.getElementById('team-color-picker');
+                if (colorPicker) {
+                    colorPicker.value = teamColor;
+                }
             }, 1000);
             
         } catch (error) {
@@ -821,6 +860,12 @@ window.InterfacciaAuth = {
         // Esponi handleLogout globalmente (per compatibilita)
         window.handleLogout = () => self.handleLogout(elements);
         window.handleFullLogout = () => self.handleFullLogout(elements);
+
+        // Bottone "Esci" nella homepage
+        const btnHomeLogout = document.getElementById('btn-home-logout');
+        if (btnHomeLogout) {
+            btnHomeLogout.addEventListener('click', () => self.handleFullLogout(elements));
+        }
 
         // Lista Icone listener
         const btnListaIcone = document.getElementById('btn-lista-icone');

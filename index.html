@@ -665,85 +665,108 @@
         </div>
 
         <!-- 2. BOX LOGIN (Nome Squadra / Password) -->
-        <div id="login-box" class="football-box w-full max-w-sm transition duration-500 hidden-on-load">
-            <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b-2 border-yellow-600 pb-2">Accedi alla tua Dashboard</h2>
+        <div id="login-box" class="w-full min-h-screen transition duration-500 hidden-on-load relative overflow-visible pb-20 px-2 sm:px-4">
+
+            <!-- Header con Logo Serie SeriA (mostrato quando non loggato) -->
+            <div id="login-header" class="mb-3">
+                <div id="login-title-box" class="rounded-lg border border-green-500/50 p-3 text-center">
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+                             alt="Serie SeriA Logo"
+                             class="w-16 h-16 sm:w-20 sm:h-20 object-contain">
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-green-500 to-green-600">
+                        SERIE SERIA
+                    </h1>
+                    <p class="text-xs text-gray-400 mt-1">Fantasy Football Manager</p>
+                </div>
+            </div>
+
+            <!-- Header Team Name (mostrato quando loggato - copia del team-name-box dalla dashboard) -->
+            <div id="home-team-header" class="hidden mb-3">
+                <div id="home-team-name-box" class="rounded-lg border border-green-500/50 relative">
+                    <h2 id="home-team-name" class="text-base sm:text-xl md:text-2xl font-extrabold text-center uppercase team-name-fancy leading-none py-1">NOME SQUADRA</h2>
+                </div>
+            </div>
 
             <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
-            <div id="remembered-session-box" class="hidden mb-4">
-                <div class="p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center">
-                    <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-yellow-400 object-cover">
+            <div id="remembered-session-box" class="hidden mb-3">
+                <div id="remembered-box" class="rounded-lg border border-green-500/50 p-4 text-center">
+                    <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-green-400 object-cover">
                     <p class="text-lg font-bold text-white mb-1" id="remembered-team-name">Nome Squadra</p>
                     <p class="text-xs text-gray-400 mb-4">Sessione attiva</p>
                     <button id="btn-reenter-dashboard"
-                            class="w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150 transform hover:scale-[1.02] mb-2">
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.02] mb-2">
                         🏠 Rientra in Dashboard
                     </button>
                     <button id="btn-full-logout"
-                            class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150">
+                            class="w-full bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-red-500 hover:to-red-600 transition duration-150">
                         🚪 Logout Completo
                     </button>
                 </div>
             </div>
 
             <!-- BOX 1: LOGIN -->
-            <div id="normal-login-box" class="p-4 bg-gray-700 rounded-lg border-2 border-yellow-600 mb-4">
-                <h3 class="text-sm font-bold text-yellow-400 mb-3 text-center">Login Squadra</h3>
+            <div id="normal-login-box" class="rounded-lg border border-green-500/50 p-4 mb-3">
+                <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
+                    <span>🔐</span> Accedi alla tua Squadra
+                </h3>
                 <input type="text" id="login-username" placeholder="Nome Squadra"
-                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
-
+                       class="w-full p-3 border border-gray-600 rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-800/50 text-white mb-3">
                 <input type="password" id="login-password" placeholder="Password"
-                       class="w-full p-3 border border-yellow-600 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 bg-gray-800 text-white mb-3 shadow-inner-dark">
-
+                       class="w-full p-3 border border-gray-600 rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-800/50 text-white mb-3">
                 <button id="login-button"
-                        class="w-full bg-yellow-400 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-300 transition duration-150 transform hover:scale-[1.02]">
-                    Accedi
+                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.02]">
+                    Accedi / Crea Squadra
                 </button>
                 <p id="login-message" class="text-center mt-2 text-red-400 text-sm"></p>
             </div>
 
             <!-- BOX 2: ESPLORA LEGA -->
-            <div class="p-4 bg-gray-700 rounded-lg border-2 border-blue-500 mb-4">
-                <h3 class="text-sm font-bold text-blue-400 mb-3 text-center">Esplora la Lega</h3>
-                <div class="grid grid-cols-2 gap-2">
+            <div id="explore-box" class="rounded-lg border border-green-500/50 p-4 mb-3">
+                <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
+                    <span>🌐</span> Esplora la Lega
+                </h3>
+                <div class="grid grid-cols-3 gap-2">
                     <button id="btn-leaderboard"
-                            class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-blue-500 transition duration-150 transform hover:scale-[1.02]">
+                            class="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-blue-500 hover:to-blue-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         📊 Classifica
                     </button>
                     <button id="btn-schedule"
-                            class="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-teal-500 transition duration-150 transform hover:scale-[1.02]">
+                            class="bg-gradient-to-r from-teal-600 to-teal-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-teal-500 hover:to-teal-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         📅 Calendario
                     </button>
                     <button id="btn-coppa-home"
-                            class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
-                        🏆 CoppaSeriA
+                            class="bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.02] text-xs">
+                        🏆 Coppa
                     </button>
                     <button id="btn-supercoppa-home"
-                            class="w-full bg-amber-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-amber-500 transition duration-150 transform hover:scale-[1.02]">
+                            class="bg-gradient-to-r from-amber-600 to-amber-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-amber-500 hover:to-amber-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         ⭐ SuperCoppa
                     </button>
                     <button id="btn-lista-icone"
-                            class="w-full bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-yellow-500 transition duration-150 transform hover:scale-[1.02]">
+                            class="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         👑 Icone
                     </button>
                     <button id="btn-lista-squadre"
-                            class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-green-500 transition duration-150 transform hover:scale-[1.02]">
+                            class="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         📋 Squadre
                     </button>
                 </div>
             </div>
 
             <!-- BOX: TABELLA PREMI -->
-            <div class="p-3 bg-gradient-to-br from-amber-900/40 via-yellow-900/30 to-orange-900/40 rounded-xl border border-amber-500/50 mb-4 shadow-lg">
-                <h3 class="text-sm font-bold text-amber-300 mb-3 text-center flex items-center justify-center gap-2">
-                    <span class="text-lg">🏆</span> Premi Stagionali
+            <div id="rewards-box" class="rounded-lg border border-green-500/50 p-3 mb-3">
+                <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
+                    <span>🏆</span> Premi Stagionali
                 </h3>
                 <!-- Griglia 3 colonne per competizioni -->
                 <div class="grid grid-cols-3 gap-2 text-[10px]">
                     <!-- Campionato -->
-                    <div class="bg-gradient-to-b from-green-900/50 to-green-950/50 rounded-lg p-2 border border-green-600/30">
+                    <div class="bg-gradient-to-b from-green-900/30 to-green-950/30 rounded-lg p-2 border border-green-600/30">
                         <div class="text-center mb-2">
                             <span class="text-xl">🏅</span>
-                            <p class="team-color-text font-bold text-xs">SerieSeriA</p>
+                            <p class="text-green-400 font-bold text-xs">SerieSeriA</p>
                         </div>
                         <div class="space-y-1">
                             <div class="flex justify-between items-center bg-black/30 rounded px-1.5 py-0.5">
@@ -769,7 +792,7 @@
                         </div>
                     </div>
                     <!-- CoppaSeriA -->
-                    <div class="bg-gradient-to-b from-purple-900/50 to-purple-950/50 rounded-lg p-2 border border-purple-600/30">
+                    <div class="bg-gradient-to-b from-purple-900/30 to-purple-950/30 rounded-lg p-2 border border-purple-600/30">
                         <div class="text-center mb-2">
                             <span class="text-xl">🏆</span>
                             <p class="text-purple-400 font-bold text-xs">Coppa</p>
@@ -794,7 +817,7 @@
                         </div>
                     </div>
                     <!-- Supercoppa -->
-                    <div class="bg-gradient-to-b from-orange-900/50 to-orange-950/50 rounded-lg p-2 border border-orange-600/30">
+                    <div class="bg-gradient-to-b from-orange-900/30 to-orange-950/30 rounded-lg p-2 border border-orange-600/30">
                         <div class="text-center mb-2">
                             <span class="text-xl">⭐</span>
                             <p class="text-orange-400 font-bold text-xs">Super</p>
@@ -809,32 +832,33 @@
                     </div>
                 </div>
                 <!-- Legenda -->
-                <div class="mt-2 pt-2 border-t border-amber-700/30 flex justify-center gap-4 text-[9px] text-gray-400">
+                <div class="mt-2 pt-2 border-t border-gray-700/50 flex justify-center gap-4 text-[9px] text-gray-400">
                     <span><span class="text-yellow-300">CSS</span> = Crediti Super Seri</span>
                     <span><span class="text-green-400">CS</span> = Crediti Seri</span>
                 </div>
             </div>
 
             <!-- BOX 3: SUPPORTO -->
-            <div class="p-4 bg-gray-700 rounded-lg border-2 border-red-500">
-                <h3 class="text-sm font-bold text-red-400 mb-3 text-center">Supporto</h3>
+            <div id="support-box" class="rounded-lg border border-green-500/50 p-4">
+                <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
+                    <span>💡</span> Supporto
+                </h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <button id="btn-how-to-create-team"
-                            onclick="window.Tutorial?.startHowToCreateTeam()"
-                            class="bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs">
-                        📖 Come creare la mia squadra
-                    </button>
                     <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
                        target="_blank"
-                       class="bg-red-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-red-500 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
+                       class="bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-red-500 hover:to-red-600 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
                         🐛 Segnala Bug
                     </a>
+                    <button id="btn-home-logout"
+                            class="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-gray-500 hover:to-gray-600 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
+                        🚪 Esci
+                    </button>
                 </div>
                 <div class="mt-3 flex justify-center">
                     <button id="btn-show-changelog"
                             onclick="window.Changelog?.showPlayers()"
-                            class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-500 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
-                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v1.0.0</span>
+                            class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-indigo-500 hover:to-indigo-600 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
+                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v2.2</span>
                     </button>
                 </div>
             </div>
@@ -869,15 +893,6 @@
                                 <span>🎨</span> Colore Squadra
                             </button>
                             <div class="border-t border-gray-700"></div>
-                            <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
-                                <span>🔧</span> Pannello Admin
-                            </button>
-                            <button id="menu-homepage" class="w-full px-4 py-2 text-left text-sm text-blue-400 hover:bg-gray-700 flex items-center gap-2">
-                                <span>🏠</span> Homepage
-                            </button>
-                            <button id="menu-logout" class="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-gray-700 flex items-center gap-2">
-                                <span>🚪</span> Logout
-                            </button>
                             <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
                                 <span>🗑️</span> Elimina Squadra
                             </button>
@@ -2240,27 +2255,31 @@
 
     <!-- ========== GLOBAL TAB BAR (BOTTOM NAVIGATION - FIXED) ========== -->
     <div id="dashboard-tabs" class="hidden fixed bottom-0 left-0 right-0 z-50 flex bg-gray-900/70 border-t border-gray-700 shadow-lg">
-        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
-            <span class="text-base sm:text-lg">🏠</span>
+        <button id="dashboard-tab-login" class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="login">
+            <span class="text-base sm:text-lg">🏡</span>
             <span>Home</span>
         </button>
-        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
+        <button id="dashboard-tab-dashboard" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
+            <span class="text-base sm:text-lg">📊</span>
+            <span>Dashboard</span>
+        </button>
+        <button id="dashboard-tab-squad" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
             <span class="text-base sm:text-lg">👥</span>
             <span>Squadra</span>
         </button>
-        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
+        <button id="dashboard-tab-competitions" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
             <span class="text-base sm:text-lg">🏆</span>
             <span>Gare</span>
         </button>
-        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
+        <button id="dashboard-tab-shop" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
             <span class="text-base sm:text-lg">🛒</span>
             <span>Shop</span>
         </button>
-        <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="rules">
+        <button id="dashboard-tab-rules" class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="rules">
             <span class="text-base sm:text-lg">📖</span>
             <span>Regole</span>
         </button>
-        <button id="dashboard-tab-admin" class="dashboard-tab hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="admin">
+        <button id="dashboard-tab-admin" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="admin">
             <span class="text-base sm:text-lg">🔧</span>
             <span>Admin</span>
         </button>
