@@ -1833,6 +1833,47 @@ window.FigurineSystem = {
     },
 
     /**
+     * Salva lo sfondo dashboard usando un URL diretto (per figurine/varianti)
+     * @param {string} teamId - ID del team
+     * @param {string} imageUrl - URL dell'immagine
+     * @param {string} title - Titolo/nome dell'immagine
+     */
+    async saveDashboardBackgroundDirect(teamId, imageUrl, title) {
+        const appId = window.firestoreTools?.appId;
+        if (!appId || !window.db || !teamId) {
+            console.error('[Figurine] Impossibile salvare sfondo diretto');
+            return false;
+        }
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const teamRef = doc(window.db, `artifacts/${appId}/public/data/teams`, teamId);
+
+            await updateDoc(teamRef, {
+                dashboardBackground: {
+                    itemId: title,
+                    imageUrl: imageUrl,
+                    updatedAt: new Date().toISOString()
+                }
+            });
+            console.log('[Figurine] Sfondo diretto salvato:', title, imageUrl);
+
+            // Aggiorna anche currentTeamData
+            if (window.InterfacciaCore?.currentTeamData) {
+                window.InterfacciaCore.currentTeamData.dashboardBackground = {
+                    itemId: title,
+                    imageUrl: imageUrl
+                };
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[Figurine] Errore salvataggio sfondo diretto:', error);
+            return false;
+        }
+    },
+
+    /**
      * Ottiene lo sfondo dashboard corrente di un team
      * @param {string} teamId - ID del team
      * @returns {Object|null} { itemId, imageUrl } o null

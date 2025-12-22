@@ -694,31 +694,85 @@ window.FigurineUI = {
     },
 
     /**
-     * Mostra immagine a schermo intero
+     * Mostra immagine a schermo intero con opzione sfondo
      */
-    showFullscreenImage(imgUrl, title, owned = true) {
+    showFullscreenImage(imgUrl, title, owned = true, itemId = null) {
         // Rimuovi viewer esistente
         document.getElementById('fullscreen-image-viewer')?.remove();
 
+        // Verifica se e' lo sfondo attuale
+        const currentBg = window.InterfacciaCore?.currentTeamData?.dashboardBackground;
+        const isCurrentBackground = currentBg?.imageUrl === imgUrl;
+
         const viewer = document.createElement('div');
         viewer.id = 'fullscreen-image-viewer';
-        viewer.className = 'fixed inset-0 bg-black/95 z-[1200] flex items-center justify-center p-4 cursor-pointer';
+        viewer.className = 'fixed inset-0 bg-black/95 z-[1200] flex items-center justify-center p-4';
 
         viewer.innerHTML = `
-            <div class="relative max-w-full max-h-full flex flex-col items-center">
-                <button class="absolute top-2 right-2 bg-black/50 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center text-2xl z-10">&times;</button>
+            <div class="relative max-w-full max-h-full flex flex-col items-center" id="fullscreen-content">
+                <button id="close-fullscreen-btn" class="absolute top-2 right-2 bg-black/50 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center text-2xl z-10">&times;</button>
                 <img src="${imgUrl}" alt="${title}"
-                     class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl ${!owned ? 'grayscale brightness-50' : ''}"
+                     class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl ${!owned ? 'grayscale brightness-50' : ''}"
                      onerror="this.src='https://placehold.co/400x400/1f2937/6b7280?text=Errore'">
                 <p class="mt-4 text-white text-lg font-bold text-center">${title}</p>
                 ${!owned ? '<p class="text-yellow-400 text-sm">Anteprima - Non posseduta</p>' : ''}
+                ${owned ? `
+                    <button id="set-bg-fullscreen-btn" class="${isCurrentBackground
+                        ? 'bg-red-600 hover:bg-red-500'
+                        : 'bg-purple-600 hover:bg-purple-500'} text-white font-bold py-2 px-4 rounded-lg transition mt-4 flex items-center gap-2">
+                        ${isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo'}
+                    </button>
+                ` : ''}
             </div>
         `;
 
         document.body.appendChild(viewer);
 
-        // Chiudi al click ovunque
-        viewer.addEventListener('click', () => viewer.remove());
+        // Chiudi con X
+        document.getElementById('close-fullscreen-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            viewer.remove();
+        });
+
+        // Chiudi al click fuori dal contenuto
+        viewer.addEventListener('click', (e) => {
+            if (e.target === viewer) viewer.remove();
+        });
+
+        // Pulsante sfondo
+        const bgBtn = document.getElementById('set-bg-fullscreen-btn');
+        if (bgBtn) {
+            bgBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const teamId = window.InterfacciaCore?.currentTeamId;
+                if (!teamId) {
+                    alert('Errore: team non trovato');
+                    return;
+                }
+
+                bgBtn.disabled = true;
+                bgBtn.innerHTML = '⏳ Salvataggio...';
+
+                try {
+                    if (isCurrentBackground) {
+                        // Rimuovi sfondo
+                        await window.FigurineSystem.saveDashboardBackground(teamId, null);
+                        alert('Sfondo rimosso!');
+                    } else {
+                        // Imposta sfondo con URL diretto
+                        await window.FigurineSystem.saveDashboardBackgroundDirect(teamId, imgUrl, title);
+                        alert('Sfondo impostato! Torna alla dashboard per vederlo.');
+                    }
+                    viewer.remove();
+                    window.DashboardBackground?.apply();
+                } catch (error) {
+                    console.error('[FigurineUI] Errore impostazione sfondo:', error);
+                    alert('Errore nel salvataggio dello sfondo');
+                    bgBtn.disabled = false;
+                    bgBtn.innerHTML = isCurrentBackground ? '🚫 Rimuovi sfondo' : '🖼️ Usa come sfondo';
+                }
+            });
+        }
 
         // Chiudi con ESC
         const escHandler = (e) => {
