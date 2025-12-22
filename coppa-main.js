@@ -219,13 +219,7 @@ window.CoppaMain = {
                 await window.PlayerExp.saveExpToFirestore(match.awayTeam.teamId, awayExpResults);
             }
 
-            // Mostra notifiche level-up
-            if (window.PlayerExpUI) {
-                const allLevelUps = [...homeExpResults, ...awayExpResults].filter(r => r.leveledUp);
-                if (allLevelUps.length > 0) {
-                    window.PlayerExpUI.showMultipleLevelUpModal(allLevelUps);
-                }
-            }
+            // Notifiche level-up rimosse (troppo invasive durante simulazione)
         }
 
         // SEMPRE: Salva nello storico partite per entrambe le squadre (sia andata che ritorno)

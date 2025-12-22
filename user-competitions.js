@@ -81,15 +81,15 @@ window.UserCompetitions = {
             const appId = window.firestoreTools.appId;
             const cache = window.FirestoreCache;
 
-            // Carica calendario (con cache 5 min)
-            let scheduleData = cache?.get('schedule', 'full');
-            if (!scheduleData) {
-                const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
-                const scheduleRef = doc(db, schedulePath);
-                const scheduleSnap = await getDoc(scheduleRef);
-                scheduleData = scheduleSnap.exists() ? scheduleSnap.data().matches : [];
-                cache?.set('schedule', 'full', scheduleData, cache.TTL.SCHEDULE);
-            }
+            // Invalida cache per avere sempre dati aggiornati
+            cache?.invalidate?.('schedule', 'full');
+
+            // Carica calendario (sempre fresco)
+            const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+            const scheduleRef = doc(db, schedulePath);
+            const scheduleSnap = await getDoc(scheduleRef);
+            const scheduleData = scheduleSnap.exists() ? scheduleSnap.data().matches : [];
+            cache?.set('schedule', 'full', scheduleData, cache.TTL.SCHEDULE);
 
             // Carica classifica (usando LeaderboardListener per cache condivisa)
             const leaderboardData = await window.LeaderboardListener.getLeaderboard();
