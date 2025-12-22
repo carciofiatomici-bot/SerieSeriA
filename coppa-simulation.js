@@ -253,6 +253,7 @@ window.CoppaSimulation = {
             penalties: null,
             winner: null,
             highlights: result.highlightsText || null,
+            matchLog: result.highlights || [],
             scorers: result.scorers || [],
             assists: result.assists || [],
             matchEvents: result.matchEvents || null

@@ -229,11 +229,12 @@ window.CoppaMain = {
             const awayGoals = parseInt(parts[1]) || 0;
 
             // Salva per squadra di casa
-            // Prepara dettagli con highlights
+            // Prepara dettagli con highlights e matchLog per telecronaca
             const matchDetails = {
                 round: round.roundName,
                 leg: legType,
                 highlights: result.highlights || null,
+                matchLog: result.matchLog || [],
                 scorers: result.scorers || [],
                 assists: result.assists || []
             };

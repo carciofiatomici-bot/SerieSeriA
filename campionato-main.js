@@ -119,7 +119,7 @@ window.ChampionshipMain = {
             
             // 3. Simula partita con highlights
             const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
-            const { homeGoals, awayGoals, highlightsText, scorers, assists, matchEvents } = simResult;
+            const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;
 
             // 3.5. Registra statistiche stagionali (goal, assist, clean sheets)
             if (window.PlayerSeasonStats) {
@@ -383,7 +383,7 @@ window.ChampionshipMain = {
                 }
 
                 const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
-                const { homeGoals, awayGoals, highlightsText, scorers, assists, matchEvents } = simResult;
+                const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;
 
                 // Registra statistiche stagionali (goal, assist, clean sheets)
                 if (window.PlayerSeasonStats) {
@@ -515,9 +515,10 @@ window.ChampionshipMain = {
 
                 // Salva nello storico partite per entrambe le squadre
                 if (window.MatchHistory) {
-                    // Prepara dettagli con highlights
+                    // Prepara dettagli con highlights e matchLog per telecronaca
                     const matchDetails = {
                         highlights: highlightsText,
+                        matchLog: highlights || [],
                         scorers: scorers || [],
                         assists: assists || []
                     };

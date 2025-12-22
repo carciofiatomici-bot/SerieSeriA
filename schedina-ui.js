@@ -456,7 +456,7 @@ window.SchedinaUI = {
             return;
         }
 
-        const historyHtml = history.map(s => {
+        const historyHtml = history.map((s, idx) => {
             const status = s.status === 'calculated' ? 'Calcolata' : 'In attesa';
             const statusColor = s.status === 'calculated' ? 'text-green-400' : 'text-yellow-400';
             const correct = s.results?.correctPredictions || '-';
@@ -464,18 +464,21 @@ window.SchedinaUI = {
             const reward = s.results?.totalReward || 0;
 
             return `
-                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 cursor-pointer hover:bg-gray-700 transition schedina-history-item" data-index="${idx}">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-white font-semibold">Giornata ${s.roundNumber}</p>
                             <p class="text-gray-400 text-xs mt-1">${new Date(s.submittedAt).toLocaleDateString('it-IT')}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="${statusColor} text-sm font-semibold">${status}</p>
-                            ${s.status === 'calculated' ? `
-                                <p class="text-white">${correct}/${total} corretti</p>
-                                ${reward > 0 ? `<p class="text-green-400 font-bold">+${reward} CS</p>` : ''}
-                            ` : ''}
+                        <div class="text-right flex items-center gap-2">
+                            <div>
+                                <p class="${statusColor} text-sm font-semibold">${status}</p>
+                                ${s.status === 'calculated' ? `
+                                    <p class="text-white">${correct}/${total} corretti</p>
+                                    ${reward > 0 ? `<p class="text-green-400 font-bold">+${reward} CS</p>` : ''}
+                                ` : ''}
+                            </div>
+                            <span class="text-gray-500 text-lg">▶</span>
                         </div>
                     </div>
                 </div>
@@ -483,6 +486,98 @@ window.SchedinaUI = {
         }).join('');
 
         content.innerHTML = `<div class="space-y-3">${historyHtml}</div>`;
+
+        // Aggiungi click listener per mostrare dettagli
+        content.querySelectorAll('.schedina-history-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const idx = parseInt(item.dataset.index);
+                this.showSchedinaDetails(history[idx]);
+            });
+        });
+    },
+
+    /**
+     * Mostra i dettagli di una schedina con i risultati
+     */
+    showSchedinaDetails(schedina) {
+        const predictions = schedina.predictions || [];
+        const status = schedina.status;
+
+        let detailsHtml = predictions.map(p => {
+            const predSymbol = p.prediction || '-';
+            const actualSymbol = p.actualResult || '-';
+            const isCorrect = p.isCorrect;
+
+            let bgClass = 'bg-gray-700';
+            let icon = '';
+            if (status === 'calculated') {
+                if (isCorrect) {
+                    bgClass = 'bg-green-900/50 border-green-500';
+                    icon = '✅';
+                } else {
+                    bgClass = 'bg-red-900/50 border-red-500';
+                    icon = '❌';
+                }
+            }
+
+            return `
+                <div class="p-3 rounded-lg border ${bgClass}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-white text-sm font-semibold">${p.homeName || p.homeId} vs ${p.awayName || p.awayId}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-400">Pronostico</p>
+                                <p class="text-yellow-400 font-bold">${predSymbol}</p>
+                            </div>
+                            ${status === 'calculated' ? `
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-400">Risultato</p>
+                                    <p class="text-white font-bold">${actualSymbol}</p>
+                                </div>
+                                <span class="text-xl">${icon}</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Mostra in un overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+        overlay.innerHTML = `
+            <div class="bg-gray-900 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto border border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white">Giornata ${schedina.roundNumber}</h3>
+                    <button id="close-schedina-details" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                ${schedina.status === 'calculated' ? `
+                    <div class="mb-4 p-3 rounded-lg ${schedina.results?.correctPredictions === schedina.results?.totalMatches ? 'bg-green-900/50' : 'bg-gray-800'}">
+                        <p class="text-center text-white font-bold">
+                            ${schedina.results?.correctPredictions || 0}/${schedina.results?.totalMatches || 0} corretti
+                            ${schedina.results?.totalReward > 0 ? `<span class="text-green-400 ml-2">+${schedina.results.totalReward} CS</span>` : ''}
+                        </p>
+                    </div>
+                ` : `
+                    <div class="mb-4 p-3 rounded-lg bg-yellow-900/50">
+                        <p class="text-center text-yellow-400">In attesa dei risultati</p>
+                    </div>
+                `}
+                <div class="space-y-2">
+                    ${detailsHtml}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Close handlers
+        document.getElementById('close-schedina-details').addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
     },
 
     // ==================== LOGICA PRONOSTICI ====================
