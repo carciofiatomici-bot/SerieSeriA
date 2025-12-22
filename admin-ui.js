@@ -90,19 +90,47 @@ window.AdminUI = {
                     <!-- SerieSeriA -->
                     <div id="serieseria-admin-section" class="p-4 bg-gray-800 rounded-lg border border-green-500">
                         <h4 class="text-lg font-bold text-green-400 mb-3 flex items-center">🏅 SerieSeriA</h4>
-                        <div class="grid grid-cols-3 gap-3">
-                            <button id="btn-admin-leaderboard" class="bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-500 transition text-sm">
-                                <i class="fas fa-chart-bar mr-1"></i> Classifica
+
+                        <!-- Stato Campionato -->
+                        <div id="serieseria-status-container" class="mb-3 p-3 bg-gray-900 rounded-lg">
+                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
+                        </div>
+
+                        <!-- Bottoni Azione -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <button id="btn-generate-championship-schedule" class="bg-green-700 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition text-sm">
+                                <i class="fas fa-plus-circle mr-1"></i> Genera Calendario
                             </button>
-                            <button id="btn-admin-schedule" class="bg-green-700 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition text-sm">
-                                <i class="fas fa-calendar-alt mr-1"></i> Calendario
-                            </button>
-                            <button id="btn-generate-championship-schedule" class="bg-green-800 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition text-sm">
-                                <i class="fas fa-plus-circle mr-1"></i> Genera
+                            <button id="btn-simulate-championship-round" class="bg-yellow-600 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-500 transition text-sm">
+                                <i class="fas fa-play mr-1"></i> Simula Giornata
                             </button>
                         </div>
-                        <div id="serieseria-status-container" class="mt-3">
-                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
+
+                        <!-- Prossima Giornata -->
+                        <div id="serieseria-next-round" class="mb-3">
+                            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700">
+                                <h5 class="text-sm font-bold text-yellow-400 mb-2 flex items-center">
+                                    <i class="fas fa-calendar-day mr-2"></i> Prossima Giornata
+                                </h5>
+                                <div id="serieseria-next-matches" class="text-xs text-gray-400">
+                                    Caricamento...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Classifica Accordion -->
+                        <div id="serieseria-standings-accordion" class="border border-gray-700 rounded-lg overflow-hidden">
+                            <button id="btn-toggle-standings" class="w-full p-3 bg-gray-900 hover:bg-gray-700 transition flex items-center justify-between text-left">
+                                <span class="text-sm font-bold text-blue-400 flex items-center">
+                                    <i class="fas fa-chart-bar mr-2"></i> Classifica
+                                </span>
+                                <i id="standings-chevron" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                            </button>
+                            <div id="serieseria-standings-content" class="hidden bg-gray-900 border-t border-gray-700">
+                                <div id="serieseria-standings-table" class="p-2 text-xs">
+                                    Caricamento classifica...
+                                </div>
+                            </div>
                         </div>
                     </div>
 

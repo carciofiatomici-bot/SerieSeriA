@@ -786,41 +786,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnFeatureFlags = document.getElementById('btn-feature-flags');
         if (btnFeatureFlags) btnFeatureFlags.addEventListener('click', renderFeatureFlagsPanel);
 
-        const btnAdminLeaderboard = document.getElementById('btn-admin-leaderboard');
-        if (btnAdminLeaderboard) {
-            btnAdminLeaderboard.addEventListener('click', async () => {
-                 console.log('[Admin] Click su Classifica');
-                 const userCampionatoContent = document.getElementById('user-campionato-content');
-                 console.log('[Admin] userCampionatoContent:', userCampionatoContent);
-                 if (userCampionatoContent) {
-                     window.showScreen(userCampionatoContent);
-                     // Carica il campionato (include classifica)
-                     if (window.UserCampionato) {
-                         await window.UserCampionato.load();
-                     }
-                     const backBtn = document.getElementById('user-campionato-back-button');
-                     if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
-                 } else {
-                     console.error('[Admin] user-campionato-content non trovato!');
-                 }
+        // Toggle classifica accordion
+        const btnToggleStandings = document.getElementById('btn-toggle-standings');
+        if (btnToggleStandings) {
+            btnToggleStandings.addEventListener('click', () => {
+                const content = document.getElementById('serieseria-standings-content');
+                const chevron = document.getElementById('standings-chevron');
+                if (content && chevron) {
+                    content.classList.toggle('hidden');
+                    chevron.classList.toggle('rotate-180');
+                }
             });
-        } else {
-            console.warn('[Admin] btn-admin-leaderboard non trovato nel DOM');
         }
 
-        const btnAdminSchedule = document.getElementById('btn-admin-schedule');
-        if (btnAdminSchedule) {
-            btnAdminSchedule.addEventListener('click', async () => {
-                 const userCampionatoContent = document.getElementById('user-campionato-content');
-                 if (userCampionatoContent) {
-                     window.showScreen(userCampionatoContent);
-                     // Carica il campionato (include calendario)
-                     if (window.UserCampionato) {
-                         await window.UserCampionato.load();
-                     }
-                     const backBtn = document.getElementById('user-campionato-back-button');
-                     if (backBtn) backBtn.onclick = () => window.showScreen(adminContent);
-                 }
+        // Simula giornata campionato
+        const btnSimulateRound = document.getElementById('btn-simulate-championship-round');
+        if (btnSimulateRound) {
+            btnSimulateRound.addEventListener('click', async () => {
+                try {
+                    btnSimulateRound.disabled = true;
+                    btnSimulateRound.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Simulando...';
+
+                    // Usa il sistema di automazione per simulare
+                    if (window.AutomazioneSimulazioni) {
+                        const result = await window.AutomazioneSimulazioni.simulateChampionshipRound();
+                        if (result.success) {
+                            displayMessage(`Giornata ${result.round} simulata!`, 'success', 'toggle-status-message');
+                            // Ricarica dati
+                            await loadSerieSeriaStatus();
+                            await loadSerieSeriaStandings();
+                            await loadSerieSeriaNextRound();
+                        } else {
+                            displayMessage(result.reason || 'Errore simulazione', 'error', 'toggle-status-message');
+                        }
+                    } else {
+                        displayMessage('Modulo simulazione non disponibile', 'error', 'toggle-status-message');
+                    }
+                } catch (error) {
+                    console.error('Errore simulazione giornata:', error);
+                    displayMessage('Errore: ' + error.message, 'error', 'toggle-status-message');
+                } finally {
+                    btnSimulateRound.disabled = false;
+                    btnSimulateRound.innerHTML = '<i class="fas fa-play mr-1"></i> Simula Giornata';
+                }
             });
         }
         
@@ -1123,6 +1131,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Carica stato campionato, coppa, supercoppa (automazione si carica solo quando apri il menu)
         loadSerieSeriaStatus();
+        loadSerieSeriaStandings();
+        loadSerieSeriaNextRound();
         loadCupStatus();
         loadSupercoppPanel();
         // loadAutomationPanel(); // Non caricare automaticamente, si carica al click sul menu
@@ -2694,6 +2704,119 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Carica e mostra la classifica inline nella sezione SerieSeriA
+     */
+    const loadSerieSeriaStandings = async () => {
+        const container = document.getElementById('serieseria-standings-table');
+        if (!container) return;
+
+        try {
+            const leaderboardData = await window.LeaderboardListener?.getLeaderboard();
+            const standings = leaderboardData?.standings || [];
+
+            if (standings.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-2">Classifica non disponibile.</p>';
+                return;
+            }
+
+            let html = `
+                <table class="w-full">
+                    <thead class="bg-gray-800">
+                        <tr>
+                            <th class="py-1 px-2 text-left text-gray-400">#</th>
+                            <th class="py-1 px-2 text-left text-gray-400">Squadra</th>
+                            <th class="py-1 px-2 text-center text-gray-400">Pt</th>
+                            <th class="py-1 px-2 text-center text-gray-400">V</th>
+                            <th class="py-1 px-2 text-center text-gray-400">P</th>
+                            <th class="py-1 px-2 text-center text-gray-400">S</th>
+                            <th class="py-1 px-2 text-center text-gray-400">GF</th>
+                            <th class="py-1 px-2 text-center text-gray-400">GS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            standings.forEach((team, index) => {
+                const pos = index + 1;
+                const posColor = pos === 1 ? 'text-yellow-400' : (pos <= 3 ? 'text-green-400' : 'text-gray-300');
+                html += `
+                    <tr class="border-b border-gray-700 hover:bg-gray-800">
+                        <td class="py-1 px-2 ${posColor} font-bold">${pos}</td>
+                        <td class="py-1 px-2 text-white">${team.teamName || team.teamId}</td>
+                        <td class="py-1 px-2 text-center text-green-400 font-bold">${team.points || 0}</td>
+                        <td class="py-1 px-2 text-center text-gray-300">${team.wins || 0}</td>
+                        <td class="py-1 px-2 text-center text-gray-300">${team.draws || 0}</td>
+                        <td class="py-1 px-2 text-center text-gray-300">${team.losses || 0}</td>
+                        <td class="py-1 px-2 text-center text-gray-300">${team.goalsFor || 0}</td>
+                        <td class="py-1 px-2 text-center text-gray-300">${team.goalsAgainst || 0}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Errore caricamento classifica:', error);
+            container.innerHTML = '<p class="text-red-400 text-center py-2">Errore caricamento.</p>';
+        }
+    };
+
+    /**
+     * Carica e mostra la prossima giornata nella sezione SerieSeriA
+     */
+    const loadSerieSeriaNextRound = async () => {
+        const container = document.getElementById('serieseria-next-matches');
+        if (!container) return;
+
+        try {
+            const { doc, getDoc } = firestoreTools;
+            const appId = firestoreTools.appId;
+            const SCHEDULE_COLLECTION_PATH = `artifacts/${appId}/public/data/schedule`;
+
+            const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, 'full_schedule');
+            const scheduleDoc = await getDoc(scheduleDocRef);
+
+            if (!scheduleDoc.exists() || !scheduleDoc.data().matches) {
+                container.innerHTML = '<p class="text-gray-400">Nessun calendario.</p>';
+                return;
+            }
+
+            const schedule = scheduleDoc.data().matches;
+            const nextRound = schedule.find(round =>
+                round.matches.some(match => match.result === null)
+            );
+
+            if (!nextRound) {
+                container.innerHTML = '<p class="text-green-400 font-semibold">Tutte le partite completate!</p>';
+                return;
+            }
+
+            let html = `<p class="text-yellow-300 font-bold mb-2">Giornata ${nextRound.round}</p>`;
+            html += '<div class="space-y-1">';
+
+            nextRound.matches.forEach(match => {
+                if (match.result === null) {
+                    html += `
+                        <div class="flex items-center justify-between bg-gray-800 rounded px-2 py-1">
+                            <span class="text-white">${match.homeName}</span>
+                            <span class="text-gray-500 mx-2">vs</span>
+                            <span class="text-white">${match.awayName}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Errore caricamento prossima giornata:', error);
+            container.innerHTML = '<p class="text-red-400">Errore caricamento.</p>';
+        }
+    };
+
+    /**
      * Gestisce la generazione del calendario coppa
      */
     const handleGenerateCupSchedule = async () => {
@@ -2797,6 +2920,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Aggiorna gli stati nella UI
             loadSerieSeriaStatus();
+            loadSerieSeriaStandings();
+            loadSerieSeriaNextRound();
             loadCupStatus();
 
             // Se il pannello automazione e' aperto, aggiornalo
