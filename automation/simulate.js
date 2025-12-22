@@ -265,8 +265,9 @@ async function simulateChampionshipMatchday(db, appId) {
         // Aggiorna la classifica
         await updateLeaderboard(db, appId, scheduleData);
 
-        // Resetta la forma dei giocatori
-        await resetPlayersForm(db, appId, teamsMap);
+        // NOTA: Le forme dei giocatori NON vengono resettate
+        // Il nuovo sistema aggiorna le forme in base alle prestazioni (gol, assist, clean sheet)
+        // L'automazione non traccia questi dati, quindi le forme vengono gestite dal client
     }
 
     return true;
@@ -579,8 +580,7 @@ async function simulateCupRound(db, appId) {
         });
         console.log('[Coppa] Bracket salvato');
 
-        // Resetta forma giocatori
-        await resetPlayersForm(db, appId, teamsMap);
+        // NOTA: Le forme dei giocatori NON vengono resettate (gestite dal client)
     }
 
     return true;

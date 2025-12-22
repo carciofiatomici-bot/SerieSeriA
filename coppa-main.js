@@ -276,6 +276,25 @@ window.CoppaMain = {
                 details: matchDetails
             });
 
+            // NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
+            if (window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+                const homeMatchResult = {
+                    scorers: (result.scorers || []).filter(s => s.team === homeTeamData.teamName),
+                    assists: (result.assists || []).filter(a => a.team === homeTeamData.teamName),
+                    goalsAgainst: awayGoals,
+                    isHome: true
+                };
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeTeam.teamId, homeTeamData, homeMatchResult);
+
+                const awayMatchResult = {
+                    scorers: (result.scorers || []).filter(s => s.team === awayTeamData.teamName),
+                    assists: (result.assists || []).filter(a => a.team === awayTeamData.teamName),
+                    goalsAgainst: homeGoals,
+                    isHome: false
+                };
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayTeam.teamId, awayTeamData, awayMatchResult);
+            }
+
             // Dispatch evento matchSimulated per notifiche push
             document.dispatchEvent(new CustomEvent('matchSimulated', {
                 detail: {

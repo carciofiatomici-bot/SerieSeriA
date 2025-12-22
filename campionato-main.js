@@ -248,9 +248,30 @@ window.ChampionshipMain = {
                 }, standings);
             }
 
-            // 6. Resetta lo stato della forma dopo la simulazione per la prossima giornata
-            await this.resetPlayersFormStatus(match.homeId);
-            await this.resetPlayersFormStatus(match.awayId);
+            // 6. NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
+            if (window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+                // Prepara dati per home team
+                const homeMatchResult = {
+                    scorers: scorers.filter(s => s.team === homeTeamData.teamName),
+                    assists: assists.filter(a => a.team === homeTeamData.teamName),
+                    goalsAgainst: awayGoals,
+                    isHome: true
+                };
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeMatchResult);
+
+                // Prepara dati per away team
+                const awayMatchResult = {
+                    scorers: scorers.filter(s => s.team === awayTeamData.teamName),
+                    assists: assists.filter(a => a.team === awayTeamData.teamName),
+                    goalsAgainst: homeGoals,
+                    isHome: false
+                };
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayMatchResult);
+            } else {
+                // Fallback: resetta forme se funzione non disponibile
+                await this.resetPlayersFormStatus(match.homeId);
+                await this.resetPlayersFormStatus(match.awayId);
+            }
             
             const updatedStandings = Array.from(standingsMap.values()).sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
@@ -562,6 +583,25 @@ window.ChampionshipMain = {
                     });
                 }
 
+                // NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
+                if (window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+                    const homeMatchResult = {
+                        scorers: (scorers || []).filter(s => s.team === homeTeamData.teamName),
+                        assists: (assists || []).filter(a => a.team === homeTeamData.teamName),
+                        goalsAgainst: awayGoals,
+                        isHome: true
+                    };
+                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeMatchResult);
+
+                    const awayMatchResult = {
+                        scorers: (scorers || []).filter(s => s.team === awayTeamData.teamName),
+                        assists: (assists || []).filter(a => a.team === awayTeamData.teamName),
+                        goalsAgainst: homeGoals,
+                        isHome: false
+                    };
+                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayMatchResult);
+                }
+
                 // Dispatch evento matchSimulated per notifiche push
                 document.dispatchEvent(new CustomEvent('matchSimulated', {
                     detail: {
@@ -573,9 +613,8 @@ window.ChampionshipMain = {
                 }));
             }
 
-            // 6. Resetta lo stato della forma dopo la simulazione per TUTTE le squadre coinvolte
-            const resetPromises = Array.from(teamsInRound).map(teamId => this.resetPlayersFormStatus(teamId));
-            await Promise.all(resetPromises);
+            // RIMOSSO: Il reset forme non è più necessario con il nuovo sistema basato su prestazioni
+            // Le forme vengono aggiornate (non resettate) dopo ogni partita
             
             const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
             await setDoc(scheduleDocRef, { matches: schedule }, { merge: true });

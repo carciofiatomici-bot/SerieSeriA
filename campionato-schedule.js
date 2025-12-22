@@ -144,6 +144,12 @@ window.ChampionshipSchedule = {
             console.log('ChampionshipSchedule: Statistiche stagionali resettate per nuova stagione.');
         }
 
+        // NUOVO: Resetta le forme dei giocatori a 0 per inizio stagione
+        if (window.GestioneSquadreUtils?.resetAllTeamsForms) {
+            await window.GestioneSquadreUtils.resetAllTeamsForms();
+            console.log('ChampionshipSchedule: Forme giocatori resettate a 0 per nuova stagione.');
+        }
+
         // Imposta stagione IN CORSO
         await setDoc(configDocRef, { isSeasonOver: false }, { merge: true });
 

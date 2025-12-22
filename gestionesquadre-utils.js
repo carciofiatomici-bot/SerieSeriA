@@ -46,50 +46,31 @@ window.GestioneSquadreUtils = {
     },
 
     /**
-     * Genera o recupera la forma casuale e la applica al giocatore.
+     * Recupera o inizializza la forma di un giocatore.
+     * NUOVO SISTEMA: I giocatori partono con forma 0 (neutra).
+     * La forma viene modificata solo dalle prestazioni in partita.
      * @param {Object} player - Oggetto giocatore.
      * @param {Map} formsMap - Mappa delle forme persistenti {playerId: {mod: X, icon: Y, level: Z}}.
      * @returns {Object} Oggetto giocatore con formModifier, formIcon, e currentLevel.
      */
     applyFormForDisplay(player, formsMap) {
         const playerId = player.id;
-        // Fallback se getRandomInt non e' ancora definito
-        const getRandomInt = window.getRandomInt || ((min, max) => {
-            min = Math.ceil(min);
-            max = Math.floor(max);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        });
 
-        // 1. RECUPERO: Se la forma è già stata calcolata e salvata, usala
+        // 1. RECUPERO: Se la forma e' gia' stata salvata, usala
         if (formsMap.has(playerId)) {
             const savedForm = formsMap.get(playerId);
             return {
                 ...player,
                 formModifier: savedForm.mod,
                 formIcon: savedForm.icon,
-                currentLevel: savedForm.level
+                currentLevel: savedForm.level,
+                benchStreak: savedForm.benchStreak || 0
             };
         }
 
-        // 2. GENERAZIONE: Genera un modificatore di forma
-        let mod;
-
-        const isIcona = player.abilities && player.abilities.includes('Icona');
-        if (isIcona) {
-             mod = getRandomInt(-2, 4); // ICONA: Range [-2, +4] (possono avere forma negativa)
-        } else {
-             mod = getRandomInt(-3, 3); // ALTRI: Range [-3, +3]
-        }
-
-        let icon;
-
-        if (mod > 0) {
-            icon = 'text-green-500 fas fa-arrow-up';
-        } else if (mod < 0) {
-            icon = 'text-red-500 fas fa-arrow-down';
-        } else {
-            icon = 'text-gray-400 fas fa-minus-circle';
-        }
+        // 2. INIZIALIZZAZIONE: Nuovi giocatori partono con forma 0 (neutra)
+        const mod = 0;
+        const icon = 'text-gray-400 fas fa-minus-circle'; // Icona neutra
 
         const currentLevel = Math.min(30, Math.max(1, (player.level || player.currentLevel || 1) + mod));
 
@@ -97,17 +78,289 @@ window.GestioneSquadreUtils = {
             ...player,
             formModifier: mod,
             formIcon: icon,
-            currentLevel: currentLevel
+            currentLevel: currentLevel,
+            benchStreak: 0
         };
 
         // 3. SALVATAGGIO NELLA MAPPA IN MEMORIA (formsMap)
         formsMap.set(playerId, {
             mod: mod,
             icon: icon,
-            level: currentLevel
+            level: currentLevel,
+            benchStreak: 0
         });
 
         return formState;
+    },
+
+    /**
+     * Calcola l'icona della forma in base al modificatore
+     * @param {number} mod - Modificatore forma
+     * @returns {string} Classe CSS icona
+     */
+    getFormIcon(mod) {
+        if (mod > 0) {
+            return 'text-green-500 fas fa-arrow-up';
+        } else if (mod < 0) {
+            return 'text-red-500 fas fa-arrow-down';
+        }
+        return 'text-gray-400 fas fa-minus-circle';
+    },
+
+    /**
+     * Aggiorna la forma dei giocatori dopo una partita.
+     * NUOVO SISTEMA basato su prestazioni:
+     * - Gol segnato: +1
+     * - Assist: +1
+     * - Clean sheet (portiere): +1
+     * - 20% chance +-1 per titolari
+     * - 10% chance +-1 per tutti
+     * - Panchina consecutiva: probabilita' crescente di -1
+     *
+     * @param {string} teamId - ID squadra
+     * @param {Object} teamData - Dati squadra con formation e players
+     * @param {Object} matchResult - Risultato partita {scorers, assisters, cleanSheet, isHome, goalsAgainst}
+     * @returns {Promise<Object>} Nuove forme aggiornate
+     */
+    async updatePlayerFormAfterMatch(teamId, teamData, matchResult) {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+        // Carica forme attuali
+        const teamDocRef = doc(db, TEAMS_PATH, teamId);
+        const teamDoc = await getDoc(teamDocRef);
+        if (!teamDoc.exists()) {
+            console.error(`[FormSystem] Squadra ${teamId} non trovata`);
+            return null;
+        }
+
+        const currentData = teamDoc.data();
+        const playersFormStatus = currentData.playersFormStatus || {};
+        const players = currentData.players || [];
+        const titolari = teamData.formation?.titolari || [];
+        const panchina = teamData.formation?.panchina || [];
+
+        // Set di ID titolari e panchina
+        const titolariIds = new Set(titolari.map(p => p.id));
+        const panchinaIds = new Set(panchina.map(p => p.id));
+
+        // Estrai scorers e assisters dalla partita
+        const scorersSet = new Set((matchResult.scorers || []).map(s => s.name));
+        const assistersSet = new Set((matchResult.assists || []).map(a => a.name));
+        const isCleanSheet = matchResult.goalsAgainst === 0;
+
+        // Random helper
+        const getRandomInt = window.getRandomInt || ((min, max) => {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        });
+
+        const updatedForms = {};
+        const formChanges = [];
+
+        // Processa tutti i giocatori della rosa
+        for (const player of players) {
+            if (!player || !player.id) continue;
+
+            const playerId = player.id;
+            const playerName = player.name || player.nome || 'Giocatore';
+            const currentForm = playersFormStatus[playerId] || { mod: 0, benchStreak: 0 };
+            let newMod = currentForm.mod || 0;
+            let benchStreak = currentForm.benchStreak || 0;
+            const changes = [];
+
+            const isTitolare = titolariIds.has(playerId);
+            const isInPanchina = panchinaIds.has(playerId);
+            const isGK = (player.role || player.ruolo || '').toUpperCase() === 'P';
+
+            if (isTitolare) {
+                // Reset bench streak per titolari
+                benchStreak = 0;
+
+                // Bonus gol
+                if (scorersSet.has(playerName)) {
+                    newMod += 1;
+                    changes.push('+1 gol');
+                }
+
+                // Bonus assist
+                if (assistersSet.has(playerName)) {
+                    newMod += 1;
+                    changes.push('+1 assist');
+                }
+
+                // Bonus clean sheet portiere
+                if (isGK && isCleanSheet) {
+                    newMod += 1;
+                    changes.push('+1 clean sheet');
+                }
+
+                // 20% chance +-1 random per titolari
+                if (Math.random() < 0.20) {
+                    const randomChange = getRandomInt(0, 1) === 0 ? -1 : 1;
+                    newMod += randomChange;
+                    changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);
+                }
+
+            } else if (isInPanchina) {
+                // In panchina durante la partita: incrementa bench streak
+                benchStreak += 1;
+
+                // Probabilita' perdita forma basata su bench streak
+                let benchPenaltyChance = 0;
+                if (benchStreak === 1) benchPenaltyChance = 0.10;
+                else if (benchStreak === 2) benchPenaltyChance = 0.20;
+                else if (benchStreak >= 3) benchPenaltyChance = 0.30;
+
+                if (benchPenaltyChance > 0 && Math.random() < benchPenaltyChance) {
+                    newMod -= 1;
+                    changes.push(`-1 panchina (streak ${benchStreak})`);
+                } else {
+                    // 10% chance +-1 random per chi non ha gia' preso penalita'
+                    if (Math.random() < 0.10) {
+                        const randomChange = getRandomInt(0, 1) === 0 ? -1 : 1;
+                        newMod += randomChange;
+                        changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);
+                    }
+                }
+
+            } else {
+                // Non in formazione: incrementa bench streak (come in panchina)
+                benchStreak += 1;
+
+                // Stesse probabilita' della panchina
+                let benchPenaltyChance = 0;
+                if (benchStreak === 1) benchPenaltyChance = 0.10;
+                else if (benchStreak === 2) benchPenaltyChance = 0.20;
+                else if (benchStreak >= 3) benchPenaltyChance = 0.30;
+
+                if (benchPenaltyChance > 0 && Math.random() < benchPenaltyChance) {
+                    newMod -= 1;
+                    changes.push(`-1 escluso (streak ${benchStreak})`);
+                }
+            }
+
+            // Clamp forma a [-3, +3]
+            newMod = Math.max(-3, Math.min(3, newMod));
+
+            // Calcola nuovo livello
+            const baseLevel = player.level || 1;
+            const newLevel = Math.min(30, Math.max(1, baseLevel + newMod));
+
+            updatedForms[playerId] = {
+                mod: newMod,
+                icon: this.getFormIcon(newMod),
+                level: newLevel,
+                benchStreak: benchStreak
+            };
+
+            if (changes.length > 0) {
+                formChanges.push(`${playerName}: ${changes.join(', ')} -> forma ${newMod}`);
+            }
+        }
+
+        // Salva su Firestore
+        try {
+            await updateDoc(teamDocRef, { playersFormStatus: updatedForms });
+            console.log(`[FormSystem] Forme aggiornate per ${teamData.teamName || teamId}:`, formChanges);
+        } catch (error) {
+            console.error(`[FormSystem] Errore salvataggio forme per ${teamId}:`, error);
+        }
+
+        return updatedForms;
+    },
+
+    /**
+     * Applica penalita' forma dopo allenamento giocatore (-1)
+     * @param {string} teamId - ID squadra
+     * @param {string} playerId - ID giocatore allenato
+     * @returns {Promise<boolean>} Successo operazione
+     */
+    async applyTrainingFormPenalty(teamId, playerId) {
+        const { doc, getDoc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+        try {
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const teamDoc = await getDoc(teamDocRef);
+            if (!teamDoc.exists()) return false;
+
+            const teamData = teamDoc.data();
+            const playersFormStatus = teamData.playersFormStatus || {};
+            const players = teamData.players || [];
+
+            // Trova il giocatore per ottenere il livello base
+            const player = players.find(p => p.id === playerId);
+            if (!player) return false;
+
+            const currentForm = playersFormStatus[playerId] || { mod: 0, benchStreak: 0 };
+            const newMod = Math.max(-3, currentForm.mod - 1);
+            const baseLevel = player.level || 1;
+            const newLevel = Math.min(30, Math.max(1, baseLevel + newMod));
+
+            playersFormStatus[playerId] = {
+                mod: newMod,
+                icon: this.getFormIcon(newMod),
+                level: newLevel,
+                benchStreak: currentForm.benchStreak || 0
+            };
+
+            await updateDoc(teamDocRef, { playersFormStatus });
+            console.log(`[FormSystem] Penalita' allenamento: ${player.name || playerId} forma ${currentForm.mod} -> ${newMod}`);
+            return true;
+
+        } catch (error) {
+            console.error(`[FormSystem] Errore penalita' allenamento:`, error);
+            return false;
+        }
+    },
+
+    /**
+     * Resetta le forme di tutte le squadre a 0 (inizio stagione)
+     * @returns {Promise<number>} Numero squadre resettate
+     */
+    async resetAllTeamsForms() {
+        const { collection, getDocs, updateDoc, doc } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+        const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+
+        try {
+            const teamsRef = collection(db, TEAMS_PATH);
+            const teamsSnapshot = await getDocs(teamsRef);
+            let resetCount = 0;
+
+            for (const teamDoc of teamsSnapshot.docs) {
+                const teamData = teamDoc.data();
+                const players = teamData.players || [];
+                const resetForms = {};
+
+                // Resetta tutti i giocatori a forma 0
+                for (const player of players) {
+                    if (!player || !player.id) continue;
+                    const baseLevel = player.level || 1;
+                    resetForms[player.id] = {
+                        mod: 0,
+                        icon: 'text-gray-400 fas fa-minus-circle',
+                        level: baseLevel,
+                        benchStreak: 0
+                    };
+                }
+
+                await updateDoc(doc(db, TEAMS_PATH, teamDoc.id), { playersFormStatus: resetForms });
+                resetCount++;
+            }
+
+            console.log(`[FormSystem] Reset stagionale: ${resetCount} squadre resettate a forma 0`);
+            return resetCount;
+
+        } catch (error) {
+            console.error('[FormSystem] Errore reset stagionale forme:', error);
+            return 0;
+        }
     },
 
     /**
