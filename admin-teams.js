@@ -1533,6 +1533,9 @@ window.AdminTeams = {
 
         let repairs = [];
 
+        // Carica template icone per riparare abilities
+        const iconeTemplates = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
+
         this.currentEditingPlayers = this.currentEditingPlayers.map(player => {
             const isIcona = player.abilities && player.abilities.includes('Icona');
             const isBasePlayer = player.name && (
@@ -1571,14 +1574,42 @@ window.AdminTeams = {
             const needsLevelFix = currentLevel !== correctLevel;
             const hasObsoleteFields = player.levelRange || player.levelMin !== undefined || player.levelMax !== undefined;
 
-            if (needsLevelFix || hasObsoleteFields) {
+            // FIX ABILITIES ICONE: controlla se l'icona ha abilities incomplete
+            let correctAbilities = player.abilities || [];
+            let needsAbilitiesFix = false;
+
+            if (isIcona) {
+                // Cerca l'icona template per nome o id
+                const iconaTemplate = iconeTemplates.find(t =>
+                    t.id === player.id || t.name === player.name
+                );
+
+                if (iconaTemplate && iconaTemplate.abilities) {
+                    // Controlla se mancano abilities (es. solo ['Icona'] invece di ['Icona', 'Tiro Dritto'])
+                    const templateAbilities = iconaTemplate.abilities;
+                    const missingAbilities = templateAbilities.filter(a => !player.abilities.includes(a));
+
+                    if (missingAbilities.length > 0) {
+                        correctAbilities = [...new Set([...player.abilities, ...templateAbilities])];
+                        needsAbilitiesFix = true;
+                    }
+                }
+            }
+
+            if (needsLevelFix || hasObsoleteFields || needsAbilitiesFix) {
                 let repairNote = `${player.name}: `;
+                const fixes = [];
                 if (needsLevelFix) {
-                    repairNote += `Lv ${currentLevel} -> ${correctLevel}`;
+                    fixes.push(`Lv ${currentLevel} -> ${correctLevel}`);
                 }
                 if (hasObsoleteFields) {
-                    repairNote += needsLevelFix ? ', rimossi campi obsoleti' : 'rimossi campi obsoleti';
+                    fixes.push('rimossi campi obsoleti');
                 }
+                if (needsAbilitiesFix) {
+                    const added = correctAbilities.filter(a => !player.abilities.includes(a));
+                    fixes.push(`+${added.join(', ')}`);
+                }
+                repairNote += fixes.join(', ');
                 repairs.push(repairNote);
             }
 
@@ -1591,7 +1622,7 @@ window.AdminTeams = {
                 age: player.age,
                 cost: player.cost || 0,
                 level: correctLevel,
-                abilities: player.abilities || [],
+                abilities: correctAbilities, // Usa abilities corrette
                 isCaptain: player.isCaptain || false
             };
 
