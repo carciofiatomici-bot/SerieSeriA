@@ -546,7 +546,7 @@ window.SchedinaUI = {
 
         // Mostra in un overlay
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+        overlay.className = 'fixed inset-0 bg-black/80 z-[10000] flex items-center justify-center p-4';
         overlay.innerHTML = `
             <div class="bg-gray-900 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
