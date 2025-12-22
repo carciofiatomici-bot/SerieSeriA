@@ -7,7 +7,7 @@
 // IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const APP_VERSION = '2.2.65'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const APP_VERSION = '2.2.66'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
 const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
 const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
 const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
@@ -66,6 +66,7 @@ const STATIC_ASSETS = [
     './lazy-loader.js',
 
     // Simulation
+    './abilita-effects.js',
     './simulazione.js',
     './simulazione-nuove-regole.js',
 
