@@ -676,11 +676,14 @@ window.DashboardFeatures = {
             }
         });
 
-        // Homepage (senza logout)
+        // Homepage (senza logout) - mantiene la sessione attiva
         document.getElementById('menu-homepage')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');
             const loginBox = document.getElementById('login-box');
-            if (loginBox) window.showScreen(loginBox);
+            if (loginBox && window.InterfacciaAuth) {
+                // Usa showLoginWithRememberedSession per mantenere la sessione
+                window.InterfacciaAuth.showLoginWithRememberedSession({ loginBox });
+            }
         });
 
         // Logout
