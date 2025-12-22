@@ -109,7 +109,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         cost: 0,
         isCaptain: true,
         level: 5,
-        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/Bemolle.jpg',
+        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/bemolle.jpg',
         type: TYPE_VELOCITA,
         abilities: ['Icona', 'Scheggia impazzita']
     },
