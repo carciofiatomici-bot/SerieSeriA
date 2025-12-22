@@ -2676,10 +2676,11 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
 
     // Sincronizza eventi con AbilitaEffects
     if (window.AbilitaEffects) {
+        const shooter = attackingTeam.A?.[0] || null;
         if (goal) {
-            window.AbilitaEffects.onGoal(attaccante, attackingTeam);
+            window.AbilitaEffects.onGoal(shooter, attackingTeam);
         } else {
-            window.AbilitaEffects.onSave(portiere, attaccante, defendingTeam);
+            window.AbilitaEffects.onSave(portiere, shooter, defendingTeam);
         }
     }
 
