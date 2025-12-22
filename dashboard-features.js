@@ -277,7 +277,7 @@ window.DashboardFeatures = {
                 }
 
                 // Verifica se il Museo del Club e' costruito
-                const teamData = window.InterfacciaCore?.getCurrentTeam?.();
+                const teamData = window.InterfacciaCore?.currentTeamData;
                 if (teamData && window.Stadium) {
                     const museumLevel = window.Stadium.getStructureLevel('museum', teamData.stadium);
                     if (museumLevel <= 0) {

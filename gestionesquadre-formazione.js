@@ -162,7 +162,6 @@ window.GestioneSquadreFormazione = {
                          ondragover="event.preventDefault();"
                          ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'ROSALIBERA')">
                     </div>
-                    ${this.renderInjuredPlayersBoxCompact(teamData)}
                 </div>
 
                 <!-- Campo + Panchina (colonna centrale) -->
@@ -194,6 +193,9 @@ window.GestioneSquadreFormazione = {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Infermeria (sotto la panchina) -->
+                    ${this.renderInjuredPlayersBoxCompact(teamData)}
 
                     <!-- Legenda Tipologie -->
                     <div class="bg-gray-800 p-2 rounded-lg border border-gray-600">
@@ -2409,8 +2411,8 @@ window.GestioneSquadreFormazione = {
             document.getElementById('player-info-budget').textContent = `Saldo: ${newBudget} CS`;
 
             // Aggiorna InterfacciaCore per sincronizzare globalmente
-            if (window.InterfacciaCore?.setCurrentTeamData) {
-                window.InterfacciaCore.setCurrentTeamData(teamData);
+            if (window.InterfacciaCore) {
+                window.InterfacciaCore.currentTeamData = teamData;
             }
 
             // Aggiorna header budget se presente
@@ -2418,11 +2420,13 @@ window.GestioneSquadreFormazione = {
 
             displayMessage('formation-message', `Forma di ${player?.name || 'giocatore'} ripristinata! (-${cost} CS)`, 'success');
 
-            // Chiudi e aggiorna
+            // Renderizza immediatamente per aggiornare la lista giocatori
+            this.render(teamData, context);
+
+            // Chiudi modal dopo un breve delay per mostrare il messaggio
             setTimeout(() => {
                 this.closePlayerInfoModal();
-                this.render(teamData, context);
-            }, 1000);
+            }, 800);
 
         } catch (error) {
             console.error('Errore cura forma:', error);
@@ -2489,8 +2493,8 @@ window.GestioneSquadreFormazione = {
             document.getElementById('player-info-budget').textContent = `Saldo: ${newBudget} CS`;
 
             // Aggiorna InterfacciaCore per sincronizzare globalmente
-            if (window.InterfacciaCore?.setCurrentTeamData) {
-                window.InterfacciaCore.setCurrentTeamData(teamData);
+            if (window.InterfacciaCore) {
+                window.InterfacciaCore.currentTeamData = teamData;
             }
 
             // Aggiorna header budget se presente
@@ -2498,11 +2502,13 @@ window.GestioneSquadreFormazione = {
 
             displayMessage('formation-message', `${player?.name || 'Giocatore'} e guarito! (-${cost} CS)`, 'success');
 
-            // Chiudi e aggiorna
+            // Renderizza immediatamente per aggiornare la lista giocatori
+            this.render(teamData, context);
+
+            // Chiudi modal dopo un breve delay per mostrare il messaggio
             setTimeout(() => {
                 this.closePlayerInfoModal();
-                this.render(teamData, context);
-            }, 1000);
+            }, 800);
 
         } catch (error) {
             console.error('Errore guarigione infortunio:', error);

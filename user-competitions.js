@@ -401,6 +401,13 @@ window.UserCompetitions = {
                             <span class="${lastPlayedMatch.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.awayName}</span>
                         </div>
                         <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
+                        <button id="btn-campionato-telecronaca"
+                                class="mt-3 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                                data-home-name="${lastPlayedMatch.homeName}"
+                                data-away-name="${lastPlayedMatch.awayName}"
+                                data-result="${lastPlayedMatch.result}">
+                            📺 Vedi Telecronaca
+                        </button>
                     </div>
                 </div>
             `
@@ -422,7 +429,57 @@ window.UserCompetitions = {
                     arrow.classList.toggle('rotate-180');
                 });
             });
+
+            // Listener per bottone telecronaca campionato
+            const btnTelecronaca = document.getElementById('btn-campionato-telecronaca');
+            if (btnTelecronaca) {
+                btnTelecronaca.addEventListener('click', async () => {
+                    await this.showLastMatchTelecronaca('campionato', btnTelecronaca.dataset);
+                });
+            }
         }, 100);
+    },
+
+    /**
+     * Mostra la telecronaca dell'ultima partita
+     */
+    async showLastMatchTelecronaca(matchType, matchData) {
+        const currentTeamId = window.InterfacciaCore.currentTeamId;
+        if (!currentTeamId) {
+            if (window.Toast) window.Toast.error('Errore: squadra non trovata');
+            return;
+        }
+
+        try {
+            // Carica storico partite
+            const history = await window.MatchHistory.loadHistory(currentTeamId);
+
+            // Trova l'ultima partita del tipo specificato
+            const lastMatch = history.find(m => m.type === matchType);
+
+            if (!lastMatch) {
+                if (window.Toast) window.Toast.info('Nessuna partita trovata nello storico');
+                return;
+            }
+
+            if (!lastMatch.details?.matchLog || lastMatch.details.matchLog.length === 0) {
+                if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
+                return;
+            }
+
+            // Mostra telecronaca
+            window.MatchHistory.showTelecronacaModal(
+                lastMatch.details.matchLog,
+                lastMatch.homeTeam.name,
+                lastMatch.awayTeam.name,
+                lastMatch.homeScore,
+                lastMatch.awayScore
+            );
+
+        } catch (error) {
+            console.error('Errore caricamento telecronaca:', error);
+            if (window.Toast) window.Toast.error('Errore nel caricamento della telecronaca');
+        }
     },
 
     // ================================================================
@@ -765,6 +822,10 @@ window.UserCompetitions = {
                             <span class="${lastCupMatch.awayTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.awayTeam?.teamName || 'TBD'}</span>
                         </div>
                         <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
+                        <button id="btn-coppa-telecronaca"
+                                class="mt-3 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                            📺 Vedi Telecronaca
+                        </button>
                     </div>
                 </div>
             `;
@@ -787,6 +848,14 @@ window.UserCompetitions = {
                     arrow.classList.toggle('rotate-180');
                 });
             });
+
+            // Listener per bottone telecronaca coppa
+            const btnCoppaTelecronaca = document.getElementById('btn-coppa-telecronaca');
+            if (btnCoppaTelecronaca) {
+                btnCoppaTelecronaca.addEventListener('click', async () => {
+                    await this.showLastMatchTelecronaca('coppa', {});
+                });
+            }
         }, 100);
     },
 
@@ -980,6 +1049,10 @@ window.UserCompetitions = {
                             🏆 Vincitore: ${bracket.winner.teamName}
                         </p>
                         <p class="text-gray-400 text-sm mt-1">Premio: 1 CSS</p>
+                        <button id="btn-supercoppa-telecronaca"
+                                class="mt-3 bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition inline-flex items-center gap-2">
+                            📺 Vedi Telecronaca
+                        </button>
                     </div>
                 ` : `
                     <div class="mt-4 pt-4 border-t border-gray-700 text-center">
@@ -993,6 +1066,60 @@ window.UserCompetitions = {
         html += `</div>`;
 
         container.innerHTML = html;
+
+        // Listener per bottone telecronaca supercoppa (visibile a tutti)
+        setTimeout(() => {
+            const btnSupercoppaTelecronaca = document.getElementById('btn-supercoppa-telecronaca');
+            if (btnSupercoppaTelecronaca && bracket) {
+                btnSupercoppaTelecronaca.addEventListener('click', async () => {
+                    await this.showSupercoppaTelecronaca(bracket);
+                });
+            }
+        }, 100);
+    },
+
+    /**
+     * Mostra la telecronaca della supercoppa (visibile a tutti gli utenti)
+     */
+    async showSupercoppaTelecronaca(bracket) {
+        if (!bracket?.winner || !bracket.homeTeam?.teamId || !bracket.awayTeam?.teamId) {
+            if (window.Toast) window.Toast.info('Telecronaca non ancora disponibile');
+            return;
+        }
+
+        try {
+            // Prova a caricare lo storico dal vincitore
+            let matchLog = null;
+            let homeScore = 0;
+            let awayScore = 0;
+
+            const winnerId = bracket.winner.teamId;
+            const history = await window.MatchHistory.loadHistory(winnerId);
+            const supercoppMatch = history.find(m => m.type === 'supercoppa');
+
+            if (supercoppMatch?.details?.matchLog) {
+                matchLog = supercoppMatch.details.matchLog;
+                homeScore = supercoppMatch.homeScore;
+                awayScore = supercoppMatch.awayScore;
+            }
+
+            if (!matchLog || matchLog.length === 0) {
+                if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
+                return;
+            }
+
+            window.MatchHistory.showTelecronacaModal(
+                matchLog,
+                bracket.homeTeam.teamName,
+                bracket.awayTeam.teamName,
+                homeScore,
+                awayScore
+            );
+
+        } catch (error) {
+            console.error('Errore caricamento telecronaca supercoppa:', error);
+            if (window.Toast) window.Toast.error('Errore nel caricamento della telecronaca');
+        }
     },
 
     // ================================================================

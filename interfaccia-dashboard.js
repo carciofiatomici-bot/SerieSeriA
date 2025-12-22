@@ -925,6 +925,9 @@ window.InterfacciaDashboard = {
                 );
                 // Ricarica stato toggle partecipazione draft
                 window.InterfacciaNavigation?.loadDraftParticipationState?.();
+
+                // Ricarica anche la prossima partita
+                this.loadNextMatch(elements);
             } else {
                 console.error("Errore: Impossibile trovare i dati della squadra corrente per l'aggiornamento.");
             }

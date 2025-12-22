@@ -276,7 +276,8 @@ window.ChampionshipMain = {
 
             // Invalida anche FirestoreCache per aggiornamento istantaneo
             if (window.FirestoreCache?.invalidate) {
-                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule');
+                window.FirestoreCache.invalidate('schedule', 'full_schedule');
+                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule'); // Retrocompatibilita
                 window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
             }
 
@@ -605,7 +606,8 @@ window.ChampionshipMain = {
 
             // Invalida anche FirestoreCache per aggiornamento istantaneo
             if (window.FirestoreCache?.invalidate) {
-                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule');
+                window.FirestoreCache.invalidate('schedule', 'full_schedule');
+                window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule'); // Retrocompatibilita
                 window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
             }
 

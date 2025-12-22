@@ -489,7 +489,7 @@ window.MatchHistory = {
                 </div>
                 ${match.details?.scorers?.length > 0 ? `
                     <p class="text-xs text-gray-400 mt-1">
-                        ⚽ Marcatori: ${match.details.scorers.join(', ')}
+                        ⚽ Marcatori: ${match.details.scorers.map(s => typeof s === 'string' ? s : s.name).join(', ')}
                     </p>
                 ` : ''}
                 ${telecronacaBtn}
