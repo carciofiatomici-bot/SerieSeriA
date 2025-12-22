@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.29',
+    currentVersion: '2.2.30',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,29 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.30',
+            date: '2025-12-22',
+            time: '18:00',
+            title: 'Nuovo Sistema Forma e Regole Aggiornate',
+            changes: [
+                { text: 'NUOVO: Sistema Forma basato su prestazioni (gol +1, assist +1, clean sheet +1)', adminOnly: false },
+                { text: 'NUOVO: Penalita panchina consecutiva (10%/20%/30% chance -1 forma)', adminOnly: false },
+                { text: 'NUOVO: Elemento casuale forma (20% titolari, 10% tutti)', adminOnly: false },
+                { text: 'NUOVO: Reset forme a 0 a inizio stagione', adminOnly: false },
+                { text: 'Potenziamento giocatore ora costa -1 forma', adminOnly: false },
+                { text: 'Pannello Regole completamente aggiornato con nuova sezione Sistema Forma', adminOnly: false },
+                { text: 'Occasioni partita: 50 totali (25 per squadra) invece di 30', adminOnly: false },
+                { text: 'Telecronaca: colori distinti per squadra casa (blu) e ospite (rosso)', adminOnly: false },
+                { text: 'Telecronaca: aggiunto riepilogo sintetico per ogni occasione', adminOnly: false },
+                { text: 'Fix nomi giocatori "undefined" in telecronaca', adminOnly: false },
+                { text: 'Fix livelli icone in simulazione (mostrava sempre Lv.12)', adminOnly: false },
+                { text: 'Fix icone mancanti nel tab Squadre della homepage', adminOnly: false },
+                { text: 'Museo semplificato: rimossi livelli 2 e 3 (solo Hall of Fame)', adminOnly: true },
+                { text: 'Fix simulazione automatica GitHub Actions', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.29',
             date: '2025-12-22',
