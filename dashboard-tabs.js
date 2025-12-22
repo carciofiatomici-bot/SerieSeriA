@@ -57,16 +57,16 @@ window.DashboardTabs = {
             targetTab.classList.remove('hidden');
         }
 
-        // Aggiorna stili dei bottoni tab
+        // Aggiorna stili dei bottoni tab (bottom navigation con border-top)
         document.querySelectorAll('.dashboard-tab').forEach(tab => {
             if (tab.dataset.tab === tabName) {
                 // Tab attivo
                 tab.classList.add('bg-green-600', 'text-white', 'border-green-400');
-                tab.classList.remove('bg-gray-800', 'text-gray-400', 'border-transparent');
+                tab.classList.remove('bg-gray-900', 'text-gray-400', 'border-transparent');
             } else {
                 // Tab inattivo
                 tab.classList.remove('bg-green-600', 'text-white', 'border-green-400');
-                tab.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent');
+                tab.classList.add('bg-gray-900', 'text-gray-400', 'border-transparent');
             }
         });
 

@@ -841,7 +841,7 @@
         </div>
 
         <!-- 3. CONTENUTO PRINCIPALE DELL'APP - Dashboard Squadra con 4 Tab -->
-        <div id="app-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load relative overflow-visible">
+        <div id="app-content" class="w-full min-h-screen transition duration-500 hidden-on-load relative overflow-visible pb-20 px-2 sm:px-4">
 
             <!-- ========== HEADER FISSO (sempre visibile) ========== -->
             <div id="dashboard-fixed-header" class="mb-1">
@@ -946,19 +946,23 @@
                 </div>
             </div>
 
-            <!-- ========== TAB BAR ========== -->
-            <div id="dashboard-tabs" class="flex border-b border-gray-700 mb-2">
-                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-green-600 text-white border-b-2 border-green-400 transition hover:bg-green-500" data-tab="home">
-                    🏠 Home
+            <!-- ========== TAB BAR (BOTTOM NAVIGATION - FIXED) ========== -->
+            <div id="dashboard-tabs" class="fixed bottom-0 left-0 right-0 z-50 flex bg-gray-900 border-t border-gray-700 shadow-lg">
+                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
+                    <span class="text-lg">🏠</span>
+                    <span>Home</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="squad">
-                    👥 Squadra
+                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
+                    <span class="text-lg">👥</span>
+                    <span>Squadra</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="competitions">
-                    🏆 Gare
+                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
+                    <span class="text-lg">🏆</span>
+                    <span>Gare</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-2 sm:py-2.5 text-center font-bold text-[10px] sm:text-xs bg-gray-800 text-gray-400 border-b-2 border-transparent transition hover:bg-gray-700 hover:text-white" data-tab="shop">
-                    🛒 Shop
+                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
+                    <span class="text-lg">🛒</span>
+                    <span>Shop</span>
                 </button>
             </div>
 
