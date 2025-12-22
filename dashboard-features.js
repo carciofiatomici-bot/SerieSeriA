@@ -679,8 +679,8 @@ window.DashboardFeatures = {
         // Homepage (senza logout)
         document.getElementById('menu-homepage')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');
-            const homepageBox = document.getElementById('homepage-box');
-            if (homepageBox) window.showScreen(homepageBox);
+            const loginBox = document.getElementById('login-box');
+            if (loginBox) window.showScreen(loginBox);
         });
 
         // Logout
