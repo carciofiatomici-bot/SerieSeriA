@@ -204,8 +204,8 @@
         </div>
     </div>
 
-    <!-- Bottone Regole Globale (sempre visibile) - z-index alto per stare sopra tutto -->
-    <div id="rules-btn-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9998;">
+    <!-- Bottone Regole Globale (nascosto quando dashboard attiva - usa tab invece) -->
+    <div id="rules-btn-container" class="hidden-on-dashboard" style="position: fixed; bottom: 20px; right: 20px; z-index: 9998;">
         <!-- Bottone normale (espanso) -->
         <button id="rules-global-btn"
                 onclick="window.RulesPanel.toggle()"
@@ -948,26 +948,37 @@
 
             <!-- ========== TAB BAR (BOTTOM NAVIGATION - FIXED) ========== -->
             <div id="dashboard-tabs" class="fixed bottom-0 left-0 right-0 z-50 flex bg-gray-900 border-t border-gray-700 shadow-lg">
-                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
-                    <span class="text-lg">🏠</span>
+                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
+                    <span class="text-base sm:text-lg">🏠</span>
                     <span>Home</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
-                    <span class="text-lg">👥</span>
+                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
+                    <span class="text-base sm:text-lg">👥</span>
                     <span>Squadra</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
-                    <span class="text-lg">🏆</span>
+                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="competitions">
+                    <span class="text-base sm:text-lg">🏆</span>
                     <span>Gare</span>
                 </button>
-                <button class="dashboard-tab flex-1 py-3 sm:py-4 text-center font-bold text-[10px] sm:text-xs bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
-                    <span class="text-lg">🛒</span>
+                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="shop">
+                    <span class="text-base sm:text-lg">🛒</span>
                     <span>Shop</span>
+                </button>
+                <button class="dashboard-tab flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="rules">
+                    <span class="text-base sm:text-lg">📖</span>
+                    <span>Regole</span>
                 </button>
             </div>
 
             <!-- ========== TAB 1: HOME (Dashboard) ========== -->
             <div id="tab-home" class="tab-content">
+                <!-- Logo SerieSeriA -->
+                <div class="flex justify-center mb-2">
+                    <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
+                         alt="Serie SeriA Logo"
+                         class="w-24 h-24 sm:w-32 sm:h-32 object-contain">
+                </div>
+
                 <!-- Logo, Icona, Sponsor -->
                 <div id="sponsor-media-box" class="px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-lg border border-green-500 bg-gray-900/20">
                     <!-- Timer Prossima Partita -->
@@ -1169,6 +1180,14 @@
 
             <!-- ========== TAB 4: SHOP ========== -->
             <div id="tab-shop" class="tab-content hidden">
+                <!-- Bottone Pannello Admin (solo per admin) -->
+                <div id="admin-panel-tab-btn" class="hidden mb-2">
+                    <button id="btn-goto-admin-from-tab"
+                            class="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold py-2.5 sm:py-3 text-sm sm:text-base rounded-md shadow-lg hover:from-red-500 hover:to-rose-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        🔧 Pannello Admin
+                    </button>
+                </div>
+
                 <!-- BOX DRAFT/MERCATO/SCAMBI -->
                 <div id="draft-scambi-box" class="p-1.5 sm:p-2 rounded-lg border border-green-500 bg-gray-900/20 space-y-2">
                     <!-- Draft con Toggle -->

@@ -27,6 +27,21 @@ window.DashboardTabs = {
             });
         }
 
+        // Listener per il bottone admin nel tab shop
+        const btnAdminFromTab = document.getElementById('btn-goto-admin-from-tab');
+        if (btnAdminFromTab) {
+            btnAdminFromTab.addEventListener('click', () => {
+                // Usa lo stesso handler del menu admin
+                const adminContent = document.getElementById('admin-content');
+                if (adminContent && window.showScreen) {
+                    window.showScreen(adminContent);
+                }
+            });
+        }
+
+        // Nascondi il bottone regole flottante quando la dashboard e visibile
+        this.hideFloatingRulesButton();
+
         // Carica il tab salvato o usa 'home' come default
         const savedTab = localStorage.getItem('dashboard_current_tab');
         if (savedTab && ['home', 'squad', 'competitions', 'shop'].includes(savedTab)) {
@@ -38,9 +53,17 @@ window.DashboardTabs = {
 
     /**
      * Cambia il tab attivo
-     * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop'
+     * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop', 'rules'
      */
     switchTab(tabName) {
+        // Se e il tab regole, apri il pannello regole invece di switchare tab
+        if (tabName === 'rules') {
+            if (window.RulesPanel?.toggle) {
+                window.RulesPanel.toggle();
+            }
+            return;
+        }
+
         this.currentTab = tabName;
 
         // Salva in localStorage per persistenza
@@ -89,6 +112,32 @@ window.DashboardTabs = {
      */
     getCurrentTab() {
         return this.currentTab;
+    },
+
+    /**
+     * Nasconde il bottone regole flottante quando la dashboard e attiva
+     * (le regole sono accessibili dal tab nella bottom navigation)
+     */
+    hideFloatingRulesButton() {
+        const rulesBtnContainer = document.getElementById('rules-btn-container');
+        const rulesMinimizedBtn = document.getElementById('rules-minimized-btn');
+
+        if (rulesBtnContainer) {
+            rulesBtnContainer.style.display = 'none';
+        }
+        if (rulesMinimizedBtn) {
+            rulesMinimizedBtn.style.display = 'none';
+        }
+    },
+
+    /**
+     * Mostra il bottone regole flottante (quando si esce dalla dashboard)
+     */
+    showFloatingRulesButton() {
+        const rulesBtnContainer = document.getElementById('rules-btn-container');
+        if (rulesBtnContainer) {
+            rulesBtnContainer.style.display = 'block';
+        }
     }
 };
 

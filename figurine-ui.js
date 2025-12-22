@@ -1556,23 +1556,17 @@ console.log('Modulo figurine-ui.js caricato.');
 // ====================================================================
 
 window.DashboardBackground = {
-    // ID dell'elemento dashboard
-    DASHBOARD_ELEMENT_ID: 'app-content',
-
     // Overlay per leggibilita
     OVERLAY_OPACITY: 0.7,
 
+    // Flag per tracciare se lo sfondo e applicato
+    _hasBackground: false,
+
     /**
-     * Applica lo sfondo alla dashboard
+     * Applica lo sfondo a TUTTA LA PAGINA (body)
      */
     apply() {
         const bg = window.InterfacciaCore?.currentTeamData?.dashboardBackground;
-        const element = document.getElementById(this.DASHBOARD_ELEMENT_ID);
-
-        if (!element) {
-            console.warn('[DashboardBackground] Elemento dashboard non trovato');
-            return;
-        }
 
         // Rimuovi sfondo esistente
         this.remove();
@@ -1582,27 +1576,28 @@ window.DashboardBackground = {
             return;
         }
 
-        // Applica sfondo direttamente all'elemento come background-image
-        element.style.backgroundImage = `linear-gradient(rgba(17, 24, 39, ${this.OVERLAY_OPACITY}), rgba(17, 24, 39, ${this.OVERLAY_OPACITY})), url('${bg.imageUrl}')`;
-        element.style.backgroundSize = 'cover';
-        element.style.backgroundPosition = 'center';
-        element.style.backgroundRepeat = 'no-repeat';
-        element.dataset.hasBackground = 'true';
+        // Applica sfondo al body per coprire tutta la pagina
+        document.body.style.backgroundImage = `linear-gradient(rgba(17, 24, 39, ${this.OVERLAY_OPACITY}), rgba(17, 24, 39, ${this.OVERLAY_OPACITY})), url('${bg.imageUrl}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundAttachment = 'fixed';
+        this._hasBackground = true;
 
-        console.log('[DashboardBackground] Sfondo applicato:', bg.itemId);
+        console.log('[DashboardBackground] Sfondo applicato a body:', bg.itemId);
     },
 
     /**
-     * Rimuove lo sfondo dalla dashboard
+     * Rimuove lo sfondo dalla pagina
      */
     remove() {
-        const element = document.getElementById(this.DASHBOARD_ELEMENT_ID);
-        if (element && element.dataset.hasBackground) {
-            element.style.backgroundImage = '';
-            element.style.backgroundSize = '';
-            element.style.backgroundPosition = '';
-            element.style.backgroundRepeat = '';
-            delete element.dataset.hasBackground;
+        if (this._hasBackground) {
+            document.body.style.backgroundImage = '';
+            document.body.style.backgroundSize = '';
+            document.body.style.backgroundPosition = '';
+            document.body.style.backgroundRepeat = '';
+            document.body.style.backgroundAttachment = '';
+            this._hasBackground = false;
         }
     },
 

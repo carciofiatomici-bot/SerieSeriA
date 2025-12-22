@@ -725,20 +725,22 @@ window.DashboardFeatures = {
     },
 
     /**
-     * Aggiorna visibilita' opzione admin nel menu
+     * Aggiorna visibilita' opzione admin nel menu e nel tab
      */
     updateAdminMenuVisibility() {
         const menuAdminPanel = document.getElementById('menu-admin-panel');
-        if (!menuAdminPanel) return;
+        const adminTabBtn = document.getElementById('admin-panel-tab-btn');
 
         const teamData = window.InterfacciaCore?.currentTeamData;
         const teamName = teamData?.name;
         const isAdmin = window.isTeamAdmin?.(teamName, teamData) || false;
 
         if (isAdmin) {
-            menuAdminPanel.classList.remove('hidden');
+            menuAdminPanel?.classList.remove('hidden');
+            adminTabBtn?.classList.remove('hidden');
         } else {
-            menuAdminPanel.classList.add('hidden');
+            menuAdminPanel?.classList.add('hidden');
+            adminTabBtn?.classList.add('hidden');
         }
     },
 
