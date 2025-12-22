@@ -225,6 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INIZIALIZZAZIONE APP ---
     const initApp = async () => {
+        // Carica la configurazione rewards per aggiornare la tabella premi
+        if (window.AdminRewards?.loadConfig) {
+            window.AdminRewards.loadConfig().catch(err => {
+                console.warn('[App] Errore caricamento config rewards:', err);
+            });
+        }
+
         // Tenta di ripristinare la sessione salvata
         const sessionRestored = await window.InterfacciaAuth.restoreSession(elements);
 

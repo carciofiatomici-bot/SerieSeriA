@@ -748,23 +748,23 @@
                         <div class="space-y-1">
                             <div class="flex justify-between items-center bg-black/30 rounded px-1.5 py-0.5">
                                 <span class="text-gray-400">🥇</span>
-                                <span class="text-yellow-300 font-bold">1 CSS</span>
+                                <span id="reward-camp-css" class="text-yellow-300 font-bold">1 CSS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Win</span>
-                                <span class="text-green-400">25 CS</span>
+                                <span id="reward-camp-win" class="text-green-400">25 CS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Goal</span>
-                                <span class="text-green-400">5 CS</span>
+                                <span id="reward-camp-goal" class="text-green-400">5 CS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Top 3</span>
-                                <span class="text-green-400">150 CS</span>
+                                <span id="reward-camp-top3" class="text-green-400">150 CS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Last 3</span>
-                                <span class="text-green-400">200 CS</span>
+                                <span id="reward-camp-last3" class="text-green-400">200 CS</span>
                             </div>
                         </div>
                     </div>
@@ -777,19 +777,19 @@
                         <div class="space-y-1">
                             <div class="flex justify-between items-center bg-black/30 rounded px-1.5 py-0.5">
                                 <span class="text-gray-400">🥇</span>
-                                <span class="text-yellow-300 font-bold">1 CSS</span>
+                                <span id="reward-coppa-css" class="text-yellow-300 font-bold">1 CSS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Win</span>
-                                <span class="text-green-400">25 CS</span>
+                                <span id="reward-coppa-win" class="text-green-400">25 CS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">Goal</span>
-                                <span class="text-green-400">5 CS</span>
+                                <span id="reward-coppa-goal" class="text-green-400">5 CS</span>
                             </div>
                             <div class="flex justify-between items-center px-1.5">
                                 <span class="text-gray-400">2-4°</span>
-                                <span class="text-green-400">100 CS</span>
+                                <span id="reward-coppa-234" class="text-green-400">100 CS</span>
                             </div>
                         </div>
                     </div>
@@ -802,7 +802,7 @@
                         <div class="space-y-1">
                             <div class="flex justify-between items-center bg-black/30 rounded px-1.5 py-0.5">
                                 <span class="text-gray-400">🥇</span>
-                                <span class="text-yellow-300 font-bold">1 CSS</span>
+                                <span id="reward-super-css" class="text-yellow-300 font-bold">1 CSS</span>
                             </div>
                             <p class="text-[8px] text-gray-500 text-center mt-2 leading-tight">1° Camp. vs Vincitore Coppa</p>
                         </div>
@@ -915,6 +915,9 @@
                         <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
                             <span>🔑</span> Cambia Password
                         </button>
+                        <button id="menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>🎨</span> Colore Squadra
+                        </button>
                         <div class="border-t border-gray-700"></div>
                         <button id="menu-admin-panel" class="hidden w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2">
                             <span>🔧</span> Pannello Admin
@@ -931,9 +934,10 @@
                     </div>
                 </div>
                 <!-- Selettore Colore (destra assoluto) -->
-                <div id="team-color-picker-container" class="absolute right-2 top-1/2 -translate-y-1/2">
+                <div id="team-color-picker-container" class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <span class="text-[10px] text-gray-400 hidden sm:inline">🎨</span>
                     <input type="color" id="team-color-picker"
-                           class="w-4 h-4 rounded cursor-pointer border border-gray-600 hover:border-white transition appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
+                           class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
                            title="Scegli il colore primario della squadra"
                            value="#22c55e">
                 </div>

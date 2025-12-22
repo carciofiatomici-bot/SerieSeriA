@@ -678,6 +678,16 @@ window.DashboardFeatures = {
             if (modal) modal.classList.remove('hidden');
         });
 
+        // Colore Squadra - apre il color picker
+        document.getElementById('menu-color-picker')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            const colorPicker = document.getElementById('team-color-picker');
+            if (colorPicker) {
+                // Trigger click sul color picker per aprirlo
+                colorPicker.click();
+            }
+        });
+
         // Pannello Admin
         document.getElementById('menu-admin-panel')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');

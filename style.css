@@ -127,6 +127,8 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
+    /* Colore primario squadra (impostato via JS) */
+    --team-primary-color: #22c55e;
 }
 
 /* Supporto per dvh dove disponibile */

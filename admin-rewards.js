@@ -87,12 +87,17 @@ window.AdminRewards = {
             }
 
             window.RewardsConfig = this._config;
+
+            // Aggiorna la tabella premi nella homepage
+            this.updateRewardsDisplay();
+
             return this._config;
 
         } catch (error) {
             console.error('[AdminRewards] Errore caricamento config:', error);
             this._config = { ...this.DEFAULT_CONFIG };
             window.RewardsConfig = this._config;
+            this.updateRewardsDisplay();
             return this._config;
         }
     },
@@ -114,6 +119,9 @@ window.AdminRewards = {
 
             this._config = configToSave;
             window.RewardsConfig = this._config;
+
+            // Aggiorna la tabella premi nella homepage
+            this.updateRewardsDisplay();
 
             console.log('[AdminRewards] Configurazione salvata su Firestore');
             return true;
@@ -401,6 +409,48 @@ window.AdminRewards = {
         } else {
             this.showMessage(container, 'Errore nel ripristino. Riprova.', 'error');
         }
+    },
+
+    // ====================================================================
+    // AGGIORNAMENTO UI TABELLA PREMI
+    // ====================================================================
+
+    /**
+     * Aggiorna i valori nella tabella premi della homepage
+     * Chiamato quando la configurazione viene caricata o modificata
+     */
+    updateRewardsDisplay() {
+        const config = this._config || window.RewardsConfig || this.DEFAULT_CONFIG;
+
+        // Campionato
+        const campCss = document.getElementById('reward-camp-css');
+        const campWin = document.getElementById('reward-camp-win');
+        const campGoal = document.getElementById('reward-camp-goal');
+        const campTop3 = document.getElementById('reward-camp-top3');
+        const campLast3 = document.getElementById('reward-camp-last3');
+
+        if (campCss) campCss.textContent = `${config.rewardCampionatoCSS || 1} CSS`;
+        if (campWin) campWin.textContent = `${config.rewardVittoriaCS || 25} CS`;
+        if (campGoal) campGoal.textContent = `${config.rewardGoalCS || 5} CS`;
+        if (campTop3) campTop3.textContent = `${config.rewardTop3CS || 150} CS`;
+        if (campLast3) campLast3.textContent = `${config.rewardUltimi3CS || 200} CS`;
+
+        // Coppa
+        const coppaCss = document.getElementById('reward-coppa-css');
+        const coppaWin = document.getElementById('reward-coppa-win');
+        const coppaGoal = document.getElementById('reward-coppa-goal');
+        const coppa234 = document.getElementById('reward-coppa-234');
+
+        if (coppaCss) coppaCss.textContent = `${config.rewardCoppaCSS || 1} CSS`;
+        if (coppaWin) coppaWin.textContent = `${config.rewardVittoriaCS || 25} CS`;
+        if (coppaGoal) coppaGoal.textContent = `${config.rewardGoalCS || 5} CS`;
+        if (coppa234) coppa234.textContent = `${config.rewardCoppa234CS || 100} CS`;
+
+        // Supercoppa
+        const superCss = document.getElementById('reward-super-css');
+        if (superCss) superCss.textContent = `${config.rewardSupercoppaCSS || 1} CSS`;
+
+        console.log('[AdminRewards] Tabella premi aggiornata');
     },
 
     // ====================================================================
