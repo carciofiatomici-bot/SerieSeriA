@@ -676,6 +676,13 @@ window.DashboardFeatures = {
             }
         });
 
+        // Homepage (senza logout)
+        document.getElementById('menu-homepage')?.addEventListener('click', () => {
+            dropdown?.classList.add('hidden');
+            const homepageBox = document.getElementById('homepage-box');
+            if (homepageBox) window.showScreen(homepageBox);
+        });
+
         // Logout
         document.getElementById('menu-logout')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');
