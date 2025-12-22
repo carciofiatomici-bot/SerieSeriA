@@ -1909,8 +1909,8 @@ window.AdminTeams = {
      * da icone.js (legge da CAPTAIN_CANDIDATES_TEMPLATES)
      */
     async updateIconeAbilities() {
-        const TEAMS_COLLECTION_PATH = window.AdminTeams?.TEAMS_COLLECTION_PATH ||
-            `artifacts/${window.currentAppId || 'default'}/public/data/teams`;
+        const appId = window.firestoreTools?.appId || window.currentAppId || 'default-app-id';
+        const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
 
         const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
         const db = window.db;
