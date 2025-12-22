@@ -450,6 +450,11 @@ window.InterfacciaDashboard = {
      * Applica il colore primario alla dashboard
      */
     applyPrimaryColor(color) {
+        // Usa LayoutManager per applicare il tema globale
+        if (window.LayoutManager?.setPrimaryColor) {
+            window.LayoutManager.setPrimaryColor(color);
+        }
+
         // Titolo squadra
         const title = document.getElementById('team-dashboard-title');
         if (title) {
@@ -650,6 +655,18 @@ window.InterfacciaDashboard = {
             };
             schedinaBtn.onmouseleave = () => {
                 schedinaBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            };
+        }
+
+        // Colore bottone Album Figurine
+        const albumBtn = document.getElementById('risorse-pacchetti');
+        if (albumBtn) {
+            albumBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            albumBtn.onmouseenter = () => {
+                albumBtn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+            };
+            albumBtn.onmouseleave = () => {
+                albumBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
             };
         }
 

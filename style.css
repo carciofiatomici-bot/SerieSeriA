@@ -4115,7 +4115,7 @@ html, body {
 
 /* Migliore contrasto tab attivo */
 #dashboard-tabs {
-    background: linear-gradient(to top, #111827 0%, #1f2937 100%);
+    background: rgba(17, 24, 39, 0.6);
     border-top-width: 2px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
@@ -4232,6 +4232,17 @@ html, body {
     #toggle-partecipazione-box,
     #stadio-hall-box {
         padding: 16px !important;
+    }
+}
+
+/* Altezza ridotta per next-match-inline-box */
+#next-match-inline-box {
+    padding: 8px !important;
+}
+
+@media (min-width: 640px) {
+    #next-match-inline-box {
+        padding: 10px !important;
     }
 }
 

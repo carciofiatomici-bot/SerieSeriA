@@ -329,6 +329,202 @@ window.LayoutManager = {
         if (element && classes) {
             classes.split(' ').forEach(cls => element.classList.add(cls));
         }
+    },
+
+    // ================================================================
+    // THEMING - Colori dinamici
+    // ================================================================
+
+    /**
+     * Colore primario corrente
+     */
+    currentPrimaryColor: '#22c55e',
+
+    /**
+     * Selettori per elementi che devono usare il colore primario
+     */
+    themedSelectors: {
+        // Bottoni con sfondo colorato (gradiente)
+        primaryButtons: [
+            '#risorse-pacchetti',
+            '#next-match-schedina-btn',
+            '#btn-gestione-rosa',
+            '#btn-gestione-formazione',
+            '#btn-stadium',
+            '#btn-hall-of-fame',
+            '#btn-user-campionato',
+            '#btn-user-coppa',
+            '#btn-user-supercoppa',
+            '#btn-challenge',
+            '#btn-private-leagues',
+            '#btn-draft-utente',
+            '#btn-mercato-utente',
+            '#btn-trades'
+        ],
+        // Box con bordo colorato
+        themedBoxes: [
+            '#team-name-box',
+            '#sponsor-media-box',
+            '#next-match-inline-box',
+            '#schedina-box',
+            '#gestione-box',
+            '#competizioni-box',
+            '#draft-scambi-box',
+            '#private-leagues-box',
+            '#risorse-box',
+            '#last-match-box'
+        ],
+        // Testi con colore primario
+        themedTexts: [
+            '#team-dashboard-title',
+            '.team-color-text'
+        ]
+    },
+
+    /**
+     * Imposta il colore primario e applica a tutti gli elementi
+     * @param {string} color - Colore hex
+     */
+    setPrimaryColor(color) {
+        if (!color) return;
+
+        this.currentPrimaryColor = color;
+
+        // Calcola varianti colore
+        const lighterColor = this.lightenColor(color, 15);
+        const darkerColor = this.darkenColor(color, 15);
+
+        // Salva come CSS variable per uso globale
+        document.documentElement.style.setProperty('--team-primary-color', color);
+        document.documentElement.style.setProperty('--team-primary-light', lighterColor);
+        document.documentElement.style.setProperty('--team-primary-dark', darkerColor);
+
+        // Applica ai bottoni primari
+        this.applyButtonTheme(color, lighterColor, darkerColor);
+
+        // Applica ai box
+        this.applyBoxTheme(color);
+
+        // Applica ai testi
+        this.applyTextTheme(color, lighterColor, darkerColor);
+
+        console.log('[LayoutManager] Colore primario applicato:', color);
+    },
+
+    /**
+     * Applica il tema ai bottoni
+     */
+    applyButtonTheme(color, lighterColor, darkerColor) {
+        // Bottoni con gradiente
+        this.themedSelectors.primaryButtons.forEach(selector => {
+            const btn = document.querySelector(selector);
+            if (btn) {
+                btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+                btn.onmouseenter = () => {
+                    btn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+                };
+                btn.onmouseleave = () => {
+                    btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+                };
+            }
+        });
+
+        // Applica anche a tutti i bottoni con classe .themed-button
+        document.querySelectorAll('.themed-button').forEach(btn => {
+            btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            btn.onmouseenter = () => {
+                btn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+            };
+            btn.onmouseleave = () => {
+                btn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            };
+        });
+    },
+
+    /**
+     * Applica il tema ai box
+     */
+    applyBoxTheme(color) {
+        this.themedSelectors.themedBoxes.forEach(selector => {
+            const box = document.querySelector(selector);
+            if (box) {
+                box.style.borderColor = color;
+            }
+        });
+
+        // Applica anche a tutti i box con classe .themed-box
+        document.querySelectorAll('.themed-box').forEach(box => {
+            box.style.borderColor = color;
+        });
+    },
+
+    /**
+     * Applica il tema ai testi
+     */
+    applyTextTheme(color, lighterColor, darkerColor) {
+        this.themedSelectors.themedTexts.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                // Per il titolo squadra usa gradiente
+                if (el.id === 'team-dashboard-title') {
+                    el.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
+                    el.style.webkitBackgroundClip = 'text';
+                    el.style.backgroundClip = 'text';
+                    el.style.webkitTextFillColor = 'transparent';
+                } else {
+                    el.style.color = color;
+                }
+            });
+        });
+
+        // Applica anche a tutti gli elementi con classe .team-color-text
+        document.querySelectorAll('.team-color-text').forEach(el => {
+            el.style.color = color;
+        });
+    },
+
+    /**
+     * Schiarisce un colore hex
+     */
+    lightenColor(hex, percent) {
+        if (!hex || hex.length < 7) return hex;
+        const num = parseInt(hex.slice(1), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+    },
+
+    /**
+     * Scurisce un colore hex
+     */
+    darkenColor(hex, percent) {
+        if (!hex || hex.length < 7) return hex;
+        const num = parseInt(hex.slice(1), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+    },
+
+    /**
+     * Converte hex in rgba
+     */
+    hexToRgba(hex, alpha) {
+        if (!hex || hex.length < 7) return `rgba(0,0,0,${alpha})`;
+        const num = parseInt(hex.slice(1), 16);
+        const R = (num >> 16) & 0xFF;
+        const G = (num >> 8) & 0xFF;
+        const B = num & 0xFF;
+        return `rgba(${R}, ${G}, ${B}, ${alpha})`;
+    },
+
+    /**
+     * Ottiene il colore primario corrente
+     */
+    getPrimaryColor() {
+        return this.currentPrimaryColor;
     }
 };
 
@@ -341,6 +537,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         window.LayoutManager.init();
     }, 50);
+});
+
+// Ascolta cambiamenti del colorpicker per aggiornare il tema
+document.addEventListener('DOMContentLoaded', () => {
+    const colorPicker = document.getElementById('team-color-picker');
+    if (colorPicker) {
+        colorPicker.addEventListener('input', (e) => {
+            window.LayoutManager.setPrimaryColor(e.target.value);
+        });
+    }
 });
 
 console.log('Modulo layout-manager.js caricato.');

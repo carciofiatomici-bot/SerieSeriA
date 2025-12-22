@@ -340,13 +340,13 @@ window.NextMatchAlert = {
 
             <!-- Countdown -->
             ${automationState?.isEnabled ? `
-                <div class="mt-4 pt-4 border-t border-cyan-500/30 flex flex-col items-center">
-                    <p class="text-xs sm:text-sm text-gray-400 mb-1">Prossima simulazione tra</p>
-                    <p id="next-match-countdown" class="text-2xl sm:text-3xl font-bold text-white countdown-title">--:--:--</p>
+                <div class="mt-2 pt-2 border-t border-cyan-500/30 flex flex-col items-center">
+                    <p class="text-[10px] sm:text-xs text-gray-400">Prossima simulazione tra</p>
+                    <p id="next-match-countdown" class="text-lg sm:text-xl font-bold text-white countdown-title">--:--:--</p>
                 </div>
             ` : `
-                <div class="mt-4 pt-4 border-t border-gray-700/50 flex flex-col items-center">
-                    <p class="text-sm text-gray-500">Simulazione automatica disattivata</p>
+                <div class="mt-2 pt-2 border-t border-gray-700/50 flex flex-col items-center">
+                    <p class="text-xs text-gray-500">Simulazione automatica disattivata</p>
                 </div>
             `}
         `;
