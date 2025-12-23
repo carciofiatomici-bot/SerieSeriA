@@ -7,7 +7,7 @@
 // IMPORTANTE: Per forzare un aggiornamento dell'app, incrementa APP_VERSION
 //
 
-const APP_VERSION = '2.3.8'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
+const APP_VERSION = '2.3.9'; // <-- INCREMENTA QUESTO NUMERO PER FORZARE AGGIORNAMENTO
 const CACHE_NAME = `serie-seria-v${APP_VERSION}`;
 const STATIC_CACHE = `serie-seria-static-v${APP_VERSION}`;
 const DYNAMIC_CACHE = `serie-seria-dynamic-v${APP_VERSION}`;
@@ -157,8 +157,7 @@ const STATIC_ASSETS = [
     './crediti-super-seri.js',
     './crediti-super-seri-ui.js',
 
-    // PWA & Version
-    './version-check.js',
+    // PWA
     './pwa-install.js',
 
     // Offline fallback
