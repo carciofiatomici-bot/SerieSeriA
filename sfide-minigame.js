@@ -68,6 +68,21 @@
         modal.className = 'fixed inset-0 bg-slate-900 z-50 hidden flex flex-col';
         modal.innerHTML = `
             <style>
+                /* Forza landscape su mobile portrait */
+                @media screen and (max-width: 768px) and (orientation: portrait) {
+                    #sfide-minigame-modal .game-container {
+                        transform: rotate(90deg);
+                        transform-origin: center center;
+                        width: 100vh;
+                        height: 100vw;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        margin-left: -50vh;
+                        margin-top: -50vw;
+                    }
+                }
+
                 #sfide-minigame-modal .pitch {
                     display: grid;
                     grid-template-columns: repeat(11, 1fr);
@@ -186,95 +201,89 @@
                 }
             </style>
 
-            <!-- Header -->
-            <div class="flex justify-between items-center p-3 bg-slate-800 border-b border-slate-700">
-                <button id="smg-close-btn" class="text-white text-2xl hover:text-red-400 transition px-2">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h1 class="text-lg font-black italic tracking-tight text-white">FUTSAL TACTICS</h1>
-                <div class="w-8"></div>
-            </div>
-
-            <!-- Scoreboard -->
-            <div class="flex justify-between items-center max-w-2xl mx-auto w-full p-3 bg-slate-800/50">
-                <div class="text-center">
-                    <div class="text-xs text-slate-400 uppercase font-bold">Rossa</div>
-                    <div id="smg-score-a" class="text-3xl font-black text-red-500">0</div>
+            <!-- Game Container (ruotato in portrait) -->
+            <div class="game-container flex flex-col h-full w-full bg-slate-900">
+                <!-- Header -->
+                <div class="flex justify-between items-center p-3 bg-slate-800 border-b border-slate-700">
+                    <button id="smg-close-btn" class="text-white text-2xl hover:text-red-400 transition px-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h1 class="text-lg font-black italic tracking-tight text-white">FUTSAL TACTICS</h1>
+                    <div class="w-8"></div>
                 </div>
-                <div class="flex flex-col items-center">
-                    <div id="smg-turn-display" class="px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
-                        TURNO ROSSO
+
+                <!-- Scoreboard -->
+                <div class="flex justify-between items-center max-w-2xl mx-auto w-full p-3 bg-slate-800/50">
+                    <div class="text-center">
+                        <div class="text-xs text-slate-400 uppercase font-bold">Rossa</div>
+                        <div id="smg-score-a" class="text-3xl font-black text-red-500">0</div>
                     </div>
-                    <div id="smg-actions-display" class="flex gap-1 mt-1">
-                        <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                    </div>
-                </div>
-                <div class="text-center">
-                    <div class="text-xs text-slate-400 uppercase font-bold">Blu</div>
-                    <div id="smg-score-b" class="text-3xl font-black text-blue-500">0</div>
-                </div>
-            </div>
-
-            <!-- Campo -->
-            <div class="flex-grow flex items-center justify-center p-2 overflow-hidden">
-                <div class="pitch" id="smg-pitch">
-                    <div class="goal-post goal-left"></div>
-                    <div class="goal-post goal-right"></div>
-                    <div id="smg-ball" class="ball-token"></div>
-                </div>
-            </div>
-
-            <!-- Controlli -->
-            <div class="max-w-2xl mx-auto w-full grid grid-cols-2 gap-2 p-2">
-                <div class="bg-slate-800 rounded-lg p-3 border border-slate-700">
-                    <div id="smg-selection-info" class="text-slate-400 text-xs italic">Seleziona un giocatore...</div>
-                    <div id="smg-action-panel" class="hidden mt-2">
-                        <div class="flex flex-wrap gap-2 items-center mb-2">
-                            <button id="smg-btn-mura" class="action-btn bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
-                                🛡️ Mura
-                            </button>
-                            <button id="smg-btn-pass" class="action-btn bg-green-600 hover:bg-green-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
-                                ⚽ Passa
-                            </button>
-                            <button id="smg-btn-shot" class="action-btn bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
-                                🥅 Tira
-                            </button>
+                    <div class="flex flex-col items-center">
+                        <div id="smg-turn-display" class="px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
+                            TURNO ROSSO
                         </div>
-                        <div class="text-xs border-t border-slate-600 pt-2">
-                            <span id="smg-stat-name" class="font-bold text-white">PIVOT</span>
-                            <span id="smg-stat-mod" class="text-yellow-400 ml-1">+7</span>
+                        <div id="smg-actions-display" class="flex gap-1 mt-1">
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
                         </div>
                     </div>
-                </div>
-                <div id="smg-log" class="bg-black/40 rounded-lg p-2 border border-slate-800 overflow-y-auto text-xs font-mono max-h-24">
-                    <div class="text-yellow-500">Primo a 3 gol vince!</div>
-                </div>
-            </div>
-
-            <!-- Game Over Modal -->
-            <div id="smg-game-over" class="hidden fixed inset-0 bg-black/85 z-60 flex items-center justify-center backdrop-blur-sm">
-                <div class="bg-slate-800 p-6 rounded-xl border-2 border-slate-600 text-center shadow-2xl max-w-sm w-11/12">
-                    <h2 class="text-2xl font-black italic mb-2 text-white">PARTITA CONCLUSA</h2>
-                    <div id="smg-winner-text" class="text-lg font-bold mb-4 text-yellow-400 uppercase">SQUADRA ROSSA VINCE!</div>
-                    <div class="space-y-2">
-                        <button id="smg-btn-restart" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition">
-                            🔄 NUOVA PARTITA
-                        </button>
-                        <button id="smg-btn-exit" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg transition">
-                            X CHIUDI
-                        </button>
+                    <div class="text-center">
+                        <div class="text-xs text-slate-400 uppercase font-bold">Blu</div>
+                        <div id="smg-score-b" class="text-3xl font-black text-blue-500">0</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Rotate Warning (Mobile) -->
-            <div id="smg-rotate-warning" class="hidden fixed inset-0 bg-black/95 z-70 flex items-center justify-center">
-                <div class="text-center text-white p-6">
-                    <div class="text-6xl mb-4">📱↪️</div>
-                    <div class="text-xl font-bold mb-2">Ruota il dispositivo</div>
-                    <div class="text-sm text-slate-400">Per giocare, usa la modalita orizzontale</div>
+                <!-- Campo -->
+                <div class="flex-grow flex items-center justify-center p-2 overflow-hidden">
+                    <div class="pitch" id="smg-pitch">
+                        <div class="goal-post goal-left"></div>
+                        <div class="goal-post goal-right"></div>
+                        <div id="smg-ball" class="ball-token"></div>
+                    </div>
+                </div>
+
+                <!-- Controlli -->
+                <div class="max-w-2xl mx-auto w-full grid grid-cols-2 gap-2 p-2">
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700">
+                        <div id="smg-selection-info" class="text-slate-400 text-xs italic">Seleziona un giocatore...</div>
+                        <div id="smg-action-panel" class="hidden mt-2">
+                            <div class="flex flex-wrap gap-2 items-center mb-2">
+                                <button id="smg-btn-mura" class="action-btn bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
+                                    🛡️ Mura
+                                </button>
+                                <button id="smg-btn-pass" class="action-btn bg-green-600 hover:bg-green-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
+                                    ⚽ Passa
+                                </button>
+                                <button id="smg-btn-shot" class="action-btn bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
+                                    🥅 Tira
+                                </button>
+                            </div>
+                            <div class="text-xs border-t border-slate-600 pt-2">
+                                <span id="smg-stat-name" class="font-bold text-white">PIVOT</span>
+                                <span id="smg-stat-mod" class="text-yellow-400 ml-1">+7</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="smg-log" class="bg-black/40 rounded-lg p-2 border border-slate-800 overflow-y-auto text-xs font-mono max-h-24">
+                        <div class="text-yellow-500">Primo a 3 gol vince!</div>
+                    </div>
+                </div>
+
+                <!-- Game Over Modal -->
+                <div id="smg-game-over" class="hidden fixed inset-0 bg-black/85 z-60 flex items-center justify-center backdrop-blur-sm">
+                    <div class="bg-slate-800 p-6 rounded-xl border-2 border-slate-600 text-center shadow-2xl max-w-sm w-11/12">
+                        <h2 class="text-2xl font-black italic mb-2 text-white">PARTITA CONCLUSA</h2>
+                        <div id="smg-winner-text" class="text-lg font-bold mb-4 text-yellow-400 uppercase">SQUADRA ROSSA VINCE!</div>
+                        <div class="space-y-2">
+                            <button id="smg-btn-restart" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition">
+                                🔄 NUOVA PARTITA
+                            </button>
+                            <button id="smg-btn-exit" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg transition">
+                                X CHIUDI
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -300,10 +309,6 @@
         });
         document.getElementById('smg-btn-restart').addEventListener('click', resetGame);
         document.getElementById('smg-btn-exit').addEventListener('click', close);
-
-        // Listener per orientamento mobile
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
     }
 
     function buildPitch() {
@@ -344,9 +349,6 @@
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
-        // Controlla orientamento
-        checkOrientation();
-
         console.log('[SfideMinigame] Aperto', { testMode: state.testMode });
     }
 
@@ -370,20 +372,6 @@
         }
 
         console.log('[SfideMinigame] Chiuso');
-    }
-
-    function checkOrientation() {
-        const warning = document.getElementById('smg-rotate-warning');
-        if (!warning) return;
-
-        const isPortrait = window.innerHeight > window.innerWidth;
-        const isMobile = window.innerWidth < 768;
-
-        if (isPortrait && isMobile && !modal.classList.contains('hidden')) {
-            warning.classList.remove('hidden');
-        } else {
-            warning.classList.add('hidden');
-        }
     }
 
     function resetGame() {
