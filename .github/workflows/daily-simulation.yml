@@ -36,5 +36,13 @@ jobs:
           APP_ID: ${{ secrets.APP_ID }}
         run: node simulate.js
 
+      - name: Process schedina results
+        working-directory: ./automation
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
+        run: node schedina-process.js
+
       - name: Log result
-        run: echo "Simulation completed at $(date)"
+        run: echo "Simulation and schedina completed at $(date)"
