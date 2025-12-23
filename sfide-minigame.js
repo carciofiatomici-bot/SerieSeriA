@@ -68,21 +68,6 @@
         modal.className = 'fixed inset-0 bg-slate-900 z-50 hidden flex flex-col';
         modal.innerHTML = `
             <style>
-                /* Forza landscape su mobile portrait */
-                @media screen and (max-width: 768px) and (orientation: portrait) {
-                    #sfide-minigame-modal .game-container {
-                        transform: rotate(90deg);
-                        transform-origin: center center;
-                        width: 100vh;
-                        height: 100vw;
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        margin-left: -50vh;
-                        margin-top: -50vw;
-                    }
-                }
-
                 #sfide-minigame-modal .pitch {
                     display: grid;
                     grid-template-columns: repeat(11, 1fr);
@@ -95,6 +80,46 @@
                     max-width: 800px;
                     margin: 0 auto;
                     box-shadow: 0 0 50px rgba(0,0,0,0.5);
+                }
+
+                /* Mobile Portrait: Campo verticale (7x11 invece di 11x7) */
+                @media screen and (max-width: 768px) and (orientation: portrait) {
+                    #sfide-minigame-modal .pitch {
+                        grid-template-columns: repeat(7, 1fr);
+                        grid-template-rows: repeat(11, 1fr);
+                        aspect-ratio: 7 / 11;
+                        width: 85%;
+                        max-width: none;
+                    }
+                    #sfide-minigame-modal .goal-post {
+                        width: 42.85% !important;
+                        height: 10px !important;
+                        left: 28.57% !important;
+                        top: auto !important;
+                        right: auto !important;
+                    }
+                    #sfide-minigame-modal .goal-left {
+                        top: -10px !important;
+                        bottom: auto !important;
+                        border-radius: 4px 4px 0 0 !important;
+                    }
+                    #sfide-minigame-modal .goal-right {
+                        bottom: -10px !important;
+                        top: auto !important;
+                        border-radius: 0 0 4px 4px !important;
+                    }
+                    #sfide-minigame-modal .smg-header {
+                        padding: 0.5rem !important;
+                    }
+                    #sfide-minigame-modal .smg-header h1 {
+                        font-size: 0.875rem !important;
+                    }
+                    #sfide-minigame-modal .smg-scoreboard {
+                        padding: 0.5rem !important;
+                    }
+                    #sfide-minigame-modal .smg-controls {
+                        padding: 0.5rem !important;
+                    }
                 }
                 #sfide-minigame-modal .cell {
                     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -201,10 +226,10 @@
                 }
             </style>
 
-            <!-- Game Container (ruotato in portrait) -->
+            <!-- Game Container -->
             <div class="game-container flex flex-col h-full w-full bg-slate-900">
                 <!-- Header -->
-                <div class="flex justify-between items-center p-3 bg-slate-800 border-b border-slate-700">
+                <div class="smg-header flex justify-between items-center p-3 bg-slate-800 border-b border-slate-700">
                     <button id="smg-close-btn" class="text-white text-2xl hover:text-red-400 transition px-2">
                         <i class="fas fa-times"></i>
                     </button>
@@ -213,7 +238,7 @@
                 </div>
 
                 <!-- Scoreboard -->
-                <div class="flex justify-between items-center max-w-2xl mx-auto w-full p-3 bg-slate-800/50">
+                <div class="smg-scoreboard flex justify-between items-center max-w-2xl mx-auto w-full p-3 bg-slate-800/50">
                     <div class="text-center">
                         <div class="text-xs text-slate-400 uppercase font-bold">Rossa</div>
                         <div id="smg-score-a" class="text-3xl font-black text-red-500">0</div>
@@ -244,7 +269,7 @@
                 </div>
 
                 <!-- Controlli -->
-                <div class="max-w-2xl mx-auto w-full grid grid-cols-2 gap-2 p-2">
+                <div class="smg-controls max-w-2xl mx-auto w-full grid grid-cols-2 gap-2 p-2">
                     <div class="bg-slate-800 rounded-lg p-3 border border-slate-700">
                         <div id="smg-selection-info" class="text-slate-400 text-xs italic">Seleziona un giocatore...</div>
                         <div id="smg-action-panel" class="hidden mt-2">
@@ -311,19 +336,44 @@
         document.getElementById('smg-btn-exit').addEventListener('click', close);
     }
 
+    function isPortrait() {
+        return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+    }
+
     function buildPitch() {
         const pitch = document.getElementById('smg-pitch');
         // Rimuovi celle esistenti
         pitch.querySelectorAll('.cell').forEach(c => c.remove());
 
-        for (let y = 0; y < GRID_H; y++) {
+        const portrait = isPortrait();
+
+        if (portrait) {
+            // Portrait: griglia 7 colonne x 11 righe
+            // Le coordinate x,y del gioco rimangono uguali (11x7)
+            // ma le celle sono disposte ruotate di 90 gradi
+            // x (0-10) diventa la riga (dall'alto verso il basso)
+            // y (0-6) diventa la colonna (da sinistra a destra)
             for (let x = 0; x < GRID_W; x++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.dataset.x = x;
-                cell.dataset.y = y;
-                cell.addEventListener('click', () => onCellClick(x, y));
-                pitch.appendChild(cell);
+                for (let y = 0; y < GRID_H; y++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', () => onCellClick(x, y));
+                    pitch.appendChild(cell);
+                }
+            }
+        } else {
+            // Landscape: griglia standard 11 colonne x 7 righe
+            for (let y = 0; y < GRID_H; y++) {
+                for (let x = 0; x < GRID_W; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', () => onCellClick(x, y));
+                    pitch.appendChild(cell);
+                }
             }
         }
     }
