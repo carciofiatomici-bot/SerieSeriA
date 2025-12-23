@@ -56,7 +56,7 @@ window.LayoutManager = {
     screenLayouts: {
         // Schermate di autenticazione
         'gate-box': 'auth',
-        'login-box': 'auth',
+        'login-box': 'full',
         'coach-selection-box': 'auth',
         'captain-selection-box': 'auth',
 
@@ -111,6 +111,15 @@ window.LayoutManager = {
 
         // Sovrascrive window.showScreen per integrarsi con il sistema esistente
         this.wrapShowScreen();
+
+        // Aggiorna i tab auth-required all'avvio
+        this.updateAuthRequiredTabs();
+
+        // Mostra la tab bar se siamo in login-box all'avvio
+        const loginBox = document.getElementById('login-box');
+        if (loginBox && !loginBox.classList.contains('hidden')) {
+            this.setTabBarVisibility(true);
+        }
 
         this.initialized = true;
         console.log('[LayoutManager] Inizializzato con', Object.keys(this.screenLayouts).length, 'schermate registrate');
@@ -179,7 +188,12 @@ window.LayoutManager = {
         }
 
         // Applica visibilita tab bar
-        this.setTabBarVisibility(layout.showTabBar && this.isUserLoggedIn());
+        // Mostra la tab bar se il layout lo richiede E (utente loggato OPPURE siamo in login-box)
+        const showTabBar = layout.showTabBar && (this.isUserLoggedIn() || screenId === 'login-box');
+        this.setTabBarVisibility(showTabBar);
+
+        // Mostra/nascondi i tab che richiedono autenticazione
+        this.updateAuthRequiredTabs();
 
         // Gestisci tab admin
         if (this.adminTab) {
@@ -211,6 +225,37 @@ window.LayoutManager = {
             this.tabBar.classList.remove('hidden');
         } else {
             this.tabBar.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Aggiorna la visibilita dei tab che richiedono autenticazione
+     */
+    updateAuthRequiredTabs() {
+        const isLoggedIn = this.isUserLoggedIn();
+        const isAdmin = this.isAdminUser();
+
+        // Mostra/nascondi i tab con classe auth-required
+        document.querySelectorAll('.dashboard-tab.auth-required').forEach(tab => {
+            if (isLoggedIn) {
+                // Se loggato, mostra i tab (tranne admin che ha logica separata)
+                if (tab.id !== 'dashboard-tab-admin') {
+                    tab.classList.remove('hidden');
+                }
+            } else {
+                // Se non loggato, nascondi i tab
+                tab.classList.add('hidden');
+            }
+        });
+
+        // Gestione speciale per tab admin
+        const adminTab = document.getElementById('dashboard-tab-admin');
+        if (adminTab) {
+            if (isLoggedIn && isAdmin) {
+                adminTab.classList.remove('hidden');
+            } else {
+                adminTab.classList.add('hidden');
+            }
         }
     },
 
@@ -532,12 +577,15 @@ window.LayoutManager = {
 // AUTO-INIZIALIZZAZIONE
 // ====================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Ritarda leggermente per assicurarsi che gli altri moduli siano caricati
-    setTimeout(() => {
+// Inizializzazione immediata se DOM gia' pronto, altrimenti attendi
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
         window.LayoutManager.init();
-    }, 50);
-});
+    });
+} else {
+    // DOM gia' pronto - inizializza subito
+    window.LayoutManager.init();
+}
 
 // Ascolta cambiamenti del colorpicker per aggiornare il tema
 document.addEventListener('DOMContentLoaded', () => {

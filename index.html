@@ -55,6 +55,22 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     <link rel="dns-prefetch" href="https://www.googleapis.com">
 
+    <!-- Handler globale errori - mostra homepage in caso di crash JS -->
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('Errore JS globale:', msg, url, line);
+            // Dopo 3 secondi, se la pagina e' ancora bloccata, mostra la homepage
+            setTimeout(function() {
+                var loginBox = document.getElementById('login-box');
+                if (loginBox && loginBox.classList.contains('hidden-on-load')) {
+                    console.warn('[ErrorHandler] Errore JS rilevato, mostro homepage');
+                    loginBox.classList.remove('hidden-on-load', 'hidden');
+                }
+            }, 3000);
+            return false; // Permetti al browser di loggare l'errore
+        };
+    </script>
+
     <!-- Carica Tailwind CSS dal CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Collega il foglio di stile esterno -->
@@ -694,7 +710,7 @@
                             <span class="text-xs text-white">☰</span>
                         </button>
                         <!-- Dropdown Menu -->
-                        <div id="home-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
+                        <div id="home-menu-dropdown" class="hidden absolute left-0 top-6 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
                             <button id="home-menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
                                 <span>📖</span> Tutorial
                             </button>
@@ -2103,6 +2119,24 @@
         }
         
         initialAuth();
+
+        // FALLBACK DI SICUREZZA: Se dopo 5 secondi nessuna schermata e' visibile, mostra la homepage
+        setTimeout(() => {
+            const loginBox = document.getElementById('login-box');
+            const appContent = document.getElementById('app-content');
+            const adminContent = document.getElementById('admin-content');
+
+            // Controlla se almeno una schermata principale e' visibile
+            const isAnyVisible =
+                (loginBox && !loginBox.classList.contains('hidden') && !loginBox.classList.contains('hidden-on-load')) ||
+                (appContent && !appContent.classList.contains('hidden') && !appContent.classList.contains('hidden-on-load')) ||
+                (adminContent && !adminContent.classList.contains('hidden') && !adminContent.classList.contains('hidden-on-load'));
+
+            if (!isAnyVisible && loginBox) {
+                console.warn('[Fallback] Nessuna schermata visibile dopo 5s, mostro homepage');
+                loginBox.classList.remove('hidden-on-load', 'hidden');
+            }
+        }, 5000);
 
     </script>
     

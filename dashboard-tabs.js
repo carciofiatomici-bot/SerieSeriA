@@ -18,10 +18,16 @@ window.DashboardTabs = {
         // Nascondi il bottone regole flottante quando la dashboard e visibile
         this.hideFloatingRulesButton();
 
-        // Carica il tab salvato o usa 'home' come default
-        const savedTab = localStorage.getItem('dashboard_current_tab');
-        if (savedTab && ['home', 'squad', 'competitions', 'shop', 'rules'].includes(savedTab)) {
-            this.switchTab(savedTab);
+        // Carica il tab salvato SOLO se c'e' una sessione attiva
+        const isLoggedIn = !!(window.InterfacciaCore?.currentTeamId);
+        if (isLoggedIn) {
+            const savedTab = localStorage.getItem('dashboard_current_tab');
+            if (savedTab && ['home', 'squad', 'competitions', 'shop', 'rules'].includes(savedTab)) {
+                this.switchTab(savedTab);
+            }
+        } else {
+            // Se non c'e' sessione, resetta il tab salvato
+            localStorage.removeItem('dashboard_current_tab');
         }
 
         console.log('[DashboardTabs] Inizializzato');
@@ -112,6 +118,22 @@ window.DashboardTabs = {
         const targetTab = document.getElementById(`tab-${tabName}`);
         if (targetTab) {
             targetTab.classList.remove('hidden');
+        }
+
+        // Gestisci visibilita header dashboard in base a sessione e tab
+        const isLoggedIn = !!(window.InterfacciaCore?.currentTeamId);
+        const dashboardHeader = document.getElementById('dashboard-fixed-header');
+        if (dashboardHeader) {
+            if (tabName === 'rules' && !isLoggedIn) {
+                // Nascondi header se in Regole senza sessione
+                dashboardHeader.classList.add('hidden');
+            } else if (isLoggedIn) {
+                // Mostra header se c'e' sessione attiva
+                dashboardHeader.classList.remove('hidden');
+            } else {
+                // Senza sessione, nascondi header su tutti i tab tranne quelli pubblici
+                dashboardHeader.classList.add('hidden');
+            }
         }
 
         // Aggiorna stili dei bottoni tab

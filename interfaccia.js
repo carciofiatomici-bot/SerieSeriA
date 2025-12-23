@@ -244,6 +244,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Funzione per mostrare la homepage (fallback)
         const showHomepage = () => {
             console.log('[App] Mostro homepage');
+            // Resetta tab salvato per evitare di mostrare un tab random
+            localStorage.removeItem('dashboard_current_tab');
+            // Assicura che il login box sia visibile
+            const normalLoginBox = document.getElementById('normal-login-box');
+            const loginHeader = document.getElementById('login-header');
+            const homeTeamHeader = document.getElementById('home-team-header');
+            if (normalLoginBox) normalLoginBox.classList.remove('hidden');
+            if (loginHeader) loginHeader.classList.remove('hidden');
+            if (homeTeamHeader) homeTeamHeader.classList.add('hidden');
+            // Mostra la homepage
             if (elements.loginBox) {
                 elements.loginBox.classList.remove('hidden-on-load');
                 window.showScreen(elements.loginBox);

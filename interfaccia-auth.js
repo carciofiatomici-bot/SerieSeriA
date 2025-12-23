@@ -81,8 +81,15 @@ window.InterfacciaAuth = {
             localStorage.removeItem('fanta_needs_icona');
             localStorage.removeItem('fanta_last_screen');
             localStorage.removeItem('fanta_squadra_mode');
+            // Resetta anche il tab della dashboard per evitare di mostrare un tab random
+            localStorage.removeItem('dashboard_current_tab');
         } catch (e) {
             console.error("Impossibile pulire la sessione da localStorage.", e);
+        }
+        // Resetta anche lo stato in InterfacciaCore
+        if (window.InterfacciaCore) {
+            window.InterfacciaCore.currentTeamId = null;
+            window.InterfacciaCore.currentTeamData = null;
         }
     },
 
@@ -255,17 +262,32 @@ window.InterfacciaAuth = {
                         targetScreenId = elements.appContent.id;
                     }
                     
+                    // Applica SUBITO le estetiche della squadra PRIMA di mostrare lo schermo
+                    const teamColor = teamData.primaryColor || '#22c55e';
+                    if (window.LayoutManager?.setPrimaryColor) {
+                        window.LayoutManager.setPrimaryColor(teamColor);
+                    }
+                    // Aggiorna il color picker
+                    const colorPicker = document.getElementById('team-color-picker');
+                    if (colorPicker) {
+                        colorPicker.value = teamColor;
+                    }
+                    // Aggiorna i tab della navbar
+                    if (window.LayoutManager?.updateAuthRequiredTabs) {
+                        window.LayoutManager.updateAuthRequiredTabs();
+                    }
+
                     // Aggiorna la dashboard in background
                     if (window.InterfacciaDashboard) {
                         window.InterfacciaDashboard.updateTeamUI(
-                            teamData.teamName, 
-                            teamDocRef.id, 
-                            teamData.logoUrl, 
-                            false, 
+                            teamData.teamName,
+                            teamDocRef.id,
+                            teamData.logoUrl,
+                            false,
                             elements
                         );
                     }
-                    
+
                     const targetElement = document.getElementById(targetScreenId);
                     window.showScreen(targetElement || elements.appContent);
                     
@@ -298,22 +320,6 @@ window.InterfacciaAuth = {
 
                     // Assicura che l'ultima schermata salvata sia un contenuto Utente valido
                     localStorage.setItem('fanta_last_screen', targetScreenId);
-
-                    // Aggiorna i tab della navbar dopo il ripristino sessione
-                    if (window.LayoutManager?.updateAuthRequiredTabs) {
-                        window.LayoutManager.updateAuthRequiredTabs();
-                    }
-
-                    // Applica il colore della squadra se presente
-                    const teamColor = teamData.primaryColor || '#22c55e';
-                    if (window.LayoutManager?.setPrimaryColor) {
-                        window.LayoutManager.setPrimaryColor(teamColor);
-                    }
-                    // Aggiorna anche il color picker
-                    const colorPicker = document.getElementById('team-color-picker');
-                    if (colorPicker) {
-                        colorPicker.value = teamColor;
-                    }
 
                     console.log(`Sessione Utente ripristinata su: ${targetScreenId}`);
                     return true;
@@ -585,6 +591,21 @@ window.InterfacciaAuth = {
             localStorage.removeItem('fanta_needs_icona');
             localStorage.setItem('fanta_last_screen', elements.appContent.id); // Salva Dashboard come default
 
+            // Applica SUBITO le estetiche della squadra (colore, sfondo, ecc.) PRIMA di mostrare lo schermo
+            const teamColor = teamData.primaryColor || '#22c55e';
+            if (window.LayoutManager?.setPrimaryColor) {
+                window.LayoutManager.setPrimaryColor(teamColor);
+            }
+            // Aggiorna il color picker
+            const colorPicker = document.getElementById('team-color-picker');
+            if (colorPicker) {
+                colorPicker.value = teamColor;
+            }
+            // Aggiorna i tab della navbar
+            if (window.LayoutManager?.updateAuthRequiredTabs) {
+                window.LayoutManager.updateAuthRequiredTabs();
+            }
+
             setTimeout(() => {
                 if (window.InterfacciaDashboard) {
                     window.InterfacciaDashboard.updateTeamUI(
@@ -597,22 +618,6 @@ window.InterfacciaAuth = {
                 }
                 window.showScreen(elements.appContent);
                 elements.loginPasswordInput.value = '';
-
-                // Aggiorna i tab della navbar dopo il login
-                if (window.LayoutManager?.updateAuthRequiredTabs) {
-                    window.LayoutManager.updateAuthRequiredTabs();
-                }
-
-                // Applica il colore della squadra se presente
-                const teamColor = teamData.primaryColor || '#22c55e';
-                if (window.LayoutManager?.setPrimaryColor) {
-                    window.LayoutManager.setPrimaryColor(teamColor);
-                }
-                // Aggiorna anche il color picker
-                const colorPicker = document.getElementById('team-color-picker');
-                if (colorPicker) {
-                    colorPicker.value = teamColor;
-                }
             }, 1000);
             
         } catch (error) {
