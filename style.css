@@ -4246,6 +4246,55 @@ html, body {
     }
 }
 
+/* Altezza ridotta per team-name-box */
+#team-name-box,
+#home-team-name-box {
+    padding: 4px 8px !important;
+}
+
+@media (min-width: 640px) {
+    #team-name-box,
+    #home-team-name-box {
+        padding: 6px 12px !important;
+    }
+}
+
+/* Risorse dentro team-name-box - niente padding extra */
+#team-name-box #risorse-box,
+#home-team-name-box #home-risorse-box {
+    padding: 0 !important;
+    padding-top: 4px !important;
+    margin-top: 2px !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+/* Mobile: riduci ulteriormente gli spazi nel team-name-box */
+@media (max-width: 640px) {
+    #team-name-box,
+    #home-team-name-box {
+        padding: 2px 6px 4px 6px !important;
+    }
+
+    #team-name-box #risorse-box,
+    #home-team-name-box #home-risorse-box {
+        margin-top: 0 !important;
+        padding-top: 2px !important;
+    }
+
+    /* Riduci gap tra elementi risorse */
+    #team-name-box #risorse-box .flex,
+    #home-team-name-box #home-risorse-box .flex {
+        gap: 4px !important;
+    }
+
+    /* CS/CSS row meno margine top */
+    #team-name-box #risorse-box .order-3,
+    #home-team-name-box #home-risorse-box .order-3 {
+        margin-top: 2px !important;
+    }
+}
+
 /* ==================== 15.5 HEADER IMPROVEMENTS ==================== */
 
 /* Nome squadra più leggibile */
