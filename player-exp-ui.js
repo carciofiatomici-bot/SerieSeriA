@@ -253,7 +253,7 @@
         }
 
         return `
-            <div class="near-level-up-widget bg-gray-800 rounded-xl p-4 border border-gray-700">
+            <div class="near-level-up-widget rounded-xl p-4 border border-green-500/50" style="background: rgba(17, 24, 39, 0.6);">
                 <div class="flex items-center gap-2 mb-3">
                     <i class="fas fa-star text-yellow-400"></i>
                     <h4 class="text-white font-bold">Vicini al Level Up</h4>

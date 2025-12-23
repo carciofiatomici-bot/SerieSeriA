@@ -627,9 +627,9 @@ window.InterfacciaAuth = {
                 window.showScreen(elements.appContent);
                 // Aggiungi classe per stili utente loggato
                 document.body.classList.add('user-logged-in');
-                // Porta l'utente al tab Home della dashboard
-                if (window.DashboardTabs?.switchTab) {
-                    window.DashboardTabs.switchTab('home');
+                // Nuovo login: porta l'utente al tab Home (Board)
+                if (window.DashboardTabs?.restoreSavedTab) {
+                    window.DashboardTabs.restoreSavedTab(true); // true = nuovo login
                 }
                 elements.loginPasswordInput.value = '';
             }, 1000);
@@ -825,9 +825,9 @@ window.InterfacciaAuth = {
             window.showScreen(elements.appContent);
             // Aggiungi classe per stili utente loggato
             document.body.classList.add('user-logged-in');
-            // Porta l'utente al tab Home della dashboard
-            if (window.DashboardTabs?.switchTab) {
-                window.DashboardTabs.switchTab('home');
+            // Rientro con sessione attiva: porta in Board
+            if (window.DashboardTabs?.restoreSavedTab) {
+                window.DashboardTabs.restoreSavedTab(true); // true = vai a Board
             }
 
             console.log("Rientro in dashboard completato per:", teamData.teamName);

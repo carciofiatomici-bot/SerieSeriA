@@ -18,19 +18,39 @@ window.DashboardTabs = {
         // Nascondi il bottone regole flottante quando la dashboard e visibile
         this.hideFloatingRulesButton();
 
-        // Carica il tab salvato SOLO se c'e' una sessione attiva
-        const isLoggedIn = !!(window.InterfacciaCore?.currentTeamId);
-        if (isLoggedIn) {
+        console.log('[DashboardTabs] Inizializzato');
+    },
+
+    /**
+     * Ripristina il tab salvato (chiamare dopo il login/rientro sessione)
+     * @param {boolean} goToBoard - true per andare a Board, false per ripristinare tab salvato
+     */
+    restoreSavedTab(goToBoard = true) {
+        if (goToBoard) {
+            // Vai a Board (home)
+            localStorage.setItem('dashboard_current_tab', 'home');
+            this.switchTab('home');
+        } else {
+            // Ripristina il tab salvato (usato solo per refresh in-app)
             const savedTab = localStorage.getItem('dashboard_current_tab');
             if (savedTab && ['home', 'squad', 'competitions', 'shop', 'rules'].includes(savedTab)) {
                 this.switchTab(savedTab);
+            } else {
+                // Default a home se non c'e' tab salvato
+                this.switchTab('home');
             }
-        } else {
-            // Se non c'e' sessione, resetta il tab salvato
-            localStorage.removeItem('dashboard_current_tab');
         }
+    },
 
-        console.log('[DashboardTabs] Inizializzato');
+    /**
+     * Ripristina il tab salvato per refresh in-app
+     * Chiamare quando si rileva un refresh della pagina (non un nuovo accesso)
+     */
+    restoreTabOnRefresh() {
+        const savedTab = localStorage.getItem('dashboard_current_tab');
+        if (savedTab && ['home', 'squad', 'competitions', 'shop', 'rules'].includes(savedTab)) {
+            this.switchTab(savedTab);
+        }
     },
 
     /**

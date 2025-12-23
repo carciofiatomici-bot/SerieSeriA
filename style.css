@@ -2982,11 +2982,15 @@ body.user-logged-in #allenamento-box,
 body.user-logged-in #statistiche-box,
 body.user-logged-in #remembered-box,
 body.user-logged-in #normal-login-box,
+body.user-logged-in #login-box #explore-box,
+body.user-logged-in #login-box #rewards-box,
+body.user-logged-in #login-box #support-box,
 body.user-logged-in #explore-box,
 body.user-logged-in #rewards-box,
 body.user-logged-in #support-box {
     border-color: var(--team-primary-color, #22c55e) !important;
 }
+
 
 /* Container che potrebbero causare overflow */
 .flex-nowrap {
