@@ -859,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetHoF.addEventListener('click', handleResetHallOfFame);
         }
 
-        // Test Challenge Minigame
+        // Test Challenge Minigame (Allenamento)
         const btnTestChallengeMinigame = document.getElementById('btn-test-challenge-minigame');
         if (btnTestChallengeMinigame) {
             btnTestChallengeMinigame.addEventListener('click', () => {
@@ -867,6 +867,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.ChallengeMinigame.open({ testMode: true });
                 } else {
                     window.Toast?.error("Minigioco non disponibile");
+                }
+            });
+        }
+
+        // Test Sfide Minigame (Sfide)
+        const btnTestSfideMinigame = document.getElementById('btn-test-sfide-minigame');
+        if (btnTestSfideMinigame) {
+            btnTestSfideMinigame.addEventListener('click', () => {
+                if (window.SfideMinigame) {
+                    window.SfideMinigame.open({ testMode: true });
+                } else {
+                    window.Toast?.error("Minigioco Sfide non disponibile");
                 }
             });
         }

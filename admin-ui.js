@@ -190,7 +190,10 @@ window.AdminUI = {
                         <button id="btn-test-challenge-minigame" class="bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-2 rounded-lg hover:from-green-500 hover:to-green-600 transition text-sm">
                             🎮 Test Minigioco
                         </button>
-                        <button id="btn-reset-hall-of-fame" class="bg-orange-700 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition text-sm">
+                        <button id="btn-test-sfide-minigame" class="bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold py-2 rounded-lg hover:from-orange-500 hover:to-red-500 transition text-sm">
+                            ⚔️ Test Sfide
+                        </button>
+                        <button id="btn-reset-hall-of-fame" class="bg-orange-700 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition text-sm col-span-2">
                             🏛️ Reset HoF Stats
                         </button>
                     </div>
