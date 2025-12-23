@@ -4244,65 +4244,180 @@ html, body {
     }
 }
 
-/* Altezza ridotta per team-name-box */
-#team-name-box,
-#home-team-name-box {
-    background: rgba(17, 24, 39, 0.6);
-    border-radius: 12px;
-    padding: 4px 8px !important;
+/* ==================== TEAM HEADER BOX - Compact Design ==================== */
+
+.team-header-box {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid var(--team-primary-color, #22c55e);
+    border-radius: 8px;
+    padding: 6px 10px;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-@media (min-width: 640px) {
-    #team-name-box,
-    #home-team-name-box {
-        padding: 8px 12px !important;
-    }
+/* Top row: hamburger + team name + color picker */
+.team-header-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
 }
 
-/* Risorse dentro team-name-box - niente padding extra */
-#team-name-box #risorse-box,
-#home-team-name-box #home-risorse-box {
-    padding: 0 !important;
-    padding-top: 4px !important;
-    margin-top: 2px !important;
+.team-header-icon-btn {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    background: transparent;
+    border: none;
+}
+
+.team-header-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.team-header-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 12px var(--team-primary-color, #22c55e);
+    line-height: 1.1;
+    margin: 0;
+    padding: 0;
+}
+
+/* Bottom row: actions + resources - TUTTO SU UNA RIGA */
+.team-header-bottom {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     background: transparent !important;
-    border-radius: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
 }
 
-/* Mobile: riduci ulteriormente gli spazi nel team-name-box */
-@media (max-width: 640px) {
-    #team-name-box,
-    #home-team-name-box {
-        padding: 2px 6px 4px 6px !important;
+.team-header-actions {
+    display: contents;
+}
+
+.team-action-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 24px;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.team-action-btn:hover {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.7);
+}
+
+.team-action-btn span:first-child {
+    font-size: 11px;
+}
+
+.team-action-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.team-header-resources {
+    display: contents;
+}
+
+.team-resource {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.team-resource-icon {
+    font-size: 10px;
+}
+
+.team-resource-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4ade80;
+    font-variant-numeric: tabular-nums;
+}
+
+.team-resource-premium {
+    color: #facc15;
+}
+
+.team-resource-label {
+    font-size: 8px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+/* Desktop: slightly larger */
+@media (min-width: 640px) {
+    .team-header-box {
+        padding: 8px 14px;
     }
 
-    #team-name-box #risorse-box,
-    #home-team-name-box #home-risorse-box {
-        margin-top: 0 !important;
-        padding-top: 2px !important;
+    .team-header-name {
+        font-size: 18px;
     }
 
-    /* Riduci gap tra elementi risorse */
-    #team-name-box #risorse-box .flex,
-    #home-team-name-box #home-risorse-box .flex {
-        gap: 4px !important;
+    .team-action-btn {
+        height: 28px;
+        padding: 0 10px;
     }
 
-    /* CS/CSS row meno margine top */
-    #team-name-box #risorse-box .order-3,
-    #home-team-name-box #home-risorse-box .order-3 {
-        margin-top: 2px !important;
+    .team-resource {
+        padding: 4px 10px;
+    }
+
+    .team-resource-value {
+        font-size: 13px;
     }
 }
 
 /* ==================== 15.5 HEADER IMPROVEMENTS ==================== */
 
-/* Nome squadra più leggibile */
+/* Nome squadra più leggibile - legacy support */
 #team-dashboard-title {
-    text-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.8),
-        0 0 20px var(--team-primary-color, #22c55e);
-    letter-spacing: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 12px var(--team-primary-color, #22c55e);
+    letter-spacing: 0.5px;
 }
 
 /* Countdown prossima partita - stesso stile del titolo squadra */
