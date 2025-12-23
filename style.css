@@ -2987,7 +2987,10 @@ body.user-logged-in #login-box #rewards-box,
 body.user-logged-in #login-box #support-box,
 body.user-logged-in #explore-box,
 body.user-logged-in #rewards-box,
-body.user-logged-in #support-box {
+body.user-logged-in #support-box,
+body.user-logged-in #divisa-livello-box,
+body.user-logged-in .near-level-up-widget,
+body.user-logged-in #admin-content {
     border-color: var(--team-primary-color, #22c55e) !important;
 }
 
