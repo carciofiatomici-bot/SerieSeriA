@@ -598,7 +598,15 @@
             sp.y = ty;
             sp.mura = false;
             sp.muraCells = [];
-            logMsg(`${sp.name} si sposta.`);
+
+            // Controlla se c'è una palla libera nella nuova posizione
+            if (state.ballPosition && tx === state.ballPosition.x && ty === state.ballPosition.y) {
+                state.ballCarrierId = sp.id;
+                state.ballPosition = null;
+                logMsg(`${sp.name} si sposta e prende la palla!`, "text-green-400");
+            } else {
+                logMsg(`${sp.name} si sposta.`);
+            }
             consumeAction();
             return;
         }

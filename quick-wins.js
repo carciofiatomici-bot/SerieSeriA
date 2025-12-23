@@ -82,64 +82,103 @@ window.QuickWins = {
     },
     
     /**
-     * QUICK WIN 2: Preview ultima partita
+     * QUICK WIN 2: Preview ultima partita (carica da matchHistory)
      */
-    showLastMatchPreview() {
-        const teamData = window.InterfacciaCore.currentTeamData;
+    async showLastMatchPreview() {
         const lastMatchEl = document.getElementById('last-match-preview');
-        
-        if (!lastMatchEl || !teamData) return;
-        
-        const lastMatch = teamData.lastMatch || null;
-        
-        if (lastMatch) {
-            const { homeTeam, awayTeam, homeGoals, awayGoals, isHome } = lastMatch;
-            const won = (isHome && homeGoals > awayGoals) || (!isHome && awayGoals > homeGoals);
-            const draw = homeGoals === awayGoals;
-            
-            let resultClass = won ? 'border-green-500 bg-green-900/20' : (draw ? 'border-yellow-500 bg-yellow-900/20' : 'border-red-500 bg-red-900/20');
-            let resultText = won ? 'Vittoria! 🎉' : (draw ? 'Pareggio 🤝' : 'Sconfitta 😞');
-            let resultEmoji = won ? '✅' : (draw ? '⚖️' : '❌');
-            
-            const myGoals = isHome ? homeGoals : awayGoals;
-            const theirGoals = isHome ? awayGoals : homeGoals;
-            const opponent = isHome ? awayTeam : homeTeam;
-            
-            const creditsEarned = myGoals + (won ? 15 : 0);
-            
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+
+        console.log('[QuickWins] showLastMatchPreview - elemento:', !!lastMatchEl, 'teamId:', currentTeamId);
+
+        if (!lastMatchEl || !currentTeamId) {
+            console.log('[QuickWins] showLastMatchPreview - mancano dati, esco');
+            return;
+        }
+
+        // Verifica se MatchHistory è disponibile
+        if (!window.MatchHistory?.loadHistory) {
+            console.log('[QuickWins] MatchHistory non disponibile');
             lastMatchEl.innerHTML = `
-                <div class="p-4 bg-gray-800 rounded-lg border-2 ${resultClass} shadow-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex-1">
-                            <p class="text-xs text-gray-400">Ultima Partita</p>
-                            <p class="text-lg font-bold text-white">${resultText}</p>
-                            <p class="text-sm text-gray-300">vs ${opponent}</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-3xl font-extrabold ${won ? 'text-green-400' : (draw ? 'text-yellow-400' : 'text-red-400')}">
-                                ${myGoals} - ${theirGoals}
-                            </p>
-                            <p class="text-2xl">${resultEmoji}</p>
-                        </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl">⚽</div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-400">Ultima Partita</p>
+                        <p class="text-sm text-white font-semibold">Nessuna partita giocata</p>
                     </div>
-                    ${creditsEarned > 0 ? `
-                        <div class="mt-2 p-2 bg-green-900/30 rounded border border-green-500">
-                            <p class="text-xs text-green-400 text-center">
-                                💰 +${creditsEarned} crediti guadagnati!
-                            </p>
-                        </div>
-                    ` : ''}
                 </div>
             `;
             lastMatchEl.classList.remove('hidden');
-        } else {
+            return;
+        }
+
+        try {
+            // Carica lo storico partite
+            const history = await window.MatchHistory.loadHistory(currentTeamId);
+            console.log('[QuickWins] Storico caricato:', history?.length || 0, 'partite');
+
+            if (!history || history.length === 0) {
+                lastMatchEl.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-3xl">⚽</div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400">Ultima Partita</p>
+                            <p class="text-sm text-white font-semibold">Nessuna partita giocata</p>
+                        </div>
+                    </div>
+                `;
+                lastMatchEl.classList.remove('hidden');
+                return;
+            }
+
+            // Prendi l'ultima partita (la prima nell'array, ordinate per data decrescente)
+            const lastMatch = history[0];
+
+            const homeScore = lastMatch.homeScore ?? 0;
+            const awayScore = lastMatch.awayScore ?? 0;
+            const isHome = lastMatch.homeTeam?.id === currentTeamId;
+
+            const myGoals = isHome ? homeScore : awayScore;
+            const theirGoals = isHome ? awayScore : homeScore;
+            const opponent = isHome ? lastMatch.awayTeam?.name : lastMatch.homeTeam?.name;
+
+            const won = myGoals > theirGoals;
+            const draw = myGoals === theirGoals;
+
+            let resultText = won ? 'Vittoria!' : (draw ? 'Pareggio' : 'Sconfitta');
+            let scoreColor = won ? 'text-green-400' : (draw ? 'text-yellow-400' : 'text-red-400');
+
+            // Icona tipo partita (usata come emoji principale)
+            const typeIcon = window.MatchHistory?.TYPE_ICONS?.[lastMatch.type] || '⚽';
+
             lastMatchEl.innerHTML = `
-                <div class="p-4 bg-gray-800 rounded-lg border-2 border-blue-500 shadow-lg">
-                    <p class="text-center text-gray-400">
-                        <i class="fas fa-futbol text-3xl mb-2 text-blue-400"></i><br>
-                        <span class="text-white font-semibold">Nessuna partita giocata</span><br>
-                        <span class="text-blue-400 text-sm">Inizia il campionato per vedere i risultati!</span>
-                    </p>
+                <div class="flex items-center gap-3">
+                    <!-- Icona competizione -->
+                    <div class="text-3xl">${typeIcon}</div>
+
+                    <!-- Info partita -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold ${scoreColor} truncate">${resultText}</p>
+                        <p class="text-xs text-gray-300 truncate">vs ${opponent || 'Avversario'}</p>
+                    </div>
+
+                    <!-- Punteggio -->
+                    <div class="text-right">
+                        <p class="text-2xl font-extrabold ${scoreColor}">${myGoals} - ${theirGoals}</p>
+                    </div>
+                </div>
+            `;
+            lastMatchEl.classList.remove('hidden');
+
+        } catch (error) {
+            console.error("Errore caricamento ultima partita:", error);
+            // Mostra comunque il box con messaggio di fallback
+            lastMatchEl.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl">⚽</div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-400">Ultima Partita</p>
+                        <p class="text-sm text-white font-semibold">Nessuna partita giocata</p>
+                    </div>
                 </div>
             `;
             lastMatchEl.classList.remove('hidden');
@@ -304,6 +343,25 @@ document.addEventListener('dashboardNeedsUpdate', () => {
     setTimeout(() => {
         window.QuickWins.initializeAll();
     }, 500);
+});
+
+// Inizializza anche al caricamento della pagina (dopo che Firebase è pronto)
+document.addEventListener('DOMContentLoaded', () => {
+    // Aspetta che l'utente sia loggato e i dati caricati
+    setTimeout(() => {
+        if (window.InterfacciaCore?.currentTeamId) {
+            console.log('[QuickWins] Inizializzazione al DOMContentLoaded');
+            window.QuickWins.initializeAll();
+        }
+    }, 2000);
+});
+
+// Ascolta anche l'evento di login completato
+document.addEventListener('userLoggedIn', () => {
+    setTimeout(() => {
+        console.log('[QuickWins] Inizializzazione dopo login');
+        window.QuickWins.initializeAll();
+    }, 1000);
 });
 
 console.log("✅ Modulo quick-wins.js caricato.");

@@ -135,6 +135,9 @@ window.InterfacciaDashboard = {
         // Inizializza il widget giocatori vicini al level-up
         this.initNearLevelUpWidget();
 
+        // Inizializza il box allenatore nel tab squadra
+        this.initCoachBoxWidget();
+
         // Inizializza il countdown per la prossima partita
         this.initNextMatchCountdown();
 
@@ -593,6 +596,12 @@ window.InterfacciaDashboard = {
         const nextMatchBox = document.getElementById('next-match-inline-box');
         if (nextMatchBox) {
             nextMatchBox.style.borderColor = color;
+        }
+
+        // Bordo box Ultima Partita
+        const lastMatchPreview = document.getElementById('last-match-preview');
+        if (lastMatchPreview) {
+            lastMatchPreview.style.borderColor = color;
         }
 
         // Bordo box Schedina
@@ -1153,10 +1162,27 @@ window.InterfacciaDashboard = {
         }
     },
 
+    // Listener real-time per il widget near-level-up
+    _nearLevelUpUnsubscribe: null,
+
     /**
-     * Inizializza il widget giocatori vicini al level-up
+     * Inizializza il widget giocatori vicini al level-up con aggiornamento real-time
      */
     async initNearLevelUpWidget() {
+        const container = document.getElementById('near-level-up-widget-container');
+        if (!container) return;
+
+        // Renderizza inizialmente
+        this.updateNearLevelUpWidget();
+
+        // Avvia listener real-time per aggiornamenti
+        this.startNearLevelUpListener();
+    },
+
+    /**
+     * Aggiorna il widget near-level-up
+     */
+    updateNearLevelUpWidget() {
         const container = document.getElementById('near-level-up-widget-container');
         if (!container) return;
 
@@ -1172,6 +1198,125 @@ window.InterfacciaDashboard = {
         // Renderizza il widget
         const widgetHtml = window.PlayerExpUI.renderNearLevelUpWidget(currentTeamData, 75);
         container.innerHTML = widgetHtml;
+    },
+
+    /**
+     * Avvia il listener real-time per il widget near-level-up
+     */
+    startNearLevelUpListener() {
+        // Ferma listener precedente se esiste
+        this.stopNearLevelUpListener();
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId || !window.firestoreTools) return;
+
+        try {
+            const { doc, onSnapshot } = window.firestoreTools;
+            const appId = window.InterfacciaConstants?.ARTIFACT_ID || 'serie-seria';
+            const teamDocRef = doc(window.db, `artifacts/${appId}/public/data/teams`, currentTeamId);
+
+            this._nearLevelUpUnsubscribe = onSnapshot(teamDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const teamData = { id: snapshot.id, ...snapshot.data() };
+                    // Aggiorna i dati globali
+                    window.InterfacciaCore.currentTeamData = teamData;
+                    // Aggiorna il widget
+                    this.updateNearLevelUpWidget();
+                    // Aggiorna anche il box allenatore
+                    this.initCoachBoxWidget();
+                }
+            }, (error) => {
+                console.warn('[NearLevelUp] Errore listener:', error);
+            });
+
+            console.log('[NearLevelUp] Listener real-time avviato');
+        } catch (error) {
+            console.warn('[NearLevelUp] Impossibile avviare listener:', error);
+        }
+    },
+
+    /**
+     * Ferma il listener real-time
+     */
+    stopNearLevelUpListener() {
+        if (this._nearLevelUpUnsubscribe) {
+            this._nearLevelUpUnsubscribe();
+            this._nearLevelUpUnsubscribe = null;
+            console.log('[NearLevelUp] Listener real-time fermato');
+        }
+    },
+
+    /**
+     * Inizializza il box allenatore nel tab squadra
+     */
+    initCoachBoxWidget() {
+        const container = document.getElementById('coach-box-container');
+        if (!container) return;
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const coach = currentTeamData?.coach;
+
+        if (!coach) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const coachName = coach.name || 'Sconosciuto';
+        const coachLevel = coach.level || 1;
+        const maxLevel = window.PlayerExp?.CONFIG?.MAX_LEVEL_COACH || 10;
+
+        // Ottieni progressione EXP
+        let expProgress = { current: 0, needed: 0, percentage: 0, maxed: false };
+        if (window.PlayerExp?.getCoachExpProgress) {
+            expProgress = window.PlayerExp.getCoachExpProgress(coach);
+        }
+
+        const isMaxed = coachLevel >= maxLevel || expProgress.maxed;
+
+        container.innerHTML = `
+            <div>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">👔</span>
+                        <div>
+                            <p class="text-xs text-gray-400">Allenatore</p>
+                            <p class="text-sm font-bold text-orange-400">${this._escapeHtml(coachName)}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">Livello</p>
+                        <p class="text-lg font-bold text-white">${coachLevel}<span class="text-xs text-gray-500">/${maxLevel}</span></p>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    ${isMaxed ? `
+                        <div class="text-xs text-yellow-400 font-bold text-center mb-1">LIVELLO MASSIMO</div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    ` : `
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>EXP: ${expProgress.current}/${expProgress.needed}</span>
+                            <span>${expProgress.percentage}%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-orange-600 to-orange-400 h-2 rounded-full transition-all"
+                                 style="width: ${expProgress.percentage}%"></div>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Escape HTML per sicurezza
+     */
+    _escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     },
 
     // ====================================================================

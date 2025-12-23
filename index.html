@@ -853,26 +853,16 @@
             </div>
 
             <!-- BOX 3: SUPPORTO -->
-            <div id="support-box" class="rounded-lg border p-4" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
-                <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
-                    <span>💡</span> Supporto
-                </h3>
-                <div class="grid grid-cols-2 gap-2">
+            <div id="support-box" class="rounded-lg border p-2 flex items-center" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
+                <div class="flex gap-4 items-center w-full">
                     <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
                        target="_blank"
-                       class="bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-red-500 hover:to-red-600 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
-                        🐛 Segnala Bug
+                       class="flex-1 h-8 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg shadow-md hover:from-red-500 hover:to-red-600 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-1">
+                        <span>🐛</span> Segnala Bug
                     </a>
                     <button id="btn-home-logout"
-                            class="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-gray-500 hover:to-gray-600 transition duration-150 transform hover:scale-[1.02] text-center text-xs flex items-center justify-center">
-                        🚪 Esci
-                    </button>
-                </div>
-                <div class="mt-3 flex justify-center">
-                    <button id="btn-show-changelog"
-                            onclick="window.Changelog?.showPlayers()"
-                            class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-indigo-500 hover:to-indigo-600 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-2">
-                        <span>📋</span> Novita <span class="bg-indigo-800 px-2 py-0.5 rounded-full text-[10px]">v2.2</span>
+                            class="flex-1 h-8 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg shadow-md hover:from-gray-500 hover:to-gray-600 transition duration-150 transform hover:scale-[1.02] text-xs flex items-center justify-center gap-1">
+                        <span>🚪</span> Esci
                     </button>
                 </div>
             </div>
@@ -1032,6 +1022,17 @@
                     </div>
                 </div>
 
+                <!-- BOX ULTIMA PARTITA - Contenuto generato da quick-wins.js -->
+                <div id="last-match-preview" class="mt-3 rounded-xl border border-green-500/50" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
+                    <div class="flex items-center gap-3">
+                        <div class="text-3xl">⚽</div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400">Ultima Partita</p>
+                            <p class="text-sm text-white font-semibold">Caricamento...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BOX SCHEDINA PRONOSTICI (Espanso) -->
                 <div id="schedina-box" class="mt-3 rounded-lg border border-green-500/50">
                     <!-- Container per bottone schedina (gestito da next-match-alert.js) -->
@@ -1051,13 +1052,8 @@
 
             <!-- ========== TAB 2: GESTIONE SQUADRA ========== -->
             <div id="tab-squad" class="tab-content hidden">
-                <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
-                <div id="near-level-up-widget-container" class="mb-2">
-                    <!-- Il widget EXP viene renderizzato qui dinamicamente -->
-                </div>
-
                 <!-- Divisa + Livello Rosa -->
-                <div id="divisa-livello-box" class="flex items-center justify-between mb-2 p-2 sm:p-3 rounded-lg border bg-gray-900/30" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
+                <div id="divisa-livello-box" class="flex items-center justify-between mb-2 rounded-xl border" style="background: rgba(17, 24, 39, 0.6); padding: 12px; border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
                     <!-- BOX DIVISA SQUADRA -->
                     <div id="team-uniform-box" class="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition duration-150" title="Clicca per modificare la divisa">
                         <svg id="uniform-preview-svg" viewBox="20 0 180 160" class="w-14 h-14 sm:w-16 sm:h-16">
@@ -1080,15 +1076,33 @@
                         </svg>
                     </div>
                     <!-- BOX LIVELLO MEDIO ROSA -->
-                    <div class="px-2 flex flex-col items-center justify-center">
-                        <p class="text-[8px] sm:text-[10px] text-gray-300 font-semibold leading-none">📈 Lv. Rosa</p>
-                        <p class="leading-none"><span id="stat-rosa-level" class="text-sm sm:text-base font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[8px] sm:text-[10px] text-gray-400">(0)</span></p>
+                    <div class="flex-1 px-3 flex flex-col items-center justify-center min-w-0">
+                        <p class="text-[10px] sm:text-xs text-gray-300 font-semibold leading-tight whitespace-nowrap">📈 Livello Rosa</p>
+                        <p class="leading-none mt-0.5"><span id="stat-rosa-level" class="text-base sm:text-lg font-extrabold text-white">N/A</span> <span id="stat-rosa-count" class="text-[10px] sm:text-xs text-gray-400">(0)</span></p>
+                    </div>
+                </div>
+
+                <!-- Box Allenatore (placeholder, renderizzato dinamicamente) -->
+                <div id="coach-box-container" class="rounded-xl border border-green-500/50 mb-2" style="background: rgba(17, 24, 39, 0.6); padding: 12px;">
+                    <!-- Il box allenatore viene renderizzato qui dinamicamente -->
+                </div>
+
+                <!-- BOX STADIO E HALL OF FAME -->
+                <div id="stadio-hall-box" class="rounded-lg border border-green-500/50 mb-2">
+                    <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                        <button id="btn-stadium"
+                                class="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-emerald-500 hover:to-green-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            🏟️ Stadio
+                        </button>
+                        <button id="btn-hall-of-fame"
+                                class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-amber-500 hover:to-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
+                            🏛️ Hall of Fame
+                        </button>
                     </div>
                 </div>
 
                 <!-- BOX GESTIONE ROSA E FORMAZIONE -->
-                <div id="gestione-box" class="rounded-lg border border-green-500/50 space-y-1.5 sm:space-y-2">
-                    <!-- Riga Rosa e Formazione -->
+                <div id="gestione-box" class="rounded-lg border border-green-500/50">
                     <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
                         <button id="btn-gestione-rosa"
                                 class="w-full bg-gradient-to-r from-pink-600 to-rose-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-pink-500 hover:to-rose-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
@@ -1099,17 +1113,11 @@
                             📋 Formazione
                         </button>
                     </div>
-                    <!-- Riga Stadio e Hall of Fame -->
-                    <div id="stadio-hall-row" class="grid grid-cols-2 gap-1.5 sm:gap-2">
-                        <button id="btn-stadium"
-                                class="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-emerald-500 hover:to-green-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                            🏟️ Stadio
-                        </button>
-                        <button id="btn-hall-of-fame"
-                                class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-amber-500 hover:to-yellow-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                            🏛️ Hall of Fame
-                        </button>
-                    </div>
+                </div>
+
+                <!-- CONTAINER WIDGET GIOCATORI VICINI AL LEVEL-UP -->
+                <div id="near-level-up-widget-container" class="mt-2">
+                    <!-- Il widget EXP viene renderizzato qui dinamicamente -->
                 </div>
 
                 <!-- Statistica nascosta per compatibilita JS -->
@@ -2114,6 +2122,7 @@
     <script src="tutorial.js"></script>
     <script src="changelog.js"></script>
     <script src="match-history.js"></script>
+    <script src="quick-wins.js"></script>
     <script src="match-credits.js"></script>
     <script src="sponsor-system.js"></script>
     <script src="private-leagues.js"></script>
