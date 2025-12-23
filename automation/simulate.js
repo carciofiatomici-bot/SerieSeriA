@@ -749,31 +749,45 @@ async function main() {
 
     console.log('[Config] Configurazione caricata');
     console.log(`  - Simulazione Coppa prima: ${config.simulateCupFirst ? 'Si' : 'No'}`);
-    console.log(`  - Coppa terminata: ${config.isCupOver ? 'Si' : 'No'}`);
-    console.log(`  - Campionato terminato: ${config.isChampionshipOver ? 'Si' : 'No'}`);
+    console.log(`  - Coppa terminata (flag): ${config.isCupOver ? 'Si' : 'No'}`);
+    console.log(`  - Campionato terminato (flag): ${config.isChampionshipOver ? 'Si' : 'No'}`);
+
+    // Verifica EFFETTIVA se ci sono partite da giocare (ignora i flag)
+    const championshipResult = await findNextMatchday(db, appId);
+    const cupResult = await findNextCupMatch(db, appId);
+    const hasChampionshipMatches = championshipResult !== null;
+    const hasCupMatches = cupResult !== null;
+
+    console.log(`  - Partite campionato disponibili: ${hasChampionshipMatches ? 'Si' : 'No'}`);
+    console.log(`  - Partite coppa disponibili: ${hasCupMatches ? 'Si' : 'No'}`);
+
+    // Warning se i flag sono incoerenti con lo stato reale
+    if (config.isChampionshipOver && hasChampionshipMatches) {
+        console.warn('[WARN] isChampionshipOver=true ma ci sono ancora partite da giocare! Simulazione procedera comunque.');
+    }
+    if (config.isCupOver && hasCupMatches) {
+        console.warn('[WARN] isCupOver=true ma ci sono ancora partite di coppa da giocare! Simulazione procedera comunque.');
+    }
 
     let simulatedSomething = false;
 
-    // Determina cosa simulare
-    if (config.simulateCupFirst && !config.isCupOver) {
-        // Prima la coppa
-        simulatedSomething = await simulateCupRound(db, appId);
-
-        if (!simulatedSomething && !config.isChampionshipOver) {
-            // Se coppa non ha partite, prova campionato
-            simulatedSomething = await simulateChampionshipMatchday(db, appId);
-        }
-    } else if (!config.isChampionshipOver) {
-        // Prima il campionato
-        simulatedSomething = await simulateChampionshipMatchday(db, appId);
-
-        if (!simulatedSomething && !config.isCupOver) {
-            // Se campionato non ha partite, prova coppa
+    // Determina cosa simulare basandosi sulla disponibilita REALE delle partite
+    if (config.simulateCupFirst) {
+        // Prima la coppa, poi campionato
+        if (hasCupMatches) {
             simulatedSomething = await simulateCupRound(db, appId);
         }
-    } else if (!config.isCupOver) {
-        // Solo coppa
-        simulatedSomething = await simulateCupRound(db, appId);
+        if (!simulatedSomething && hasChampionshipMatches) {
+            simulatedSomething = await simulateChampionshipMatchday(db, appId);
+        }
+    } else {
+        // Prima il campionato, poi coppa
+        if (hasChampionshipMatches) {
+            simulatedSomething = await simulateChampionshipMatchday(db, appId);
+        }
+        if (!simulatedSomething && hasCupMatches) {
+            simulatedSomething = await simulateCupRound(db, appId);
+        }
     }
 
     if (!simulatedSomething) {
