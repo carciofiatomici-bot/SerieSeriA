@@ -4205,7 +4205,6 @@ html, body {
 #competizioni-box,
 #draft-scambi-box,
 #sponsor-media-box,
-#team-name-box,
 #next-match-inline-box,
 #schedina-box,
 #private-leagues-box,
@@ -4223,7 +4222,6 @@ html, body {
     #competizioni-box,
     #draft-scambi-box,
     #sponsor-media-box,
-    #team-name-box,
     #next-match-inline-box,
     #schedina-box,
     #private-leagues-box,
@@ -4249,13 +4247,15 @@ html, body {
 /* Altezza ridotta per team-name-box */
 #team-name-box,
 #home-team-name-box {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
     padding: 4px 8px !important;
 }
 
 @media (min-width: 640px) {
     #team-name-box,
     #home-team-name-box {
-        padding: 6px 12px !important;
+        padding: 8px 12px !important;
     }
 }
 
