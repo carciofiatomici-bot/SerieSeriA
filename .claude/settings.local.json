@@ -43,7 +43,10 @@
       "WebFetch(domain:cdn.jsdelivr.net)",
       "Bash(do echo \"=== TEST $i ===\")",
       "Bash(npm install:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(rm \"C:\\\\Users\\\\PowerUser\\\\Desktop\\\\Repository\\\\New Porgetto Calcetto\\\\Claude Working Space\\\\nul\")",
+      "Skill(frontend-design)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": [],
