@@ -576,6 +576,18 @@
 
         // Movimento
         if (dist === 1 && !playerAt) {
+            // Controlla se la cella è bloccata da mura avversario
+            const isMuraBlocked = players.some(p =>
+                p.team !== state.currentTeam &&
+                p.mura &&
+                p.muraCells?.some(mc => mc.x === tx && mc.y === ty)
+            );
+
+            if (isMuraBlocked) {
+                logMsg("Cella bloccata da mura!", "text-orange-400");
+                return;
+            }
+
             sp.x = tx;
             sp.y = ty;
             sp.mura = false;
@@ -612,8 +624,22 @@
         logMsg(`Tackle: ${atk.name}(${rollAtk}) vs ${def.name}(${rollDef})`);
 
         if (rollAtk > rollDef) {
+            // Scambia posizioni
+            const tempX = atk.x;
+            const tempY = atk.y;
+            atk.x = def.x;
+            atk.y = def.y;
+            def.x = tempX;
+            def.y = tempY;
+
+            // Attaccante prende la palla
             state.ballCarrierId = atk.id;
-            logMsg("Palla rubata!", "text-green-400");
+
+            // Reset mura del difensore
+            def.mura = false;
+            def.muraCells = [];
+
+            logMsg("Palla rubata! Scambio posizioni!", "text-green-400");
         } else {
             logMsg("Tackle fallito.", "text-red-400");
         }
@@ -670,9 +696,30 @@
                 logMsg(`Palla in zona! (${passRoll} vs ${difficulty})`, "text-green-400");
             }
         } else {
-            state.ballCarrierId = null;
-            state.ballPosition = null;
-            logMsg(`Passaggio fuori! (${passRoll} vs ${difficulty})`, "text-orange-400");
+            // Passaggio fuori: palla al giocatore avversario più vicino al punto di destinazione
+            const opposingTeam = state.currentTeam === 'A' ? 'B' : 'A';
+            const opposingPlayers = players.filter(p => p.team === opposingTeam);
+
+            // Trova il più vicino al target
+            let closest = opposingPlayers[0];
+            let minDist = Infinity;
+            for (const p of opposingPlayers) {
+                const dist = Math.abs(p.x - target.x) + Math.abs(p.y - target.y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = p;
+                }
+            }
+
+            if (closest) {
+                state.ballCarrierId = closest.id;
+                state.ballPosition = null;
+                logMsg(`Passaggio fuori! Palla a ${closest.name}`, "text-orange-400");
+            } else {
+                state.ballCarrierId = null;
+                state.ballPosition = { x: 5, y: 3 };
+                logMsg(`Passaggio fuori!`, "text-orange-400");
+            }
         }
         consumeAction();
     }
