@@ -574,8 +574,14 @@
         const playerAt = players.find(p => p.x === tx && p.y === ty);
         const isCarrier = state.ballCarrierId === sp.id;
 
-        // Movimento
+        // Movimento semplice (cella vuota adiacente)
         if (dist === 1 && !playerAt) {
+            // Chi sta murando non può muoversi
+            if (sp.mura) {
+                logMsg("Stai murando! Non puoi muoverti.", "text-orange-400");
+                return;
+            }
+
             // Controlla se la cella è bloccata da mura avversario
             const isMuraBlocked = players.some(p =>
                 p.team !== state.currentTeam &&
@@ -597,12 +603,16 @@
             return;
         }
 
-        // Tackle (su chi ha la palla)
+        // Azioni su giocatore avversario adiacente
         if (dist === 1 && playerAt && playerAt.team !== state.currentTeam) {
-            if (state.ballCarrierId === playerAt.id) {
-                executeTackle(sp, playerAt);
+            if (isCarrier) {
+                // DRIBBLING: ho la palla e premo su avversario
+                executeDribbling(sp, playerAt);
+            } else if (state.ballCarrierId === playerAt.id) {
+                // CONTRASTO: non ho palla e premo su chi ce l'ha
+                executeContrasto(sp, playerAt);
             } else {
-                logMsg("Tackle solo su chi ha palla.", "text-gray-500");
+                logMsg("Nessuna azione possibile.", "text-gray-500");
             }
             return;
         }
@@ -618,89 +628,191 @@
         logMsg("Azione non valida.", "text-red-400");
     }
 
-    function executeTackle(atk, def) {
-        const rollAtk = d20() + atk.mod;
-        const rollDef = d20() + def.mod + (def.mura ? 3 : 0);
-        logMsg(`Tackle: ${atk.name}(${rollAtk}) vs ${def.name}(${rollDef})`);
+    /**
+     * DRIBBLING: giocatore CON palla preme su avversario
+     * 1d20+modA vs 1d20+modB
+     * - Vince A: passa alle spalle di B
+     * - Vince B: A non può più muoversi (azione persa)
+     */
+    function executeDribbling(attacker, defender) {
+        const rollAtk = d20() + attacker.mod;
+        const rollDef = d20() + defender.mod;
+
+        logMsg(`Dribbling: ${attacker.name}(${rollAtk}) vs ${defender.name}(${rollDef})`);
 
         if (rollAtk > rollDef) {
-            // Scambia posizioni
-            const tempX = atk.x;
-            const tempY = atk.y;
-            atk.x = def.x;
-            atk.y = def.y;
-            def.x = tempX;
-            def.y = tempY;
+            // Calcola posizione "alle spalle" del difensore
+            const behindX = defender.x + (defender.x - attacker.x);
+            const behindY = defender.y + (defender.y - attacker.y);
 
-            // Attaccante prende la palla
-            state.ballCarrierId = atk.id;
+            // Verifica che la posizione sia valida
+            if (behindX >= 0 && behindX < GRID_W && behindY >= 0 && behindY < GRID_H) {
+                const playerBehind = players.find(p => p.x === behindX && p.y === behindY);
+                if (!playerBehind) {
+                    attacker.x = behindX;
+                    attacker.y = behindY;
+                    logMsg("Dribbling riuscito!", "text-green-400");
+                } else {
+                    // C'è qualcuno dietro, vai al posto del difensore
+                    attacker.x = defender.x;
+                    attacker.y = defender.y;
+                    defender.x = behindX - (defender.x - attacker.x);
+                    defender.y = behindY - (defender.y - attacker.y);
+                    logMsg("Dribbling riuscito! (spazio limitato)", "text-green-400");
+                }
+            } else {
+                // Fuori campo, scambia posizioni
+                const tempX = attacker.x;
+                const tempY = attacker.y;
+                attacker.x = defender.x;
+                attacker.y = defender.y;
+                defender.x = tempX;
+                defender.y = tempY;
+                logMsg("Dribbling riuscito! (bordo campo)", "text-green-400");
+            }
 
-            // Reset mura del difensore
-            def.mura = false;
-            def.muraCells = [];
-
-            logMsg("Palla rubata! Scambio posizioni!", "text-green-400");
+            attacker.mura = false;
+            attacker.muraCells = [];
         } else {
-            logMsg("Tackle fallito.", "text-red-400");
+            logMsg("Dribbling fallito! Bloccato.", "text-red-400");
+            // Azione persa, non può più muoversi
         }
         consumeAction();
     }
 
-    function executePass(from, target) {
-        // target = { x, y, id (opzionale) }
-        const path = getLinePath(from.x, from.y, target.x, target.y);
-        const malus = path.length; // -1 per ogni cella attraversata
+    /**
+     * CONTRASTO: giocatore SENZA palla preme su chi ha palla
+     * 1d20+modA vs 1d20+modB
+     * - Vince A: prende palla e va alle spalle di B
+     * - Vince B: A può ritentare ma tira 2d20 e prende il più basso
+     */
+    function executeContrasto(attacker, defender, isRetry = false) {
+        let rollAtk;
+        if (isRetry) {
+            // Ritenta: 2d20 prende il più basso
+            const roll1 = d20();
+            const roll2 = d20();
+            rollAtk = Math.min(roll1, roll2) + attacker.mod;
+            logMsg(`Ritenta contrasto (${roll1},${roll2}): ${attacker.name}(${rollAtk}) vs...`);
+        } else {
+            rollAtk = d20() + attacker.mod;
+        }
 
-        logMsg(`Passaggio (${path.length} celle)...`);
+        const rollDef = d20() + defender.mod;
 
-        // Controlla intercettazioni lungo il percorso
-        for (let i = 0; i < path.length; i++) {
-            const cell = path[i];
+        if (!isRetry) {
+            logMsg(`Contrasto: ${attacker.name}(${rollAtk}) vs ${defender.name}(${rollDef})`);
+        } else {
+            logMsg(`...${defender.name}(${rollDef})`);
+        }
 
-            // Trova difensori nella cella o con mura che copre la cella
-            const defenders = players.filter(p =>
-                p.team !== state.currentTeam &&
-                ((p.x === cell.x && p.y === cell.y) ||
-                 (p.mura && p.muraCells?.some(mc => mc.x === cell.x && mc.y === cell.y)))
-            );
+        if (rollAtk > rollDef) {
+            // Calcola posizione "alle spalle" del difensore
+            const behindX = defender.x + (defender.x - attacker.x);
+            const behindY = defender.y + (defender.y - attacker.y);
 
-            for (const defender of defenders) {
-                const interceptionRoll = d20() + defender.mod + (defender.mura ? 3 : 0);
-                const difficulty = 12 + Math.floor(malus / 2);
+            // Attaccante prende la palla
+            state.ballCarrierId = attacker.id;
 
-                if (interceptionRoll >= difficulty) {
-                    state.ballCarrierId = defender.id;
-                    defender.mura = false;
-                    defender.muraCells = [];
-                    logMsg(`INTERCETTATO da ${defender.name}! (${interceptionRoll} vs ${difficulty})`, "text-red-400");
-                    consumeAction();
-                    return;
+            // Verifica che la posizione sia valida
+            if (behindX >= 0 && behindX < GRID_W && behindY >= 0 && behindY < GRID_H) {
+                const playerBehind = players.find(p => p.x === behindX && p.y === behindY);
+                if (!playerBehind) {
+                    attacker.x = behindX;
+                    attacker.y = behindY;
+                } else {
+                    // Scambia posizioni se c'è qualcuno dietro
+                    const tempX = attacker.x;
+                    const tempY = attacker.y;
+                    attacker.x = defender.x;
+                    attacker.y = defender.y;
+                    defender.x = tempX;
+                    defender.y = tempY;
                 }
+            } else {
+                // Fuori campo, scambia posizioni
+                const tempX = attacker.x;
+                const tempY = attacker.y;
+                attacker.x = defender.x;
+                attacker.y = defender.y;
+                defender.x = tempX;
+                defender.y = tempY;
+            }
+
+            defender.mura = false;
+            defender.muraCells = [];
+
+            logMsg("Contrasto vinto! Palla rubata!", "text-green-400");
+            consumeAction();
+        } else {
+            if (!isRetry) {
+                logMsg("Contrasto perso! Puoi ritentare (svantaggio)...", "text-orange-400");
+                // Ritenta automaticamente con svantaggio
+                executeContrasto(attacker, defender, true);
+            } else {
+                logMsg("Contrasto fallito definitivamente.", "text-red-400");
+                consumeAction();
+            }
+        }
+    }
+
+    /**
+     * PASSAGGIO: 1d20+mod vs 5+distanza+Σ(mod avversari in traiettoria)
+     * Mura conta come avversario con metà modificatore
+     */
+    function executePass(from, target) {
+        const path = getLinePath(from.x, from.y, target.x, target.y);
+        const distance = path.length;
+
+        // Calcola difficoltà: 5 + distanza + modificatori avversari in traiettoria
+        let difficulty = 5 + distance;
+        let interceptors = [];
+
+        for (const cell of path) {
+            // Avversari fisicamente nella cella
+            const enemyInCell = players.find(p =>
+                p.team !== state.currentTeam &&
+                p.x === cell.x && p.y === cell.y
+            );
+            if (enemyInCell) {
+                difficulty += enemyInCell.mod;
+                interceptors.push(`${enemyInCell.name}(+${enemyInCell.mod})`);
+            }
+
+            // Celle coperte da mura (metà modificatore)
+            const muraPlayers = players.filter(p =>
+                p.team !== state.currentTeam &&
+                p.mura &&
+                p.muraCells?.some(mc => mc.x === cell.x && mc.y === cell.y) &&
+                !(p.x === cell.x && p.y === cell.y) // Non contare due volte
+            );
+            for (const mp of muraPlayers) {
+                const halfMod = Math.floor(mp.mod / 2);
+                difficulty += halfMod;
+                interceptors.push(`${mp.name}mura(+${halfMod})`);
             }
         }
 
-        // Passaggio riuscito
-        const passRoll = d20() + from.mod - malus;
-        const difficulty = 8;
+        const passRoll = d20() + from.mod;
+
+        const interceptStr = interceptors.length > 0 ? ` [${interceptors.join(', ')}]` : '';
+        logMsg(`Passaggio: ${passRoll} vs ${difficulty}${interceptStr}`);
 
         if (passRoll >= difficulty) {
             if (target.id) {
-                // Passaggio a giocatore
                 state.ballCarrierId = target.id;
                 const receiver = players.find(p => p.id === target.id);
-                logMsg(`Passaggio a ${receiver?.name}! (${passRoll} vs ${difficulty})`, "text-green-400");
+                logMsg(`Passaggio a ${receiver?.name}!`, "text-green-400");
             } else {
-                // Passaggio in zona
                 state.ballCarrierId = null;
                 state.ballPosition = { x: target.x, y: target.y };
-                logMsg(`Palla in zona! (${passRoll} vs ${difficulty})`, "text-green-400");
+                logMsg(`Palla in zona!`, "text-green-400");
             }
         } else {
-            // Passaggio fuori: palla al giocatore avversario più vicino al punto di destinazione
+            // Passaggio fallito: palla al giocatore avversario più vicino
             const opposingTeam = state.currentTeam === 'A' ? 'B' : 'A';
             const opposingPlayers = players.filter(p => p.team === opposingTeam);
 
-            // Trova il più vicino al target
             let closest = opposingPlayers[0];
             let minDist = Infinity;
             for (const p of opposingPlayers) {
@@ -714,62 +826,67 @@
             if (closest) {
                 state.ballCarrierId = closest.id;
                 state.ballPosition = null;
-                logMsg(`Passaggio fuori! Palla a ${closest.name}`, "text-orange-400");
-            } else {
-                state.ballCarrierId = null;
-                state.ballPosition = { x: 5, y: 3 };
-                logMsg(`Passaggio fuori!`, "text-orange-400");
+                logMsg(`Passaggio fallito! Palla a ${closest.name}`, "text-red-400");
             }
         }
         consumeAction();
     }
 
+    /**
+     * TIRO: 1d20+mod-distanza vs 1d20+modGK (solo se GK adiacente a porta)
+     * Se GK non adiacente, goal automatico se tiro > 10
+     */
     function executeShot(atk, targetY) {
         const gk = players.find(p => p.team !== state.currentTeam && p.isGK);
         const goalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
         const path = getLinePath(atk.x, atk.y, goalX, targetY);
-        const malus = path.length;
+        const distance = path.length;
 
-        logMsg(`Tiro! (${path.length} celle)...`);
+        // Verifica se il portiere è adiacente alla porta (entro 2 celle dalla linea di porta)
+        const gkAdjacentToGoal = gk && (
+            (state.currentTeam === 'A' && gk.x >= GRID_W - 2) ||
+            (state.currentTeam === 'B' && gk.x <= 1)
+        );
 
-        // Controlla blocchi lungo traiettoria (escluso portiere)
-        for (const cell of path) {
-            const blockers = players.filter(p =>
-                p.team !== state.currentTeam && !p.isGK &&
-                ((p.x === cell.x && p.y === cell.y) ||
-                 (p.mura && p.muraCells?.some(mc => mc.x === cell.x && mc.y === cell.y)))
-            );
+        const shotRoll = d20() + atk.mod - distance;
 
-            for (const blocker of blockers) {
-                const blockRoll = d20() + blocker.mod + (blocker.mura ? 3 : 0);
-                if (blockRoll >= 15) {
-                    state.ballCarrierId = blocker.id;
-                    blocker.mura = false;
-                    blocker.muraCells = [];
-                    logMsg(`BLOCCATO da ${blocker.name}! (${blockRoll})`, "text-blue-400");
-                    consumeAction();
-                    return;
-                }
+        if (gkAdjacentToGoal) {
+            // Portiere para
+            const saveRoll = d20() + gk.mod;
+            logMsg(`Tiro: ${shotRoll} vs GK: ${saveRoll}`);
+
+            if (shotRoll > saveRoll) {
+                // GOAL!
+                if (state.currentTeam === 'A') state.scoreA++;
+                else state.scoreB++;
+                logMsg("GOOOOL!!!", "text-yellow-400 font-bold");
+                checkWinCondition();
+                if (!state.isGameOver) handleGoalReset();
+            } else {
+                logMsg("PARATA!", "text-blue-400");
+                state.ballCarrierId = gk.id;
+                consumeAction();
             }
-        }
-
-        // Tiro vs Portiere
-        const shotRoll = d20() + atk.mod - Math.floor(malus / 2);
-        const saveRoll = d20() + gk.mod + 2;
-
-        logMsg(`Tiro: ${shotRoll} vs GK: ${saveRoll}`);
-
-        if (shotRoll > saveRoll) {
-            // GOAL!
-            if (state.currentTeam === 'A') state.scoreA++;
-            else state.scoreB++;
-            logMsg("GOOOOL!!!", "text-yellow-400 font-bold");
-            checkWinCondition();
-            if (!state.isGameOver) handleGoalReset();
         } else {
-            logMsg("PARATA!", "text-blue-400");
-            state.ballCarrierId = gk.id;
-            consumeAction();
+            // Portiere fuori posizione - deve superare difficoltà fissa
+            const difficulty = 5 + distance;
+            logMsg(`Tiro: ${shotRoll} vs ${difficulty} (GK fuori posizione!)`);
+
+            if (shotRoll >= difficulty) {
+                // GOAL!
+                if (state.currentTeam === 'A') state.scoreA++;
+                else state.scoreB++;
+                logMsg("GOOOOL!!! (Porta sguarnita)", "text-yellow-400 font-bold");
+                checkWinCondition();
+                if (!state.isGameOver) handleGoalReset();
+            } else {
+                logMsg("Tiro fuori!", "text-orange-400");
+                // Rimessa dal fondo al portiere
+                if (gk) {
+                    state.ballCarrierId = gk.id;
+                }
+                consumeAction();
+            }
         }
     }
 
@@ -818,6 +935,10 @@
         const sp = state.selectedPlayer;
         if (!sp) {
             logMsg("Seleziona un giocatore!", "text-orange-400");
+            return;
+        }
+        if (sp.isGK) {
+            logMsg("I portieri non possono murare!", "text-orange-400");
             return;
         }
         if (state.ballCarrierId === sp.id) {

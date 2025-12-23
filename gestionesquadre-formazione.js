@@ -19,35 +19,24 @@ window.GestioneSquadreFormazione = {
         const { MODULI } = window.GestioneSquadreConstants;
         const { displayMessage } = window.GestioneSquadreUtils;
 
-        squadraMainTitle.textContent = "Gestione Formazione";
-        squadraSubtitle.textContent = `Modulo Attuale: ${teamData.formation.modulo} | Trascina i giocatori in campo! (Forma attiva)`;
+        if (squadraMainTitle) squadraMainTitle.textContent = "Gestione Formazione";
+        if (squadraSubtitle) squadraSubtitle.textContent = `Modulo Attuale: ${teamData.formation.modulo} | Trascina i giocatori in campo! (Forma attiva)`;
 
         // Legenda tipologie con badge system
         const legendHtml = `
-            <div class="flex flex-col gap-3 p-3">
-                <div class="text-center text-sm text-gray-400 mb-2">Sistema Sasso-Carta-Forbice</div>
-                <div class="flex justify-center items-center gap-4 flex-wrap">
-                    <div class="flex flex-col items-center gap-1">
-                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'md')}
-                        <span class="text-xs text-gray-400">Potenza</span>
-                    </div>
-                    <span class="text-green-400 text-lg font-bold">></span>
-                    <div class="flex flex-col items-center gap-1">
-                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Tecnica', 'md')}
-                        <span class="text-xs text-gray-400">Tecnica</span>
-                    </div>
-                    <span class="text-green-400 text-lg font-bold">></span>
-                    <div class="flex flex-col items-center gap-1">
-                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Velocita', 'md')}
-                        <span class="text-xs text-gray-400">Velocita</span>
-                    </div>
-                    <span class="text-green-400 text-lg font-bold">></span>
-                    <div class="flex flex-col items-center gap-1">
-                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'md')}
-                        <span class="text-xs text-gray-400">Potenza</span>
+            <div class="flex flex-col gap-2 p-2">
+                <div class="flex justify-center items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-1">
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'sm')}
+                        <span class="text-green-400 font-bold">></span>
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Tecnica', 'sm')}
+                        <span class="text-green-400 font-bold">></span>
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Velocita', 'sm')}
+                        <span class="text-green-400 font-bold">></span>
+                        ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'sm')}
                     </div>
                 </div>
-                <div class="text-center text-xs text-gray-500 mt-1">Bonus: +5% a +25% | Malus: -5% a -25%</div>
+                <div class="text-center text-xs text-gray-500">Bonus: +5% a +25% | Malus: -5% a -25%</div>
             </div>
         `;
 
@@ -131,41 +120,53 @@ window.GestioneSquadreFormazione = {
 
             <div id="formation-message" class="text-center mb-4 text-red-400"></div>
 
-            <!-- Riga superiore: Seleziona Modulo (con XP) -->
+            <!-- Bottoni Auto Formazione e Salva Formazione -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button id="btn-auto-formation"
+                        class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                    <span>🤖</span> Auto Formazione
+                </button>
+                <button id="btn-save-formation"
+                        class="bg-indigo-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-400 transition duration-150 transform hover:scale-[1.01]">
+                    Salva Formazione
+                </button>
+            </div>
+
+            <!-- Riga superiore: Seleziona Modulo (menu a scomparsa) -->
             <div class="mb-4">
-                <div class="p-3 bg-gray-800 rounded-lg border border-indigo-500">
-                    <div class="flex flex-col lg:flex-row gap-4">
-                        <div class="lg:flex-1">
-                            <h3 class="text-lg font-bold text-indigo-400 border-b border-gray-600 pb-2 mb-2">Seleziona Modulo</h3>
-                            <select id="formation-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-indigo-600 text-sm">
-                                ${Object.keys(MODULI).map(mod => {
-                                    const m = MODULI[mod];
-                                    const rolesStr = ['P', 'D', 'C', 'A'].filter(r => m[r] > 0).map(r => r.repeat(m[r])).join('-');
-                                    return `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod} (${rolesStr})</option>`;
-                                }).join('')}
-                            </select>
-                            <p id="module-description" class="text-xs text-gray-400 mt-2">${MODULI[teamData.formation.modulo].description}</p>
+                <div class="bg-gray-800 rounded-lg border border-indigo-500 overflow-hidden">
+                    <div id="modulo-header" class="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span id="modulo-toggle-icon" class="text-gray-400 transition-transform duration-200">▶</span>
+                            <h3 class="text-lg font-bold text-indigo-400">Seleziona Modulo</h3>
+                            <span class="text-gray-400 text-sm">(${teamData.formation.modulo})</span>
                         </div>
-                        <div class="lg:w-1/3">
-                            ${this.renderFormationXpBarCompact(teamData)}
+                        <div class="text-xs text-gray-400">Clicca per espandere</div>
+                    </div>
+                    <div id="modulo-content" class="hidden p-3 pt-0 border-t border-gray-700">
+                        <div class="flex flex-col lg:flex-row gap-4 pt-3">
+                            <div class="lg:flex-1">
+                                <select id="formation-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-indigo-600 text-sm">
+                                    ${Object.keys(MODULI).map(mod => {
+                                        const m = MODULI[mod];
+                                        const rolesStr = ['P', 'D', 'C', 'A'].filter(r => m[r] > 0).map(r => r.repeat(m[r])).join('-');
+                                        return `<option value="${mod}" ${teamData.formation.modulo === mod ? 'selected' : ''}>${mod} (${rolesStr})</option>`;
+                                    }).join('')}
+                                </select>
+                                <p id="module-description" class="text-xs text-gray-400 mt-2">${MODULI[teamData.formation.modulo].description}</p>
+                            </div>
+                            <div class="lg:w-1/3">
+                                ${this.renderFormationXpBarCompact(teamData)}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Layout principale: Rosa a sinistra, Campo + Panchina a destra -->
-            <div class="flex flex-col lg:flex-row gap-4">
-                <!-- Rosa Completa (colonna sinistra stretta) -->
-                <div class="lg:w-48 p-3 bg-gray-800 rounded-lg border border-indigo-500 flex flex-col">
-                    <h3 class="text-sm font-bold text-indigo-400 border-b border-gray-600 pb-2 mb-2">Rosa Disponibile</h3>
-                    <div id="full-squad-list" class="space-y-1 overflow-y-auto flex-1 min-h-[200px] max-h-[350px] border border-gray-700 p-2 rounded-lg"
-                         ondragover="event.preventDefault();"
-                         ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'ROSALIBERA')">
-                    </div>
-                </div>
-
-                <!-- Campo + Panchina (colonna centrale) -->
-                <div class="flex-1 space-y-4">
+            <!-- Layout principale: Campo + Panchina + Rosa -->
+            <div class="flex flex-col gap-4">
+                <!-- Campo + Panchina -->
+                <div class="space-y-4">
                     <div id="field-area" class="rounded-lg shadow-xl p-4 text-center">
                         <h4 class="text-white font-bold mb-4 z-10 relative">Campo (Titolari) - Modulo: ${teamData.formation.modulo}</h4>
                         <div class="center-circle"></div>
@@ -194,23 +195,29 @@ window.GestioneSquadreFormazione = {
                         </div>
                     </div>
 
-                    <!-- Infermeria (sotto la panchina) -->
-                    ${this.renderInjuredPlayersBoxCompact(teamData)}
-
-                    <!-- Legenda Tipologie -->
-                    <div class="bg-gray-800 p-2 rounded-lg border border-gray-600">
-                        ${legendHtml}
+                    <!-- Rosa Disponibile (sotto la panchina) -->
+                    <div class="p-3 bg-gray-800 rounded-lg border border-indigo-500">
+                        <h3 class="text-sm font-bold text-indigo-400 border-b border-gray-600 pb-2 mb-2">Rosa Disponibile</h3>
+                        <div id="full-squad-list" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 overflow-y-auto max-h-[250px] border border-gray-700 p-2 rounded-lg"
+                             ondragover="event.preventDefault();"
+                             ondrop="window.GestioneSquadreFormazione.handleDrop(event, 'ROSALIBERA')">
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="btn-auto-formation"
-                                class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
-                            <span>🤖</span> Auto Formazione
-                        </button>
-                        <button id="btn-save-formation"
-                                class="bg-indigo-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-indigo-400 transition duration-150 transform hover:scale-[1.01]">
-                            Salva Formazione
-                        </button>
+                    <!-- Infermeria -->
+                    ${this.renderInjuredPlayersBoxCompact(teamData)}
+
+                    <!-- Tipi a confronto (menu a scomparsa) -->
+                    <div class="bg-gray-800 rounded-lg border border-gray-600 overflow-hidden">
+                        <div id="tipi-header" class="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span id="tipi-toggle-icon" class="text-gray-400 transition-transform duration-200">▶</span>
+                                <span class="text-sm font-bold text-gray-300">Tipi a confronto</span>
+                            </div>
+                        </div>
+                        <div id="tipi-content" class="hidden border-t border-gray-700">
+                            ${legendHtml}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -413,12 +420,38 @@ window.GestioneSquadreFormazione = {
             document.querySelector('#field-area h4').textContent = `Campo (Titolari) - Modulo: ${newModule}`;
             // Aggiorna barra XP formazione (se presente)
             this.updateFormationXpBar(context.currentTeamData);
+            // Aggiorna label nel header del menu a scomparsa
+            const moduloHeader = document.getElementById('modulo-header');
+            if (moduloHeader) {
+                const labelSpan = moduloHeader.querySelector('.text-gray-400.text-sm');
+                if (labelSpan) labelSpan.textContent = `(${newModule})`;
+            }
+        });
+
+        // Toggle menu modulo a scomparsa
+        document.getElementById('modulo-header')?.addEventListener('click', () => {
+            const content = document.getElementById('modulo-content');
+            const icon = document.getElementById('modulo-toggle-icon');
+            if (content && icon) {
+                content.classList.toggle('hidden');
+                icon.style.transform = content.classList.contains('hidden') ? '' : 'rotate(90deg)';
+            }
         });
 
         document.getElementById('btn-save-formation').addEventListener('click', () => this.handleSaveFormation(context));
 
         // Bottone Formazione Automatica
         document.getElementById('btn-auto-formation')?.addEventListener('click', () => this.handleAutoFormation(context));
+
+        // Toggle menu Tipi a confronto
+        document.getElementById('tipi-header')?.addEventListener('click', () => {
+            const content = document.getElementById('tipi-content');
+            const icon = document.getElementById('tipi-toggle-icon');
+            if (content && icon) {
+                content.classList.toggle('hidden');
+                icon.style.transform = content.classList.contains('hidden') ? '' : 'rotate(90deg)';
+            }
+        });
 
         // Espone globalmente le funzioni drag and drop
         window.handleDragStart = (e) => this.handleDragStart(e);
@@ -1949,15 +1982,9 @@ window.GestioneSquadreFormazione = {
 
         const injuredPlayers = window.Injuries.getInjuredPlayers(teamData);
 
+        // Nascondi completamente se non ci sono infortunati
         if (injuredPlayers.length === 0) {
-            return `
-                <div id="injured-box-compact" class="mt-3 p-2 bg-gray-700/50 rounded-lg border border-red-500/30">
-                    <h4 class="text-xs font-bold text-red-400 flex items-center gap-1 mb-1">
-                        <span>🏥</span> Infermeria
-                    </h4>
-                    <p class="text-gray-500 text-[10px] text-center">Nessun infortunato</p>
-                </div>
-            `;
+            return '';
         }
 
         const playersHtml = injuredPlayers.map(p => {

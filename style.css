@@ -2942,6 +2942,51 @@ html, body {
     max-width: 100vw;
 }
 
+/* ===================== FIX OVERSCROLL SU TUTTE LE SCHERMATE ===================== */
+/* Previene la visualizzazione di schermate nascoste durante l'overscroll */
+#main-content {
+    overscroll-behavior: none;
+    position: relative;
+}
+
+/* Assicura che le schermate nascoste non siano visibili durante overscroll */
+#main-content > .hidden,
+#main-content > .hidden-on-load {
+    visibility: hidden !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -9999px !important;
+}
+
+/* Schermate visibili devono avere sfondo per coprire tutto */
+#login-box:not(.hidden):not(.hidden-on-load),
+#app-content:not(.hidden):not(.hidden-on-load),
+#admin-content:not(.hidden):not(.hidden-on-load),
+#match-history-content:not(.hidden):not(.hidden-on-load),
+#squadra-content:not(.hidden):not(.hidden-on-load),
+#mercato-content:not(.hidden):not(.hidden-on-load),
+#draft-content:not(.hidden):not(.hidden-on-load),
+#leaderboard-content:not(.hidden):not(.hidden-on-load),
+#schedule-content:not(.hidden):not(.hidden-on-load),
+#championship-content:not(.hidden):not(.hidden-on-load),
+#user-championship-content:not(.hidden):not(.hidden-on-load),
+#user-campionato-content:not(.hidden):not(.hidden-on-load),
+#user-coppa-content:not(.hidden):not(.hidden-on-load),
+#user-supercoppa-content:not(.hidden):not(.hidden-on-load),
+#stadium-content:not(.hidden):not(.hidden-on-load),
+#private-leagues-content:not(.hidden):not(.hidden-on-load),
+#player-management-content:not(.hidden):not(.hidden-on-load),
+#team-management-content:not(.hidden):not(.hidden-on-load),
+#feature-flags-content:not(.hidden):not(.hidden-on-load),
+#coach-selection-box:not(.hidden):not(.hidden-on-load),
+#captain-selection-box:not(.hidden):not(.hidden-on-load) {
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+    z-index: 1;
+}
+
 /* ===================== HOMEPAGE BOX STYLES ===================== */
 /* Stile uniforme per tutti i box della homepage */
 #login-box #remembered-box,

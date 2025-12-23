@@ -15,8 +15,8 @@ window.GestioneSquadreRosa = {
         const { squadraMainTitle, squadraSubtitle, squadraToolsContainer, currentTeamId, loadTeamDataFromFirestore } = context;
         const { displayMessage } = window.GestioneSquadreUtils;
 
-        squadraMainTitle.textContent = "Gestione Rosa";
-        squadraSubtitle.textContent = `Budget Rimanente: ${teamData.budget} Crediti Seri | Giocatori in rosa: ${window.getPlayerCountExcludingIcona(teamData.players)}/${window.InterfacciaConstants.MAX_ROSA_PLAYERS} (+ Icona)`;
+        if (squadraMainTitle) squadraMainTitle.textContent = "Gestione Rosa";
+        if (squadraSubtitle) squadraSubtitle.textContent = `Budget Rimanente: ${teamData.budget} Crediti Seri | Giocatori in rosa: ${window.getPlayerCountExcludingIcona(teamData.players)}/${window.InterfacciaConstants.MAX_ROSA_PLAYERS} (+ Icona)`;
 
         // Separa giocatori per ruolo
         const players = teamData.players || [];
@@ -45,12 +45,12 @@ window.GestioneSquadreRosa = {
                     <div class="role-section-header flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700 transition-colors"
                          data-role="${role}">
                         <div class="flex items-center gap-2">
-                            <span class="role-toggle-icon text-gray-400 transition-transform duration-200" style="transform: rotate(90deg);">▶</span>
+                            <span class="role-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
                             <span class="${colors.text} font-bold text-lg">${colors.icon} ${title}</span>
                             <span class="text-gray-400 text-sm">(${playersToRender.length})</span>
                         </div>
                     </div>
-                    <div class="role-section-content p-3 pt-0 space-y-2">
+                    <div class="role-section-content p-3 pt-0 space-y-2 hidden">
                         ${playersToRender.map(player => this.renderPlayerCard(player, teamData)).join('')}
                     </div>
                 </div>
@@ -58,14 +58,6 @@ window.GestioneSquadreRosa = {
         };
 
         squadraToolsContainer.innerHTML = `
-            <!-- BOTTONE ALLENAMENTO (centrato) -->
-            <div class="flex justify-center mb-6">
-                <button id="btn-training-rosa"
-                        class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 px-8 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>⚽</span> Allenamento
-                </button>
-            </div>
-
             <div class="bg-gray-700 p-6 rounded-lg border border-green-500 relative">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-2xl font-bold text-green-400">I Tuoi Calciatori</h3>
@@ -87,6 +79,14 @@ window.GestioneSquadreRosa = {
                         `
                     }
                 </div>
+            </div>
+
+            <!-- BOTTONE ALLENAMENTO (in fondo) -->
+            <div class="flex justify-center mt-6">
+                <button id="btn-training-rosa"
+                        class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 px-8 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>⚽</span> Allenamento
+                </button>
             </div>
         `;
 

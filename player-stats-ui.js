@@ -34,8 +34,8 @@ window.PlayerStatsUI = {
         
         if (!squadraToolsContainer) return;
         
-        squadraMainTitle.textContent = "Statistiche Squadra";
-        squadraSubtitle.textContent = "Analisi prestazioni giocatori";
+        if (squadraMainTitle) squadraMainTitle.textContent = "Statistiche Squadra";
+        if (squadraSubtitle) squadraSubtitle.textContent = "Analisi prestazioni giocatori";
         
         squadraToolsContainer.innerHTML = `
             <div class="text-center py-8">
