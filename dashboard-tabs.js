@@ -52,13 +52,13 @@ window.DashboardTabs = {
                 const homeTeamName = document.getElementById('home-team-name');
 
                 if (isLoggedIn) {
-                    // Utente loggato: mostra team-name-box, nascondi logo Serie SeriA e login box
+                    // Utente loggato: sposta team-name-box nella homepage, nascondi logo Serie SeriA e login box
                     if (normalLoginBox) normalLoginBox.classList.add('hidden');
                     if (loginHeader) loginHeader.classList.add('hidden');
                     if (homeTeamHeader) {
                         homeTeamHeader.classList.remove('hidden');
-                        // Sincronizza dati dalla dashboard alla homepage
-                        this.syncHomeTeamHeader();
+                        // Sposta il team-name-box dalla dashboard alla homepage
+                        this.moveTeamNameBoxToHome();
                     }
                 } else {
                     // Utente non loggato: mostra logo Serie SeriA e login box
@@ -101,6 +101,9 @@ window.DashboardTabs = {
         if (appContent && appContent.classList.contains('hidden')) {
             window.showScreen(appContent);
         }
+
+        // Riporta il team-name-box alla dashboard (se era stato spostato nella homepage)
+        this.moveTeamNameBoxToDashboard();
 
         this.currentTab = tabName;
 
@@ -227,123 +230,31 @@ window.DashboardTabs = {
     },
 
     /**
-     * Sincronizza i dati del team-name-box dalla dashboard alla homepage
+     * Sposta il team-name-box dalla dashboard alla homepage
      */
-    syncHomeTeamHeader() {
-        const teamData = window.InterfacciaCore?.currentTeamData;
-        if (!teamData) return;
+    moveTeamNameBoxToHome() {
+        const teamNameBox = document.getElementById('team-name-box');
+        const homeTeamHeader = document.getElementById('home-team-header');
 
-        // Nome squadra
-        const homeTeamName = document.getElementById('home-team-name');
-        if (homeTeamName) {
-            homeTeamName.textContent = teamData.teamName || 'SQUADRA';
+        if (teamNameBox && homeTeamHeader) {
+            // Sposta il box nella homepage
+            homeTeamHeader.appendChild(teamNameBox);
         }
-
-        // Colore squadra
-        const teamColor = teamData.primaryColor || '#22c55e';
-        const homeColorPicker = document.getElementById('home-color-picker');
-        if (homeColorPicker) {
-            homeColorPicker.value = teamColor;
-        }
-
-        // Sincronizza CS e CSS
-        const dashboardCS = document.getElementById('risorse-cs');
-        const dashboardCSS = document.getElementById('risorse-css');
-        const homeCS = document.getElementById('home-risorse-cs');
-        const homeCSS = document.getElementById('home-risorse-css');
-
-        if (dashboardCS && homeCS) {
-            homeCS.textContent = dashboardCS.textContent;
-        }
-        if (dashboardCSS && homeCSS) {
-            homeCSS.textContent = dashboardCSS.textContent;
-        }
-
-        // Sincronizza visibilita bottoni Album, Ruota, Negozio
-        const syncButtonVisibility = (dashboardId, homeId) => {
-            const dashboardBtn = document.getElementById(dashboardId);
-            const homeBtn = document.getElementById(homeId);
-            if (dashboardBtn && homeBtn) {
-                if (dashboardBtn.classList.contains('hidden')) {
-                    homeBtn.classList.add('hidden');
-                } else {
-                    homeBtn.classList.remove('hidden');
-                }
-            }
-        };
-
-        syncButtonVisibility('risorse-pacchetti', 'home-risorse-pacchetti');
-        syncButtonVisibility('risorse-ruota', 'home-risorse-ruota');
-        syncButtonVisibility('risorse-negozio', 'home-risorse-negozio');
     },
 
     /**
-     * Inizializza i listener per il menu hamburger della homepage
+     * Riporta il team-name-box dalla homepage alla dashboard
      */
-    initHomeMenuListeners() {
-        const homeMenuBtn = document.getElementById('home-menu-btn');
-        const homeMenuDropdown = document.getElementById('home-menu-dropdown');
+    moveTeamNameBoxToDashboard() {
+        const teamNameBox = document.getElementById('team-name-box');
+        const dashboardFixedHeader = document.getElementById('dashboard-fixed-header');
 
-        if (homeMenuBtn && homeMenuDropdown) {
-            // Toggle menu
-            homeMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                homeMenuDropdown.classList.toggle('hidden');
-            });
-
-            // Chiudi menu cliccando fuori
-            document.addEventListener('click', () => {
-                homeMenuDropdown.classList.add('hidden');
-            });
+        if (teamNameBox && dashboardFixedHeader) {
+            // Riporta il box alla dashboard (come primo figlio)
+            dashboardFixedHeader.insertBefore(teamNameBox, dashboardFixedHeader.firstChild);
         }
+    },
 
-        // Collega i bottoni del menu ai loro equivalenti nella dashboard
-        const menuMappings = [
-            ['home-menu-tutorial', 'menu-tutorial'],
-            ['home-menu-changelog', 'menu-changelog'],
-            ['home-menu-password', 'menu-password'],
-            ['home-menu-color-picker', 'menu-color-picker'],
-            ['home-menu-delete-team', 'menu-delete-team']
-        ];
-
-        menuMappings.forEach(([homeId, dashboardId]) => {
-            const homeBtn = document.getElementById(homeId);
-            const dashboardBtn = document.getElementById(dashboardId);
-            if (homeBtn && dashboardBtn) {
-                homeBtn.addEventListener('click', () => {
-                    homeMenuDropdown?.classList.add('hidden');
-                    dashboardBtn.click();
-                });
-            }
-        });
-
-        // Sincronizza color picker della homepage con quello della dashboard
-        const homeColorPicker = document.getElementById('home-color-picker');
-        const dashboardColorPicker = document.getElementById('team-color-picker');
-        if (homeColorPicker && dashboardColorPicker) {
-            homeColorPicker.addEventListener('input', (e) => {
-                dashboardColorPicker.value = e.target.value;
-                dashboardColorPicker.dispatchEvent(new Event('input'));
-            });
-        }
-
-        // Collega bottoni risorse (Album, Ruota, Negozio)
-        const resourceMappings = [
-            ['home-risorse-pacchetti', 'risorse-pacchetti'],
-            ['home-risorse-ruota', 'risorse-ruota'],
-            ['home-risorse-negozio', 'risorse-negozio']
-        ];
-
-        resourceMappings.forEach(([homeId, dashboardId]) => {
-            const homeBtn = document.getElementById(homeId);
-            const dashboardBtn = document.getElementById(dashboardId);
-            if (homeBtn && dashboardBtn) {
-                homeBtn.addEventListener('click', () => {
-                    dashboardBtn.click();
-                });
-            }
-        });
-    }
 };
 
 // Auto-inizializzazione quando il DOM e pronto
@@ -351,6 +262,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ritarda l'init per assicurarsi che tutto sia caricato
     setTimeout(() => {
         window.DashboardTabs.init();
-        window.DashboardTabs.initHomeMenuListeners();
     }, 100);
 });

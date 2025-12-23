@@ -698,81 +698,9 @@
                 </div>
             </div>
 
-            <!-- Header Team Name (mostrato quando loggato - copia del team-name-box dalla dashboard) -->
+            <!-- Header Team Name (mostrato quando loggato - il team-name-box viene spostato qui dal JS) -->
             <div id="home-team-header" class="hidden mb-1">
-                <!-- Box unificato: Nome Squadra + Risorse (copia per homepage) -->
-                <div id="home-team-name-box" class="rounded-lg border border-green-500/50 relative">
-                    <!-- Nome Squadra (centro) -->
-                    <h2 id="home-team-name" class="text-base sm:text-xl md:text-2xl font-extrabold text-center uppercase team-name-fancy leading-none py-1">NOME SQUADRA</h2>
-                    <!-- Menu Hamburger (sinistra assoluto) -->
-                    <div class="absolute left-1 top-3 sm:top-4">
-                        <button id="home-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
-                            <span class="text-xs text-white">☰</span>
-                        </button>
-                        <!-- Dropdown Menu -->
-                        <div id="home-menu-dropdown" class="hidden absolute left-0 top-6 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
-                            <button id="home-menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>📖</span> Tutorial
-                            </button>
-                            <button id="home-menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>📋</span> Changelog
-                            </button>
-                            <button id="home-menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>🔑</span> Cambia Password
-                            </button>
-                            <button id="home-menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>🎨</span> Colore Squadra
-                            </button>
-                            <div class="border-t border-gray-700"></div>
-                            <button id="home-menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
-                                <span>🗑️</span> Elimina Squadra
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Selettore Colore (destra assoluto) -->
-                    <div class="absolute right-1.5 top-3 sm:top-4">
-                        <input type="color" id="home-color-picker"
-                               class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
-                               title="Scegli il colore primario della squadra"
-                               value="#22c55e">
-                    </div>
-                    <!-- Risorse (sotto il nome squadra) -->
-                    <div id="home-risorse-box" class="mt-1 pt-1 border-t border-gray-700/50">
-                        <div class="flex flex-wrap items-center justify-center sm:justify-between w-full gap-1">
-                            <!-- Album e Ruota (sinistra) -->
-                            <div class="flex items-center gap-1 order-1">
-                                <button id="home-risorse-pacchetti" class="relative hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition" title="Album Figurine">
-                                    <span class="text-lg">🎴</span>
-                                    <span class="text-xs text-yellow-300 font-bold">ALBUM</span>
-                                </button>
-                                <button id="home-risorse-ruota" class="relative hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-orange-800/30 transition" title="Ruota Fortuna">
-                                    <span class="text-lg">🎡</span>
-                                    <span class="text-xs text-orange-300 font-bold">RUOTA</span>
-                                </button>
-                            </div>
-                            <!-- CS e CSS (riga sotto su mobile, centro su desktop) -->
-                            <div class="flex items-center justify-center gap-2 order-3 sm:order-2 w-full sm:w-auto sm:flex-1 mt-1 sm:mt-0">
-                                <!-- Crediti Seri -->
-                                <div class="h-8 px-3 flex items-center gap-1 bg-gray-800/40 rounded border border-amber-500/60">
-                                    <span class="text-base">💰</span>
-                                    <span id="home-risorse-cs" class="text-sm text-green-400 font-bold">0</span>
-                                    <span class="text-xs text-gray-400">CS</span>
-                                </div>
-                                <!-- Crediti Super Seri -->
-                                <div class="h-8 px-3 flex items-center gap-1 bg-gray-800/40 rounded border border-amber-500/60">
-                                    <span class="text-base">💎</span>
-                                    <span id="home-risorse-css" class="text-sm text-yellow-400 font-bold">0</span>
-                                    <span class="text-xs text-gray-400">CSS</span>
-                                </div>
-                            </div>
-                            <!-- Negozio (destra) -->
-                            <button id="home-risorse-negozio" class="hidden h-8 px-2 flex items-center justify-center gap-1 rounded border border-amber-500/60 cursor-pointer hover:bg-yellow-800/30 transition order-2 sm:order-3" title="Negozio CSS">
-                                <span class="text-lg">🛒</span>
-                                <span class="text-xs text-yellow-300 font-bold">SHOP</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Il team-name-box viene spostato qui dinamicamente quando l'utente e' sulla homepage -->
             </div>
 
             <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
@@ -954,7 +882,7 @@
         <div id="app-content" class="w-full min-h-screen transition duration-500 hidden-on-load relative overflow-visible pb-20 px-2 sm:px-4">
 
             <!-- ========== HEADER FISSO (sempre visibile) ========== -->
-            <div id="dashboard-fixed-header" class="mb-1">
+            <div id="dashboard-fixed-header">
                 <!-- Box unificato: Nome Squadra + Risorse -->
                 <div id="team-name-box" class="rounded-lg border border-green-500/50 relative">
                     <!-- Nome Squadra (centro) -->
@@ -1031,14 +959,13 @@
                             </button>
                         </div>
                     </div>
-                    <!-- Elementi nascosti per compatibilita JS -->
-                    <div id="figurine-box" class="hidden"></div>
-                    <div id="daily-wheel-box" class="hidden"></div>
-                    <!-- Separatori nascosti per compatibilita JS -->
-                    <span id="risorse-separator-start" class="hidden"></span>
-                    <span id="risorse-separator" class="hidden"></span>
-                    <span id="risorse-separator-end" class="hidden"></span>
                 </div>
+                <!-- Elementi nascosti per compatibilita JS (fuori dal team-name-box) -->
+                <div id="figurine-box" class="hidden"></div>
+                <div id="daily-wheel-box" class="hidden"></div>
+                <span id="risorse-separator-start" class="hidden"></span>
+                <span id="risorse-separator" class="hidden"></span>
+                <span id="risorse-separator-end" class="hidden"></span>
             </div>
 
             <!-- ========== TAB 1: HOME (Dashboard) ========== -->
@@ -2365,7 +2292,7 @@
         </button>
         <button id="dashboard-tab-dashboard" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-green-600 text-white border-t-2 border-green-400 transition hover:bg-green-500 flex flex-col items-center gap-0.5" data-tab="home">
             <span class="text-base sm:text-lg">📊</span>
-            <span>Dashboard</span>
+            <span>Board</span>
         </button>
         <button id="dashboard-tab-squad" class="dashboard-tab auth-required hidden flex-1 py-2 sm:py-3 text-center font-bold text-[9px] sm:text-[10px] bg-gray-900 text-gray-400 border-t-2 border-transparent transition hover:bg-gray-800 hover:text-white flex flex-col items-center gap-0.5" data-tab="squad">
             <span class="text-base sm:text-lg">👥</span>

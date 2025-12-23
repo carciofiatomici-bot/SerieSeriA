@@ -625,6 +625,12 @@ window.InterfacciaAuth = {
                     );
                 }
                 window.showScreen(elements.appContent);
+                // Aggiungi classe per stili utente loggato
+                document.body.classList.add('user-logged-in');
+                // Porta l'utente al tab Home della dashboard
+                if (window.DashboardTabs?.switchTab) {
+                    window.DashboardTabs.switchTab('home');
+                }
                 elements.loginPasswordInput.value = '';
             }, 1000);
             
@@ -684,6 +690,9 @@ window.InterfacciaAuth = {
 
         this.clearSession();
         localStorage.removeItem('fanta_admin_viewing_team');
+
+        // Rimuovi classe utente loggato
+        document.body.classList.remove('user-logged-in');
 
         // Resetta stato globale SUBITO
         window.InterfacciaCore.currentTeamId = null;
@@ -814,6 +823,12 @@ window.InterfacciaAuth = {
 
             // Mostra la dashboard
             window.showScreen(elements.appContent);
+            // Aggiungi classe per stili utente loggato
+            document.body.classList.add('user-logged-in');
+            // Porta l'utente al tab Home della dashboard
+            if (window.DashboardTabs?.switchTab) {
+                window.DashboardTabs.switchTab('home');
+            }
 
             console.log("Rientro in dashboard completato per:", teamData.teamName);
 

@@ -2942,6 +2942,52 @@ html, body {
     max-width: 100vw;
 }
 
+/* ===================== HOMEPAGE BOX STYLES ===================== */
+/* Stile uniforme per tutti i box della homepage */
+#login-box #remembered-box,
+#login-box #normal-login-box,
+#login-box #explore-box,
+#login-box #rewards-box,
+#login-box #support-box {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+}
+
+/* ===================== TEAM COLOR BORDERS ===================== */
+/* Applica il colore primario della squadra a tutti i bordi quando loggato */
+body.user-logged-in #app-content [class*="border-green"],
+body.user-logged-in #app-content [class*="border-amber"],
+body.user-logged-in #app-content [class*="border-yellow"],
+body.user-logged-in #app-content [class*="border-emerald"],
+body.user-logged-in #app-content .rounded-lg.border,
+body.user-logged-in #app-content .rounded.border,
+body.user-logged-in #login-box [class*="border-green"],
+body.user-logged-in #login-box .rounded-lg.border,
+body.user-logged-in #home-team-header [class*="border-green"],
+body.user-logged-in #home-team-header [class*="border-amber"],
+body.user-logged-in #home-team-header .rounded-lg.border {
+    border-color: var(--team-primary-color, #22c55e) !important;
+}
+
+/* Bordi specifici per box principali */
+body.user-logged-in #team-name-box,
+body.user-logged-in #sponsor-media-box,
+body.user-logged-in #next-match-inline-box,
+body.user-logged-in #competizioni-box,
+body.user-logged-in #draft-scambi-box,
+body.user-logged-in #rosa-box,
+body.user-logged-in #formazione-box,
+body.user-logged-in #allenamento-box,
+body.user-logged-in #statistiche-box,
+body.user-logged-in #remembered-box,
+body.user-logged-in #normal-login-box,
+body.user-logged-in #explore-box,
+body.user-logged-in #rewards-box,
+body.user-logged-in #support-box {
+    border-color: var(--team-primary-color, #22c55e) !important;
+}
+
 /* Container che potrebbero causare overflow */
 .flex-nowrap {
     overflow-x: auto;
@@ -4266,8 +4312,44 @@ html, body {
 
 /* Header fisso migliorato */
 /* Header fisso - senza sfondo per coerenza con gli altri box */
-#dashboard-fixed-header {
+#dashboard-fixed-header,
+#home-team-header {
     /* Nessun background - il team-name-box ha gia il suo stile */
+    margin-bottom: 10px !important;
+}
+
+/* Rimuovi spazio tra header e tab content */
+#dashboard-fixed-header + .tab-content,
+.tab-content:first-of-type {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Rimuovi margin-top dal primo figlio del tab-content */
+.tab-content > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* Rimuovi gap specifico per tab-home */
+#tab-home {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+#tab-home > #sponsor-media-box {
+    margin-top: 0 !important;
+}
+
+/* Elementi placeholder sempre nascosti */
+#figurine-box,
+#daily-wheel-box,
+#risorse-separator-start,
+#risorse-separator,
+#risorse-separator-end {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ==================== 15.6 SPACING IMPROVEMENTS ==================== */
