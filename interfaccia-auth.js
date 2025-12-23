@@ -276,6 +276,10 @@ window.InterfacciaAuth = {
                     if (window.LayoutManager?.updateAuthRequiredTabs) {
                         window.LayoutManager.updateAuthRequiredTabs();
                     }
+                    // Applica lo sfondo personalizzato se presente
+                    if (window.DashboardBackground?.apply) {
+                        window.DashboardBackground.apply();
+                    }
 
                     // Aggiorna la dashboard in background
                     if (window.InterfacciaDashboard) {
@@ -605,6 +609,10 @@ window.InterfacciaAuth = {
             if (window.LayoutManager?.updateAuthRequiredTabs) {
                 window.LayoutManager.updateAuthRequiredTabs();
             }
+            // Applica lo sfondo personalizzato se presente
+            if (window.DashboardBackground?.apply) {
+                window.DashboardBackground.apply();
+            }
 
             setTimeout(() => {
                 if (window.InterfacciaDashboard) {
@@ -677,17 +685,34 @@ window.InterfacciaAuth = {
         this.clearSession();
         localStorage.removeItem('fanta_admin_viewing_team');
 
+        // Resetta stato globale SUBITO
+        window.InterfacciaCore.currentTeamId = null;
+        window.InterfacciaCore.currentTeamData = null;
+
         // Nascondi sessione ricordata e mostra login normale
         const rememberedBox = document.getElementById('remembered-session-box');
         const normalLoginBox = document.getElementById('normal-login-box');
+        const loginHeader = document.getElementById('login-header');
+        const homeTeamHeader = document.getElementById('home-team-header');
+
         if (rememberedBox) rememberedBox.classList.add('hidden');
         if (normalLoginBox) normalLoginBox.classList.remove('hidden');
+        if (loginHeader) loginHeader.classList.remove('hidden');
+        if (homeTeamHeader) homeTeamHeader.classList.add('hidden');
 
-        elements.loginPasswordInput.value = '';
-        elements.loginUsernameInput.value = '';
+        // Aggiorna i tab della navbar (nasconde quelli auth-required)
+        if (window.LayoutManager?.updateAuthRequiredTabs) {
+            window.LayoutManager.updateAuthRequiredTabs();
+        }
+
+        // Resetta colore al default
+        if (window.LayoutManager?.setPrimaryColor) {
+            window.LayoutManager.setPrimaryColor('#22c55e');
+        }
+
+        if (elements.loginPasswordInput) elements.loginPasswordInput.value = '';
+        if (elements.loginUsernameInput) elements.loginUsernameInput.value = '';
         window.showScreen(elements.loginBox);
-        window.InterfacciaCore.currentTeamId = null;
-        window.InterfacciaCore.currentTeamData = null;
 
         if (elements.teamLogoElement) elements.teamLogoElement.src = DEFAULT_LOGO_URL;
 

@@ -188,8 +188,8 @@ window.LayoutManager = {
         }
 
         // Applica visibilita tab bar
-        // Mostra la tab bar se il layout lo richiede E (utente loggato OPPURE siamo in login-box)
-        const showTabBar = layout.showTabBar && (this.isUserLoggedIn() || screenId === 'login-box');
+        // Mostra la tab bar se il layout lo richiede E (utente loggato OPPURE siamo in login-box OPPURE app-content per regole pubbliche)
+        const showTabBar = layout.showTabBar && (this.isUserLoggedIn() || screenId === 'login-box' || screenId === 'app-content');
         this.setTabBarVisibility(showTabBar);
 
         // Mostra/nascondi i tab che richiedono autenticazione
