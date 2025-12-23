@@ -30,23 +30,25 @@
         actionsLeft: 3,
         selectedPlayer: null,
         ballCarrierId: 'A5',
+        ballPosition: null, // Per palla libera in zona
         isGameOver: false,
         testMode: false,
-        onComplete: null
+        onComplete: null,
+        actionMode: null // 'pass', 'shot' o null
     };
 
     const initialPlayers = [
-        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, mura: false },
-        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 3, mod: 6, isGK: false, mura: false },
-        { id: 'A3', team: 'A', name: 'ALA', x: 4, y: 1, mod: 5, isGK: false, mura: false },
-        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 5, mod: 5, isGK: false, mura: false },
-        { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 3, mod: 7, isGK: false, mura: false },
+        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
+        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 3, mod: 6, isGK: false, mura: false, muraCells: [] },
+        { id: 'A3', team: 'A', name: 'ALA', x: 4, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 5, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 3, mod: 7, isGK: false, mura: false, muraCells: [] },
 
-        { id: 'B1', team: 'B', name: 'GK', x: 10, y: 3, mod: 8, isGK: true, mura: false },
-        { id: 'B2', team: 'B', name: 'FIX', x: 8, y: 3, mod: 6, isGK: false, mura: false },
-        { id: 'B3', team: 'B', name: 'ALA', x: 6, y: 1, mod: 5, isGK: false, mura: false },
-        { id: 'B4', team: 'B', name: 'ALA', x: 6, y: 5, mod: 5, isGK: false, mura: false },
-        { id: 'B5', team: 'B', name: 'PIV', x: 6, y: 3, mod: 7, isGK: false, mura: false }
+        { id: 'B1', team: 'B', name: 'GK', x: 10, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
+        { id: 'B2', team: 'B', name: 'FIX', x: 8, y: 3, mod: 6, isGK: false, mura: false, muraCells: [] },
+        { id: 'B3', team: 'B', name: 'ALA', x: 6, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B4', team: 'B', name: 'ALA', x: 6, y: 5, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B5', team: 'B', name: 'PIV', x: 6, y: 3, mod: 7, isGK: false, mura: false, muraCells: [] }
     ];
 
     let players = [];
@@ -90,6 +92,12 @@
                 #sfide-minigame-modal .cell:hover { background-color: rgba(255, 255, 255, 0.1); }
                 #sfide-minigame-modal .cell.highlight-move { background-color: rgba(255, 255, 255, 0.25); }
                 #sfide-minigame-modal .cell.highlight-target { background-color: rgba(248, 113, 113, 0.5); }
+                #sfide-minigame-modal .cell.highlight-pass { background-color: rgba(74, 222, 128, 0.4); }
+                #sfide-minigame-modal .cell.highlight-shot { background-color: rgba(251, 191, 36, 0.5); }
+                #sfide-minigame-modal .cell.highlight-mura {
+                    background-color: rgba(99, 102, 241, 0.3);
+                    box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.5);
+                }
 
                 #sfide-minigame-modal .player-token {
                     width: 75%;
@@ -125,7 +133,7 @@
                 }
 
                 #sfide-minigame-modal .mura-effect::after {
-                    content: '🛡️';
+                    content: '';
                     position: absolute;
                     top: -8px;
                     right: -8px;
@@ -168,6 +176,13 @@
                 @keyframes smg-slideIn {
                     from { opacity: 0; transform: translateX(-10px); }
                     to { opacity: 1; transform: translateX(0); }
+                }
+
+                /* Bottoni azione attivi */
+                #sfide-minigame-modal .action-btn.active {
+                    ring: 2px;
+                    ring-color: white;
+                    transform: scale(1.05);
                 }
             </style>
 
@@ -216,14 +231,20 @@
                 <div class="bg-slate-800 rounded-lg p-3 border border-slate-700">
                     <div id="smg-selection-info" class="text-slate-400 text-xs italic">Seleziona un giocatore...</div>
                     <div id="smg-action-panel" class="hidden mt-2">
-                        <div class="flex gap-2 items-center">
-                            <button id="smg-btn-mura" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded font-bold text-xs transition">
+                        <div class="flex flex-wrap gap-2 items-center mb-2">
+                            <button id="smg-btn-mura" class="action-btn bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
                                 🛡️ Mura
                             </button>
-                            <div class="text-xs border-l border-slate-600 pl-2">
-                                <span id="smg-stat-name" class="font-bold text-white">PIVOT</span>
-                                <span id="smg-stat-mod" class="text-yellow-400 ml-1">+7</span>
-                            </div>
+                            <button id="smg-btn-pass" class="action-btn bg-green-600 hover:bg-green-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
+                                ⚽ Passa
+                            </button>
+                            <button id="smg-btn-shot" class="action-btn bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded font-bold text-xs transition text-white">
+                                🥅 Tira
+                            </button>
+                        </div>
+                        <div class="text-xs border-t border-slate-600 pt-2">
+                            <span id="smg-stat-name" class="font-bold text-white">PIVOT</span>
+                            <span id="smg-stat-mod" class="text-yellow-400 ml-1">+7</span>
                         </div>
                     </div>
                 </div>
@@ -242,9 +263,18 @@
                             🔄 NUOVA PARTITA
                         </button>
                         <button id="smg-btn-exit" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg transition">
-                            ✕ CHIUDI
+                            X CHIUDI
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Rotate Warning (Mobile) -->
+            <div id="smg-rotate-warning" class="hidden fixed inset-0 bg-black/95 z-70 flex items-center justify-center">
+                <div class="text-center text-white p-6">
+                    <div class="text-6xl mb-4">📱↪️</div>
+                    <div class="text-xl font-bold mb-2">Ruota il dispositivo</div>
+                    <div class="text-sm text-slate-400">Per giocare, usa la modalita orizzontale</div>
                 </div>
             </div>
         `;
@@ -260,8 +290,20 @@
             e.stopPropagation();
             performMura();
         });
+        document.getElementById('smg-btn-pass').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleActionMode('pass');
+        });
+        document.getElementById('smg-btn-shot').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleActionMode('shot');
+        });
         document.getElementById('smg-btn-restart').addEventListener('click', resetGame);
         document.getElementById('smg-btn-exit').addEventListener('click', close);
+
+        // Listener per orientamento mobile
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
     }
 
     function buildPitch() {
@@ -291,9 +333,19 @@
         state.testMode = options.testMode || false;
         state.onComplete = options.onComplete || null;
 
+        // Forza landscape su mobile
+        if (window.innerWidth < 768) {
+            try {
+                screen.orientation?.lock?.('landscape').catch(() => {});
+            } catch(e) {}
+        }
+
         resetGame();
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+
+        // Controlla orientamento
+        checkOrientation();
 
         console.log('[SfideMinigame] Aperto', { testMode: state.testMode });
     }
@@ -303,6 +355,11 @@
             modal.classList.add('hidden');
         }
         document.body.style.overflow = '';
+
+        // Sblocca orientamento
+        try {
+            screen.orientation?.unlock?.();
+        } catch(e) {}
 
         if (state.onComplete) {
             state.onComplete({
@@ -315,17 +372,32 @@
         console.log('[SfideMinigame] Chiuso');
     }
 
+    function checkOrientation() {
+        const warning = document.getElementById('smg-rotate-warning');
+        if (!warning) return;
+
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const isMobile = window.innerWidth < 768;
+
+        if (isPortrait && isMobile && !modal.classList.contains('hidden')) {
+            warning.classList.remove('hidden');
+        } else {
+            warning.classList.add('hidden');
+        }
+    }
+
     function resetGame() {
         state.scoreA = 0;
         state.scoreB = 0;
         state.currentTeam = 'A';
         state.actionsLeft = 3;
         state.ballCarrierId = 'A5';
+        state.ballPosition = null;
         state.isGameOver = false;
         state.selectedPlayer = null;
+        state.actionMode = null;
 
         players = JSON.parse(JSON.stringify(initialPlayers));
-        players.find(p => p.id === 'B5').x = 6;
 
         document.getElementById('smg-game-over').classList.add('hidden');
         document.getElementById('smg-log').innerHTML = '<div class="text-yellow-500">Nuova Partita! Inizia la Squadra Rossa.</div>';
@@ -338,50 +410,124 @@
     // GAME LOGIC
     // ========================================
 
+    function toggleActionMode(mode) {
+        if (state.actionMode === mode) {
+            state.actionMode = null;
+        } else {
+            state.actionMode = mode;
+        }
+        updateHighlights();
+        updateActionButtons();
+    }
+
+    function updateActionButtons() {
+        const btnPass = document.getElementById('smg-btn-pass');
+        const btnShot = document.getElementById('smg-btn-shot');
+
+        btnPass.classList.toggle('ring-2', state.actionMode === 'pass');
+        btnPass.classList.toggle('ring-white', state.actionMode === 'pass');
+        btnShot.classList.toggle('ring-2', state.actionMode === 'shot');
+        btnShot.classList.toggle('ring-white', state.actionMode === 'shot');
+    }
+
     function onCellClick(x, y) {
         if (state.isGameOver) return;
 
         const playerAt = players.find(p => p.x === x && p.y === y);
 
+        // Modalita' passaggio attiva
+        if (state.actionMode === 'pass' && state.selectedPlayer && state.ballCarrierId === state.selectedPlayer.id) {
+            executePass(state.selectedPlayer, { x, y, id: playerAt?.id });
+            state.actionMode = null;
+            updateActionButtons();
+            return;
+        }
+
+        // Modalita' tiro attiva
+        if (state.actionMode === 'shot' && state.selectedPlayer && state.ballCarrierId === state.selectedPlayer.id) {
+            const targetGoalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
+            if (x === targetGoalX && y >= 2 && y <= 4) {
+                executeShot(state.selectedPlayer, y);
+                state.actionMode = null;
+                updateActionButtons();
+            } else {
+                logMsg("Clicca sulla porta avversaria!", "text-orange-400");
+            }
+            return;
+        }
+
+        // Selezione giocatore della propria squadra
         if (playerAt && playerAt.team === state.currentTeam) {
             state.selectedPlayer = playerAt;
-            highlight(x, y);
+            state.actionMode = null;
+            updateHighlights();
         } else if (state.selectedPlayer) {
             handleAction(x, y);
         }
         update();
     }
 
-    function highlight(x, y) {
+    function updateHighlights() {
         document.querySelectorAll('#smg-pitch .cell').forEach(c => {
-            c.classList.remove('highlight-move', 'highlight-target');
+            c.classList.remove('highlight-move', 'highlight-target', 'highlight-pass', 'highlight-shot', 'highlight-mura');
         });
 
-        // Celle adiacenti
+        if (!state.selectedPlayer) return;
+
+        const sp = state.selectedPlayer;
+        const isCarrier = state.ballCarrierId === sp.id;
+
+        // Modalita' passaggio
+        if (state.actionMode === 'pass' && isCarrier) {
+            // Evidenzia tutti i compagni e celle vuote per passaggio
+            players.filter(p => p.team === state.currentTeam && p.id !== sp.id).forEach(p => {
+                const cell = getCell(p.x, p.y);
+                if (cell) cell.classList.add('highlight-pass');
+            });
+            // Celle vuote
+            for (let y = 0; y < GRID_H; y++) {
+                for (let x = 0; x < GRID_W; x++) {
+                    if (!players.find(p => p.x === x && p.y === y)) {
+                        getCell(x, y)?.classList.add('highlight-pass');
+                    }
+                }
+            }
+            return;
+        }
+
+        // Modalita' tiro
+        if (state.actionMode === 'shot' && isCarrier) {
+            const targetGoalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
+            for (let gy = 2; gy <= 4; gy++) {
+                getCell(targetGoalX, gy)?.classList.add('highlight-shot');
+            }
+            return;
+        }
+
+        // Celle adiacenti per movimento
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
                 if (dx === 0 && dy === 0) continue;
-                const tx = x + dx;
-                const ty = y + dy;
+                const tx = sp.x + dx;
+                const ty = sp.y + dy;
                 if (tx >= 0 && tx < GRID_W && ty >= 0 && ty < GRID_H) {
                     const cell = getCell(tx, ty);
                     const p = players.find(pl => pl.x === tx && pl.y === ty);
                     if (!p) {
                         cell.classList.add('highlight-move');
-                    } else if (p.team !== state.currentTeam) {
+                    } else if (p.team !== state.currentTeam && state.ballCarrierId === p.id) {
                         cell.classList.add('highlight-target');
                     }
                 }
             }
         }
 
-        // Porta avversaria se ha palla
-        if (state.ballCarrierId === state.selectedPlayer.id) {
-            const targetGoalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
-            for (let gy = 2; gy <= 4; gy++) {
-                getCell(targetGoalX, gy).classList.add('highlight-target');
-            }
-        }
+        // Mostra celle difese da mura
+        players.filter(p => p.mura && p.muraCells?.length > 0).forEach(p => {
+            p.muraCells.forEach(mc => {
+                getCell(mc.x, mc.y)?.classList.add('highlight-mura');
+            });
+        });
     }
 
     function handleAction(tx, ty) {
@@ -395,12 +541,13 @@
             sp.x = tx;
             sp.y = ty;
             sp.mura = false;
+            sp.muraCells = [];
             logMsg(`${sp.name} si sposta.`);
             consumeAction();
             return;
         }
 
-        // Tackle
+        // Tackle (su chi ha la palla)
         if (dist === 1 && playerAt && playerAt.team !== state.currentTeam) {
             if (state.ballCarrierId === playerAt.id) {
                 executeTackle(sp, playerAt);
@@ -410,19 +557,12 @@
             return;
         }
 
-        // Passaggio
-        if (isCarrier && playerAt && playerAt.team === state.currentTeam && playerAt.id !== sp.id) {
-            executePass(sp, playerAt);
+        // Raccolta palla libera
+        if (state.ballPosition && sp.x === state.ballPosition.x && sp.y === state.ballPosition.y) {
+            state.ballCarrierId = sp.id;
+            state.ballPosition = null;
+            logMsg(`${sp.name} prende la palla!`, "text-green-400");
             return;
-        }
-
-        // Tiro
-        if (isCarrier) {
-            const targetGoalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
-            if (tx === targetGoalX && ty >= 2 && ty <= 4) {
-                executeShot(sp);
-                return;
-            }
         }
 
         logMsg("Azione non valida.", "text-red-400");
@@ -442,34 +582,103 @@
         consumeAction();
     }
 
-    function executePass(p1, p2) {
-        const dist = Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
-        const difficulty = 6 + dist;
-        const roll = d20() + p1.mod;
-        logMsg(`Passaggio: ${roll} vs Diff ${difficulty}`);
+    function executePass(from, target) {
+        // target = { x, y, id (opzionale) }
+        const path = getLinePath(from.x, from.y, target.x, target.y);
+        const malus = path.length; // -1 per ogni cella attraversata
 
-        if (roll >= difficulty) {
-            state.ballCarrierId = p2.id;
-            logMsg(`Passaggio a ${p2.name}!`, "text-green-400");
+        logMsg(`Passaggio (${path.length} celle)...`);
+
+        // Controlla intercettazioni lungo il percorso
+        for (let i = 0; i < path.length; i++) {
+            const cell = path[i];
+
+            // Trova difensori nella cella o con mura che copre la cella
+            const defenders = players.filter(p =>
+                p.team !== state.currentTeam &&
+                ((p.x === cell.x && p.y === cell.y) ||
+                 (p.mura && p.muraCells?.some(mc => mc.x === cell.x && mc.y === cell.y)))
+            );
+
+            for (const defender of defenders) {
+                const interceptionRoll = d20() + defender.mod + (defender.mura ? 3 : 0);
+                const difficulty = 12 + Math.floor(malus / 2);
+
+                if (interceptionRoll >= difficulty) {
+                    state.ballCarrierId = defender.id;
+                    defender.mura = false;
+                    defender.muraCells = [];
+                    logMsg(`INTERCETTATO da ${defender.name}! (${interceptionRoll} vs ${difficulty})`, "text-red-400");
+                    consumeAction();
+                    return;
+                }
+            }
+        }
+
+        // Passaggio riuscito
+        const passRoll = d20() + from.mod - malus;
+        const difficulty = 8;
+
+        if (passRoll >= difficulty) {
+            if (target.id) {
+                // Passaggio a giocatore
+                state.ballCarrierId = target.id;
+                const receiver = players.find(p => p.id === target.id);
+                logMsg(`Passaggio a ${receiver?.name}! (${passRoll} vs ${difficulty})`, "text-green-400");
+            } else {
+                // Passaggio in zona
+                state.ballCarrierId = null;
+                state.ballPosition = { x: target.x, y: target.y };
+                logMsg(`Palla in zona! (${passRoll} vs ${difficulty})`, "text-green-400");
+            }
         } else {
             state.ballCarrierId = null;
-            logMsg("Passaggio fallito!", "text-orange-400");
+            state.ballPosition = null;
+            logMsg(`Passaggio fuori! (${passRoll} vs ${difficulty})`, "text-orange-400");
         }
         consumeAction();
     }
 
-    function executeShot(atk) {
+    function executeShot(atk, targetY) {
         const gk = players.find(p => p.team !== state.currentTeam && p.isGK);
-        const dist = Math.abs(atk.x - gk.x);
-        const rollAtk = d20() + atk.mod - Math.floor(dist / 2);
-        const rollGK = d20() + gk.mod + 2;
+        const goalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
+        const path = getLinePath(atk.x, atk.y, goalX, targetY);
+        const malus = path.length;
 
-        logMsg(`Tiro: ATK(${rollAtk}) vs GK(${rollGK})`);
+        logMsg(`Tiro! (${path.length} celle)...`);
 
-        if (rollAtk > rollGK) {
-            logMsg("GOAL!!!", "text-yellow-400 font-bold");
+        // Controlla blocchi lungo traiettoria (escluso portiere)
+        for (const cell of path) {
+            const blockers = players.filter(p =>
+                p.team !== state.currentTeam && !p.isGK &&
+                ((p.x === cell.x && p.y === cell.y) ||
+                 (p.mura && p.muraCells?.some(mc => mc.x === cell.x && mc.y === cell.y)))
+            );
+
+            for (const blocker of blockers) {
+                const blockRoll = d20() + blocker.mod + (blocker.mura ? 3 : 0);
+                if (blockRoll >= 15) {
+                    state.ballCarrierId = blocker.id;
+                    blocker.mura = false;
+                    blocker.muraCells = [];
+                    logMsg(`BLOCCATO da ${blocker.name}! (${blockRoll})`, "text-blue-400");
+                    consumeAction();
+                    return;
+                }
+            }
+        }
+
+        // Tiro vs Portiere
+        const shotRoll = d20() + atk.mod - Math.floor(malus / 2);
+        const saveRoll = d20() + gk.mod + 2;
+
+        logMsg(`Tiro: ${shotRoll} vs GK: ${saveRoll}`);
+
+        if (shotRoll > saveRoll) {
+            // GOAL!
             if (state.currentTeam === 'A') state.scoreA++;
             else state.scoreB++;
+            logMsg("GOOOOL!!!", "text-yellow-400 font-bold");
             checkWinCondition();
             if (!state.isGameOver) handleGoalReset();
         } else {
@@ -482,7 +691,7 @@
     function checkWinCondition() {
         if (state.scoreA >= GOAL_LIMIT || state.scoreB >= GOAL_LIMIT) {
             state.isGameOver = true;
-            const modal = document.getElementById('smg-game-over');
+            const gameOverModal = document.getElementById('smg-game-over');
             const winText = document.getElementById('smg-winner-text');
 
             if (state.scoreA >= GOAL_LIMIT) {
@@ -492,32 +701,69 @@
                 winText.innerText = "SQUADRA BLU VINCE!";
                 winText.className = "text-lg font-bold mb-4 text-blue-400 uppercase";
             }
-            modal.classList.remove('hidden');
+            gameOverModal.classList.remove('hidden');
         }
     }
 
     function handleGoalReset() {
-        state.ballCarrierId = null;
+        // Resetta posizioni
         resetPositions();
-        switchTurn();
+
+        // La squadra che ha SUBITO il goal inizia con la palla
+        const scoringTeam = state.currentTeam;
+        const receivingTeam = scoringTeam === 'A' ? 'B' : 'A';
+
+        // Assegna palla al pivot della squadra che ha subito
+        const pivot = players.find(p => p.team === receivingTeam && p.name === 'PIV');
+        state.ballCarrierId = pivot ? pivot.id : players.find(p => p.team === receivingTeam && !p.isGK)?.id;
+        state.ballPosition = null;
+
+        // Il turno passa a chi ha subito il goal
+        state.currentTeam = receivingTeam;
+        state.actionsLeft = 3;
+        state.selectedPlayer = null;
+        state.actionMode = null;
+
+        logMsg(`--- RIPRESA: TURNO ${receivingTeam === 'A' ? 'ROSSO' : 'BLU'} ---`, "text-yellow-500 font-bold");
+
         update();
     }
 
     function performMura() {
         const sp = state.selectedPlayer;
-        if (sp && !sp.mura && state.ballCarrierId !== sp.id) {
-            sp.mura = true;
-            logMsg(`${sp.name} in muro (+3 DIF)`);
-            consumeAction();
+        if (!sp) {
+            logMsg("Seleziona un giocatore!", "text-orange-400");
+            return;
         }
+        if (state.ballCarrierId === sp.id) {
+            logMsg("Chi ha la palla non puo fare mura!", "text-orange-400");
+            return;
+        }
+        if (sp.mura) {
+            logMsg("Gia in mura!", "text-gray-500");
+            return;
+        }
+
+        sp.mura = true;
+        // Celle difese: posizione corrente + 2 celle laterali (y-1 e y+1)
+        sp.muraCells = [
+            { x: sp.x, y: sp.y }
+        ];
+        if (sp.y > 0) sp.muraCells.push({ x: sp.x, y: sp.y - 1 });
+        if (sp.y < GRID_H - 1) sp.muraCells.push({ x: sp.x, y: sp.y + 1 });
+
+        logMsg(`${sp.name} in MURA! (difende ${sp.muraCells.length} celle)`);
+        consumeAction();
     }
 
     function consumeAction() {
         state.actionsLeft--;
         state.selectedPlayer = null;
+        state.actionMode = null;
         document.querySelectorAll('#smg-pitch .cell').forEach(c => {
-            c.classList.remove('highlight-move', 'highlight-target');
+            c.classList.remove('highlight-move', 'highlight-target', 'highlight-pass', 'highlight-shot');
         });
+        updateActionButtons();
         if (state.actionsLeft <= 0) {
             switchTurn();
         }
@@ -527,7 +773,11 @@
     function switchTurn() {
         state.currentTeam = state.currentTeam === 'A' ? 'B' : 'A';
         state.actionsLeft = 3;
-        players.filter(p => p.team === state.currentTeam).forEach(p => p.mura = false);
+        // Resetta mura della squadra che sta per giocare
+        players.filter(p => p.team === state.currentTeam).forEach(p => {
+            p.mura = false;
+            p.muraCells = [];
+        });
         logMsg(`--- TURNO ${state.currentTeam === 'A' ? 'ROSSO' : 'BLU'} ---`, "text-yellow-500 font-bold");
     }
 
@@ -540,6 +790,7 @@
             p.x = startPos[p.id][0];
             p.y = startPos[p.id][1];
             p.mura = false;
+            p.muraCells = [];
         });
     }
 
@@ -587,15 +838,21 @@
                 const pRect = pitch.getBoundingClientRect();
                 ball.style.left = (rect.left - pRect.left + rect.width * 0.7) + 'px';
                 ball.style.top = (rect.top - pRect.top + rect.height * 0.7) + 'px';
+                ball.style.display = 'block';
             }
-        } else {
-            const centerCell = getCell(5, 3);
-            if (centerCell && pitch) {
-                const rect = centerCell.getBoundingClientRect();
+        } else if (state.ballPosition) {
+            // Palla libera in zona
+            const zCell = getCell(state.ballPosition.x, state.ballPosition.y);
+            if (zCell && pitch) {
+                const rect = zCell.getBoundingClientRect();
                 const pRect = pitch.getBoundingClientRect();
                 ball.style.left = (rect.left - pRect.left + rect.width * 0.45) + 'px';
                 ball.style.top = (rect.top - pRect.top + rect.height * 0.45) + 'px';
+                ball.style.display = 'block';
             }
+        } else {
+            // Palla uscita
+            ball.style.display = 'none';
         }
 
         // Pannello selezione
@@ -608,11 +865,18 @@
             const hasBall = state.ballCarrierId === state.selectedPlayer.id;
             document.getElementById('smg-stat-name').innerText = state.selectedPlayer.name + (hasBall ? " (PALLA)" : "");
             document.getElementById('smg-stat-mod').innerText = "+" + state.selectedPlayer.mod;
-            document.getElementById('smg-btn-mura').style.display = hasBall ? "none" : "block";
+
+            // Mostra/nascondi bottoni in base allo stato
+            document.getElementById('smg-btn-mura').style.display = hasBall ? "none" : "inline-block";
+            document.getElementById('smg-btn-pass').style.display = hasBall ? "inline-block" : "none";
+            document.getElementById('smg-btn-shot').style.display = hasBall ? "inline-block" : "none";
         } else {
             panel.classList.add('hidden');
             info.classList.remove('hidden');
         }
+
+        // Aggiorna highlights delle celle mura
+        updateHighlights();
     }
 
     // ========================================
@@ -638,6 +902,31 @@
         while (log.children.length > 20) {
             log.removeChild(log.lastChild);
         }
+    }
+
+    /**
+     * Calcola il percorso lineare tra due punti (algoritmo Bresenham)
+     */
+    function getLinePath(x1, y1, x2, y2) {
+        const path = [];
+        const dx = Math.abs(x2 - x1);
+        const dy = Math.abs(y2 - y1);
+        const sx = x1 < x2 ? 1 : -1;
+        const sy = y1 < y2 ? 1 : -1;
+        let err = dx - dy;
+        let x = x1, y = y1;
+
+        while (true) {
+            if (x !== x1 || y !== y1) {
+                path.push({ x, y });
+            }
+            if (x === x2 && y === y2) break;
+            const e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x += sx; }
+            if (e2 < dx) { err += dx; y += sy; }
+        }
+
+        return path;
     }
 
     // ========================================
