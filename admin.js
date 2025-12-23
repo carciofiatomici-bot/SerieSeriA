@@ -859,6 +859,18 @@ document.addEventListener('DOMContentLoaded', () => {
             btnResetHoF.addEventListener('click', handleResetHallOfFame);
         }
 
+        // Test Challenge Minigame
+        const btnTestChallengeMinigame = document.getElementById('btn-test-challenge-minigame');
+        if (btnTestChallengeMinigame) {
+            btnTestChallengeMinigame.addEventListener('click', () => {
+                if (window.ChallengeMinigame) {
+                    window.ChallengeMinigame.open({ testMode: true });
+                } else {
+                    window.Toast?.error("Minigioco non disponibile");
+                }
+            });
+        }
+
         // Aggiungi +1 Contratto a tutti i giocatori
         const btnAddContractsAll = document.getElementById('btn-add-contracts-all');
         if (btnAddContractsAll) {
