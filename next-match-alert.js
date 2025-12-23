@@ -342,7 +342,7 @@ window.NextMatchAlert = {
             ${automationState?.isEnabled ? `
                 <div class="mt-2 pt-2 border-t border-cyan-500/30 flex flex-col items-center">
                     <p class="text-[10px] sm:text-xs text-gray-400">Prossima simulazione tra</p>
-                    <p id="next-match-countdown" class="text-lg sm:text-xl font-bold text-white countdown-title">--:--:--</p>
+                    <p id="next-match-countdown" class="text-lg sm:text-xl font-bold text-white countdown-title whitespace-nowrap">--:--:--</p>
                 </div>
             ` : `
                 <div class="mt-2 pt-2 border-t border-gray-700/50 flex flex-col items-center">
