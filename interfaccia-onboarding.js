@@ -81,21 +81,24 @@ window.InterfacciaOnboarding = {
                    (b.role === 'P' ? 0 : b.role === 'D' ? 1 : b.role === 'C' ? 2 : 3);
         });
 
-        elements.captainCandidatesContainer.innerHTML = orderedCandidates.map(player => `
+        elements.captainCandidatesContainer.innerHTML = orderedCandidates.map(player => {
+            const photoUrl = window.sanitizeGitHubUrl?.(player.photoUrl) || player.photoUrl;
+            return `
              <div data-player-id="${player.id}"
                   data-role="${player.role}"
                   class="captain-card p-4 bg-gray-700 rounded-lg border-2 border-orange-700 shadow-xl text-center cursor-pointer hover:bg-gray-600 transition duration-150">
-                 
-                 <img src="${player.photoUrl}" 
-                      alt="Icona ${player.name}" 
-                      class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-gray-500">
-                 
+
+                 <img src="${photoUrl}"
+                      alt="Icona ${player.name}"
+                      class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-gray-500"
+                      onerror="this.src='https://placehold.co/96x96/A0522D/ffffff?text=Icona'">
+
                  <p class="text-lg font-extrabold text-white">${player.name}</p>
                  <p class="text-sm font-semibold text-yellow-400">${player.role} (${player.type})</p>
                  <p class="text-xs text-green-400 font-bold mt-1">Abilita: ICONA</p>
                  <p class="text-xs text-gray-400">Livello Iniziale: ${player.level} (Fisso)</p>
              </div>
-        `).join('');
+        `;}).join('');
         
         elements.captainSelectionError.textContent = 'Per favore, scegli il giocatore ICONA del tuo club.';
         
