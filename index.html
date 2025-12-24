@@ -875,39 +875,42 @@
             <div id="dashboard-fixed-header">
                 <!-- Box unificato: Nome Squadra + Risorse -->
                 <div id="team-name-box" class="rounded-lg border border-green-500/50 relative">
-                    <!-- Nome Squadra (centro) -->
-                    <h2 id="team-dashboard-title" class="text-lg sm:text-2xl md:text-3xl font-extrabold text-center uppercase team-name-fancy leading-none py-1">NOME SQUADRA</h2>
-                    <!-- Menu Hamburger (sinistra assoluto, allineato al titolo) -->
-                    <div class="absolute left-1 top-1">
-                        <button id="dashboard-menu-btn" class="w-5 h-5 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition" title="Menu">
-                            <span class="text-xs text-white">☰</span>
+                    <!-- Riga titolo con menu, nome squadra e colorpicker -->
+                    <div class="flex items-center px-2 py-1">
+                        <!-- Menu Hamburger (sinistra) -->
+                        <button id="dashboard-menu-btn" class="w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition flex-shrink-0" title="Menu">
+                            <span class="text-sm">☰</span>
                         </button>
-                        <!-- Dropdown Menu (posizionato via JS) -->
-                        <div id="dashboard-menu-dropdown" class="hidden w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
-                            <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>📖</span> Tutorial
-                            </button>
-                            <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>📋</span> Changelog
-                            </button>
-                            <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>🔑</span> Cambia Password
-                            </button>
-                            <button id="menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
-                                <span>🎨</span> Colore Squadra
-                            </button>
-                            <div class="border-t border-gray-700"></div>
-                            <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
-                                <span>🗑️</span> Elimina Squadra
-                            </button>
+                        <!-- Testo Nome Squadra (centrato) -->
+                        <h2 id="team-dashboard-title" class="flex-1 text-lg sm:text-2xl md:text-3xl font-extrabold uppercase team-name-fancy leading-none text-center">
+                            <span id="team-dashboard-title-text">NOME SQUADRA</span>
+                        </h2>
+                        <!-- Selettore Colore (destra) -->
+                        <div id="team-color-picker-container" class="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                            <input type="color" id="team-color-picker"
+                                   class="w-6 h-6 rounded cursor-pointer border border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
+                                   title="Scegli il colore primario della squadra"
+                                   value="#22c55e">
                         </div>
                     </div>
-                    <!-- Selettore Colore (destra assoluto, allineato al titolo) -->
-                    <div id="team-color-picker-container" class="absolute right-1.5 top-1">
-                        <input type="color" id="team-color-picker"
-                               class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer border-2 border-gray-600 hover:border-white hover:scale-110 transition-all appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0"
-                               title="Scegli il colore primario della squadra"
-                               value="#22c55e">
+                    <!-- Dropdown Menu -->
+                    <div id="dashboard-menu-dropdown" class="hidden absolute left-2 top-9 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[100] overflow-hidden">
+                        <button id="menu-tutorial" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>📖</span> Tutorial
+                        </button>
+                        <button id="menu-changelog" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>📋</span> Changelog
+                        </button>
+                        <button id="menu-password" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>🔑</span> Cambia Password
+                        </button>
+                        <button id="menu-color-picker" class="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2">
+                            <span>🎨</span> Colore Squadra
+                        </button>
+                        <div class="border-t border-gray-700"></div>
+                        <button id="menu-delete-team" class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2">
+                            <span>🗑️</span> Elimina Squadra
+                        </button>
                     </div>
                     <!-- Risorse (sotto il nome squadra) -->
                     <div id="risorse-box" class="mt-1 pt-1 border-t border-gray-700/50">

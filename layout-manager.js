@@ -509,12 +509,20 @@ window.LayoutManager = {
     applyTextTheme(color, lighterColor, darkerColor) {
         this.themedSelectors.themedTexts.forEach(selector => {
             document.querySelectorAll(selector).forEach(el => {
-                // Per il titolo squadra usa gradiente
+                // Per il titolo squadra usa gradiente (ora applica allo span interno)
                 if (el.id === 'team-dashboard-title') {
-                    el.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
-                    el.style.webkitBackgroundClip = 'text';
-                    el.style.backgroundClip = 'text';
-                    el.style.webkitTextFillColor = 'transparent';
+                    const titleText = document.getElementById('team-dashboard-title-text');
+                    if (titleText) {
+                        titleText.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
+                        titleText.style.webkitBackgroundClip = 'text';
+                        titleText.style.backgroundClip = 'text';
+                        titleText.style.webkitTextFillColor = 'transparent';
+                    } else {
+                        el.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
+                        el.style.webkitBackgroundClip = 'text';
+                        el.style.backgroundClip = 'text';
+                        el.style.webkitTextFillColor = 'transparent';
+                    }
                 } else {
                     el.style.color = color;
                 }

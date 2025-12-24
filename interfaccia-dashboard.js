@@ -20,8 +20,13 @@ window.InterfacciaDashboard = {
             return;
         }
 
-        // Nome squadra in maiuscolo
-        elements.teamDashboardTitle.textContent = teamName.toUpperCase();
+        // Nome squadra in maiuscolo (usa lo span interno se esiste, altrimenti il titolo diretto)
+        const titleTextEl = document.getElementById('team-dashboard-title-text');
+        if (titleTextEl) {
+            titleTextEl.textContent = teamName.toUpperCase();
+        } else if (elements.teamDashboardTitle) {
+            elements.teamDashboardTitle.textContent = teamName.toUpperCase();
+        }
         elements.teamFirestoreId.textContent = teamDocId;
 
         window.InterfacciaCore.currentTeamId = teamDocId;
@@ -566,8 +571,9 @@ window.InterfacciaDashboard = {
             teamNameBox.style.borderColor = color;
         }
 
-        // Colore testo nome squadra (usa gradiente per effetto fancy)
-        const teamTitle = document.getElementById('team-dashboard-title');
+        // Colore testo nome squadra (usa gradiente per effetto fancy - applica allo span interno)
+        const teamTitleText = document.getElementById('team-dashboard-title-text');
+        const teamTitle = teamTitleText || document.getElementById('team-dashboard-title');
         if (teamTitle) {
             // Genera varianti del colore per il gradiente
             const lighterColor = this.lightenColor(color, 20);
@@ -614,6 +620,21 @@ window.InterfacciaDashboard = {
         const stadioHallBox = document.getElementById('stadio-hall-box');
         if (stadioHallBox) {
             stadioHallBox.style.borderColor = color;
+        }
+
+        // Bordo box Allenatore
+        const coachBoxContainer = document.getElementById('coach-box-container');
+        if (coachBoxContainer) {
+            coachBoxContainer.style.borderColor = color;
+        }
+
+        // Colore menu hamburger
+        const dashboardMenuBtn = document.getElementById('dashboard-menu-btn');
+        if (dashboardMenuBtn) {
+            const menuIcon = dashboardMenuBtn.querySelector('span');
+            if (menuIcon) {
+                menuIcon.style.color = color;
+            }
         }
 
         // NUOVO: Applica colore team a tutti i bottoni principali dei tab
