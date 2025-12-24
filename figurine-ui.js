@@ -257,15 +257,10 @@ window.FigurineUI = {
         const modBonus = (unique * 0.01).toFixed(2);
         if (modBonusEl) modBonusEl.textContent = `⚔️+${modBonus}`;
 
-        // Free pack - compact badge
+        // Free pack - solo emoji quando disponibile
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
         if (freePackEl) {
-            if (canFree) {
-                freePackEl.innerHTML = '<span class="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">🎁 GRATIS</span>';
-            } else {
-                const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
-                freePackEl.innerHTML = timeLeft ? `<span class="text-gray-500 text-[10px]">⏱️ ${timeLeft.formatted}</span>` : '';
-            }
+            freePackEl.innerHTML = canFree ? '<span class="text-xl animate-bounce">🎁</span>' : '';
         }
     },
 
@@ -1050,9 +1045,22 @@ window.FigurineUI = {
         const collectionPrices = config.collectionPackPrices || { icone: 1, giocatori_seri: 1, allenatori: 1, illustrazioni: 1, figurine_utenti: 1 };
         const csPrice = config.packPriceCS || 150; // Prezzo in CS per pacchetto
 
-        // Calcola duplicati scambiabili
-        const duplicates = window.FigurineSystem.countTradableDuplicates(this.currentAlbum.collection);
-        const tradeRewards = config.tradeRewards || { normale: 50, evoluto: 75, alternative: 150, ultimate: 300, fantasy: 300 };
+        // Calcola duplicati scambiabili (icone con varianti)
+        const duplicates = window.FigurineSystem.countTradableDuplicates(this.currentAlbum.collection || {});
+
+        // Calcola duplicati base da tutte le collezioni non-icone
+        let baseDuplicates = 0;
+        const albumCollections = this.currentAlbum.collections || {};
+        Object.entries(albumCollections).forEach(([collId, collData]) => {
+            if (collId === 'icone') return; // Icone gestite separatamente
+            Object.values(collData || {}).forEach(item => {
+                if ((item.base || 0) > 1) {
+                    baseDuplicates += item.base - 1;
+                }
+            });
+        });
+
+        const tradeRewards = config.tradeRewards || { normale: 50, evoluto: 75, alternative: 150, ultimate: 300, fantasy: 300, base: 30 };
         const tradeRequired = config.tradeRequiredCount || 3;
 
         // Bonus chance per pacchetto gratis
@@ -1072,37 +1080,24 @@ window.FigurineUI = {
                     </div>
                 </div>
 
-                <!-- Pacchetto Gratis -->
-                <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-500">
-                    <div class="mb-3">
-                        <h3 class="text-lg font-bold text-green-400 flex items-center gap-2">
-                            🎁 Pacchetto Giornaliero
-                        </h3>
-                        <p class="text-sm text-gray-300 mt-1">
-                            1 figurina (${100 - bonusChance}%) o 2 (${bonusChance}%) - Scegli la collezione!
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">Disponibile ogni ${config.freePackCooldownHours || 4} ore</p>
+                <!-- Pacchetto Gratis - Solo quando disponibile -->
+                ${canFree ? `
+                <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl p-3 border border-green-500/50">
+                    <h3 class="text-sm font-bold text-green-400 mb-2">🎁 Pacchetto Giornaliero</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        ${enabledCollections.map(collId => {
+                            const collDef = collections[collId];
+                            return `
+                                <button class="btn-free-pack-collection bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-2"
+                                        data-collection="${collId}">
+                                    <span class="text-xl">${collDef.icon}</span>
+                                    <span class="text-xs">${collDef.name}</span>
+                                </button>
+                            `;
+                        }).join('')}
                     </div>
-                    ${canFree ? `
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            ${enabledCollections.map(collId => {
-                                const collDef = collections[collId];
-                                return `
-                                    <button class="btn-free-pack-collection bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-2"
-                                            data-collection="${collId}">
-                                        <span class="text-xl">${collDef.icon}</span>
-                                        <span class="text-xs">${collDef.name}</span>
-                                    </button>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : `
-                        <div class="text-center">
-                            <p class="text-sm text-gray-400">Prossimo tra:</p>
-                            <p class="text-2xl font-bold text-green-400">${timeLeft?.formatted || '--'}</p>
-                        </div>
-                    `}
                 </div>
+                ` : ''}
 
                 <!-- Pacchetti per Collezione - Compatto -->
                 <div class="bg-gray-800/50 rounded-xl p-2.5 border border-gray-700/50">
@@ -1150,26 +1145,30 @@ window.FigurineUI = {
                         <h4 class="font-semibold text-amber-400 text-xs">🔄 Scambia Doppioni</h4>
                         <span class="text-[10px] text-gray-400">${tradeRequired} = CS</span>
                     </div>
-                    <div class="grid grid-cols-5 gap-1">
-                        <button data-trade="normale" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.normale < tradeRequired ? 'opacity-40' : ''}" ${duplicates.normale < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-gray-300">⚪${duplicates.normale}</span>
+                    <div class="grid grid-cols-6 gap-1">
+                        <button data-trade="normale" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.normale || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.normale || 0) < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-gray-300">⚪${duplicates.normale || 0}</span>
                             <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.normale}</span>
                         </button>
-                        <button data-trade="evoluto" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.evoluto < tradeRequired ? 'opacity-40' : ''}" ${duplicates.evoluto < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-green-300">🟢${duplicates.evoluto}</span>
+                        <button data-trade="evoluto" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.evoluto || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.evoluto || 0) < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-green-300">🟢${duplicates.evoluto || 0}</span>
                             <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.evoluto}</span>
                         </button>
-                        <button data-trade="alternative" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.alternative < tradeRequired ? 'opacity-40' : ''}" ${duplicates.alternative < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-blue-300">🔵${duplicates.alternative}</span>
+                        <button data-trade="alternative" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.alternative || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.alternative || 0) < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-blue-300">🔵${duplicates.alternative || 0}</span>
                             <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.alternative}</span>
                         </button>
-                        <button data-trade="ultimate" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.ultimate < tradeRequired ? 'opacity-40' : ''}" ${duplicates.ultimate < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-purple-300">🟣${duplicates.ultimate}</span>
+                        <button data-trade="ultimate" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.ultimate || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.ultimate || 0) < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-purple-300">🟣${duplicates.ultimate || 0}</span>
                             <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.ultimate}</span>
                         </button>
-                        <button data-trade="fantasy" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.fantasy < tradeRequired ? 'opacity-40' : ''}" ${duplicates.fantasy < tradeRequired ? 'disabled' : ''}>
+                        <button data-trade="fantasy" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.fantasy || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.fantasy || 0) < tradeRequired ? 'disabled' : ''}>
                             <span class="text-[10px] text-yellow-300">🟠${duplicates.fantasy || 0}</span>
                             <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.fantasy}</span>
+                        </button>
+                        <button data-trade="base" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${baseDuplicates < tradeRequired ? 'opacity-40' : ''}" ${baseDuplicates < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-cyan-300">🖼️${baseDuplicates}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.base || 30}</span>
                         </button>
                     </div>
                     <p id="trade-result" class="text-center text-[10px] mt-1.5"></p>
@@ -1240,7 +1239,7 @@ window.FigurineUI = {
         });
 
         // Bind trade buttons - usa il content container per event delegation
-        const tradeContainer = content.querySelector('.grid.grid-cols-5');
+        const tradeContainer = content.querySelector('.grid.grid-cols-6');
         if (tradeContainer) {
             tradeContainer.addEventListener('click', async (e) => {
                 const btn = e.target.closest('.trade-btn');
@@ -1328,7 +1327,17 @@ window.FigurineUI = {
                     resultEl.className = 'text-center text-[10px] mt-1.5 text-green-400 font-semibold';
                 }
                 window.Toast?.success(result.message);
-                // Ricarica album e UI
+
+                // Aggiorna immediatamente il contatore CS nella UI
+                const teamData = await window.FigurineSystem.getTeamData(teamId);
+                if (teamData) {
+                    // Aggiorna currentTeamData per sincronizzare
+                    if (window.InterfacciaCore?.currentTeamData) {
+                        window.InterfacciaCore.currentTeamData.budget = teamData.budget;
+                    }
+                }
+
+                // Ricarica album e UI (questo ricarica tutto incluso il contatore CS)
                 this.currentAlbum = await window.FigurineSystem.loadTeamAlbum(teamId);
                 await this.renderPacks();
             } else {

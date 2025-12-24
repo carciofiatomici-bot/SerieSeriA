@@ -1657,7 +1657,7 @@ window.FigurineSystem = {
     /**
      * Esegue uno scambio di figurine duplicate per CS
      * @param {string} teamId - ID squadra
-     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate)
+     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate, fantasy, base)
      * @param {number} count - Numero di scambi da fare (default 1)
      * @returns {Object} { success, csEarned, message }
      */
@@ -1665,33 +1665,76 @@ window.FigurineSystem = {
         const config = await this.loadConfig();
         const album = await this.loadTeamAlbum(teamId);
         const requiredCount = config.tradeRequiredCount || 3;
-        const reward = config.tradeRewards?.[rarity] || 0;
+        const rewards = config.tradeRewards || { normale: 50, evoluto: 75, alternative: 150, ultimate: 300, fantasy: 300, base: 30 };
+        const reward = rewards[rarity] || 0;
 
         if (!reward) {
             return { success: false, message: `Rarita "${rarity}" non valida` };
         }
 
         const totalRequired = requiredCount * count;
-        const duplicates = this.countTradableDuplicates(album.collection);
 
-        if (duplicates[rarity] < totalRequired) {
-            return {
-                success: false,
-                message: `Figurine insufficienti: hai ${duplicates[rarity]} duplicate ${rarity}, servono ${totalRequired}`
-            };
-        }
+        // Per rarita "base", gestisci le collezioni non-icone
+        if (rarity === 'base') {
+            let baseDuplicates = 0;
+            const albumCollections = album.collections || {};
+            Object.entries(albumCollections).forEach(([collId, collData]) => {
+                if (collId === 'icone') return;
+                Object.values(collData || {}).forEach(item => {
+                    if ((item.base || 0) > 1) {
+                        baseDuplicates += item.base - 1;
+                    }
+                });
+            });
 
-        // Rimuovi le figurine dalla collezione (le duplicate, non la prima)
-        let toRemove = totalRequired;
-        for (const iconaId in album.collection) {
-            if (toRemove <= 0) break;
+            if (baseDuplicates < totalRequired) {
+                return {
+                    success: false,
+                    message: `Figurine insufficienti: hai ${baseDuplicates} duplicate base, servono ${totalRequired}`
+                };
+            }
 
-            const iconaCounts = album.collection[iconaId];
-            if (iconaCounts[rarity] > 1) {
-                const removable = iconaCounts[rarity] - 1; // Lascia sempre almeno 1
-                const removeNow = Math.min(removable, toRemove);
-                iconaCounts[rarity] -= removeNow;
-                toRemove -= removeNow;
+            // Rimuovi le figurine base duplicate
+            let toRemove = totalRequired;
+            for (const collId in albumCollections) {
+                if (collId === 'icone') continue;
+                if (toRemove <= 0) break;
+
+                const collData = albumCollections[collId];
+                for (const itemId in collData) {
+                    if (toRemove <= 0) break;
+                    const item = collData[itemId];
+                    if ((item.base || 0) > 1) {
+                        const removable = item.base - 1;
+                        const removeNow = Math.min(removable, toRemove);
+                        item.base -= removeNow;
+                        toRemove -= removeNow;
+                    }
+                }
+            }
+        } else {
+            // Gestione normale per icone
+            const duplicates = this.countTradableDuplicates(album.collection || {});
+
+            if ((duplicates[rarity] || 0) < totalRequired) {
+                return {
+                    success: false,
+                    message: `Figurine insufficienti: hai ${duplicates[rarity] || 0} duplicate ${rarity}, servono ${totalRequired}`
+                };
+            }
+
+            // Rimuovi le figurine dalla collezione (le duplicate, non la prima)
+            let toRemove = totalRequired;
+            for (const iconaId in album.collection) {
+                if (toRemove <= 0) break;
+
+                const iconaCounts = album.collection[iconaId];
+                if ((iconaCounts[rarity] || 0) > 1) {
+                    const removable = iconaCounts[rarity] - 1; // Lascia sempre almeno 1
+                    const removeNow = Math.min(removable, toRemove);
+                    iconaCounts[rarity] -= removeNow;
+                    toRemove -= removeNow;
+                }
             }
         }
 
@@ -1714,7 +1757,7 @@ window.FigurineSystem = {
     /**
      * Scambia tutte le figurine duplicate di una rarita
      * @param {string} teamId - ID squadra
-     * @param {string} rarity - Rarita da scambiare
+     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate, fantasy, base)
      * @returns {Object} { success, csEarned, traded, message }
      */
     async tradeAllDuplicates(teamId, rarity) {
@@ -1722,8 +1765,24 @@ window.FigurineSystem = {
         const album = await this.loadTeamAlbum(teamId);
         const requiredCount = config.tradeRequiredCount || 3;
 
-        const duplicates = this.countTradableDuplicates(album.collection);
-        const possibleTrades = Math.floor(duplicates[rarity] / requiredCount);
+        // Per rarita "base", conta i duplicati da tutte le collezioni non-icone
+        let duplicateCount = 0;
+        if (rarity === 'base') {
+            const albumCollections = album.collections || {};
+            Object.entries(albumCollections).forEach(([collId, collData]) => {
+                if (collId === 'icone') return;
+                Object.values(collData || {}).forEach(item => {
+                    if ((item.base || 0) > 1) {
+                        duplicateCount += item.base - 1;
+                    }
+                });
+            });
+        } else {
+            const duplicates = this.countTradableDuplicates(album.collection || {});
+            duplicateCount = duplicates[rarity] || 0;
+        }
+
+        const possibleTrades = Math.floor(duplicateCount / requiredCount);
 
         if (possibleTrades === 0) {
             return {
