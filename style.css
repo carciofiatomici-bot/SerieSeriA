@@ -3025,6 +3025,53 @@ body.user-logged-in #login-box.hidden-on-load {
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* Stile squadra-content con colore team dinamico */
+#squadra-content {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    border: 1px solid var(--team-primary-color, #22c55e);
+}
+
+/* Stile modulo-header con colore team dinamico */
+#modulo-header {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--team-primary-color, #22c55e);
+}
+
+/* Stile bench-container con colore team dinamico */
+#bench-container {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--team-primary-color, #22c55e);
+}
+
+/* Stile Rosa Disponibile (parent di full-squad-list) con colore team dinamico */
+#full-squad-list {
+    border-color: var(--team-primary-color, #22c55e) !important;
+}
+
+#full-squad-list:parent,
+#squadra-content #full-squad-list ~ *,
+#squadra-content .border-indigo-500 {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    border-color: var(--team-primary-color, #22c55e) !important;
+}
+
+/* Stile tipi-header con colore team dinamico */
+#tipi-header {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--team-primary-color, #22c55e);
+}
+
 /* ===================== HOMEPAGE BOX STYLES ===================== */
 /* Stile uniforme per tutti i box della homepage */
 #login-box #remembered-box,
@@ -4203,8 +4250,6 @@ body.user-logged-in #admin-content {
     letter-spacing: 0.2px;
     white-space: nowrap;
     text-align: center;
-    display: block;
-    width: 100%;
 }
 
 @media (min-width: 360px) {
