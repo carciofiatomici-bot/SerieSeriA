@@ -3015,14 +3015,9 @@ body.user-logged-in #login-box.hidden-on-load {
     padding-bottom: 0 !important;
 }
 
-/* Schermate senza tab-content DEVONO avere padding per la tab bar */
-#login-box,
-#draft-content,
-#squadra-content,
-#mercato-content,
-#match-history-content,
-#stadium-content {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+/* Schermate senza tab-content - padding gestito in sezione 15.11 BREADCRUMB + TAB BAR SPACING */
+#login-box {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Stile squadra-content con colore team dinamico */
@@ -3030,7 +3025,7 @@ body.user-logged-in #login-box.hidden-on-load {
     background: linear-gradient(180deg, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.6) 100%);
     border-radius: 16px;
     padding: 12px !important;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    /* padding-bottom gestito in sezione 15.11 BREADCRUMB + TAB BAR SPACING */
     border: 1px solid var(--team-primary-color, #22c55e);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
@@ -4740,6 +4735,173 @@ input:focus-visible,
 select:focus-visible {
     outline: 2px solid var(--team-primary-color, #22c55e);
     outline-offset: 2px;
+}
+
+/* ==================== 15.11 BREADCRUMB + TAB BAR SPACING ==================== */
+/*
+ * Gestione spacing per schermate non principali:
+ * - Breadcrumb container: altezza 40px (fixed top)
+ * - Tab bar: altezza 56px + safe-area (fixed bottom)
+ *
+ * Le schermate non principali devono:
+ * - Iniziare SOTTO il breadcrumb (quando visibile)
+ * - Finire SOPRA la tab bar
+ */
+
+/* Altezza breadcrumb container */
+#breadcrumb-container {
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* Breadcrumb nascosto - completamente invisibile */
+#breadcrumb-container.hidden {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Schedina modal - stile con colore team */
+#schedina-modal {
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--team-primary-color, #22c55e);
+}
+
+/* ==============================================
+   SCHERMATE NON PRINCIPALI - Layout Fisso
+   ============================================== */
+
+/* Tutte le schermate figlie delle tab - layout che rispetta breadcrumb e tab bar */
+#squadra-content:not(.hidden),
+#stadium-content:not(.hidden),
+#match-history-content:not(.hidden),
+#draft-content:not(.hidden),
+#mercato-content:not(.hidden),
+#user-campionato-content:not(.hidden),
+#user-coppa-content:not(.hidden),
+#user-supercoppa-content:not(.hidden),
+#leaderboard-content:not(.hidden),
+#schedule-content:not(.hidden),
+#admin-content:not(.hidden),
+#player-management-content:not(.hidden),
+#team-management-content:not(.hidden),
+#championship-content:not(.hidden) {
+    /* Posizione fissa che occupa lo spazio tra breadcrumb e tab bar */
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    /* Top: sotto il breadcrumb (40px) quando visibile, altrimenti 0 */
+    top: 0 !important;
+    /* Bottom: sopra la tab bar (56px + safe-area) */
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    /* Permetti scroll interno */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    /* Z-index per stare sopra il contenuto ma sotto modali */
+    z-index: 40 !important;
+    /* Padding interno */
+    padding: 12px !important;
+    padding-bottom: 20px !important;
+    /* Background per coprire contenuto sottostante */
+    background: rgb(17, 24, 39) !important;
+}
+
+/* Quando breadcrumb è visibile - sposta top a 40px */
+body.has-breadcrumb #squadra-content:not(.hidden),
+body.has-breadcrumb #stadium-content:not(.hidden),
+body.has-breadcrumb #match-history-content:not(.hidden),
+body.has-breadcrumb #draft-content:not(.hidden),
+body.has-breadcrumb #mercato-content:not(.hidden),
+body.has-breadcrumb #user-campionato-content:not(.hidden),
+body.has-breadcrumb #user-coppa-content:not(.hidden),
+body.has-breadcrumb #user-supercoppa-content:not(.hidden),
+body.has-breadcrumb #leaderboard-content:not(.hidden),
+body.has-breadcrumb #schedule-content:not(.hidden),
+body.has-breadcrumb #admin-content:not(.hidden),
+body.has-breadcrumb #player-management-content:not(.hidden),
+body.has-breadcrumb #team-management-content:not(.hidden),
+body.has-breadcrumb #championship-content:not(.hidden) {
+    top: 40px !important;
+}
+
+/* ==================== 15.12 STADIUM FIELD MOBILE FIX ==================== */
+/*
+ * Fix per stadium-field-box che scorreva orizzontalmente su mobile
+ * Rendere il layout responsive invece di usare overflow-x-auto
+ */
+
+#stadium-field-box {
+    overflow-x: hidden !important;
+    overflow-y: visible;
+}
+
+#stadium-field-box .stadium-layout {
+    overflow-x: hidden !important;
+    width: 100%;
+}
+
+/* Container principale stadio - responsive */
+#stadium-field-box .stadium-layout > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100%;
+}
+
+/* Structure slots - scala su schermi piccoli */
+@media (max-width: 359px) {
+    #stadium-field-box .structure-slot {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px;
+    }
+
+    #stadium-field-box .structure-slot span {
+        font-size: 14px !important;
+    }
+
+    /* Campo da gioco più compatto */
+    #stadium-field-box .stadium-layout .bg-gradient-to-b {
+        min-height: 100px !important;
+    }
+
+    /* Strutture speciali - grid più compatto */
+    #stadium-field-box .special-structure-card {
+        padding: 6px !important;
+    }
+
+    #stadium-field-box .special-structure-card span {
+        font-size: 16px !important;
+    }
+}
+
+/* Mobile standard - ottimizzazione */
+@media (max-width: 479px) {
+    #stadium-field-box {
+        padding: 8px !important;
+    }
+
+    /* Strutture speciali - grid più stretto */
+    #stadium-field-box .grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+    }
+
+    #stadium-field-box .grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+    }
+
+    /* Card strutture speciali compatte */
+    #stadium-field-box .special-structure-card h4 {
+        font-size: 9px !important;
+    }
 }
 
 /* ==================== 15.10 SMOOTH TRANSITIONS ==================== */

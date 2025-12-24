@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.30',
+    currentVersion: '2.2.31',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,21 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.31',
+            date: '2025-12-24',
+            time: '12:00',
+            title: 'Fix Layout Mobile e Navigazione',
+            changes: [
+                { text: 'Fix schermate coperte da breadcrumb e tab bar su mobile', adminOnly: false },
+                { text: 'Schermate non principali ora occupano correttamente lo spazio disponibile', adminOnly: false },
+                { text: 'Breadcrumb nascosto automaticamente sulle tab principali', adminOnly: false },
+                { text: 'Fix scroll orizzontale nello stadio su mobile', adminOnly: false },
+                { text: 'Stile schedina-modal con bordo colore team', adminOnly: false },
+                { text: 'Rimosso bottone "Torna alla Dashboard" ridondante dalla Hall of Fame', adminOnly: true }
+            ],
+            type: 'fix'
+        },
         {
             version: '2.2.30',
             date: '2025-12-22',

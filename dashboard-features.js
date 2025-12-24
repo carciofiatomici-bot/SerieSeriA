@@ -265,8 +265,6 @@ window.DashboardFeatures = {
         // Bottone Hall of Fame (Storico Partite)
         const btnHallOfFame = document.getElementById('btn-hall-of-fame');
         const matchHistoryContent = document.getElementById('match-history-content');
-        const matchHistoryBackButton = document.getElementById('match-history-back-button');
-        const appContent = document.getElementById('app-content');
 
         if (btnHallOfFame) {
             btnHallOfFame.addEventListener('click', async () => {
@@ -294,12 +292,6 @@ window.DashboardFeatures = {
                 } else {
                     if (window.Toast) window.Toast.error("Hall of Fame non disponibile");
                 }
-            });
-        }
-
-        if (matchHistoryBackButton && appContent) {
-            matchHistoryBackButton.addEventListener('click', () => {
-                window.showScreen(appContent);
             });
         }
 

@@ -103,8 +103,16 @@ window.Breadcrumb = {
         document.addEventListener('dashboardTabChanged', (e) => {
             const tabName = e.detail?.tab;
             if (tabName) {
-                const tabId = `tab-${tabName}`;
                 // Le tab principali non mostrano breadcrumb
+                this.hide();
+            }
+        });
+
+        // Nascondi breadcrumb quando si clicca su una tab della dashboard
+        document.addEventListener('click', (e) => {
+            const tabBtn = e.target.closest('.dashboard-tab');
+            if (tabBtn) {
+                // Click su tab principale - nascondi breadcrumb
                 this.hide();
             }
         });
@@ -129,6 +137,12 @@ window.Breadcrumb = {
 
         // Nascondi per le tab principali (navigazione via tab bar)
         if (screenInfo.isTab) {
+            this.hide();
+            return;
+        }
+
+        // Nascondi per app-content (dashboard principale con tab bar)
+        if (screenId === 'app-content') {
             this.hide();
             return;
         }
