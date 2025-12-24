@@ -10,19 +10,37 @@ window.Breadcrumb = {
 
     // Mappa schermate -> info breadcrumb
     screenMap: {
+        // Dashboard principale
         'app-content': { label: 'Dashboard', icon: '🏠', parent: null },
-        'squadra-content': { label: 'Gestione Squadra', icon: '👥', parent: 'app-content' },
-        'draft-content': { label: 'Draft', icon: '📋', parent: 'app-content' },
-        'mercato-content': { label: 'Mercato', icon: '💰', parent: 'app-content' },
-        'leaderboard-content': { label: 'Classifica', icon: '🏆', parent: null },
-        'schedule-content': { label: 'Calendario', icon: '📅', parent: null },
-        'user-campionato-content': { label: 'Campionato', icon: '⚽', parent: 'app-content' },
-        'user-coppa-content': { label: 'CoppaSeriA', icon: '🏆', parent: 'app-content' },
-        'user-supercoppa-content': { label: 'SuperCoppa', icon: '⭐', parent: 'app-content' },
-        'admin-content': { label: 'Admin', icon: '⚙️', parent: null },
+
+        // Tab Dashboard (parent: app-content per tornare alla dashboard)
+        'tab-home': { label: 'Board', icon: '📊', parent: null, isTab: true },
+        'tab-squad': { label: 'Squadra', icon: '👥', parent: null, isTab: true },
+        'tab-competitions': { label: 'Gare', icon: '🏆', parent: null, isTab: true },
+        'tab-shop': { label: 'Shop', icon: '🛒', parent: null, isTab: true },
+        'tab-rules': { label: 'Regole', icon: '📖', parent: null, isTab: true },
+
+        // Sotto-schermate Gestione Squadra (da tab-squad)
+        'squadra-content': { label: 'Gestione Squadra', icon: '👥', parent: 'tab-squad' },
+        'stadium-content': { label: 'Stadio', icon: '🏟️', parent: 'tab-squad' },
+        'match-history-content': { label: 'Hall of Fame', icon: '🏛️', parent: 'tab-squad' },
+
+        // Sotto-schermate Shop (da tab-shop)
+        'draft-content': { label: 'Draft', icon: '📋', parent: 'tab-shop' },
+        'mercato-content': { label: 'Mercato', icon: '💰', parent: 'tab-shop' },
+
+        // Sotto-schermate Gare (da tab-competitions)
+        'user-campionato-content': { label: 'Campionato', icon: '⚽', parent: 'tab-competitions' },
+        'user-coppa-content': { label: 'CoppaSeriA', icon: '🏆', parent: 'tab-competitions' },
+        'user-supercoppa-content': { label: 'SuperCoppa', icon: '⭐', parent: 'tab-competitions' },
+        'leaderboard-content': { label: 'Classifica', icon: '📊', parent: 'tab-competitions' },
+        'schedule-content': { label: 'Calendario', icon: '📅', parent: 'tab-competitions' },
+
+        // Admin
+        'admin-content': { label: 'Admin', icon: '🔧', parent: null },
         'player-management-content': { label: 'Gestione Giocatori', icon: '👤', parent: 'admin-content' },
         'team-management-content': { label: 'Gestione Squadre', icon: '👥', parent: 'admin-content' },
-        'championship-content': { label: 'Campionato', icon: '🏟️', parent: 'admin-content' }
+        'championship-content': { label: 'Campionato Admin', icon: '🏟️', parent: 'admin-content' }
     },
 
     // Schermata corrente
@@ -80,6 +98,16 @@ window.Breadcrumb = {
                 }
             };
         }
+
+        // Ascolta cambiamenti tab della dashboard
+        document.addEventListener('dashboardTabChanged', (e) => {
+            const tabName = e.detail?.tab;
+            if (tabName) {
+                const tabId = `tab-${tabName}`;
+                // Le tab principali non mostrano breadcrumb
+                this.hide();
+            }
+        });
     },
 
     /**
@@ -95,6 +123,12 @@ window.Breadcrumb = {
 
         // Nascondi se schermata non mappata o login/gate
         if (!screenInfo || screenId === 'login-box' || screenId === 'gate-box') {
+            this.hide();
+            return;
+        }
+
+        // Nascondi per le tab principali (navigazione via tab bar)
+        if (screenInfo.isTab) {
             this.hide();
             return;
         }
@@ -182,6 +216,16 @@ window.Breadcrumb = {
      * Naviga a una schermata specifica
      */
     navigateTo(screenId) {
+        const screenInfo = this.screenMap[screenId];
+
+        // Se e' un tab della dashboard, usa DashboardTabs
+        if (screenInfo?.isTab && window.DashboardTabs) {
+            const tabName = screenId.replace('tab-', '');
+            window.DashboardTabs.switchTab(tabName);
+            this.hide();
+            return;
+        }
+
         const element = document.getElementById(screenId);
         if (element && window.showScreen) {
             window.showScreen(element);
