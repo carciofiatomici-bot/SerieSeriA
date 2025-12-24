@@ -98,17 +98,7 @@ window.TrainingExpMinigame = {
                     <span id="instruction-text"></span>
                 </div>
 
-                <!-- Landscape suggestion overlay (mobile portrait) -->
-                <div id="training-rotate-hint" class="absolute inset-0 bg-black bg-opacity-90 flex-col items-center justify-center z-20 hidden">
-                    <div class="text-center p-6">
-                        <div class="text-6xl mb-4 animate-pulse">📱↔️</div>
-                        <h3 class="text-xl font-bold text-white mb-2">Ruota il dispositivo</h3>
-                        <p class="text-gray-300 text-sm mb-4">Per una migliore esperienza di gioco,<br>ruota il telefono in orizzontale</p>
-                        <button id="training-ignore-rotate" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">
-                            Continua comunque
-                        </button>
-                    </div>
-                </div>
+                <!-- Landscape suggestion overlay RIMOSSO -->
             </div>
         `;
 
@@ -125,11 +115,8 @@ window.TrainingExpMinigame = {
         // Event listeners
         this.setupEventListeners();
 
-        // Listener per "Continua comunque"
-        document.getElementById('training-ignore-rotate').addEventListener('click', () => {
-            this.rotateHintIgnored = true;
-            this.hideRotateHint();
-        });
+        // Listener per "Continua comunque" - RIMOSSO
+        // (Il suggerimento landscape è stato rimosso)
 
         console.log('[TrainingExpMinigame] Inizializzato');
     },
@@ -232,38 +219,24 @@ window.TrainingExpMinigame = {
     },
 
     /**
-     * Verifica se mostrare il suggerimento landscape
+     * Verifica se mostrare il suggerimento landscape - DISABILITATO
      */
     checkRotateHint() {
-        // Mostra solo su mobile in portrait e se non ignorato
-        const isPortrait = window.innerHeight > window.innerWidth;
-        const isMobileDevice = window.innerWidth < 768;
-
-        if (isMobileDevice && isPortrait && !this.rotateHintIgnored) {
-            this.showRotateHint();
-        } else {
-            this.hideRotateHint();
-        }
+        // Funzione disabilitata - il suggerimento landscape è stato rimosso
     },
 
     /**
-     * Mostra overlay suggerimento rotazione
+     * Mostra overlay suggerimento rotazione - DISABILITATO
      */
     showRotateHint() {
-        if (this.rotateHintEl) {
-            this.rotateHintEl.classList.remove('hidden');
-            this.rotateHintEl.classList.add('flex');
-        }
+        // Funzione disabilitata
     },
 
     /**
-     * Nascondi overlay suggerimento rotazione
+     * Nascondi overlay suggerimento rotazione - DISABILITATO
      */
     hideRotateHint() {
-        if (this.rotateHintEl) {
-            this.rotateHintEl.classList.add('hidden');
-            this.rotateHintEl.classList.remove('flex');
-        }
+        // Funzione disabilitata
     },
 
     // ==================== APERTURA/CHIUSURA ====================

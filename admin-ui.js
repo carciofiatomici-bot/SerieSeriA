@@ -289,7 +289,16 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- ========== 6. BOSS BATTLE ========== -->
+            <!-- ========== 6. TEST SFIDE MINIGAME ========== -->
+            <div class="mb-4">
+                <button id="btn-test-sfide-minigame-section" class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-center px-6">
+                    <span class="flex items-center">
+                        <span class="text-xl mr-3">⚔️</span> Test Sfide Minigame
+                    </span>
+                </button>
+            </div>
+
+            <!-- ========== 7. BOSS BATTLE ========== -->
             <div class="mb-4">
                 <button id="btn-toggle-boss-battle" class="w-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
                     <span class="flex items-center">

@@ -865,10 +865,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Test Sfide Minigame (Sfide)
+        // Test Sfide Minigame (Sfide) - bottone nel grid
         const btnTestSfideMinigame = document.getElementById('btn-test-sfide-minigame');
         if (btnTestSfideMinigame) {
             btnTestSfideMinigame.addEventListener('click', () => {
+                if (window.SfideMinigame) {
+                    window.SfideMinigame.open({ testMode: true });
+                } else {
+                    window.Toast?.error("Minigioco Sfide non disponibile");
+                }
+            });
+        }
+
+        // Test Sfide Minigame - bottone sezione separata (sopra Boss Battle)
+        const btnTestSfideMinigameSection = document.getElementById('btn-test-sfide-minigame-section');
+        if (btnTestSfideMinigameSection) {
+            btnTestSfideMinigameSection.addEventListener('click', () => {
                 if (window.SfideMinigame) {
                     window.SfideMinigame.open({ testMode: true });
                 } else {
