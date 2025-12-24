@@ -556,6 +556,133 @@ window.MatchHistory = {
         });
     },
 
+    /**
+     * Mostra il modal della telecronaca COMPLETA (tutte le 50 occasioni)
+     * @param {Array} matchEvents - Array di eventi completi dalla simulazione
+     * @param {string} homeTeam - Nome squadra casa
+     * @param {string} awayTeam - Nome squadra ospite
+     * @param {number} homeScore - Gol squadra casa
+     * @param {number} awayScore - Gol squadra ospite
+     */
+    showTelecronacaCompletaModal(matchEvents, homeTeam, awayTeam, homeScore, awayScore) {
+        // Rimuovi modal esistente se presente
+        const existingModal = document.getElementById('telecronaca-modal');
+        if (existingModal) existingModal.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'telecronaca-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4';
+
+        // Genera HTML per ogni occasione
+        const eventsHtml = matchEvents.map((event, idx) => {
+            const isGoal = event.result === 'goal';
+            const isHome = event.side === 'home';
+            const teamColor = isHome ? 'text-blue-400' : 'text-red-400';
+            const bgColor = isGoal ? 'bg-green-900 bg-opacity-30 border-green-500' : 'bg-gray-800 border-gray-600';
+
+            // Formatta minuto
+            const minute = event.minute || (idx + 1);
+
+            // Fasi della partita
+            let phasesHtml = '';
+
+            // Fase Costruzione
+            const construction = event.phases?.construction;
+            if (construction && !construction.skipped) {
+                const resultIcon = construction.result === 'success' || construction.result === 'lucky' ? '✅' : '❌';
+                const resultClass = construction.result === 'success' || construction.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                phasesHtml += `
+                    <div class="pl-4 text-xs">
+                        <span class="text-cyan-400">Costruzione:</span>
+                        <span class="${resultClass}">${resultIcon} ${construction.result === 'lucky' ? 'Fortuna!' : construction.result}</span>
+                        ${construction.totals ? `<span class="text-gray-500 ml-2">(${construction.totals.attacker?.toFixed(1) || '?'} vs ${construction.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                    </div>
+                `;
+            } else if (construction?.skipped) {
+                phasesHtml += `<div class="pl-4 text-xs text-gray-500">Costruzione: Saltata (${construction.reason})</div>`;
+            }
+
+            // Fase Attacco
+            const attack = event.phases?.attack;
+            if (attack && !attack.interrupted) {
+                const resultIcon = attack.result === 'success' || attack.result === 'lucky' ? '✅' : '❌';
+                const resultClass = attack.result === 'success' || attack.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                phasesHtml += `
+                    <div class="pl-4 text-xs">
+                        <span class="text-yellow-400">Attacco:</span>
+                        <span class="${resultClass}">${resultIcon} ${attack.result === 'lucky' ? 'Fortuna!' : attack.result}</span>
+                        ${attack.totals ? `<span class="text-gray-500 ml-2">(${attack.totals.attacker?.toFixed(1) || '?'} vs ${attack.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                    </div>
+                `;
+            } else if (attack?.interrupted) {
+                phasesHtml += `<div class="pl-4 text-xs text-gray-500">Attacco: Interrotto</div>`;
+            }
+
+            // Fase Tiro
+            const shot = event.phases?.shot;
+            if (shot) {
+                const resultIcon = isGoal ? '⚽' : '🧤';
+                const resultClass = isGoal ? 'text-green-400 font-bold' : 'text-red-400';
+                const shotResult = isGoal ? 'GOL!' : 'Parato';
+                phasesHtml += `
+                    <div class="pl-4 text-xs">
+                        <span class="text-orange-400">Tiro:</span>
+                        <span class="${resultClass}">${resultIcon} ${shotResult}</span>
+                        ${shot.totalGoalkeeper ? `<span class="text-gray-500 ml-2">(Portiere: ${shot.totalGoalkeeper.toFixed(1)})</span>` : ''}
+                    </div>
+                `;
+            }
+
+            // Abilita attivate
+            let abilitiesHtml = '';
+            if (event.abilities && event.abilities.length > 0) {
+                abilitiesHtml = `<div class="pl-4 text-xs text-purple-400">✨ ${event.abilities.join(', ')}</div>`;
+            }
+
+            return `
+                <div class="border-l-2 ${bgColor} pl-3 py-2 mb-2 rounded-r">
+                    <div class="flex items-center gap-2">
+                        <span class="text-white font-bold">${minute}'</span>
+                        <span class="${teamColor} font-semibold">${event.attackingTeam}</span>
+                        ${isGoal ? '<span class="text-green-400 font-bold">⚽ GOL!</span>' : '<span class="text-gray-400">Occasione</span>'}
+                    </div>
+                    ${phasesHtml}
+                    ${abilitiesHtml}
+                </div>
+            `;
+        }).join('');
+
+        modal.innerHTML = `
+            <div class="bg-gray-900 rounded-lg border-2 border-purple-500 max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+                <div class="p-4 bg-gradient-to-r from-purple-800 to-purple-600 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">📺 Telecronaca Completa</h3>
+                        <p class="text-purple-200 text-sm">${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}</p>
+                        <p class="text-purple-300 text-xs">${matchEvents.length} azioni totali</p>
+                    </div>
+                    <button id="close-telecronaca-modal" class="text-white hover:text-purple-200 text-2xl">&times;</button>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1">
+                    ${eventsHtml}
+                </div>
+                <div class="p-3 bg-gray-800 text-center">
+                    <button id="close-telecronaca-btn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded-lg transition">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Event listeners per chiudere
+        document.getElementById('close-telecronaca-modal').addEventListener('click', () => modal.remove());
+        document.getElementById('close-telecronaca-btn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    },
+
     // Listener real-time per trofei
     trophiesUnsubscribe: null,
 

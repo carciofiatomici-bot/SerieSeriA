@@ -401,16 +401,30 @@ window.UserCompetitions = {
                             <span class="${lastPlayedMatch.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.awayName}</span>
                         </div>
                         <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
-                        <button id="btn-campionato-telecronaca"
-                                class="mt-3 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                                data-home-name="${lastPlayedMatch.homeName}"
-                                data-away-name="${lastPlayedMatch.awayName}"
-                                data-home-id="${lastPlayedMatch.homeId}"
-                                data-away-id="${lastPlayedMatch.awayId}"
-                                data-round="${lastPlayedMatch.round}"
-                                data-result="${lastPlayedMatch.result}">
-                            📺 Vedi Telecronaca
-                        </button>
+                        <div class="mt-3 flex gap-2">
+                            <button id="btn-campionato-telecronaca"
+                                    class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1"
+                                    data-home-name="${lastPlayedMatch.homeName}"
+                                    data-away-name="${lastPlayedMatch.awayName}"
+                                    data-home-id="${lastPlayedMatch.homeId}"
+                                    data-away-id="${lastPlayedMatch.awayId}"
+                                    data-round="${lastPlayedMatch.round}"
+                                    data-result="${lastPlayedMatch.result}"
+                                    data-type="highlights">
+                                📺 Azioni Salienti
+                            </button>
+                            <button id="btn-campionato-telecronaca-completa"
+                                    class="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1"
+                                    data-home-name="${lastPlayedMatch.homeName}"
+                                    data-away-name="${lastPlayedMatch.awayName}"
+                                    data-home-id="${lastPlayedMatch.homeId}"
+                                    data-away-id="${lastPlayedMatch.awayId}"
+                                    data-round="${lastPlayedMatch.round}"
+                                    data-result="${lastPlayedMatch.result}"
+                                    data-type="full">
+                                📋 Completa
+                            </button>
+                        </div>
                     </div>
                 </div>
             `
@@ -433,11 +447,19 @@ window.UserCompetitions = {
                 });
             });
 
-            // Listener per bottone telecronaca campionato
+            // Listener per bottone telecronaca campionato (azioni salienti)
             const btnTelecronaca = document.getElementById('btn-campionato-telecronaca');
             if (btnTelecronaca) {
                 btnTelecronaca.addEventListener('click', async () => {
-                    await this.showLastMatchTelecronaca('campionato', btnTelecronaca.dataset);
+                    await this.showLastMatchTelecronaca('campionato', btnTelecronaca.dataset, 'highlights');
+                });
+            }
+
+            // Listener per bottone telecronaca completa
+            const btnTelecronacaCompleta = document.getElementById('btn-campionato-telecronaca-completa');
+            if (btnTelecronacaCompleta) {
+                btnTelecronacaCompleta.addEventListener('click', async () => {
+                    await this.showLastMatchTelecronaca('campionato', btnTelecronacaCompleta.dataset, 'full');
                 });
             }
         }, 100);
@@ -446,8 +468,11 @@ window.UserCompetitions = {
     /**
      * Mostra la telecronaca dell'ultima partita
      * Prima cerca nello schedule (sempre disponibile), poi fallback su matchHistory
+     * @param {string} matchType - Tipo partita (campionato, coppa, etc.)
+     * @param {Object} matchData - Dati della partita dal dataset del bottone
+     * @param {string} telecronacaType - 'highlights' per azioni salienti, 'full' per completa
      */
-    async showLastMatchTelecronaca(matchType, matchData) {
+    async showLastMatchTelecronaca(matchType, matchData, telecronacaType = 'highlights') {
         const currentTeamId = window.InterfacciaCore.currentTeamId;
         if (!currentTeamId) {
             if (window.Toast) window.Toast.error('Errore: squadra non trovata');
@@ -456,6 +481,7 @@ window.UserCompetitions = {
 
         try {
             let matchLog = null;
+            let matchEvents = null;
             let homeName = matchData?.homeName || '';
             let awayName = matchData?.awayName || '';
             let homeScore = 0;
@@ -477,23 +503,37 @@ window.UserCompetitions = {
                             m => m.homeId === matchData.homeId && m.awayId === matchData.awayId
                         );
 
-                        if (matchInSchedule?.matchLog && matchInSchedule.matchLog.length > 0) {
-                            matchLog = matchInSchedule.matchLog;
+                        if (matchInSchedule) {
                             const [hg, ag] = (matchInSchedule.result || '0-0').split('-').map(Number);
                             homeScore = hg;
                             awayScore = ag;
+
+                            // Carica matchLog (azioni salienti)
+                            if (matchInSchedule.matchLog && matchInSchedule.matchLog.length > 0) {
+                                matchLog = matchInSchedule.matchLog;
+                            }
+
+                            // Carica matchEvents (telecronaca completa)
+                            if (matchInSchedule.matchEvents && matchInSchedule.matchEvents.length > 0) {
+                                matchEvents = matchInSchedule.matchEvents;
+                            }
                         }
                     }
                 }
             }
 
             // Fallback: cerca nello storico partite (se matchHistory e' attivo)
-            if (!matchLog && window.MatchHistory) {
+            if (!matchLog && !matchEvents && window.MatchHistory) {
                 const history = await window.MatchHistory.loadHistory(currentTeamId);
                 const lastMatch = history.find(m => m.type === matchType);
 
-                if (lastMatch?.details?.matchLog && lastMatch.details.matchLog.length > 0) {
-                    matchLog = lastMatch.details.matchLog;
+                if (lastMatch?.details) {
+                    if (lastMatch.details.matchLog && lastMatch.details.matchLog.length > 0) {
+                        matchLog = lastMatch.details.matchLog;
+                    }
+                    if (lastMatch.details.matchEvents && lastMatch.details.matchEvents.length > 0) {
+                        matchEvents = lastMatch.details.matchEvents;
+                    }
                     homeName = lastMatch.homeTeam?.name || homeName;
                     awayName = lastMatch.awayTeam?.name || awayName;
                     homeScore = lastMatch.homeScore || 0;
@@ -501,19 +541,34 @@ window.UserCompetitions = {
                 }
             }
 
-            if (!matchLog || matchLog.length === 0) {
-                if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
-                return;
+            // Mostra la telecronaca appropriata
+            if (telecronacaType === 'full') {
+                // Telecronaca completa
+                if (!matchEvents || matchEvents.length === 0) {
+                    if (window.Toast) window.Toast.info('Telecronaca completa non disponibile per questa partita');
+                    return;
+                }
+                window.MatchHistory.showTelecronacaCompletaModal(
+                    matchEvents,
+                    homeName,
+                    awayName,
+                    homeScore,
+                    awayScore
+                );
+            } else {
+                // Azioni salienti (default)
+                if (!matchLog || matchLog.length === 0) {
+                    if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
+                    return;
+                }
+                window.MatchHistory.showTelecronacaModal(
+                    matchLog,
+                    homeName,
+                    awayName,
+                    homeScore,
+                    awayScore
+                );
             }
-
-            // Mostra telecronaca
-            window.MatchHistory.showTelecronacaModal(
-                matchLog,
-                homeName,
-                awayName,
-                homeScore,
-                awayScore
-            );
 
         } catch (error) {
             console.error('Errore caricamento telecronaca:', error);

@@ -199,6 +199,8 @@ window.ChampionshipMain = {
             // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
             match.matchLog = highlights || [];
             match.scorers = scorers || [];
+            // Salva matchEvents completi per telecronaca dettagliata
+            match.matchEvents = matchEvents || [];
 
             // 4. Aggiorna statistiche classifica
             const initializeTeamStats = (teamId, teamName) => ({
@@ -490,6 +492,8 @@ window.ChampionshipMain = {
                     // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
                     round.matches[matchIndexInRound].matchLog = highlights || [];
                     round.matches[matchIndexInRound].scorers = scorers || [];
+                    // Salva matchEvents completi per telecronaca dettagliata
+                    round.matches[matchIndexInRound].matchEvents = matchEvents || [];
                 }
 
                 const initializeTeamStats = (teamId, teamName) => ({
