@@ -728,15 +728,15 @@ window.InterfacciaDashboard = {
             }
         });
 
-        // Colore testo SerieSeriA nel tab home (btn-user-campionato)
-        const btnCampionato = document.getElementById('btn-user-campionato');
-        if (btnCampionato) {
-            const serieSeriaText = btnCampionato.querySelector('span:last-child');
-            if (serieSeriaText) {
-                serieSeriaText.style.color = color;
-                serieSeriaText.style.textShadow = `0 0 10px ${this.hexToRgba(color, 0.5)}`;
-            }
-        }
+        // Colore testo SerieSeriA nel tab home (btn-user-campionato) - RIMOSSO: ora il testo e' sempre bianco
+        // const btnCampionato = document.getElementById('btn-user-campionato');
+        // if (btnCampionato) {
+        //     const serieSeriaText = btnCampionato.querySelector('span:last-child');
+        //     if (serieSeriaText) {
+        //         serieSeriaText.style.color = color;
+        //         serieSeriaText.style.textShadow = `0 0 10px ${this.hexToRgba(color, 0.5)}`;
+        //     }
+        // }
 
         // Colore bottone schedina
         const schedinaBtn = document.getElementById('next-match-schedina-btn');
@@ -3272,10 +3272,13 @@ window.InterfacciaDashboard = {
             }
 
             if (!supercoppaDoc.exists()) {
-                matchEl.textContent = 'Non ancora generata';
-                matchEl.classList.add('text-gray-400');
+                // Nascondi completamente il container se la supercoppa non e' generata
+                statusContainer.classList.add('hidden');
                 return;
             }
+
+            // Mostra il container (potrebbe essere stato nascosto)
+            statusContainer.classList.remove('hidden');
 
             const supercoppaData = supercoppaDoc.data();
 

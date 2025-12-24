@@ -34,7 +34,10 @@ window.Breadcrumb = {
         'user-coppa-content': { label: 'CoppaSeriA', icon: '🏆', parent: 'tab-competitions' },
         'user-supercoppa-content': { label: 'SuperCoppa', icon: '⭐', parent: 'tab-competitions' },
         'leaderboard-content': { label: 'Classifica', icon: '📊', parent: 'tab-competitions' },
+        'campionato-leaderboard-content': { label: 'Classifica Campionato', icon: '📊', parent: 'tab-competitions' },
+        'cup-bracket-content': { label: 'Tabellone Coppa', icon: '🏆', parent: 'tab-competitions' },
         'schedule-content': { label: 'Calendario', icon: '📅', parent: 'tab-competitions' },
+        'private-leagues-content': { label: 'Leghe Private', icon: '👥', parent: 'tab-competitions' },
 
         // Admin
         'admin-content': { label: 'Admin', icon: '🔧', parent: null },

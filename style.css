@@ -5183,3 +5183,834 @@ select,
                 border-color 0.15s ease,
                 opacity 0.15s ease;
 }
+
+/* ==================== 15.14 LEADERBOARD STADIUM DESIGN ==================== */
+
+/* Header con effetto stadio */
+.leaderboard-header {
+    position: relative;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    border-radius: 0.75rem;
+}
+
+.leaderboard-header-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, #064e3b 0%, #022c22 50%, #0f172a 100%);
+    opacity: 0.95;
+}
+
+.leaderboard-header-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255,255,255,0.02) 2px,
+            rgba(255,255,255,0.02) 4px
+        );
+}
+
+.leaderboard-header-bg::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.leaderboard-header-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.leaderboard-trophy {
+    font-size: 1.75rem;
+    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.4));
+    animation: trophy-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes trophy-glow {
+    from { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.3)); }
+    to { filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.6)); }
+}
+
+.leaderboard-title {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #f0fdf4;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    margin: 0.15rem 0;
+}
+
+.leaderboard-subtitle {
+    font-size: 0.875rem;
+    color: #34d399;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Container principale */
+.leaderboard-container {
+    padding: 0 0.5rem;
+}
+
+.leaderboard-cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Loading state */
+.leaderboard-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #9ca3af;
+}
+
+.leaderboard-loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #1f2937;
+    border-top-color: #10b981;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+}
+
+/* Team Card - Stile Stadium Scoreboard */
+.leaderboard-team-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    border-radius: 0.5rem;
+    border: 1px solid #374151;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.leaderboard-team-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #374151;
+    transition: background 0.2s ease;
+}
+
+.leaderboard-team-card:active {
+    transform: scale(0.99);
+}
+
+/* Podio styling */
+.leaderboard-team-card[data-position="1"]::before {
+    background: linear-gradient(180deg, #fbbf24, #d97706);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.leaderboard-team-card[data-position="2"]::before {
+    background: linear-gradient(180deg, #9ca3af, #6b7280);
+    box-shadow: 0 0 8px rgba(156, 163, 175, 0.3);
+}
+
+.leaderboard-team-card[data-position="3"]::before {
+    background: linear-gradient(180deg, #cd7f32, #a0522d);
+    box-shadow: 0 0 8px rgba(205, 127, 50, 0.3);
+}
+
+/* User's team highlight */
+.leaderboard-team-card.is-user-team {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+.leaderboard-team-card.is-user-team::before {
+    background: linear-gradient(180deg, #3b82f6, #1d4ed8) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Position badge - LED style */
+.leaderboard-position {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #9ca3af;
+    background: #0f0f0f;
+    border-radius: 0.375rem;
+    border: 1px solid #374151;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.leaderboard-team-card[data-position="1"] .leaderboard-position {
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+}
+
+.leaderboard-team-card[data-position="2"] .leaderboard-position {
+    color: #d1d5db;
+    text-shadow: 0 0 6px rgba(209, 213, 219, 0.4);
+}
+
+.leaderboard-team-card[data-position="3"] .leaderboard-position {
+    color: #cd7f32;
+    text-shadow: 0 0 6px rgba(205, 127, 50, 0.5);
+}
+
+.leaderboard-team-card.is-user-team .leaderboard-position {
+    color: #60a5fa;
+    text-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+}
+
+/* Team info section */
+.leaderboard-team-info {
+    min-width: 0;
+}
+
+.leaderboard-team-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #f3f4f6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.125rem;
+}
+
+.leaderboard-team-card.is-user-team .leaderboard-team-name {
+    color: #93c5fd;
+}
+
+.leaderboard-team-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: #22d3ee;
+    background: rgba(34, 211, 238, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+/* Points badge */
+.leaderboard-points {
+    text-align: center;
+    padding: 0.375rem 0.75rem;
+    background: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+    border-radius: 0.375rem;
+    border: 1px solid #10b981;
+    min-width: 3rem;
+}
+
+.leaderboard-points-value {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #34d399;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+}
+
+.leaderboard-points-label {
+    font-size: 0.5625rem;
+    color: #6ee7b7;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.leaderboard-team-card.is-user-team .leaderboard-points {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    border-color: #3b82f6;
+}
+
+.leaderboard-team-card.is-user-team .leaderboard-points-value {
+    color: #93c5fd;
+    text-shadow: 0 0 10px rgba(147, 197, 253, 0.3);
+}
+
+.leaderboard-team-card.is-user-team .leaderboard-points-label {
+    color: #bfdbfe;
+}
+
+/* Stats row (expanded) */
+.leaderboard-stats-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid #374151;
+}
+
+.leaderboard-stat {
+    text-align: center;
+    padding: 0.25rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.25rem;
+}
+
+.leaderboard-stat-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.leaderboard-stat-label {
+    font-size: 0.5625rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-top: 0.125rem;
+}
+
+.leaderboard-stat.wins .leaderboard-stat-value { color: #4ade80; }
+.leaderboard-stat.draws .leaderboard-stat-value { color: #fbbf24; }
+.leaderboard-stat.losses .leaderboard-stat-value { color: #f87171; }
+.leaderboard-stat.played .leaderboard-stat-value { color: #9ca3af; }
+.leaderboard-stat.gd .leaderboard-stat-value.positive { color: #4ade80; }
+.leaderboard-stat.gd .leaderboard-stat-value.negative { color: #f87171; }
+.leaderboard-stat.gd .leaderboard-stat-value.neutral { color: #9ca3af; }
+
+/* Desktop: table layout */
+@media (min-width: 640px) {
+    .leaderboard-header {
+        padding: 2rem;
+    }
+
+    .leaderboard-title {
+        font-size: 2.5rem;
+    }
+
+    .leaderboard-team-card {
+        grid-template-columns: auto 1fr repeat(5, 3rem) auto;
+        padding: 0.875rem 1rem;
+    }
+
+    .leaderboard-stats-row {
+        display: contents;
+    }
+
+    .leaderboard-stat {
+        background: transparent;
+        padding: 0;
+    }
+
+    .leaderboard-stat-label {
+        display: none;
+    }
+
+    .leaderboard-stat-value {
+        font-size: 0.875rem;
+    }
+}
+
+/* ==================== 15.15 CUP BRACKET NEON TOURNAMENT DESIGN ==================== */
+
+/* Header del tabellone */
+.cup-bracket-header {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+}
+
+.cup-bracket-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.cup-bracket-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+}
+
+.cup-bracket-header-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.cup-bracket-trophy {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.5));
+    animation: cup-trophy-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cup-trophy-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.5)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.8)); }
+}
+
+.cup-bracket-title {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #e0e7ff;
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+    margin: 0.25rem 0;
+}
+
+.cup-bracket-subtitle {
+    font-size: 0.75rem;
+    color: #a5b4fc;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+}
+
+/* Vincitore Coppa */
+.cup-winner-banner {
+    position: relative;
+    margin: 0 0.5rem 1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #422006 0%, #713f12 50%, #422006 100%);
+    border: 2px solid #fbbf24;
+    box-shadow:
+        0 0 30px rgba(251, 191, 36, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.cup-winner-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg 340deg,
+        rgba(251, 191, 36, 0.3) 340deg 360deg
+    );
+    animation: winner-shine 3s linear infinite;
+}
+
+@keyframes winner-shine {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.cup-winner-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.cup-winner-label {
+    font-size: 0.75rem;
+    color: #fcd34d;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.cup-winner-name {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fef3c7;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Container turni */
+.cup-rounds-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+}
+
+/* Card singolo turno */
+.cup-round-card {
+    position: relative;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(30, 27, 75, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
+}
+
+.cup-round-card:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+}
+
+.cup-round-card.has-user-match {
+    border-color: rgba(250, 204, 21, 0.5);
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.15);
+}
+
+/* Header del turno (accordion) */
+.cup-round-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.cup-round-header:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.cup-round-header:active {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+.cup-round-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cup-round-status {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+.cup-round-status.completed {
+    background: linear-gradient(135deg, #065f46, #047857);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.cup-round-status.pending {
+    background: linear-gradient(135deg, #374151, #4b5563);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cup-round-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #e0e7ff;
+}
+
+.cup-round-user-badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1f2937;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.cup-round-arrow {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    transition: transform 0.3s ease;
+}
+
+.cup-round-header[aria-expanded="true"] .cup-round-arrow {
+    transform: rotate(180deg);
+}
+
+/* Contenuto matches del turno */
+.cup-round-matches {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 0.75rem 0.75rem;
+}
+
+/* Singolo match card */
+.cup-match-card {
+    position: relative;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    transition: all 0.2s ease;
+}
+
+.cup-match-card:hover {
+    background: rgba(17, 24, 39, 0.9);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.cup-match-card.user-match {
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.3), rgba(30, 27, 75, 0.5));
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+.cup-match-card.user-match::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #a855f7, #6366f1);
+    border-radius: 3px 0 0 3px;
+}
+
+/* Team rows nel match */
+.cup-match-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.cup-match-team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: background 0.15s ease;
+}
+
+.cup-match-team.winner {
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.cup-match-team.loser {
+    opacity: 0.6;
+}
+
+.cup-team-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #e5e7eb;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cup-team-name.winner {
+    color: #34d399;
+    font-weight: 700;
+}
+
+.cup-team-name.loser {
+    color: #9ca3af;
+}
+
+.cup-team-name.is-user {
+    color: #fbbf24;
+}
+
+.cup-team-name.is-user::before {
+    content: '⭐ ';
+}
+
+.cup-team-score {
+    font-family: 'Oswald', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    min-width: 1.5rem;
+    text-align: center;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+}
+
+.cup-team-score.winner {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.cup-team-score.loser {
+    color: #6b7280;
+}
+
+/* Risultato aggregato */
+.cup-match-aggregate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(75, 85, 99, 0.3);
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.cup-match-aggregate-label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.cup-match-aggregate-score {
+    font-family: 'Oswald', monospace;
+    font-weight: 600;
+    color: #a5b4fc;
+}
+
+/* Match non ancora giocato */
+.cup-match-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.cup-match-vs-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(75, 85, 99, 0.3);
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+/* Loading state */
+.cup-bracket-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    gap: 1rem;
+}
+
+.cup-bracket-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: cup-spin 0.8s linear infinite;
+}
+
+@keyframes cup-spin {
+    to { transform: rotate(360deg); }
+}
+
+.cup-bracket-loading-text {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+/* Empty state */
+.cup-bracket-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6b7280;
+}
+
+.cup-bracket-empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Animazioni ingresso */
+.cup-round-card {
+    animation: cup-card-appear 0.4s ease-out backwards;
+}
+
+.cup-round-card:nth-child(1) { animation-delay: 0.05s; }
+.cup-round-card:nth-child(2) { animation-delay: 0.1s; }
+.cup-round-card:nth-child(3) { animation-delay: 0.15s; }
+.cup-round-card:nth-child(4) { animation-delay: 0.2s; }
+.cup-round-card:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes cup-card-appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Desktop enhancements */
+@media (min-width: 640px) {
+    .cup-bracket-header {
+        padding: 1.5rem;
+    }
+
+    .cup-bracket-trophy {
+        font-size: 2.5rem;
+    }
+
+    .cup-bracket-title {
+        font-size: 2rem;
+    }
+
+    .cup-round-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .cup-round-name {
+        font-size: 1.125rem;
+    }
+
+    .cup-match-card {
+        padding: 1rem;
+    }
+
+    .cup-team-name {
+        font-size: 1rem;
+    }
+
+    .cup-team-score {
+        font-size: 1.125rem;
+    }
+}

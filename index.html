@@ -742,22 +742,6 @@
                     <span>🌐</span> Esplora la Lega
                 </h3>
                 <div class="grid grid-cols-3 gap-2">
-                    <button id="btn-leaderboard"
-                            class="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-blue-500 hover:to-blue-600 transition duration-150 transform hover:scale-[1.02] text-xs">
-                        📊 Classifica
-                    </button>
-                    <button id="btn-schedule"
-                            class="bg-gradient-to-r from-teal-600 to-teal-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-teal-500 hover:to-teal-600 transition duration-150 transform hover:scale-[1.02] text-xs">
-                        📅 Calendario
-                    </button>
-                    <button id="btn-coppa-home"
-                            class="bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.02] text-xs">
-                        🏆 Coppa
-                    </button>
-                    <button id="btn-supercoppa-home"
-                            class="bg-gradient-to-r from-amber-600 to-amber-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-amber-500 hover:to-amber-600 transition duration-150 transform hover:scale-[1.02] text-xs">
-                        ⭐ SuperCoppa
-                    </button>
                     <button id="btn-lista-icone"
                             class="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-semibold py-2 rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-600 transition duration-150 transform hover:scale-[1.02] text-xs">
                         👑 Icone
@@ -1135,9 +1119,10 @@
                 <div id="serieseria-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
                     <div class="flex items-stretch gap-2">
                         <button id="btn-user-campionato"
-                                class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                                class="flex-1 bg-gradient-to-r from-green-600 to-green-700 font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+                                style="color: white !important;">
                             <span class="text-lg sm:text-xl">🏅</span>
-                            <span class="text-sm sm:text-base" style="color: white !important;">SerieSeriA</span>
+                            <span class="text-sm sm:text-base">SerieSeriA</span>
                         </button>
                         <div class="flex items-center bg-green-800/50 rounded-lg px-3" title="Partecipa al campionato">
                             <label class="relative inline-flex items-center cursor-pointer">
@@ -1282,7 +1267,7 @@
             <!-- ========== TAB 5: REGOLE ========== -->
             <div id="tab-rules" class="tab-content hidden">
                 <!-- Header Regole -->
-                <div class="rounded-lg p-4 mb-3 border-b-2 border-yellow-500/50">
+                <div class="rounded-xl mb-3" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px !important; border: 1px solid var(--team-primary-color, #eab308);">
                     <h2 class="text-2xl font-bold text-white text-center">Regole del Gioco</h2>
                     <p class="text-gray-300 text-center text-sm mt-1">Serie SeriA - Fantacalcio</p>
                 </div>
@@ -1526,17 +1511,22 @@
         </div>
 
         <!-- 7B2. CONTENUTO CLASSIFICA CAMPIONATO -->
-        <div id="campionato-leaderboard-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
-            <h2 class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">📊 Classifica Campionato</h2>
-            <div id="campionato-leaderboard-container" class="mt-4">
-                <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border-2 border-blue-500 shadow-lg overflow-hidden">
-                    <div class="p-3">
-                        <h3 class="text-xl font-bold text-blue-400 flex items-center gap-2">
-                            <span>📊</span> Classifica SerieSeriA
-                        </h3>
-                    </div>
-                    <div id="campionato-leaderboard-table-container" class="bg-black bg-opacity-30 rounded-lg overflow-x-auto mx-3 mb-3">
-                        <p class="text-center text-gray-400 py-4">Caricamento classifica...</p>
+        <div id="campionato-leaderboard-content" class="football-box w-full max-w-4xl transition duration-500 hidden hidden-on-load pb-20">
+            <!-- Header con effetto stadio -->
+            <div class="leaderboard-header">
+                <div class="leaderboard-header-bg"></div>
+                <div class="leaderboard-header-content">
+                    <div class="leaderboard-trophy">🏆</div>
+                    <h2 class="leaderboard-title">CLASSIFICA</h2>
+                    <p class="leaderboard-subtitle">SerieSeriA</p>
+                </div>
+            </div>
+
+            <div id="campionato-leaderboard-container" class="leaderboard-container">
+                <div id="campionato-leaderboard-table-container" class="leaderboard-cards-wrapper">
+                    <div class="leaderboard-loading">
+                        <div class="leaderboard-loading-spinner"></div>
+                        <p>Caricamento classifica...</p>
                     </div>
                 </div>
             </div>
@@ -1552,17 +1542,21 @@
         </div>
 
         <!-- 7C2. CONTENUTO TABELLONE COPPA -->
-        <div id="cup-bracket-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
-            <h2 class="text-4xl font-extrabold text-indigo-400 text-center mb-4 border-b-4 border-indigo-700 pb-2">🏆 Tabellone CoppaSeriA</h2>
-            <div id="cup-bracket-container" class="mt-4">
-                <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
-                            <span>📋</span> Tabellone Completo
-                        </h3>
-                    </div>
-                    <div id="cup-bracket-table-container">
-                        <p class="text-center text-gray-400 py-4">Caricamento tabellone...</p>
+        <div id="cup-bracket-content" class="football-box w-full max-w-4xl transition duration-500 hidden hidden-on-load pb-20">
+            <!-- Header con effetto neon -->
+            <div class="cup-bracket-header">
+                <div class="cup-bracket-header-content">
+                    <div class="cup-bracket-trophy">🏆</div>
+                    <h2 class="cup-bracket-title">TABELLONE</h2>
+                    <p class="cup-bracket-subtitle">CoppaSeriA</p>
+                </div>
+            </div>
+
+            <div id="cup-bracket-container">
+                <div id="cup-bracket-table-container">
+                    <div class="cup-bracket-loading">
+                        <div class="cup-bracket-spinner"></div>
+                        <p class="cup-bracket-loading-text">Caricamento tabellone...</p>
                     </div>
                 </div>
             </div>
@@ -2062,6 +2056,8 @@
                 document.getElementById('user-campionato-content'), // SerieSeriA Utente
                 document.getElementById('user-coppa-content'), // CoppaSeriA Utente
                 document.getElementById('user-supercoppa-content'), // Super CoppaSeriA Utente
+                document.getElementById('campionato-leaderboard-content'), // Classifica Campionato
+                document.getElementById('cup-bracket-content'), // Tabellone Coppa
                 document.getElementById('stadium-content'), // Stadio
                 document.getElementById('private-leagues-content') // Leghe Private
             ];

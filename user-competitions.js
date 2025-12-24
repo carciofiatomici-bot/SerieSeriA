@@ -1316,10 +1316,11 @@ window.UserCompetitions = {
 
         const currentTeamId = window.InterfacciaCore?.currentTeamId;
 
+        // Loading state con nuovo design
         container.innerHTML = `
-            <div class="text-center py-8">
-                <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-indigo-500 mx-auto mb-4"></div>
-                <p class="text-gray-400">Caricamento tabellone...</p>
+            <div class="cup-bracket-loading">
+                <div class="cup-bracket-spinner"></div>
+                <p class="cup-bracket-loading-text">Caricamento tabellone...</p>
             </div>
         `;
 
@@ -1334,7 +1335,12 @@ window.UserCompetitions = {
             const cupDoc = await getDoc(cupDocRef);
 
             if (!cupDoc.exists()) {
-                container.innerHTML = `<p class="text-center text-gray-400 py-4">Tabellone non ancora generato</p>`;
+                container.innerHTML = `
+                    <div class="cup-bracket-empty">
+                        <div class="cup-bracket-empty-icon">🏆</div>
+                        <p>Tabellone non ancora generato</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1342,29 +1348,33 @@ window.UserCompetitions = {
             const rounds = cupData.rounds || [];
 
             if (rounds.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-400 py-4">Nessun turno disponibile</p>`;
+                container.innerHTML = `
+                    <div class="cup-bracket-empty">
+                        <div class="cup-bracket-empty-icon">📋</div>
+                        <p>Nessun turno disponibile</p>
+                    </div>
+                `;
                 return;
             }
 
-            // Conta turni completati
-            const completedRounds = rounds.filter(r => r.status === 'completed').length;
-            const totalRounds = rounds.length;
-
-            // HTML per il tabellone
+            // HTML per il tabellone con nuovo design
             let html = '';
 
             // Mostra vincitore se coppa completata
             if (cupData.status === 'completed' && cupData.winner) {
                 html += `
-                    <div class="mb-4 p-3 bg-yellow-900 bg-opacity-50 rounded-lg text-center">
-                        <p class="text-yellow-400 font-bold text-lg">🏆 Vincitore: ${this._escapeHtml(cupData.winner.teamName)}</p>
+                    <div class="cup-winner-banner">
+                        <div class="cup-winner-content">
+                            <p class="cup-winner-label">Vincitore CoppaSeriA</p>
+                            <p class="cup-winner-name">🏆 ${this._escapeHtml(cupData.winner.teamName)}</p>
+                        </div>
                     </div>
                 `;
             }
 
-            html += `<div class="max-h-96 overflow-y-auto space-y-2" id="cup-bracket-accordion">`;
+            html += `<div class="cup-rounds-container">`;
 
-            // Genera ogni round
+            // Genera ogni round con card design
             rounds.forEach((round, roundIndex) => {
                 const isCompleted = round.status === 'completed';
                 const hasUserMatch = round.matches?.some(m =>
@@ -1372,35 +1382,35 @@ window.UserCompetitions = {
                 );
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
-                        <button class="coppa-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer" data-accordion="cup-bracket-round-${roundIndex}" aria-expanded="false">
-                            <span class="text-indigo-300 font-bold flex items-center gap-2">
-                                ${isCompleted ? '✅' : '⏳'} ${round.roundName || `Turno ${roundIndex + 1}`}
-                                ${hasUserMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
-                            </span>
-                            <span class="coppa-round-arrow text-indigo-400 transition-transform">▼</span>
+                    <div class="cup-round-card ${hasUserMatch ? 'has-user-match' : ''}">
+                        <button class="cup-round-header" data-accordion="cup-bracket-round-${roundIndex}" aria-expanded="false">
+                            <div class="cup-round-info">
+                                <div class="cup-round-status ${isCompleted ? 'completed' : 'pending'}">
+                                    ${isCompleted ? '✓' : '⏳'}
+                                </div>
+                                <span class="cup-round-name">${round.roundName || `Turno ${roundIndex + 1}`}</span>
+                                ${hasUserMatch ? '<span class="cup-round-user-badge">Tua partita</span>' : ''}
+                            </div>
+                            <div class="cup-round-arrow">▼</div>
                         </button>
-                        <div id="cup-bracket-round-${roundIndex}" class="coppa-round-content hidden px-3 pb-3 space-y-2">
+                        <div id="cup-bracket-round-${roundIndex}" class="cup-round-matches hidden">
                 `;
 
-                // Genera ogni match del round
+                // Genera ogni match del round con card design
                 if (round.matches) {
                     round.matches.forEach(match => {
                         const homeName = match.homeTeam?.teamName || 'TBD';
                         const awayName = match.awayTeam?.teamName || 'TBD';
                         const isUserMatch = match.homeTeam?.teamId === currentTeamId || match.awayTeam?.teamId === currentTeamId;
-                        const matchBg = isUserMatch ? 'bg-purple-900 bg-opacity-50' : 'bg-gray-800 bg-opacity-50';
-
-                        let scoreHtml = '';
-                        let homeClass = 'text-white';
-                        let awayClass = 'text-white';
+                        const isHomeUser = match.homeTeam?.teamId === currentTeamId;
+                        const isAwayUser = match.awayTeam?.teamId === currentTeamId;
 
                         // Funzione helper per parsare risultato stringa "X-Y" o "X-Y (dts)" ecc
                         const parseResult = (resultStr) => {
                             if (!resultStr) return null;
-                            const match = String(resultStr).match(/^(\d+)-(\d+)/);
-                            if (match) {
-                                return { home: parseInt(match[1]), away: parseInt(match[2]) };
+                            const resultMatch = String(resultStr).match(/^(\d+)-(\d+)/);
+                            if (resultMatch) {
+                                return { home: parseInt(resultMatch[1]), away: parseInt(resultMatch[2]) };
                             }
                             return null;
                         };
@@ -1408,37 +1418,74 @@ window.UserCompetitions = {
                         const leg1 = parseResult(match.leg1Result);
                         const leg2 = parseResult(match.leg2Result);
 
-                        if (match.winner) {
-                            const homeWon = match.winner.teamId === match.homeTeam?.teamId;
-                            homeClass = homeWon ? 'text-green-400 font-bold' : 'text-red-400';
-                            awayClass = homeWon ? 'text-red-400' : 'text-green-400 font-bold';
+                        let homeWon = false;
+                        let awayWon = false;
+                        let aggHome = 0;
+                        let aggAway = 0;
 
-                            // Risultati - calcola aggregato se ci sono entrambe le leg
+                        if (match.winner) {
+                            homeWon = match.winner.teamId === match.homeTeam?.teamId;
+                            awayWon = !homeWon;
+
                             if (leg1 && leg2) {
-                                // Aggregato: leg1 home + leg2 away (trasferta = gol in casa avversaria)
-                                const aggHome = leg1.home + leg2.away;
-                                const aggAway = leg1.away + leg2.home;
-                                scoreHtml = `<span class="text-gray-400 text-xs">${aggHome}-${aggAway}</span> / <span class="text-white font-bold">${leg2.home}-${leg2.away}</span>`;
+                                aggHome = leg1.home + leg2.away;
+                                aggAway = leg1.away + leg2.home;
                             } else if (leg1) {
-                                scoreHtml = `<span class="text-white font-bold">${leg1.home}-${leg1.away}</span>`;
+                                aggHome = leg1.home;
+                                aggAway = leg1.away;
                             } else {
-                                scoreHtml = `<span class="text-white font-bold">${match.aggregateHome || 0}-${match.aggregateAway || 0}</span>`;
+                                aggHome = match.aggregateHome || 0;
+                                aggAway = match.aggregateAway || 0;
                             }
-                        } else if (leg1) {
-                            // Partita in corso (solo andata giocata)
-                            scoreHtml = `<span class="text-gray-400 text-xs">${leg1.home}-${leg1.away}</span> / <span class="text-gray-500">vs</span>`;
-                        } else {
-                            scoreHtml = '<span class="text-gray-500">vs</span>';
                         }
 
-                        const homeHighlight = match.homeTeam?.teamId === currentTeamId ? 'text-yellow-400' : '';
-                        const awayHighlight = match.awayTeam?.teamId === currentTeamId ? 'text-yellow-400' : '';
+                        html += `
+                            <div class="cup-match-card ${isUserMatch ? 'user-match' : ''}">
+                                <div class="cup-match-teams">
+                        `;
+
+                        if (match.winner || leg1) {
+                            // Partita con risultato
+                            const homeScore = leg2 ? leg2.home : (leg1 ? leg1.home : aggHome);
+                            const awayScore = leg2 ? leg2.away : (leg1 ? leg1.away : aggAway);
+
+                            html += `
+                                <div class="cup-match-team ${homeWon ? 'winner' : (awayWon ? 'loser' : '')}">
+                                    <span class="cup-team-name ${homeWon ? 'winner' : (awayWon ? 'loser' : '')} ${isHomeUser ? 'is-user' : ''}">${this._escapeHtml(homeName)}</span>
+                                    <span class="cup-team-score ${homeWon ? 'winner' : (awayWon ? 'loser' : '')}">${homeScore}</span>
+                                </div>
+                                <div class="cup-match-team ${awayWon ? 'winner' : (homeWon ? 'loser' : '')}">
+                                    <span class="cup-team-name ${awayWon ? 'winner' : (homeWon ? 'loser' : '')} ${isAwayUser ? 'is-user' : ''}">${this._escapeHtml(awayName)}</span>
+                                    <span class="cup-team-score ${awayWon ? 'winner' : (homeWon ? 'loser' : '')}">${awayScore}</span>
+                                </div>
+                            `;
+
+                            // Mostra aggregato se ci sono due leg
+                            if (leg1 && leg2 && match.winner) {
+                                html += `
+                                    <div class="cup-match-aggregate">
+                                        <span class="cup-match-aggregate-label">Agg:</span>
+                                        <span class="cup-match-aggregate-score">${aggHome} - ${aggAway}</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            // Partita non ancora giocata
+                            html += `
+                                <div class="cup-match-team">
+                                    <span class="cup-team-name ${isHomeUser ? 'is-user' : ''}">${this._escapeHtml(homeName)}</span>
+                                </div>
+                                <div class="cup-match-vs">
+                                    <div class="cup-match-vs-icon">VS</div>
+                                </div>
+                                <div class="cup-match-team">
+                                    <span class="cup-team-name ${isAwayUser ? 'is-user' : ''}">${this._escapeHtml(awayName)}</span>
+                                </div>
+                            `;
+                        }
 
                         html += `
-                            <div class="flex justify-between items-center text-sm p-2 rounded ${matchBg}">
-                                <span class="${homeClass} flex-1 ${homeHighlight}">${homeHighlight ? '⭐ ' : ''}${this._escapeHtml(homeName)}</span>
-                                <span class="text-gray-400 mx-3 text-center min-w-16">${scoreHtml}</span>
-                                <span class="${awayClass} flex-1 text-right ${awayHighlight}">${this._escapeHtml(awayName)}${awayHighlight ? ' ⭐' : ''}</span>
+                                </div>
                             </div>
                         `;
                     });
@@ -1459,7 +1506,12 @@ window.UserCompetitions = {
 
         } catch (error) {
             console.error('[CupBracket] Errore:', error);
-            container.innerHTML = `<p class="text-center text-red-400 py-4">Errore nel caricamento del tabellone</p>`;
+            container.innerHTML = `
+                <div class="cup-bracket-empty">
+                    <div class="cup-bracket-empty-icon">⚠️</div>
+                    <p class="text-red-400">Errore nel caricamento del tabellone</p>
+                </div>
+            `;
         }
     },
 
@@ -1467,12 +1519,12 @@ window.UserCompetitions = {
      * Inizializza gli accordion del tabellone coppa
      */
     initCupBracketAccordions() {
-        const headers = document.querySelectorAll('#cup-bracket-accordion .coppa-round-header');
+        const headers = document.querySelectorAll('.cup-rounds-container .cup-round-header');
         headers.forEach(header => {
             header.addEventListener('click', () => {
                 const targetId = header.getAttribute('data-accordion');
                 const content = document.getElementById(targetId);
-                const arrow = header.querySelector('.coppa-round-arrow');
+                const arrow = header.querySelector('.cup-round-arrow');
 
                 if (content) {
                     const isHidden = content.classList.contains('hidden');
