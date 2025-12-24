@@ -2943,19 +2943,33 @@ html, body {
 
 /* ===================== FIX OVERSCROLL SU TUTTE LE SCHERMATE ===================== */
 /* Previene la visualizzazione di schermate nascoste durante l'overscroll */
-#main-content {
+html, body, #main-content {
     overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+#main-content {
     position: relative;
+    isolation: isolate;
 }
 
 /* Assicura che le schermate nascoste non siano visibili durante overscroll */
 #main-content > .hidden,
 #main-content > .hidden-on-load {
+    display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: -9999px !important;
+    opacity: 0 !important;
+}
+
+/* Fix specifico per login-box: nascosto quando l'utente e' loggato */
+body.user-logged-in #login-box.hidden,
+body.user-logged-in #login-box.hidden-on-load {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
 }
 
 /* Schermate visibili devono avere sfondo per coprire tutto */

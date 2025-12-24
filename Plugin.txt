@@ -1,1 +1,6 @@
 frontend-design
+
+in tutti i bordi devono avere il colore del colorpicker e
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    padding: 12px !important; 

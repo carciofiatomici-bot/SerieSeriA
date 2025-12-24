@@ -121,8 +121,46 @@ window.LayoutManager = {
             this.setTabBarVisibility(true);
         }
 
+        // Previene la visualizzazione accidentale del login-box durante lo scroll
+        this.setupScrollProtection();
+
         this.initialized = true;
         console.log('[LayoutManager] Inizializzato con', Object.keys(this.screenLayouts).length, 'schermate registrate');
+    },
+
+    /**
+     * Protegge il login-box dalla visualizzazione accidentale durante lo scroll
+     */
+    setupScrollProtection() {
+        const loginBox = document.getElementById('login-box');
+        if (!loginBox) return;
+
+        // Funzione per verificare e nascondere login-box se necessario
+        const ensureLoginBoxHidden = () => {
+            const isLoggedIn = this.isUserLoggedIn();
+            const currentScreen = this.currentScreen;
+
+            // Se l'utente e' loggato e siamo in una schermata diversa da login-box,
+            // assicuriamo che login-box sia nascosto
+            if (isLoggedIn && currentScreen !== 'login-box') {
+                if (!loginBox.classList.contains('hidden') || !loginBox.classList.contains('hidden-on-load')) {
+                    loginBox.classList.add('hidden', 'hidden-on-load');
+                }
+            }
+        };
+
+        // Controlla periodicamente (ogni 500ms) per sicurezza
+        setInterval(ensureLoginBoxHidden, 500);
+
+        // Controlla anche su scroll e touchmove
+        let scrollTimeout;
+        const onScroll = () => {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(ensureLoginBoxHidden, 100);
+        };
+
+        document.addEventListener('scroll', onScroll, { passive: true });
+        document.addEventListener('touchmove', onScroll, { passive: true });
     },
 
     /**

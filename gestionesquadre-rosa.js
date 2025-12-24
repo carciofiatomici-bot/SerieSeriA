@@ -58,14 +58,14 @@ window.GestioneSquadreRosa = {
         };
 
         squadraToolsContainer.innerHTML = `
-            <div class="bg-gray-700 p-6 rounded-lg border border-green-500 relative">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold text-green-400">I Tuoi Calciatori</h3>
+            <div id="player-list-box" class="rounded-xl border relative" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 8px;">
+                <div class="flex justify-between items-center mb-2 sm:mb-4">
+                    <h3 class="text-lg sm:text-2xl font-bold text-green-400">I Tuoi Calciatori</h3>
                     <button id="btn-toggle-licenzia"
-                            class="text-gray-400 hover:text-white hover:bg-gray-600 px-2 py-1 rounded transition text-xl"
+                            class="text-gray-400 hover:text-white hover:bg-gray-600 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition text-lg sm:text-xl"
                             title="Mostra/Nascondi opzioni licenziamento">⚙️</button>
                 </div>
-                <div id="player-list-message" class="text-center mb-4 text-green-500"></div>
+                <div id="player-list-message" class="text-center mb-2 sm:mb-4 text-green-500 text-sm"></div>
 
                 <div id="player-list">
                     ${players.length === 0

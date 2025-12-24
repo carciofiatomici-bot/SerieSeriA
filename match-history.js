@@ -312,8 +312,8 @@ window.MatchHistory = {
 
         container.innerHTML = `
             <!-- Bacheca Trofei -->
-            <div class="p-4 bg-gradient-to-r from-yellow-900 to-amber-800 rounded-lg border-2 border-yellow-500 mb-4">
-                <h3 class="text-xl font-bold text-yellow-400 mb-3 text-center">🏛️ Bacheca Trofei</h3>
+            <div id="trophy-cabinet-box" class="rounded-xl border mb-4" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
+                <h3 class="text-lg font-bold text-yellow-400 mb-3 text-center">🏛️ Bacheca Trofei</h3>
                 <div class="grid grid-cols-3 gap-3 text-center">
                     <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg">
                         <p class="text-3xl mb-1">🏅</p>
@@ -334,8 +334,8 @@ window.MatchHistory = {
             </div>
 
             <!-- Header con Statistiche -->
-            <div class="p-4 bg-gradient-to-r from-gray-700 to-gray-800 rounded-lg border-2 border-cyan-500 mb-4">
-                <h3 class="text-xl font-bold text-cyan-400 mb-3 text-center">Riepilogo Partite</h3>
+            <div id="match-stats-box" class="rounded-xl border mb-4" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
+                <h3 class="text-lg font-bold text-cyan-400 mb-3 text-center">Riepilogo Partite</h3>
                 <div class="grid grid-cols-4 gap-2 text-center">
                     <div class="bg-gray-900 p-2 rounded">
                         <p class="text-2xl font-bold text-green-400">${stats.wins}</p>

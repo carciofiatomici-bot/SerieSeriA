@@ -628,6 +628,54 @@ window.InterfacciaDashboard = {
             coachBoxContainer.style.borderColor = color;
         }
 
+        // Bordo box Stadio Content
+        const stadiumContent = document.getElementById('stadium-content');
+        if (stadiumContent) {
+            stadiumContent.style.borderColor = color;
+        }
+
+        // Bordo box Spogliatoi
+        const lockerRoomBox = document.getElementById('locker-room-box');
+        if (lockerRoomBox) {
+            lockerRoomBox.style.borderColor = color;
+        }
+
+        // Bordo box Campo Stadio
+        const stadiumFieldBox = document.getElementById('stadium-field-box');
+        if (stadiumFieldBox) {
+            stadiumFieldBox.style.borderColor = color;
+        }
+
+        // Bordo box Match History
+        const matchHistoryContent = document.getElementById('match-history-content');
+        if (matchHistoryContent) {
+            matchHistoryContent.style.borderColor = color;
+        }
+
+        // Bordo box Bacheca Trofei
+        const trophyCabinetBox = document.getElementById('trophy-cabinet-box');
+        if (trophyCabinetBox) {
+            trophyCabinetBox.style.borderColor = color;
+        }
+
+        // Bordo box Statistiche Partite
+        const matchStatsBox = document.getElementById('match-stats-box');
+        if (matchStatsBox) {
+            matchStatsBox.style.borderColor = color;
+        }
+
+        // Bordo box Squadra Tools Container
+        const squadraToolsContainer = document.getElementById('squadra-tools-container');
+        if (squadraToolsContainer) {
+            squadraToolsContainer.style.borderColor = color;
+        }
+
+        // Bordo box Player List (I Tuoi Calciatori)
+        const playerListBox = document.getElementById('player-list-box');
+        if (playerListBox) {
+            playerListBox.style.borderColor = color;
+        }
+
         // Colore menu hamburger
         const dashboardMenuBtn = document.getElementById('dashboard-menu-btn');
         if (dashboardMenuBtn) {

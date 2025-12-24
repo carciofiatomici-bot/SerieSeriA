@@ -685,7 +685,7 @@
 
             <!-- Header con Logo Serie SeriA (mostrato quando non loggato) -->
             <div id="login-header" class="mb-3">
-                <div id="login-title-box" class="rounded-lg border border-green-500/50 p-3 text-center">
+                <div id="login-title-box" class="rounded-xl border border-green-500 p-3 text-center" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px;">
                     <div class="flex items-center justify-center gap-3 mb-2">
                         <img src="https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/serie%20sera%20256.png"
                              alt="Serie SeriA Logo"
@@ -705,7 +705,7 @@
 
             <!-- SEZIONE SESSIONE RICORDATA (nascosta di default) -->
             <div id="remembered-session-box" class="hidden mb-3">
-                <div id="remembered-box" class="rounded-lg border border-green-500/50 p-4 text-center">
+                <div id="remembered-box" class="rounded-xl border border-green-500 p-3 text-center" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px;">
                     <img id="remembered-team-logo" src="" alt="Logo Squadra" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-green-400 object-cover">
                     <p class="text-lg font-bold text-white mb-1" id="remembered-team-name">Nome Squadra</p>
                     <p class="text-xs text-gray-400 mb-4">Sessione attiva</p>
@@ -721,7 +721,7 @@
             </div>
 
             <!-- BOX 1: LOGIN -->
-            <div id="normal-login-box" class="rounded-lg border border-green-500/50 p-4 mb-3">
+            <div id="normal-login-box" class="rounded-xl border border-green-500 mb-3" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
                 <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
                     <span>🔐</span> Accedi alla tua Squadra
                 </h3>
@@ -737,7 +737,7 @@
             </div>
 
             <!-- BOX 2: ESPLORA LEGA -->
-            <div id="explore-box" class="rounded-lg border p-4 mb-3" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
+            <div id="explore-box" class="rounded-xl border mb-3" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px; border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
                 <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
                     <span>🌐</span> Esplora la Lega
                 </h3>
@@ -770,7 +770,7 @@
             </div>
 
             <!-- BOX: TABELLA PREMI -->
-            <div id="rewards-box" class="rounded-lg border p-3 mb-3 bg-gray-900" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
+            <div id="rewards-box" class="rounded-xl border mb-3" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px; border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
                 <h3 class="text-sm font-bold text-green-400 mb-3 text-center flex items-center justify-center gap-2">
                     <span>🏆</span> Premi Stagionali
                 </h3>
@@ -853,7 +853,7 @@
             </div>
 
             <!-- BOX 3: SUPPORTO -->
-            <div id="support-box" class="rounded-lg border p-2 flex items-center" style="border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
+            <div id="support-box" class="rounded-xl border flex items-center" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px; border-color: var(--team-primary-color, rgba(34, 197, 94, 0.5))">
                 <div class="flex gap-4 items-center w-full">
                     <a href="https://docs.google.com/forms/d/1Iz3CJrVfeNrzR_rU5kmIC-WNCGbDo91yuM5i94P6fnY/edit"
                        target="_blank"
@@ -1557,14 +1557,14 @@
         </div>
 
         <!-- 9. CONTENUTO AREA GESTIONE SQUADRA (Rosa e Formazione) -->
-        <div id="squadra-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load pb-20">
+        <div id="squadra-content" class="football-box w-full max-w-5xl mx-auto transition duration-500 hidden-on-load pb-32 px-2 sm:px-4">
              <!-- Contenitore logica Gestione Rosa o Formazione -->
-             <div id="squadra-tools-container">
+             <div id="squadra-tools-container" class="rounded-xl border" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 8px;">
                 <p class="text-center text-gray-400">Contenuto in caricamento...</p>
              </div>
              
              <button id="squadra-back-button"
-                    class="mt-6 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
+                    class="hidden mt-6 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150 transform hover:scale-[1.02]">
                 Torna alla Dashboard
             </button>
         </div>
@@ -1582,8 +1582,7 @@
         </div>
 
         <!-- 10b. CONTENUTO HALL OF FAME (Storico Partite) - NASCOSTO -->
-        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
-             <h2 class="text-4xl font-extrabold text-amber-400 text-center mb-4 border-b-4 border-amber-600 pb-2">🏛️ Hall of Fame</h2>
+        <div id="match-history-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20 rounded-xl border" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
              <div id="match-history-tools-container" class="mt-6">
                 <p class="text-center text-gray-400">Caricamento storico partite...</p>
              </div>
@@ -1594,7 +1593,7 @@
         </div>
 
         <!-- 10c. CONTENUTO STADIO - NASCOSTO -->
-        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load pb-20">
+        <div id="stadium-content" class="football-box w-full max-w-5xl transition duration-500 hidden-on-load pb-36 rounded-xl border" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
             <!-- Il contenuto e' iniettato da stadium-ui.js -->
             <p class="text-center text-gray-400 p-8">Caricamento stadio...</p>
         </div>

@@ -47,98 +47,94 @@ window.StadiumUI = {
         const teamName = this._teamData?.teamName || 'La tua squadra';
 
         container.innerHTML = `
-            <div class="p-4 md:p-6">
+            <div class="p-4 md:p-6 pb-32">
                 <!-- Header -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-bold text-green-400 flex items-center gap-3">
-                            <span class="text-4xl">🏟️</span>
-                            Stadio di ${this.escapeHtml(teamName)}
-                        </h2>
-                        <p class="text-gray-400 mt-1">Costruisci strutture per ottenere bonus nelle partite in casa</p>
-                    </div>
-                    <button id="btn-back-from-stadium" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition">
-                        <i class="fas fa-arrow-left mr-2"></i> Torna alla Dashboard
-                    </button>
+                <div class="mb-4">
+                    <h2 class="text-xl md:text-2xl font-bold text-green-400 flex items-center gap-2">
+                        <span class="text-2xl">🏟️</span>
+                        Stadio di ${this.escapeHtml(teamName)}
+                    </h2>
                 </div>
 
-                <!-- Box Allenatore (centrato) -->
-                ${this.renderCoachBox()}
+                <!-- Box Allenatore (nascosto) -->
+                <!-- ${this.renderCoachBox()} -->
 
-                <!-- Stats Bar -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <p class="text-gray-400 text-sm">Strutture Costruite</p>
-                        <p class="text-2xl font-bold text-white">${stats.built} / ${stats.total}</p>
-                        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
-                            <div class="bg-green-500 h-2 rounded-full transition-all" style="width: ${stats.percentage}%"></div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-4 border border-blue-600">
-                        <p class="text-gray-400 text-sm">Livelli Totali</p>
-                        <p class="text-2xl font-bold text-blue-400">${stats.totalLevels} / ${stats.maxPossibleLevels}</p>
-                        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
-                            <div class="bg-blue-500 h-2 rounded-full transition-all" style="width: ${stats.levelPercentage}%"></div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-4 border border-green-600">
-                        <p class="text-gray-400 text-sm">Bonus Casa Attuale</p>
-                        <p class="text-2xl font-bold text-green-400">+${stats.bonus.toFixed(2)}</p>
-                        <p class="text-xs text-gray-500 mt-1">Max: +${stats.maxBonus.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <p class="text-gray-400 text-sm">Budget Disponibile</p>
-                        <p class="text-2xl font-bold text-yellow-400">${this._teamData?.budget || 0} CS</p>
-                    </div>
-                </div>
-
-                <!-- Sezione Spogliatoi -->
+                <!-- Sezione Spogliatoi (compatta per mobile) -->
                 ${this.renderLockerRoomSection()}
 
                 <!-- Campo da Calcio con Strutture -->
-                <div class="bg-gray-900 rounded-xl p-4 md:p-6 border-2 border-gray-700">
+                <div id="stadium-field-box" class="rounded-xl border" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
                     ${this.renderStadiumField()}
                 </div>
 
-                <!-- Legenda + Bonus Casa -->
-                <div class="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <!-- Legenda a sinistra -->
-                        <div>
-                            <h4 class="text-lg font-bold text-gray-300 mb-3">Legenda</h4>
-                            <div class="flex flex-wrap gap-4 text-sm">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-green-700 border-2 border-green-400 flex items-center justify-center text-xs text-white font-bold">1</div>
-                                    <span class="text-gray-400">Lv.1</span>
+                <!-- Legenda + Bonus Casa (collapsible) -->
+                <div class="mt-4 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                    <!-- Header cliccabile -->
+                    <button id="stadium-legend-toggle" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/50 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-gray-400">ℹ️</span>
+                            <span class="text-sm font-bold text-gray-300">Legenda e Bonus</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-green-400 font-bold text-sm" id="total-bonus-display">+${(this._stadiumData?.totalBonus || 0).toFixed(2)}</span>
+                            <span id="stadium-legend-arrow" class="text-gray-400 transition-transform">▼</span>
+                        </div>
+                    </button>
+                    <!-- Contenuto collassabile (nascosto di default) -->
+                    <div id="stadium-legend-content" class="hidden px-4 pb-4 border-t border-gray-700">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-3">
+                            <!-- Legenda -->
+                            <div class="flex flex-wrap gap-3 text-sm">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded bg-green-700 border-2 border-green-400 flex items-center justify-center text-[10px] text-white font-bold">1</div>
+                                    <span class="text-gray-400 text-xs">Lv.1</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-green-700 border-2 border-blue-400 flex items-center justify-center text-xs text-white font-bold">2</div>
-                                    <span class="text-gray-400">Lv.2</span>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded bg-green-700 border-2 border-blue-400 flex items-center justify-center text-[10px] text-white font-bold">2</div>
+                                    <span class="text-gray-400 text-xs">Lv.2</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-gradient-to-br from-yellow-700 to-yellow-900 border-2 border-purple-400 flex items-center justify-center text-xs text-yellow-300 font-bold">M</div>
-                                    <span class="text-gray-400">Lv.MAX</span>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-yellow-700 to-yellow-900 border-2 border-purple-400 flex items-center justify-center text-[10px] text-yellow-300 font-bold">M</div>
+                                    <span class="text-gray-400 text-xs">MAX</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-xs">+</div>
-                                    <span class="text-gray-400">Disponibile</span>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded bg-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-[10px]">+</div>
+                                    <span class="text-gray-400 text-xs">Disponibile</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded bg-gray-800 border-2 border-red-900 flex items-center justify-center text-xs opacity-50">🔒</div>
-                                    <span class="text-gray-400">Bloccato</span>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded bg-gray-800 border-2 border-red-900 flex items-center justify-center text-[10px] opacity-50">🔒</div>
+                                    <span class="text-gray-400 text-xs">Bloccato</span>
                                 </div>
                             </div>
+                            <!-- Bonus Casa grande -->
+                            <div class="bg-gray-900 rounded-lg px-4 py-2 border-2 border-green-500 text-center">
+                                <p class="text-[10px] text-gray-400">Bonus Casa Totale</p>
+                                <p class="text-xl font-bold text-green-400">+${(this._stadiumData?.totalBonus || 0).toFixed(2)}</p>
+                            </div>
                         </div>
-                        <!-- Bonus Casa a destra -->
-                        <div class="bg-gray-900 rounded-lg px-5 py-3 border-2 border-green-500 text-center">
-                            <p class="text-xs text-gray-400 mb-1">Bonus Casa Totale</p>
-                            <p class="text-2xl font-bold text-green-400" id="total-bonus-display">+${(this._stadiumData?.totalBonus || 0).toFixed(2)}</p>
+                    </div>
+                </div>
+
+                <!-- Stats Stadio (in fondo) -->
+                <div class="mt-4 grid grid-cols-2 gap-3 mb-20">
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                        <p class="text-gray-400 text-xs">Strutture Costruite</p>
+                        <p class="text-xl font-bold text-white">${stats.built} / ${stats.total}</p>
+                        <div class="w-full bg-gray-700 rounded-full h-1.5 mt-2">
+                            <div class="bg-green-500 h-1.5 rounded-full transition-all" style="width: ${stats.percentage}%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-3 border border-blue-600">
+                        <p class="text-gray-400 text-xs">Livelli Totali</p>
+                        <p class="text-xl font-bold text-blue-400">${stats.totalLevels} / ${stats.maxPossibleLevels}</p>
+                        <div class="w-full bg-gray-700 rounded-full h-1.5 mt-2">
+                            <div class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: ${stats.levelPercentage}%"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Messaggio feedback -->
-                <p id="stadium-message" class="text-center mt-4 text-sm"></p>
+                <p id="stadium-message" class="text-center mt-4 text-sm mb-16"></p>
             </div>
 
             <!-- Modal Conferma Acquisto -->
@@ -238,33 +234,13 @@ window.StadiumUI = {
                     <p class="text-sm text-gray-400 font-semibold">Allenatore:</p>
                     <p class="text-xl font-extrabold text-orange-400 mt-1">${this.escapeHtml(coachName)}</p>
                     <p class="text-xs text-gray-500 mb-2">Livello: ${coachLevel} / ${maxLevel}</p>
-
-                    <!-- Barra EXP Allenatore -->
-                    <div class="mt-3">
-                        ${isMaxed ? `
-                            <div class="text-xs text-yellow-400 font-bold mb-1">LIVELLO MASSIMO</div>
-                            <div class="w-full bg-gray-700 rounded-full h-3">
-                                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-3 rounded-full" style="width: 100%"></div>
-                            </div>
-                        ` : `
-                            <div class="text-xs text-gray-400 mb-1">
-                                EXP: ${expProgress.current} / ${expProgress.needed}
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-3">
-                                <div class="bg-gradient-to-r from-orange-600 to-orange-400 h-3 rounded-full transition-all"
-                                     style="width: ${expProgress.percentage}%"></div>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-1">${expProgress.percentage}% verso Lv.${coachLevel + 1}</div>
-                        `}
-                    </div>
-                    <p class="text-xs text-gray-600 mt-2 italic">Guadagna EXP vincendo partite</p>
                 </div>
             </div>
         `;
     },
 
     /**
-     * Renderizza la sezione spogliatoi con upgrade
+     * Renderizza la sezione spogliatoi con upgrade (compatta per mobile)
      */
     renderLockerRoomSection() {
         if (!window.Stadium?.getLockerRoom) {
@@ -289,52 +265,45 @@ window.StadiumUI = {
         const isMaxed = locker.maxed;
 
         return `
-            <div class="mb-6 bg-gray-800 rounded-lg p-4 border-2 ${borderColor}">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <!-- Info Spogliatoi -->
-                    <div class="flex items-center gap-4">
-                        <div class="text-5xl">${locker.level > 0 ? '🚿' : '🚧'}</div>
-                        <div>
-                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                                Spogliatoi
-                                ${isMaxed ? '<span class="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full">MAX</span>' : ''}
-                            </h3>
-                            <p class="text-sm text-gray-400">
-                                ${locker.level === 0 ? 'Non costruito' : `Livello ${locker.level} / 5`}
-                            </p>
-                            <p class="text-sm ${locker.level > 0 ? 'text-green-400' : 'text-gray-500'}">
-                                ${locker.level > 0 ? `Bonus EXP: +${locker.level * 5}%` : 'Nessun bonus'}
-                            </p>
-                        </div>
-                    </div>
+            <div id="locker-room-box" class="mb-4 rounded-xl p-3 border" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px;">
+                <!-- Layout compatto: tutto in una riga -->
+                <div class="flex items-center gap-3">
+                    <!-- Icona -->
+                    <div class="text-3xl sm:text-4xl shrink-0">${locker.level > 0 ? '🚿' : '🚧'}</div>
 
-                    <!-- Barra Livello -->
-                    <div class="flex-1 max-w-xs mx-4">
-                        <div class="flex gap-1">
+                    <!-- Info + Barra -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-sm sm:text-base font-bold text-white">Spogliatoi</h3>
+                            ${isMaxed ? '<span class="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded-full">MAX</span>' : ''}
+                            <span class="text-xs ${locker.level > 0 ? 'text-green-400' : 'text-gray-500'}">
+                                ${locker.level > 0 ? `+${locker.level * 5}% EXP` : ''}
+                            </span>
+                        </div>
+                        <!-- Barra Livello compatta -->
+                        <div class="flex gap-0.5 mt-1.5">
                             ${[1, 2, 3, 4, 5].map(lvl => `
-                                <div class="flex-1 h-4 rounded ${lvl <= locker.level ? 'bg-gradient-to-r from-blue-500 to-green-500' : 'bg-gray-700'}"></div>
+                                <div class="flex-1 h-2 rounded ${lvl <= locker.level ? 'bg-gradient-to-r from-blue-500 to-green-500' : 'bg-gray-700'}"></div>
                             `).join('')}
                         </div>
-                        <p class="text-center text-xs text-gray-500 mt-1">
-                            ${isMaxed ? '+25% EXP massimo' : `Prossimo: +${(locker.level + 1) * 5}% EXP`}
+                        <p class="text-[10px] text-gray-500 mt-0.5">
+                            ${locker.level === 0 ? 'Non costruito' : isMaxed ? 'Livello MAX' : `Lv.${locker.level}/5`}
                         </p>
                     </div>
 
                     <!-- Pulsante Upgrade -->
-                    <div class="text-center">
+                    <div class="shrink-0">
                         ${isMaxed ? `
-                            <div class="text-yellow-400 font-bold text-sm">
-                                Livello Massimo Raggiunto
-                            </div>
+                            <span class="text-yellow-400 text-xs font-bold">MAX</span>
                         ` : `
                             <button id="btn-upgrade-locker"
                                     class="${canUpgrade.canUpgrade
                                         ? 'bg-green-600 hover:bg-green-500 cursor-pointer'
                                         : 'bg-gray-600 cursor-not-allowed opacity-50'}
-                                    text-white font-bold py-2 px-4 rounded-lg transition flex items-center gap-2"
+                                    text-white font-bold py-1.5 px-3 rounded-lg transition text-xs sm:text-sm"
                                     ${canUpgrade.canUpgrade ? '' : 'disabled'}>
-                                <span>${locker.level === 0 ? 'Costruisci' : 'Migliora'}</span>
-                                <span class="text-yellow-300">${locker.nextCost} CS</span>
+                                <span class="hidden sm:inline">${locker.level === 0 ? 'Costruisci' : 'Migliora'}</span>
+                                <span class="text-yellow-300 ml-1">${locker.nextCost} CS</span>
                             </button>
                             ${!canUpgrade.canUpgrade && !isMaxed ? `
                                 <p class="text-xs text-red-400 mt-1">${canUpgrade.reason}</p>
@@ -352,8 +321,8 @@ window.StadiumUI = {
     renderStadiumField() {
         const budget = this._teamData?.budget || 0;
 
-        // Helper per creare uno slot struttura
-        const createSlot = (structureId) => {
+        // Helper per creare uno slot struttura compatto
+        const createSlot = (structureId, size = 'normal') => {
             const structure = window.Stadium.STRUCTURES[structureId];
             if (!structure) return '';
 
@@ -372,6 +341,13 @@ window.StadiumUI = {
                 3: 'border-purple-400'
             };
 
+            // Dimensioni in base al tipo
+            const sizeClasses = {
+                small: 'w-10 h-10 sm:w-12 sm:h-12',
+                normal: 'w-12 h-12 sm:w-14 sm:h-14',
+                wide: 'w-full h-10 sm:h-12'
+            };
+
             let slotClass, content, title;
 
             if (isBuilt) {
@@ -379,39 +355,43 @@ window.StadiumUI = {
                 const canUpgradeResult = window.Stadium.canUpgradeStructure(structureId, budget, this._stadiumData);
 
                 if (isMaxed) {
-                    // Livello massimo - sfondo dorato
                     slotClass = `bg-gradient-to-br from-yellow-700 to-yellow-900 ${borderColor} cursor-pointer`;
                     title = `${structure.name} Lv.MAX - Bonus: +${currentBonus.toFixed(2)}`;
                 } else if (canUpgradeResult.canUpgrade) {
-                    // Puo essere migliorata
                     slotClass = `bg-green-700 ${borderColor} hover:border-blue-400 hover:bg-blue-900/50 cursor-pointer`;
                     title = `${structure.name} Lv.${level} - Clicca per migliorare (${canUpgradeResult.upgradeCost} CS)`;
                 } else {
-                    // Costruita ma non migliorabile (fondi insufficienti)
                     slotClass = `bg-green-700 ${borderColor} cursor-pointer`;
                     title = `${structure.name} Lv.${level} - +${currentBonus.toFixed(2)} bonus`;
                 }
 
-                content = `
-                    <span class="text-2xl">${structure.icon}</span>
-                    <span class="text-xs font-bold ${isMaxed ? 'text-yellow-300' : 'text-white'} mt-0.5">
+                content = size === 'wide' ? `
+                    <span class="text-lg sm:text-xl">${structure.icon}</span>
+                    <span class="text-xs font-bold ${isMaxed ? 'text-yellow-300' : 'text-white'} ml-1">
                         ${isMaxed ? 'MAX' : 'Lv.' + level}
+                    </span>
+                ` : `
+                    <span class="text-lg sm:text-xl">${structure.icon}</span>
+                    <span class="text-[10px] font-bold ${isMaxed ? 'text-yellow-300' : 'text-white'}">
+                        ${isMaxed ? 'M' : level}
                     </span>
                 `;
             } else if (isLocked) {
                 slotClass = 'bg-gray-800 border-red-900 opacity-50 cursor-not-allowed';
-                content = `<span class="text-lg">🔒</span>`;
+                content = `<span class="text-sm">🔒</span>`;
                 title = `${structure.name} - ${canBuildResult.reason}`;
             } else {
                 const buildCost = window.Stadium.getUpgradeCost(structureId, 1);
                 slotClass = 'bg-gray-700 border-dashed border-gray-500 hover:border-green-400 hover:bg-gray-600 cursor-pointer';
-                content = `<span class="text-xl opacity-50">${structure.icon}</span>`;
+                content = `<span class="text-base opacity-50">${structure.icon}</span>`;
                 title = `${structure.name} - ${buildCost} CS (+${structure.bonus} bonus)`;
             }
 
+            const flexDirection = size === 'wide' ? 'flex-row' : 'flex-col';
+
             return `
-                <div class="structure-slot w-16 h-16 md:w-20 md:h-20 rounded-lg border-2 ${slotClass}
-                            flex flex-col items-center justify-center transition-all"
+                <div class="structure-slot ${sizeClasses[size]} rounded-lg border-2 ${slotClass}
+                            flex ${flexDirection} items-center justify-center transition-all shrink-0"
                      data-structure-id="${structureId}"
                      data-level="${level}"
                      data-is-built="${isBuilt}"
@@ -424,118 +404,140 @@ window.StadiumUI = {
         };
 
         return `
-            <div class="stadium-layout relative">
-                <!-- Layout Stadio: Vista dall'alto, campo orizzontale -->
+            <div class="stadium-layout relative overflow-x-auto">
+                <!-- Layout Stadio Compatto Orizzontale -->
 
-                <!-- Riga superiore: Tabellone Ovest - Faro NW - Tribuna Nord - Faro NE - Tabellone Est -->
-                <div class="flex justify-center items-center gap-2 mb-2">
-                    ${createSlot('scoreboard_west')}
-                    ${createSlot('light_nw')}
-                    <div class="flex-1 max-w-md">
-                        ${createSlot('tribune_north')}
-                    </div>
-                    ${createSlot('light_ne')}
-                    ${createSlot('scoreboard_east')}
-                </div>
+                <!-- Container principale con aspect ratio fisso -->
+                <div class="min-w-[320px] max-w-[600px] mx-auto">
 
-                <!-- Area Media Nord -->
-                <div class="flex justify-center mb-2">
-                    ${createSlot('media_north')}
-                </div>
-
-                <!-- Campo centrale con porte e panchine -->
-                <div class="flex items-center justify-center gap-2 my-4">
-                    <!-- Tribuna Ovest (porta) -->
-                    <div class="flex flex-col items-center gap-2">
-                        ${createSlot('tribune_west')}
-                    </div>
-
-                    <!-- Campo da gioco -->
-                    <div class="relative bg-green-800 rounded-lg border-4 border-white w-full max-w-2xl aspect-[2/1] mx-2">
-                        <!-- Linee del campo -->
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <!-- Linea centrale -->
-                            <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white opacity-60"></div>
-                            <!-- Cerchio centrale -->
-                            <div class="w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-white opacity-60"></div>
+                    <!-- Riga superiore: Fari + Tabelloni + Tribuna Nord -->
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <div class="flex items-center gap-1">
+                            ${createSlot('scoreboard_west', 'small')}
+                            ${createSlot('light_nw', 'small')}
                         </div>
-
-                        <!-- Porta sinistra -->
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-4 md:w-6 h-16 md:h-24 border-2 border-white border-l-0 opacity-80"></div>
-                        <!-- Area piccola sinistra -->
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-8 md:w-12 h-24 md:h-32 border-2 border-white border-l-0 opacity-60"></div>
-
-                        <!-- Porta destra -->
-                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-4 md:w-6 h-16 md:h-24 border-2 border-white border-r-0 opacity-80"></div>
-                        <!-- Area piccola destra -->
-                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-8 md:w-12 h-24 md:h-32 border-2 border-white border-r-0 opacity-60"></div>
-
-                        <!-- Panchine a bordo campo -->
-                        <div class="absolute bottom-2 left-1/4 transform -translate-x-1/2">
-                            ${createSlot('bench_left')}
+                        <div class="flex-1 mx-1">
+                            ${createSlot('tribune_north', 'wide')}
                         </div>
-                        <div class="absolute bottom-2 right-1/4 transform translate-x-1/2">
-                            ${createSlot('bench_right')}
+                        <div class="flex items-center gap-1">
+                            ${createSlot('light_ne', 'small')}
+                            ${createSlot('scoreboard_east', 'small')}
                         </div>
                     </div>
 
-                    <!-- Tribuna Est (porta) -->
-                    <div class="flex flex-col items-center gap-2">
-                        ${createSlot('tribune_east')}
+                    <!-- Area Media Nord -->
+                    <div class="flex justify-center mb-1">
+                        ${createSlot('media_north', 'small')}
+                    </div>
+
+                    <!-- Campo centrale con tribune laterali -->
+                    <div class="flex items-stretch gap-1 my-1">
+                        <!-- Tribuna Ovest -->
+                        <div class="flex items-center">
+                            ${createSlot('tribune_west', 'normal')}
+                        </div>
+
+                        <!-- Campo da gioco -->
+                        <div class="relative bg-gradient-to-b from-green-700 to-green-800 rounded-lg border-2 border-white/80 flex-1 min-h-[120px] sm:min-h-[140px]">
+                            <!-- Linee del campo -->
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="absolute top-0 bottom-0 left-1/2 w-px bg-white/50"></div>
+                                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full border border-white/50"></div>
+                            </div>
+
+                            <!-- Aree di rigore -->
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-14 sm:h-16 border border-white/50 border-l-0 rounded-r"></div>
+                            <div class="absolute right-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-14 sm:h-16 border border-white/50 border-r-0 rounded-l"></div>
+
+                            <!-- Panchine dentro il campo -->
+                            <div class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-4">
+                                ${createSlot('bench_left', 'small')}
+                                ${createSlot('bench_right', 'small')}
+                            </div>
+                        </div>
+
+                        <!-- Tribuna Est -->
+                        <div class="flex items-center">
+                            ${createSlot('tribune_east', 'normal')}
+                        </div>
+                    </div>
+
+                    <!-- Area Media Sud -->
+                    <div class="flex justify-center mt-1">
+                        ${createSlot('media_south', 'small')}
+                    </div>
+
+                    <!-- Riga inferiore: Fari + Tribuna Sud -->
+                    <div class="flex items-center justify-between gap-1 mt-1">
+                        <div class="flex items-center gap-1">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12"></div>
+                            ${createSlot('light_sw', 'small')}
+                        </div>
+                        <div class="flex-1 mx-1">
+                            ${createSlot('tribune_south', 'wide')}
+                        </div>
+                        <div class="flex items-center gap-1">
+                            ${createSlot('light_se', 'small')}
+                            <div class="w-10 h-10 sm:w-12 sm:h-12"></div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Area Media Sud -->
-                <div class="flex justify-center mt-2">
-                    ${createSlot('media_south')}
-                </div>
-
-                <!-- Riga inferiore: Faro SW - Tribuna Sud - Faro SE -->
-                <div class="flex justify-center items-center gap-2 mt-2">
-                    <div class="w-16 h-16 md:w-20 md:h-20"></div> <!-- Spacer -->
-                    ${createSlot('light_sw')}
-                    <div class="flex-1 max-w-md">
-                        ${createSlot('tribune_south')}
-                    </div>
-                    ${createSlot('light_se')}
-                    <div class="w-16 h-16 md:w-20 md:h-20"></div> <!-- Spacer -->
-                </div>
-
             </div>
 
-            <!-- Sezione Strutture Speciali -->
-            <div class="mt-6 pt-6 border-t-2 border-gray-700">
-                <h3 class="text-xl font-bold text-gray-300 mb-4 text-center">Strutture Speciali</h3>
-
-                <!-- Strutture Premium -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                    ${this.renderSpecialStructureCard('stadium_roof')}
-                    ${this.renderSpecialStructureCard('giant_screen')}
-                    ${this.renderSpecialStructureCard('ultras_section')}
-                    ${this.renderSpecialStructureCard('scouting_center')}
-                    ${this.renderSpecialStructureCard('observers_center')}
+            <!-- Sezione Strutture Speciali - Design Unificato -->
+            <div class="mt-4 bg-gray-800/50 rounded-xl overflow-hidden">
+                <!-- Header -->
+                <div class="px-3 py-2 bg-gradient-to-r from-gray-700/80 to-transparent border-b border-gray-600/50">
+                    <h3 class="text-sm font-bold text-gray-200 tracking-wide uppercase">Strutture Speciali</h3>
                 </div>
 
-                <!-- Facilities -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    ${this.renderSpecialStructureCard('medical_center')}
-                    ${this.renderSpecialStructureCard('gym')}
-                    ${this.renderSpecialStructureCard('tactical_room')}
-                    ${this.renderSpecialStructureCard('warmup_area')}
+                <!-- Premium (accent amber) -->
+                <div class="relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-amber-600"></div>
+                    <div class="pl-3 pr-2 py-2">
+                        <p class="text-[10px] text-amber-400/80 font-semibold mb-1.5 uppercase tracking-wider">Premium</p>
+                        <div class="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                            ${this.renderSpecialStructureCard('stadium_roof')}
+                            ${this.renderSpecialStructureCard('giant_screen')}
+                            ${this.renderSpecialStructureCard('ultras_section')}
+                            ${this.renderSpecialStructureCard('scouting_center')}
+                            ${this.renderSpecialStructureCard('observers_center')}
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Commerciali e Prestigio -->
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    ${this.renderSpecialStructureCard('shop')}
-                    ${this.renderSpecialStructureCard('museum')}
-                    ${this.renderSpecialStructureCard('conference_room')}
+                <!-- Facilities (accent cyan) -->
+                <div class="relative border-t border-gray-700/50">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 to-cyan-600"></div>
+                    <div class="pl-3 pr-2 py-2">
+                        <p class="text-[10px] text-cyan-400/80 font-semibold mb-1.5 uppercase tracking-wider">Facilities</p>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            ${this.renderSpecialStructureCard('medical_center')}
+                            ${this.renderSpecialStructureCard('gym')}
+                            ${this.renderSpecialStructureCard('tactical_room')}
+                            ${this.renderSpecialStructureCard('warmup_area')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commerciali (accent emerald) -->
+                <div class="relative border-t border-gray-700/50">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-emerald-600"></div>
+                    <div class="pl-3 pr-2 py-2">
+                        <p class="text-[10px] text-emerald-400/80 font-semibold mb-1.5 uppercase tracking-wider">Commerciale</p>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            ${this.renderSpecialStructureCard('shop')}
+                            ${this.renderSpecialStructureCard('museum')}
+                            ${this.renderSpecialStructureCard('conference_room')}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
     },
 
     /**
-     * Renderizza una card per struttura speciale
+     * Renderizza una card per struttura speciale (compatta per mobile)
      * @param {string} structureId - ID struttura
      */
     renderSpecialStructureCard(structureId) {
@@ -559,79 +561,59 @@ window.StadiumUI = {
 
         if (isBuilt) {
             if (isMaxed) {
-                // MAX level
                 cardClass = 'bg-gradient-to-br from-yellow-900/50 to-yellow-700/30 border-yellow-500';
-                statusBadge = `<span class="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">MAX</span>`;
+                statusBadge = `<span class="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">MAX</span>`;
                 actionButton = '';
             } else {
-                // Costruita, puo migliorare
                 const canAffordUpgrade = budget >= upgradeCost;
                 cardClass = 'bg-gray-800 border-green-500';
-                statusBadge = `<span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Lv.${level}</span>`;
+                statusBadge = `<span class="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${level}</span>`;
                 actionButton = `
-                    <button class="structure-upgrade-btn w-full mt-2 ${canAffordUpgrade ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-600 cursor-not-allowed'}
-                                   text-white text-xs font-bold py-1.5 px-2 rounded transition"
+                    <button class="structure-upgrade-btn w-full mt-1.5 ${canAffordUpgrade ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-600 cursor-not-allowed'}
+                                   text-white text-[10px] font-bold py-1 px-1 rounded transition"
                             data-structure-id="${structureId}"
                             ${canAffordUpgrade ? '' : 'disabled'}>
-                        Migliora Lv.${level + 1} - ${upgradeCost} CS
+                        ${upgradeCost} CS
                     </button>
                 `;
             }
         } else if (canBuildResult.canBuild) {
-            // Disponibile per costruzione
             const canAfford = budget >= buildCost;
             cardClass = 'bg-gray-800 border-gray-600 hover:border-green-500';
-            statusBadge = `<span class="bg-gray-600 text-gray-300 text-xs px-2 py-0.5 rounded-full">Non costruito</span>`;
+            statusBadge = `<span class="bg-gray-600 text-gray-300 text-[10px] px-1.5 py-0.5 rounded-full">-</span>`;
             actionButton = `
-                <button class="structure-build-btn w-full mt-2 ${canAfford ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}
-                               text-white text-xs font-bold py-1.5 px-2 rounded transition"
+                <button class="structure-build-btn w-full mt-1.5 ${canAfford ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}
+                               text-white text-[10px] font-bold py-1 px-1 rounded transition"
                         data-structure-id="${structureId}"
                         ${canAfford ? '' : 'disabled'}>
-                    Costruisci - ${buildCost} CS
+                    ${buildCost} CS
                 </button>
             `;
         } else {
-            // Bloccato
             cardClass = 'bg-gray-900 border-red-900/50 opacity-60';
-            statusBadge = `<span class="bg-red-900 text-red-300 text-xs px-2 py-0.5 rounded-full">Bloccato</span>`;
-            actionButton = `
-                <p class="text-xs text-red-400 mt-2 text-center">${canBuildResult.reason}</p>
-            `;
+            statusBadge = `<span class="bg-red-900 text-red-300 text-[10px] px-1.5 py-0.5 rounded-full">🔒</span>`;
+            actionButton = '';
         }
 
-        // Descrizione effetto speciale
-        const specialEffects = {
-            'injury_reduction': '-1/-1/-2 giornate infortunio',
-            'training_bonus': '+2/4/6% EXP allenamento',
-            'tactical_bonus': 'Bonus tattico partite',
-            'form_bonus': '-0.25/0.50/0.75 malus forma',
-            'passive_income': '+50/100/150 CS/settimana',
-            'prestige': 'Storia del Club',
-            'away_bonus': '+0.50/1.00/1.50 trasferta',
-            'market_discount': '-5/-10/-15% costo mercato'
-        };
-        const effectText = specialEffects[structure.specialEffect] || structure.description;
-
         return `
-            <div class="special-structure-card p-3 rounded-lg border-2 ${cardClass} transition-all"
+            <div class="special-structure-card p-2 rounded-lg border ${cardClass} transition-all"
                  data-structure-id="${structureId}">
-                <div class="flex items-start justify-between mb-2">
-                    <span class="text-3xl">${structure.icon}</span>
+                <!-- Header: icona + badge -->
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xl sm:text-2xl">${structure.icon}</span>
                     ${statusBadge}
                 </div>
-                <h4 class="font-bold text-white text-sm">${structure.name}</h4>
-                <p class="text-xs text-gray-400 mt-1">${effectText}</p>
+                <!-- Nome -->
+                <h4 class="font-bold text-white text-[11px] sm:text-xs leading-tight truncate">${structure.name}</h4>
+                <!-- Bonus (se presente) -->
                 ${structure.bonus > 0 ? `
-                    <p class="text-xs text-green-400 mt-1">
-                        Bonus: +${isBuilt ? currentBonus.toFixed(2) : structure.bonus}
-                        ${isBuilt && !isMaxed ? ` → +${window.Stadium.calculateStructureBonus(structureId, level + 1).toFixed(2)}` : ''}
-                    </p>
+                    <p class="text-[10px] text-green-400 mt-0.5">+${isBuilt ? currentBonus.toFixed(1) : structure.bonus}</p>
                 ` : ''}
+                <!-- Barra livello (se costruita) -->
                 ${isBuilt ? `
-                    <!-- Barra livello -->
-                    <div class="flex gap-0.5 mt-2">
+                    <div class="flex gap-0.5 mt-1">
                         ${[1, 2, 3].map(lvl => `
-                            <div class="flex-1 h-1.5 rounded ${lvl <= level ? 'bg-green-500' : 'bg-gray-700'}"></div>
+                            <div class="flex-1 h-1 rounded ${lvl <= level ? 'bg-green-500' : 'bg-gray-700'}"></div>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -650,6 +632,20 @@ window.StadiumUI = {
             btnBack.addEventListener('click', () => {
                 if (window.showScreen) {
                     window.showScreen(document.getElementById('app-content'));
+                }
+            });
+        }
+
+        // Toggle legenda
+        const legendToggle = document.getElementById('stadium-legend-toggle');
+        const legendContent = document.getElementById('stadium-legend-content');
+        const legendArrow = document.getElementById('stadium-legend-arrow');
+        if (legendToggle && legendContent) {
+            legendToggle.addEventListener('click', () => {
+                const isHidden = legendContent.classList.contains('hidden');
+                legendContent.classList.toggle('hidden');
+                if (legendArrow) {
+                    legendArrow.style.transform = isHidden ? 'rotate(180deg)' : '';
                 }
             });
         }
