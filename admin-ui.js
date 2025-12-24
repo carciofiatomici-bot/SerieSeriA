@@ -15,20 +15,6 @@ window.AdminUI = {
         const cssEnabled = configData.creditiSuperSeriEnabled || false;
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
-        // Gestione bottone "Torna alla Dashboard" (in fondo alla pagina, in index.html)
-        const adminTeamInfo = window.adminTeamAccessingPanel;
-        const returnContainer = document.getElementById('admin-return-dashboard-container');
-        const returnTeamName = document.getElementById('return-dashboard-team-name');
-
-        if (returnContainer && returnTeamName) {
-            if (adminTeamInfo) {
-                returnTeamName.textContent = `Torna alla Dashboard di ${adminTeamInfo.teamName}`;
-                returnContainer.classList.remove('hidden');
-            } else {
-                returnContainer.classList.add('hidden');
-            }
-        }
-
         adminDashboardContainer.innerHTML = `
             <!-- STATO GENERALE - In cima alla pagina -->
             <div class="mb-6 bg-gray-900 rounded-lg p-4 border border-gray-700">
@@ -287,14 +273,18 @@ window.AdminUI = {
             </div>
 
             <!-- ========== 5. EMERGENZA ========== -->
-            <div class="mb-4 p-4 bg-red-900/30 rounded-lg border border-red-600">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-red-400 font-bold">🚨 Emergenza</p>
-                        <p class="text-xs text-gray-400">Annulla Campionato e Coppa senza premi</p>
-                    </div>
-                    <button id="btn-emergency-cancel-competitions" class="bg-red-700 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm border border-red-500">
-                        Annulla Competizioni
+            <div class="mb-4">
+                <button id="btn-toggle-emergency" class="w-full bg-gradient-to-r from-red-800 to-red-900 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6 border border-red-600">
+                    <span class="flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-3"></i> Emergenza
+                    </span>
+                    <i id="emergency-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <div id="emergency-content" class="hidden mt-3 p-4 bg-red-900/30 rounded-lg border border-red-600 transition-all duration-300">
+                    <p class="text-xs text-gray-400 mb-3">Annulla Campionato e Coppa senza premi</p>
+                    <button id="btn-emergency-cancel-competitions" class="w-full bg-red-700 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition text-sm border border-red-500">
+                        🚨 Annulla Competizioni
                     </button>
                 </div>
             </div>

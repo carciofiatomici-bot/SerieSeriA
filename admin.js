@@ -8,7 +8,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const adminContent = document.getElementById('admin-content');
     const adminDashboardContainer = document.getElementById('admin-dashboard-container');
-    const adminLogoutButton = document.getElementById('admin-logout-button');
     const championshipContent = document.getElementById('championship-content');
     const playerManagementContent = document.getElementById('player-management-content'); 
     const playerManagementToolsContainer = document.getElementById('player-management-tools-container'); 
@@ -602,54 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderAdminDashboardLayout();
-        adminLogoutButton.addEventListener('click', handleAdminLogout);
-
-        // Event listener per bottone "Torna alla Dashboard" (per squadre admin non serieseria)
-        const returnDashboardBtn = document.getElementById('btn-return-to-team-dashboard');
-        if (returnDashboardBtn) {
-            returnDashboardBtn.addEventListener('click', async () => {
-                const teamId = window.adminTeamAccessingPanel?.teamId;
-                window.adminTeamAccessingPanel = null;
-
-                // Nascondi il bottone
-                const returnContainer = document.getElementById('admin-return-dashboard-container');
-                if (returnContainer) returnContainer.classList.add('hidden');
-
-                if (teamId) {
-                    try {
-                        const { doc, getDoc } = firestoreTools;
-                        const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, teamId);
-                        const teamDoc = await getDoc(teamDocRef);
-
-                        if (teamDoc.exists()) {
-                            const teamData = teamDoc.data();
-                            window.InterfacciaCore.currentTeamData = teamData;
-                            window.InterfacciaCore.currentTeamId = teamId;
-
-                            if (window.InterfacciaDashboard && window.elements) {
-                                window.InterfacciaDashboard.updateTeamUI(
-                                    teamData.teamName,
-                                    teamId,
-                                    teamData.logoUrl,
-                                    false,
-                                    window.elements
-                                );
-                            }
-
-                            const appContent = document.getElementById('app-content');
-                            if (appContent && window.showScreen) {
-                                window.showScreen(appContent);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('[Admin] Errore ritorno a dashboard:', error);
-                        if (window.Toast) {
-                            window.Toast.error('Errore nel ritorno alla dashboard');
-                        }
-                    }
-                }
-            });
-        }
     };
 
     /**
@@ -753,6 +704,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     dataMgmtContent.classList.add('hidden');
                     dataMgmtChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Toggle menu Emergenza
+        const btnToggleEmergency = document.getElementById('btn-toggle-emergency');
+        const emergencyContent = document.getElementById('emergency-content');
+        const emergencyChevron = document.getElementById('emergency-chevron');
+
+        if (btnToggleEmergency && emergencyContent) {
+            btnToggleEmergency.addEventListener('click', () => {
+                const isHidden = emergencyContent.classList.contains('hidden');
+                if (isHidden) {
+                    emergencyContent.classList.remove('hidden');
+                    emergencyChevron?.classList.add('rotate-180');
+                } else {
+                    emergencyContent.classList.add('hidden');
+                    emergencyChevron?.classList.remove('rotate-180');
                 }
             });
         }
@@ -5028,11 +4997,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-center text-red-400">Modulo AdminFeatureFlags non disponibile.</p>
             `;
         }
-    };
-
-    const handleAdminLogout = () => {
-        console.log("Logout Admin effettuato.");
-        if (window.handleLogout) window.handleLogout();
     };
 
     document.addEventListener('adminLoggedIn', initializeAdminPanel);

@@ -4774,6 +4774,181 @@ select:focus-visible {
     border: 1px solid var(--team-primary-color, #22c55e);
 }
 
+/* ==================== 15.13 ADMIN PANEL MOBILE OPTIMIZATION ==================== */
+/*
+ * Ottimizzazione pannello admin per mobile
+ * - Grid responsive per bottoni
+ * - Testo più compatto
+ * - Touch-friendly spacing
+ */
+
+/* Container principale admin */
+#admin-content {
+    padding: 8px !important;
+}
+
+#admin-dashboard-container {
+    background: rgba(17, 24, 39, 0.6) !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    border: 1px solid var(--team-primary-color, #22c55e) !important;
+}
+
+/* Stato generale - grid responsive */
+#admin-dashboard-container .grid-cols-2.md\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+}
+
+@media (min-width: 480px) {
+    #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Card stato - più compatte su mobile */
+#admin-dashboard-container .grid-cols-2.md\:grid-cols-4 > div {
+    padding: 8px !important;
+}
+
+#admin-dashboard-container .grid-cols-2.md\:grid-cols-4 .text-2xl {
+    font-size: 1.1rem !important;
+}
+
+#admin-dashboard-container .grid-cols-2.md\:grid-cols-4 .text-xs {
+    font-size: 0.65rem !important;
+    line-height: 1.2;
+}
+
+/* Bottoni navigazione principale - 2 colonne su mobile */
+@media (max-width: 639px) {
+    #admin-dashboard-container .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Bottoni più compatti */
+    #admin-dashboard-container .grid-cols-4 button {
+        padding: 10px 6px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.2;
+    }
+
+    #admin-dashboard-container .grid-cols-4 button i {
+        display: block;
+        margin: 0 auto 4px auto !important;
+        font-size: 1.1rem;
+    }
+
+    /* Nascondi testo lungo, mostra solo icona + label corta */
+    #admin-dashboard-container .grid-cols-4 button .fa-cog::after { content: "Config"; }
+    #admin-dashboard-container .grid-cols-4 button .fa-list-ol::after { content: "Players"; }
+    #admin-dashboard-container .grid-cols-4 button .fa-users::after { content: "Teams"; }
+    #admin-dashboard-container .grid-cols-4 button .fa-flag::after { content: "Flag"; }
+}
+
+/* Accordion headers - più touch friendly */
+#admin-dashboard-container button[id^="btn-toggle-"] {
+    padding: 12px 14px !important;
+    font-size: 0.85rem !important;
+}
+
+@media (max-width: 479px) {
+    #admin-dashboard-container button[id^="btn-toggle-"] {
+        padding: 14px 12px !important;
+        font-size: 0.8rem !important;
+    }
+
+    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-trophy,
+    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-rocket,
+    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-cogs,
+    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-database {
+        font-size: 1rem !important;
+    }
+}
+
+/* Grid interni accordion - 2 colonne sempre su mobile piccolo */
+@media (max-width: 479px) {
+    #admin-dashboard-container .grid-cols-2,
+    #admin-dashboard-container .grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    /* Bottoni azione più compatti */
+    #admin-dashboard-container .grid-cols-2 button,
+    #admin-dashboard-container .grid-cols-3 button {
+        padding: 8px 4px !important;
+        font-size: 0.7rem !important;
+    }
+
+    #admin-dashboard-container .grid-cols-2 button i,
+    #admin-dashboard-container .grid-cols-3 button i {
+        margin-right: 2px !important;
+    }
+
+    /* Sezioni competizioni */
+    #serieseria-admin-section,
+    #coppa-admin-section,
+    #supercoppa-admin-section,
+    #automation-admin-section {
+        padding: 10px !important;
+    }
+
+    #serieseria-admin-section h4,
+    #coppa-admin-section h4,
+    #supercoppa-admin-section h4,
+    #automation-admin-section h4 {
+        font-size: 0.9rem !important;
+        margin-bottom: 8px !important;
+    }
+}
+
+/* Sezione emergenza - più compatta */
+@media (max-width: 479px) {
+    #admin-dashboard-container .bg-red-900\/30 {
+        padding: 10px !important;
+    }
+
+    #admin-dashboard-container .bg-red-900\/30 .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    #admin-dashboard-container .bg-red-900\/30 button {
+        padding: 8px 10px !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+/* Bottoni logout e changelog in fondo */
+@media (max-width: 479px) {
+    #admin-content > .mt-4.flex {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    #admin-content > .mt-4.flex button {
+        width: 100% !important;
+        padding: 12px !important;
+    }
+}
+
+/* Pannelli configurazione - responsive */
+@media (max-width: 639px) {
+    #admin-dashboard-container [id$="-panel-container"] {
+        padding: 12px !important;
+    }
+
+    #admin-dashboard-container [id$="-panel-container"] h3 {
+        font-size: 1rem !important;
+    }
+
+    #admin-dashboard-container [id$="-panel-container"] .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+}
+
 /* ==============================================
    SCHERMATE NON PRINCIPALI - Layout Fisso
    ============================================== */
