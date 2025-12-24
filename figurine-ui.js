@@ -1104,127 +1104,75 @@ window.FigurineUI = {
                     `}
                 </div>
 
-                <!-- Pacchetti per Collezione -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-semibold text-white mb-3 flex items-center gap-2">📦 Pacchetti Collezione</h4>
-                    <div class="space-y-2">
+                <!-- Pacchetti per Collezione - Compatto -->
+                <div class="bg-gray-800/50 rounded-xl p-2.5 border border-gray-700/50">
+                    <h4 class="font-semibold text-white text-xs mb-2 px-1">📦 Pacchetti</h4>
+                    <div class="space-y-1.5">
                         ${Object.entries(collections).map(([collId, collDef]) => {
                             if (!collDef.enabled) return '';
                             const files = window.FigurineSystem.getCollectionFiles(collId);
                             if (Object.keys(files).length === 0 && collId !== 'icone') return '';
-
                             const cssPrice = collectionPrices[collId] || 1;
-                            const canBuyCS = cs >= csPrice;
-                            const canBuyCSS = css >= cssPrice;
-                            // Descrizione con rarita per tutte le collezioni
-                            const variantText = '⚪🟢🔵🟣🟠 Rarita variabile';
 
                             return `
-                                <div class="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg flex-wrap gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-2xl">${collDef.icon}</span>
-                                        <div>
-                                            <p class="font-semibold text-white">${collDef.name}</p>
-                                            <p class="text-xs text-gray-400">${variantText}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button class="btn-collection-pack-cs bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm cursor-pointer"
-                                                data-collection="${collId}" data-price="${csPrice}" data-currency="cs">
-                                            ${csPrice} CS
-                                        </button>
-                                        <button class="btn-collection-pack-css bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-2 rounded-lg transition text-sm cursor-pointer"
-                                                data-collection="${collId}" data-price="${cssPrice}" data-currency="css">
-                                            ${cssPrice} CSS
-                                        </button>
-                                    </div>
+                                <div class="flex items-center gap-2 bg-gray-700/30 p-2 rounded-lg">
+                                    <span class="text-lg">${collDef.icon}</span>
+                                    <span class="flex-1 font-medium text-white text-xs truncate">${collDef.name}</span>
+                                    <button class="btn-collection-pack-cs bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-2 py-1 rounded text-[10px]"
+                                            data-collection="${collId}" data-price="${csPrice}" data-currency="cs">
+                                        ${csPrice}CS
+                                    </button>
+                                    <button class="btn-collection-pack-css bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-2 py-1 rounded text-[10px]"
+                                            data-collection="${collId}" data-price="${cssPrice}" data-currency="css">
+                                        ${cssPrice}CSS
+                                    </button>
                                 </div>
                             `;
                         }).join('')}
                     </div>
                 </div>
 
-                <!-- Probabilita Rarita Figurine -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-semibold text-white mb-2">Probabilita Rarita</h4>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-300 text-sm">⚪ Comune</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gray-500 h-2 rounded-full" style="width: 40%"></div>
-                                </div>
-                                <span class="text-gray-400 text-xs w-8">40%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-green-300 text-sm">🟢 Non Comune</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-green-500 h-2 rounded-full" style="width: 30%"></div>
-                                </div>
-                                <span class="text-gray-400 text-xs w-8">30%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-300 text-sm">🔵 Rara</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 18%"></div>
-                                </div>
-                                <span class="text-gray-400 text-xs w-8">18%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-purple-300 text-sm">🟣 Epica</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 9%"></div>
-                                </div>
-                                <span class="text-gray-400 text-xs w-8">9%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-300 text-sm">🟠 Leggendaria</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-gray-700 rounded-full h-2">
-                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 3%"></div>
-                                </div>
-                                <span class="text-gray-400 text-xs w-8">3%</span>
-                            </div>
-                        </div>
+                <!-- Probabilita Rarita - Compatto inline -->
+                <div class="bg-gray-800/50 rounded-xl p-2.5 border border-gray-700/50">
+                    <h4 class="font-semibold text-white text-xs mb-2 px-1">📊 Probabilita</h4>
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 px-1 text-[10px]">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span><span class="text-gray-400">C 40%</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400">NC 30%</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-blue-400">R 18%</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-purple-400">E 9%</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span><span class="text-yellow-400">L 3%</span></span>
                     </div>
                 </div>
 
-                <!-- Scambio Figurine Duplicate -->
-                <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-xl p-4 border border-amber-500">
-                    <h4 class="font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                        🔄 Scambia Figurine Duplicate
-                    </h4>
-                    <p class="text-xs text-gray-400 mb-3">${tradeRequired} figurine duplicate = CS (la prima resta nell'album)</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <button data-trade="normale" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.normale < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.normale < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-gray-300 text-xs">⚪ ${duplicates.normale}</span>
-                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.normale} CS</span>
+                <!-- Scambio Figurine Duplicate - Compatto -->
+                <div class="bg-amber-900/30 rounded-xl p-2.5 border border-amber-500/50">
+                    <div class="flex items-center justify-between mb-2 px-1">
+                        <h4 class="font-semibold text-amber-400 text-xs">🔄 Scambia Doppioni</h4>
+                        <span class="text-[10px] text-gray-400">${tradeRequired} = CS</span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1">
+                        <button data-trade="normale" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.normale < tradeRequired ? 'opacity-40' : ''}" ${duplicates.normale < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-gray-300">⚪${duplicates.normale}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.normale}</span>
                         </button>
-                        <button data-trade="evoluto" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.evoluto < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.evoluto < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-blue-300 text-xs">🔵 ${duplicates.evoluto}</span>
-                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.evoluto} CS</span>
+                        <button data-trade="evoluto" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.evoluto < tradeRequired ? 'opacity-40' : ''}" ${duplicates.evoluto < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-green-300">🟢${duplicates.evoluto}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.evoluto}</span>
                         </button>
-                        <button data-trade="alternative" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.alternative < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.alternative < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-purple-300 text-xs">🟣 ${duplicates.alternative}</span>
-                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.alternative} CS</span>
+                        <button data-trade="alternative" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.alternative < tradeRequired ? 'opacity-40' : ''}" ${duplicates.alternative < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-blue-300">🔵${duplicates.alternative}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.alternative}</span>
                         </button>
-                        <button data-trade="ultimate" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.ultimate < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.ultimate < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-yellow-300 text-xs">🟡 ${duplicates.ultimate}</span>
-                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.ultimate} CS</span>
+                        <button data-trade="ultimate" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.ultimate < tradeRequired ? 'opacity-40' : ''}" ${duplicates.ultimate < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-purple-300">🟣${duplicates.ultimate}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.ultimate}</span>
                         </button>
-                        <button data-trade="fantasy" class="trade-btn flex items-center justify-between bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition ${duplicates.fantasy < tradeRequired ? 'opacity-50 cursor-not-allowed' : ''}" ${duplicates.fantasy < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-pink-300 text-xs">🩷 ${duplicates.fantasy || 0}</span>
-                            <span class="text-amber-400 text-xs font-bold">${tradeRewards.fantasy} CS</span>
+                        <button data-trade="fantasy" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${duplicates.fantasy < tradeRequired ? 'opacity-40' : ''}" ${duplicates.fantasy < tradeRequired ? 'disabled' : ''}>
+                            <span class="text-[10px] text-yellow-300">🟠${duplicates.fantasy || 0}</span>
+                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.fantasy}</span>
                         </button>
                     </div>
-                    <p id="trade-result" class="text-center text-sm mt-2"></p>
+                    <p id="trade-result" class="text-center text-[10px] mt-1.5"></p>
                 </div>
 
                 <!-- Container risultato apertura -->
@@ -1291,14 +1239,21 @@ window.FigurineUI = {
             });
         });
 
-        // Bind trade buttons
-        document.querySelectorAll('.trade-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const rarity = e.currentTarget.dataset.trade;
+        // Bind trade buttons - usa il content container per event delegation
+        const tradeContainer = content.querySelector('.grid.grid-cols-5');
+        if (tradeContainer) {
+            tradeContainer.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.trade-btn');
+                if (!btn) return;
+                if (btn.disabled || btn.classList.contains('opacity-40')) {
+                    window.Toast?.info('Non hai abbastanza doppioni per questo scambio');
+                    return;
+                }
+                const rarity = btn.dataset.trade;
                 if (!rarity) return;
                 await this.tradeDuplicates(rarity);
             });
-        });
+        }
     },
 
     /**
@@ -1353,9 +1308,15 @@ window.FigurineUI = {
         if (!teamId) {
             if (resultEl) {
                 resultEl.textContent = 'Errore: squadra non trovata';
-                resultEl.className = 'text-center text-sm mt-2 text-red-400';
+                resultEl.className = 'text-center text-[10px] mt-1.5 text-red-400';
             }
             return;
+        }
+
+        // Mostra loading
+        if (resultEl) {
+            resultEl.textContent = 'Scambio in corso...';
+            resultEl.className = 'text-center text-[10px] mt-1.5 text-gray-400 animate-pulse';
         }
 
         try {
@@ -1364,23 +1325,26 @@ window.FigurineUI = {
             if (result.success) {
                 if (resultEl) {
                     resultEl.textContent = result.message;
-                    resultEl.className = 'text-center text-sm mt-2 text-green-400';
+                    resultEl.className = 'text-center text-[10px] mt-1.5 text-green-400 font-semibold';
                 }
+                window.Toast?.success(result.message);
                 // Ricarica album e UI
                 this.currentAlbum = await window.FigurineSystem.loadTeamAlbum(teamId);
                 await this.renderPacks();
             } else {
                 if (resultEl) {
                     resultEl.textContent = result.message;
-                    resultEl.className = 'text-center text-sm mt-2 text-red-400';
+                    resultEl.className = 'text-center text-[10px] mt-1.5 text-red-400';
                 }
+                window.Toast?.error(result.message);
             }
         } catch (error) {
             console.error('[FigurineUI] Errore scambio:', error);
             if (resultEl) {
                 resultEl.textContent = `Errore: ${error.message}`;
-                resultEl.className = 'text-center text-sm mt-2 text-red-400';
+                resultEl.className = 'text-center text-[10px] mt-1.5 text-red-400';
             }
+            window.Toast?.error(`Errore scambio: ${error.message}`);
         }
     },
 
