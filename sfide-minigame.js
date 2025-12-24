@@ -88,8 +88,9 @@
                         grid-template-columns: repeat(8, 1fr);
                         grid-template-rows: repeat(12, 1fr);
                         aspect-ratio: 8 / 12;
-                        width: 85%;
+                        width: 98%;
                         max-width: none;
+                        max-height: 55vh;
                     }
                     #sfide-minigame-modal .goal-post {
                         width: 42.85% !important;
@@ -233,7 +234,7 @@
                     <button id="smg-close-btn" class="text-white text-2xl hover:text-red-400 transition px-2">
                         <i class="fas fa-times"></i>
                     </button>
-                    <h1 class="text-lg font-black italic tracking-tight text-white">FUTSAL TACTICS</h1>
+                    <h1 class="text-lg font-black italic tracking-tight text-white">TATTICHE SERIE</h1>
                     <div class="w-8"></div>
                 </div>
 
@@ -290,7 +291,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="smg-log" class="bg-black/40 rounded-lg p-2 border border-slate-800 overflow-y-auto text-xs font-mono max-h-24">
+                    <div id="smg-log" class="bg-black/40 rounded-lg p-2 border border-slate-800 overflow-y-auto text-xs font-mono max-h-32">
                         <div class="text-yellow-500">Primo a 3 gol vince!</div>
                     </div>
                 </div>
