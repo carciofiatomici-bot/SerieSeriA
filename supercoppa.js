@@ -327,9 +327,11 @@ window.Supercoppa = {
 
         // Salva nello storico partite per entrambe le squadre
         if (window.MatchHistory) {
-            // Prepara dettagli con highlights
+            // Prepara dettagli con highlights e matchLog/matchEvents per telecronaca
             const matchDetails = {
                 highlights: matchResult.highlightsText || null,
+                matchLog: matchResult.highlights || [],
+                matchEvents: matchResult.matchEvents || [],
                 scorers: matchResult.scorers || [],
                 assists: matchResult.assists || [],
                 penalties: penalties || null

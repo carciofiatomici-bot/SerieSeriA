@@ -916,10 +916,16 @@ window.UserCompetitions = {
                             <span class="${lastCupMatch.awayTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.awayTeam?.teamName || 'TBD'}</span>
                         </div>
                         <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
-                        <button id="btn-coppa-telecronaca"
-                                class="mt-3 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                            📺 Vedi Telecronaca
-                        </button>
+                        <div class="mt-3 flex gap-2">
+                            <button id="btn-coppa-telecronaca"
+                                    class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                                📺 Azioni Salienti
+                            </button>
+                            <button id="btn-coppa-telecronaca-completa"
+                                    class="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                                📋 Completa
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -943,11 +949,19 @@ window.UserCompetitions = {
                 });
             });
 
-            // Listener per bottone telecronaca coppa
+            // Listener per bottone telecronaca coppa (azioni salienti)
             const btnCoppaTelecronaca = document.getElementById('btn-coppa-telecronaca');
             if (btnCoppaTelecronaca) {
                 btnCoppaTelecronaca.addEventListener('click', async () => {
-                    await this.showLastMatchTelecronaca('coppa', {});
+                    await this.showLastMatchTelecronaca('coppa', {}, 'highlights');
+                });
+            }
+
+            // Listener per bottone telecronaca coppa completa
+            const btnCoppaTelecronacaCompleta = document.getElementById('btn-coppa-telecronaca-completa');
+            if (btnCoppaTelecronacaCompleta) {
+                btnCoppaTelecronacaCompleta.addEventListener('click', async () => {
+                    await this.showLastMatchTelecronaca('coppa', {}, 'full');
                 });
             }
         }, 100);
@@ -1143,10 +1157,16 @@ window.UserCompetitions = {
                             🏆 Vincitore: ${bracket.winner.teamName}
                         </p>
                         <p class="text-gray-400 text-sm mt-1">Premio: 1 CSS</p>
-                        <button id="btn-supercoppa-telecronaca"
-                                class="mt-3 bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition inline-flex items-center gap-2">
-                            📺 Vedi Telecronaca
-                        </button>
+                        <div class="mt-3 flex gap-2 justify-center">
+                            <button id="btn-supercoppa-telecronaca"
+                                    class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition inline-flex items-center gap-1">
+                                📺 Azioni Salienti
+                            </button>
+                            <button id="btn-supercoppa-telecronaca-completa"
+                                    class="bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition inline-flex items-center gap-1">
+                                📋 Completa
+                            </button>
+                        </div>
                     </div>
                 ` : `
                     <div class="mt-4 pt-4 border-t border-gray-700 text-center">
@@ -1166,7 +1186,14 @@ window.UserCompetitions = {
             const btnSupercoppaTelecronaca = document.getElementById('btn-supercoppa-telecronaca');
             if (btnSupercoppaTelecronaca && bracket) {
                 btnSupercoppaTelecronaca.addEventListener('click', async () => {
-                    await this.showSupercoppaTelecronaca(bracket);
+                    await this.showSupercoppaTelecronaca(bracket, 'highlights');
+                });
+            }
+
+            const btnSupercoppaTelecronacaCompleta = document.getElementById('btn-supercoppa-telecronaca-completa');
+            if (btnSupercoppaTelecronacaCompleta && bracket) {
+                btnSupercoppaTelecronacaCompleta.addEventListener('click', async () => {
+                    await this.showSupercoppaTelecronaca(bracket, 'full');
                 });
             }
         }, 100);
@@ -1174,8 +1201,10 @@ window.UserCompetitions = {
 
     /**
      * Mostra la telecronaca della supercoppa (visibile a tutti gli utenti)
+     * @param {Object} bracket - Dati bracket supercoppa
+     * @param {string} telecronacaType - 'highlights' o 'full'
      */
-    async showSupercoppaTelecronaca(bracket) {
+    async showSupercoppaTelecronaca(bracket, telecronacaType = 'highlights') {
         if (!bracket?.winner || !bracket.homeTeam?.teamId || !bracket.awayTeam?.teamId) {
             if (window.Toast) window.Toast.info('Telecronaca non ancora disponibile');
             return;
@@ -1184,6 +1213,7 @@ window.UserCompetitions = {
         try {
             // Prova a caricare lo storico dal vincitore
             let matchLog = null;
+            let matchEvents = null;
             let homeScore = 0;
             let awayScore = 0;
 
@@ -1191,24 +1221,43 @@ window.UserCompetitions = {
             const history = await window.MatchHistory.loadHistory(winnerId);
             const supercoppMatch = history.find(m => m.type === 'supercoppa');
 
-            if (supercoppMatch?.details?.matchLog) {
-                matchLog = supercoppMatch.details.matchLog;
+            if (supercoppMatch?.details) {
+                if (supercoppMatch.details.matchLog) {
+                    matchLog = supercoppMatch.details.matchLog;
+                }
+                if (supercoppMatch.details.matchEvents) {
+                    matchEvents = supercoppMatch.details.matchEvents;
+                }
                 homeScore = supercoppMatch.homeScore;
                 awayScore = supercoppMatch.awayScore;
             }
 
-            if (!matchLog || matchLog.length === 0) {
-                if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
-                return;
+            // Mostra la telecronaca appropriata
+            if (telecronacaType === 'full') {
+                if (!matchEvents || matchEvents.length === 0) {
+                    if (window.Toast) window.Toast.info('Telecronaca completa non disponibile per questa partita');
+                    return;
+                }
+                window.MatchHistory.showTelecronacaCompletaModal(
+                    matchEvents,
+                    bracket.homeTeam.teamName,
+                    bracket.awayTeam.teamName,
+                    homeScore,
+                    awayScore
+                );
+            } else {
+                if (!matchLog || matchLog.length === 0) {
+                    if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
+                    return;
+                }
+                window.MatchHistory.showTelecronacaModal(
+                    matchLog,
+                    bracket.homeTeam.teamName,
+                    bracket.awayTeam.teamName,
+                    homeScore,
+                    awayScore
+                );
             }
-
-            window.MatchHistory.showTelecronacaModal(
-                matchLog,
-                bracket.homeTeam.teamName,
-                bracket.awayTeam.teamName,
-                homeScore,
-                awayScore
-            );
 
         } catch (error) {
             console.error('Errore caricamento telecronaca supercoppa:', error);

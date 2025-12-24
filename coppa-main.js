@@ -235,6 +235,7 @@ window.CoppaMain = {
                 leg: legType,
                 highlights: result.highlights || null,
                 matchLog: result.matchLog || [],
+                matchEvents: result.matchEvents || [],
                 scorers: result.scorers || [],
                 assists: result.assists || []
             };
