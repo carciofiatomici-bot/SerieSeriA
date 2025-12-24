@@ -3007,8 +3007,6 @@ body.user-logged-in #login-box.hidden-on-load {
 #feature-flags-content:not(.hidden):not(.hidden-on-load),
 #coach-selection-box:not(.hidden):not(.hidden-on-load),
 #captain-selection-box:not(.hidden):not(.hidden-on-load) {
-    min-height: calc(100vh - 75px);
-    min-height: calc(100dvh - 75px);
     position: relative;
     z-index: 1;
 }
@@ -4447,7 +4445,14 @@ body.user-logged-in #admin-content {
 
 /* Padding bottom per evitare overlap con bottom nav */
 .tab-content {
-    padding-bottom: calc(70px + var(--safe-bottom, 0px)) !important;
+    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Tab specifici senza min-height per evitare scroll extra */
+#tab-home,
+#tab-squad,
+#tab-shop {
+    min-height: auto !important;
 }
 
 /* ==================== 15.7 VISUAL HIERARCHY ==================== */
