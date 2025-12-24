@@ -1143,7 +1143,7 @@ window.UserCompetitions = {
         const btnLeaderboard = document.getElementById('btn-view-leaderboard');
         if (btnLeaderboard) {
             btnLeaderboard.addEventListener('click', () => {
-                window.showScreen(document.getElementById('leaderboard-content'));
+                window.showScreen(document.getElementById('campionato-leaderboard-content'));
                 this.loadLeaderboardScreen();
             });
         }
@@ -1201,7 +1201,7 @@ window.UserCompetitions = {
      * Carica la schermata Classifica Campionato
      */
     async loadLeaderboardScreen() {
-        const container = document.getElementById('leaderboard-table-container');
+        const container = document.getElementById('campionato-leaderboard-table-container');
         if (!container) return;
 
         const currentTeamId = window.InterfacciaCore?.currentTeamId;
@@ -1395,19 +1395,38 @@ window.UserCompetitions = {
                         let homeClass = 'text-white';
                         let awayClass = 'text-white';
 
+                        // Funzione helper per parsare risultato stringa "X-Y" o "X-Y (dts)" ecc
+                        const parseResult = (resultStr) => {
+                            if (!resultStr) return null;
+                            const match = String(resultStr).match(/^(\d+)-(\d+)/);
+                            if (match) {
+                                return { home: parseInt(match[1]), away: parseInt(match[2]) };
+                            }
+                            return null;
+                        };
+
+                        const leg1 = parseResult(match.leg1Result);
+                        const leg2 = parseResult(match.leg2Result);
+
                         if (match.winner) {
                             const homeWon = match.winner.teamId === match.homeTeam?.teamId;
                             homeClass = homeWon ? 'text-green-400 font-bold' : 'text-red-400';
                             awayClass = homeWon ? 'text-red-400' : 'text-green-400 font-bold';
 
-                            // Risultati
-                            if (match.leg1Result && match.leg2Result) {
-                                const agg1 = (match.leg1Result.homeScore || 0) + (match.leg2Result.awayScore || 0);
-                                const agg2 = (match.leg1Result.awayScore || 0) + (match.leg2Result.homeScore || 0);
-                                scoreHtml = `<span class="text-gray-400 text-xs">${agg1}-${agg2}</span> / <span class="text-white font-bold">${match.leg2Result.homeScore || 0}-${match.leg2Result.awayScore || 0}</span>`;
-                            } else if (match.leg1Result) {
-                                scoreHtml = `<span class="text-white font-bold">${match.leg1Result.homeScore || 0}-${match.leg1Result.awayScore || 0}</span>`;
+                            // Risultati - calcola aggregato se ci sono entrambe le leg
+                            if (leg1 && leg2) {
+                                // Aggregato: leg1 home + leg2 away (trasferta = gol in casa avversaria)
+                                const aggHome = leg1.home + leg2.away;
+                                const aggAway = leg1.away + leg2.home;
+                                scoreHtml = `<span class="text-gray-400 text-xs">${aggHome}-${aggAway}</span> / <span class="text-white font-bold">${leg2.home}-${leg2.away}</span>`;
+                            } else if (leg1) {
+                                scoreHtml = `<span class="text-white font-bold">${leg1.home}-${leg1.away}</span>`;
+                            } else {
+                                scoreHtml = `<span class="text-white font-bold">${match.aggregateHome || 0}-${match.aggregateAway || 0}</span>`;
                             }
+                        } else if (leg1) {
+                            // Partita in corso (solo andata giocata)
+                            scoreHtml = `<span class="text-gray-400 text-xs">${leg1.home}-${leg1.away}</span> / <span class="text-gray-500">vs</span>`;
                         } else {
                             scoreHtml = '<span class="text-gray-500">vs</span>';
                         }
