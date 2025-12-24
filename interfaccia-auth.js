@@ -923,11 +923,6 @@ window.InterfacciaAuth = {
         if (btnCloseListaIcone && listaIconeModal) {
             btnCloseListaIcone.addEventListener('click', () => self.hideListaIcone());
         }
-        // Bottone "Torna al Login"
-        const btnBackToLogin = document.getElementById('btn-back-to-login');
-        if (btnBackToLogin) {
-            btnBackToLogin.addEventListener('click', () => self.hideListaIcone());
-        }
         // Chiudi cliccando fuori dal modal
         if (listaIconeModal) {
             listaIconeModal.addEventListener('click', (e) => {

@@ -118,6 +118,9 @@
 ================================================================================
 */
 
+/* ===================== GOOGLE FONTS IMPORT ===================== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Quicksand:wght@400;500;600&display=swap');
+
 /* ===================== CSS CUSTOM PROPERTIES PER VIEWPORT ===================== */
 :root {
     /* Fallback per browser che non supportano dvh */
@@ -145,8 +148,8 @@ html {
     /* Altezza minima con supporto dvh */
     min-height: 100vh;
     min-height: 100dvh;
-    /* Colore di sfondo per evitare flash bianco */
-    background-color: #0d1b2a;
+    /* Colore di sfondo per status bar e safe areas - DEVE matchare theme-color */
+    background-color: #0d1b2a !important;
 }
 
 /* 1. Stile per l'immagine di sfondo globale */
@@ -2244,8 +2247,15 @@ html {
     #draft-alert-banner {
         top: max(65px, calc(env(safe-area-inset-top) + 10px)) !important;
     }
+
+    /* Tab bar con home indicator spacing */
+    #dashboard-tabs {
+        padding-bottom: max(34px, env(safe-area-inset-bottom)) !important;
+        height: calc(56px + max(34px, env(safe-area-inset-bottom))) !important;
+    }
 }
 
+/* iPhone 14 Pro Max/15 Pro Max/16 Pro Max */
 @media only screen
     and (device-width: 430px)
     and (device-height: 932px)
@@ -2258,6 +2268,11 @@ html {
     #draft-alert-banner {
         top: max(65px, calc(env(safe-area-inset-top) + 10px)) !important;
     }
+
+    #dashboard-tabs {
+        padding-bottom: max(34px, env(safe-area-inset-bottom)) !important;
+        height: calc(56px + max(34px, env(safe-area-inset-bottom))) !important;
+    }
 }
 
 /* iPhone 14/15/16 standard */
@@ -2268,6 +2283,11 @@ html {
 
     body {
         padding-top: max(47px, env(safe-area-inset-top));
+    }
+
+    #dashboard-tabs {
+        padding-bottom: max(34px, env(safe-area-inset-bottom)) !important;
+        height: calc(56px + max(34px, env(safe-area-inset-bottom))) !important;
     }
 }
 
@@ -2280,14 +2300,23 @@ html {
     body {
         padding-top: max(47px, env(safe-area-inset-top));
     }
+
+    #dashboard-tabs {
+        padding-bottom: max(34px, env(safe-area-inset-bottom)) !important;
+        height: calc(56px + max(34px, env(safe-area-inset-bottom))) !important;
+    }
 }
 
 /* ===================== OTTIMIZZAZIONI ANDROID MODERNI ===================== */
 
-/* Android con display punch-hole o notch */
+/* Android con display punch-hole o notch - PWA standalone */
 @media screen and (display-mode: standalone) {
     body {
         padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    #dashboard-tabs {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
     }
 }
 
@@ -2296,12 +2325,20 @@ html {
     body {
         padding-top: max(24px, env(safe-area-inset-top));
     }
+
+    #dashboard-tabs {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    }
 }
 
 /* Google Pixel 6/7/8 series */
 @media screen and (width: 412px) and (min-resolution: 2.5dppx) {
     body {
         padding-top: max(28px, env(safe-area-inset-top));
+    }
+
+    #dashboard-tabs {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
     }
 }
 
@@ -4468,12 +4505,17 @@ body.user-logged-in #admin-content {
 
 /* Migliore contrasto tab attivo */
 #dashboard-tabs {
-    background: rgba(17, 24, 39, 0.6);
+    background: rgba(17, 24, 39, 0.95);
     border-top-width: 2px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    /* Altezza fissa per consistenza con spacer */
+    /* Posizione fissa in basso */
+    bottom: 0 !important;
+    /* Altezza con safe area per home indicator iPhone */
     height: calc(56px + env(safe-area-inset-bottom, 0px));
+    /* Padding bottom per home indicator - fallback 0 se env non supportato */
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Background esteso sotto safe area */
+    background-clip: padding-box;
 }
 
 .dashboard-tab {
@@ -7449,451 +7491,295 @@ select,
 }
 
 /* ============================================
-   15.19 LISTA ICONE MODAL - ROYAL GALLERY
-   Regal gold theme with card showcase
+   15.19 LISTA ICONE MODAL - COLLECTOR'S VAULT
+   Art Deco inspired premium design
    ============================================ */
 
-/* CSS Variables for Icons Gallery */
+/* CSS Variables for Vault Gallery */
 :root {
-    --icone-gold: #eab308;
-    --icone-gold-light: #facc15;
-    --icone-gold-dark: #ca8a04;
-    --icone-crown-glow: rgba(234, 179, 8, 0.4);
-    --icone-card-bg: rgba(31, 41, 55, 0.95);
+    --vault-gold: #d4af37;
+    --vault-gold-light: #f4d03f;
+    --vault-gold-dark: #aa8c2c;
+    --vault-bronze: #cd7f32;
+    --vault-black: #0a0a0a;
+    --vault-dark: #111111;
+    --vault-card: #1a1a1a;
 }
 
-/* Modal Overlay - Royal atmosphere */
+/* Modal Overlay - Vault atmosphere */
 #lista-icone-modal {
-    background: radial-gradient(ellipse at center top, rgba(234, 179, 8, 0.08) 0%, rgba(0, 0, 0, 0.95) 60%);
+    background: var(--vault-black) !important;
+    backdrop-filter: blur(10px);
 }
 
 #lista-icone-modal::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image:
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
         repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 20px,
-            rgba(234, 179, 8, 0.02) 20px,
-            rgba(234, 179, 8, 0.02) 40px
+            0deg,
+            transparent 0px,
+            transparent 1px,
+            rgba(212, 175, 55, 0.02) 1px,
+            rgba(212, 175, 55, 0.02) 2px
         );
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
 }
 
-/* Main container */
+/* Main container - remove football-box styling */
 #lista-icone-modal > .football-box {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(31, 41, 55, 0.95) 100%);
-    border: 2px solid rgba(234, 179, 8, 0.4) !important;
-    border-radius: 1.25rem !important;
-    box-shadow:
-        0 0 60px rgba(234, 179, 8, 0.15),
-        0 20px 60px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Header with crown effect */
-#lista-icone-modal .flex.justify-between.items-center.mb-4 {
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.1) 50%, rgba(234, 179, 8, 0.15) 100%);
-    border-bottom: 2px solid rgba(234, 179, 8, 0.5) !important;
-    border-radius: 1rem 1rem 0 0;
-    padding: 1rem 1.25rem !important;
-    margin: -1rem -1rem 1rem -1rem !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
     position: relative;
-    overflow: hidden;
+    z-index: 1;
 }
 
+/* Header - Full width Art Deco bar */
+#lista-icone-modal .flex.justify-between.items-center.mb-4 {
+    background: linear-gradient(180deg, var(--vault-dark) 0%, var(--vault-black) 100%) !important;
+    border: none !important;
+    border-bottom: 1px solid var(--vault-gold) !important;
+    border-radius: 0 !important;
+    padding: 1.25rem 1.5rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    position: sticky !important;
+    top: 0;
+    z-index: 100;
+    box-sizing: border-box !important;
+}
+
+/* Art Deco decorative line */
 #lista-icone-modal .flex.justify-between.items-center.mb-4::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
         transparent 0%,
-        rgba(255, 255, 255, 0.1) 50%,
+        var(--vault-gold-dark) 15%,
+        var(--vault-gold) 30%,
+        var(--vault-gold-light) 50%,
+        var(--vault-gold) 70%,
+        var(--vault-gold-dark) 85%,
         transparent 100%
     );
-    animation: icone-header-shimmer 4s ease-in-out infinite;
 }
 
-@keyframes icone-header-shimmer {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(50%); }
+#lista-icone-modal .flex.justify-between.items-center.mb-4::after {
+    content: '◆ ◆ ◆';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 6px;
+    letter-spacing: 8px;
+    color: var(--vault-gold);
+    background: var(--vault-black);
+    padding: 0 12px;
 }
 
-/* Title with royal styling */
+/* Title styling - Cinzel font */
 #lista-icone-modal h3 {
-    background: linear-gradient(135deg, #fcd34d 0%, #eab308 30%, #fcd34d 50%, #eab308 70%, #fcd34d 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: icone-title-shine 3s linear infinite;
-    text-shadow: none;
-    position: relative;
+    font-family: 'Cinzel', serif !important;
+    font-weight: 600 !important;
+    font-size: 1.5rem !important;
+    color: var(--vault-gold) !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: var(--vault-gold) !important;
+    background-clip: unset !important;
+    animation: none !important;
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+    margin: 0 !important;
 }
 
-@keyframes icone-title-shine {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
-}
-
-/* Close button */
+/* Close button - Elegant X */
 #btn-close-lista-icone {
-    background: rgba(239, 68, 68, 0.2);
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem !important;
-    transition: all 0.2s ease;
+    background: transparent !important;
+    border: 1px solid var(--vault-gold) !important;
+    border-radius: 0 !important;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1rem !important;
+    color: var(--vault-gold) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
 }
 
 #btn-close-lista-icone:hover {
-    background: rgba(239, 68, 68, 0.4);
-    transform: rotate(90deg);
+    background: var(--vault-gold) !important;
+    color: var(--vault-black) !important;
+    transform: none !important;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
 }
 
-/* Subtitle */
+/* Subtitle - hidden */
 #lista-icone-modal > .football-box > p {
-    color: #9ca3af;
-    font-style: italic;
-    position: relative;
-    display: inline-block;
-    width: 100%;
+    display: none !important;
 }
 
-#lista-icone-modal > .football-box > p::before,
-#lista-icone-modal > .football-box > p::after {
-    content: '✦';
-    color: var(--icone-gold);
-    margin: 0 0.5rem;
-    font-size: 0.6rem;
-    vertical-align: middle;
-}
-
-/* Icons Grid Container */
+/* Icons List Container */
 #lista-icone-container {
-    gap: 0.75rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    padding: 1.5rem 1rem !important;
+    background: transparent !important;
 }
 
-/* Icon Cards - Premium styling */
+/* Icon Cards - Horizontal luxury list */
 #lista-icone-container > div {
-    background: linear-gradient(145deg, rgba(55, 65, 81, 0.9) 0%, rgba(31, 41, 55, 0.95) 100%);
-    border: 2px solid rgba(234, 179, 8, 0.4) !important;
-    border-radius: 1rem !important;
-    padding: 1rem !important;
+    background: linear-gradient(135deg,
+        rgba(26, 26, 26, 0.95) 0%,
+        rgba(17, 17, 17, 0.98) 100%
+    ) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+    border-radius: 0 !important;
+    padding: 1rem 1.25rem !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 0.25rem 1rem !important;
+    text-align: left !important;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: visible !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: none !important;
+    cursor: pointer;
+}
+
+/* Remove corner decorations */
+#lista-icone-container > div::before,
+#lista-icone-container > div::after {
+    display: none !important;
 }
 
 /* Card hover effect */
 #lista-icone-container > div:hover {
-    border-color: var(--icone-gold-light) !important;
-    transform: translateY(-4px) scale(1.02);
+    background: linear-gradient(135deg,
+        rgba(212, 175, 55, 0.1) 0%,
+        rgba(26, 26, 26, 0.98) 100%
+    ) !important;
+    transform: none !important;
     box-shadow:
-        0 8px 30px rgba(234, 179, 8, 0.25),
-        0 15px 40px rgba(0, 0, 0, 0.4);
+        inset 3px 0 0 var(--vault-gold),
+        0 0 30px rgba(212, 175, 55, 0.1) !important;
 }
 
-/* Card corner decorations */
-#lista-icone-container > div::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 20px;
-    height: 20px;
-    border-top: 2px solid var(--icone-gold);
-    border-left: 2px solid var(--icone-gold);
-    border-radius: 0.5rem 0 0 0;
-    opacity: 0.6;
-}
-
-#lista-icone-container > div::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px;
-    height: 20px;
-    border-bottom: 2px solid var(--icone-gold);
-    border-right: 2px solid var(--icone-gold);
-    border-radius: 0 0 0.5rem 0;
-    opacity: 0.6;
+/* First card - top border */
+#lista-icone-container > div:first-child {
+    border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
 }
 
 /* Avatar image */
 #lista-icone-container > div img {
-    border: 3px solid var(--icone-gold) !important;
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    min-width: 3.5rem !important;
+    border-radius: 0 !important;
+    border: 2px solid var(--vault-gold) !important;
     box-shadow:
-        0 0 20px rgba(234, 179, 8, 0.3),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
+        0 0 0 1px var(--vault-black),
+        0 0 20px rgba(212, 175, 55, 0.3) !important;
+    transition: all 0.3s ease !important;
+    margin: 0 !important;
+    object-fit: cover !important;
 }
 
 #lista-icone-container > div:hover img {
     box-shadow:
-        0 0 30px rgba(234, 179, 8, 0.5),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.05);
+        0 0 0 1px var(--vault-black),
+        0 0 30px rgba(212, 175, 55, 0.5) !important;
+    transform: none !important;
 }
 
-/* Name with crown */
+/* Name styling */
 #lista-icone-container > div > p:first-of-type {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-family: 'Cinzel', serif !important;
     font-size: 1rem !important;
-    letter-spacing: 0.025em;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.05em !important;
+    margin: 0 !important;
+    align-self: end !important;
+    text-shadow: none !important;
 }
 
 /* Role/Type info */
 #lista-icone-container > div > p:nth-of-type(2) {
-    color: var(--icone-gold-light) !important;
-    font-weight: 600;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-family: 'Quicksand', sans-serif !important;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+    color: var(--vault-gold) !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    align-self: start !important;
 }
 
 /* Abilities section */
 #lista-icone-container > div .space-y-1 {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    margin-top: 0.5rem !important;
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    align-self: center !important;
+    align-items: flex-end !important;
 }
 
 /* Ability badges */
 #lista-icone-container > div .space-y-1 p {
-    display: inline-block;
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(202, 138, 4, 0.15) 100%);
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    margin: 0.125rem;
+    display: inline-block !important;
+    font-family: 'Quicksand', sans-serif !important;
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    color: var(--vault-gold-light) !important;
+    background: rgba(212, 175, 55, 0.1) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    padding: 0.2rem 0.5rem !important;
+    margin: 0 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
 }
 
-/* "Clicca per dettagli" hint */
+/* Hide hint text */
 #lista-icone-container > div > p:last-of-type {
-    opacity: 0;
-    transform: translateY(5px);
-    transition: all 0.3s ease;
-}
-
-#lista-icone-container > div:hover > p:last-of-type {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Close button at bottom */
-#btn-back-to-login {
-    background: linear-gradient(135deg, var(--icone-gold) 0%, var(--icone-gold-dark) 100%) !important;
-    border: none;
-    color: #1f2937 !important;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-#btn-back-to-login::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
-}
-
-#btn-back-to-login:hover::before {
-    left: 100%;
-}
-
-#btn-back-to-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(234, 179, 8, 0.4);
-}
-
-/* ============================================
-   LISTA ICONE MOBILE OPTIMIZATIONS
-   ============================================ */
-@media (max-width: 768px) {
-    /* Modal full screen feeling */
-    #lista-icone-modal {
-        padding: 0.5rem !important;
-        padding-top: 0.5rem !important;
-    }
-
-    #lista-icone-modal > .football-box {
-        border-radius: 1rem !important;
-        padding: 0.75rem !important;
-        max-height: 98vh !important;
-    }
-
-    /* Compact header */
-    #lista-icone-modal .flex.justify-between.items-center.mb-4 {
-        padding: 0.75rem 1rem !important;
-        margin: -0.75rem -0.75rem 0.75rem -0.75rem !important;
-        border-radius: 0.75rem 0.75rem 0 0;
-    }
-
-    #lista-icone-modal h3 {
-        font-size: 1.25rem !important;
-    }
-
-    #btn-close-lista-icone {
-        width: 2rem;
-        height: 2rem;
-        font-size: 1rem !important;
-    }
-
-    /* Hide subtitle on mobile */
-    #lista-icone-modal > .football-box > p:first-of-type {
-        font-size: 0.7rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    /* Single column - one icon per row */
-    #lista-icone-container {
-        grid-template-columns: 1fr !important;
-        gap: 0.625rem !important;
-    }
-
-    /* Card as grid layout: avatar | name+role | abilities */
-    #lista-icone-container > div {
-        display: grid !important;
-        grid-template-columns: auto 1fr auto !important;
-        grid-template-rows: auto auto !important;
-        align-items: center !important;
-        padding: 0.625rem 0.875rem !important;
-        border-radius: 0.875rem !important;
-        gap: 0.25rem 0.625rem;
-        text-align: left !important;
-    }
-
-    /* Avatar on the left - spans 2 rows */
-    #lista-icone-container > div img {
-        grid-column: 1;
-        grid-row: 1 / 3;
-        width: 3.5rem !important;
-        height: 3.5rem !important;
-        min-width: 3.5rem !important;
-        margin: 0 !important;
-        border-width: 2px !important;
-    }
-
-    /* Name - top middle */
-    #lista-icone-container > div > p:first-of-type {
-        grid-column: 2;
-        grid-row: 1;
-        font-size: 0.9rem !important;
-        margin: 0 !important;
-        line-height: 1.3;
-        align-self: end;
-    }
-
-    /* Role/Type - bottom middle */
-    #lista-icone-container > div > p:nth-of-type(2) {
-        grid-column: 2;
-        grid-row: 2;
-        font-size: 0.65rem !important;
-        margin: 0 !important;
-        line-height: 1.2;
-        align-self: start;
-    }
-
-    /* Abilities - right side, spans 2 rows */
-    #lista-icone-container > div .space-y-1 {
-        grid-column: 3;
-        grid-row: 1 / 3;
-        display: flex !important;
-        flex-direction: column;
-        gap: 0.2rem;
-        padding: 0.25rem 0.4rem;
-        margin: 0 !important;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 0.375rem;
-        align-self: center;
-    }
-
-    #lista-icone-container > div .space-y-1 p {
-        font-size: 0.55rem !important;
-        padding: 0.1rem 0.35rem;
-        margin: 0 !important;
-        white-space: nowrap;
-        text-align: center;
-    }
-
-    /* Hide "clicca per dettagli" on mobile */
-    #lista-icone-container > div > p:last-of-type {
-        display: none !important;
-    }
-
-    /* Corner decorations adjusted for horizontal card */
-    #lista-icone-container > div::before,
-    #lista-icone-container > div::after {
-        width: 12px;
-        height: 12px;
-    }
-
-    /* Touch feedback */
-    #lista-icone-container > div:active {
-        transform: scale(0.96);
-        border-color: var(--icone-gold) !important;
-    }
-
-    /* Bottom button */
-    #btn-back-to-login {
-        padding: 0.75rem !important;
-        font-size: 0.875rem !important;
-        margin-top: 0.75rem !important;
-    }
-}
-
-/* Extra small screens */
-@media (max-width: 375px) {
-    #lista-icone-modal h3 {
-        font-size: 1.1rem !important;
-    }
-
-    #lista-icone-container > div {
-        padding: 0.625rem 0.75rem !important;
-        gap: 0.625rem;
-    }
-
-    #lista-icone-container > div img {
-        width: 3.5rem !important;
-        height: 3.5rem !important;
-    }
-
-    #lista-icone-container > div > p:first-of-type {
-        font-size: 0.875rem !important;
-    }
-
-    #lista-icone-container > div > p:nth-of-type(2) {
-        font-size: 0.65rem !important;
-    }
-
-    #lista-icone-container > div .space-y-1 p {
-        font-size: 0.6rem !important;
-    }
+    display: none !important;
 }
 
 /* Card entrance animation */
 #lista-icone-container > div {
-    animation: icone-card-entrance 0.4s ease-out backwards;
+    animation: vault-card-enter 0.5s ease-out backwards !important;
 }
 
 #lista-icone-container > div:nth-child(1) { animation-delay: 0.05s; }
@@ -7912,13 +7798,111 @@ select,
 #lista-icone-container > div:nth-child(14) { animation-delay: 0.7s; }
 #lista-icone-container > div:nth-child(15) { animation-delay: 0.75s; }
 
-@keyframes icone-card-entrance {
+@keyframes vault-card-enter {
     from {
         opacity: 0;
-        transform: translateY(20px) scale(0.9);
+        transform: translateX(-20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateX(0);
+    }
+}
+
+/* ============================================
+   LISTA ICONE MOBILE OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 768px) {
+    #lista-icone-modal {
+        padding: 0 !important;
+    }
+
+    #lista-icone-modal > .football-box {
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+    }
+
+    #lista-icone-modal .flex.justify-between.items-center.mb-4 {
+        padding: 1rem 1rem !important;
+        position: sticky !important;
+        top: 0 !important;
+    }
+
+    #lista-icone-modal h3 {
+        font-size: 1.1rem !important;
+        letter-spacing: 0.1em !important;
+    }
+
+    #btn-close-lista-icone {
+        width: 2rem !important;
+        height: 2rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    #lista-icone-container {
+        padding: 1rem 0.75rem !important;
+    }
+
+    #lista-icone-container > div {
+        padding: 0.875rem 1rem !important;
+        gap: 0.25rem 0.75rem !important;
+    }
+
+    #lista-icone-container > div img {
+        width: 3rem !important;
+        height: 3rem !important;
+        min-width: 3rem !important;
+    }
+
+    #lista-icone-container > div > p:first-of-type {
+        font-size: 0.875rem !important;
+    }
+
+    #lista-icone-container > div > p:nth-of-type(2) {
+        font-size: 0.6rem !important;
+    }
+
+    #lista-icone-container > div .space-y-1 {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    #lista-icone-container > div .space-y-1 p {
+        font-size: 0.5rem !important;
+        padding: 0.15rem 0.4rem !important;
+    }
+
+    /* Touch feedback */
+    #lista-icone-container > div:active {
+        background: linear-gradient(135deg,
+            rgba(212, 175, 55, 0.15) 0%,
+            rgba(26, 26, 26, 0.98) 100%
+        ) !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 375px) {
+    #lista-icone-modal h3 {
+        font-size: 0.95rem !important;
+        letter-spacing: 0.08em !important;
+    }
+
+    #lista-icone-container > div img {
+        width: 3.5rem !important;
+        height: 3.5rem !important;
+    }
+
+    #lista-icone-container > div > p:first-of-type {
+        font-size: 0.875rem !important;
+    }
+
+    #lista-icone-container > div > p:nth-of-type(2) {
+        font-size: 0.65rem !important;
+    }
+
+    #lista-icone-container > div .space-y-1 p {
+        font-size: 0.6rem !important;
     }
 }

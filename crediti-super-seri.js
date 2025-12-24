@@ -69,7 +69,6 @@ window.CreditiSuperSeri = {
         'ilcap': ['Icona', 'Calcolo delle probabilita'],
         'simo': ['Icona', 'Parata Efficiente'],
         'dappi': ['Icona'],
-        'blatta': ['Icona', 'Scheggia impazzita'],
         'antony': ['Icona', 'Avanti un altro'],
         'gladio': ['Icona', 'Continua a provare'],
         'amedemo': ['Icona', 'Tiro Dritto'],

@@ -114,13 +114,6 @@ window.FigurineSystem = {
             ultimate: 'Icone/cocco ultimate.jpg',
             fantasy: 'Icone Fantasy/Cocco Fantasy.jpg'
         },
-        'blatta': {
-            normale: 'Icone/Bemolle.jpg',
-            evoluto: 'Icone/Bemolle Evoluto.jpg',
-            alternative: 'Icone/Bemolle Alternative.jpg',
-            ultimate: 'Icone/Bemolle Ultimate.jpg',
-            fantasy: 'Icone Fantasy/Bemolle Fantasy.jpg'
-        },
         'antony': {
             normale: 'Icone/antony.jpg',
             evoluto: 'Icone/Antony Evoluto.jpg',

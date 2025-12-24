@@ -5,9 +5,8 @@
     <!-- Viewport ottimizzato per iPhone moderni (notch, Dynamic Island) e Android -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 
-    <!-- Theme colors per browser mobile -->
-    <meta name="theme-color" content="#16a34a" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0d1b2a" media="(prefers-color-scheme: dark)">
+    <!-- Theme color per browser mobile - colore scuro per status bar -->
+    <meta name="theme-color" content="#0d1b2a">
 
     <!-- iOS PWA ottimizzazioni -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1771,14 +1770,10 @@
                     <h3 class="text-2xl md:text-3xl font-bold text-yellow-400">👑 Lista Icone</h3>
                     <button id="btn-close-lista-icone" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
                 </div>
-                <p class="text-gray-300 mb-4 text-center text-sm">Scegli un'Icona quando crei la tua squadra!</p>
+                <p class="text-gray-300 mb-4 text-center text-sm hidden">Scegli un'Icona quando crei la tua squadra!</p>
                 <div id="lista-icone-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <!-- Le icone vengono caricate dinamicamente -->
                 </div>
-                <button id="btn-back-to-login"
-                        class="mt-4 w-full bg-yellow-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-yellow-400 transition duration-150">
-                    Chiudi
-                </button>
             </div>
         </div>
 

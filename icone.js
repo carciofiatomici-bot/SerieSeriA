@@ -100,21 +100,7 @@ const CAPTAIN_CANDIDATES_TEMPLATES = [
         abilities: ['Icona']
     }, 
     
-    // 6. Bemolle: D, Velocita
-    {
-        id: 'blatta',
-        role: 'D',
-        name: 'Bemolle',
-        age: 27,
-        cost: 0,
-        isCaptain: true,
-        level: 5,
-        photoUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/bemolle.jpg',
-        type: TYPE_VELOCITA,
-        abilities: ['Icona', 'Scheggia impazzita']
-    },
-    
-    // 7. Antony: D, Potente
+    // 6. Antony: D, Potente
     {
         id: 'antony',
         role: 'D',

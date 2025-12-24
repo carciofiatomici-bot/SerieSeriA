@@ -1191,7 +1191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'ilcap': ['Icona', 'Calcolo delle probabilita'],
             'simo': ['Icona'],
             'dappi': ['Icona'],
-            'blatta': ['Icona', 'Scheggia impazzita'],
             'antony': ['Icona', 'Avanti un altro'],
             'gladio': ['Icona', 'Continua a provare'],
             'amedemo': ['Icona', 'Tiro Dritto'],

@@ -20,10 +20,6 @@ Nome: Dappino
 Ruolo: C
 Tipologia: Tecnico
 Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/dappino.png
-Nome: Blatta
-Ruolo: D
-Tipologia: Velocità
-Avatar: https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/Icone/blatta.jpg
 Nome: Antony
 Ruolo: D
 Tipologia: Potente
