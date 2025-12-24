@@ -484,63 +484,70 @@ window.StadiumUI = {
                 </div>
             </div>
 
-            <!-- Sezione Strutture Speciali - Design Unificato -->
-            <div class="mt-4 bg-gray-800/50 rounded-xl overflow-hidden">
-                <!-- Header -->
-                <div class="px-3 py-2 bg-gradient-to-r from-gray-700/80 to-transparent border-b border-gray-600/50">
-                    <h3 class="text-sm font-bold text-gray-200 tracking-wide uppercase">Strutture Speciali</h3>
-                </div>
+            <!-- Sezione Strutture Speciali - Mobile-First Design -->
+            <div class="mt-4 space-y-3">
 
                 <!-- Premium (accent amber) -->
-                <div class="relative">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-amber-600"></div>
-                    <div class="pl-3 pr-2 py-2">
-                        <p class="text-[10px] text-amber-400/80 font-semibold mb-1.5 uppercase tracking-wider">Premium</p>
-                        <div class="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
-                            ${this.renderSpecialStructureCard('stadium_roof')}
-                            ${this.renderSpecialStructureCard('giant_screen')}
-                            ${this.renderSpecialStructureCard('ultras_section')}
-                            ${this.renderSpecialStructureCard('scouting_center')}
-                            ${this.renderSpecialStructureCard('observers_center')}
+                <div class="rounded-xl overflow-hidden border border-amber-500/30 bg-gradient-to-br from-amber-950/40 via-gray-900/80 to-gray-900">
+                    <div class="px-3 py-2 bg-gradient-to-r from-amber-900/60 to-transparent flex items-center gap-2">
+                        <span class="text-lg">⭐</span>
+                        <h3 class="text-xs font-black text-amber-400 uppercase tracking-wider">Premium</h3>
+                        <span class="text-[9px] text-amber-500/60 ml-auto">Strutture Esclusive</span>
+                    </div>
+                    <div class="p-2">
+                        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                            ${this.renderSpecialStructureCard('stadium_roof', 'amber')}
+                            ${this.renderSpecialStructureCard('giant_screen', 'amber')}
+                            ${this.renderSpecialStructureCard('ultras_section', 'amber')}
+                            ${this.renderSpecialStructureCard('scouting_center', 'amber')}
+                            ${this.renderSpecialStructureCard('observers_center', 'amber')}
                         </div>
                     </div>
                 </div>
 
                 <!-- Facilities (accent cyan) -->
-                <div class="relative border-t border-gray-700/50">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 to-cyan-600"></div>
-                    <div class="pl-3 pr-2 py-2">
-                        <p class="text-[10px] text-cyan-400/80 font-semibold mb-1.5 uppercase tracking-wider">Facilities</p>
-                        <div class="grid grid-cols-4 gap-1.5">
-                            ${this.renderSpecialStructureCard('medical_center')}
-                            ${this.renderSpecialStructureCard('gym')}
-                            ${this.renderSpecialStructureCard('tactical_room')}
-                            ${this.renderSpecialStructureCard('warmup_area')}
+                <div class="rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/40 via-gray-900/80 to-gray-900">
+                    <div class="px-3 py-2 bg-gradient-to-r from-cyan-900/60 to-transparent flex items-center gap-2">
+                        <span class="text-lg">🏋️</span>
+                        <h3 class="text-xs font-black text-cyan-400 uppercase tracking-wider">Facilities</h3>
+                        <span class="text-[9px] text-cyan-500/60 ml-auto">Allenamento & Recupero</span>
+                    </div>
+                    <div class="p-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            ${this.renderSpecialStructureCard('medical_center', 'cyan')}
+                            ${this.renderSpecialStructureCard('gym', 'cyan')}
+                            ${this.renderSpecialStructureCard('tactical_room', 'cyan')}
+                            ${this.renderSpecialStructureCard('warmup_area', 'cyan')}
                         </div>
                     </div>
                 </div>
 
                 <!-- Commerciali (accent emerald) -->
-                <div class="relative border-t border-gray-700/50">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-emerald-600"></div>
-                    <div class="pl-3 pr-2 py-2">
-                        <p class="text-[10px] text-emerald-400/80 font-semibold mb-1.5 uppercase tracking-wider">Commerciale</p>
-                        <div class="grid grid-cols-3 gap-1.5">
-                            ${this.renderSpecialStructureCard('shop')}
-                            ${this.renderSpecialStructureCard('museum')}
-                            ${this.renderSpecialStructureCard('conference_room')}
+                <div class="rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-gray-900/80 to-gray-900">
+                    <div class="px-3 py-2 bg-gradient-to-r from-emerald-900/60 to-transparent flex items-center gap-2">
+                        <span class="text-lg">💰</span>
+                        <h3 class="text-xs font-black text-emerald-400 uppercase tracking-wider">Commerciale</h3>
+                        <span class="text-[9px] text-emerald-500/60 ml-auto">Ricavi & Immagine</span>
+                    </div>
+                    <div class="p-2">
+                        <div class="grid grid-cols-3 gap-2">
+                            ${this.renderSpecialStructureCard('shop', 'emerald')}
+                            ${this.renderSpecialStructureCard('museum', 'emerald')}
+                            ${this.renderSpecialStructureCard('conference_room', 'emerald')}
                         </div>
                     </div>
                 </div>
+
             </div>
         `;
     },
 
     /**
-     * Renderizza una card per struttura speciale (compatta per mobile)
+     * Renderizza una card per struttura speciale (Mobile-First)
      * @param {string} structureId - ID struttura
+     * @param {string} accentColor - Colore accent: 'amber', 'cyan', 'emerald'
      */
-    renderSpecialStructureCard(structureId) {
+    renderSpecialStructureCard(structureId, accentColor = 'amber') {
         const structure = window.Stadium.STRUCTURES[structureId];
         if (!structure) return '';
 
@@ -556,68 +563,152 @@ window.StadiumUI = {
         const upgradeCost = isBuilt && !isMaxed ? window.Stadium.getUpgradeCost(structureId, level + 1) : 0;
         const currentBonus = window.Stadium.calculateStructureBonus(structureId, level);
 
-        // Colori in base allo stato
-        let cardClass, statusBadge, actionButton;
+        // Palette colori per accent
+        const colorPalette = {
+            amber: {
+                border: 'border-amber-500/50',
+                borderActive: 'border-amber-400',
+                bg: 'from-amber-900/30',
+                text: 'text-amber-400',
+                badge: 'bg-amber-500 text-black',
+                badgeLvl: 'bg-amber-600 text-white',
+                bar: 'bg-amber-500',
+                btn: 'bg-amber-600 hover:bg-amber-500',
+                btnDisabled: 'bg-amber-900/50'
+            },
+            cyan: {
+                border: 'border-cyan-500/50',
+                borderActive: 'border-cyan-400',
+                bg: 'from-cyan-900/30',
+                text: 'text-cyan-400',
+                badge: 'bg-cyan-500 text-black',
+                badgeLvl: 'bg-cyan-600 text-white',
+                bar: 'bg-cyan-500',
+                btn: 'bg-cyan-600 hover:bg-cyan-500',
+                btnDisabled: 'bg-cyan-900/50'
+            },
+            emerald: {
+                border: 'border-emerald-500/50',
+                borderActive: 'border-emerald-400',
+                bg: 'from-emerald-900/30',
+                text: 'text-emerald-400',
+                badge: 'bg-emerald-500 text-black',
+                badgeLvl: 'bg-emerald-600 text-white',
+                bar: 'bg-emerald-500',
+                btn: 'bg-emerald-600 hover:bg-emerald-500',
+                btnDisabled: 'bg-emerald-900/50'
+            }
+        };
+
+        const colors = colorPalette[accentColor] || colorPalette.amber;
+
+        // Determina stato e styling
+        let cardClass, statusContent, actionContent;
 
         if (isBuilt) {
             if (isMaxed) {
-                cardClass = 'bg-gradient-to-br from-yellow-900/50 to-yellow-700/30 border-yellow-500';
-                statusBadge = `<span class="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">MAX</span>`;
-                actionButton = '';
+                // MAX LEVEL
+                cardClass = `bg-gradient-to-br from-yellow-900/40 to-gray-900/60 border-2 border-yellow-500/70`;
+                statusContent = `
+                    <div class="absolute -top-1 -right-1">
+                        <span class="bg-yellow-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-lg">MAX</span>
+                    </div>
+                `;
+                actionContent = `
+                    <div class="mt-2 text-center">
+                        <span class="text-yellow-400 text-[10px] font-bold">✨ Completo</span>
+                    </div>
+                `;
             } else {
+                // BUILT - UPGRADEABLE
                 const canAffordUpgrade = budget >= upgradeCost;
-                cardClass = 'bg-gray-800 border-green-500';
-                statusBadge = `<span class="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${level}</span>`;
-                actionButton = `
-                    <button class="structure-upgrade-btn w-full mt-1.5 ${canAffordUpgrade ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-600 cursor-not-allowed'}
-                                   text-white text-[10px] font-bold py-1 px-1 rounded transition"
+                cardClass = `bg-gradient-to-br ${colors.bg} to-gray-900/60 border ${colors.borderActive}`;
+                statusContent = `
+                    <div class="absolute -top-1 -right-1">
+                        <span class="${colors.badgeLvl} text-[9px] font-black px-1.5 py-0.5 rounded-full shadow">${level}</span>
+                    </div>
+                `;
+                actionContent = `
+                    <button class="structure-upgrade-btn w-full mt-2 ${canAffordUpgrade ? colors.btn : 'bg-gray-700 cursor-not-allowed opacity-60'}
+                                   text-white text-[10px] font-bold py-1.5 rounded-lg transition active:scale-95"
                             data-structure-id="${structureId}"
                             ${canAffordUpgrade ? '' : 'disabled'}>
-                        ${upgradeCost} CS
+                        <span class="flex items-center justify-center gap-1">
+                            <span>⬆️</span>
+                            <span>${upgradeCost} CS</span>
+                        </span>
                     </button>
                 `;
             }
         } else if (canBuildResult.canBuild) {
+            // NOT BUILT - AVAILABLE
             const canAfford = budget >= buildCost;
-            cardClass = 'bg-gray-800 border-gray-600 hover:border-green-500';
-            statusBadge = `<span class="bg-gray-600 text-gray-300 text-[10px] px-1.5 py-0.5 rounded-full">-</span>`;
-            actionButton = `
-                <button class="structure-build-btn w-full mt-1.5 ${canAfford ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}
-                               text-white text-[10px] font-bold py-1 px-1 rounded transition"
+            cardClass = `bg-gradient-to-br from-gray-800/60 to-gray-900/80 border border-dashed ${colors.border} hover:${colors.borderActive}`;
+            statusContent = `
+                <div class="absolute -top-1 -right-1">
+                    <span class="bg-gray-700 text-gray-400 text-[9px] px-1.5 py-0.5 rounded-full">—</span>
+                </div>
+            `;
+            actionContent = `
+                <button class="structure-build-btn w-full mt-2 ${canAfford ? colors.btn : 'bg-gray-700 cursor-not-allowed opacity-60'}
+                               text-white text-[10px] font-bold py-1.5 rounded-lg transition active:scale-95"
                         data-structure-id="${structureId}"
                         ${canAfford ? '' : 'disabled'}>
-                    ${buildCost} CS
+                    <span class="flex items-center justify-center gap-1">
+                        <span>🔨</span>
+                        <span>${buildCost} CS</span>
+                    </span>
                 </button>
             `;
         } else {
-            cardClass = 'bg-gray-900 border-red-900/50 opacity-60';
-            statusBadge = `<span class="bg-red-900 text-red-300 text-[10px] px-1.5 py-0.5 rounded-full">🔒</span>`;
-            actionButton = '';
+            // LOCKED
+            cardClass = `bg-gray-900/60 border border-red-900/40 opacity-50`;
+            statusContent = `
+                <div class="absolute -top-1 -right-1">
+                    <span class="bg-red-900/80 text-red-300 text-[9px] px-1.5 py-0.5 rounded-full">🔒</span>
+                </div>
+            `;
+            actionContent = `
+                <div class="mt-2 text-center">
+                    <span class="text-red-400/60 text-[9px]">Bloccato</span>
+                </div>
+            `;
         }
 
+        // Barra livello (solo se costruito e non max)
+        const levelBar = isBuilt ? `
+            <div class="flex gap-0.5 mt-1.5">
+                ${[1, 2, 3].map(lvl => `
+                    <div class="flex-1 h-1 rounded-full ${lvl <= level ? (isMaxed ? 'bg-yellow-500' : colors.bar) : 'bg-gray-700/50'}"></div>
+                `).join('')}
+            </div>
+        ` : '';
+
         return `
-            <div class="special-structure-card p-2 rounded-lg border ${cardClass} transition-all"
+            <div class="special-structure-card relative flex-shrink-0 w-[85px] sm:w-auto p-2.5 rounded-xl ${cardClass} transition-all"
                  data-structure-id="${structureId}">
-                <!-- Header: icona + badge -->
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xl sm:text-2xl">${structure.icon}</span>
-                    ${statusBadge}
+                ${statusContent}
+
+                <!-- Icona -->
+                <div class="text-center mb-1">
+                    <span class="text-2xl sm:text-3xl drop-shadow-lg">${structure.icon}</span>
                 </div>
+
                 <!-- Nome -->
-                <h4 class="font-bold text-white text-[11px] sm:text-xs leading-tight truncate">${structure.name}</h4>
-                <!-- Bonus (se presente) -->
+                <h4 class="font-bold ${colors.text} text-[10px] sm:text-[11px] leading-tight text-center truncate">${structure.name}</h4>
+
+                <!-- Bonus -->
                 ${structure.bonus > 0 ? `
-                    <p class="text-[10px] text-green-400 mt-0.5">+${isBuilt ? currentBonus.toFixed(1) : structure.bonus}</p>
+                    <p class="text-[9px] text-green-400/80 text-center mt-0.5 font-semibold">
+                        +${isBuilt ? currentBonus.toFixed(1) : structure.bonus}
+                    </p>
                 ` : ''}
-                <!-- Barra livello (se costruita) -->
-                ${isBuilt ? `
-                    <div class="flex gap-0.5 mt-1">
-                        ${[1, 2, 3].map(lvl => `
-                            <div class="flex-1 h-1 rounded ${lvl <= level ? 'bg-green-500' : 'bg-gray-700'}"></div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                ${actionButton}
+
+                <!-- Barra livello -->
+                ${levelBar}
+
+                <!-- Action Button -->
+                ${actionContent}
             </div>
         `;
     },
