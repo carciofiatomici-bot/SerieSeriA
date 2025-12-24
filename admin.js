@@ -726,6 +726,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Toggle menu Boss Battle
+        const btnToggleBossBattle = document.getElementById('btn-toggle-boss-battle');
+        const bossBattleContent = document.getElementById('boss-battle-content');
+        const bossBattleChevron = document.getElementById('boss-battle-chevron');
+        let bossBattleLoaded = false;
+
+        if (btnToggleBossBattle && bossBattleContent) {
+            btnToggleBossBattle.addEventListener('click', async () => {
+                const isHidden = bossBattleContent.classList.contains('hidden');
+                if (isHidden) {
+                    bossBattleContent.classList.remove('hidden');
+                    bossBattleChevron?.classList.add('rotate-180');
+
+                    // Carica pannello Boss Battle solo la prima volta
+                    if (!bossBattleLoaded && window.AdminBoss) {
+                        await window.AdminBoss.renderBossAdminPanel(bossBattleContent);
+                        bossBattleLoaded = true;
+                    }
+                } else {
+                    bossBattleContent.classList.add('hidden');
+                    bossBattleChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
         // Carica pannello automazione quando si apre Gestione Competizioni
         let automationLoaded = false;
         if (btnToggleLeague && leagueContent) {

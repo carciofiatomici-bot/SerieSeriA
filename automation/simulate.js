@@ -47,6 +47,664 @@ const TYPE_ADVANTAGE = {
     Tecnica: 'Potenza'
 };
 
+// ============ SISTEMA EXP ============
+
+const EXP_CONFIG = {
+    // Valori base EXP
+    MATCH_STARTER: 50,      // EXP per titolare
+    MATCH_BENCH: 10,        // EXP per panchina (20% del titolare)
+    GOAL: 30,               // EXP per gol
+    ASSIST: 20,             // EXP per assist
+    CLEAN_SHEET_GK: 40,     // EXP clean sheet portiere
+    CLEAN_SHEET_DEF: 25,    // EXP clean sheet difensore
+    VICTORY: 20,            // EXP vittoria
+    DRAW: 10,               // EXP pareggio
+    COACH_WIN: 100,         // EXP allenatore per vittoria
+
+    // Moltiplicatori
+    CAPTAIN_MULTIPLIER: 1.10,   // Capitano +10%
+    ICON_MULTIPLIER: 1.05,      // Icona +5%
+
+    // Formula level-up: Math.floor(BASE * Math.pow(level, EXPONENT) * MULTIPLIER)
+    BASE: 100,
+    EXPONENT: 1.5,
+    MULTIPLIER: 1.15,
+
+    // Limiti
+    MAX_LEVEL_NORMAL: 25,
+    MAX_LEVEL_ICON: 30,
+    MAX_LEVEL_BASE: 5,
+    MAX_LEVEL_COACH: 20
+};
+
+/**
+ * Calcola l'EXP necessaria per passare dal livello L al livello L+1
+ */
+function expForLevel(level) {
+    if (level < 1) return 0;
+    return Math.floor(EXP_CONFIG.BASE * Math.pow(level, EXP_CONFIG.EXPONENT) * EXP_CONFIG.MULTIPLIER);
+}
+
+/**
+ * Calcola l'EXP totale cumulativa necessaria per raggiungere un livello
+ */
+function totalExpForLevel(targetLevel) {
+    let total = 0;
+    for (let i = 1; i < targetLevel; i++) {
+        total += expForLevel(i);
+    }
+    return total;
+}
+
+/**
+ * Restituisce il livello massimo per un giocatore
+ */
+function getMaxLevel(player) {
+    if (player.isSeriousPlayer) return 10;
+
+    const isIcon = player.isIcon || player.icon || player.tipo === 'icona' ||
+                   (player.abilities && player.abilities.includes('Icona'));
+    if (isIcon) return EXP_CONFIG.MAX_LEVEL_ICON;
+
+    const playerLevel = player.level || 1;
+    const playerCost = player.cost || 0;
+    const isBase = player.isBase ||
+                   (player.nome && player.nome.includes('Base')) ||
+                   (player.name && player.name.includes('Base')) ||
+                   (player.id && /^[pdca]00[1-9]$/.test(player.id)) ||
+                   ((playerLevel === 1 || playerLevel === 5) && playerCost === 0);
+
+    if (isBase) return EXP_CONFIG.MAX_LEVEL_BASE;
+    if (player.secretMaxLevel !== undefined) return player.secretMaxLevel;
+    return EXP_CONFIG.MAX_LEVEL_NORMAL;
+}
+
+/**
+ * Verifica e applica level-up
+ */
+function checkLevelUp(player) {
+    if (!player || player.exp === undefined) return { leveledUp: false, levelsGained: 0 };
+
+    const maxLevel = getMaxLevel(player);
+    const startLevel = player.level;
+    let levelsGained = 0;
+
+    while (player.level < maxLevel) {
+        const expNeededForNext = totalExpForLevel(player.level + 1);
+        if (player.exp >= expNeededForNext) {
+            player.level++;
+            levelsGained++;
+            const playerName = player.nome || player.name || 'Giocatore';
+            console.log(`  [EXP] ${playerName} sale al livello ${player.level}!`);
+        } else {
+            break;
+        }
+    }
+
+    if (player.level < maxLevel) {
+        player.expToNextLevel = totalExpForLevel(player.level + 1) - player.exp;
+    } else {
+        player.expToNextLevel = 0;
+    }
+
+    return { leveledUp: levelsGained > 0, levelsGained };
+}
+
+/**
+ * Migra un giocatore se non ha EXP
+ */
+function migratePlayer(player) {
+    if (!player || typeof player !== 'object') return;
+    if (player.exp !== undefined) return;
+
+    const currentLevel = player.level || 1;
+    player.level = currentLevel;
+    player.exp = totalExpForLevel(currentLevel);
+    player.expToNextLevel = expForLevel(currentLevel);
+    player.totalMatchesPlayed = player.totalMatchesPlayed || 0;
+}
+
+/**
+ * Applica EXP a un giocatore
+ */
+function applyExp(player, amount) {
+    if (!player || amount <= 0) return { leveledUp: false, expGained: 0 };
+
+    if (player.exp === undefined) {
+        migratePlayer(player);
+    }
+
+    const oldLevel = player.level;
+    const maxLevel = getMaxLevel(player);
+
+    if (player.level >= maxLevel) {
+        const maxExp = totalExpForLevel(maxLevel);
+        if (player.exp > maxExp) player.exp = maxExp;
+        player.expToNextLevel = 0;
+        return { leveledUp: false, oldLevel, newLevel: oldLevel, expGained: 0 };
+    }
+
+    player.exp += amount;
+    if (player.totalMatchesPlayed !== undefined) {
+        player.totalMatchesPlayed++;
+    }
+
+    const levelUpResult = checkLevelUp(player);
+
+    if (player.level >= maxLevel) {
+        const maxExp = totalExpForLevel(maxLevel);
+        if (player.exp > maxExp) player.exp = maxExp;
+        player.expToNextLevel = 0;
+    }
+
+    return {
+        leveledUp: levelUpResult.leveledUp,
+        oldLevel: oldLevel,
+        newLevel: player.level,
+        expGained: amount,
+        levelsGained: player.level - oldLevel
+    };
+}
+
+/**
+ * Processa EXP per una squadra dopo una partita
+ */
+function processTeamMatchExp(teamData, isHome, homeGoals, awayGoals) {
+    if (!teamData) return [];
+
+    const teamGoals = isHome ? homeGoals : awayGoals;
+    const oppGoals = isHome ? awayGoals : homeGoals;
+
+    let result = 'loss';
+    if (teamGoals > oppGoals) result = 'win';
+    else if (teamGoals === oppGoals) result = 'draw';
+
+    const cleanSheet = oppGoals === 0;
+    const captainId = teamData.capitanoId || teamData.captainId || teamData.iconaId;
+
+    // Bonus spogliatoi
+    const lockerRoomLevel = teamData.stadium?.lockerRoom?.level || 0;
+    let expBonusMultiplier = 1 + (lockerRoomLevel * 0.05);
+
+    // Bonus sponsor/media
+    const sponsorExpBonus = teamData.sponsor?.expBonus || 0;
+    const mediaExpBonus = teamData.media?.expBonus || 0;
+    expBonusMultiplier += sponsorExpBonus + mediaExpBonus;
+
+    // Bonus allenatore
+    const coach = teamData.coach || teamData.allenatore;
+    const coachLevel = (coach && typeof coach === 'object') ? (coach.level || 1) : 1;
+    expBonusMultiplier += (coachLevel / 2) / 100;
+
+    const results = [];
+    const formation = teamData.formation?.titolari || [];
+    const roster = teamData.players || [];
+    const processedIds = new Set();
+
+    // Processa titolari
+    formation.forEach(formPlayer => {
+        if (!formPlayer) return;
+        const playerId = formPlayer.id || formPlayer.visitorId;
+        if (!playerId || processedIds.has(playerId)) return;
+        processedIds.add(playerId);
+
+        const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+        const player = rosterPlayer || formPlayer;
+        if (!player) return;
+
+        const playerName = player.nome || player.name || 'Sconosciuto';
+        const role = (player.ruolo || player.role || '').toUpperCase();
+        const isIcon = player.isIcon || player.icon || player.tipo === 'icona';
+
+        let exp = EXP_CONFIG.MATCH_STARTER;
+
+        // Bonus risultato
+        if (result === 'win') exp += EXP_CONFIG.VICTORY;
+        else if (result === 'draw') exp += EXP_CONFIG.DRAW;
+
+        // Bonus clean sheet
+        if (cleanSheet) {
+            if (role === 'P') exp += EXP_CONFIG.CLEAN_SHEET_GK;
+            else if (role === 'D') exp += EXP_CONFIG.CLEAN_SHEET_DEF;
+        }
+
+        // Moltiplicatore capitano
+        if (playerId === captainId) {
+            exp = Math.floor(exp * EXP_CONFIG.CAPTAIN_MULTIPLIER);
+        }
+
+        // Moltiplicatore icona
+        if (isIcon) {
+            exp = Math.floor(exp * EXP_CONFIG.ICON_MULTIPLIER);
+        }
+
+        // Bonus strutture
+        exp = Math.floor(exp * expBonusMultiplier);
+
+        const applyResult = applyExp(player, exp);
+        console.log(`  [EXP] ${playerName}: +${exp} EXP (Lv.${player.level})`);
+
+        results.push({
+            player,
+            playerId,
+            expGained: exp,
+            ...applyResult
+        });
+    });
+
+    // Processa panchina
+    const benchPlayers = teamData.formation?.panchina || [];
+    benchPlayers.forEach(benchPlayer => {
+        if (!benchPlayer) return;
+        const playerId = benchPlayer.id || benchPlayer.visitorId;
+        if (!playerId || processedIds.has(playerId)) return;
+        processedIds.add(playerId);
+
+        const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+        const player = rosterPlayer || benchPlayer;
+        if (!player) return;
+
+        let exp = EXP_CONFIG.MATCH_BENCH;
+        if (result === 'win') exp += Math.floor(EXP_CONFIG.VICTORY / 2);
+        else if (result === 'draw') exp += Math.floor(EXP_CONFIG.DRAW / 2);
+
+        exp = Math.floor(exp * expBonusMultiplier);
+
+        const applyResult = applyExp(player, exp);
+        const playerName = player.nome || player.name || 'Sconosciuto';
+        console.log(`  [EXP] ${playerName} (panchina): +${exp} EXP`);
+
+        results.push({
+            player,
+            playerId,
+            expGained: exp,
+            ...applyResult
+        });
+    });
+
+    // Processa allenatore (solo vittoria)
+    if (coach && typeof coach === 'object' && result === 'win') {
+        if (coach.exp === undefined) {
+            coach.level = coach.level || 1;
+            coach.exp = totalExpForLevel(coach.level);
+            coach.expToNextLevel = expForLevel(coach.level);
+        }
+
+        const maxLevel = EXP_CONFIG.MAX_LEVEL_COACH;
+        if (coach.level < maxLevel) {
+            let coachExp = Math.floor(EXP_CONFIG.COACH_WIN * expBonusMultiplier);
+            coach.exp += coachExp;
+
+            while (coach.level < maxLevel) {
+                const expNeededForNext = totalExpForLevel(coach.level + 1);
+                if (coach.exp >= expNeededForNext) {
+                    coach.level++;
+                    console.log(`  [EXP] Allenatore ${coach.name} sale al livello ${coach.level}!`);
+                } else {
+                    break;
+                }
+            }
+
+            if (coach.level < maxLevel) {
+                coach.expToNextLevel = totalExpForLevel(coach.level + 1) - coach.exp;
+            } else {
+                coach.expToNextLevel = 0;
+            }
+
+            console.log(`  [EXP] Allenatore: +${coachExp} EXP (Lv.${coach.level})`);
+
+            results.push({
+                type: 'coach',
+                coach,
+                expGained: coachExp
+            });
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Processa EXP per una squadra dopo una partita CON statistiche individuali
+ * (gol, assist da playerStats)
+ */
+function processTeamMatchExpWithStats(teamData, isHome, homeGoals, awayGoals, playerStats) {
+    if (!teamData) return [];
+
+    const teamGoals = isHome ? homeGoals : awayGoals;
+    const oppGoals = isHome ? awayGoals : homeGoals;
+
+    let result = 'loss';
+    if (teamGoals > oppGoals) result = 'win';
+    else if (teamGoals === oppGoals) result = 'draw';
+
+    const cleanSheet = oppGoals === 0;
+    const captainId = teamData.capitanoId || teamData.captainId || teamData.iconaId;
+
+    // Bonus spogliatoi
+    const lockerRoomLevel = teamData.stadium?.lockerRoom?.level || 0;
+    let expBonusMultiplier = 1 + (lockerRoomLevel * 0.05);
+
+    // Bonus sponsor/media
+    const sponsorExpBonus = teamData.sponsor?.expBonus || 0;
+    const mediaExpBonus = teamData.media?.expBonus || 0;
+    expBonusMultiplier += sponsorExpBonus + mediaExpBonus;
+
+    // Bonus allenatore
+    const coach = teamData.coach || teamData.allenatore;
+    const coachLevel = (coach && typeof coach === 'object') ? (coach.level || 1) : 1;
+    expBonusMultiplier += (coachLevel / 2) / 100;
+
+    const results = [];
+    const formation = teamData.formation?.titolari || [];
+    const roster = teamData.players || [];
+    const processedIds = new Set();
+
+    // Processa titolari
+    formation.forEach(formPlayer => {
+        if (!formPlayer) return;
+        const playerId = formPlayer.id || formPlayer.visitorId;
+        if (!playerId || processedIds.has(playerId)) return;
+        processedIds.add(playerId);
+
+        const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+        const player = rosterPlayer || formPlayer;
+        if (!player) return;
+
+        const playerName = player.nome || player.name || 'Sconosciuto';
+        const role = (player.ruolo || player.role || '').toUpperCase();
+        const isIcon = player.isIcon || player.icon || player.tipo === 'icona';
+
+        // Statistiche individuali da playerStats
+        const stats = playerStats?.[playerId] || { goals: 0, assists: 0 };
+
+        let exp = EXP_CONFIG.MATCH_STARTER;
+
+        // Bonus risultato
+        if (result === 'win') exp += EXP_CONFIG.VICTORY;
+        else if (result === 'draw') exp += EXP_CONFIG.DRAW;
+
+        // Bonus clean sheet
+        if (cleanSheet) {
+            if (role === 'P') exp += EXP_CONFIG.CLEAN_SHEET_GK;
+            else if (role === 'D') exp += EXP_CONFIG.CLEAN_SHEET_DEF;
+        }
+
+        // EXP per gol e assist
+        if (stats.goals > 0) {
+            exp += stats.goals * EXP_CONFIG.GOAL;
+        }
+        if (stats.assists > 0) {
+            exp += stats.assists * EXP_CONFIG.ASSIST;
+        }
+
+        // Moltiplicatore capitano
+        if (playerId === captainId) {
+            exp = Math.floor(exp * EXP_CONFIG.CAPTAIN_MULTIPLIER);
+        }
+
+        // Moltiplicatore icona
+        if (isIcon) {
+            exp = Math.floor(exp * EXP_CONFIG.ICON_MULTIPLIER);
+        }
+
+        // Bonus strutture
+        exp = Math.floor(exp * expBonusMultiplier);
+
+        const applyResult = applyExp(player, exp);
+
+        let extraInfo = '';
+        if (stats.goals > 0) extraInfo += ` [${stats.goals}G]`;
+        if (stats.assists > 0) extraInfo += ` [${stats.assists}A]`;
+        console.log(`  [EXP] ${playerName}: +${exp} EXP (Lv.${player.level})${extraInfo}`);
+
+        results.push({
+            player,
+            playerId,
+            expGained: exp,
+            ...applyResult
+        });
+    });
+
+    // Processa panchina
+    const benchPlayers = teamData.formation?.panchina || [];
+    benchPlayers.forEach(benchPlayer => {
+        if (!benchPlayer) return;
+        const playerId = benchPlayer.id || benchPlayer.visitorId;
+        if (!playerId || processedIds.has(playerId)) return;
+        processedIds.add(playerId);
+
+        const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+        const player = rosterPlayer || benchPlayer;
+        if (!player) return;
+
+        let exp = EXP_CONFIG.MATCH_BENCH;
+        if (result === 'win') exp += Math.floor(EXP_CONFIG.VICTORY / 2);
+        else if (result === 'draw') exp += Math.floor(EXP_CONFIG.DRAW / 2);
+
+        exp = Math.floor(exp * expBonusMultiplier);
+
+        const applyResult = applyExp(player, exp);
+        const playerName = player.nome || player.name || 'Sconosciuto';
+        console.log(`  [EXP] ${playerName} (panchina): +${exp} EXP`);
+
+        results.push({
+            player,
+            playerId,
+            expGained: exp,
+            ...applyResult
+        });
+    });
+
+    // Processa allenatore (solo vittoria)
+    if (coach && typeof coach === 'object' && result === 'win') {
+        if (coach.exp === undefined) {
+            coach.level = coach.level || 1;
+            coach.exp = totalExpForLevel(coach.level);
+            coach.expToNextLevel = expForLevel(coach.level);
+        }
+
+        const maxLevel = EXP_CONFIG.MAX_LEVEL_COACH;
+        if (coach.level < maxLevel) {
+            let coachExp = Math.floor(EXP_CONFIG.COACH_WIN * expBonusMultiplier);
+            coach.exp += coachExp;
+
+            while (coach.level < maxLevel) {
+                const expNeededForNext = totalExpForLevel(coach.level + 1);
+                if (coach.exp >= expNeededForNext) {
+                    coach.level++;
+                    console.log(`  [EXP] Allenatore ${coach.name} sale al livello ${coach.level}!`);
+                } else {
+                    break;
+                }
+            }
+
+            if (coach.level < maxLevel) {
+                coach.expToNextLevel = totalExpForLevel(coach.level + 1) - coach.exp;
+            } else {
+                coach.expToNextLevel = 0;
+            }
+
+            console.log(`  [EXP] Allenatore: +${coachExp} EXP (Lv.${coach.level})`);
+
+            results.push({
+                type: 'coach',
+                coach,
+                expGained: coachExp
+            });
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Aggiorna la forma dei giocatori in base alle prestazioni della partita
+ * Forma va da -2 a +2:
+ *  - Gol segnato: +1
+ *  - Assist: +0.5
+ *  - Clean sheet (P/D): +0.5
+ *  - Vittoria: +0.5
+ *  - Sconfitta: -0.5
+ *  - 0 gol subiti ma difensore: +0.25
+ */
+function updateTeamFormStatus(teamData, isHome, homeGoals, awayGoals, playerStats) {
+    if (!teamData) return {};
+
+    const teamGoals = isHome ? homeGoals : awayGoals;
+    const oppGoals = isHome ? awayGoals : homeGoals;
+
+    const won = teamGoals > oppGoals;
+    const lost = teamGoals < oppGoals;
+    const cleanSheet = oppGoals === 0;
+
+    const formation = teamData.formation?.titolari || [];
+    const roster = teamData.players || [];
+    const currentFormStatus = teamData.playersFormStatus || {};
+    const updatedFormStatus = { ...currentFormStatus };
+
+    // Processa solo i titolari
+    formation.forEach(formPlayer => {
+        if (!formPlayer) return;
+        const playerId = formPlayer.id || formPlayer.visitorId;
+        if (!playerId) return;
+
+        // Trova giocatore nella rosa per il ruolo
+        const rosterPlayer = roster.find(p => p && ((p.id === playerId) || (p.visitorId === playerId)));
+        const player = rosterPlayer || formPlayer;
+        const role = (player?.ruolo || player?.role || 'C').toUpperCase();
+
+        // Statistiche individuali
+        const stats = playerStats?.[playerId] || { goals: 0, assists: 0 };
+
+        // Forma attuale (default 0)
+        let currentMod = updatedFormStatus[playerId]?.mod || 0;
+
+        // Calcola nuova forma
+        let formChange = 0;
+
+        // Bonus/malus risultato
+        if (won) formChange += 0.5;
+        if (lost) formChange -= 0.5;
+
+        // Bonus gol
+        if (stats.goals > 0) formChange += stats.goals * 1;
+
+        // Bonus assist
+        if (stats.assists > 0) formChange += stats.assists * 0.5;
+
+        // Bonus clean sheet per portieri e difensori
+        if (cleanSheet) {
+            if (role === 'P') formChange += 0.5;
+            else if (role === 'D') formChange += 0.25;
+        }
+
+        // Applica cambio e limita tra -2 e +2
+        currentMod += formChange;
+        currentMod = Math.max(-2, Math.min(2, currentMod));
+
+        // Arrotonda a 0.5
+        currentMod = Math.round(currentMod * 2) / 2;
+
+        updatedFormStatus[playerId] = {
+            mod: currentMod,
+            lastUpdate: new Date().toISOString()
+        };
+    });
+
+    return updatedFormStatus;
+}
+
+/**
+ * Salva la forma aggiornata su Firestore
+ */
+async function saveTeamFormStatus(db, appId, teamId, formStatus) {
+    if (!teamId || !formStatus || Object.keys(formStatus).length === 0) return;
+
+    try {
+        const teamRef = db.collection(`artifacts/${appId}/public/data/teams`).doc(teamId);
+        await teamRef.update({ playersFormStatus: formStatus });
+        console.log(`  [Forma] Aggiornata forma giocatori per squadra ${teamId}`);
+    } catch (error) {
+        console.error(`  [Forma] Errore aggiornamento forma per squadra ${teamId}:`, error);
+    }
+}
+
+/**
+ * Salva EXP aggiornata su Firestore per una squadra
+ */
+async function saveTeamExpToFirestore(db, appId, teamId, teamData, expResults) {
+    if (!teamId || !expResults || expResults.length === 0) return;
+
+    try {
+        const teamRef = db.collection(`artifacts/${appId}/public/data/teams`).doc(teamId);
+
+        // Prepara playersExp aggiornato
+        const existingPlayersExp = teamData.playersExp || {};
+        const updatedPlayersExp = { ...existingPlayersExp };
+
+        // Prepara coachExp
+        let updatedCoachExp = teamData.coachExp || null;
+
+        expResults.forEach(result => {
+            if (result.type === 'coach' && result.coach) {
+                updatedCoachExp = {
+                    exp: result.coach.exp || 0,
+                    level: result.coach.level || 1,
+                    expToNextLevel: result.coach.expToNextLevel || 0
+                };
+            } else if (result.player && result.playerId) {
+                updatedPlayersExp[result.playerId] = {
+                    exp: result.player.exp || 0,
+                    level: result.player.level || 1,
+                    expToNextLevel: result.player.expToNextLevel || 0,
+                    totalMatchesPlayed: result.player.totalMatchesPlayed || 0
+                };
+            }
+        });
+
+        // Aggiorna anche l'array players
+        const updatedPlayers = (teamData.players || []).map(player => {
+            if (!player) return player;
+            const playerId = player.id || player.visitorId;
+            if (playerId && updatedPlayersExp[playerId]) {
+                const expData = updatedPlayersExp[playerId];
+                return {
+                    ...player,
+                    exp: expData.exp,
+                    level: expData.level,
+                    expToNextLevel: expData.expToNextLevel,
+                    totalMatchesPlayed: expData.totalMatchesPlayed || player.totalMatchesPlayed || 0
+                };
+            }
+            return player;
+        });
+
+        // Prepara dati da salvare
+        const updateData = {
+            players: updatedPlayers,
+            playersExp: updatedPlayersExp
+        };
+
+        // Aggiorna coach se presente
+        if (updatedCoachExp && teamData.coach) {
+            updateData.coach = {
+                ...teamData.coach,
+                exp: updatedCoachExp.exp,
+                level: updatedCoachExp.level,
+                expToNextLevel: updatedCoachExp.expToNextLevel
+            };
+            updateData.coachExp = updatedCoachExp;
+        }
+
+        await teamRef.update(updateData);
+        console.log(`  [EXP] Salvata EXP per squadra ${teamData.teamName || teamId}`);
+
+    } catch (error) {
+        console.error(`  [EXP] Errore salvataggio EXP per squadra ${teamId}:`, error);
+    }
+}
+
 // ============ SIMULAZIONE ============
 
 /**
@@ -117,8 +775,71 @@ function calculateTeamStrength(teamData) {
 }
 
 /**
- * Simula una partita tra due squadre
- * Ritorna { homeGoals, awayGoals }
+ * Seleziona un giocatore casuale dalla formazione per ruolo (o qualsiasi)
+ */
+function selectRandomPlayer(team, preferredRoles = null) {
+    const formation = team.formation?.titolari || [];
+    const players = team.players || [];
+
+    // Filtra per ruolo se specificato
+    let candidates = formation.filter(p => {
+        if (!p) return false;
+        if (!preferredRoles) return true;
+        const role = (p.ruolo || p.role || 'C').toUpperCase();
+        return preferredRoles.includes(role);
+    });
+
+    // Se nessun candidato, usa tutti i titolari
+    if (candidates.length === 0) {
+        candidates = formation.filter(p => p);
+    }
+
+    if (candidates.length === 0) return null;
+
+    const selected = candidates[Math.floor(Math.random() * candidates.length)];
+
+    // Cerca dati completi nella rosa
+    const fullPlayer = players.find(p => p && (p.id === selected.id || p.visitorId === selected.id)) || selected;
+
+    return fullPlayer;
+}
+
+/**
+ * Genera descrizione azione per telecronaca
+ */
+function generateActionDescription(phase, team, player, result, isGoal) {
+    const teamName = team.teamName || 'Squadra';
+    const playerName = player?.nome || player?.name || 'Giocatore';
+
+    const phaseDescriptions = {
+        costruzione: [
+            `${teamName} costruisce dal basso con ${playerName}`,
+            `Bella triangolazione del ${teamName}, palla a ${playerName}`,
+            `${playerName} gestisce il possesso per il ${teamName}`
+        ],
+        attacco: [
+            `${teamName} attacca! ${playerName} in area`,
+            `Azione pericolosa del ${teamName} con ${playerName}`,
+            `${playerName} punta la porta avversaria`
+        ],
+        tiro: isGoal ? [
+            `GOL! ${playerName} segna per il ${teamName}!`,
+            `RETE! Splendido gol di ${playerName}!`,
+            `${playerName} non sbaglia! GOL del ${teamName}!`
+        ] : [
+            `Tiro di ${playerName}, parato!`,
+            `${playerName} calcia, palla fuori!`,
+            `Occasione sprecata da ${playerName}`
+        ]
+    };
+
+    const descriptions = phaseDescriptions[phase] || phaseDescriptions.costruzione;
+    return descriptions[Math.floor(Math.random() * descriptions.length)];
+}
+
+/**
+ * Simula una partita tra due squadre con telecronaca e statistiche individuali
+ * Ritorna { homeGoals, awayGoals, scorers, assists, matchLog, matchEvents, playerStats }
  */
 function simulateMatch(homeTeam, awayTeam) {
     const homeStrength = calculateTeamStrength(homeTeam);
@@ -132,29 +853,169 @@ function simulateMatch(homeTeam, awayTeam) {
     const homeProb = adjustedHomeStrength / totalStrength;
     const awayProb = awayStrength / totalStrength;
 
-    // Genera gol (0-5 per squadra, basato su forza relativa)
+    // Statistiche
     let homeGoals = 0;
     let awayGoals = 0;
+    const scorers = [];
+    const assists = [];
+    const matchLog = [];       // Solo gol (highlights)
+    const matchEvents = [];    // Tutte le 50 occasioni (telecronaca completa)
+    const playerStats = {};    // ID giocatore -> { goals, assists }
 
-    // Simula 10 "azioni" di gioco
-    for (let i = 0; i < 10; i++) {
+    // Simula 50 occasioni di gioco (come la simulazione client)
+    for (let occasion = 1; occasion <= 50; occasion++) {
+        const minute = Math.floor((occasion / 50) * 90);
         const roll = Math.random();
 
-        if (roll < homeProb * 0.3) {
-            homeGoals++;
-        } else if (roll > 1 - awayProb * 0.3) {
-            awayGoals++;
+        // Determina quale squadra ha l'azione
+        const isHomeAction = roll < 0.5 + (homeProb - 0.5) * 0.3;
+        const attackingTeam = isHomeAction ? homeTeam : awayTeam;
+        const defendingTeam = isHomeAction ? awayTeam : homeTeam;
+
+        // Fasi dell'azione
+        const phases = ['costruzione', 'attacco', 'tiro'];
+        let actionSuccess = true;
+        let isGoal = false;
+        const eventDetails = {
+            occasion,
+            minute,
+            team: isHomeAction ? 'home' : 'away',
+            teamName: attackingTeam.teamName,
+            phases: []
+        };
+
+        for (const phase of phases) {
+            const phaseRoll = Math.random();
+            const successChance = phase === 'costruzione' ? 0.7 : (phase === 'attacco' ? 0.5 : 0.3);
+            const adjustedChance = successChance * (isHomeAction ? homeProb / 0.5 : awayProb / 0.5);
+
+            const player = selectRandomPlayer(attackingTeam,
+                phase === 'costruzione' ? ['C', 'D'] :
+                phase === 'attacco' ? ['C', 'A'] :
+                ['A', 'C']
+            );
+
+            if (phaseRoll > adjustedChance) {
+                // Azione fallita
+                eventDetails.phases.push({
+                    phase,
+                    success: false,
+                    player: player?.nome || player?.name || 'Giocatore',
+                    playerId: player?.id,
+                    description: generateActionDescription(phase, attackingTeam, player, 'fail', false)
+                });
+                actionSuccess = false;
+                break;
+            }
+
+            // Fase riuscita
+            eventDetails.phases.push({
+                phase,
+                success: true,
+                player: player?.nome || player?.name || 'Giocatore',
+                playerId: player?.id,
+                description: generateActionDescription(phase, attackingTeam, player, 'success', phase === 'tiro')
+            });
+
+            // Se siamo alla fase tiro e ha avuto successo, e un gol!
+            if (phase === 'tiro') {
+                isGoal = true;
+            }
         }
+
+        // Se l'azione ha portato a un gol
+        if (isGoal && actionSuccess) {
+            if (isHomeAction) {
+                homeGoals++;
+            } else {
+                awayGoals++;
+            }
+
+            // Trova marcatore e assistman
+            const scorer = selectRandomPlayer(attackingTeam, ['A', 'C']);
+            const assistPlayer = selectRandomPlayer(attackingTeam, ['C', 'A', 'D']);
+
+            const scorerId = scorer?.id || scorer?.visitorId;
+            const assistId = assistPlayer?.id || assistPlayer?.visitorId;
+
+            // Aggiorna statistiche giocatore
+            if (scorerId) {
+                if (!playerStats[scorerId]) playerStats[scorerId] = { goals: 0, assists: 0 };
+                playerStats[scorerId].goals++;
+            }
+            if (assistId && assistId !== scorerId) {
+                if (!playerStats[assistId]) playerStats[assistId] = { goals: 0, assists: 0 };
+                playerStats[assistId].assists++;
+            }
+
+            // Aggiungi ai marcatori
+            scorers.push({
+                teamId: attackingTeam.id,
+                teamName: attackingTeam.teamName,
+                playerId: scorerId,
+                playerName: scorer?.nome || scorer?.name || 'Giocatore',
+                minute: minute
+            });
+
+            // Aggiungi agli assistmen (se diverso dal marcatore)
+            if (assistId && assistId !== scorerId) {
+                assists.push({
+                    teamId: attackingTeam.id,
+                    teamName: attackingTeam.teamName,
+                    playerId: assistId,
+                    playerName: assistPlayer?.nome || assistPlayer?.name || 'Giocatore',
+                    minute: minute
+                });
+            }
+
+            // Aggiungi a matchLog (highlights)
+            const goalDescription = `${minute}' - GOL! ${scorer?.nome || scorer?.name || 'Giocatore'} (${attackingTeam.teamName})${assistId && assistId !== scorerId ? ` su assist di ${assistPlayer?.nome || assistPlayer?.name}` : ''}`;
+            matchLog.push({
+                minute,
+                type: 'goal',
+                team: isHomeAction ? 'home' : 'away',
+                teamName: attackingTeam.teamName,
+                scorer: scorer?.nome || scorer?.name || 'Giocatore',
+                scorerId: scorerId,
+                assist: assistId && assistId !== scorerId ? (assistPlayer?.nome || assistPlayer?.name) : null,
+                assistId: assistId && assistId !== scorerId ? assistId : null,
+                description: goalDescription,
+                homeScore: homeGoals,
+                awayScore: awayGoals
+            });
+
+            eventDetails.isGoal = true;
+            eventDetails.scorer = scorer?.nome || scorer?.name;
+            eventDetails.scorerId = scorerId;
+            eventDetails.assist = assistId && assistId !== scorerId ? (assistPlayer?.nome || assistPlayer?.name) : null;
+            eventDetails.assistId = assistId && assistId !== scorerId ? assistId : null;
+            eventDetails.homeScore = homeGoals;
+            eventDetails.awayScore = awayGoals;
+        }
+
+        // Aggiungi sempre a matchEvents (telecronaca completa)
+        matchEvents.push(eventDetails);
     }
 
-    // Limita gol massimi
-    homeGoals = Math.min(homeGoals, 5);
-    awayGoals = Math.min(awayGoals, 5);
+    // Limita gol massimi (sicurezza)
+    homeGoals = Math.min(homeGoals, 7);
+    awayGoals = Math.min(awayGoals, 7);
 
     console.log(`  ${homeTeam.teamName} ${homeGoals} - ${awayGoals} ${awayTeam.teamName}`);
     console.log(`    (Forza: ${adjustedHomeStrength.toFixed(0)} vs ${awayStrength.toFixed(0)})`);
+    if (scorers.length > 0) {
+        console.log(`    Marcatori: ${scorers.map(s => `${s.playerName} (${s.minute}')`).join(', ')}`);
+    }
 
-    return { homeGoals, awayGoals };
+    return {
+        homeGoals,
+        awayGoals,
+        scorers,
+        assists,
+        matchLog,
+        matchEvents,
+        playerStats
+    };
 }
 
 // ============ CAMPIONATO ============
@@ -228,7 +1089,13 @@ async function simulateChampionshipMatchday(db, appId) {
         // Aggiorna il match nel formato del client: result = "homeGoals-awayGoals"
         match.result = `${simResult.homeGoals}-${simResult.awayGoals}`;
 
-        // Invia notifiche e salva nella Hall of Fame
+        // Salva matchLog e matchEvents per telecronaca
+        match.matchLog = simResult.matchLog || [];
+        match.matchEvents = simResult.matchEvents || [];
+        match.scorers = simResult.scorers || [];
+        match.assists = simResult.assists || [];
+
+        // Invia notifiche, salva nella Hall of Fame, e processa EXP
         if (!DRY_RUN) {
             await sendMatchNotifications(db, appId, homeTeam, awayTeam, simResult.homeGoals, simResult.awayGoals, 'Campionato');
 
@@ -251,6 +1118,62 @@ async function simulateChampionshipMatchday(db, appId) {
                 isHome: false,
                 details: { round: round.round }
             });
+
+            // ========== SISTEMA EXP ==========
+            console.log(`  [EXP] Processamento EXP per ${homeTeam.teamName}...`);
+
+            // Processa EXP per squadra casa con statistiche individuali
+            const homeExpResults = processTeamMatchExpWithStats(
+                homeTeam,
+                true,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+
+            // Salva EXP squadra casa
+            if (homeExpResults.length > 0) {
+                await saveTeamExpToFirestore(db, appId, homeTeam.id, homeTeam, homeExpResults);
+            }
+
+            console.log(`  [EXP] Processamento EXP per ${awayTeam.teamName}...`);
+
+            // Processa EXP per squadra trasferta con statistiche individuali
+            const awayExpResults = processTeamMatchExpWithStats(
+                awayTeam,
+                false,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+
+            // Salva EXP squadra trasferta
+            if (awayExpResults.length > 0) {
+                await saveTeamExpToFirestore(db, appId, awayTeam.id, awayTeam, awayExpResults);
+            }
+
+            // ========== AGGIORNA FORMA GIOCATORI ==========
+            console.log(`  [Forma] Aggiornamento forma giocatori...`);
+
+            // Aggiorna forma squadra casa
+            const homeFormStatus = updateTeamFormStatus(
+                homeTeam,
+                true,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            await saveTeamFormStatus(db, appId, homeTeam.id, homeFormStatus);
+
+            // Aggiorna forma squadra trasferta
+            const awayFormStatus = updateTeamFormStatus(
+                awayTeam,
+                false,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            await saveTeamFormStatus(db, appId, awayTeam.id, awayFormStatus);
         }
     }
 
@@ -260,14 +1183,10 @@ async function simulateChampionshipMatchday(db, appId) {
             matches: scheduleData.matches,
             lastUpdated: new Date().toISOString()
         });
-        console.log('[Campionato] Calendario salvato');
+        console.log('[Campionato] Calendario salvato (con telecronaca)');
 
         // Aggiorna la classifica
         await updateLeaderboard(db, appId, scheduleData);
-
-        // NOTA: Le forme dei giocatori NON vengono resettate
-        // Il nuovo sistema aggiorna le forme in base alle prestazioni (gol, assist, clean sheet)
-        // L'automazione non traccia questi dati, quindi le forme vengono gestite dal client
     }
 
     return true;
@@ -478,20 +1397,33 @@ async function simulateCupRound(db, appId) {
             actualAway = homeTeam;
         }
 
-        const result = simulateMatch(actualHome, actualAway);
+        const simResult = simulateMatch(actualHome, actualAway);
 
-        // Invia notifiche alle squadre e salva nella Hall of Fame
+        // Salva matchLog e matchEvents per telecronaca
+        if (legType === 'leg1') {
+            match.leg1MatchLog = simResult.matchLog || [];
+            match.leg1MatchEvents = simResult.matchEvents || [];
+            match.leg1Scorers = simResult.scorers || [];
+            match.leg1Assists = simResult.assists || [];
+        } else {
+            match.leg2MatchLog = simResult.matchLog || [];
+            match.leg2MatchEvents = simResult.matchEvents || [];
+            match.leg2Scorers = simResult.scorers || [];
+            match.leg2Assists = simResult.assists || [];
+        }
+
+        // Invia notifiche alle squadre, salva nella Hall of Fame, processa EXP e forma
         if (!DRY_RUN) {
             const legLabel = legType === 'leg1' ? 'Andata' : 'Ritorno';
-            await sendMatchNotifications(db, appId, actualHome, actualAway, result.homeGoals, result.awayGoals, `Coppa - ${round.roundName} (${legLabel})`);
+            await sendMatchNotifications(db, appId, actualHome, actualAway, simResult.homeGoals, simResult.awayGoals, `Coppa - ${round.roundName} (${legLabel})`);
 
             // Salva nella Hall of Fame (matchHistory) per entrambe le squadre
             await saveMatchToHistory(db, appId, match.homeTeam.teamId, {
                 type: 'coppa',
                 homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
                 awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
-                homeScore: result.homeGoals,
-                awayScore: result.awayGoals,
+                homeScore: simResult.homeGoals,
+                awayScore: simResult.awayGoals,
                 isHome: true,
                 details: { round: round.roundName, leg: legLabel }
             });
@@ -499,36 +1431,86 @@ async function simulateCupRound(db, appId) {
                 type: 'coppa',
                 homeTeam: { id: match.homeTeam.teamId, name: match.homeTeam.teamName, logoUrl: homeTeam.logoUrl || '' },
                 awayTeam: { id: match.awayTeam.teamId, name: match.awayTeam.teamName, logoUrl: awayTeam.logoUrl || '' },
-                homeScore: result.homeGoals,
-                awayScore: result.awayGoals,
+                homeScore: simResult.homeGoals,
+                awayScore: simResult.awayGoals,
                 isHome: false,
                 details: { round: round.roundName, leg: legLabel }
             });
+
+            // ========== SISTEMA EXP COPPA ==========
+            console.log(`  [EXP] Processamento EXP Coppa per ${actualHome.teamName}...`);
+
+            // Processa EXP per squadra casa
+            const homeExpResults = processTeamMatchExpWithStats(
+                actualHome,
+                true,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            if (homeExpResults.length > 0) {
+                await saveTeamExpToFirestore(db, appId, actualHome.id, actualHome, homeExpResults);
+            }
+
+            console.log(`  [EXP] Processamento EXP Coppa per ${actualAway.teamName}...`);
+
+            // Processa EXP per squadra trasferta
+            const awayExpResults = processTeamMatchExpWithStats(
+                actualAway,
+                false,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            if (awayExpResults.length > 0) {
+                await saveTeamExpToFirestore(db, appId, actualAway.id, actualAway, awayExpResults);
+            }
+
+            // ========== AGGIORNA FORMA GIOCATORI COPPA ==========
+            console.log(`  [Forma] Aggiornamento forma giocatori Coppa...`);
+
+            const homeFormStatus = updateTeamFormStatus(
+                actualHome,
+                true,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            await saveTeamFormStatus(db, appId, actualHome.id, homeFormStatus);
+
+            const awayFormStatus = updateTeamFormStatus(
+                actualAway,
+                false,
+                simResult.homeGoals,
+                simResult.awayGoals,
+                simResult.playerStats
+            );
+            await saveTeamFormStatus(db, appId, actualAway.id, awayFormStatus);
         }
 
         // Salva risultato
         if (legType === 'leg1') {
-            match.leg1Result = `${result.homeGoals}-${result.awayGoals}`;
+            match.leg1Result = `${simResult.homeGoals}-${simResult.awayGoals}`;
         } else {
-            match.leg2Result = `${result.homeGoals}-${result.awayGoals}`;
+            match.leg2Result = `${simResult.homeGoals}-${simResult.awayGoals}`;
         }
 
         // Determina vincitore se necessario
         if (round.isSingleMatch) {
             // Partita secca
-            if (result.homeGoals === result.awayGoals) {
+            if (simResult.homeGoals === simResult.awayGoals) {
                 const penalties = simulatePenalties();
                 match.penalties = penalties;
                 match.winner = penalties.homeGoals > penalties.awayGoals ? match.homeTeam : match.awayTeam;
                 console.log(`    Rigori: ${penalties.homeGoals}-${penalties.awayGoals}`);
             } else {
-                match.winner = result.homeGoals > result.awayGoals ? match.homeTeam : match.awayTeam;
+                match.winner = simResult.homeGoals > simResult.awayGoals ? match.homeTeam : match.awayTeam;
             }
         } else if (legType === 'leg2') {
             // Calcola aggregato
             const leg1 = match.leg1Result.split('-').map(Number);
-            const totalHome = leg1[0] + result.awayGoals;
-            const totalAway = leg1[1] + result.homeGoals;
+            const totalHome = leg1[0] + simResult.awayGoals;
+            const totalAway = leg1[1] + simResult.homeGoals;
 
             match.aggregateHome = totalHome;
             match.aggregateAway = totalAway;
@@ -536,7 +1518,7 @@ async function simulateCupRound(db, appId) {
             if (totalHome === totalAway) {
                 // Gol in trasferta
                 const awayGoalsHome = leg1[1];
-                const awayGoalsAway = result.awayGoals;
+                const awayGoalsAway = simResult.awayGoals;
 
                 if (awayGoalsHome === awayGoalsAway) {
                     // Rigori
@@ -573,14 +1555,12 @@ async function simulateCupRound(db, appId) {
     }
 
     if (!DRY_RUN) {
-        // Salva il bracket aggiornato
+        // Salva il bracket aggiornato (con telecronaca)
         await db.collection(`artifacts/${appId}/public/data/schedule`).doc('coppa_schedule').set({
             ...bracket,
             lastUpdated: new Date().toISOString()
         });
-        console.log('[Coppa] Bracket salvato');
-
-        // NOTA: Le forme dei giocatori NON vengono resettate (gestite dal client)
+        console.log('[Coppa] Bracket salvato (con telecronaca)');
     }
 
     return true;

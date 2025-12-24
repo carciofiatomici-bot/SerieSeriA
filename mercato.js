@@ -131,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3 class="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
                     <span>🆓</span> Giocatori Base Gratuiti
                 </h3>
-                <p class="text-xs text-gray-400 mb-3">Acquista giocatori di livello 5 senza costo. Nessun cooldown.</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     ${roles.map(role => {
                         const colorClass = ROLE_COLORS[role];
@@ -373,66 +372,45 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Genera l'HTML della barra filtri per il Mercato
+     * Genera l'HTML della barra filtri per il Mercato (Mobile-First)
      */
     const renderMarketFiltersBar = () => {
         return `
-            <div class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
-                <div class="flex justify-between items-center mb-3">
-                    <h4 class="text-sm font-bold text-blue-400 flex items-center gap-2">
-                        <span>🔍</span> Filtri
-                    </h4>
-                    <button id="btn-reset-market-filters" class="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition">
-                        Resetta
-                    </button>
+            <div class="mb-3 space-y-2">
+                <!-- Filtri Ruolo - Chips orizzontali scrollabili -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider flex-shrink-0">Ruolo</span>
+                    <div class="flex gap-1.5 flex-shrink-0">
+                        <button class="filter-market-role-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.role === 'all' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}" data-role="all">Tutti</button>
+                        <button class="filter-market-role-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.role === 'P' ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-gray-800 text-yellow-400 hover:bg-gray-700'}" data-role="P">POR</button>
+                        <button class="filter-market-role-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.role === 'D' ? 'bg-green-500 text-white shadow-lg shadow-green-500/30' : 'bg-gray-800 text-green-400 hover:bg-gray-700'}" data-role="D">DIF</button>
+                        <button class="filter-market-role-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.role === 'C' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-800 text-blue-400 hover:bg-gray-700'}" data-role="C">CEN</button>
+                        <button class="filter-market-role-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.role === 'A' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-gray-800 text-red-400 hover:bg-gray-700'}" data-role="A">ATT</button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <!-- Filtro Ruolo -->
-                    <div>
-                        <label class="text-xs text-gray-400 block mb-1">Ruolo</label>
-                        <div class="flex gap-1 flex-wrap">
-                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="all">Tutti</button>
-                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'P' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="P">P</button>
-                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'D' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="D">D</button>
-                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'C' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="C">C</button>
-                            <button class="filter-market-role-btn px-2 py-1 text-xs rounded ${marketFilters.role === 'A' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-role="A">A</button>
-                        </div>
+                <!-- Filtri Tipo - Chips -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider flex-shrink-0">Tipo</span>
+                    <div class="flex gap-1.5 flex-shrink-0">
+                        <button class="filter-market-type-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.type === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}" data-type="all">Tutti</button>
+                        <button class="filter-market-type-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.type === 'Potenza' ? 'bg-red-500/90 text-white shadow-lg shadow-red-500/30' : 'bg-gray-800 text-red-400 hover:bg-gray-700'}" data-type="Potenza">💪 POT</button>
+                        <button class="filter-market-type-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.type === 'Tecnica' ? 'bg-blue-500/90 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-800 text-blue-400 hover:bg-gray-700'}" data-type="Tecnica">🎯 TEC</button>
+                        <button class="filter-market-type-btn px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${marketFilters.type === 'Velocita' ? 'bg-yellow-500/90 text-black shadow-lg shadow-yellow-500/30' : 'bg-gray-800 text-yellow-400 hover:bg-gray-700'}" data-type="Velocita">⚡ VEL</button>
                     </div>
+                </div>
 
-                    <!-- Filtro Tipo -->
-                    <div>
-                        <label class="text-xs text-gray-400 block mb-1">Tipo</label>
-                        <div class="flex gap-1 flex-wrap">
-                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="all">Tutti</button>
-                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Potenza' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Potenza">Potenza</button>
-                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Tecnica' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Tecnica">Tecnica</button>
-                            <button class="filter-market-type-btn px-2 py-1 text-xs rounded ${marketFilters.type === 'Velocita' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-type="Velocita">Velocita</button>
-                        </div>
-                    </div>
-
-                    <!-- Filtro Costo -->
-                    <div>
-                        <label class="text-xs text-gray-400 block mb-1">Costo (CS)</label>
-                        <div class="flex gap-2 items-center">
-                            <input type="number" id="filter-market-min-cost" placeholder="Min" value="${marketFilters.minCost || ''}"
-                                   class="w-20 px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
-                            <span class="text-gray-500">-</span>
-                            <input type="number" id="filter-market-max-cost" placeholder="Max" value="${marketFilters.maxCost || ''}"
-                                   class="w-20 px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Ordinamento -->
-                    <div>
-                        <label class="text-xs text-gray-400 block mb-1">Ordina per</label>
-                        <select id="filter-market-sort" class="w-full px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
-                            <option value="cost_asc" ${marketFilters.sortBy === 'cost_asc' ? 'selected' : ''}>Costo (crescente)</option>
-                            <option value="cost_desc" ${marketFilters.sortBy === 'cost_desc' ? 'selected' : ''}>Costo (decrescente)</option>
-                            <option value="level_desc" ${marketFilters.sortBy === 'level_desc' ? 'selected' : ''}>Livello (decrescente)</option>
-                            <option value="name" ${marketFilters.sortBy === 'name' ? 'selected' : ''}>Nome (A-Z)</option>
-                        </select>
-                    </div>
+                <!-- Row: Sort + Reset -->
+                <div class="flex items-center gap-2">
+                    <select id="filter-market-sort" class="flex-1 px-3 py-2 text-xs bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none">
+                        <option value="cost_asc" ${marketFilters.sortBy === 'cost_asc' ? 'selected' : ''}>💰 Prezzo ↑</option>
+                        <option value="cost_desc" ${marketFilters.sortBy === 'cost_desc' ? 'selected' : ''}>💰 Prezzo ↓</option>
+                        <option value="level_desc" ${marketFilters.sortBy === 'level_desc' ? 'selected' : ''}>📈 Livello ↓</option>
+                        <option value="name" ${marketFilters.sortBy === 'name' ? 'selected' : ''}>🔤 Nome A-Z</option>
+                    </select>
+                    <button id="btn-reset-market-filters" class="p-2 bg-gray-800 text-gray-400 rounded-lg hover:bg-gray-700 hover:text-white transition" title="Resetta filtri">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
                 </div>
             </div>
         `;
@@ -521,48 +499,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isAffordable = budgetRimanente >= discountedCost;
                 const canBuy = isAffordable;
 
-                const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
+                // Role colors
+                const roleColors = {
+                    'P': 'bg-yellow-500 text-black',
+                    'D': 'bg-green-500 text-white',
+                    'C': 'bg-blue-500 text-white',
+                    'A': 'bg-red-500 text-white'
+                };
+                const roleClass = roleColors[player.role] || 'bg-gray-500 text-white';
 
-                // Mostra prezzo scontato se c'e' sconto
-                let priceDisplay = `${discountedCost} CS`;
-                if (discount > 0 && originalCost > 0) {
-                    priceDisplay = `<span class="line-through text-gray-500">${originalCost}</span> <span class="text-green-400">${discountedCost} CS</span>`;
-                }
-                let buttonText = isAffordable ? `Acquista (${discountedCost} CS)` : `Costo ${discountedCost} CS (No Budget)`;
-
-                // Mostra abilita se presenti
-                const abilitiesText = player.abilities && player.abilities.length > 0
-                    ? `<p class="text-xs text-purple-300 mt-1">Abilita: ${player.abilities.join(', ')}</p>`
-                    : '';
-
-                // Colore tipo
+                // Type styling
+                const typeEmoji = player.type === 'Potenza' ? '💪' : player.type === 'Tecnica' ? '🎯' : player.type === 'Velocita' ? '⚡' : '';
                 const typeColor = player.type === 'Potenza' ? 'text-red-400' :
                                   player.type === 'Tecnica' ? 'text-blue-400' :
-                                  player.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
+                                  player.type === 'Velocita' ? 'text-yellow-400' : 'text-gray-400';
+
+                // Abilities
+                const abilitiesHtml = player.abilities && player.abilities.length > 0
+                    ? `<div class="flex flex-wrap gap-1 mt-1.5">${player.abilities.slice(0,2).map(a => `<span class="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">${a}</span>`).join('')}${player.abilities.length > 2 ? `<span class="text-[10px] text-gray-500">+${player.abilities.length - 2}</span>` : ''}</div>`
+                    : '';
+
+                // Price display
+                let priceHtml = `<span class="text-green-400 font-bold">${discountedCost.toLocaleString('it-IT')}</span>`;
+                if (discount > 0) {
+                    priceHtml = `<span class="text-gray-500 line-through text-xs mr-1">${originalCost}</span><span class="text-green-400 font-bold">${discountedCost.toLocaleString('it-IT')}</span>`;
+                }
 
                 return `
-                    <div class="flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-blue-500">
-                        <div>
-                            <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span></p>
-                            <p class="text-sm text-blue-300">Livello: ${playerLevel}</p>
-                            ${abilitiesText}
+                    <div class="mercato-player-card bg-gray-800/80 rounded-xl p-3 border border-gray-700/50 hover:border-blue-500/50 transition-all active:scale-[0.99]">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0">
+                                <span class="${roleClass} text-xs font-black px-2 py-1 rounded-lg">${player.role}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white font-bold text-sm truncate">${player.name}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs text-gray-400">Lv.${playerLevel}</span>
+                                    <span class="text-xs ${typeColor}">${typeEmoji} ${player.type || 'N/A'}</span>
+                                    <span class="text-xs text-gray-500">${player.age}y</span>
+                                </div>
+                                ${abilitiesHtml}
+                            </div>
+                            <div class="flex-shrink-0 text-right">
+                                <p class="text-sm">${priceHtml} <span class="text-[10px] text-gray-500">CS</span></p>
+                                <button data-player-id="${player.id}"
+                                        data-player-cost="${player.cost}"
+                                        data-player-level="${playerLevel}"
+                                        data-player-name="${player.name}"
+                                        data-player-role="${player.role}"
+                                        data-player-age="${player.age}"
+                                        data-player-type="${player.type}"
+                                        data-action="buy-market"
+                                        ${canBuy ? '' : 'disabled'}
+                                        class="mt-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all ${canBuy ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-95' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}">
+                                    ${canBuy ? 'Acquista' : 'No Budget'}
+                                </button>
+                            </div>
                         </div>
-                        <button data-player-id="${player.id}"
-                                data-player-cost="${player.cost}"
-                                data-player-level="${playerLevel}"
-                                data-player-name="${player.name}"
-                                data-player-role="${player.role}"
-                                data-player-age="${player.age}"
-                                data-player-type="${player.type}"
-                                data-action="buy-market"
-                                ${canBuy ? '' : 'disabled'}
-                                class="text-sm px-4 py-2 rounded-lg font-bold transition duration-150 mt-2 sm:mt-0 ${buttonClass}">
-                            ${buttonText}
-                        </button>
                     </div>
                 `;
             }).join('')
-            : '<p class="text-center text-gray-400 font-semibold">Nessun calciatore trovato con i filtri selezionati.</p>';
+            : '<div class="text-center py-8"><p class="text-gray-500 text-sm">Nessun giocatore trovato</p></div>';
 
         // Mostra conteggio risultati
         const countEl = document.getElementById('market-filtered-count');
@@ -792,30 +789,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
 
-            // 2. Renderizza il layout base
+            // 2. Aggiorna header con budget e rosa
+            const budgetDisplay = document.getElementById('mercato-budget-display');
+            const rosaDisplay = document.getElementById('mercato-rosa-display');
+            const liveStatus = document.getElementById('mercato-live-status');
+
+            if (budgetDisplay) budgetDisplay.textContent = `${budgetRimanente.toLocaleString('it-IT')} CS`;
+            if (rosaDisplay) {
+                rosaDisplay.textContent = `${currentRosaCount}/${MAX_ROSA_PLAYERS}`;
+                rosaDisplay.className = `text-lg font-black ${isRosaFull ? 'text-red-400' : 'text-blue-400'}`;
+            }
+
+            // 3. Renderizza il layout base mobile-first
             const showObjectsTab = window.FeatureFlags?.isEnabled('marketObjects');
 
             mercatoToolsContainer.innerHTML = `
-                <div class="p-6 bg-gray-800 rounded-lg border-2 border-blue-500 shadow-xl space-y-4">
-                    <p class="text-center text-2xl font-extrabold text-white">
-                        Budget: <span class="text-yellow-400">${budgetRimanente} CS</span>
-                    </p>
-                    <p class="text-center text-lg font-bold text-gray-300">
-                        Rosa attuale: <span class="${isRosaFull ? 'text-red-400' : 'text-green-400'}">${currentRosaCount}</span> / ${MAX_ROSA_PLAYERS} giocatori (+ Icona)
-                    </p>
-                    <div id="mercato-status-box" class="p-4 rounded-lg text-center font-extrabold text-xl"></div>
-                    <p id="user-mercato-message" class="text-center text-red-400"></p>
-                </div>
+                <p id="user-mercato-message" class="text-center text-red-400 text-sm mb-3 hidden"></p>
 
                 ${showObjectsTab ? `
-                <!-- Tab Selector -->
-                <div id="market-tabs" class="mt-4 flex border-b border-gray-600">
+                <!-- Tab Selector Mobile -->
+                <div id="market-tabs" class="flex gap-2 mb-4">
                     <button id="tab-market-players" onclick="window.MercatoObjects?.switchTab('players')"
-                            class="flex-1 py-3 px-4 text-center font-bold ${activeMarketTab === 'players' ? 'bg-blue-600 text-white border-b-2 border-blue-400' : 'bg-gray-800 text-gray-400 hover:text-white'}">
+                            class="flex-1 py-2.5 px-4 text-center font-bold text-sm rounded-xl transition-all ${activeMarketTab === 'players' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-800 text-gray-400 hover:text-white'}">
                         ⚽ Giocatori
                     </button>
                     <button id="tab-market-objects" onclick="window.MercatoObjects?.switchTab('objects')"
-                            class="flex-1 py-3 px-4 text-center font-bold ${activeMarketTab === 'objects' ? 'bg-emerald-600 text-white border-b-2 border-emerald-400' : 'bg-gray-800 text-gray-400 hover:text-white'}">
+                            class="flex-1 py-2.5 px-4 text-center font-bold text-sm rounded-xl transition-all ${activeMarketTab === 'objects' ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/30' : 'bg-gray-800 text-gray-400 hover:text-white'}">
                         🎒 Oggetti
                     </button>
                 </div>
@@ -823,33 +822,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <!-- Container Giocatori -->
                 <div id="market-players-container" class="${activeMarketTab !== 'players' && showObjectsTab ? 'hidden' : ''}">
-                    <!-- Sezione Giocatori Base Gratuiti (sempre visibile se mercato aperto) -->
+                    <!-- Sezione Giocatori Base Gratuiti -->
                     <div id="base-players-section">
                         ${isMarketOpen ? renderBasePlayersSection(isRosaFull, !isMarketOpen) : ''}
                     </div>
 
-                    <div id="available-market-players-list" class="mt-6 space-y-3 max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg">
-                        <p class="text-gray-500 text-center">Caricamento giocatori...</p>
+                    <!-- Lista Giocatori Mercato -->
+                    <div id="available-market-players-list" class="mt-4 space-y-2">
+                        <div class="flex items-center justify-center py-8">
+                            <div class="w-8 h-8 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Container Oggetti (solo se feature flag attivo) -->
+                <!-- Container Oggetti -->
                 ${showObjectsTab ? `
-                <div id="market-objects-container" class="${activeMarketTab !== 'objects' ? 'hidden' : ''} mt-6">
-                    <div id="available-market-objects-list" class="space-y-3 p-4 bg-gray-800 rounded-lg">
-                        <p class="text-gray-500 text-center">Caricamento oggetti...</p>
+                <div id="market-objects-container" class="${activeMarketTab !== 'objects' ? 'hidden' : ''} mt-4">
+                    <div id="available-market-objects-list" class="space-y-2">
+                        <p class="text-gray-500 text-center text-sm py-4">Caricamento oggetti...</p>
                     </div>
                 </div>
                 ` : ''}
             `;
 
-            const statusBox = document.getElementById('mercato-status-box');
             const playersListContainer = document.getElementById('available-market-players-list');
+
+            // Aggiorna live status indicator nell'header
+            if (liveStatus) {
+                if (!isMarketOpen) {
+                    liveStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-400">Chiuso</span>`;
+                    liveStatus.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 border border-red-500/50';
+                } else if (isCooldownActive) {
+                    liveStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-yellow-400">Cooldown</span>`;
+                    liveStatus.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 border border-yellow-500/50';
+                } else if (isRosaFull) {
+                    liveStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-orange-500"></span><span class="text-orange-400">Rosa Piena</span>`;
+                    liveStatus.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-500/20 border border-orange-500/50';
+                } else {
+                    liveStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><span class="text-green-400">Aperto</span>`;
+                    liveStatus.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 border border-green-500/50';
+                }
+            }
 
             if (!isMarketOpen || isRosaFull) {
                  // Mercato chiuso o rosa piena - blocca tutto
-                 statusBox.textContent = mainMessage;
-                 statusBox.classList.add('border-red-500', 'bg-red-900', 'text-red-400');
                  playersListContainer.innerHTML = secondaryMessageHtml;
 
                  // Carica comunque gli oggetti se il feature flag è attivo
@@ -861,9 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isCooldownActive) {
                  // Cooldown attivo - blocca solo i giocatori del mercato, NON i giocatori base
-                 statusBox.textContent = mainMessage;
-                 statusBox.classList.add('border-yellow-500', 'bg-yellow-900', 'text-yellow-400');
-                 playersListContainer.innerHTML = secondaryMessageHtml;
+                 playersListContainer.innerHTML = `<div class="text-center py-6"><p class="text-yellow-300 text-sm" id="mercato-cooldown-timer">Caricamento timer...</p></div>`;
 
                  // Avvia il cronometro
                  startAcquisitionCountdown(lastAcquisitionTimestamp);
@@ -877,10 +891,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
                  return;
             }
-
-            statusBox.textContent = 'MERCATO APERTO!';
-            statusBox.classList.add('border-green-500', 'bg-green-900', 'text-green-400');
-
 
             // 3. Carica i giocatori disponibili dal Mercato
             const playersCollectionRef = collection(db, MARKET_PLAYERS_COLLECTION_PATH);
@@ -916,80 +926,100 @@ document.addEventListener('DOMContentLoaded', () => {
             // Inserisci filtri prima della lista
             playersListContainer.insertAdjacentHTML('beforebegin', `
                 <!-- Container Filtri -->
-                <div id="market-filters-container" class="mt-4">
+                <div id="market-filters-container" class="mt-3">
                     ${renderMarketFiltersBar()}
                 </div>
 
                 <!-- Conteggio risultati -->
-                <div class="flex justify-between items-center mt-2 px-2">
-                    <p id="market-filtered-count" class="text-sm text-gray-400">${filteredPlayers.length} giocatori trovati</p>
+                <div class="flex justify-between items-center mb-2">
+                    <p id="market-filtered-count" class="text-xs text-gray-500">${filteredPlayers.length} giocatori</p>
                 </div>
             `);
 
-            // Renderizza la lista dei giocatori
+            // Renderizza la lista dei giocatori (Mobile-First Cards)
             const discount = marketDiscountCache;
             if (filteredPlayers.length > 0) {
                  playersListContainer.innerHTML = filteredPlayers.map(player => {
-                    // Nel mercato i giocatori hanno level fisso (non range)
                     const playerLevel = player.level || (player.levelRange ? player.levelRange[0] : 1);
                     const originalCost = player.cost || 0;
                     const discountedCost = discount > 0 ? Math.floor(originalCost * (1 - discount)) : originalCost;
                     const isAffordable = budgetRimanente >= discountedCost;
                     const canBuy = isAffordable && !disableAcquisition;
 
-                    const buttonClass = canBuy ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-gray-500 text-gray-300 cursor-not-allowed';
-                    let buttonText;
+                    // Role colors
+                    const roleColors = {
+                        'P': 'bg-yellow-500 text-black',
+                        'D': 'bg-green-500 text-white',
+                        'C': 'bg-blue-500 text-white',
+                        'A': 'bg-red-500 text-white'
+                    };
+                    const roleClass = roleColors[player.role] || 'bg-gray-500 text-white';
 
-                    if (!isAffordable) {
-                        buttonText = `Costo ${discountedCost} CS (No Budget)`;
-                    } else {
-                         buttonText = `Acquista (${discountedCost} CS)`;
-                    }
-
-                    // Mostra abilita se presenti
-                    const abilitiesText = player.abilities && player.abilities.length > 0
-                        ? `<p class="text-xs text-purple-300 mt-1">Abilita: ${player.abilities.join(', ')}</p>`
-                        : '';
-
-                    // Colore tipo
+                    // Type styling
+                    const typeEmoji = player.type === 'Potenza' ? '💪' : player.type === 'Tecnica' ? '🎯' : player.type === 'Velocita' ? '⚡' : '';
                     const typeColor = player.type === 'Potenza' ? 'text-red-400' :
                                       player.type === 'Tecnica' ? 'text-blue-400' :
-                                      player.type === 'Velocita' ? 'text-green-400' : 'text-gray-400';
+                                      player.type === 'Velocita' ? 'text-yellow-400' : 'text-gray-400';
+
+                    // Abilities
+                    const abilitiesHtml = player.abilities && player.abilities.length > 0
+                        ? `<div class="flex flex-wrap gap-1 mt-1.5">${player.abilities.slice(0,2).map(a => `<span class="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">${a}</span>`).join('')}${player.abilities.length > 2 ? `<span class="text-[10px] text-gray-500">+${player.abilities.length - 2}</span>` : ''}</div>`
+                        : '';
+
+                    // Price display
+                    let priceHtml = `<span class="text-green-400 font-bold">${discountedCost.toLocaleString('it-IT')}</span>`;
+                    if (discount > 0) {
+                        priceHtml = `<span class="text-gray-500 line-through text-xs mr-1">${originalCost}</span><span class="text-green-400 font-bold">${discountedCost.toLocaleString('it-IT')}</span>`;
+                    }
 
                     return `
-                        <div class="flex flex-col sm:flex-row justify-between items-center p-3 bg-gray-700 rounded-lg border border-blue-500">
-                            <div>
-                                <p class="text-white font-semibold">${player.name} (${player.role}, ${player.age} anni) <span class="${typeColor}">(${player.type || 'N/A'})</span></p>
-                                <p class="text-sm text-blue-300">Livello: ${playerLevel}</p>
-                                ${abilitiesText}
+                        <div class="mercato-player-card bg-gray-800/80 rounded-xl p-3 border border-gray-700/50 hover:border-blue-500/50 transition-all active:scale-[0.99]">
+                            <div class="flex items-start gap-3">
+                                <!-- Role Badge -->
+                                <div class="flex-shrink-0">
+                                    <span class="${roleClass} text-xs font-black px-2 py-1 rounded-lg">${player.role}</span>
+                                </div>
+
+                                <!-- Player Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white font-bold text-sm truncate">${player.name}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-xs text-gray-400">Lv.${playerLevel}</span>
+                                        <span class="text-xs ${typeColor}">${typeEmoji} ${player.type || 'N/A'}</span>
+                                        <span class="text-xs text-gray-500">${player.age}y</span>
+                                    </div>
+                                    ${abilitiesHtml}
+                                </div>
+
+                                <!-- Price & Buy -->
+                                <div class="flex-shrink-0 text-right">
+                                    <p class="text-sm">${priceHtml} <span class="text-[10px] text-gray-500">CS</span></p>
+                                    <button data-player-id="${player.id}"
+                                            data-player-cost="${player.cost}"
+                                            data-player-level="${playerLevel}"
+                                            data-player-name="${player.name}"
+                                            data-player-role="${player.role}"
+                                            data-player-age="${player.age}"
+                                            data-player-type="${player.type}"
+                                            data-action="buy-market"
+                                            ${canBuy ? '' : 'disabled'}
+                                            class="mt-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all ${canBuy ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-95' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}">
+                                        ${canBuy ? 'Acquista' : 'No Budget'}
+                                    </button>
+                                </div>
                             </div>
-                            <button data-player-id="${player.id}"
-                                    data-player-cost="${player.cost}"
-                                    data-player-level="${playerLevel}"
-                                    data-player-name="${player.name}"
-                                    data-player-role="${player.role}"
-                                    data-player-age="${player.age}"
-                                    data-player-type="${player.type}"
-                                    data-action="buy-market"
-                                    ${canBuy ? '' : 'disabled'}
-                                    class="text-sm px-4 py-2 rounded-lg font-bold transition duration-150 mt-2 sm:mt-0 ${buttonClass}">
-                                ${buttonText}
-                            </button>
                         </div>
                     `;
                  }).join('');
 
-                 // Setup listeners filtri
                  setupMarketFilterListeners();
 
-                 // Event listener per l'acquisto
                  if (!playersListContainer._hasClickListener) {
                      playersListContainer.addEventListener('click', handleUserMercatoAction);
                      playersListContainer._hasClickListener = true;
                  }
             } else {
-                 playersListContainer.innerHTML = '<p class="text-center text-gray-400 font-semibold">Nessun calciatore trovato con i filtri selezionati.</p>';
-                 // Setup listeners filtri comunque
+                 playersListContainer.innerHTML = '<div class="text-center py-8"><p class="text-gray-500 text-sm">Nessun giocatore trovato</p></div>';
                  setupMarketFilterListeners();
             }
 

@@ -289,6 +289,21 @@ window.AdminUI = {
                 </div>
             </div>
 
+            <!-- ========== 6. BOSS BATTLE ========== -->
+            <div class="mb-4">
+                <button id="btn-toggle-boss-battle" class="w-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:opacity-90 transition duration-150 flex items-center justify-between px-6">
+                    <span class="flex items-center">
+                        <span class="text-xl mr-3">👹</span> Boss Battle
+                    </span>
+                    <i id="boss-battle-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <div id="boss-battle-content" class="hidden mt-3 transition-all duration-300">
+                    <!-- Il contenuto viene iniettato da admin-boss.js -->
+                    <div class="text-gray-400 text-center py-4">Caricamento...</div>
+                </div>
+            </div>
+
             <!-- PANNELLO FORMULE COSTI (inizialmente nascosto) -->
             <div id="formulas-panel-container" class="hidden mb-6 bg-gray-800 p-6 rounded-lg border-2 border-cyan-500">
                 <div class="flex justify-between items-center mb-4">

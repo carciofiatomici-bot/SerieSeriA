@@ -143,227 +143,248 @@ window.UserCompetitions = {
     },
 
     /**
-     * Renderizza la schermata Campionato
+     * Renderizza la schermata Campionato (Mobile-First)
      */
     renderCampionatoScreen(container, nextMatch, standings, scheduleData, currentTeamId, teamsData = {}) {
         let html = '';
 
-        // SEZIONE 1: Prossima Partita
-        html += `
-            <div class="bg-gradient-to-r from-green-900 to-green-800 rounded-lg p-4 border-2 border-green-500 shadow-lg">
-                <h3 class="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
-                    <span>⚽</span> Prossima Partita
-                </h3>
-        `;
+        // Aggiorna position badge nell'header
+        const myPosition = standings.findIndex(t => t.teamId === currentTeamId) + 1;
+        const myTeamStanding = standings.find(t => t.teamId === currentTeamId);
+        const positionBadge = document.getElementById('campionato-position-badge');
+        if (positionBadge && myPosition > 0) {
+            const positionColor = myPosition <= 3 ? 'text-yellow-400' : myPosition <= 6 ? 'text-emerald-400' : 'text-gray-400';
+            const badgeBg = myPosition <= 3 ? 'bg-yellow-500/20 border-yellow-500/50' : 'bg-emerald-500/20 border-emerald-500/50';
+            positionBadge.className = `flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${badgeBg} border`;
+            positionBadge.innerHTML = `<span class="${positionColor}">${myPosition}° • ${myTeamStanding?.points || 0} pt</span>`;
+        }
 
+        // SEZIONE 1: Prossima Partita (Card compatta stile broadcast)
         if (nextMatch) {
             const isHome = nextMatch.homeId === currentTeamId;
-            const statusText = isHome ? '🏠 IN CASA' : '✈️ TRASFERTA';
-            const statusColor = isHome ? 'text-green-400' : 'text-blue-400';
+            const statusText = isHome ? 'CASA' : 'TRASFERTA';
+            const statusColor = isHome ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40';
 
-            // Funzione per ottenere logo grande
-            const getLargeLogoHtml = (teamId) => {
-                const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
-                return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
+            const getLogoUrl = (teamId) => {
+                return window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             };
 
-            // Calcola livello medio formazione per ogni squadra
             const getFormationLevel = (teamId) => {
                 const teamData = teamsData[teamId];
                 if (!teamData) return '?';
-                const formationPlayers = window.getFormationPlayers(teamData);
+                const formationPlayers = window.getFormationPlayers?.(teamData) || [];
                 if (formationPlayers.length === 0) return '?';
-                return window.calculateAverageLevel(formationPlayers).toFixed(1);
+                return window.calculateAverageLevel?.(formationPlayers)?.toFixed(1) || '?';
             };
 
             const homeLvl = getFormationLevel(nextMatch.homeId);
             const awayLvl = getFormationLevel(nextMatch.awayId);
 
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-6">
-                    <p class="text-gray-400 text-sm mb-4 text-center">Giornata ${nextMatch.round}</p>
-                    <div class="flex items-center justify-center gap-6">
-                        <div class="flex flex-col items-center gap-2">
-                            ${getLargeLogoHtml(nextMatch.homeId)}
-                            <span class="text-white font-bold text-lg text-center ${nextMatch.homeId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.homeName}</span>
-                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
-                        </div>
-                        <div class="text-center px-4">
-                            <span class="text-3xl font-bold text-gray-400">VS</span>
-                        </div>
-                        <div class="flex flex-col items-center gap-2">
-                            ${getLargeLogoHtml(nextMatch.awayId)}
-                            <span class="text-white font-bold text-lg text-center ${nextMatch.awayId === currentTeamId ? 'text-yellow-400' : ''}">${nextMatch.awayName}</span>
-                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
+                <div class="next-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/90 to-gray-900/90 border border-emerald-500/30 shadow-xl">
+                    <!-- Header con giornata e status -->
+                    <div class="flex items-center justify-between px-4 py-2 bg-black/30">
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Giornata ${nextMatch.round}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full border ${statusColor} font-bold uppercase">${statusText}</span>
+                    </div>
+
+                    <!-- Match Preview -->
+                    <div class="px-4 py-4">
+                        <div class="flex items-center justify-between">
+                            <!-- Home Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(nextMatch.homeId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${nextMatch.homeId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${nextMatch.homeId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-2 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${nextMatch.homeId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${nextMatch.homeName}</p>
+                                <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${homeLvl}</span>
+                            </div>
+
+                            <!-- VS Divider -->
+                            <div class="flex-shrink-0 px-3">
+                                <div class="relative">
+                                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-600/20 border border-emerald-500/40 flex items-center justify-center">
+                                        <span class="text-lg sm:text-xl font-black text-emerald-400">VS</span>
+                                    </div>
+                                    <div class="absolute inset-0 rounded-full animate-ping bg-emerald-500/10"></div>
+                                </div>
+                            </div>
+
+                            <!-- Away Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(nextMatch.awayId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${nextMatch.awayId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${nextMatch.awayId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-2 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${nextMatch.awayId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${nextMatch.awayName}</p>
+                                <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${awayLvl}</span>
+                            </div>
                         </div>
                     </div>
-                    <p class="text-center mt-4 ${statusColor} font-bold text-lg">${statusText}</p>
                 </div>
             `;
         } else {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-green-400 font-bold">✅ Tutte le partite sono state giocate!</p>
-                    <p class="text-gray-400 text-sm mt-1">Il campionato e concluso.</p>
+                <div class="rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-600/5 border border-emerald-500/30 p-4 text-center">
+                    <span class="text-2xl">🏁</span>
+                    <p class="text-emerald-400 font-bold mt-2">Campionato concluso!</p>
+                    <p class="text-gray-500 text-xs mt-1">Tutte le partite sono state giocate</p>
                 </div>
             `;
         }
-        html += `</div>`;
 
-        // SEZIONE 2: Classifica (accordion minimizzato di default)
-        // Trova la posizione della squadra corrente per mostrarla nel titolo
-        const myPosition = standings.findIndex(t => t.teamId === currentTeamId) + 1;
-        const myTeamStanding = standings.find(t => t.teamId === currentTeamId);
-        const positionText = myPosition > 0 ? `${myPosition}° posto - ${myTeamStanding?.points || 0} pt` : '';
-
+        // SEZIONE 2: Mini Classifica (scrollabile orizzontalmente)
         html += `
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border-2 border-blue-500 shadow-lg overflow-hidden">
-                <div class="p-3 cursor-pointer select-none hover:bg-black hover:bg-opacity-20 transition"
-                     onclick="window.UserCompetitions.toggleAccordion('classifica-accordion')">
-                    <h3 class="text-xl font-bold text-blue-400 flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <span>📊</span> Classifica
-                            ${positionText ? `<span class="ml-2 text-sm font-normal text-gray-400">- ${positionText}</span>` : ''}
-                        </span>
-                        <span id="classifica-accordion-icon" class="text-gray-400 transition-transform">▼</span>
+            <div class="standings-section">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-gray-400 flex items-center gap-1.5">
+                        <span>📊</span> Classifica
                     </h3>
+                    <button onclick="window.UserCompetitions.toggleAccordion('full-standings')" class="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                        <span id="full-standings-btn-text">Espandi</span> <span id="full-standings-icon">▼</span>
+                    </button>
                 </div>
-                <div id="classifica-accordion" class="hidden">
+
+                <!-- Mini Standings Scroll -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         `;
 
         if (standings.length === 0) {
-            html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center mx-3 mb-3">
-                    <p class="text-gray-400">Classifica non ancora disponibile.</p>
-                </div>
-            `;
+            html += `<p class="text-gray-500 text-sm py-4 text-center w-full">Classifica non disponibile</p>`;
         } else {
-            html += `
-                <div class="bg-black bg-opacity-30 rounded-lg overflow-x-auto mx-3 mb-3">
-                    <table class="w-full text-sm min-w-[400px]">
-                        <thead class="bg-gray-800">
-                            <tr>
-                                <th class="py-2 px-3 text-left text-gray-400">#</th>
-                                <th class="py-2 px-2 text-center text-gray-400" title="Media Livello Rosa">Lv</th>
-                                <th class="py-2 px-3 text-left text-gray-400">Squadra</th>
-                                <th class="py-2 px-3 text-center text-gray-400">Pt</th>
-                                <th class="py-2 px-3 text-center text-gray-400">G</th>
-                                <th class="py-2 px-3 text-center text-gray-400">V</th>
-                                <th class="py-2 px-3 text-center text-gray-400">P</th>
-                                <th class="py-2 px-3 text-center text-gray-400">S</th>
-                                <th class="py-2 px-3 text-center text-gray-400">DR</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            standings.forEach((team, index) => {
+            standings.slice(0, 4).forEach((team, index) => {
                 const isCurrentTeam = team.teamId === currentTeamId;
-                const rowClass = isCurrentTeam ? 'bg-yellow-900 bg-opacity-50' : (index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800');
-                const textClass = isCurrentTeam ? 'text-yellow-400 font-bold' : 'text-white';
-                const goalDiff = (team.goalsFor || 0) - (team.goalsAgainst || 0);
-                const diffColor = goalDiff > 0 ? 'text-green-400' : goalDiff < 0 ? 'text-red-400' : 'text-gray-400';
-
-                // Calcola media livello rosa
-                const teamFullData = teamsData[team.teamId];
-                let avgLevel = '-';
-                if (teamFullData?.players?.length > 0) {
-                    const totalLevel = teamFullData.players.reduce((sum, p) => sum + (p.currentLevel || p.level || 1), 0);
-                    avgLevel = (totalLevel / teamFullData.players.length).toFixed(1);
-                }
+                const position = index + 1;
+                const posClass = position === 1 ? 'from-yellow-500/30 to-yellow-600/20 border-yellow-500/50' :
+                                 position === 2 ? 'from-gray-400/20 to-gray-500/10 border-gray-400/40' :
+                                 position === 3 ? 'from-amber-600/20 to-amber-700/10 border-amber-600/40' :
+                                 'from-gray-800/60 to-gray-900/60 border-gray-700/40';
+                const teamBorder = isCurrentTeam ? 'ring-2 ring-yellow-400/60' : '';
 
                 html += `
-                    <tr class="${rowClass}">
-                        <td class="py-2 px-3 ${textClass}">${index + 1}</td>
-                        <td class="py-2 px-2 text-center text-cyan-400 text-xs font-semibold">${avgLevel}</td>
-                        <td class="py-2 px-3 ${textClass}">${team.teamName}</td>
-                        <td class="py-2 px-3 text-center font-bold ${textClass}">${team.points || 0}</td>
-                        <td class="py-2 px-3 text-center text-gray-400">${team.played || 0}</td>
-                        <td class="py-2 px-3 text-center text-green-400">${team.wins || 0}</td>
-                        <td class="py-2 px-3 text-center text-yellow-400">${team.draws || 0}</td>
-                        <td class="py-2 px-3 text-center text-red-400">${team.losses || 0}</td>
-                        <td class="py-2 px-3 text-center ${diffColor}">${goalDiff >= 0 ? '+' : ''}${goalDiff}</td>
-                    </tr>
+                    <div class="flex-shrink-0 w-20 bg-gradient-to-br ${posClass} border rounded-xl p-2 text-center ${teamBorder}">
+                        <div class="text-lg font-black ${position <= 3 ? 'text-yellow-400' : 'text-gray-400'}">${position}</div>
+                        <p class="text-[10px] text-white font-semibold truncate mt-0.5">${team.teamName}</p>
+                        <p class="text-xs text-emerald-400 font-bold mt-1">${team.points || 0} pt</p>
+                    </div>
                 `;
             });
-
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
         }
-        html += `</div></div>`;
-
-        // SEZIONE 3: Calendario (accordion minimizzato di default)
-        // Calcola quante giornate sono state giocate per mostrarle nel titolo
-        const playedRounds = scheduleData.filter(r => r.matches.every(m => m.result !== null)).length;
-        const totalRounds = scheduleData.length;
-        const calendarText = totalRounds > 0 ? `${playedRounds}/${totalRounds} giornate` : '';
 
         html += `
-            <div class="bg-gradient-to-r from-teal-900 to-teal-800 rounded-lg border-2 border-teal-500 shadow-lg overflow-hidden">
-                <div class="p-3 cursor-pointer select-none hover:bg-black hover:bg-opacity-20 transition"
+                </div>
+
+                <!-- Full Standings (hidden by default) -->
+                <div id="full-standings" class="hidden mt-3">
+                    <div class="bg-gray-800/60 rounded-xl overflow-hidden border border-gray-700/50">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs min-w-[320px]">
+                                <thead class="bg-gray-900/80">
+                                    <tr>
+                                        <th class="py-2 px-2 text-left text-gray-500">#</th>
+                                        <th class="py-2 px-2 text-left text-gray-500">Squadra</th>
+                                        <th class="py-2 px-2 text-center text-gray-500">Pt</th>
+                                        <th class="py-2 px-2 text-center text-gray-500">V</th>
+                                        <th class="py-2 px-2 text-center text-gray-500">P</th>
+                                        <th class="py-2 px-2 text-center text-gray-500">S</th>
+                                        <th class="py-2 px-2 text-center text-gray-500">DR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+        `;
+
+        standings.forEach((team, index) => {
+            const isCurrentTeam = team.teamId === currentTeamId;
+            const rowClass = isCurrentTeam ? 'bg-yellow-500/10' : '';
+            const textClass = isCurrentTeam ? 'text-yellow-400 font-bold' : 'text-white';
+            const goalDiff = (team.goalsFor || 0) - (team.goalsAgainst || 0);
+            const diffColor = goalDiff > 0 ? 'text-green-400' : goalDiff < 0 ? 'text-red-400' : 'text-gray-500';
+
+            html += `
+                <tr class="${rowClass} border-t border-gray-700/30">
+                    <td class="py-2 px-2 ${textClass}">${index + 1}</td>
+                    <td class="py-2 px-2 ${textClass} truncate max-w-[100px]">${team.teamName}</td>
+                    <td class="py-2 px-2 text-center font-bold text-emerald-400">${team.points || 0}</td>
+                    <td class="py-2 px-2 text-center text-green-400">${team.wins || 0}</td>
+                    <td class="py-2 px-2 text-center text-yellow-400">${team.draws || 0}</td>
+                    <td class="py-2 px-2 text-center text-red-400">${team.losses || 0}</td>
+                    <td class="py-2 px-2 text-center ${diffColor}">${goalDiff >= 0 ? '+' : ''}${goalDiff}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // SEZIONE 3: Calendario (compatto, accordion)
+        const playedRounds = scheduleData.filter(r => r.matches.every(m => m.result !== null)).length;
+        const totalRounds = scheduleData.length;
+
+        html += `
+            <div class="calendar-section bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-2 bg-gray-900/50 cursor-pointer"
                      onclick="window.UserCompetitions.toggleAccordion('calendario-accordion')">
-                    <h3 class="text-xl font-bold text-teal-400 flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <span>📅</span> Calendario Completo
-                            ${calendarText ? `<span class="ml-2 text-sm font-normal text-gray-400">- ${calendarText}</span>` : ''}
-                        </span>
-                        <span id="calendario-accordion-icon" class="text-gray-400 transition-transform">▼</span>
-                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">📅</span>
+                        <span class="text-sm font-bold text-gray-300">Calendario</span>
+                        <span class="text-[10px] px-2 py-0.5 bg-gray-700 rounded-full text-gray-400">${playedRounds}/${totalRounds}</span>
+                    </div>
+                    <span id="calendario-accordion-icon" class="text-gray-500 text-xs transition-transform">▼</span>
                 </div>
                 <div id="calendario-accordion" class="hidden">
         `;
 
         if (scheduleData.length === 0) {
-            html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center mx-3 mb-3">
-                    <p class="text-gray-400">Calendario non ancora generato.</p>
-                </div>
-            `;
+            html += `<p class="text-gray-500 text-sm py-4 text-center">Calendario non disponibile</p>`;
         } else {
-            // Ordina le giornate: prima quelle da giocare, poi quelle completate
             const sortedSchedule = [...scheduleData].sort((a, b) => {
                 const aComplete = a.matches.every(m => m.result !== null);
                 const bComplete = b.matches.every(m => m.result !== null);
-                if (aComplete === bComplete) return a.round - b.round; // Ordine numerico se stesso stato
-                return aComplete ? 1 : -1; // Completate in fondo
+                if (aComplete === bComplete) return a.round - b.round;
+                return aComplete ? 1 : -1;
             });
 
-            html += `<div class="max-h-96 overflow-y-auto space-y-2 mx-3 mb-3" id="calendar-rounds">`;
+            html += `<div class="max-h-72 overflow-y-auto divide-y divide-gray-700/30">`;
 
-            sortedSchedule.forEach((round, index) => {
+            sortedSchedule.forEach((round) => {
                 const roundComplete = round.matches.every(m => m.result !== null);
-                const statusIcon = roundComplete ? '✅' : '⏳';
                 const hasMyMatch = round.matches.some(m => m.homeId === currentTeamId || m.awayId === currentTeamId);
-                // Sempre chiuso di default
-                const isOpen = false;
+                const myMatch = round.matches.find(m => m.homeId === currentTeamId || m.awayId === currentTeamId);
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
-                        <button class="calendar-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer"
-                                data-round="${round.round}" aria-expanded="${isOpen}">
-                            <span class="text-teal-300 font-bold flex items-center gap-2">
-                                ${statusIcon} Giornata ${round.round}
-                                ${hasMyMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
-                            </span>
-                            <span class="calendar-round-arrow text-teal-400 transition-transform ${isOpen ? 'rotate-180' : ''}">▼</span>
+                    <div class="calendar-round">
+                        <button class="calendar-round-header w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-700/30 transition"
+                                data-round="${round.round}">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] ${roundComplete ? 'text-emerald-400' : 'text-yellow-400'}">${roundComplete ? '✓' : '○'}</span>
+                                <span class="text-xs font-semibold text-gray-300">G${round.round}</span>
+                                ${hasMyMatch && myMatch ? `
+                                    <span class="text-[10px] text-gray-500">|</span>
+                                    <span class="text-[10px] ${myMatch.result ? 'text-gray-400' : 'text-yellow-400'} truncate max-w-[120px]">
+                                        ${myMatch.result || 'Da giocare'}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <span class="calendar-round-arrow text-gray-500 text-[10px] transition-transform">▼</span>
                         </button>
-                        <div class="calendar-round-content ${isOpen ? '' : 'hidden'} px-3 pb-3 space-y-1">
+                        <div class="calendar-round-content hidden bg-gray-900/30 px-3 py-2 space-y-1">
                 `;
 
                 round.matches.forEach(match => {
                     const isMyMatch = match.homeId === currentTeamId || match.awayId === currentTeamId;
-                    const matchBg = isMyMatch ? 'bg-yellow-900 bg-opacity-30' : '';
 
                     html += `
-                        <div class="flex justify-between items-center text-sm p-2 rounded ${matchBg}">
-                            <span class="${match.homeId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${match.homeName}</span>
-                            <span class="text-gray-400 mx-2">
-                                ${match.result ? `<span class="text-white font-bold">${match.result}</span>` : 'vs'}
-                            </span>
-                            <span class="${match.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${match.awayName}</span>
+                        <div class="flex items-center justify-between text-[11px] py-1 ${isMyMatch ? 'bg-yellow-500/10 -mx-1 px-1 rounded' : ''}">
+                            <span class="flex-1 truncate ${match.homeId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-gray-300'}">${match.homeName}</span>
+                            <span class="px-2 ${match.result ? 'text-white font-bold' : 'text-gray-600'}">${match.result || 'vs'}</span>
+                            <span class="flex-1 truncate text-right ${match.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-gray-300'}">${match.awayName}</span>
                         </div>
                     `;
                 });
@@ -378,56 +399,116 @@ window.UserCompetitions = {
         }
         html += `</div></div>`;
 
-        // SEZIONE 4: Ultima Partita Giocata
+        // SEZIONE 4: Ultima Partita Giocata (Mobile-First)
         const lastPlayedMatch = this.findLastPlayedMatch(scheduleData, currentTeamId);
         if (lastPlayedMatch) {
             const isHome = lastPlayedMatch.homeId === currentTeamId;
             const myGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[0]) : parseInt(lastPlayedMatch.result.split('-')[1]);
             const opponentGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[1]) : parseInt(lastPlayedMatch.result.split('-')[0]);
             const resultType = myGoals > opponentGoals ? 'win' : myGoals < opponentGoals ? 'loss' : 'draw';
-            const resultColor = resultType === 'win' ? 'from-green-900 to-green-800 border-green-500' : resultType === 'loss' ? 'from-red-900 to-red-800 border-red-500' : 'from-yellow-900 to-yellow-800 border-yellow-500';
-            const resultText = resultType === 'win' ? '✅ VITTORIA' : resultType === 'loss' ? '❌ SCONFITTA' : '🤝 PAREGGIO';
-            const resultTextColor = resultType === 'win' ? 'text-green-400' : resultType === 'loss' ? 'text-red-400' : 'text-yellow-400';
+
+            // Colori e stili basati sul risultato
+            const resultStyles = {
+                win: {
+                    gradient: 'from-emerald-900/60 via-emerald-800/40 to-gray-900/80',
+                    border: 'border-emerald-500/50',
+                    badge: 'bg-emerald-500/30 border-emerald-400/60 text-emerald-400',
+                    icon: '🏆',
+                    text: 'VITTORIA'
+                },
+                loss: {
+                    gradient: 'from-red-900/60 via-red-800/40 to-gray-900/80',
+                    border: 'border-red-500/50',
+                    badge: 'bg-red-500/30 border-red-400/60 text-red-400',
+                    icon: '💔',
+                    text: 'SCONFITTA'
+                },
+                draw: {
+                    gradient: 'from-amber-900/60 via-amber-800/40 to-gray-900/80',
+                    border: 'border-amber-500/50',
+                    badge: 'bg-amber-500/30 border-amber-400/60 text-amber-400',
+                    icon: '🤝',
+                    text: 'PAREGGIO'
+                }
+            };
+            const style = resultStyles[resultType];
+
+            const getLogoUrl = (teamId) => {
+                return window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
+            };
+
+            const homeGoals = parseInt(lastPlayedMatch.result.split('-')[0]);
+            const awayGoals = parseInt(lastPlayedMatch.result.split('-')[1]);
 
             html += `
-                <div class="bg-gradient-to-r ${resultColor} rounded-lg p-4 border-2 shadow-lg">
-                    <h3 class="text-xl font-bold ${resultTextColor} mb-3 flex items-center gap-2">
-                        <span>📊</span> Ultima Partita (Giornata ${lastPlayedMatch.round})
-                    </h3>
-                    <div class="bg-black bg-opacity-30 rounded-lg p-4">
-                        <div class="flex items-center justify-center gap-4">
-                            <span class="${lastPlayedMatch.homeId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.homeName}</span>
-                            <span class="text-2xl font-extrabold text-white">${lastPlayedMatch.result}</span>
-                            <span class="${lastPlayedMatch.awayId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastPlayedMatch.awayName}</span>
-                        </div>
-                        <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
-                        <div class="mt-3 flex gap-2">
-                            <button id="btn-campionato-telecronaca"
-                                    class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1"
-                                    data-home-name="${lastPlayedMatch.homeName}"
-                                    data-away-name="${lastPlayedMatch.awayName}"
-                                    data-home-id="${lastPlayedMatch.homeId}"
-                                    data-away-id="${lastPlayedMatch.awayId}"
-                                    data-round="${lastPlayedMatch.round}"
-                                    data-result="${lastPlayedMatch.result}"
-                                    data-type="highlights">
-                                📺 Azioni Salienti
-                            </button>
-                            <button id="btn-campionato-telecronaca-completa"
-                                    class="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1"
-                                    data-home-name="${lastPlayedMatch.homeName}"
-                                    data-away-name="${lastPlayedMatch.awayName}"
-                                    data-home-id="${lastPlayedMatch.homeId}"
-                                    data-away-id="${lastPlayedMatch.awayId}"
-                                    data-round="${lastPlayedMatch.round}"
-                                    data-result="${lastPlayedMatch.result}"
-                                    data-type="full">
-                                📋 Completa
-                            </button>
+                <div class="last-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${style.gradient} ${style.border} border shadow-xl">
+                    <!-- Header con giornata e risultato badge -->
+                    <div class="flex items-center justify-between px-4 py-2 bg-black/30">
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Giornata ${lastPlayedMatch.round}</span>
+                        <span class="text-[10px] px-2.5 py-0.5 rounded-full border ${style.badge} font-bold uppercase flex items-center gap-1">
+                            <span>${style.icon}</span> ${style.text}
+                        </span>
+                    </div>
+
+                    <!-- Match Result Display -->
+                    <div class="px-4 py-4">
+                        <div class="flex items-center justify-between">
+                            <!-- Home Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(lastPlayedMatch.homeId)}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 ${lastPlayedMatch.homeId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${lastPlayedMatch.homeId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-1.5 text-[10px] sm:text-xs font-bold text-center truncate max-w-[70px] sm:max-w-[90px] ${lastPlayedMatch.homeId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${lastPlayedMatch.homeName}</p>
+                            </div>
+
+                            <!-- Score Display -->
+                            <div class="flex-shrink-0 px-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-2xl sm:text-3xl font-black ${homeGoals > awayGoals ? 'text-emerald-400' : homeGoals < awayGoals ? 'text-gray-400' : 'text-amber-400'}">${homeGoals}</span>
+                                    <span class="text-lg text-gray-500 font-bold">-</span>
+                                    <span class="text-2xl sm:text-3xl font-black ${awayGoals > homeGoals ? 'text-emerald-400' : awayGoals < homeGoals ? 'text-gray-400' : 'text-amber-400'}">${awayGoals}</span>
+                                </div>
+                            </div>
+
+                            <!-- Away Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(lastPlayedMatch.awayId)}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 ${lastPlayedMatch.awayId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${lastPlayedMatch.awayId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-1.5 text-[10px] sm:text-xs font-bold text-center truncate max-w-[70px] sm:max-w-[90px] ${lastPlayedMatch.awayId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${lastPlayedMatch.awayName}</p>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Action Buttons -->
+                    <div class="px-4 pb-4 flex gap-2">
+                        <button id="btn-campionato-telecronaca"
+                                class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-1.5 font-semibold"
+                                data-home-name="${lastPlayedMatch.homeName}"
+                                data-away-name="${lastPlayedMatch.awayName}"
+                                data-home-id="${lastPlayedMatch.homeId}"
+                                data-away-id="${lastPlayedMatch.awayId}"
+                                data-round="${lastPlayedMatch.round}"
+                                data-result="${lastPlayedMatch.result}"
+                                data-type="highlights">
+                            <span class="text-sm">📺</span> Highlights
+                        </button>
+                        <button id="btn-campionato-telecronaca-completa"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-1.5 font-semibold"
+                                data-home-name="${lastPlayedMatch.homeName}"
+                                data-away-name="${lastPlayedMatch.awayName}"
+                                data-home-id="${lastPlayedMatch.homeId}"
+                                data-away-id="${lastPlayedMatch.awayId}"
+                                data-round="${lastPlayedMatch.round}"
+                                data-result="${lastPlayedMatch.result}"
+                                data-type="full">
+                            <span class="text-sm">📋</span> Completa
+                        </button>
+                    </div>
                 </div>
-            `
+            `;
         }
 
         container.innerHTML = html;
@@ -644,7 +725,7 @@ window.UserCompetitions = {
     },
 
     /**
-     * Renderizza la schermata Coppa
+     * Renderizza la schermata Coppa (Mobile-First)
      */
     renderCoppaScreen(container, bracket, currentTeamId, teamsData = {}) {
         let html = '';
@@ -654,48 +735,84 @@ window.UserCompetitions = {
         const hasBye = bracket ? window.CoppaSchedule.teamHasBye(bracket, currentTeamId) : false;
         const isParticipating = teamMatches.length > 0 || hasBye;
 
-        // Funzione per ottenere logo grande
-        const getLargeLogoHtml = (teamId) => {
-            const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
-            return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover">`;
+        // Aggiorna status badge nell'header
+        const statusBadge = document.getElementById('coppa-status-badge');
+        if (statusBadge) {
+            let statusText = '--';
+            let badgeClass = 'bg-purple-500/20 border-purple-500/50';
+            let textClass = 'text-purple-400';
+
+            if (!bracket) {
+                statusText = 'Non iniziata';
+                badgeClass = 'bg-gray-500/20 border-gray-500/50';
+                textClass = 'text-gray-400';
+            } else if (!isParticipating) {
+                statusText = 'Non iscritto';
+                badgeClass = 'bg-gray-500/20 border-gray-500/50';
+                textClass = 'text-gray-400';
+            } else if (bracket.winner?.teamId === currentTeamId) {
+                statusText = '🏆 Vincitore!';
+                badgeClass = 'bg-yellow-500/20 border-yellow-500/50';
+                textClass = 'text-yellow-400';
+            } else {
+                const lastMatch = teamMatches[teamMatches.length - 1];
+                const eliminated = lastMatch && lastMatch.winner && lastMatch.winner.teamId !== currentTeamId;
+                if (eliminated) {
+                    statusText = 'Eliminato';
+                    badgeClass = 'bg-red-500/20 border-red-500/50';
+                    textClass = 'text-red-400';
+                } else if (hasBye) {
+                    statusText = 'BYE';
+                    badgeClass = 'bg-emerald-500/20 border-emerald-500/50';
+                    textClass = 'text-emerald-400';
+                } else {
+                    statusText = 'In gara';
+                    badgeClass = 'bg-emerald-500/20 border-emerald-500/50';
+                    textClass = 'text-emerald-400';
+                }
+            }
+
+            statusBadge.className = `flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${badgeClass} border`;
+            statusBadge.innerHTML = `<span class="${textClass}">${statusText}</span>`;
+        }
+
+        // Funzione per ottenere URL logo
+        const getLogoUrl = (teamId) => {
+            return window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
         };
 
         // Calcola livello medio formazione per ogni squadra
         const getFormationLevel = (teamId) => {
             const teamData = teamsData[teamId];
             if (!teamData) return '?';
-            const formationPlayers = window.getFormationPlayers(teamData);
+            const formationPlayers = window.getFormationPlayers?.(teamData) || [];
             if (formationPlayers.length === 0) return '?';
-            return window.calculateAverageLevel(formationPlayers).toFixed(1);
+            return window.calculateAverageLevel?.(formationPlayers)?.toFixed(1) || '?';
         };
 
-        // SEZIONE 1: Prossima Partita Coppa
-        html += `
-            <div class="bg-gradient-to-r from-purple-900 to-purple-800 rounded-lg p-4 border-2 border-purple-500 shadow-lg">
-                <h3 class="text-xl font-bold text-purple-400 mb-3 flex items-center gap-2">
-                    <span>⚽</span> La Tua Situazione in Coppa
-                </h3>
-        `;
-
+        // SEZIONE 1: Prossima Partita Coppa (Card stile broadcast)
         if (!bracket) {
             // Coppa non ancora iniziata
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">La coppa non e ancora iniziata.</p>
-                    <p class="text-gray-500 text-sm mt-2">Attendi che l'admin generi il tabellone.</p>
+                <div class="rounded-2xl bg-gradient-to-br from-gray-800/60 to-gray-900/80 border border-purple-500/30 p-5 text-center">
+                    <span class="text-4xl mb-3 block">⏳</span>
+                    <p class="text-gray-300 font-semibold">La coppa non e ancora iniziata</p>
+                    <p class="text-gray-500 text-xs mt-1">Attendi che l'admin generi il tabellone</p>
                 </div>
             `;
         } else if (!isParticipating) {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">Non sei iscritto alla CoppaSeriA.</p>
+                <div class="rounded-2xl bg-gradient-to-br from-gray-800/60 to-gray-900/80 border border-gray-600/30 p-5 text-center">
+                    <span class="text-4xl mb-3 block">🚫</span>
+                    <p class="text-gray-400 font-semibold">Non sei iscritto alla CoppaSeriA</p>
                 </div>
             `;
         } else if (hasBye) {
             html += `
-                <div class="bg-green-900 bg-opacity-50 rounded-lg p-4 text-center">
-                    <p class="text-green-400 font-bold">✅ Hai un BYE!</p>
-                    <p class="text-gray-300 text-sm mt-1">Passi direttamente al turno successivo.</p>
+                <div class="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-gray-900/80 border border-emerald-500/40 p-5 text-center">
+                    <span class="text-4xl mb-3 block">✨</span>
+                    <p class="text-emerald-400 font-bold text-lg">Hai un BYE!</p>
+                    <p class="text-gray-400 text-sm mt-1">Passi direttamente al turno successivo</p>
                 </div>
             `;
         } else {
@@ -704,8 +821,8 @@ window.UserCompetitions = {
 
             if (nextCupMatch) {
                 const isHome = nextCupMatch.homeTeam?.teamId === currentTeamId;
-                const statusText = isHome ? '🏠 IN CASA' : '✈️ TRASFERTA';
-                const statusColor = isHome ? 'text-green-400' : 'text-blue-400';
+                const statusText = isHome ? 'CASA' : 'TRASFERTA';
+                const statusColor = isHome ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40';
 
                 const homeTeamId = nextCupMatch.homeTeam?.teamId;
                 const awayTeamId = nextCupMatch.awayTeam?.teamId;
@@ -713,26 +830,54 @@ window.UserCompetitions = {
                 const awayLvl = getFormationLevel(awayTeamId);
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg p-6">
-                        <p class="text-gray-400 text-sm mb-4 text-center">${nextCupMatch.roundName} ${nextCupMatch.isSingleMatch ? '(Partita Secca)' : '(Andata/Ritorno)'}</p>
-                        <div class="flex items-center justify-center gap-6">
-                            <div class="flex flex-col items-center gap-2">
-                                ${getLargeLogoHtml(homeTeamId)}
-                                <span class="text-white font-bold text-lg text-center ${homeTeamId === currentTeamId ? 'text-yellow-400' : ''}">${nextCupMatch.homeTeam?.teamName || 'TBD'}</span>
-                                <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
-                            </div>
-                            <div class="text-center px-4">
-                                <span class="text-3xl font-bold text-gray-400">VS</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-2">
-                                ${getLargeLogoHtml(awayTeamId)}
-                                <span class="text-white font-bold text-lg text-center ${awayTeamId === currentTeamId ? 'text-yellow-400' : ''}">${nextCupMatch.awayTeam?.teamName || 'TBD'}</span>
-                                <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
+                    <div class="next-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/50 via-gray-800/90 to-gray-900/90 border border-purple-500/30 shadow-xl">
+                        <!-- Header con round e status -->
+                        <div class="flex items-center justify-between px-4 py-2 bg-black/30">
+                            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">${nextCupMatch.roundName} ${nextCupMatch.isSingleMatch ? '• Secca' : '• A/R'}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border ${statusColor} font-bold uppercase">${statusText}</span>
+                        </div>
+
+                        <!-- Match Preview -->
+                        <div class="px-4 py-4">
+                            <div class="flex items-center justify-between">
+                                <!-- Home Team -->
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="relative">
+                                        <img src="${getLogoUrl(homeTeamId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${homeTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                        ${homeTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                    </div>
+                                    <p class="mt-2 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${homeTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${nextCupMatch.homeTeam?.teamName || 'TBD'}</p>
+                                    <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${homeLvl}</span>
+                                </div>
+
+                                <!-- VS Divider -->
+                                <div class="flex-shrink-0 px-3">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500/20 to-fuchsia-600/20 border border-purple-500/40 flex items-center justify-center">
+                                            <span class="text-lg sm:text-xl font-black text-purple-400">VS</span>
+                                        </div>
+                                        <div class="absolute inset-0 rounded-full animate-ping bg-purple-500/10"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Away Team -->
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="relative">
+                                        <img src="${getLogoUrl(awayTeamId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${awayTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                        ${awayTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                    </div>
+                                    <p class="mt-2 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${awayTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${nextCupMatch.awayTeam?.teamName || 'TBD'}</p>
+                                    <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${awayLvl}</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-center mt-4 ${statusColor} font-bold text-lg">${statusText}</p>
+
                         ${!nextCupMatch.isSingleMatch && nextCupMatch.leg1Result ? `
-                            <p class="text-center mt-2 text-gray-400 text-sm">Andata: ${nextCupMatch.leg1Result}</p>
+                            <div class="px-4 pb-3">
+                                <div class="text-center text-[11px] px-3 py-1.5 bg-purple-900/40 rounded-lg border border-purple-500/30">
+                                    <span class="text-gray-400">Andata:</span> <span class="text-white font-bold">${nextCupMatch.leg1Result}</span>
+                                </div>
+                            </div>
                         ` : ''}
                     </div>
                 `;
@@ -743,64 +888,66 @@ window.UserCompetitions = {
 
                 if (eliminated) {
                     html += `
-                        <div class="bg-red-900 bg-opacity-50 rounded-lg p-4 text-center">
-                            <p class="text-red-400 font-bold">❌ Eliminato</p>
-                            <p class="text-gray-300 text-sm mt-1">Sei stato eliminato nel turno: ${lastMatch.roundName}</p>
+                        <div class="rounded-2xl bg-gradient-to-br from-red-900/40 to-gray-900/80 border border-red-500/40 p-5 text-center">
+                            <span class="text-4xl mb-3 block">💔</span>
+                            <p class="text-red-400 font-bold text-lg">Eliminato</p>
+                            <p class="text-gray-400 text-sm mt-1">Turno: ${lastMatch.roundName}</p>
                         </div>
                     `;
                 } else if (bracket.winner && bracket.winner.teamId === currentTeamId) {
                     html += `
-                        <div class="bg-yellow-900 bg-opacity-50 rounded-lg p-4 text-center">
-                            <p class="text-yellow-400 font-bold text-xl">🏆 HAI VINTO LA COPPA!</p>
+                        <div class="rounded-2xl bg-gradient-to-br from-yellow-900/50 via-amber-800/30 to-gray-900/80 border border-yellow-500/50 p-6 text-center shadow-xl shadow-yellow-900/20">
+                            <span class="text-5xl mb-3 block">🏆</span>
+                            <p class="text-yellow-400 font-black text-xl">HAI VINTO LA COPPA!</p>
                         </div>
                     `;
                 } else {
                     html += `
-                        <div class="bg-green-900 bg-opacity-50 rounded-lg p-4 text-center">
-                            <p class="text-green-400 font-bold">✅ Ancora in corsa!</p>
-                            <p class="text-gray-300 text-sm mt-1">Attendi il prossimo turno.</p>
+                        <div class="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-gray-900/80 border border-emerald-500/40 p-5 text-center">
+                            <span class="text-4xl mb-3 block">⏳</span>
+                            <p class="text-emerald-400 font-bold">Ancora in corsa!</p>
+                            <p class="text-gray-400 text-sm mt-1">Attendi il prossimo turno</p>
                         </div>
                     `;
                 }
             }
         }
-        html += `</div>`;
 
-        // SEZIONE 2: Tabellone Completo (accordion minimizzato di default)
-        // Calcola quanti turni completati
+        // SEZIONE 2: Tabellone Completo (accordion compatto stile mobile)
         let completedRounds = 0;
         let totalRounds = 0;
         if (bracket && bracket.rounds) {
             totalRounds = bracket.rounds.length;
             completedRounds = bracket.rounds.filter(r => r.matches.every(m => m.winner !== null && m.winner !== undefined)).length;
         }
-        const bracketSummary = bracket ? `${completedRounds}/${totalRounds} turni completati` : 'Non disponibile';
 
         html += `
-            <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
-                <div class="flex justify-between items-center cursor-pointer" onclick="window.UserCompetitions.toggleAccordion('coppa-tabellone-content')">
-                    <h3 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
-                        <span>📋</span> Tabellone Completo
-                    </h3>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-indigo-300">${bracketSummary}</span>
-                        <span id="coppa-tabellone-content-icon" class="text-indigo-400 text-lg">▼</span>
+            <div class="bracket-section bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-2 bg-gray-900/50 cursor-pointer"
+                     onclick="window.UserCompetitions.toggleAccordion('coppa-tabellone-content')">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">📋</span>
+                        <span class="text-sm font-bold text-gray-300">Tabellone</span>
+                        <span class="text-[10px] px-2 py-0.5 bg-gray-700 rounded-full text-gray-400">${completedRounds}/${totalRounds}</span>
                     </div>
+                    <span id="coppa-tabellone-content-icon" class="text-gray-500 text-xs transition-transform">▼</span>
                 </div>
-                <div id="coppa-tabellone-content" class="hidden mt-3">
+                <div id="coppa-tabellone-content" class="hidden">
         `;
 
         // Vincitore se presente (in alto)
         if (bracket && bracket.winner) {
             html += `
-                <div class="mb-4 p-3 bg-yellow-900 bg-opacity-50 rounded-lg text-center">
-                    <p class="text-yellow-400 font-bold text-lg">🏆 Vincitore: ${bracket.winner.teamName}</p>
+                <div class="mx-3 mt-3 p-2.5 bg-gradient-to-r from-yellow-900/40 to-amber-800/30 rounded-lg border border-yellow-500/40 text-center">
+                    <p class="text-yellow-400 font-bold text-sm flex items-center justify-center gap-1.5">
+                        <span>🏆</span> ${bracket.winner.teamName}
+                    </p>
                 </div>
             `;
         }
 
         // Renderizza ogni round con accordion (collassabile)
-        html += `<div class="max-h-96 overflow-y-auto space-y-2" id="coppa-accordion">`;
+        html += `<div class="max-h-72 overflow-y-auto divide-y divide-gray-700/30">`;
 
         if (bracket && bracket.rounds && bracket.rounds.length > 0) {
             // Ordina i round: prima quelli da giocare, poi quelli completati
@@ -808,29 +955,28 @@ window.UserCompetitions = {
                 const aComplete = a.matches.every(m => m.winner !== null && m.winner !== undefined);
                 const bComplete = b.matches.every(m => m.winner !== null && m.winner !== undefined);
                 if (aComplete === bComplete) return a.roundNumber - b.roundNumber;
-                return aComplete ? 1 : -1; // Completate in fondo
+                return aComplete ? 1 : -1;
             });
 
             sortedRounds.forEach((round, index) => {
-                // Verifica se il round è completato
                 const roundComplete = round.matches.every(m => m.winner !== null && m.winner !== undefined);
-                const statusIcon = roundComplete ? '✅' : '⏳';
                 const hasMyMatch = round.matches.some(m =>
                     m.homeTeam?.teamId === currentTeamId || m.awayTeam?.teamId === currentTeamId
                 );
                 const accordionId = `coppa-round-${index}`;
 
                 html += `
-                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
-                        <button class="coppa-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer"
+                    <div class="coppa-round">
+                        <button class="coppa-round-header w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-700/30 transition"
                                 data-accordion="${accordionId}" aria-expanded="false">
-                            <span class="text-indigo-300 font-bold flex items-center gap-2">
-                                ${statusIcon} ${round.roundName}
-                                ${hasMyMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
-                            </span>
-                            <span class="coppa-round-arrow text-indigo-400 transition-transform">▼</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] ${roundComplete ? 'text-emerald-400' : 'text-purple-400'}">${roundComplete ? '✓' : '○'}</span>
+                                <span class="text-xs font-semibold text-gray-300">${round.roundName}</span>
+                                ${hasMyMatch ? '<span class="text-[10px] text-yellow-400">⭐</span>' : ''}
+                            </div>
+                            <span class="coppa-round-arrow text-gray-500 text-[10px] transition-transform">▼</span>
                         </button>
-                        <div id="${accordionId}" class="coppa-round-content hidden px-3 pb-3 space-y-2">
+                        <div id="${accordionId}" class="coppa-round-content hidden bg-gray-900/30 px-3 py-2 space-y-1">
                 `;
 
                 round.matches.forEach(match => {
@@ -839,35 +985,26 @@ window.UserCompetitions = {
                     const homeId = match.homeTeam?.teamId;
                     const awayId = match.awayTeam?.teamId;
                     const isMyMatch = homeId === currentTeamId || awayId === currentTeamId;
-                    const matchBg = isMyMatch ? 'bg-purple-900 bg-opacity-50' : 'bg-gray-800 bg-opacity-50';
 
                     // Determina il vincitore per evidenziazione
                     const homeIsWinner = match.winner && match.winner.teamId === homeId;
                     const awayIsWinner = match.winner && match.winner.teamId === awayId;
-                    const homeClass = homeIsWinner ? 'text-green-400 font-bold' : (awayIsWinner ? 'text-red-400' : 'text-white');
-                    const awayClass = awayIsWinner ? 'text-green-400 font-bold' : (homeIsWinner ? 'text-red-400' : 'text-white');
 
-                    // Risultato
+                    // Risultato compatto
                     let resultDisplay = 'vs';
                     if (match.leg1Result && match.leg2Result) {
-                        resultDisplay = `<span class="text-gray-400 text-xs">${match.leg1Result}</span> / <span class="text-white font-bold">${match.leg2Result}</span>`;
+                        resultDisplay = `${match.leg1Result} / ${match.leg2Result}`;
                     } else if (match.leg1Result) {
-                        resultDisplay = `<span class="text-white font-bold">${match.leg1Result}</span>`;
+                        resultDisplay = match.leg1Result;
                     } else if (match.result) {
-                        resultDisplay = `<span class="text-white font-bold">${match.result}</span>`;
+                        resultDisplay = match.result;
                     }
 
-                    // Icona per la mia squadra
-                    const homeIcon = homeId === currentTeamId ? '⭐ ' : '';
-                    const awayIcon = awayId === currentTeamId ? ' ⭐' : '';
-
                     html += `
-                        <div class="flex justify-between items-center text-sm p-2 rounded ${matchBg}">
-                            <span class="${homeClass} flex-1 ${homeId === currentTeamId ? 'text-yellow-400' : ''}">${homeIcon}${homeName}</span>
-                            <span class="text-gray-400 mx-3 text-center min-w-16">
-                                ${resultDisplay}
-                            </span>
-                            <span class="${awayClass} flex-1 text-right ${awayId === currentTeamId ? 'text-yellow-400' : ''}">${awayName}${awayIcon}</span>
+                        <div class="flex items-center justify-between text-[11px] py-1 ${isMyMatch ? 'bg-purple-500/10 -mx-1 px-1 rounded' : ''}">
+                            <span class="flex-1 truncate ${homeId === currentTeamId ? 'text-yellow-400 font-bold' : homeIsWinner ? 'text-emerald-400 font-semibold' : awayIsWinner ? 'text-gray-500' : 'text-gray-300'}">${homeName}</span>
+                            <span class="px-2 ${match.winner ? 'text-white font-bold' : 'text-gray-600'}">${resultDisplay}</span>
+                            <span class="flex-1 truncate text-right ${awayId === currentTeamId ? 'text-yellow-400 font-bold' : awayIsWinner ? 'text-emerald-400 font-semibold' : homeIsWinner ? 'text-gray-500' : 'text-gray-300'}">${awayName}</span>
                         </div>
                     `;
                 });
@@ -879,8 +1016,8 @@ window.UserCompetitions = {
             });
         } else {
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">Tabellone non ancora disponibile.</p>
+                <div class="p-4 text-center">
+                    <p class="text-gray-500 text-sm">Tabellone non ancora disponibile</p>
                 </div>
             `;
         }
@@ -889,43 +1026,88 @@ window.UserCompetitions = {
         html += `</div>`; // chiude coppa-tabellone-content
         html += `</div>`; // chiude box principale tabellone
 
-        // SEZIONE 3: Ultima Partita Giocata in Coppa
+        // SEZIONE 3: Ultima Partita Giocata in Coppa (Mobile-First)
         const lastCupMatch = this.findLastPlayedCupMatch(bracket, currentTeamId);
         if (lastCupMatch) {
-            const isHome = lastCupMatch.homeTeam?.teamId === currentTeamId;
             const myTeamWon = lastCupMatch.winner?.teamId === currentTeamId;
-            const resultColor = myTeamWon ? 'from-green-900 to-green-800 border-green-500' : 'from-red-900 to-red-800 border-red-500';
-            const resultText = myTeamWon ? '✅ PASSATO IL TURNO' : '❌ ELIMINATO';
-            const resultTextColor = myTeamWon ? 'text-green-400' : 'text-red-400';
+
+            // Stili basati sul risultato
+            const resultStyles = myTeamWon ? {
+                gradient: 'from-emerald-900/60 via-emerald-800/40 to-gray-900/80',
+                border: 'border-emerald-500/50',
+                badge: 'bg-emerald-500/30 border-emerald-400/60 text-emerald-400',
+                icon: '🎉',
+                text: 'PASSATO'
+            } : {
+                gradient: 'from-red-900/60 via-red-800/40 to-gray-900/80',
+                border: 'border-red-500/50',
+                badge: 'bg-red-500/30 border-red-400/60 text-red-400',
+                icon: '💔',
+                text: 'ELIMINATO'
+            };
 
             // Costruisci stringa risultato
-            let resultStr = lastCupMatch.leg1Result || '';
-            if (lastCupMatch.leg2Result) {
-                resultStr += ` / ${lastCupMatch.leg2Result}`;
-            }
+            let leg1Score = lastCupMatch.leg1Result || '';
+            let leg2Score = lastCupMatch.leg2Result || '';
+
+            const homeTeamId = lastCupMatch.homeTeam?.teamId;
+            const awayTeamId = lastCupMatch.awayTeam?.teamId;
 
             html += `
-                <div class="bg-gradient-to-r ${resultColor} rounded-lg p-4 border-2 shadow-lg">
-                    <h3 class="text-xl font-bold ${resultTextColor} mb-3 flex items-center gap-2">
-                        <span>📊</span> Ultima Partita (${lastCupMatch.roundName})
-                    </h3>
-                    <div class="bg-black bg-opacity-30 rounded-lg p-4">
-                        <div class="flex items-center justify-center gap-4">
-                            <span class="${lastCupMatch.homeTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.homeTeam?.teamName || 'TBD'}</span>
-                            <span class="text-xl font-extrabold text-white">${resultStr}</span>
-                            <span class="${lastCupMatch.awayTeam?.teamId === currentTeamId ? 'text-yellow-400 font-bold' : 'text-white'}">${lastCupMatch.awayTeam?.teamName || 'TBD'}</span>
+                <div class="last-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${resultStyles.gradient} ${resultStyles.border} border shadow-xl">
+                    <!-- Header con round e risultato badge -->
+                    <div class="flex items-center justify-between px-4 py-2 bg-black/30">
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">${lastCupMatch.roundName}</span>
+                        <span class="text-[10px] px-2.5 py-0.5 rounded-full border ${resultStyles.badge} font-bold uppercase flex items-center gap-1">
+                            <span>${resultStyles.icon}</span> ${resultStyles.text}
+                        </span>
+                    </div>
+
+                    <!-- Match Result Display -->
+                    <div class="px-4 py-4">
+                        <div class="flex items-center justify-between">
+                            <!-- Home Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(homeTeamId)}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 ${homeTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${homeTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-1.5 text-[10px] sm:text-xs font-bold text-center truncate max-w-[70px] sm:max-w-[90px] ${homeTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${lastCupMatch.homeTeam?.teamName || 'TBD'}</p>
+                            </div>
+
+                            <!-- Score Display -->
+                            <div class="flex-shrink-0 px-2 text-center">
+                                ${leg2Score ? `
+                                    <div class="text-[10px] text-gray-500 mb-1">Andata</div>
+                                    <div class="text-lg font-bold text-gray-400 mb-1">${leg1Score}</div>
+                                    <div class="text-[10px] text-gray-500 mb-1">Ritorno</div>
+                                    <div class="text-xl font-black text-white">${leg2Score}</div>
+                                ` : `
+                                    <div class="text-2xl sm:text-3xl font-black text-white">${leg1Score || 'vs'}</div>
+                                `}
+                            </div>
+
+                            <!-- Away Team -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(awayTeamId)}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 ${awayTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${awayTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px]">⭐</div>' : ''}
+                                </div>
+                                <p class="mt-1.5 text-[10px] sm:text-xs font-bold text-center truncate max-w-[70px] sm:max-w-[90px] ${awayTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${lastCupMatch.awayTeam?.teamName || 'TBD'}</p>
+                            </div>
                         </div>
-                        <p class="text-center mt-2 ${resultTextColor} font-bold">${resultText}</p>
-                        <div class="mt-3 flex gap-2">
-                            <button id="btn-coppa-telecronaca"
-                                    class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
-                                📺 Azioni Salienti
-                            </button>
-                            <button id="btn-coppa-telecronaca-completa"
-                                    class="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
-                                📋 Completa
-                            </button>
-                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="px-4 pb-4 flex gap-2">
+                        <button id="btn-coppa-telecronaca"
+                                class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-1.5 font-semibold">
+                            <span class="text-sm">📺</span> Highlights
+                        </button>
+                        <button id="btn-coppa-telecronaca-completa"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-1.5 font-semibold">
+                            <span class="text-sm">📋</span> Completa
+                        </button>
                     </div>
                 </div>
             `;
@@ -1026,158 +1208,190 @@ window.UserCompetitions = {
     },
 
     /**
-     * Renderizza la schermata Supercoppa
+     * Renderizza la schermata Supercoppa (Mobile-First)
      */
     renderSupercoppScreen(container, bracket, currentTeamId, teamsData = {}) {
         let html = '';
 
-        // Funzione per ottenere logo grande
-        const getLargeLogoHtml = (teamId) => {
-            const url = window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
-            return `<img src="${url}" alt="Logo" class="w-28 h-28 rounded-full border-4 border-gray-600 shadow-lg object-cover mx-auto">`;
+        // Funzione per ottenere URL logo
+        const getLogoUrl = (teamId) => {
+            return window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
         };
 
         // Calcola livello medio formazione per ogni squadra
         const getFormationLevel = (teamId) => {
             const teamData = teamsData[teamId];
             if (!teamData) return '?';
-            const formationPlayers = window.getFormationPlayers(teamData);
+            const formationPlayers = window.getFormationPlayers?.(teamData) || [];
             if (formationPlayers.length === 0) return '?';
-            return window.calculateAverageLevel(formationPlayers).toFixed(1);
+            return window.calculateAverageLevel?.(formationPlayers)?.toFixed(1) || '?';
         };
 
         const isParticipant = bracket ? (bracket.homeTeam?.teamId === currentTeamId || bracket.awayTeam?.teamId === currentTeamId) : false;
         const isCompleted = bracket?.isCompleted || false;
         const isWinner = bracket?.winner?.teamId === currentTeamId;
+        const isLoser = isCompleted && isParticipant && !isWinner;
 
         const homeTeamId = bracket?.homeTeam?.teamId;
         const awayTeamId = bracket?.awayTeam?.teamId;
         const homeLvl = getFormationLevel(homeTeamId);
         const awayLvl = getFormationLevel(awayTeamId);
 
-        // SEZIONE 1: La Tua Situazione
-        html += `
-            <div class="bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg p-4 border-2 border-yellow-500 shadow-lg">
-                <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
-                    <span>⭐</span> La Tua Situazione in Supercoppa
-                </h3>
-        `;
+        // Aggiorna status badge nell'header
+        const statusBadge = document.getElementById('supercoppa-status-badge');
+        if (statusBadge) {
+            let statusText = '--';
+            let badgeClass = 'bg-yellow-500/20 border-yellow-500/50';
+            let textClass = 'text-yellow-400';
 
+            if (!bracket) {
+                statusText = 'Non in programma';
+                badgeClass = 'bg-gray-500/20 border-gray-500/50';
+                textClass = 'text-gray-400';
+            } else if (!isParticipant) {
+                statusText = 'Spettatore';
+                badgeClass = 'bg-gray-500/20 border-gray-500/50';
+                textClass = 'text-gray-400';
+            } else if (isWinner) {
+                statusText = '🏆 Vincitore!';
+                badgeClass = 'bg-yellow-500/20 border-yellow-500/50';
+                textClass = 'text-yellow-400';
+            } else if (isLoser) {
+                statusText = 'Sconfitto';
+                badgeClass = 'bg-red-500/20 border-red-500/50';
+                textClass = 'text-red-400';
+            } else {
+                statusText = 'Finalista';
+                badgeClass = 'bg-amber-500/20 border-amber-500/50';
+                textClass = 'text-amber-400';
+            }
+
+            statusBadge.className = `flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${badgeClass} border`;
+            statusBadge.innerHTML = `<span class="${textClass}">${statusText}</span>`;
+        }
+
+        // SEZIONE UNICA: La Partita (Card stile broadcast)
         if (!bracket) {
+            // Supercoppa non ancora in programma
             html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">La Supercoppa non e ancora in programma.</p>
-                    <p class="text-gray-500 text-sm mt-2">Verra creata dopo il termine del campionato e della coppa.</p>
-                </div>
-            `;
-        } else if (!isParticipant) {
-            html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">Non partecipi alla Supercoppa.</p>
-                    <p class="text-gray-500 text-sm mt-2">Solo il Campione e il Vincitore della Coppa si sfidano.</p>
-                </div>
-            `;
-        } else if (isWinner) {
-            html += `
-                <div class="bg-green-900 bg-opacity-50 rounded-lg p-4 text-center">
-                    <p class="text-green-400 font-bold text-xl">🏆 HAI VINTO LA SUPERCOPPA!</p>
-                </div>
-            `;
-        } else if (isCompleted) {
-            html += `
-                <div class="bg-red-900 bg-opacity-50 rounded-lg p-4 text-center">
-                    <p class="text-red-400 font-bold">😔 Hai perso la finale</p>
+                <div class="rounded-2xl bg-gradient-to-br from-gray-800/60 to-gray-900/80 border border-yellow-500/30 p-6 text-center">
+                    <span class="text-5xl mb-4 block">⏳</span>
+                    <p class="text-gray-300 font-semibold text-lg">Supercoppa non in programma</p>
+                    <p class="text-gray-500 text-sm mt-2">Verra creata dopo il termine del campionato e della coppa</p>
                 </div>
             `;
         } else {
+            // Card partita stile broadcast
+            const matchStatus = isCompleted ? (isWinner ? 'VITTORIA' : isLoser ? 'SCONFITTA' : 'CONCLUSA') : 'IN PROGRAMMA';
+            const statusStyle = isCompleted
+                ? (isWinner
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    : isLoser
+                        ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                        : 'bg-gray-500/20 text-gray-400 border-gray-500/40')
+                : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40';
+
+            // Gradiente card basato su stato
+            const cardGradient = isCompleted
+                ? (isWinner
+                    ? 'from-yellow-900/50 via-amber-800/30 to-gray-900/80 border-yellow-500/50'
+                    : isLoser
+                        ? 'from-red-900/40 via-gray-800/60 to-gray-900/80 border-red-500/40'
+                        : 'from-gray-800/60 via-gray-800/80 to-gray-900/90 border-gray-600/50')
+                : 'from-amber-900/40 via-orange-800/30 to-gray-900/80 border-orange-500/40';
+
             html += `
-                <div class="bg-yellow-800 bg-opacity-50 rounded-lg p-4 text-center">
-                    <p class="text-yellow-300 font-bold">⭐ Partecipi alla Supercoppa!</p>
-                    <p class="text-gray-300 text-sm mt-1">Partita secca contro ${isParticipant && homeTeamId === currentTeamId ? bracket.awayTeam?.teamName : bracket.homeTeam?.teamName}</p>
-                </div>
-            `;
-        }
-
-        html += `</div>`;
-
-        // SEZIONE 2: La Partita
-        html += `
-            <div class="bg-gradient-to-r from-orange-900 to-amber-900 rounded-lg p-4 border-2 border-orange-500 shadow-lg">
-                <h3 class="text-xl font-bold text-orange-400 mb-3 flex items-center gap-2">
-                    <span>⚽</span> La Partita
-                </h3>
-        `;
-
-        if (!bracket) {
-            html += `
-                <div class="bg-black bg-opacity-30 rounded-lg p-4 text-center">
-                    <p class="text-gray-400">Partita non ancora programmata.</p>
-                </div>
-            `;
-        } else {
-            // Card partita con loghi grandi e livelli
-            html += `
-                <div class="bg-black bg-opacity-40 rounded-lg p-6">
-                    <p class="text-gray-400 text-sm mb-4 text-center">Partita Secca</p>
-                    <div class="flex items-center justify-center gap-6">
-                        <!-- Home Team -->
-                        <div class="flex flex-col items-center gap-2">
-                            ${getLargeLogoHtml(homeTeamId)}
-                            <p class="text-xs text-yellow-300">${bracket.homeTeam?.qualification || ''}</p>
-                            <p class="text-lg font-bold text-center ${homeTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
-                                ${bracket.homeTeam?.teamName || 'TBD'}
-                            </p>
-                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${homeLvl}</span>
-                        </div>
-
-                        <!-- Risultato / VS -->
-                        <div class="text-center px-4">
-                            ${bracket.result ?
-                            `<p class="text-3xl font-extrabold text-yellow-400">${bracket.result}</p>
-                             ${bracket.penalties ? `<p class="text-xs text-gray-400">(d.c.r.)</p>` : ''}` :
-                            `<p class="text-3xl text-gray-400 font-bold">VS</p>
-                             <p class="text-xs text-gray-500 mt-1">Partita Secca</p>`
-                        }
+                <div class="supercoppa-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${cardGradient} border shadow-xl">
+                    <!-- Header con tipo partita e status -->
+                    <div class="flex items-center justify-between px-4 py-2 bg-black/30">
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Partita Secca</span>
+                        ${isParticipant ? `<span class="text-[10px] px-2.5 py-0.5 rounded-full border ${statusStyle} font-bold uppercase">${matchStatus}</span>` : ''}
                     </div>
 
-                    <!-- Away Team -->
-                    <div class="flex flex-col items-center gap-2">
-                        ${getLargeLogoHtml(awayTeamId)}
-                        <p class="text-xs text-yellow-300">${bracket.awayTeam?.qualification || ''}</p>
-                        <p class="text-lg font-bold text-center ${awayTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">
-                            ${bracket.awayTeam?.teamName || 'TBD'}
-                        </p>
-                        <span class="text-sm px-3 py-1 bg-gray-700 rounded-full text-cyan-400 font-semibold">Lv. ${awayLvl}</span>
-                    </div>
-                </div>
+                    <!-- Match Display -->
+                    <div class="px-4 py-5">
+                        <div class="flex items-center justify-between">
+                            <!-- Home Team (Campione) -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(homeTeamId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${homeTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${homeTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                </div>
+                                <span class="mt-1.5 text-[9px] px-2 py-0.5 bg-emerald-900/50 rounded-full text-emerald-400 font-semibold">${bracket.homeTeam?.qualification || 'Campione'}</span>
+                                <p class="mt-1 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${homeTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${bracket.homeTeam?.teamName || 'TBD'}</p>
+                                <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${homeLvl}</span>
+                            </div>
 
-                ${bracket.winner ? `
-                    <div class="mt-4 pt-4 border-t border-gray-700 text-center">
-                        <p class="text-green-400 font-extrabold text-lg">
-                            🏆 Vincitore: ${bracket.winner.teamName}
-                        </p>
-                        <p class="text-gray-400 text-sm mt-1">Premio: 1 CSS</p>
-                        <div class="mt-3 flex gap-2 justify-center">
-                            <button id="btn-supercoppa-telecronaca"
-                                    class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 px-3 rounded-lg transition inline-flex items-center gap-1">
-                                📺 Azioni Salienti
-                            </button>
-                            <button id="btn-supercoppa-telecronaca-completa"
-                                    class="bg-purple-700 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-lg transition inline-flex items-center gap-1">
-                                📋 Completa
-                            </button>
+                            <!-- VS / Risultato -->
+                            <div class="flex-shrink-0 px-3 text-center">
+                                ${bracket.result ? `
+                                    <div class="text-2xl sm:text-3xl font-black text-yellow-400">${bracket.result}</div>
+                                    ${bracket.penalties ? `<div class="text-[10px] text-gray-400 mt-1">(d.c.r.)</div>` : ''}
+                                ` : `
+                                    <div class="relative">
+                                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/40 flex items-center justify-center">
+                                            <span class="text-lg sm:text-xl font-black text-yellow-400">VS</span>
+                                        </div>
+                                        <div class="absolute inset-0 rounded-full animate-ping bg-yellow-500/10"></div>
+                                    </div>
+                                `}
+                            </div>
+
+                            <!-- Away Team (Vincitore Coppa) -->
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="relative">
+                                    <img src="${getLogoUrl(awayTeamId)}" alt="" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 ${awayTeamId === currentTeamId ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-600'} object-cover">
+                                    ${awayTeamId === currentTeamId ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px]">⭐</div>' : ''}
+                                </div>
+                                <span class="mt-1.5 text-[9px] px-2 py-0.5 bg-purple-900/50 rounded-full text-purple-400 font-semibold">${bracket.awayTeam?.qualification || 'Coppa'}</span>
+                                <p class="mt-1 text-xs sm:text-sm font-bold text-center truncate max-w-[80px] sm:max-w-[100px] ${awayTeamId === currentTeamId ? 'text-yellow-400' : 'text-white'}">${bracket.awayTeam?.teamName || 'TBD'}</p>
+                                <span class="mt-1 text-[10px] px-2 py-0.5 bg-gray-700/60 rounded-full text-cyan-400 font-semibold">Lv ${awayLvl}</span>
+                            </div>
                         </div>
                     </div>
-                ` : `
-                    <div class="mt-4 pt-4 border-t border-gray-700 text-center">
-                        <p class="text-yellow-400">⏳ In attesa di essere giocata</p>
-                    </div>
-                `}
-            </div>
-            `;
-        }
 
-        html += `</div>`;
+                    ${bracket.winner ? `
+                        <!-- Vincitore e Bottoni -->
+                        <div class="px-4 pb-4">
+                            <div class="text-center mb-3 py-2 bg-gradient-to-r from-yellow-900/40 to-amber-800/30 rounded-lg border border-yellow-500/40">
+                                <p class="text-yellow-400 font-bold text-sm flex items-center justify-center gap-1.5">
+                                    <span>🏆</span> ${bracket.winner.teamName}
+                                </p>
+                                <p class="text-gray-500 text-[10px] mt-0.5">Premio: 1 CSS</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="btn-supercoppa-telecronaca"
+                                        class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-1.5 font-semibold">
+                                    <span class="text-sm">📺</span> Highlights
+                                </button>
+                                <button id="btn-supercoppa-telecronaca-completa"
+                                        class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-1.5 font-semibold">
+                                    <span class="text-sm">📋</span> Completa
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
+                        <!-- In attesa -->
+                        <div class="px-4 pb-4">
+                            <div class="text-center py-3 bg-yellow-900/20 rounded-lg border border-yellow-500/30">
+                                <p class="text-yellow-400 text-sm font-semibold flex items-center justify-center gap-1.5">
+                                    <span class="animate-pulse">⏳</span> In attesa di essere giocata
+                                </p>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            `;
+
+            // Info aggiuntiva se non partecipante
+            if (!isParticipant) {
+                html += `
+                    <div class="rounded-xl bg-gray-800/40 border border-gray-700/50 p-3 text-center">
+                        <p class="text-gray-500 text-xs">Solo il Campione e il Vincitore della Coppa si sfidano</p>
+                    </div>
+                `;
+            }
+        }
 
         container.innerHTML = html;
 
@@ -1326,16 +1540,19 @@ window.UserCompetitions = {
     toggleAccordion(accordionId) {
         const content = document.getElementById(accordionId);
         const icon = document.getElementById(`${accordionId}-icon`);
+        const btnText = document.getElementById(`${accordionId}-btn-text`);
 
-        if (content && icon) {
+        if (content) {
             const isHidden = content.classList.contains('hidden');
 
             if (isHidden) {
                 content.classList.remove('hidden');
-                icon.textContent = '▲';
+                if (icon) icon.textContent = '▲';
+                if (btnText) btnText.textContent = 'Riduci';
             } else {
                 content.classList.add('hidden');
-                icon.textContent = '▼';
+                if (icon) icon.textContent = '▼';
+                if (btnText) btnText.textContent = 'Espandi';
             }
         }
     },

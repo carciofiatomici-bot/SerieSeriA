@@ -16,6 +16,7 @@ window.DashboardFeatures = {
         this.setupFlagsLoadedListener();
         this.initHamburgerMenu();
         this.updateRisorseBox();
+        this.initLatestReleasedPlayer();
         console.log("Dashboard Features inizializzato");
     },
 
@@ -741,21 +742,27 @@ window.DashboardFeatures = {
 
         // Aggiorna Negozio CSS
         const negozioBox = document.getElementById('risorse-negozio');
-        if (negozioBox && window.FeatureFlags?.isEnabled('creditiSuperSeri')) {
-            negozioBox.classList.remove('hidden');
-            negozioBox.classList.add('flex');
+        const shopNegozioBtn = document.getElementById('btn-shop-negozio');
 
-            // Click per aprire negozio
-            negozioBox.onclick = async () => {
-                if (window.CreditiSuperSeriUI && teamId) {
-                    const rosa = teamData?.players || [];
-                    const saldo = await window.CreditiSuperSeri?.getSaldo(teamId) || 0;
-                    window.CreditiSuperSeriUI.openPotenziamentoPanel(rosa, saldo);
-                }
-            };
-        } else if (negozioBox) {
+        // Funzione click negozio condivisa
+        const openNegozio = async () => {
+            if (window.CreditiSuperSeriUI && teamId) {
+                const rosa = teamData?.players || [];
+                const saldo = await window.CreditiSuperSeri?.getSaldo(teamId) || 0;
+                window.CreditiSuperSeriUI.openPotenziamentoPanel(rosa, saldo);
+            }
+        };
+
+        // risorse-negozio rimosso - ora nel tab Shop
+        // Manteniamo solo il bottone nel tab Shop
+        if (negozioBox) {
             negozioBox.classList.add('hidden');
             negozioBox.classList.remove('flex');
+        }
+
+        // Bottone negozio nel tab Shop
+        if (shopNegozioBtn) {
+            shopNegozioBtn.onclick = openNegozio;
         }
 
         // Aggiorna CS
@@ -878,6 +885,280 @@ window.DashboardFeatures = {
             } else {
                 separatorEnd.classList.add('hidden');
             }
+        }
+    },
+
+    /**
+     * Listener per l'ultimo giocatore rilasciato nel mercato
+     */
+    latestPlayerUnsubscribe: null,
+
+    /**
+     * Inizializza il listener real-time per gli ultimi 3 giocatori rilasciati
+     */
+    initLatestReleasedPlayer() {
+        const container = document.getElementById('latest-released-player');
+        if (!container) {
+            console.warn('[LatestPlayer] Container non trovato');
+            return;
+        }
+
+        const db = window.db;
+        const firestoreTools = window.firestoreTools;
+        if (!db || !firestoreTools) {
+            console.warn('[LatestPlayer] Firestore non disponibile');
+            return;
+        }
+
+        const { collection, query, orderBy, limit, onSnapshot } = firestoreTools;
+        const appId = firestoreTools.appId;
+        const MARKET_PLAYERS_PATH = `artifacts/${appId}/public/data/marketPlayers`;
+
+        // Cancella listener precedente se esiste
+        if (this.latestPlayerUnsubscribe) {
+            this.latestPlayerUnsubscribe();
+        }
+
+        try {
+            const marketRef = collection(db, MARKET_PLAYERS_PATH);
+            // Query semplice: ultimi 5 giocatori per data, filtriamo lato client
+            const q = query(marketRef, orderBy('creationDate', 'desc'), limit(5));
+
+            this.latestPlayerUnsubscribe = onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    this.renderNoPlayers(container);
+                    console.log('[LatestPlayer] Nessun giocatore nel mercato');
+                    return;
+                }
+
+                // Filtra lato client per isDrafted == false e prendi i primi 3
+                const players = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(p => !p.isDrafted)
+                    .slice(0, 3);
+
+                if (players.length === 0) {
+                    this.renderNoPlayers(container);
+                    return;
+                }
+
+                this.renderLatestPlayers(container, players);
+                console.log('[LatestPlayer] Mostrati', players.length, 'giocatori');
+            }, (error) => {
+                console.error('[LatestPlayer] Errore listener:', error);
+                this.renderNoPlayers(container);
+            });
+
+            console.log('[LatestPlayer] Listener inizializzato su', MARKET_PLAYERS_PATH);
+        } catch (error) {
+            console.error('[LatestPlayer] Errore init:', error);
+        }
+    },
+
+    /**
+     * Renderizza messaggio quando non ci sono giocatori disponibili
+     */
+    renderNoPlayers(container) {
+        container.innerHTML = `
+            <div class="bg-gray-800/60 rounded-lg p-3 border border-gray-600/30">
+                <div class="flex items-center justify-center gap-2 text-gray-400">
+                    <span class="text-lg">📭</span>
+                    <span class="text-sm">Nessun giocatore acquistabile</span>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Calcola il tempo trascorso da una data
+     */
+    getTimeAgo(dateString) {
+        if (!dateString) return '';
+        const created = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - created;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Ora';
+        if (diffMins < 60) return `${diffMins}m`;
+        if (diffHours < 24) return `${diffHours}h`;
+        return `${diffDays}g`;
+    },
+
+    /**
+     * Renderizza le card degli ultimi 3 giocatori rilasciati
+     */
+    renderLatestPlayers(container, players) {
+        const roleColors = {
+            'P': 'bg-yellow-600',
+            'D': 'bg-green-600',
+            'C': 'bg-blue-600',
+            'A': 'bg-red-600'
+        };
+        const typeColors = {
+            'Potenza': 'text-red-400',
+            'Tecnica': 'text-blue-400',
+            'Velocita': 'text-yellow-400'
+        };
+
+        let html = `
+            <div class="bg-gray-800/60 rounded-lg p-3 border border-cyan-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-cyan-400 font-semibold">🆕 Ultimi Svincolati</span>
+                    <span class="text-xs text-gray-500">${players.length} disponibili</span>
+                </div>
+                <div class="space-y-2">
+        `;
+
+        players.forEach((player, index) => {
+            const roleColor = roleColors[player.role] || 'bg-gray-600';
+            const typeColor = typeColors[player.type] || 'text-gray-400';
+            const cost = player.cost || 0;
+            const timeAgo = this.getTimeAgo(player.creationDate);
+
+            html += `
+                <div class="flex items-center gap-2 ${index > 0 ? 'pt-2 border-t border-gray-700/50' : ''}">
+                    <span class="${roleColor} text-white text-xs font-bold px-1.5 py-0.5 rounded">${player.role}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white font-medium text-sm truncate">${player.name || 'Sconosciuto'}</p>
+                        <p class="text-xs ${typeColor}">Lv.${player.level || 1} • ${timeAgo}</p>
+                    </div>
+                    <span class="text-green-400 font-bold text-xs">${cost.toLocaleString('it-IT')}</span>
+                    <button class="btn-quick-buy bg-gradient-to-r from-green-600 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded hover:from-green-500 hover:to-emerald-400 transition active:scale-95"
+                            data-player-id="${player.id}">
+                        +
+                    </button>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Aggiungi listener per tutti i bottoni acquista
+        container.querySelectorAll('.btn-quick-buy').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const playerId = btn.dataset.playerId;
+                const player = players.find(p => p.id === playerId);
+                if (player) this.quickBuyPlayer(player);
+            });
+        });
+    },
+
+    /**
+     * Acquisto rapido del giocatore
+     */
+    async quickBuyPlayer(player) {
+        const teamId = window.InterfacciaCore?.currentTeamId;
+        const teamData = window.InterfacciaCore?.currentTeamData;
+
+        if (!teamId || !teamData) {
+            alert('Devi selezionare una squadra prima di acquistare.');
+            return;
+        }
+
+        const budget = teamData.budget || 0;
+        const cost = player.cost || 0;
+        const currentPlayers = teamData.players || [];
+
+        // Verifica budget
+        if (budget < cost) {
+            alert(`Budget insufficiente! Hai ${budget.toLocaleString('it-IT')} CS, servono ${cost.toLocaleString('it-IT')} CS.`);
+            return;
+        }
+
+        // Verifica rosa piena (max 15 giocatori senza icona)
+        const nonIconPlayers = currentPlayers.filter(p => !p.isIcona);
+        if (nonIconPlayers.length >= 15) {
+            alert('Rosa piena! Hai gia 15 giocatori. Licenzia qualcuno prima di acquistare.');
+            return;
+        }
+
+        // Conferma acquisto
+        if (!confirm(`Vuoi acquistare ${player.name} per ${cost.toLocaleString('it-IT')} CS?`)) {
+            return;
+        }
+
+        try {
+            const db = window.db;
+            const { doc, getDoc, updateDoc, runTransaction } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_PATH = `artifacts/${appId}/public/data/teams`;
+            const MARKET_PATH = `artifacts/${appId}/public/data/marketPlayers`;
+
+            const teamDocRef = doc(db, TEAMS_PATH, teamId);
+            const marketDocRef = doc(db, MARKET_PATH, player.id);
+
+            // Transazione atomica
+            await runTransaction(db, async (transaction) => {
+                const [teamDoc, playerDoc] = await Promise.all([
+                    transaction.get(teamDocRef),
+                    transaction.get(marketDocRef)
+                ]);
+
+                if (!teamDoc.exists()) throw new Error('Squadra non trovata');
+                if (!playerDoc.exists()) throw new Error('Giocatore non piu disponibile');
+
+                const freshTeamData = teamDoc.data();
+                const freshPlayerData = playerDoc.data();
+
+                if (freshPlayerData.isDrafted) {
+                    throw new Error('Giocatore gia acquistato da un altro utente!');
+                }
+
+                const freshBudget = freshTeamData.budget || 0;
+                if (freshBudget < cost) {
+                    throw new Error('Budget insufficiente');
+                }
+
+                const freshPlayers = freshTeamData.players || [];
+                const nonIconCount = freshPlayers.filter(p => !p.isIcona).length;
+                if (nonIconCount >= 15) {
+                    throw new Error('Rosa piena');
+                }
+
+                // Prepara giocatore per la rosa
+                const playerForRosa = {
+                    id: player.id,
+                    name: player.name,
+                    role: player.role,
+                    type: player.type || 'Potenza',
+                    age: player.age || 25,
+                    level: player.level || 1,
+                    abilities: player.abilities || [],
+                    cost: cost,
+                    acquiredAt: new Date().toISOString(),
+                    contractDuration: 3
+                };
+
+                // Aggiorna squadra
+                transaction.update(teamDocRef, {
+                    players: [...freshPlayers, playerForRosa],
+                    budget: freshBudget - cost
+                });
+
+                // Marca giocatore come acquistato
+                transaction.update(marketDocRef, {
+                    isDrafted: true,
+                    teamId: teamId,
+                    soldAt: new Date().toISOString()
+                });
+            });
+
+            alert(`${player.name} acquistato con successo!`);
+
+            // Aggiorna dashboard
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+
+        } catch (error) {
+            console.error('[QuickBuy] Errore:', error);
+            alert('Errore acquisto: ' + error.message);
         }
     }
 };

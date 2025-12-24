@@ -3820,7 +3820,8 @@ body.user-logged-in #admin-content {
     }
 
     #btn-challenge,
-    #btn-trades {
+    #btn-trades,
+    #btn-private-leagues {
         font-size: 0.75rem !important;
         padding: 6px 8px !important;
         min-height: 32px !important;
@@ -7975,26 +7976,13 @@ select,
 /* The wheel container */
 .fortune-wheel-container {
     background: linear-gradient(145deg, #0a0f1a 0%, #111827 50%, #0d1b2a 100%);
-    border: 3px solid transparent;
-    background-clip: padding-box;
+    border: 3px solid #d4af37;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    padding-top: 1.5rem;
 }
 
-.fortune-wheel-container::before {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    background: linear-gradient(135deg, #d4af37 0%, #fbbf24 25%, #f59e0b 50%, #d4af37 75%, #fbbf24 100%);
-    border-radius: inherit;
-    z-index: -1;
-    animation: wheel-border-glow 3s ease-in-out infinite;
-}
-
-@keyframes wheel-border-glow {
-    0%, 100% { opacity: 1; filter: brightness(1); }
-    50% { opacity: 0.8; filter: brightness(1.3); }
-}
+/* Rimuovo il pseudo-element per il bordo animato - causava problemi con overflow */
 
 /* Animated corner decorations */
 .wheel-corner-decoration {
@@ -8006,17 +7994,21 @@ select,
 }
 
 .wheel-corner-decoration.top-left {
-    top: 12px;
-    left: 12px;
+    top: 8px;
+    left: 8px;
     border-right: none;
     border-bottom: none;
+    width: 30px;
+    height: 30px;
 }
 
 .wheel-corner-decoration.top-right {
-    top: 12px;
-    right: 12px;
+    top: 8px;
+    right: 8px;
     border-left: none;
     border-bottom: none;
+    width: 30px;
+    height: 30px;
 }
 
 .wheel-corner-decoration.bottom-left {
@@ -8037,70 +8029,39 @@ select,
 .wheel-title {
     font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d4af37 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: none;
-    filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
+    letter-spacing: 0.1em;
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(251, 191, 36, 0.3), 0 0 20px rgba(251, 191, 36, 0.2);
+    position: relative;
+    z-index: 5;
 }
 
 /* Wheel wrapper with glow effects */
 .wheel-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Light rays behind wheel */
+/* Light rays behind wheel - DISABILITATI per semplicità */
 .wheel-light-rays {
-    position: absolute;
-    inset: -30px;
-    background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(251, 191, 36, 0.1) 15deg,
-        transparent 30deg,
-        rgba(251, 191, 36, 0.1) 45deg,
-        transparent 60deg,
-        rgba(251, 191, 36, 0.1) 75deg,
-        transparent 90deg,
-        rgba(251, 191, 36, 0.1) 105deg,
-        transparent 120deg,
-        rgba(251, 191, 36, 0.1) 135deg,
-        transparent 150deg,
-        rgba(251, 191, 36, 0.1) 165deg,
-        transparent 180deg,
-        rgba(251, 191, 36, 0.1) 195deg,
-        transparent 210deg,
-        rgba(251, 191, 36, 0.1) 225deg,
-        transparent 240deg,
-        rgba(251, 191, 36, 0.1) 255deg,
-        transparent 270deg,
-        rgba(251, 191, 36, 0.1) 285deg,
-        transparent 300deg,
-        rgba(251, 191, 36, 0.1) 315deg,
-        transparent 330deg,
-        rgba(251, 191, 36, 0.1) 345deg,
-        transparent 360deg
-    );
-    border-radius: 50%;
-    animation: wheel-rays-rotate 20s linear infinite;
-    opacity: 0.7;
+    display: none;
 }
 
-@keyframes wheel-rays-rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Outer glow ring */
+/* Outer glow ring - contenitore circolare dorato */
 .wheel-outer-ring {
     position: absolute;
-    inset: -8px;
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     border-radius: 50%;
     background: linear-gradient(135deg, #d4af37 0%, #fbbf24 50%, #d4af37 100%);
-    padding: 4px;
+    padding: 6px;
     animation: wheel-ring-pulse 2s ease-in-out infinite;
+    z-index: 1;
 }
 
 @keyframes wheel-ring-pulse {
@@ -8112,48 +8073,48 @@ select,
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: #0a0f1a;
+    background: transparent;
 }
 
-/* Premium indicator arrow */
+/* Premium indicator arrow - freccia in alto */
 .wheel-indicator {
     position: absolute;
-    top: -12px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 20;
+    z-index: 30;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
 }
 
 .wheel-indicator-arrow {
     width: 0;
     height: 0;
-    border-left: 18px solid transparent;
-    border-right: 18px solid transparent;
-    border-top: 32px solid #d4af37;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 28px solid #d4af37;
     position: relative;
 }
 
 .wheel-indicator-arrow::before {
     content: '';
     position: absolute;
-    top: -32px;
-    left: -14px;
+    top: -28px;
+    left: -12px;
     width: 0;
     height: 0;
-    border-left: 14px solid transparent;
-    border-right: 14px solid transparent;
-    border-top: 26px solid #fbbf24;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 22px solid #fbbf24;
 }
 
 .wheel-indicator-arrow::after {
     content: '';
     position: absolute;
-    top: -28px;
+    top: -24px;
     left: 50%;
     transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     background: #fff;
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
@@ -8163,6 +8124,8 @@ select,
 #wheel-svg {
     filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
     will-change: transform;
+    z-index: 10;
+    position: relative;
 }
 
 #wheel-svg.spinning {
@@ -8375,4 +8338,389 @@ select,
 @keyframes wheel-box-shine {
     0% { transform: translateX(-100%) rotate(45deg); }
     100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* ============================================================================
+   BOSS BATTLE STYLES
+   ============================================================================ */
+
+/* HP Bar Container */
+.boss-hp-container {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 12px;
+    border: 2px solid #0f3460;
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* HP Bar Fill */
+.boss-hp-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+/* HP Bar Colors based on health percentage */
+.boss-hp-bar.hp-high {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.boss-hp-bar.hp-medium {
+    background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.boss-hp-bar.hp-low {
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 50%, #dc2626 100%);
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* HP Bar Shine Effect */
+.boss-hp-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 100%);
+    border-radius: 10px 10px 0 0;
+}
+
+/* HP Bar Pulse Animation when low */
+.boss-hp-bar.hp-low {
+    animation: hp-pulse 1s ease-in-out infinite;
+}
+
+@keyframes hp-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(248, 113, 113, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(248, 113, 113, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* HP Text Overlay */
+.boss-hp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.5);
+    color: white;
+    z-index: 10;
+}
+
+/* Boss Card */
+.boss-card {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.boss-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+/* Boss Status Badges */
+.boss-status-active {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    animation: status-glow 2s ease-in-out infinite;
+}
+
+.boss-status-defeated {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    color: #94a3b8;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.boss-status-expired {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@keyframes status-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+    }
+}
+
+/* Difficulty Badges */
+.difficulty-easy {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+}
+
+.difficulty-normal {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.difficulty-hard {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.difficulty-nightmare {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    color: white;
+    animation: nightmare-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes nightmare-pulse {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), 0 0 25px rgba(239, 68, 68, 0.4);
+    }
+}
+
+/* Damage Numbers Animation */
+.damage-number {
+    position: absolute;
+    font-weight: bold;
+    font-size: 24px;
+    color: #ef4444;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.8);
+    animation: damage-float 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 100;
+}
+
+@keyframes damage-float {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(0.8);
+    }
+}
+
+/* Boss Battle Button */
+.boss-challenge-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    border: 2px solid #f87171;
+    color: white;
+    font-weight: bold;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.boss-challenge-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+}
+
+.boss-challenge-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.boss-challenge-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.boss-challenge-btn:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+/* Leaderboard Styles */
+.boss-leaderboard-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+}
+
+.boss-leaderboard-row:hover {
+    background: rgba(51, 65, 85, 0.7);
+}
+
+.boss-leaderboard-row.top-1 {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.boss-leaderboard-row.top-2 {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.2) 0%, rgba(107, 114, 128, 0.1) 100%);
+    border: 1px solid rgba(156, 163, 175, 0.4);
+}
+
+.boss-leaderboard-row.top-3 {
+    background: linear-gradient(135deg, rgba(180, 83, 9, 0.2) 0%, rgba(146, 64, 14, 0.1) 100%);
+    border: 1px solid rgba(180, 83, 9, 0.4);
+}
+
+/* Config Toggle Style */
+.boss-config-toggle {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: #374151;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.boss-config-toggle.active {
+    background: #22c55e;
+}
+
+.boss-config-toggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.boss-config-toggle.active::before {
+    transform: translateX(24px);
+}
+
+/* ============================================================================
+   TAB SHOP - BOTTONI UNIFORMI
+   ============================================================================ */
+
+/* Altezza esatta per tutti i bottoni nel tab shop */
+#tab-shop #btn-draft-container,
+#tab-shop #btn-mercato-utente,
+#tab-shop #btn-trades,
+#tab-shop #btn-shop-negozio {
+    height: 44px !important;
+    max-height: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Rimuovi sfondo hover da btn-draft-utente */
+#tab-shop #btn-draft-utente {
+    background: transparent !important;
+}
+
+#tab-shop #btn-draft-utente:hover {
+    background: transparent !important;
+}
+
+@media (min-width: 640px) {
+    #tab-shop #btn-draft-container,
+    #tab-shop #btn-mercato-utente,
+    #tab-shop #btn-trades,
+    #tab-shop #btn-shop-negozio {
+        height: 48px !important;
+        max-height: 48px !important;
+        min-height: 48px !important;
+    }
+}
+
+/* ============================================================================
+   MERCATO PAGE - MOBILE FIRST STYLES
+   ============================================================================ */
+
+/* Hide scrollbar for filter chips */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Mercato Header Gradient */
+#mercato-content .mercato-header {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Player card hover effect */
+.mercato-player-card {
+    transition: all 0.2s ease;
+}
+
+.mercato-player-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Filter button active state animation */
+.filter-market-role-btn,
+.filter-market-type-btn {
+    transition: all 0.15s ease;
+}
+
+.filter-market-role-btn:active,
+.filter-market-type-btn:active {
+    transform: scale(0.95);
+}
+
+/* Floating back button shadow */
+#mercato-back-button {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Live status pulse animation */
+#mercato-live-status span:first-child {
+    animation: mercato-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mercato-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }

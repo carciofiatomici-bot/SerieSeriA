@@ -105,7 +105,7 @@
                     </div>
 
                     <!-- Wheel SVG -->
-                    <svg id="wheel-svg" viewBox="0 0 300 300" class="w-full h-full transition-transform absolute inset-0" style="transform: rotate(${currentRotation}deg)">
+                    <svg id="wheel-svg" viewBox="0 0 300 300" class="w-full h-full transition-transform" style="transform: rotate(${currentRotation}deg)">
                         <!-- Gradient definitions -->
                         <defs>
                             ${PRIZES.map((prize, i) => `
