@@ -1277,157 +1277,314 @@
 
             <!-- ========== TAB 5: REGOLE ========== -->
             <div id="tab-rules" class="tab-content hidden">
-                <!-- Header Regole -->
-                <div class="rounded-xl mb-3" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px !important; border: 1px solid var(--team-primary-color, #eab308);">
-                    <h2 class="text-2xl font-bold text-white text-center">Regole del Gioco</h2>
-                    <p class="text-gray-300 text-center text-sm mt-1">Serie SeriA - Fantacalcio</p>
+                <!-- Header Sticky Mobile-First -->
+                <div class="rules-header sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-2 px-1">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">📖</span>
+                            <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">REGOLAMENTO</h2>
+                        </div>
+                        <!-- Quick Actions -->
+                        <button onclick="if(window.AbilitiesEncyclopediaUI?.open) window.AbilitiesEncyclopediaUI.open();"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition">
+                            <span>📔</span> Abilita
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Contenuto Regole (Accordion) -->
-                <div class="space-y-2">
+                <!-- Quick Stats Cards (Scroll orizzontale) -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1 mb-3">
+                    <div class="flex-shrink-0 w-24 bg-gradient-to-br from-yellow-900/40 to-gray-900/60 border border-yellow-500/40 rounded-xl p-2.5 text-center">
+                        <div class="text-2xl mb-1">⚽</div>
+                        <div class="text-[10px] text-gray-400">Rosa</div>
+                        <div class="text-sm font-black text-yellow-400">15+1</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 bg-gradient-to-br from-green-900/40 to-gray-900/60 border border-green-500/40 rounded-xl p-2.5 text-center">
+                        <div class="text-2xl mb-1">🎮</div>
+                        <div class="text-[10px] text-gray-400">Occasioni</div>
+                        <div class="text-sm font-black text-green-400">50</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 bg-gradient-to-br from-sky-900/40 to-gray-900/60 border border-sky-500/40 rounded-xl p-2.5 text-center">
+                        <div class="text-2xl mb-1">📊</div>
+                        <div class="text-[10px] text-gray-400">Livello Max</div>
+                        <div class="text-sm font-black text-sky-400">30</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 bg-gradient-to-br from-orange-900/40 to-gray-900/60 border border-orange-500/40 rounded-xl p-2.5 text-center">
+                        <div class="text-2xl mb-1">💪</div>
+                        <div class="text-[10px] text-gray-400">Forma</div>
+                        <div class="text-sm font-black text-orange-400">±3</div>
+                    </div>
+                </div>
+
+                <!-- Contenuto Regole (Accordion Compatto) -->
+                <div class="space-y-2 px-1">
 
                     <!-- Sezione Squadra -->
-                    <div class="bg-gray-900/60 rounded-lg border border-yellow-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">⚽</span>
-                                <h3 class="text-base font-bold text-yellow-400">La Squadra</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-500/20 text-base">⚽</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-yellow-400">La Squadra</h3>
+                                    <p class="text-[10px] text-gray-500">Rosa, formazioni, ruoli</p>
+                                </div>
                             </div>
-                            <span class="text-yellow-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-yellow-700/50 bg-gray-800/30">
-                            <ul class="text-gray-300 space-y-1.5 text-sm">
-                                <li>• Ogni squadra ha <strong class="text-white">15 giocatori + 1 Icona</strong></li>
-                                <li>• <strong class="text-white">Formazione:</strong> 5 titolari + 3 panchina</li>
-                                <li>• <strong class="text-white">Moduli:</strong> 1-2-2, 1-1-2-1, 1-3-1, 1-1-3</li>
-                                <li>• Ruoli: <span class="text-blue-400">P</span>, <span class="text-green-400">D</span>, <span class="text-yellow-400">C</span>, <span class="text-red-400">A</span></li>
-                                <li>• Tipologie: <span class="text-red-400">Potenza</span> > <span class="text-blue-400">Tecnica</span> > <span class="text-yellow-400">Velocita</span></li>
-                            </ul>
+                        <div class="hidden px-3 pb-3 pt-1 border-t border-gray-700/30 bg-gray-900/30">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="w-5 h-5 flex items-center justify-center rounded bg-gray-700 text-[10px]">👥</span>
+                                    <span class="text-gray-300"><strong class="text-white">15 giocatori</strong> + 1 Icona capitano</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="w-5 h-5 flex items-center justify-center rounded bg-gray-700 text-[10px]">📋</span>
+                                    <span class="text-gray-300"><strong class="text-white">5 titolari</strong> + 3 in panchina</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="w-5 h-5 flex items-center justify-center rounded bg-gray-700 text-[10px]">⚙️</span>
+                                    <span class="text-gray-300">Moduli: 1-2-2, 1-1-2-1, 1-3-1, 1-1-3</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/40">P Portiere</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/40">D Difensore</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/40">C Centrocampista</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40">A Attaccante</span>
+                                </div>
+                                <div class="mt-2 p-2 bg-gray-800/50 rounded-lg">
+                                    <p class="text-[10px] text-gray-400 mb-1">Tipologie (carta vince):</p>
+                                    <div class="flex items-center gap-1 text-xs">
+                                        <span class="text-red-400 font-bold">Potenza</span>
+                                        <span class="text-gray-500">></span>
+                                        <span class="text-blue-400 font-bold">Tecnica</span>
+                                        <span class="text-gray-500">></span>
+                                        <span class="text-yellow-400 font-bold">Velocita</span>
+                                        <span class="text-gray-500">></span>
+                                        <span class="text-red-400 font-bold">Potenza</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Sezione Livelli -->
-                    <div class="bg-gray-900/60 rounded-lg border border-sky-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">📊</span>
-                                <h3 class="text-base font-bold text-sky-400">Livelli e Modificatori</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-sky-500/20 text-base">📊</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-sky-400">Livelli</h3>
+                                    <p class="text-[10px] text-gray-500">Modificatori e bonus</p>
+                                </div>
                             </div>
-                            <span class="text-sky-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-sky-700/50 bg-gray-800/30">
-                            <p class="text-gray-300 text-sm mb-2">Il livello determina il modificatore bonus ai tiri.</p>
-                            <div class="grid grid-cols-3 gap-2 text-xs">
-                                <div class="space-y-0.5">
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 1-2</span><span class="text-white">0.5</span></div>
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 5-6</span><span class="text-white">1.5</span></div>
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 9-10</span><span class="text-white">2.5</span></div>
+                        <div class="hidden px-3 pb-3 pt-2 border-t border-gray-700/30 bg-gray-900/30">
+                            <p class="text-[10px] text-gray-400 mb-2">Bonus ai tiri in base al livello:</p>
+                            <div class="grid grid-cols-5 gap-1">
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">1-4</div>
+                                    <div class="text-xs font-bold text-gray-400">+0.5</div>
                                 </div>
-                                <div class="space-y-0.5">
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 13-14</span><span class="text-white">3.5</span></div>
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 17-18</span><span class="text-white">4.5</span></div>
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 21-22</span><span class="text-white">5.5</span></div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">5-8</div>
+                                    <div class="text-xs font-bold text-gray-400">+1.5</div>
                                 </div>
-                                <div class="space-y-0.5">
-                                    <div class="flex justify-between"><span class="text-gray-400">Liv 25-26</span><span class="text-white">6.5</span></div>
-                                    <div class="flex justify-between"><span class="text-yellow-400">Liv 29</span><span class="text-yellow-400">8.0</span></div>
-                                    <div class="flex justify-between"><span class="text-yellow-400">Liv 30</span><span class="text-yellow-400">9.0</span></div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">9-12</div>
+                                    <div class="text-xs font-bold text-white">+2.5</div>
+                                </div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">13-16</div>
+                                    <div class="text-xs font-bold text-white">+3.5</div>
+                                </div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">17-20</div>
+                                    <div class="text-xs font-bold text-cyan-400">+4.5</div>
+                                </div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">21-24</div>
+                                    <div class="text-xs font-bold text-cyan-400">+5.5</div>
+                                </div>
+                                <div class="text-center p-1.5 bg-gray-800/60 rounded-lg">
+                                    <div class="text-[9px] text-gray-500">25-28</div>
+                                    <div class="text-xs font-bold text-amber-400">+6.5</div>
+                                </div>
+                                <div class="text-center p-1.5 bg-gradient-to-br from-yellow-900/50 to-amber-800/30 rounded-lg border border-yellow-500/40">
+                                    <div class="text-[9px] text-yellow-400">29</div>
+                                    <div class="text-xs font-bold text-yellow-400">+8.0</div>
+                                </div>
+                                <div class="col-span-2 text-center p-1.5 bg-gradient-to-br from-yellow-900/50 to-amber-800/30 rounded-lg border border-yellow-500/40">
+                                    <div class="text-[9px] text-yellow-400">30 MAX</div>
+                                    <div class="text-xs font-bold text-yellow-400">+9.0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sezione Partita -->
-                    <div class="bg-gray-900/60 rounded-lg border border-green-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">🎮</span>
-                                <h3 class="text-base font-bold text-green-400">La Partita</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-500/20 text-base">🎮</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-green-400">La Partita</h3>
+                                    <p class="text-[10px] text-gray-500">Fasi e meccaniche</p>
+                                </div>
                             </div>
-                            <span class="text-green-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-green-700/50 bg-gray-800/30">
-                            <ul class="text-gray-300 space-y-1.5 text-sm">
-                                <li>• <strong class="text-white">50 occasioni</strong> per partita (25 per squadra)</li>
-                                <li>• 3 fasi: <span class="text-cyan-400">Costruzione</span> → <span class="text-orange-400">Attacco</span> → <span class="text-red-400">Tiro</span></li>
-                                <li>• Le abilita si attivano automaticamente</li>
-                                <li>• La forma modifica il livello effettivo</li>
-                            </ul>
+                        <div class="hidden px-3 pb-3 pt-2 border-t border-gray-700/30 bg-gray-900/30">
+                            <div class="flex items-center justify-between mb-3 p-2 bg-gray-800/50 rounded-lg">
+                                <span class="text-xs text-gray-400">Occasioni totali:</span>
+                                <span class="text-sm font-black text-white">50 <span class="text-gray-500 text-[10px]">(25 per squadra)</span></span>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mb-2">Le 3 fasi di ogni azione:</p>
+                            <div class="flex items-center gap-1">
+                                <div class="flex-1 text-center p-2 bg-cyan-900/30 rounded-lg border border-cyan-500/30">
+                                    <div class="text-base mb-0.5">🏗️</div>
+                                    <div class="text-[10px] font-bold text-cyan-400">Costruzione</div>
+                                </div>
+                                <span class="text-gray-600">→</span>
+                                <div class="flex-1 text-center p-2 bg-orange-900/30 rounded-lg border border-orange-500/30">
+                                    <div class="text-base mb-0.5">⚡</div>
+                                    <div class="text-[10px] font-bold text-orange-400">Attacco</div>
+                                </div>
+                                <span class="text-gray-600">→</span>
+                                <div class="flex-1 text-center p-2 bg-red-900/30 rounded-lg border border-red-500/30">
+                                    <div class="text-base mb-0.5">🎯</div>
+                                    <div class="text-[10px] font-bold text-red-400">Tiro</div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-2 text-center">Le abilita si attivano automaticamente in base alla fase</p>
                         </div>
                     </div>
 
                     <!-- Sezione Forma -->
-                    <div class="bg-gray-900/60 rounded-lg border border-orange-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">💪</span>
-                                <h3 class="text-base font-bold text-orange-400">Sistema Forma</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-500/20 text-base">💪</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-orange-400">Forma</h3>
+                                    <p class="text-[10px] text-gray-500">Bonus/malus dinamici</p>
+                                </div>
                             </div>
-                            <span class="text-orange-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-orange-700/50 bg-gray-800/30">
-                            <p class="text-gray-300 text-sm mb-2">Range: <strong>-3</strong> a <strong>+3</strong></p>
-                            <div class="space-y-1 text-xs">
-                                <div class="flex justify-between text-green-400"><span>Gol/Assist/Clean sheet</span><span>+1</span></div>
-                                <div class="flex justify-between text-red-400"><span>Panchina consecutiva</span><span>-1 (chance)</span></div>
-                                <div class="flex justify-between text-purple-400"><span>Random dopo partita</span><span>±1 (20%)</span></div>
+                        <div class="hidden px-3 pb-3 pt-2 border-t border-gray-700/30 bg-gray-900/30">
+                            <div class="flex items-center justify-center gap-1 mb-3">
+                                <span class="px-2 py-1 bg-red-900/40 rounded text-red-400 font-bold text-xs">-3</span>
+                                <span class="px-2 py-1 bg-red-900/30 rounded text-red-400 text-xs">-2</span>
+                                <span class="px-2 py-1 bg-red-900/20 rounded text-red-400 text-xs">-1</span>
+                                <span class="px-2 py-1 bg-gray-700 rounded text-gray-400 text-xs">0</span>
+                                <span class="px-2 py-1 bg-green-900/20 rounded text-green-400 text-xs">+1</span>
+                                <span class="px-2 py-1 bg-green-900/30 rounded text-green-400 text-xs">+2</span>
+                                <span class="px-2 py-1 bg-green-900/40 rounded text-green-400 font-bold text-xs">+3</span>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-xs p-1.5 bg-green-900/20 rounded">
+                                    <span class="text-gray-300">Gol / Assist / Clean sheet</span>
+                                    <span class="text-green-400 font-bold">+1</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs p-1.5 bg-red-900/20 rounded">
+                                    <span class="text-gray-300">Panchina consecutiva</span>
+                                    <span class="text-red-400 font-bold">-1 <span class="text-gray-500">(prob.)</span></span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs p-1.5 bg-purple-900/20 rounded">
+                                    <span class="text-gray-300">Evento random post-partita</span>
+                                    <span class="text-purple-400 font-bold">±1 <span class="text-gray-500">(20%)</span></span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sezione Valute -->
-                    <div class="bg-gray-900/60 rounded-lg border border-amber-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">💰</span>
-                                <h3 class="text-base font-bold text-amber-400">Valute</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-500/20 text-base">💰</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-amber-400">Valute</h3>
+                                    <p class="text-[10px] text-gray-500">CS e CSS</p>
+                                </div>
                             </div>
-                            <span class="text-amber-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-amber-700/50 bg-gray-800/30">
-                            <ul class="text-gray-300 space-y-1.5 text-sm">
-                                <li>• <strong class="text-white">CS</strong>: Crediti per acquisti giocatori</li>
-                                <li>• <strong class="text-amber-400">CSS</strong>: Premium per potenziamenti</li>
-                                <li>• CS: vinci partite e stagioni</li>
-                                <li>• CSS: vinci trofei (Campionato, Coppa)</li>
-                            </ul>
+                        <div class="hidden px-3 pb-3 pt-2 border-t border-gray-700/30 bg-gray-900/30">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="p-2.5 bg-gray-800/60 rounded-lg border border-gray-600/50">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-lg">🪙</span>
+                                        <span class="font-bold text-white text-sm">CS</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400">Crediti Standard</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">Acquisti giocatori, mercato</p>
+                                </div>
+                                <div class="p-2.5 bg-gradient-to-br from-amber-900/40 to-yellow-800/20 rounded-lg border border-amber-500/40">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-lg">💎</span>
+                                        <span class="font-bold text-amber-400 text-sm">CSS</span>
+                                    </div>
+                                    <p class="text-[10px] text-amber-300/80">Crediti Premium</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">Potenziamenti, upgrade</p>
+                                </div>
+                            </div>
+                            <div class="mt-2 p-2 bg-gray-800/40 rounded-lg">
+                                <p class="text-[10px] text-gray-400">Come ottenerle:</p>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <span class="px-1.5 py-0.5 bg-gray-700 rounded text-[9px] text-gray-300">Vittorie</span>
+                                    <span class="px-1.5 py-0.5 bg-gray-700 rounded text-[9px] text-gray-300">Trofei</span>
+                                    <span class="px-1.5 py-0.5 bg-gray-700 rounded text-[9px] text-gray-300">Stagioni</span>
+                                    <span class="px-1.5 py-0.5 bg-gray-700 rounded text-[9px] text-gray-300">Eventi</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Sezione Competizioni -->
-                    <div class="bg-gray-900/60 rounded-lg border border-purple-500/50 overflow-hidden">
-                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼';"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
+                    <div class="rules-accordion bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.rules-arrow').classList.toggle('rotate-180');"
+                                class="w-full px-3 py-2.5 flex justify-between items-center text-left hover:bg-gray-700/30 transition">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">🏆</span>
-                                <h3 class="text-base font-bold text-purple-400">Competizioni</h3>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-500/20 text-base">🏆</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-purple-400">Competizioni</h3>
+                                    <p class="text-[10px] text-gray-500">Campionato, Coppa, Supercoppa</p>
+                                </div>
                             </div>
-                            <span class="text-purple-400">▶</span>
+                            <span class="rules-arrow text-gray-500 text-xs transition-transform">▼</span>
                         </button>
-                        <div class="hidden p-3 border-t border-purple-700/50 bg-gray-800/30">
-                            <ul class="text-gray-300 space-y-1.5 text-sm">
-                                <li>• <span class="text-green-400">SerieSeriA</span>: Girone unico, tutti vs tutti</li>
-                                <li>• <span class="text-purple-400">CoppaSeriA</span>: Eliminazione diretta</li>
-                                <li>• <span class="text-yellow-400">Supercoppa</span>: Campione vs Coppa</li>
-                            </ul>
+                        <div class="hidden px-3 pb-3 pt-2 border-t border-gray-700/30 bg-gray-900/30">
+                            <div class="space-y-2">
+                                <div class="flex items-start gap-2 p-2 bg-emerald-900/20 rounded-lg border border-emerald-500/30">
+                                    <span class="text-lg">🏟️</span>
+                                    <div>
+                                        <p class="text-xs font-bold text-emerald-400">SerieSeriA</p>
+                                        <p class="text-[10px] text-gray-400">Girone unico, tutti contro tutti. Vince chi ha piu punti.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2 p-2 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                                    <span class="text-lg">🏆</span>
+                                    <div>
+                                        <p class="text-xs font-bold text-purple-400">CoppaSeriA</p>
+                                        <p class="text-[10px] text-gray-400">Eliminazione diretta con andata/ritorno o partita secca.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2 p-2 bg-yellow-900/20 rounded-lg border border-yellow-500/30">
+                                    <span class="text-lg">⭐</span>
+                                    <div>
+                                        <p class="text-xs font-bold text-yellow-400">Supercoppa</p>
+                                        <p class="text-[10px] text-gray-400">Sfida secca tra Campione e Vincitore della Coppa.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Sezione Enciclopedia -->
-                    <div class="bg-gray-900/60 rounded-lg border border-pink-500/50 overflow-hidden">
-                        <button onclick="if(window.AbilitiesEncyclopediaUI?.open) window.AbilitiesEncyclopediaUI.open();"
-                                class="w-full p-3 flex justify-between items-center text-left hover:bg-gray-800/50 transition">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl">📔</span>
-                                <h3 class="text-base font-bold text-pink-400">Enciclopedia Abilita</h3>
-                            </div>
-                            <span class="text-pink-400">→</span>
-                        </button>
                     </div>
 
                 </div>
