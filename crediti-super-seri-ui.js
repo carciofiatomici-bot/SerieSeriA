@@ -68,9 +68,9 @@ window.CreditiSuperSeriUI = {
                         <!-- Title & Close -->
                         <div class="flex items-center gap-3 min-w-0">
                             <button id="btn-close-css-panel"
-                                    class="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg border border-gray-700 transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    class="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-red-600/80 hover:bg-red-500 text-white rounded-lg border border-red-500/50 transition shadow-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                             </button>
                             <div class="min-w-0">
