@@ -2934,24 +2934,37 @@ button,
 }
 
 /* ===================== FIX OVERFLOW GLOBALE ===================== */
-/* Previene scroll orizzontale su tutta l'app */
-html, body {
+/* Previene scroll orizzontale e verticale extra su tutta l'app */
+html {
     overflow-x: hidden;
+    overflow-y: auto;
     width: 100%;
     max-width: 100vw;
+    height: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 100vw;
+    min-height: 100%;
+    min-height: 100dvh;
+    /* Previene scroll extra oltre il contenuto */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
 }
 
 /* ===================== FIX OVERSCROLL SU TUTTE LE SCHERMATE ===================== */
 /* Previene la visualizzazione di schermate nascoste durante l'overscroll */
-html, body, #main-content {
+#main-content {
     overscroll-behavior: none;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
-}
-
-#main-content {
     position: relative;
     isolation: isolate;
+    /* Padding bottom globale per tab bar (70px) + safe area */
+    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Assicura che le schermate nascoste non siano visibili durante overscroll */
@@ -2994,10 +3007,28 @@ body.user-logged-in #login-box.hidden-on-load {
 #feature-flags-content:not(.hidden):not(.hidden-on-load),
 #coach-selection-box:not(.hidden):not(.hidden-on-load),
 #captain-selection-box:not(.hidden):not(.hidden-on-load) {
-    min-height: 100vh;
-    min-height: 100dvh;
+    min-height: calc(100vh - 75px);
+    min-height: calc(100dvh - 75px);
     position: relative;
     z-index: 1;
+}
+
+/* ===================== TAB BAR SPACING GLOBALE ===================== */
+/* Padding bottom per tutte le schermate principali sopra la tab bar */
+#login-box,
+#app-content,
+#admin-content,
+#match-history-content,
+#squadra-content,
+#mercato-content,
+#draft-content,
+#stadium-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Admin content ha bisogno di piu spazio per i bottoni in fondo */
+#admin-content {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* ===================== HOMEPAGE BOX STYLES ===================== */
