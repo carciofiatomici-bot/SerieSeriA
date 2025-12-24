@@ -196,7 +196,10 @@ window.ChampionshipMain = {
                 }
             const resultString = `${homeGoals}-${awayGoals}`;
             match.result = resultString;
-            
+            // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
+            match.matchLog = highlights || [];
+            match.scorers = scorers || [];
+
             // 4. Aggiorna statistiche classifica
             const initializeTeamStats = (teamId, teamName) => ({
                 teamId, teamName, points: 0, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0
@@ -484,8 +487,11 @@ window.ChampionshipMain = {
                 const matchIndexInRound = round.matches.findIndex(m => m.homeId === match.homeId && m.awayId === match.awayId && m.result === null);
                 if (matchIndexInRound !== -1) {
                     round.matches[matchIndexInRound].result = resultString;
+                    // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
+                    round.matches[matchIndexInRound].matchLog = highlights || [];
+                    round.matches[matchIndexInRound].scorers = scorers || [];
                 }
-                
+
                 const initializeTeamStats = (teamId, teamName) => ({
                     teamId, teamName, points: 0, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0
                 });

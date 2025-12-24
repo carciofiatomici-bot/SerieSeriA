@@ -405,6 +405,9 @@ window.UserCompetitions = {
                                 class="mt-3 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-sm py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
                                 data-home-name="${lastPlayedMatch.homeName}"
                                 data-away-name="${lastPlayedMatch.awayName}"
+                                data-home-id="${lastPlayedMatch.homeId}"
+                                data-away-id="${lastPlayedMatch.awayId}"
+                                data-round="${lastPlayedMatch.round}"
                                 data-result="${lastPlayedMatch.result}">
                             📺 Vedi Telecronaca
                         </button>
@@ -442,6 +445,7 @@ window.UserCompetitions = {
 
     /**
      * Mostra la telecronaca dell'ultima partita
+     * Prima cerca nello schedule (sempre disponibile), poi fallback su matchHistory
      */
     async showLastMatchTelecronaca(matchType, matchData) {
         const currentTeamId = window.InterfacciaCore.currentTeamId;
@@ -451,29 +455,64 @@ window.UserCompetitions = {
         }
 
         try {
-            // Carica storico partite
-            const history = await window.MatchHistory.loadHistory(currentTeamId);
+            let matchLog = null;
+            let homeName = matchData?.homeName || '';
+            let awayName = matchData?.awayName || '';
+            let homeScore = 0;
+            let awayScore = 0;
 
-            // Trova l'ultima partita del tipo specificato
-            const lastMatch = history.find(m => m.type === matchType);
+            // Prima prova a cercare nello schedule (indipendente dal flag matchHistory)
+            if (matchType === 'campionato' && matchData?.round && matchData?.homeId && matchData?.awayId) {
+                const { doc, getDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                const scheduleDocRef = doc(window.db, `artifacts/${appId}/public/data/schedule`, 'full_schedule');
+                const scheduleDoc = await getDoc(scheduleDocRef);
 
-            if (!lastMatch) {
-                if (window.Toast) window.Toast.info('Nessuna partita trovata nello storico');
-                return;
+                if (scheduleDoc.exists()) {
+                    const schedule = scheduleDoc.data().matches || [];
+                    const roundIndex = parseInt(matchData.round) - 1;
+
+                    if (schedule[roundIndex]) {
+                        const matchInSchedule = schedule[roundIndex].matches.find(
+                            m => m.homeId === matchData.homeId && m.awayId === matchData.awayId
+                        );
+
+                        if (matchInSchedule?.matchLog && matchInSchedule.matchLog.length > 0) {
+                            matchLog = matchInSchedule.matchLog;
+                            const [hg, ag] = (matchInSchedule.result || '0-0').split('-').map(Number);
+                            homeScore = hg;
+                            awayScore = ag;
+                        }
+                    }
+                }
             }
 
-            if (!lastMatch.details?.matchLog || lastMatch.details.matchLog.length === 0) {
+            // Fallback: cerca nello storico partite (se matchHistory e' attivo)
+            if (!matchLog && window.MatchHistory) {
+                const history = await window.MatchHistory.loadHistory(currentTeamId);
+                const lastMatch = history.find(m => m.type === matchType);
+
+                if (lastMatch?.details?.matchLog && lastMatch.details.matchLog.length > 0) {
+                    matchLog = lastMatch.details.matchLog;
+                    homeName = lastMatch.homeTeam?.name || homeName;
+                    awayName = lastMatch.awayTeam?.name || awayName;
+                    homeScore = lastMatch.homeScore || 0;
+                    awayScore = lastMatch.awayScore || 0;
+                }
+            }
+
+            if (!matchLog || matchLog.length === 0) {
                 if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
                 return;
             }
 
             // Mostra telecronaca
             window.MatchHistory.showTelecronacaModal(
-                lastMatch.details.matchLog,
-                lastMatch.homeTeam.name,
-                lastMatch.awayTeam.name,
-                lastMatch.homeScore,
-                lastMatch.awayScore
+                matchLog,
+                homeName,
+                awayName,
+                homeScore,
+                awayScore
             );
 
         } catch (error) {

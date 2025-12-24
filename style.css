@@ -2234,6 +2234,30 @@ html {
 
 /* ===================== OTTIMIZZAZIONI iPHONE MODERNI ===================== */
 
+/* iOS GENERICO - Tutti gli iPhone moderni con home indicator (Face ID) */
+/* Usa min/max-width per catturare tutti gli iPhone moderni */
+@media only screen
+    and (min-width: 375px)
+    and (max-width: 440px)
+    and (-webkit-min-device-pixel-ratio: 3)
+    and (orientation: portrait) {
+
+    body {
+        /* Padding top per status bar/notch/Dynamic Island */
+        padding-top: max(env(safe-area-inset-top, 47px), 47px);
+    }
+
+    #dashboard-tabs {
+        /* Home indicator space - 34px su iPhone con Face ID */
+        padding-bottom: max(env(safe-area-inset-bottom, 34px), 34px) !important;
+        height: calc(56px + max(env(safe-area-inset-bottom, 34px), 34px)) !important;
+    }
+
+    #draft-alert-banner {
+        top: max(calc(env(safe-area-inset-top, 47px) + 10px), 57px) !important;
+    }
+}
+
 /* iPhone 14 Pro/Pro Max, 15 Pro/Pro Max, 16 Pro/Pro Max con Dynamic Island */
 @media only screen
     and (device-width: 393px)
@@ -4505,17 +4529,38 @@ body.user-logged-in #admin-content {
 
 /* Migliore contrasto tab attivo */
 #dashboard-tabs {
-    background: rgba(17, 24, 39, 0.95);
+    background: rgba(17, 24, 39, 0.98);
     border-top-width: 2px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    /* Posizione fissa in basso */
+    /* Posizione fissa in basso - IMPORTANTE per iPhone */
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
     bottom: 0 !important;
-    /* Altezza con safe area per home indicator iPhone */
+    /* Altezza con safe area per home indicator iPhone - fallback 34px per iPhone senza notch */
     height: calc(56px + env(safe-area-inset-bottom, 0px));
-    /* Padding bottom per home indicator - fallback 0 se env non supportato */
+    /* Padding bottom per home indicator */
     padding-bottom: env(safe-area-inset-bottom, 0px);
     /* Background esteso sotto safe area */
     background-clip: padding-box;
+    /* Z-index alto per stare sopra tutto */
+    z-index: 50;
+}
+
+/* iOS Safari - force safe area inset */
+@supports (padding: max(0px)) {
+    #dashboard-tabs {
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+        height: calc(56px + max(env(safe-area-inset-bottom, 0px), 0px));
+    }
+}
+
+/* PWA mode (iOS e Android) - forza safe area */
+@media (display-mode: standalone) {
+    #dashboard-tabs {
+        padding-bottom: max(env(safe-area-inset-bottom, 20px), 20px);
+        height: calc(56px + max(env(safe-area-inset-bottom, 20px), 20px));
+    }
 }
 
 .dashboard-tab {
