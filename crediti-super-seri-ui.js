@@ -61,51 +61,60 @@ window.CreditiSuperSeriUI = {
         overlay.className = 'fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto';
 
         overlay.innerHTML = `
-            <div class="container mx-auto px-4 py-8 max-w-4xl">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-3xl font-bold text-amber-400">Potenziamento Giocatori</h2>
-                        <p class="text-gray-400 mt-1">Spendi i tuoi Crediti Super Seri per potenziare la squadra</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="bg-amber-900 border border-amber-500 rounded-lg px-4 py-2">
-                            <span class="text-amber-300 text-sm">Saldo:</span>
-                            <span id="css-saldo-display" class="text-white font-bold text-xl ml-2">${saldo} CSS</span>
+            <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
+                <!-- Header Mobile-First -->
+                <div class="sticky top-0 z-10 bg-black/80 backdrop-blur-md -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 mb-4 border-b border-amber-500/30">
+                    <div class="flex items-center justify-between gap-2">
+                        <!-- Title & Close -->
+                        <div class="flex items-center gap-3 min-w-0">
+                            <button id="btn-close-css-panel"
+                                    class="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg border border-gray-700 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <div class="min-w-0">
+                                <h2 class="text-lg sm:text-xl font-bold text-amber-400 truncate">Potenziamento</h2>
+                            </div>
                         </div>
-                        <button id="btn-close-css-panel"
-                                class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                            Chiudi X
-                        </button>
+                        <!-- Saldo Badge -->
+                        <div class="flex-shrink-0 bg-gradient-to-r from-amber-900/80 to-yellow-900/80 border border-amber-500/50 rounded-lg px-3 py-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-amber-300 text-xs hidden sm:inline">Saldo:</span>
+                                <span class="text-lg">💰</span>
+                                <span id="css-saldo-display" class="text-white font-bold text-sm sm:text-base">${saldo}</span>
+                                <span class="text-amber-400 text-xs font-semibold">CSS</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Tabs -->
-                <div class="flex flex-wrap gap-2 mb-6">
-                    <button id="tab-potenziamento" class="tab-btn active bg-amber-600 text-white font-bold py-2 px-4 rounded-lg">
-                        Potenzia Livello
+                <!-- Tabs - Horizontal Scroll -->
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
+                    <button id="tab-potenziamento" class="tab-btn active flex-shrink-0 bg-amber-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg text-sm whitespace-nowrap">
+                        ⬆️ Livello
                     </button>
-                    <button id="tab-abilita" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
-                        Assegna Abilita
+                    <button id="tab-abilita" class="tab-btn flex-shrink-0 bg-gray-700 text-gray-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-600 text-sm whitespace-nowrap">
+                        ✨ Abilita
                     </button>
-                    <button id="tab-rimuovi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
-                        Rimuovi Abilita
+                    <button id="tab-rimuovi" class="tab-btn flex-shrink-0 bg-gray-700 text-gray-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-600 text-sm whitespace-nowrap">
+                        🗑️ Rimuovi
                     </button>
-                    <button id="tab-upgrade-max" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
-                        Upgrade Massimale
+                    <button id="tab-upgrade-max" class="tab-btn flex-shrink-0 bg-gray-700 text-gray-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-600 text-sm whitespace-nowrap">
+                        📈 Max
                     </button>
-                    <button id="tab-servizi" class="tab-btn bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-lg hover:bg-gray-600">
-                        Servizi
+                    <button id="tab-servizi" class="tab-btn flex-shrink-0 bg-gray-700 text-gray-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-600 text-sm whitespace-nowrap">
+                        🛒 Servizi
                     </button>
                 </div>
 
                 <!-- Content -->
-                <div id="css-panel-content" class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div id="css-panel-content" class="bg-gray-800/50 rounded-xl p-3 sm:p-5 border border-gray-700/50">
                     <p class="text-gray-400 text-center">Caricamento...</p>
                 </div>
 
                 <!-- Messaggio -->
-                <p id="css-action-message" class="text-center mt-4 font-semibold"></p>
+                <p id="css-action-message" class="text-center mt-3 font-semibold text-sm"></p>
             </div>
         `;
 
@@ -181,17 +190,14 @@ window.CreditiSuperSeriUI = {
             return ordineRuoli.indexOf(a.role) - ordineRuoli.indexOf(b.role);
         });
 
-        let html = `
-            <div class="space-y-4">
-                <div class="grid grid-cols-12 gap-2 text-gray-400 text-sm font-semibold border-b border-gray-700 pb-2 mb-2">
-                    <div class="col-span-1">Ruolo</div>
-                    <div class="col-span-4">Nome</div>
-                    <div class="col-span-2 text-center">Livello</div>
-                    <div class="col-span-2 text-center">Max</div>
-                    <div class="col-span-2 text-center">Costo</div>
-                    <div class="col-span-1 text-center">Azione</div>
-                </div>
-        `;
+        const roleColors = {
+            'P': { text: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
+            'D': { text: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
+            'C': { text: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/50' },
+            'A': { text: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' }
+        };
+
+        let html = '<div class="space-y-2">';
 
         rosaSorted.forEach(player => {
             const isIcona = player.abilities && player.abilities.includes('Icona');
@@ -200,44 +206,46 @@ window.CreditiSuperSeriUI = {
             const costo = CSS.getCostoPotenziamento(livelloAttuale, isIcona);
             const canUpgrade = costo !== null && saldo >= costo;
             const isMaxLevel = livelloAttuale >= maxLevel;
-
-            const roleColors = {
-                'P': 'text-yellow-400',
-                'D': 'text-blue-400',
-                'C': 'text-green-400',
-                'A': 'text-red-400'
-            };
+            const colors = roleColors[player.role] || { text: 'text-white', bg: 'bg-gray-500/20', border: 'border-gray-500/50' };
+            const progressPct = Math.min((livelloAttuale / maxLevel) * 100, 100);
 
             html += `
-                <div class="grid grid-cols-12 gap-2 items-center py-3 border-b border-gray-700 hover:bg-gray-700 rounded transition">
-                    <div class="col-span-1">
-                        <span class="font-bold ${roleColors[player.role] || 'text-white'}">${player.role}</span>
-                        ${isIcona ? '<span class="ml-1" title="Icona">👑</span>' : ''}
+                <div class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-800/80 rounded-lg border ${colors.border} hover:bg-gray-700/50 transition active:scale-[0.99]">
+                    <!-- Role Badge -->
+                    <div class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 ${colors.bg} rounded-lg flex items-center justify-center border ${colors.border}">
+                        <span class="font-bold ${colors.text} text-sm sm:text-base">${player.role}</span>
                     </div>
-                    <div class="col-span-4 text-white font-semibold">${player.name}</div>
-                    <div class="col-span-2 text-center">
-                        <span class="text-amber-400 font-bold text-lg">Lv ${livelloAttuale}</span>
+
+                    <!-- Player Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-white font-semibold text-sm sm:text-base truncate">${player.name}</span>
+                            ${isIcona ? '<span class="flex-shrink-0" title="Icona">👑</span>' : ''}
+                        </div>
+                        <!-- Level Progress Bar -->
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full ${isMaxLevel ? 'bg-green-500' : 'bg-amber-500'} rounded-full transition-all" style="width: ${progressPct}%"></div>
+                            </div>
+                            <span class="text-xs ${isMaxLevel ? 'text-green-400' : 'text-amber-400'} font-bold whitespace-nowrap">
+                                Lv ${livelloAttuale}/${maxLevel}
+                            </span>
+                        </div>
                     </div>
-                    <div class="col-span-2 text-center">
-                        <span class="text-gray-400">/ ${maxLevel}</span>
-                    </div>
-                    <div class="col-span-2 text-center">
+
+                    <!-- Action -->
+                    <div class="flex-shrink-0 flex items-center gap-2">
                         ${isMaxLevel
-                            ? '<span class="text-green-400 font-bold">MAX</span>'
-                            : `<span class="${canUpgrade ? 'text-amber-400' : 'text-red-400'} font-bold">${costo} CSS</span>`
-                        }
-                    </div>
-                    <div class="col-span-1 text-center">
-                        ${isMaxLevel
-                            ? '<span class="text-gray-500">-</span>'
-                            : `<button class="btn-potenzia ${canUpgrade
-                                ? 'bg-amber-500 hover:bg-amber-400 text-gray-900'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                              } font-bold py-1 px-3 rounded text-sm transition"
-                              data-player-id="${player.id}"
-                              ${canUpgrade ? '' : 'disabled'}>
-                                ⬆️
-                            </button>`
+                            ? '<span class="text-green-400 font-bold text-xs px-2 py-1 bg-green-500/20 rounded">MAX</span>'
+                            : `<span class="${canUpgrade ? 'text-amber-400' : 'text-red-400'} font-bold text-xs sm:text-sm">${costo}💰</span>
+                               <button class="btn-potenzia ${canUpgrade
+                                   ? 'bg-amber-500 hover:bg-amber-400 text-gray-900'
+                                   : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                 } font-bold w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-sm transition flex items-center justify-center"
+                                 data-player-id="${player.id}"
+                                 ${canUpgrade ? '' : 'disabled'}>
+                                   ⬆️
+                               </button>`
                         }
                     </div>
                 </div>
@@ -305,49 +313,53 @@ window.CreditiSuperSeriUI = {
             }
 
             const roleColors = {
-                'P': 'border-yellow-500',
-                'D': 'border-blue-500',
-                'C': 'border-green-500',
-                'A': 'border-red-500'
+                'P': { text: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
+                'D': { text: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
+                'C': { text: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/50' },
+                'A': { text: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' }
             };
+            const colors = roleColors[player.role] || { text: 'text-white', bg: 'bg-gray-500/20', border: 'border-gray-500/50' };
 
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 border-l-4 ${roleColors[player.role]}">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white text-lg">${player.name}</span>
-                            ${isIcona ? '<span title="Icona">👑</span>' : ''}
-                            <span class="text-gray-400 text-sm">(${player.role})</span>
+                <div class="bg-gray-800/80 rounded-lg p-3 sm:p-4 border ${colors.border}">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex-shrink-0 w-8 h-8 ${colors.bg} rounded-lg flex items-center justify-center border ${colors.border}">
+                                <span class="font-bold ${colors.text} text-sm">${player.role}</span>
+                            </div>
+                            <span class="font-bold text-white text-sm sm:text-base truncate">${player.name}</span>
+                            ${isIcona ? '<span class="flex-shrink-0" title="Icona">👑</span>' : ''}
                         </div>
-                        <span class="text-sm">
+                        <span class="text-xs flex-shrink-0">
                             ${abilityStatusText}
                         </span>
                     </div>
 
                     <!-- Abilita attuali -->
-                    <div class="flex flex-wrap gap-2 mb-3">
+                    <div class="flex flex-wrap gap-1.5 mb-2">
                         ${currentAbilities.length > 0
                             ? currentAbilities.map(a => `
-                                <span class="bg-gray-800 text-amber-400 px-3 py-1 rounded-full text-sm font-semibold border border-amber-600">
+                                <span class="bg-gray-900/80 text-amber-400 px-2 py-0.5 rounded-full text-xs font-semibold border border-amber-600/50">
                                     ${a}
                                 </span>
                             `).join('')
-                            : '<span class="text-gray-500 text-sm italic">Nessuna abilita</span>'
+                            : '<span class="text-gray-500 text-xs italic">Nessuna abilita</span>'
                         }
                     </div>
 
                     ${canAddAbility ? `
                         <!-- Selezione nuova abilita -->
-                        <div class="mt-3 pt-3 border-t border-gray-600">
-                            <div class="flex gap-2 items-center">
+                        <div class="pt-2 border-t border-gray-700/50">
+                            <div class="flex flex-col sm:flex-row gap-2">
                                 <select id="select-ability-${player.id}"
-                                        class="flex-1 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm">
+                                        class="flex-1 bg-gray-900 border border-gray-600 text-white rounded-lg px-2.5 py-2 text-xs sm:text-sm">
                                     <option value="">-- Seleziona abilita --</option>
                                     ${this.getAbilitaOptions(player.role, currentAbilities, saldo, isIcona ? iconaId : null)}
                                 </select>
-                                <button class="btn-assegna-abilita bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-lg text-sm transition"
+                                <button class="btn-assegna-abilita bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-lg text-xs sm:text-sm transition whitespace-nowrap"
                                         data-player-id="${player.id}">
-                                    Assegna
+                                    ✨ Assegna
                                 </button>
                             </div>
                         </div>
@@ -427,78 +439,72 @@ window.CreditiSuperSeriUI = {
             return ordineRuoli.indexOf(a.role) - ordineRuoli.indexOf(b.role);
         });
 
+        const roleColors = {
+            'P': { text: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
+            'D': { text: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
+            'C': { text: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/50' },
+            'A': { text: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' }
+        };
+
         let html = `
-            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-purple-500">
-                <p class="text-gray-300 text-sm">
-                    <span class="text-purple-400 font-bold">Upgrade Massimale:</span>
-                    Aumenta il livello massimo raggiungibile di un giocatore.
-                    <br><span class="text-amber-400">Costo: 2 × Livello attuale CSS</span>
-                    <br><span class="text-yellow-400">Limite massimo: Lv.${MAX_LEVEL} (GOAT)</span>
+            <div class="mb-3 p-2.5 sm:p-3 bg-purple-900/30 rounded-lg border border-purple-500/50">
+                <p class="text-gray-300 text-xs sm:text-sm">
+                    <span class="text-purple-400 font-bold">📈 Upgrade Massimale</span> - Aumenta il livello max raggiungibile
+                    <br><span class="text-amber-400 text-xs">Costo: 2 × Livello attuale</span>
+                    <span class="mx-1.5 text-gray-600">|</span>
+                    <span class="text-yellow-400 text-xs">Limite: Lv.${MAX_LEVEL} 🐐</span>
                 </p>
             </div>
-            <div class="space-y-4">
-                <div class="grid grid-cols-12 gap-2 text-gray-400 text-sm font-semibold border-b border-gray-700 pb-2 mb-2">
-                    <div class="col-span-1">Ruolo</div>
-                    <div class="col-span-4">Nome</div>
-                    <div class="col-span-2 text-center">Livello</div>
-                    <div class="col-span-2 text-center">Max Attuale</div>
-                    <div class="col-span-2 text-center">Costo</div>
-                    <div class="col-span-1 text-center">Azione</div>
-                </div>
+            <div class="space-y-2">
         `;
 
         rosaSorted.forEach(player => {
             const currentLevel = player.currentLevel || player.level || 1;
             const secretMax = player.secretMaxLevel;
-            const costo = currentLevel * 2; // Costo = 2 × livello giocatore
-            const isAtGoatLevel = secretMax >= MAX_LEVEL; // Gia al massimo assoluto
+            const costo = currentLevel * 2;
+            const isAtGoatLevel = secretMax >= MAX_LEVEL;
             const canAfford = saldo >= costo && !isAtGoatLevel;
-
-            const roleColors = {
-                'P': 'text-yellow-400',
-                'D': 'text-blue-400',
-                'C': 'text-green-400',
-                'A': 'text-red-400'
-            };
+            const colors = roleColors[player.role] || { text: 'text-white', bg: 'bg-gray-500/20', border: 'border-gray-500/50' };
 
             html += `
-                <div class="grid grid-cols-12 gap-2 items-center py-3 border-b border-gray-700 hover:bg-gray-700 rounded transition">
-                    <div class="col-span-1">
-                        <span class="font-bold ${roleColors[player.role] || 'text-white'}">${player.role}</span>
+                <div class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-800/80 rounded-lg border ${colors.border} hover:bg-gray-700/50 transition">
+                    <!-- Role Badge -->
+                    <div class="flex-shrink-0 w-9 h-9 ${colors.bg} rounded-lg flex items-center justify-center border ${colors.border}">
+                        <span class="font-bold ${colors.text} text-sm">${player.role}</span>
                     </div>
-                    <div class="col-span-4 text-white font-semibold">
-                        ${player.name}
-                        ${isAtGoatLevel ? '<span class="ml-1 text-yellow-400 text-xs">🐐 GOAT</span>' : ''}
+
+                    <!-- Player Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-white font-semibold text-sm truncate">${player.name}</span>
+                            ${isAtGoatLevel ? '<span class="flex-shrink-0 text-xs">🐐</span>' : ''}
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-amber-400 text-xs font-bold">Lv ${currentLevel}</span>
+                            <span class="text-gray-500 text-xs">Max:</span>
+                            ${isAtGoatLevel
+                                ? `<span class="text-yellow-400 font-bold text-xs">${secretMax} GOAT</span>`
+                                : `<span class="text-purple-400 font-bold text-xs">${secretMax}</span>
+                                   <span class="text-gray-500 text-xs">→</span>
+                                   <span class="text-green-400 font-bold text-xs">${secretMax + 1}</span>`
+                            }
+                        </div>
                     </div>
-                    <div class="col-span-2 text-center">
-                        <span class="text-amber-400 font-bold text-lg">Lv ${currentLevel}</span>
-                    </div>
-                    <div class="col-span-2 text-center">
+
+                    <!-- Action -->
+                    <div class="flex-shrink-0 flex items-center gap-2">
                         ${isAtGoatLevel
-                            ? `<span class="text-yellow-400 font-bold">${secretMax} MAX</span>`
-                            : `<span class="text-purple-400 font-bold">${secretMax}</span>
-                               <span class="text-gray-500">→</span>
-                               <span class="text-green-400 font-bold">${secretMax + 1}</span>`
-                        }
-                    </div>
-                    <div class="col-span-2 text-center">
-                        ${isAtGoatLevel
-                            ? '<span class="text-yellow-400 font-bold">GOAT</span>'
-                            : `<span class="${canAfford ? 'text-amber-400' : 'text-red-400'} font-bold">${costo} CSS</span>`
-                        }
-                    </div>
-                    <div class="col-span-1 text-center">
-                        ${isAtGoatLevel
-                            ? '<span class="text-gray-500">-</span>'
-                            : `<button class="btn-upgrade-max ${canAfford
-                                ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                              } font-bold py-1 px-3 rounded text-sm transition"
-                              data-player-id="${player.id}"
-                              data-costo="${costo}"
-                              ${canAfford ? '' : 'disabled'}>
-                                📈
-                            </button>`
+                            ? '<span class="text-yellow-400 font-bold text-xs px-2 py-1 bg-yellow-500/20 rounded">🐐 GOAT</span>'
+                            : `<span class="${canAfford ? 'text-amber-400' : 'text-red-400'} font-bold text-xs">${costo}💰</span>
+                               <button class="btn-upgrade-max ${canAfford
+                                   ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                                   : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                 } font-bold w-8 h-8 rounded-lg text-sm transition flex items-center justify-center"
+                                 data-player-id="${player.id}"
+                                 data-costo="${costo}"
+                                 ${canAfford ? '' : 'disabled'}>
+                                   📈
+                               </button>`
                         }
                     </div>
                 </div>
@@ -649,26 +655,24 @@ window.CreditiSuperSeriUI = {
         const sbloccoLegaDisponibile = isInCooldown && canAffordSblocco;
 
         container.innerHTML = `
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold text-amber-400 mb-4">Servizi Disponibili</h3>
-
+            <div class="space-y-3">
                 <!-- Servizio: Sostituisci Icona -->
-                <div class="bg-gray-700 rounded-lg p-4 border border-orange-500">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">👑</span>
-                            <div>
-                                <p class="text-white font-bold text-lg">Sostituisci Icona</p>
-                                <p class="text-gray-400 text-sm">Cambia l'Icona della tua squadra con una nuova</p>
-                            </div>
+                <div class="bg-gray-800/80 rounded-lg p-3 border border-orange-500/50 hover:bg-gray-700/50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">👑</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="${canAffordIcona ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${costoSostituzioneIcona} CSS</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm sm:text-base">Sostituisci Icona</p>
+                            <p class="text-gray-400 text-xs truncate">Cambia l'Icona della squadra</p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <span class="${canAffordIcona ? 'text-amber-400' : 'text-red-400'} font-bold text-sm">${costoSostituzioneIcona}💰</span>
                             <button id="btn-sostituisci-icona"
                                     class="${canAffordIcona
                                         ? 'bg-orange-600 hover:bg-orange-500 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    } font-bold py-1.5 px-3 rounded-lg text-xs sm:text-sm transition"
                                     ${canAffordIcona ? '' : 'disabled'}>
                                 Acquista
                             </button>
@@ -677,22 +681,22 @@ window.CreditiSuperSeriUI = {
                 </div>
 
                 <!-- Servizio: Acquista CS -->
-                <div class="bg-gray-700 rounded-lg p-4 border border-green-500">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">💰</span>
-                            <div>
-                                <p class="text-white font-bold text-lg">Acquista ${csOttenuti} CS</p>
-                                <p class="text-gray-400 text-sm">Converti CSS in Crediti Seri per il mercato</p>
-                            </div>
+                <div class="bg-gray-800/80 rounded-lg p-3 border border-green-500/50 hover:bg-gray-700/50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">💰</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="${canAffordCS ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${costoAcquistoCS} CSS</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm sm:text-base">+${csOttenuti} CS</p>
+                            <p class="text-gray-400 text-xs truncate">Converti CSS in Crediti Seri</p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <span class="${canAffordCS ? 'text-amber-400' : 'text-red-400'} font-bold text-sm">${costoAcquistoCS}💰</span>
                             <button id="btn-acquista-cs"
                                     class="${canAffordCS
                                         ? 'bg-green-600 hover:bg-green-500 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    } font-bold py-1.5 px-3 rounded-lg text-xs sm:text-sm transition"
                                     ${canAffordCS ? '' : 'disabled'}>
                                 Acquista
                             </button>
@@ -701,51 +705,48 @@ window.CreditiSuperSeriUI = {
                 </div>
 
                 <!-- Servizio: Sblocco Lega Privata -->
-                <div class="bg-gray-700 rounded-lg p-4 border ${isInCooldown ? 'border-purple-500' : 'border-gray-600'}">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">🏠</span>
-                            <div>
-                                <p class="text-white font-bold text-lg">Sblocco Lega Privata</p>
-                                <p class="text-gray-400 text-sm">
-                                    ${isInCooldown
-                                        ? `Sblocca ora (in cooldown fino al ${cooldownDateStr})`
-                                        : 'Puoi gia partecipare alle leghe private'
-                                    }
-                                </p>
-                            </div>
+                <div class="bg-gray-800/80 rounded-lg p-3 border ${isInCooldown ? 'border-purple-500/50' : 'border-gray-600/50'} hover:bg-gray-700/50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-10 h-10 ${isInCooldown ? 'bg-purple-500/20' : 'bg-gray-500/20'} rounded-lg flex items-center justify-center">
+                            <span class="text-xl">🏠</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="${sbloccoLegaDisponibile ? 'text-amber-400' : 'text-gray-500'} font-bold text-lg">${costoSbloccoLega} CSS</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm sm:text-base">Sblocco Lega</p>
+                            <p class="text-gray-400 text-xs truncate">
+                                ${isInCooldown ? `Cooldown: ${cooldownDateStr}` : 'Gia disponibile'}
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <span class="${sbloccoLegaDisponibile ? 'text-amber-400' : 'text-gray-500'} font-bold text-sm">${costoSbloccoLega}💰</span>
                             <button id="btn-sblocco-lega"
                                     class="${sbloccoLegaDisponibile
                                         ? 'bg-purple-600 hover:bg-purple-500 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    } font-bold py-1.5 px-3 rounded-lg text-xs sm:text-sm transition"
                                     ${sbloccoLegaDisponibile ? '' : 'disabled'}>
-                                ${isInCooldown ? 'Sblocca' : 'Non necessario'}
+                                ${isInCooldown ? 'Sblocca' : '✓'}
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Servizio: Converti CS in CSS -->
-                <div class="bg-gray-700 rounded-lg p-4 border border-amber-500">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">💎</span>
-                            <div>
-                                <p class="text-white font-bold text-lg">Converti CS in CSS</p>
-                                <p class="text-gray-400 text-sm">Converti ${csPerCSS} CS in 1 CSS (Hai ${budgetCS} CS)</p>
-                            </div>
+                <div class="bg-gray-800/80 rounded-lg p-3 border border-amber-500/50 hover:bg-gray-700/50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">💎</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="${canAffordCStoCSS ? 'text-amber-400' : 'text-red-400'} font-bold text-lg">${csPerCSS} CS</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm sm:text-base">CS → CSS</p>
+                            <p class="text-gray-400 text-xs truncate">${csPerCSS} CS = 1 CSS (Hai ${budgetCS})</p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <span class="${canAffordCStoCSS ? 'text-amber-400' : 'text-red-400'} font-bold text-sm">${csPerCSS}</span>
                             <button id="btn-converti-cs-css"
                                     class="${canAffordCStoCSS
                                         ? 'bg-amber-600 hover:bg-amber-500 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    } font-bold py-2 px-4 rounded-lg transition"
+                                    } font-bold py-1.5 px-3 rounded-lg text-xs sm:text-sm transition"
                                     ${canAffordCStoCSS ? '' : 'disabled'}>
                                 Converti
                             </button>
@@ -832,29 +833,35 @@ window.CreditiSuperSeriUI = {
             return ordineRuoli.indexOf(a.role) - ordineRuoli.indexOf(b.role);
         });
 
+        const roleColors = {
+            'P': { text: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
+            'D': { text: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
+            'C': { text: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/50' },
+            'A': { text: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' }
+        };
+
         let html = `
-            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
-                <p class="text-gray-300 text-sm">
-                    <span class="text-green-400 font-bold">Positive:</span> Costo = 5 + (2 × rarita) CSS
-                    <span class="mx-2">|</span>
-                    <span class="text-red-400 font-bold">Negative:</span> Costo progressivo = 5 × (n° rimossi + 1) CSS
+            <div class="mb-3 p-2.5 bg-gray-800/80 rounded-lg border border-gray-600/50">
+                <p class="text-gray-300 text-xs">
+                    <span class="text-green-400 font-bold">➕ Positive:</span> 5 + (2 × rarita)
+                    <span class="mx-1.5 text-gray-600">|</span>
+                    <span class="text-red-400 font-bold">➖ Negative:</span> 5 × (n° rimossi + 1)
                 </p>
             </div>
-            <div class="space-y-4">
+            <div class="space-y-3">
         `;
 
         rosaSorted.forEach(player => {
             const abilities = player.abilities || [];
             const negativeRemovedCount = player.negativeRemovedCount || 0;
 
-            // Separa positive e negative, escludi Icona e Uniche
             const positive = [];
             const negative = [];
 
             abilities.forEach(abilityName => {
                 if (abilityName === 'Icona') return;
                 const data = Encyclopedia.getAbility(abilityName);
-                if (!data || data.rarity === 'Unica') return; // Escludi Uniche
+                if (!data || data.rarity === 'Unica') return;
 
                 if (data.isNegative) {
                     negative.push({ name: abilityName, data });
@@ -865,28 +872,26 @@ window.CreditiSuperSeriUI = {
 
             if (positive.length === 0 && negative.length === 0) return;
 
-            const roleColors = {
-                'P': 'border-yellow-500',
-                'D': 'border-blue-500',
-                'C': 'border-green-500',
-                'A': 'border-red-500'
-            };
+            const colors = roleColors[player.role] || { text: 'text-white', bg: 'bg-gray-500/20', border: 'border-gray-500/50' };
 
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 border-l-4 ${roleColors[player.role]}">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white text-lg">${player.name}</span>
-                            <span class="text-gray-400 text-sm">(${player.role})</span>
+                <div class="bg-gray-800/80 rounded-lg p-3 border ${colors.border}">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex-shrink-0 w-8 h-8 ${colors.bg} rounded-lg flex items-center justify-center border ${colors.border}">
+                                <span class="font-bold ${colors.text} text-sm">${player.role}</span>
+                            </div>
+                            <span class="font-bold text-white text-sm truncate">${player.name}</span>
                         </div>
                         ${negativeRemovedCount > 0 ? `
-                            <span class="text-xs text-red-400 bg-red-900 px-2 py-1 rounded">
-                                Negative rimosse: ${negativeRemovedCount}
+                            <span class="flex-shrink-0 text-xs text-red-400 bg-red-900/50 px-1.5 py-0.5 rounded">
+                                -${negativeRemovedCount}
                             </span>
                         ` : ''}
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
             `;
 
             // Abilità Positive
@@ -902,14 +907,14 @@ window.CreditiSuperSeriUI = {
                 };
 
                 html += `
-                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
-                        <div class="flex items-center gap-2">
-                            <span class="text-green-400">➕</span>
-                            <span class="text-white">${data.icon || ''} ${name}</span>
-                            <span class="${rarityColors[data.rarity] || 'text-gray-400'} text-xs">(${data.rarity})</span>
+                    <div class="flex items-center justify-between gap-2 bg-gray-900/50 p-2 rounded-lg">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-green-400 text-xs flex-shrink-0">➕</span>
+                            <span class="text-white text-xs sm:text-sm truncate">${data.icon || ''} ${name}</span>
+                            <span class="${rarityColors[data.rarity] || 'text-gray-400'} text-xs flex-shrink-0">(${data.rarity?.charAt(0)})</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-sm font-bold">${costo} CSS</span>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-xs font-bold">${costo}💰</span>
                             <button class="btn-rimuovi-abilita ${canAfford
                                 ? 'bg-red-600 hover:bg-red-500 text-white'
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}
@@ -918,7 +923,7 @@ window.CreditiSuperSeriUI = {
                                 data-ability-name="${name}"
                                 data-is-negative="false"
                                 ${canAfford ? '' : 'disabled'}>
-                                Rimuovi
+                                🗑️
                             </button>
                         </div>
                     </div>
@@ -931,14 +936,13 @@ window.CreditiSuperSeriUI = {
                 const canAfford = saldo >= costo;
 
                 html += `
-                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded border border-red-900">
-                        <div class="flex items-center gap-2">
-                            <span class="text-red-400">➖</span>
-                            <span class="text-white">${data.icon || ''} ${name}</span>
-                            <span class="text-red-400 text-xs">(Negativa)</span>
+                    <div class="flex items-center justify-between gap-2 bg-red-900/20 p-2 rounded-lg border border-red-500/30">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-red-400 text-xs flex-shrink-0">➖</span>
+                            <span class="text-white text-xs sm:text-sm truncate">${data.icon || ''} ${name}</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-sm font-bold">${costo} CSS</span>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <span class="${canAfford ? 'text-amber-400' : 'text-red-400'} text-xs font-bold">${costo}💰</span>
                             <button class="btn-rimuovi-abilita ${canAfford
                                 ? 'bg-red-600 hover:bg-red-500 text-white'
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}
@@ -947,7 +951,7 @@ window.CreditiSuperSeriUI = {
                                 data-ability-name="${name}"
                                 data-is-negative="true"
                                 ${canAfford ? '' : 'disabled'}>
-                                Rimuovi
+                                🗑️
                             </button>
                         </div>
                     </div>

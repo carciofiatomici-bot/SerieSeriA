@@ -288,7 +288,7 @@ window.MatchHistory = {
     },
 
     /**
-     * Renderizza l'interfaccia utente
+     * Renderizza l'interfaccia utente (Mobile-First)
      */
     renderUI(container, history, trophies = null) {
         // Stato filtro corrente
@@ -310,96 +310,139 @@ window.MatchHistory = {
             supercoppeSerieVinte: 0
         };
 
+        // Conteggi per tipo
+        const countByType = {
+            all: history.length,
+            campionato: history.filter(m => m.type === 'campionato').length,
+            coppa: history.filter(m => m.type === 'coppa').length,
+            sfida: history.filter(m => m.type === 'sfida').length,
+            sfida_realtime: history.filter(m => m.type === 'sfida_realtime').length,
+            allenamento: history.filter(m => m.type === 'allenamento').length
+        };
+
         container.innerHTML = `
-            <!-- Bacheca Trofei -->
-            <div id="trophy-cabinet-box" class="rounded-xl border mb-4" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
-                <h3 class="text-lg font-bold text-yellow-400 mb-3 text-center">🏛️ Bacheca Trofei</h3>
-                <div class="grid grid-cols-3 gap-3 text-center">
-                    <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg">
-                        <p class="text-3xl mb-1">🏅</p>
-                        <p class="text-2xl font-bold text-yellow-400">${trophyData.campionatiVinti}</p>
-                        <p class="text-xs text-gray-300">SerieSeriA</p>
-                    </div>
-                    <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg">
-                        <p class="text-3xl mb-1">🏆</p>
-                        <p class="text-2xl font-bold text-amber-400">${trophyData.coppeSerieVinte}</p>
-                        <p class="text-xs text-gray-300">CoppaSeriA</p>
-                    </div>
-                    <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg">
-                        <p class="text-3xl mb-1">⭐</p>
-                        <p class="text-2xl font-bold text-orange-400">${trophyData.supercoppeSerieVinte}</p>
-                        <p class="text-xs text-gray-300">SuperCoppaSeriA</p>
+            <div class="pb-24">
+
+                <!-- Header Sticky Mobile-First -->
+                <div class="sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-2 -mx-3 px-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">🏛️</span>
+                            <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-500">HALL OF FAME</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-800/80 border border-gray-700">
+                            <span class="text-cyan-400 text-sm font-bold">${stats.winRate}%</span>
+                            <span class="text-[9px] text-gray-500">WIN</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Header con Statistiche -->
-            <div id="match-stats-box" class="rounded-xl border mb-4" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px;">
-                <h3 class="text-lg font-bold text-cyan-400 mb-3 text-center">Riepilogo Partite</h3>
-                <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="bg-gray-900 p-2 rounded">
-                        <p class="text-2xl font-bold text-green-400">${stats.wins}</p>
-                        <p class="text-xs text-gray-400">Vittorie</p>
-                    </div>
-                    <div class="bg-gray-900 p-2 rounded">
-                        <p class="text-2xl font-bold text-yellow-400">${stats.draws}</p>
-                        <p class="text-xs text-gray-400">Pareggi</p>
-                    </div>
-                    <div class="bg-gray-900 p-2 rounded">
-                        <p class="text-2xl font-bold text-red-400">${stats.losses}</p>
-                        <p class="text-xs text-gray-400">Sconfitte</p>
-                    </div>
-                    <div class="bg-gray-900 p-2 rounded">
-                        <p class="text-2xl font-bold text-cyan-400">${stats.winRate}%</p>
-                        <p class="text-xs text-gray-400">Win Rate</p>
+                <!-- Bacheca Trofei (Compatta) -->
+                <div class="mb-3">
+                    <div class="flex gap-2">
+                        <!-- Campionato -->
+                        <div class="flex-1 bg-gradient-to-br from-yellow-900/40 to-gray-900/60 border border-yellow-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                            <div class="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500/10 rounded-full blur-lg"></div>
+                            <span class="text-2xl drop-shadow-lg">🏅</span>
+                            <p class="text-xl font-black text-yellow-400">${trophyData.campionatiVinti}</p>
+                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Serie</p>
+                        </div>
+                        <!-- Coppa -->
+                        <div class="flex-1 bg-gradient-to-br from-amber-900/40 to-gray-900/60 border border-amber-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                            <div class="absolute -top-2 -right-2 w-8 h-8 bg-amber-500/10 rounded-full blur-lg"></div>
+                            <span class="text-2xl drop-shadow-lg">🏆</span>
+                            <p class="text-xl font-black text-amber-400">${trophyData.coppeSerieVinte}</p>
+                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Coppa</p>
+                        </div>
+                        <!-- Supercoppa -->
+                        <div class="flex-1 bg-gradient-to-br from-orange-900/40 to-gray-900/60 border border-orange-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                            <div class="absolute -top-2 -right-2 w-8 h-8 bg-orange-500/10 rounded-full blur-lg"></div>
+                            <span class="text-2xl drop-shadow-lg">⭐</span>
+                            <p class="text-xl font-black text-orange-400">${trophyData.supercoppeSerieVinte}</p>
+                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Super</p>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
-                    <div>
-                        <span class="text-gray-400">Gol Fatti:</span>
-                        <span class="text-green-400 font-bold ml-1">${stats.goalsScored}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-400">Gol Subiti:</span>
-                        <span class="text-red-400 font-bold ml-1">${stats.goalsConceded}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-400">Diff. Reti:</span>
-                        <span class="${stats.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'} font-bold ml-1">${stats.goalDifference > 0 ? '+' : ''}${stats.goalDifference}</span>
+
+                <!-- Stats Compatte -->
+                <div class="mb-3 bg-gradient-to-br from-gray-800/60 to-gray-900/80 rounded-xl p-3 border border-gray-700/50">
+                    <div class="flex justify-between items-center gap-2">
+                        <!-- Vittorie -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-green-400">${stats.wins}</p>
+                            <p class="text-[9px] text-gray-500">V</p>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <!-- Pareggi -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-yellow-400">${stats.draws}</p>
+                            <p class="text-[9px] text-gray-500">P</p>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <!-- Sconfitte -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-red-400">${stats.losses}</p>
+                            <p class="text-[9px] text-gray-500">S</p>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <!-- Gol -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-white">${stats.goalsScored}</p>
+                            <p class="text-[9px] text-gray-500">GF</p>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <!-- Gol Subiti -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-gray-400">${stats.goalsConceded}</p>
+                            <p class="text-[9px] text-gray-500">GS</p>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <!-- Diff -->
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black ${stats.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}">${stats.goalDifference > 0 ? '+' : ''}${stats.goalDifference}</p>
+                            <p class="text-[9px] text-gray-500">DR</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Filtri -->
-            <div class="flex flex-wrap gap-2 mb-4 justify-center">
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'all' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="all">
-                    Tutte (${history.length})
-                </button>
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'campionato' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="campionato">
-                    🏅 SerieSeriA
-                </button>
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'coppa' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="coppa">
-                    🏆 CoppaSeriA
-                </button>
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'sfida' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="sfida">
-                    ⚔️ Sfide
-                </button>
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'sfida_realtime' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="sfida_realtime">
-                    🎲 Real-Time
-                </button>
-                <button class="filter-btn px-3 py-1 rounded-lg text-sm font-semibold transition ${this.currentFilter === 'allenamento' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}" data-filter="allenamento">
-                    ⚽ Allenamenti
-                </button>
-            </div>
+                <!-- Filtri (Scroll orizzontale) -->
+                <div class="flex gap-2 overflow-x-auto pb-3 scrollbar-hide -mx-1 px-1">
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'all' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="all">
+                        Tutte <span class="text-[10px] opacity-70">${countByType.all}</span>
+                    </button>
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'campionato' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="campionato">
+                        🏅 Serie <span class="text-[10px] opacity-70">${countByType.campionato}</span>
+                    </button>
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'coppa' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="coppa">
+                        🏆 Coppa <span class="text-[10px] opacity-70">${countByType.coppa}</span>
+                    </button>
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'sfida' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="sfida">
+                        ⚔️ Sfide <span class="text-[10px] opacity-70">${countByType.sfida}</span>
+                    </button>
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'sfida_realtime' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="sfida_realtime">
+                        🎲 Live <span class="text-[10px] opacity-70">${countByType.sfida_realtime}</span>
+                    </button>
+                    <button class="filter-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-all ${this.currentFilter === 'allenamento' ? 'bg-cyan-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}" data-filter="allenamento">
+                        ⚽ Train <span class="text-[10px] opacity-70">${countByType.allenamento}</span>
+                    </button>
+                </div>
 
-            <!-- Lista Partite -->
-            <div class="space-y-2 max-h-[400px] overflow-y-auto" id="match-history-list">
-                ${filteredHistory.length === 0 ? `
-                    <div class="p-4 bg-gray-700 rounded-lg text-center">
-                        <p class="text-gray-400">Nessuna partita trovata</p>
-                        <p class="text-sm text-gray-500 mt-1">Le partite giocate appariranno qui</p>
-                    </div>
-                ` : filteredHistory.map(match => this.renderMatchCard(match)).join('')}
+                <!-- Lista Partite -->
+                <div class="space-y-2" id="match-history-list">
+                    ${filteredHistory.length === 0 ? `
+                        <div class="text-center py-8">
+                            <p class="text-4xl mb-3">📭</p>
+                            <p class="text-gray-400 font-semibold">Nessuna partita</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Le partite giocate appariranno qui</p>
+                        </div>
+                    ` : filteredHistory.slice(0, 30).map(match => this.renderMatchCard(match)).join('')}
+                    ${filteredHistory.length > 30 ? `
+                        <div class="text-center py-3">
+                            <p class="text-[10px] text-gray-500">Mostrando 30 di ${filteredHistory.length} partite</p>
+                        </div>
+                    ` : ''}
+                </div>
+
             </div>
         `;
 
@@ -409,7 +452,7 @@ window.MatchHistory = {
         // Event listeners per i filtri
         container.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.currentFilter = e.target.dataset.filter;
+                this.currentFilter = e.target.closest('.filter-btn').dataset.filter;
                 this.renderUI(container, history);
             });
         });
@@ -417,7 +460,7 @@ window.MatchHistory = {
         // Event listeners per bottoni telecronaca
         container.querySelectorAll('.btn-telecronaca').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const matchId = e.target.dataset.matchId;
+                const matchId = e.target.closest('.btn-telecronaca').dataset.matchId;
                 const match = this.currentHistory.find(m => m.id === matchId);
                 if (match && match.details?.matchLog) {
                     this.showTelecronacaModal(
@@ -433,65 +476,98 @@ window.MatchHistory = {
     },
 
     /**
-     * Renderizza una card partita
+     * Renderizza una card partita (Mobile-First)
      */
     renderMatchCard(match) {
         const typeIcon = this.TYPE_ICONS[match.type] || '⚽';
-        const resultColor = this.RESULT_COLORS[match.result] || 'text-gray-400';
-        const resultIcon = match.result === 'win' ? '✅' : (match.result === 'loss' ? '❌' : '🟰');
 
         const myTeamName = match.isHome ? match.homeTeam.name : match.awayTeam.name;
         const opponentName = match.isHome ? match.awayTeam.name : match.homeTeam.name;
         const myScore = match.isHome ? match.homeScore : match.awayScore;
         const opponentScore = match.isHome ? match.awayScore : match.homeScore;
 
+        // Colori e stili per risultato
+        const resultStyles = {
+            win: { bg: 'from-green-900/30', border: 'border-green-500/50', scoreBg: 'bg-green-500', icon: '✓' },
+            loss: { bg: 'from-red-900/30', border: 'border-red-500/50', scoreBg: 'bg-red-500', icon: '✗' },
+            draw: { bg: 'from-yellow-900/30', border: 'border-yellow-500/50', scoreBg: 'bg-yellow-500', icon: '=' }
+        };
+        const style = resultStyles[match.result] || resultStyles.draw;
+
         // Info aggiuntive per sfide con scommessa
-        let betInfo = '';
+        let betBadge = '';
         if ((match.type === 'sfida' || match.type === 'sfida_realtime') && match.betAmount > 0) {
             const creditsChange = match.result === 'win' ? `+${match.creditsWon || match.betAmount}` :
                                   match.result === 'loss' ? `-${match.betAmount}` : '0';
-            const creditsColor = match.result === 'win' ? 'text-green-400' :
-                                 match.result === 'loss' ? 'text-red-400' : 'text-yellow-400';
-            betInfo = `<span class="${creditsColor} text-xs ml-2">(${creditsChange} CS)</span>`;
+            const creditsColor = match.result === 'win' ? 'bg-green-900/50 text-green-400' :
+                                 match.result === 'loss' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400';
+            betBadge = `<span class="text-[9px] ${creditsColor} px-1.5 py-0.5 rounded-full font-bold">${creditsChange} CS</span>`;
         }
 
         // Info partita abbandonata
-        let abandonedInfo = '';
+        let abandonedBadge = '';
         if (match.abandoned) {
-            abandonedInfo = `<span class="text-orange-400 text-xs ml-2">(Abbandonata)</span>`;
+            abandonedBadge = `<span class="text-[9px] bg-orange-900/50 text-orange-400 px-1.5 py-0.5 rounded-full">ABB</span>`;
         }
+
+        // Formatta data compatta
+        const date = new Date(match.date);
+        const dateStr = date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+        const timeStr = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
         // Bottone Telecronaca (solo se esiste matchLog)
         const hasMatchLog = match.details?.matchLog && Array.isArray(match.details.matchLog) && match.details.matchLog.length > 0;
         const telecronacaBtn = hasMatchLog ? `
-            <button class="btn-telecronaca mt-2 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-1 px-2 rounded transition"
+            <button class="btn-telecronaca mt-2 w-full bg-cyan-900/50 hover:bg-cyan-800/60 text-cyan-400 text-[10px] font-bold py-1.5 px-2 rounded-lg transition flex items-center justify-center gap-1"
                     data-match-id="${match.id}">
-                📺 Telecronaca azione per azione
+                <span>📺</span> Telecronaca
             </button>
         ` : '';
 
+        // Marcatori compatti
+        const scorersLine = match.details?.scorers?.length > 0 ? `
+            <div class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-500">
+                <span>⚽</span>
+                <span class="truncate">${match.details.scorers.slice(0, 3).map(s => typeof s === 'string' ? s : s.name).join(', ')}${match.details.scorers.length > 3 ? '...' : ''}</span>
+            </div>
+        ` : '';
+
         return `
-            <div class="p-3 bg-gray-700 rounded-lg border-l-4 ${match.result === 'win' ? 'border-green-500' : match.result === 'loss' ? 'border-red-500' : 'border-yellow-500'} hover:bg-gray-600 transition">
-                <div class="flex items-center justify-between">
+            <div class="bg-gradient-to-br ${style.bg} to-gray-900/80 rounded-xl p-2.5 border ${style.border} transition-all active:scale-[0.99]">
+                <!-- Header: tipo + data + badges -->
+                <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
-                        <span class="text-lg">${typeIcon}</span>
-                        <div>
-                            <p class="text-sm text-gray-400">${this.formatDate(match.date)}</p>
-                            <p class="font-semibold text-white">
-                                ${myTeamName}
-                                <span class="${resultColor} font-bold">${myScore} - ${opponentScore}</span>
-                                ${opponentName}
-                                ${betInfo}${abandonedInfo}
-                            </p>
-                        </div>
+                        <span class="text-base">${typeIcon}</span>
+                        <span class="text-[10px] text-gray-500">${dateStr} ${timeStr}</span>
                     </div>
-                    <span class="text-2xl">${resultIcon}</span>
+                    <div class="flex items-center gap-1">
+                        ${abandonedBadge}
+                        ${betBadge}
+                    </div>
                 </div>
-                ${match.details?.scorers?.length > 0 ? `
-                    <p class="text-xs text-gray-400 mt-1">
-                        ⚽ Marcatori: ${match.details.scorers.map(s => typeof s === 'string' ? s : s.name).join(', ')}
-                    </p>
-                ` : ''}
+
+                <!-- Risultato: VS style compatto -->
+                <div class="flex items-center justify-between">
+                    <!-- Mia squadra -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white text-sm font-bold truncate">${myTeamName}</p>
+                    </div>
+
+                    <!-- Score centrale -->
+                    <div class="flex items-center gap-1 mx-2">
+                        <span class="text-white font-black text-lg">${myScore}</span>
+                        <span class="text-gray-600 text-xs">-</span>
+                        <span class="text-gray-400 font-black text-lg">${opponentScore}</span>
+                        <span class="w-5 h-5 ${style.scoreBg} rounded-full flex items-center justify-center text-[10px] text-white font-bold ml-1">${style.icon}</span>
+                    </div>
+
+                    <!-- Avversario -->
+                    <div class="flex-1 min-w-0 text-right">
+                        <p class="text-gray-400 text-sm font-semibold truncate">${opponentName}</p>
+                    </div>
+                </div>
+
+                ${scorersLine}
                 ${telecronacaBtn}
             </div>
         `;

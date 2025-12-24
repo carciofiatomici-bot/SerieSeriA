@@ -15,7 +15,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const draftContent = document.getElementById('draft-content');
     const draftToolsContainer = document.getElementById('draft-tools-container');
-    const draftBackButton = document.getElementById('draft-back-button');
     const adminContent = document.getElementById('admin-content');
     const appContent = document.getElementById('app-content');
 
@@ -25,51 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMode = 'admin';
     let currentTeamId = null;
     let paths = {};
-
-    // FALLBACK: Imposta un listener di base sul bottone indietro
-    // Questo garantisce che l'utente possa sempre uscire dalla pagina
-    if (draftBackButton) {
-        // Aggiorna il testo del bottone in base al contesto
-        const updateBackButtonText = () => {
-            const hasActiveTeam = window.InterfacciaCore && window.InterfacciaCore.currentTeamId;
-            if (currentMode === 'utente' || hasActiveTeam) {
-                draftBackButton.textContent = 'Torna alla Dashboard';
-            } else {
-                draftBackButton.textContent = 'Torna al Pannello Admin';
-            }
-        };
-
-        draftBackButton.addEventListener('click', () => {
-            // Determina la destinazione in base a currentMode
-            // Se currentMode non e' stato ancora impostato, controlla se c'e' un teamId attivo
-            let destination;
-            if (currentMode === 'utente') {
-                destination = appContent;
-            } else if (currentMode === 'admin') {
-                // Verifica se l'utente ha effettivamente un teamId (quindi e' un utente normale)
-                const hasActiveTeam = window.InterfacciaCore && window.InterfacciaCore.currentTeamId;
-                destination = hasActiveTeam ? appContent : adminContent;
-            } else {
-                destination = appContent; // Default alla dashboard utente
-            }
-
-            if (window.showScreen && destination) {
-                window.showScreen(destination);
-            }
-        });
-
-        // Osserva quando il draft-content diventa visibile per aggiornare il testo
-        const observer = new MutationObserver(() => {
-            if (draftContent && !draftContent.classList.contains('hidden-on-load') &&
-                !draftContent.classList.contains('hidden')) {
-                updateBackButtonText();
-            }
-        });
-
-        if (draftContent) {
-            observer.observe(draftContent, { attributes: true, attributeFilter: ['class'] });
-        }
-    }
 
     /**
      * Mostra un messaggio di errore con opzioni per riprovare o tornare indietro.
@@ -172,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const context = {
                 draftContent,
                 draftToolsContainer,
-                draftBackButton,
                 adminContent,
                 appContent,
                 db,
