@@ -171,15 +171,13 @@ body {
 /* ===================== MAIN CONTAINER FIX ===================== */
 /* Fix per il problema di justify-center che taglia contenuto su mobile */
 main {
-    /* Usa min-height invece di height per permettere crescita */
-    min-height: 100vh;
-    min-height: 100dvh;
+    /* NO min-height - lascia che il contenuto determini l'altezza
+       Questo evita scroll extra quando il contenuto e' meno di 100vh */
     /* Sostituisce justify-center con justify-start per evitare taglio contenuto */
     justify-content: flex-start !important;
     /* Padding top per evitare contenuto sotto la status bar */
     padding-top: max(16px, var(--safe-top, 0px));
-    /* Padding bottom per safe area */
-    padding-bottom: max(16px, var(--safe-bottom, 0px));
+    /* NO padding-bottom qui - gestito da ::after e padding sui container */
     /* Larghezza controllata */
     width: 100%;
     max-width: 100vw;
@@ -1355,9 +1353,10 @@ html {
 /* ===================== PANNELLO ADMIN RESPONSIVE ===================== */
 
 @media (max-width: 639px) {
-    /* Admin container generale */
+    /* Admin container generale - padding laterale/top compatto, bottom per tab bar
+       Usa 60px (56px tab bar + 4px margine) */
     #admin-content {
-        padding: 8px !important;
+        padding: 8px 8px calc(60px + env(safe-area-inset-bottom, 0px)) 8px !important;
     }
 
     /* Football box admin piu compatto */
@@ -2597,12 +2596,8 @@ body {
     }
 }
 
-/* Spazio extra per evitare che il bottone regole copra contenuto */
-@media (max-width: 639px) {
-    main {
-        padding-bottom: 80px !important;
-    }
-}
+/* NOTA: Spazio per tab bar gestito da .tab-content::after
+   NON aggiungere padding-bottom su main - causa scroll extra */
 
 /* Fix per iOS input zoom */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
@@ -2963,8 +2958,7 @@ body {
     -webkit-overflow-scrolling: touch;
     position: relative;
     isolation: isolate;
-    /* Padding bottom globale per tab bar (70px) + safe area */
-    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+    /* NO padding-bottom qui - viene gestito dai singoli contenitori */
 }
 
 /* Assicura che le schermate nascoste non siano visibili durante overscroll */
@@ -3012,21 +3006,23 @@ body.user-logged-in #login-box.hidden-on-load {
 }
 
 /* ===================== TAB BAR SPACING GLOBALE ===================== */
-/* Padding bottom per tutte le schermate principali sopra la tab bar */
-#login-box,
-#app-content,
-#admin-content,
-#match-history-content,
-#squadra-content,
-#mercato-content,
-#draft-content,
-#stadium-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+/* Altezza tab bar: 56px + safe-area
+   Spacer necessario: 60px (56px + 4px margine) + safe-area */
+
+/* App-content NON deve avere padding-bottom extra
+   perche i suoi figli (tab-content) hanno gia lo spacer ::after */
+#app-content {
+    padding-bottom: 0 !important;
 }
 
-/* Admin content ha bisogno di piu spazio per i bottoni in fondo */
-#admin-content {
-    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
+/* Schermate senza tab-content DEVONO avere padding per la tab bar */
+#login-box,
+#draft-content,
+#squadra-content,
+#mercato-content,
+#match-history-content,
+#stadium-content {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* ===================== HOMEPAGE BOX STYLES ===================== */
@@ -3142,11 +3138,8 @@ body.user-logged-in #admin-content {
         min-height: 100%;
     }
 
-    /* Assicura che il contenuto non sia tagliato */
-    main {
-        /* Aggiungi padding extra in basso per compensare */
-        padding-bottom: max(80px, calc(var(--safe-bottom, 0px) + 60px));
-    }
+    /* NOTA: padding-bottom per tab bar gestito da .tab-content::after
+       NON aggiungere padding-bottom su main qui */
 
     /* Fix bottone stats che copre nome giocatore in gestione rosa (mobile) */
     .player-card-header {
@@ -3612,14 +3605,10 @@ body.user-logged-in #admin-content {
 }
 
 /* ===================== FIX 6: SPAZIO PER BOTTONE REGOLE ===================== */
-/* Aggiungi padding in fondo per evitare sovrapposizione */
+/* NOTA: padding-bottom per tab bar gestito da .tab-content::after
+   NON aggiungere padding-bottom su #app-content - causa scroll extra */
 @media (max-width: 639px) {
-    /* Ultimo box della dashboard */
-    #app-content {
-        padding-bottom: 70px !important;
-    }
-
-    /* Box draft/mercato - padding extra in basso */
+    /* Box draft/mercato - margin per separazione */
     #draft-scambi-box {
         margin-bottom: 10px !important;
     }
@@ -4210,13 +4199,17 @@ body.user-logged-in #admin-content {
 
 /* Font size minimi per leggibilità */
 .dashboard-tab span:last-child {
-    font-size: 10px !important;
-    letter-spacing: 0.3px;
+    font-size: clamp(7px, 2.5vw, 11px) !important;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    text-align: center;
+    display: block;
+    width: 100%;
 }
 
 @media (min-width: 360px) {
     .dashboard-tab span:last-child {
-        font-size: 11px !important;
+        font-size: clamp(8px, 2.5vw, 11px) !important;
     }
 }
 
@@ -4244,6 +4237,9 @@ body.user-logged-in #admin-content {
     background: rgba(17, 24, 39, 0.6);
     border-top-width: 2px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    /* Altezza fissa per consistenza con spacer */
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .dashboard-tab {
@@ -4251,6 +4247,10 @@ body.user-logged-in #admin-content {
     transition: all 0.2s ease;
     padding-top: 8px !important;
     padding-bottom: calc(8px + var(--safe-bottom, 0px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 /* Indicatore tab attivo (pill effect) */
@@ -4439,20 +4439,21 @@ body.user-logged-in #admin-content {
     margin-bottom: 12px;
 }
 
-.tab-content > div:last-child {
-    margin-bottom: 0;
-}
-
-/* Padding bottom per evitare overlap con bottom nav */
+/* Tab content - layout preciso per evitare scroll extra */
 .tab-content {
-    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-/* Tab specifici senza min-height per evitare scroll extra */
-#tab-home,
-#tab-squad,
-#tab-shop {
-    min-height: auto !important;
+/* Spacer per tab bar - elemento pseudo dopo l'ultimo figlio visibile
+   SOLO per tab-content visibili (non hidden)
+   Altezza: 56px (altezza tab bar) + safe-area */
+.tab-content:not(.hidden)::after {
+    content: '';
+    display: block;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    flex-shrink: 0;
 }
 
 /* ==================== 15.7 VISUAL HIERARCHY ==================== */
