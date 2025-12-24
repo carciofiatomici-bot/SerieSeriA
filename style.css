@@ -4774,178 +4774,268 @@ select:focus-visible {
     border: 1px solid var(--team-primary-color, #22c55e);
 }
 
-/* ==================== 15.13 ADMIN PANEL MOBILE OPTIMIZATION ==================== */
+/* ==================== 15.13 ADMIN PANEL - FUNCTIONAL MOBILE ==================== */
 /*
- * Ottimizzazione pannello admin per mobile
- * - Grid responsive per bottoni
- * - Testo più compatto
- * - Touch-friendly spacing
+ * Pannello Admin ottimizzato per mobile
+ * Approccio: INDUSTRIAL/UTILITARIAN - pura funzionalità
+ * - Bottoni grandi touch-friendly (min 44px)
+ * - Alto contrasto per leggibilità
+ * - Layout compatto ma accessibile
+ * - Zero decorazioni superflue
  */
 
-/* Container principale admin */
+/* ===== CONTAINER PRINCIPALE ===== */
 #admin-content {
-    padding: 8px !important;
-}
-
-#admin-dashboard-container {
     background: rgba(17, 24, 39, 0.6) !important;
     border-radius: 12px !important;
     padding: 12px !important;
     border: 1px solid var(--team-primary-color, #22c55e) !important;
 }
 
-/* Stato generale - grid responsive */
+#admin-dashboard-container {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* ===== STATO GENERALE - Cards compatte ===== */
 #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 {
+    display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    gap: 6px !important;
 }
 
-@media (min-width: 480px) {
-    #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 {
-        grid-template-columns: repeat(4, 1fr) !important;
-    }
-}
-
-/* Card stato - più compatte su mobile */
 #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 > div {
-    padding: 8px !important;
+    padding: 6px 4px !important;
+    background: rgba(31, 41, 55, 0.9) !important;
+    border: 1px solid rgba(75, 85, 99, 0.5) !important;
+    border-radius: 6px !important;
 }
 
 #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 .text-2xl {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
 }
 
 #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 .text-xs {
+    font-size: 0.6rem !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ===== BOTTONI NAVIGAZIONE PRINCIPALE ===== */
+#admin-dashboard-container .mb-6 > .grid.grid-cols-4,
+#admin-dashboard-container .grid-cols-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+}
+
+#admin-dashboard-container .grid-cols-4 > button {
+    min-height: 52px !important;
+    padding: 8px 4px !important;
     font-size: 0.65rem !important;
-    line-height: 1.2;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    border-radius: 6px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
 }
 
-/* Bottoni navigazione principale - 2 colonne su mobile */
-@media (max-width: 639px) {
-    #admin-dashboard-container .grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-    }
-
-    /* Bottoni più compatti */
-    #admin-dashboard-container .grid-cols-4 button {
-        padding: 10px 6px !important;
-        font-size: 0.7rem !important;
-        line-height: 1.2;
-    }
-
-    #admin-dashboard-container .grid-cols-4 button i {
-        display: block;
-        margin: 0 auto 4px auto !important;
-        font-size: 1.1rem;
-    }
-
-    /* Nascondi testo lungo, mostra solo icona + label corta */
-    #admin-dashboard-container .grid-cols-4 button .fa-cog::after { content: "Config"; }
-    #admin-dashboard-container .grid-cols-4 button .fa-list-ol::after { content: "Players"; }
-    #admin-dashboard-container .grid-cols-4 button .fa-users::after { content: "Teams"; }
-    #admin-dashboard-container .grid-cols-4 button .fa-flag::after { content: "Flag"; }
+#admin-dashboard-container .grid-cols-4 > button i {
+    font-size: 1.2rem !important;
+    margin: 0 !important;
 }
 
-/* Accordion headers - più touch friendly */
+/* ===== ACCORDION TOGGLE BUTTONS ===== */
 #admin-dashboard-container button[id^="btn-toggle-"] {
-    padding: 12px 14px !important;
+    min-height: 48px !important;
+    padding: 10px 12px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    margin-bottom: 4px !important;
+}
+
+#admin-dashboard-container button[id^="btn-toggle-"] i:first-child {
+    font-size: 1rem !important;
+}
+
+#admin-dashboard-container button[id^="btn-toggle-"] .fa-chevron-down {
+    font-size: 0.7rem !important;
+}
+
+/* ===== CONTENUTO ACCORDION ===== */
+#admin-dashboard-container [id$="-content"]:not(#admin-content) {
+    padding: 8px !important;
+    margin-top: 0 !important;
+    border-radius: 6px !important;
+}
+
+/* ===== SEZIONI COMPETIZIONI ===== */
+#serieseria-admin-section,
+#coppa-admin-section,
+#supercoppa-admin-section,
+#automation-admin-section {
+    padding: 8px !important;
+    margin-bottom: 6px !important;
+    border-radius: 6px !important;
+}
+
+#serieseria-admin-section h4,
+#coppa-admin-section h4,
+#supercoppa-admin-section h4,
+#automation-admin-section h4 {
     font-size: 0.85rem !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
 }
 
-@media (max-width: 479px) {
-    #admin-dashboard-container button[id^="btn-toggle-"] {
-        padding: 14px 12px !important;
-        font-size: 0.8rem !important;
-    }
-
-    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-trophy,
-    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-rocket,
-    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-cogs,
-    #admin-dashboard-container button[id^="btn-toggle-"] i.fa-database {
-        font-size: 1rem !important;
-    }
+/* ===== GRID BOTTONI INTERNI ===== */
+#admin-dashboard-container .grid-cols-2,
+#admin-dashboard-container .grid-cols-3 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
 }
 
-/* Grid interni accordion - 2 colonne sempre su mobile piccolo */
-@media (max-width: 479px) {
-    #admin-dashboard-container .grid-cols-2,
+#admin-dashboard-container .grid-cols-2 > button,
+#admin-dashboard-container .grid-cols-3 > button,
+#admin-dashboard-container .grid > button {
+    min-height: 44px !important;
+    padding: 8px 6px !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    border-radius: 4px !important;
+    line-height: 1.2 !important;
+}
+
+#admin-dashboard-container .grid-cols-2 > button i,
+#admin-dashboard-container .grid-cols-3 > button i {
+    margin-right: 3px !important;
+    font-size: 0.8rem !important;
+}
+
+/* Bottoni col-span-2 (full width) */
+#admin-dashboard-container .col-span-2 {
+    grid-column: span 2 !important;
+}
+
+/* ===== STATO BOX INTERNI ===== */
+#serieseria-status-container,
+#coppa-status-container,
+#serieseria-next-round,
+#serieseria-standings-accordion {
+    padding: 6px !important;
+    margin-bottom: 6px !important;
+    border-radius: 4px !important;
+}
+
+#serieseria-standings-accordion button {
+    padding: 8px !important;
+    font-size: 0.75rem !important;
+}
+
+/* ===== PANNELLI CONFIGURAZIONE ===== */
+#admin-dashboard-container [id$="-panel-container"] {
+    padding: 10px !important;
+    margin-bottom: 8px !important;
+    border-radius: 6px !important;
+}
+
+#admin-dashboard-container [id$="-panel-container"] h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 8px !important;
+}
+
+#admin-dashboard-container [id$="-panel-container"] .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* ===== INPUTS E SELECT ===== */
+#admin-dashboard-container input,
+#admin-dashboard-container select,
+#admin-dashboard-container textarea {
+    min-height: 40px !important;
+    font-size: 0.85rem !important;
+    padding: 8px !important;
+    border-radius: 4px !important;
+}
+
+/* ===== TITOLI SEZIONI ===== */
+#admin-dashboard-container h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 8px !important;
+}
+
+#admin-dashboard-container .text-xl {
+    font-size: 0.95rem !important;
+}
+
+/* ===== TESTI ===== */
+#admin-dashboard-container .text-xs {
+    font-size: 0.65rem !important;
+}
+
+#admin-dashboard-container .text-sm {
+    font-size: 0.75rem !important;
+}
+
+#admin-dashboard-container p.text-gray-400 {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+}
+
+/* ===== SPACING GENERALE ===== */
+#admin-dashboard-container .mb-6 {
+    margin-bottom: 10px !important;
+}
+
+#admin-dashboard-container .mb-4 {
+    margin-bottom: 8px !important;
+}
+
+#admin-dashboard-container .mb-3 {
+    margin-bottom: 6px !important;
+}
+
+#admin-dashboard-container .mt-3 {
+    margin-top: 6px !important;
+}
+
+#admin-dashboard-container .space-y-4 > * + * {
+    margin-top: 6px !important;
+}
+
+/* ===== TABLET+ (480px+) ===== */
+@media (min-width: 480px) {
+    #admin-content {
+        padding: 12px !important;
+        margin: 8px !important;
+    }
+
+    #admin-dashboard-container .grid-cols-2.md\:grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    #admin-dashboard-container .grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    #admin-dashboard-container .grid-cols-4 > button {
+        min-height: 56px !important;
+        font-size: 0.7rem !important;
+    }
+
     #admin-dashboard-container .grid-cols-3 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 6px !important;
-    }
-
-    /* Bottoni azione più compatti */
-    #admin-dashboard-container .grid-cols-2 button,
-    #admin-dashboard-container .grid-cols-3 button {
-        padding: 8px 4px !important;
-        font-size: 0.7rem !important;
-    }
-
-    #admin-dashboard-container .grid-cols-2 button i,
-    #admin-dashboard-container .grid-cols-3 button i {
-        margin-right: 2px !important;
-    }
-
-    /* Sezioni competizioni */
-    #serieseria-admin-section,
-    #coppa-admin-section,
-    #supercoppa-admin-section,
-    #automation-admin-section {
-        padding: 10px !important;
-    }
-
-    #serieseria-admin-section h4,
-    #coppa-admin-section h4,
-    #supercoppa-admin-section h4,
-    #automation-admin-section h4 {
-        font-size: 0.9rem !important;
-        margin-bottom: 8px !important;
-    }
-}
-
-/* Sezione emergenza - più compatta */
-@media (max-width: 479px) {
-    #admin-dashboard-container .bg-red-900\/30 {
-        padding: 10px !important;
-    }
-
-    #admin-dashboard-container .bg-red-900\/30 .text-sm {
-        font-size: 0.75rem !important;
-    }
-
-    #admin-dashboard-container .bg-red-900\/30 button {
-        padding: 8px 10px !important;
-        font-size: 0.7rem !important;
-    }
-}
-
-/* Bottoni logout e changelog in fondo */
-@media (max-width: 479px) {
-    #admin-content > .mt-4.flex {
-        flex-direction: column !important;
-        gap: 8px !important;
-    }
-
-    #admin-content > .mt-4.flex button {
-        width: 100% !important;
-        padding: 12px !important;
-    }
-}
-
-/* Pannelli configurazione - responsive */
-@media (max-width: 639px) {
-    #admin-dashboard-container [id$="-panel-container"] {
-        padding: 12px !important;
-    }
-
-    #admin-dashboard-container [id$="-panel-container"] h3 {
-        font-size: 1rem !important;
-    }
-
-    #admin-dashboard-container [id$="-panel-container"] .grid-cols-2 {
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 }
 
