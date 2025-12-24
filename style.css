@@ -3027,11 +3027,70 @@ body.user-logged-in #login-box.hidden-on-load {
 
 /* Stile squadra-content con colore team dinamico */
 #squadra-content {
-    background: rgba(17, 24, 39, 0.6);
-    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.6) 100%);
+    border-radius: 16px;
     padding: 12px !important;
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
     border: 1px solid var(--team-primary-color, #22c55e);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Header squadra accattivante */
+#squadra-header {
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 95, 70, 0.1) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    margin-bottom: 12px;
+}
+
+#squadra-main-title {
+    text-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+}
+
+/* Container tools con scrolling fluido */
+#squadra-tools-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--team-primary-color, #22c55e) transparent;
+}
+
+#squadra-tools-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+#squadra-tools-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#squadra-tools-container::-webkit-scrollbar-thumb {
+    background: var(--team-primary-color, #22c55e);
+    border-radius: 4px;
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 639px) {
+    #squadra-content {
+        padding: 8px !important;
+        border-radius: 12px;
+    }
+
+    #squadra-header {
+        padding: 6px 10px;
+        margin-bottom: 8px;
+    }
+
+    #squadra-main-title {
+        font-size: 1.1rem !important;
+    }
+
+    #squadra-subtitle {
+        font-size: 0.65rem !important;
+    }
+
+    #squadra-tools-container {
+        padding: 8px !important;
+        border-radius: 12px;
+    }
 }
 
 /* Stile modulo-header con colore team dinamico */
@@ -4050,43 +4109,178 @@ body.user-logged-in #admin-content {
     }
 }
 
-/* ===================== FIX 15B: FORMAZIONE BOX MOBILE ===================== */
+/* ===================== FIX 15B: FORMAZIONE MOBILE - LAYOUT ARMONICO ===================== */
 @media (max-width: 639px) {
-    /* Rosa Disponibile box piu compatto */
-    .lg\\:w-48 {
-        width: 100% !important;
+    /* === CAMPO DA CALCIO COMPATTO === */
+    #field-area {
+        height: 320px !important;
+        border-width: 2px !important;
+        border-radius: 10px !important;
         padding: 8px !important;
     }
 
-    /* Titolo sezione piu piccolo */
-    .lg\\:w-48 h3,
-    #full-squad-list + * h4 {
-        font-size: 0.8rem !important;
+    #field-area h4 {
+        font-size: 0.7rem !important;
+        margin-bottom: 4px !important;
     }
 
-    /* Infermeria box compatto */
+    /* Cerchio centrale più piccolo */
+    #field-area .center-circle {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    /* Aree di rigore più proporzionate */
+    #field-area .penalty-area-top,
+    #field-area .penalty-area-bottom {
+        height: 50px !important;
+        width: 70% !important;
+    }
+
+    /* === MAGLIETTE ULTRA-COMPATTE === */
+    .jersey-container {
+        width: 48px !important;
+        height: 48px !important;
+        padding: 2px !important;
+    }
+
+    .jersey-inner {
+        font-size: 0.4rem !important;
+        padding: 1px !important;
+    }
+
+    .jersey-name {
+        font-size: 0.38rem !important;
+    }
+
+    .jersey-role,
+    .jersey-base-level {
+        font-size: 0.35rem !important;
+    }
+
+    .level-text {
+        font-size: 0.75rem !important;
+    }
+
+    .mod-text {
+        font-size: 0.35rem !important;
+    }
+
+    /* === PANCHINA COMPATTA === */
+    #bench-container {
+        padding: 8px !important;
+        height: auto !important;
+        min-height: 70px !important;
+    }
+
+    #bench-container h4 {
+        font-size: 0.7rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    #panchina-slots {
+        gap: 4px !important;
+    }
+
+    /* Zona rimozione più piccola */
+    #bench-remove-zone {
+        width: 40px !important;
+        min-width: 40px !important;
+        font-size: 0.6rem !important;
+    }
+
+    #bench-remove-zone span.text-lg {
+        font-size: 0.9rem !important;
+    }
+
+    /* === ROSA DISPONIBILE COMPATTA === */
+    #full-squad-list {
+        max-height: 150px !important;
+        gap: 4px !important;
+        padding: 6px !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    /* === HEADERS SEZIONI COLLASSABILI === */
+    #modulo-header,
+    #tipi-header {
+        padding: 8px !important;
+    }
+
+    #modulo-header h3 {
+        font-size: 0.85rem !important;
+    }
+
+    #modulo-header .text-sm {
+        font-size: 0.65rem !important;
+    }
+
+    #modulo-header .text-xs {
+        display: none !important;
+    }
+
+    /* === BOTTONI AZIONE COMPATTI === */
+    #btn-auto-formation,
+    #btn-save-formation {
+        padding: 10px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    #btn-auto-formation span,
+    #btn-save-formation span {
+        font-size: 0.9rem !important;
+    }
+
+    /* === INFERMERIA COMPATTA === */
     #injured-box-compact {
         padding: 6px !important;
         margin-top: 6px !important;
     }
 
     #injured-box-compact h4 {
-        font-size: 0.75rem !important;
+        font-size: 0.7rem !important;
     }
 
-    /* Bottoni grid formazione */
-    .grid.grid-cols-2 button {
-        padding: 10px 8px !important;
-        font-size: 0.8rem !important;
+    /* === LEGENDA TIPI COMPATTA === */
+    #tipi-content {
+        padding: 6px !important;
     }
 
-    /* Legenda tipologie compatta */
-    .bg-gray-800.p-2 .flex.gap-4 {
+    #tipi-content .flex.gap-3 {
+        gap: 4px !important;
+    }
+
+    #tipi-content .text-xs {
+        font-size: 0.6rem !important;
+    }
+
+    /* === SPAZIATURA GENERALE === */
+    #squadra-tools-container .mb-4 {
+        margin-bottom: 8px !important;
+    }
+
+    #squadra-tools-container .gap-4 {
         gap: 8px !important;
     }
 
-    .bg-gray-800.p-2 .text-lg {
-        font-size: 0.9rem !important;
+    #squadra-tools-container .space-y-4 > * + * {
+        margin-top: 8px !important;
+    }
+
+    /* === SELECT MODULO COMPATTO === */
+    #formation-select {
+        font-size: 0.75rem !important;
+        padding: 6px 8px !important;
+    }
+
+    #module-description {
+        font-size: 0.6rem !important;
+        margin-top: 4px !important;
+    }
+
+    /* === SLOT VUOTI PIU PICCOLI === */
+    .empty-slot.slot-target {
+        padding: 4px !important;
     }
 }
 

@@ -1557,12 +1557,22 @@
         </div>
 
         <!-- 9. CONTENUTO AREA GESTIONE SQUADRA (Rosa e Formazione) -->
-        <div id="squadra-content" class="football-box w-full max-w-5xl mx-auto transition duration-500 hidden-on-load pb-20 px-1 sm:px-4
-                                         min-h-0 flex flex-col">
+        <div id="squadra-content" class="football-box w-full max-w-5xl mx-auto transition duration-500 hidden-on-load px-2 sm:px-4 min-h-0 flex flex-col">
+             <!-- Header con titolo e sottotitolo dinamici -->
+             <div id="squadra-header" class="mb-3 text-center">
+                 <h2 id="squadra-main-title" class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400 tracking-tight"></h2>
+                 <p id="squadra-subtitle" class="text-xs sm:text-sm text-gray-400 mt-1"></p>
+             </div>
+
              <!-- Contenitore logica Gestione Rosa o Formazione -->
-             <div id="squadra-tools-container" class="rounded-xl border flex-1 min-h-0 overflow-hidden"
-                  style="background: rgba(17, 24, 39, 0.6); border-radius: 12px;">
-                <p class="text-center text-gray-400 p-4">Contenuto in caricamento...</p>
+             <div id="squadra-tools-container" class="rounded-xl flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+                  style="background: rgba(17, 24, 39, 0.4); border-radius: 16px; padding: 12px;">
+                <div class="flex items-center justify-center h-32">
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-gray-400 text-sm">Caricamento...</p>
+                    </div>
+                </div>
              </div>
 
              <!-- Bottone rimosso - navigazione tramite tab bar -->
