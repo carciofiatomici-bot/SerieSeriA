@@ -92,8 +92,7 @@ window.AbilitiesUI = {
                                placeholder="Cerca abilita..."
                                value="${this.currentSearch}"
                                oninput="window.AbilitiesUI.handleSearch(this.value)"
-                               class="w-full bg-gray-800/80 text-white text-sm px-4 py-2.5 pl-10 rounded-xl border border-gray-700 focus:border-purple-500 focus:outline-none placeholder-gray-500">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔎</span>
+                               class="w-full bg-gray-800/80 text-white text-sm px-4 py-2.5 rounded-xl border border-gray-700 focus:border-purple-500 focus:outline-none placeholder-gray-500">
                     </div>
                 </div>
 

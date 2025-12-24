@@ -12,6 +12,7 @@ window.SchedinaUI = {
     predictions: {},        // { matchKey: '1' | 'X' | '2' }
     existingPrediction: null,
     countdownInterval: null,
+    currentTab: 'current',
 
     // ==================== INIZIALIZZAZIONE ====================
 
@@ -24,83 +25,17 @@ window.SchedinaUI = {
     },
 
     /**
-     * Crea il modal
+     * Crea il modal (Mobile-First Fullscreen)
      */
     createModal() {
         if (this.modal) return;
 
         this.modal = document.createElement('div');
         this.modal.id = 'schedina-modal';
-        this.modal.className = 'fixed inset-0 z-[9999] bg-black bg-opacity-80 hidden flex items-center justify-center p-4';
-        this.modal.innerHTML = `
-            <div class="bg-gray-900 rounded-xl border-2 border-green-500 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-green-700 to-emerald-600 p-4 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <span class="text-2xl">🎯</span> Schedina Pronostici
-                        </h2>
-                        <p id="schedina-round-info" class="text-green-200 text-sm mt-1"></p>
-                    </div>
-                    <button id="schedina-close-btn" class="text-white hover:text-green-200 text-2xl font-bold">&times;</button>
-                </div>
-
-                <!-- Tabs -->
-                <div class="flex border-b border-gray-700">
-                    <button class="schedina-tab flex-1 py-3 text-center font-semibold bg-green-600 text-white" data-tab="current">
-                        Prossima Giornata
-                    </button>
-                    <button class="schedina-tab flex-1 py-3 text-center font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600" data-tab="history">
-                        Storico
-                    </button>
-                </div>
-
-                <!-- Countdown -->
-                <div id="schedina-countdown-container" class="px-4 pt-4 hidden">
-                    <div class="bg-yellow-900/30 border border-yellow-500 rounded-lg p-3 text-center">
-                        <p class="text-yellow-400 text-sm font-semibold">Pronostici chiudono tra:</p>
-                        <p id="schedina-countdown" class="text-2xl font-bold text-white mt-1">--:--:--</p>
-                    </div>
-                </div>
-
-                <!-- Content -->
-                <div id="schedina-content" class="flex-1 overflow-y-auto p-4">
-                    <!-- Contenuto dinamico -->
-                </div>
-
-                <!-- Footer con bottone Invia -->
-                <div id="schedina-footer" class="p-4 border-t border-gray-700 hidden">
-                    <button id="schedina-submit-btn" class="w-full py-3 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition">
-                        Invia Schedina
-                    </button>
-                    <p id="schedina-submit-status" class="text-center text-sm text-gray-400 mt-2"></p>
-                </div>
-            </div>
-        `;
+        this.modal.className = 'fixed inset-0 z-[9999] bg-slate-900 hidden overflow-y-auto';
+        this.modal.innerHTML = `<div id="schedina-modal-content"></div>`;
 
         document.body.appendChild(this.modal);
-
-        // Event listeners
-        document.getElementById('schedina-close-btn').addEventListener('click', () => this.close());
-        this.modal.addEventListener('click', (e) => {
-            if (e.target === this.modal) this.close();
-        });
-
-        // Tab switching
-        this.modal.querySelectorAll('.schedina-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                this.modal.querySelectorAll('.schedina-tab').forEach(t => {
-                    t.classList.remove('bg-green-600', 'text-white');
-                    t.classList.add('bg-gray-700', 'text-gray-300');
-                });
-                tab.classList.remove('bg-gray-700', 'text-gray-300');
-                tab.classList.add('bg-green-600', 'text-white');
-                this.renderTab(tab.dataset.tab);
-            });
-        });
-
-        // Submit button
-        document.getElementById('schedina-submit-btn').addEventListener('click', () => this.submitPredictions());
     },
 
     // ==================== APERTURA/CHIUSURA ====================
@@ -117,11 +52,12 @@ window.SchedinaUI = {
         if (!this.modal) this.init();
 
         this.modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
         this.isOpen = true;
 
         // Carica dati prossima giornata
         await this.loadCurrentRound();
-        this.renderTab('current');
+        this.render();
     },
 
     /**
@@ -130,34 +66,112 @@ window.SchedinaUI = {
     close() {
         if (this.modal) {
             this.modal.classList.add('hidden');
+            document.body.style.overflow = '';
         }
         this.isOpen = false;
         this.stopCountdown();
     },
 
-    // ==================== RENDERING ====================
+    // ==================== RENDERING PRINCIPALE ====================
+
+    /**
+     * Render principale (Mobile-First)
+     */
+    render() {
+        const container = document.getElementById('schedina-modal-content');
+        if (!container) return;
+
+        const roundInfo = this.currentRound
+            ? `Giornata ${this.currentRound.roundNumber}`
+            : 'Nessuna giornata';
+
+        container.innerHTML = `
+            <div class="min-h-screen pb-24">
+
+                <!-- Header Sticky Mobile-First -->
+                <div class="sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-3 px-3">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">🎯</span>
+                            <div>
+                                <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">SCHEDINA</h1>
+                                <p class="text-[10px] text-gray-400">${roundInfo}</p>
+                            </div>
+                        </div>
+                        <button onclick="window.SchedinaUI.close()"
+                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800/80 border border-gray-700 text-gray-400 hover:text-white hover:bg-red-500/30 hover:border-red-500/50 transition">
+                            <span class="text-xl">×</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Filters -->
+                    <div class="flex gap-2">
+                        <button onclick="window.SchedinaUI.switchTab('current')"
+                                class="flex-1 px-4 py-2 text-sm font-bold rounded-xl transition-all ${this.currentTab === 'current' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}">
+                            📋 Prossima
+                        </button>
+                        <button onclick="window.SchedinaUI.switchTab('history')"
+                                class="flex-1 px-4 py-2 text-sm font-bold rounded-xl transition-all ${this.currentTab === 'history' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}">
+                            📜 Storico
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div id="schedina-tab-content" class="px-3">
+                    <!-- Contenuto dinamico -->
+                </div>
+
+            </div>
+
+            <!-- Footer Sticky (solo per tab current) -->
+            <div id="schedina-footer" class="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent hidden">
+                <button id="schedina-submit-btn" onclick="window.SchedinaUI.submitPredictions()"
+                        class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl text-white font-bold text-base shadow-lg shadow-green-900/30 transition">
+                    Invia Schedina
+                </button>
+                <p id="schedina-submit-status" class="text-center text-[10px] text-gray-500 mt-2"></p>
+            </div>
+        `;
+
+        this.renderTab();
+    },
+
+    /**
+     * Switch tab
+     */
+    switchTab(tabName) {
+        this.currentTab = tabName;
+        this.render();
+    },
+
+    /**
+     * Renderizza tab corrente
+     */
+    renderTab() {
+        const footer = document.getElementById('schedina-footer');
+
+        if (this.currentTab === 'current') {
+            this.renderCurrentRound();
+            if (this.currentRound && !this.existingPrediction?.status) {
+                footer.classList.remove('hidden');
+            }
+        } else {
+            this.renderHistory();
+            footer.classList.add('hidden');
+        }
+    },
+
+    // ==================== CARICAMENTO DATI ====================
 
     /**
      * Carica dati della giornata corrente
      */
     async loadCurrentRound() {
-        const content = document.getElementById('schedina-content');
-        content.innerHTML = `
-            <div class="flex items-center justify-center py-12">
-                <div class="animate-spin rounded-full h-10 w-10 border-4 border-green-500 border-t-transparent"></div>
-            </div>
-        `;
-
         try {
             this.currentRound = await window.Schedina.getNextRoundMatches();
 
-            if (!this.currentRound) {
-                document.getElementById('schedina-round-info').textContent = 'Nessuna giornata disponibile';
-                return;
-            }
-
-            document.getElementById('schedina-round-info').textContent =
-                `Giornata ${this.currentRound.roundNumber} - ${this.currentRound.roundType}`;
+            if (!this.currentRound) return;
 
             // Carica pronostici esistenti
             const teamId = window.InterfacciaCore?.currentTeamId;
@@ -176,54 +190,26 @@ window.SchedinaUI = {
                 }
             }
 
-            // Verifica se puo' inviare
-            const canSubmitInfo = await window.Schedina.canSubmitPredictions(this.currentRound.roundNumber);
-            this.setupCountdown(canSubmitInfo);
-
         } catch (error) {
             console.error('[SchedinaUI] Errore caricamento:', error);
-            content.innerHTML = `
-                <div class="text-center py-8 text-red-400">
-                    <p>Errore nel caricamento</p>
-                    <button onclick="window.SchedinaUI.loadCurrentRound()" class="mt-4 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">
-                        Riprova
-                    </button>
-                </div>
-            `;
         }
     },
 
-    /**
-     * Renderizza tab
-     */
-    renderTab(tabName) {
-        const footer = document.getElementById('schedina-footer');
-        const countdownContainer = document.getElementById('schedina-countdown-container');
-
-        if (tabName === 'current') {
-            this.renderCurrentRound();
-            footer.classList.remove('hidden');
-            countdownContainer.classList.remove('hidden');
-        } else {
-            this.renderHistory();
-            footer.classList.add('hidden');
-            countdownContainer.classList.add('hidden');
-        }
-    },
+    // ==================== TAB CURRENT ====================
 
     /**
      * Renderizza partite della giornata corrente
      */
     renderCurrentRound() {
-        const content = document.getElementById('schedina-content');
+        const content = document.getElementById('schedina-tab-content');
         const footer = document.getElementById('schedina-footer');
 
         if (!this.currentRound) {
             content.innerHTML = `
-                <div class="text-center py-8 text-gray-400">
+                <div class="text-center py-12">
                     <p class="text-4xl mb-4">📅</p>
-                    <p>Nessuna giornata da pronosticare</p>
-                    <p class="text-sm mt-2">Tutte le partite sono state giocate</p>
+                    <p class="text-lg text-gray-400">Nessuna giornata</p>
+                    <p class="text-sm text-gray-500 mt-2">Tutte le partite sono state giocate</p>
                 </div>
             `;
             footer.classList.add('hidden');
@@ -236,59 +222,70 @@ window.SchedinaUI = {
             return;
         }
 
-        // Se ha gia' inviato una schedina (status pending), mostra solo i pronostici in sola lettura
-        if (this.existingPrediction && this.existingPrediction.status === 'pending') {
+        // Se ha gia' inviato una schedina (status pending)
+        if (this.existingPrediction?.status === 'pending') {
             this.renderSubmittedPredictions();
             return;
         }
 
-        const matchesHtml = this.currentRound.matches.map((match, index) => {
+        // Countdown
+        this.setupCountdown();
+
+        const matchesHtml = this.currentRound.matches.map((match) => {
             const key = `${match.homeId}_${match.awayId}`;
             const currentPred = this.predictions[key] || null;
             const isPlayed = !!match.result;
 
             return `
-                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 ${isPlayed ? 'opacity-50' : ''}"
+                <div class="bg-gradient-to-br from-gray-800/60 to-gray-900/80 rounded-xl p-3 border border-gray-700/50 ${isPlayed ? 'opacity-50' : ''}"
                      data-match-key="${key}">
-                    <div class="flex items-center justify-between gap-2">
-                        <!-- Squadra Casa -->
-                        <div class="flex-1 text-center">
-                            <p class="text-white font-semibold text-sm truncate">${match.homeName || match.homeId}</p>
-                        </div>
 
-                        <!-- Bottoni Pronostico -->
-                        <div class="flex gap-1 mx-2">
-                            <button class="pred-btn w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg transition
-                                           ${currentPred === '1' ? 'bg-green-600 text-white ring-2 ring-green-400' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}
-                                           ${isPlayed ? 'cursor-not-allowed' : ''}"
-                                    data-match-key="${key}" data-prediction="1" ${isPlayed ? 'disabled' : ''}>
-                                1
-                            </button>
-                            <button class="pred-btn w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg transition
-                                           ${currentPred === 'X' ? 'bg-yellow-600 text-white ring-2 ring-yellow-400' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}
-                                           ${isPlayed ? 'cursor-not-allowed' : ''}"
-                                    data-match-key="${key}" data-prediction="X" ${isPlayed ? 'disabled' : ''}>
-                                X
-                            </button>
-                            <button class="pred-btn w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg transition
-                                           ${currentPred === '2' ? 'bg-blue-600 text-white ring-2 ring-blue-400' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}
-                                           ${isPlayed ? 'cursor-not-allowed' : ''}"
-                                    data-match-key="${key}" data-prediction="2" ${isPlayed ? 'disabled' : ''}>
-                                2
-                            </button>
-                        </div>
-
-                        <!-- Squadra Trasferta -->
+                    <!-- Teams -->
+                    <div class="flex items-center justify-between gap-2 mb-3">
                         <div class="flex-1 text-center">
-                            <p class="text-white font-semibold text-sm truncate">${match.awayName || match.awayId}</p>
+                            <p class="text-white font-bold text-sm">${match.homeName || match.homeId}</p>
+                        </div>
+                        <span class="text-gray-600 text-xs font-bold">VS</span>
+                        <div class="flex-1 text-center">
+                            <p class="text-white font-bold text-sm">${match.awayName || match.awayId}</p>
                         </div>
                     </div>
-                    ${isPlayed ? `<p class="text-center text-xs text-gray-500 mt-2">Risultato: ${match.result}</p>` : ''}
+
+                    <!-- Prediction Buttons -->
+                    <div class="flex gap-2 justify-center">
+                        <button class="pred-btn flex-1 max-w-[80px] h-11 rounded-xl font-black text-lg transition-all
+                                       ${currentPred === '1' ? 'bg-green-500 text-white shadow-lg shadow-green-500/30 scale-105' : 'bg-gray-700/80 text-gray-400 hover:bg-gray-600'}
+                                       ${isPlayed ? 'cursor-not-allowed opacity-50' : ''}"
+                                data-match-key="${key}" data-prediction="1" ${isPlayed ? 'disabled' : ''}>
+                            1
+                        </button>
+                        <button class="pred-btn flex-1 max-w-[80px] h-11 rounded-xl font-black text-lg transition-all
+                                       ${currentPred === 'X' ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30 scale-105' : 'bg-gray-700/80 text-gray-400 hover:bg-gray-600'}
+                                       ${isPlayed ? 'cursor-not-allowed opacity-50' : ''}"
+                                data-match-key="${key}" data-prediction="X" ${isPlayed ? 'disabled' : ''}>
+                            X
+                        </button>
+                        <button class="pred-btn flex-1 max-w-[80px] h-11 rounded-xl font-black text-lg transition-all
+                                       ${currentPred === '2' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105' : 'bg-gray-700/80 text-gray-400 hover:bg-gray-600'}
+                                       ${isPlayed ? 'cursor-not-allowed opacity-50' : ''}"
+                                data-match-key="${key}" data-prediction="2" ${isPlayed ? 'disabled' : ''}>
+                            2
+                        </button>
+                    </div>
+
+                    ${isPlayed ? `<p class="text-center text-[10px] text-gray-500 mt-2">Risultato: ${match.result}</p>` : ''}
                 </div>
             `;
         }).join('');
 
         content.innerHTML = `
+            <!-- Countdown -->
+            <div id="schedina-countdown-box" class="bg-gradient-to-br from-yellow-900/30 to-gray-900/60 border border-yellow-500/40 rounded-xl p-3 mb-4 text-center hidden">
+                <p class="text-yellow-400 text-xs font-semibold">Pronostici chiudono tra:</p>
+                <p id="schedina-countdown" class="text-xl font-black text-white mt-1">--:--:--</p>
+            </div>
+
+            <!-- Matches -->
             <div class="space-y-3">
                 ${matchesHtml}
             </div>
@@ -311,35 +308,28 @@ window.SchedinaUI = {
      * Renderizza schedina gia' inviata (sola lettura)
      */
     renderSubmittedPredictions() {
-        const content = document.getElementById('schedina-content');
+        const content = document.getElementById('schedina-tab-content');
         const footer = document.getElementById('schedina-footer');
-
-        // Nascondi il bottone invia
         footer.classList.add('hidden');
 
         const predictionsHtml = this.existingPrediction.predictions.map(p => {
-            const predColor = p.prediction === '1' ? 'bg-green-600' :
-                             p.prediction === 'X' ? 'bg-yellow-600' : 'bg-blue-600';
+            const predStyles = {
+                '1': 'bg-green-500 text-white',
+                'X': 'bg-yellow-500 text-black',
+                '2': 'bg-blue-500 text-white'
+            };
 
             return `
-                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="bg-gradient-to-br from-gray-800/60 to-gray-900/80 rounded-xl p-3 border border-gray-700/50">
                     <div class="flex items-center justify-between gap-2">
-                        <!-- Squadra Casa -->
                         <div class="flex-1 text-center">
-                            <p class="text-white font-semibold text-sm truncate">${p.homeName}</p>
+                            <p class="text-white font-bold text-sm">${p.homeName}</p>
                         </div>
-
-                        <!-- Pronostico (solo visualizzazione) -->
-                        <div class="flex gap-1 mx-2">
-                            <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg flex items-center justify-center
-                                        ${predColor} text-white ring-2 ${p.prediction === '1' ? 'ring-green-400' : p.prediction === 'X' ? 'ring-yellow-400' : 'ring-blue-400'}">
-                                ${p.prediction}
-                            </span>
-                        </div>
-
-                        <!-- Squadra Trasferta -->
+                        <span class="w-10 h-10 rounded-xl font-black text-base flex items-center justify-center ${predStyles[p.prediction]}">
+                            ${p.prediction}
+                        </span>
                         <div class="flex-1 text-center">
-                            <p class="text-white font-semibold text-sm truncate">${p.awayName}</p>
+                            <p class="text-white font-bold text-sm">${p.awayName}</p>
                         </div>
                     </div>
                 </div>
@@ -347,22 +337,16 @@ window.SchedinaUI = {
         }).join('');
 
         content.innerHTML = `
-            <div class="space-y-3">
-                <!-- Banner schedina inviata -->
-                <div class="bg-green-900/40 border-2 border-green-500 rounded-xl p-4 text-center">
-                    <p class="text-3xl mb-2">✅</p>
-                    <p class="text-green-400 font-bold text-lg">Schedina Inviata!</p>
-                    <p class="text-gray-300 text-sm mt-2">I tuoi pronostici per la Giornata ${this.currentRound.roundNumber}</p>
-                    <p class="text-gray-500 text-xs mt-1">In attesa dei risultati delle partite</p>
-                </div>
+            <!-- Banner schedina inviata -->
+            <div class="bg-gradient-to-br from-green-900/40 to-gray-900/60 border border-green-500/50 rounded-xl p-4 text-center mb-4">
+                <p class="text-3xl mb-2">✅</p>
+                <p class="text-green-400 font-black text-lg">Schedina Inviata!</p>
+                <p class="text-gray-400 text-xs mt-1">In attesa dei risultati</p>
+            </div>
 
-                <!-- Lista pronostici -->
-                <div class="mt-4">
-                    <h3 class="text-gray-400 text-sm font-semibold mb-3 uppercase tracking-wide">I tuoi pronostici:</h3>
-                    <div class="space-y-2">
-                        ${predictionsHtml}
-                    </div>
-                </div>
+            <!-- Lista pronostici -->
+            <div class="space-y-2">
+                ${predictionsHtml}
             </div>
         `;
     },
@@ -371,67 +355,67 @@ window.SchedinaUI = {
      * Renderizza risultati calcolati
      */
     renderCalculatedResults() {
-        const content = document.getElementById('schedina-content');
+        const content = document.getElementById('schedina-tab-content');
+        const footer = document.getElementById('schedina-footer');
+        footer.classList.add('hidden');
+
         const pred = this.existingPrediction;
         const results = pred.results;
 
         const predictionsHtml = pred.predictions.map(p => {
-            const iconClass = p.isCorrect ? 'text-green-400' : 'text-red-400';
-            const icon = p.isCorrect ? '✓' : '✗';
-            const actualSymbol = window.Schedina.getResultSymbol(p.actualResult);
+            const isCorrect = p.isCorrect;
+            const borderColor = isCorrect ? 'border-green-500/50' : 'border-red-500/50';
+            const bgColor = isCorrect ? 'from-green-900/30' : 'from-red-900/30';
 
             return `
-                <div class="bg-gray-800 rounded-lg p-3 border ${p.isCorrect ? 'border-green-500' : 'border-red-500'}">
+                <div class="bg-gradient-to-br ${bgColor} to-gray-900/80 rounded-xl p-3 border ${borderColor}">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
-                            <p class="text-white text-sm">${p.homeName} vs ${p.awayName}</p>
-                            <p class="text-gray-400 text-xs mt-1">Risultato: ${p.actualResult || '-'}</p>
+                            <p class="text-white text-sm font-bold">${p.homeName} vs ${p.awayName}</p>
+                            <p class="text-gray-500 text-[10px] mt-1">Risultato: ${p.actualResult || '-'}</p>
                         </div>
-                        <div class="text-center mx-4">
-                            <span class="inline-block w-8 h-8 rounded-lg ${
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg ${
                                 p.prediction === '1' ? 'bg-green-700' :
                                 p.prediction === 'X' ? 'bg-yellow-700' : 'bg-blue-700'
-                            } text-white font-bold leading-8">${p.prediction}</span>
-                            <p class="text-xs text-gray-500 mt-1">Tuo</p>
-                        </div>
-                        <div class="text-center">
-                            <span class="text-2xl ${iconClass}">${icon}</span>
+                            } text-white font-bold text-sm flex items-center justify-center">${p.prediction}</span>
+                            <span class="text-xl">${isCorrect ? '✅' : '❌'}</span>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
 
-        content.innerHTML = `
-            <div class="space-y-4">
-                <!-- Riepilogo -->
-                <div class="bg-gradient-to-r ${results.isPerfect ? 'from-yellow-600 to-amber-500' : 'from-gray-700 to-gray-600'} rounded-xl p-4 text-center">
-                    <p class="text-white text-lg font-bold">
-                        ${results.isPerfect ? '🎉 SCHEDINA PERFETTA!' : `${results.correctPredictions}/${results.totalMatches} Corretti`}
-                    </p>
-                    ${results.totalReward > 0 || results.cssBonus > 0 ? `
-                        <p class="text-green-300 text-2xl font-bold mt-2">+${results.totalReward} CS${results.cssBonus > 0 ? ` <span class="text-amber-400">+${results.cssBonus} CSS</span>` : ''}</p>
-                        ${results.bonusReward > 0 ? `<p class="text-yellow-300 text-sm">(include bonus perfetta: +${results.bonusReward} CS${results.cssBonus > 0 ? ` +${results.cssBonus} CSS` : ''})</p>` : ''}
-                    ` : `
-                        <p class="text-gray-300 text-sm mt-2">Nessun premio questa volta</p>
-                    `}
-                </div>
+        const isPerfect = results.isPerfect;
+        const headerBg = isPerfect ? 'from-yellow-600 to-amber-500' : 'from-gray-700 to-gray-600';
 
-                <!-- Dettaglio pronostici -->
-                <div class="space-y-2">
-                    ${predictionsHtml}
-                </div>
+        content.innerHTML = `
+            <!-- Riepilogo -->
+            <div class="bg-gradient-to-r ${headerBg} rounded-xl p-4 text-center mb-4">
+                <p class="text-white text-lg font-black">
+                    ${isPerfect ? '🎉 SCHEDINA PERFETTA!' : `${results.correctPredictions}/${results.totalMatches} Corretti`}
+                </p>
+                ${results.totalReward > 0 || results.cssBonus > 0 ? `
+                    <p class="text-green-300 text-2xl font-black mt-2">+${results.totalReward} CS${results.cssBonus > 0 ? ` <span class="text-amber-300">+${results.cssBonus} CSS</span>` : ''}</p>
+                ` : `
+                    <p class="text-gray-300 text-sm mt-2">Nessun premio questa volta</p>
+                `}
+            </div>
+
+            <!-- Dettaglio pronostici -->
+            <div class="space-y-2">
+                ${predictionsHtml}
             </div>
         `;
-
-        document.getElementById('schedina-footer').classList.add('hidden');
     },
+
+    // ==================== TAB STORICO ====================
 
     /**
      * Renderizza storico schedine
      */
     async renderHistory() {
-        const content = document.getElementById('schedina-content');
+        const content = document.getElementById('schedina-tab-content');
         content.innerHTML = `
             <div class="flex items-center justify-center py-12">
                 <div class="animate-spin rounded-full h-10 w-10 border-4 border-green-500 border-t-transparent"></div>
@@ -448,44 +432,47 @@ window.SchedinaUI = {
 
         if (history.length === 0) {
             content.innerHTML = `
-                <div class="text-center py-8 text-gray-400">
+                <div class="text-center py-12">
                     <p class="text-4xl mb-4">📭</p>
-                    <p>Nessuna schedina compilata</p>
+                    <p class="text-lg text-gray-400">Nessuna schedina</p>
+                    <p class="text-sm text-gray-500 mt-2">Compila la tua prima schedina!</p>
                 </div>
             `;
             return;
         }
 
         const historyHtml = history.map((s, idx) => {
-            const status = s.status === 'calculated' ? 'Calcolata' : 'In attesa';
-            const statusColor = s.status === 'calculated' ? 'text-green-400' : 'text-yellow-400';
-            const correct = s.results?.correctPredictions || '-';
-            const total = s.results?.totalMatches || s.predictions?.length || '-';
+            const isCalculated = s.status === 'calculated';
+            const correct = s.results?.correctPredictions || 0;
+            const total = s.results?.totalMatches || s.predictions?.length || 0;
             const reward = s.results?.totalReward || 0;
+            const isPerfect = correct === total && total > 0;
 
             return `
-                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 cursor-pointer hover:bg-gray-700 transition schedina-history-item" data-index="${idx}">
+                <div class="bg-gradient-to-br ${isCalculated ? (isPerfect ? 'from-yellow-900/30' : 'from-gray-800/60') : 'from-yellow-900/20'} to-gray-900/80 rounded-xl p-3 border ${isCalculated ? (isPerfect ? 'border-yellow-500/50' : 'border-gray-700/50') : 'border-yellow-700/30'} cursor-pointer hover:border-white/30 transition schedina-history-item"
+                     data-index="${idx}">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-white font-semibold">Giornata ${s.roundNumber}</p>
-                            <p class="text-gray-400 text-xs mt-1">${new Date(s.submittedAt).toLocaleDateString('it-IT')}</p>
+                            <p class="text-white font-bold">Giornata ${s.roundNumber}</p>
+                            <p class="text-gray-500 text-[10px] mt-0.5">${new Date(s.submittedAt).toLocaleDateString('it-IT')}</p>
                         </div>
-                        <div class="text-right flex items-center gap-2">
-                            <div>
-                                <p class="${statusColor} text-sm font-semibold">${status}</p>
-                                ${s.status === 'calculated' ? `
-                                    <p class="text-white">${correct}/${total} corretti</p>
-                                    ${reward > 0 ? `<p class="text-green-400 font-bold">+${reward} CS</p>` : ''}
-                                ` : ''}
-                            </div>
-                            <span class="text-gray-500 text-lg">▶</span>
+                        <div class="text-right flex items-center gap-3">
+                            ${isCalculated ? `
+                                <div>
+                                    <p class="text-white font-bold">${correct}/${total}</p>
+                                    ${reward > 0 ? `<p class="text-green-400 text-xs font-bold">+${reward} CS</p>` : ''}
+                                </div>
+                                <span class="text-lg">${isPerfect ? '🏆' : (correct > 0 ? '✅' : '❌')}</span>
+                            ` : `
+                                <span class="text-[10px] px-2 py-1 bg-yellow-900/50 rounded-full text-yellow-400 font-bold">In attesa</span>
+                            `}
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
 
-        content.innerHTML = `<div class="space-y-3">${historyHtml}</div>`;
+        content.innerHTML = `<div class="space-y-2">${historyHtml}</div>`;
 
         // Aggiungi click listener per mostrare dettagli
         content.querySelectorAll('.schedina-history-item').forEach(item => {
@@ -502,41 +489,35 @@ window.SchedinaUI = {
     showSchedinaDetails(schedina) {
         const predictions = schedina.predictions || [];
         const status = schedina.status;
+        const isCalculated = status === 'calculated';
 
         let detailsHtml = predictions.map(p => {
-            const predSymbol = p.prediction || '-';
-            const actualSymbol = p.actualResult || '-';
             const isCorrect = p.isCorrect;
+            let bgClass = 'from-gray-800/60';
+            let borderClass = 'border-gray-700/50';
 
-            let bgClass = 'bg-gray-700';
-            let icon = '';
-            if (status === 'calculated') {
-                if (isCorrect) {
-                    bgClass = 'bg-green-900/50 border-green-500';
-                    icon = '✅';
-                } else {
-                    bgClass = 'bg-red-900/50 border-red-500';
-                    icon = '❌';
-                }
+            if (isCalculated) {
+                bgClass = isCorrect ? 'from-green-900/30' : 'from-red-900/30';
+                borderClass = isCorrect ? 'border-green-500/50' : 'border-red-500/50';
             }
 
             return `
-                <div class="p-3 rounded-lg border ${bgClass}">
+                <div class="bg-gradient-to-br ${bgClass} to-gray-900/80 rounded-xl p-3 border ${borderClass}">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
-                            <p class="text-white text-sm font-semibold">${p.homeName || p.homeId} vs ${p.awayName || p.awayId}</p>
+                            <p class="text-white text-sm font-bold">${p.homeName || p.homeId} vs ${p.awayName || p.awayId}</p>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
                             <div class="text-center">
-                                <p class="text-xs text-gray-400">Pronostico</p>
-                                <p class="text-yellow-400 font-bold">${predSymbol}</p>
+                                <p class="text-[9px] text-gray-500">Tuo</p>
+                                <p class="text-yellow-400 font-bold">${p.prediction}</p>
                             </div>
-                            ${status === 'calculated' ? `
+                            ${isCalculated ? `
                                 <div class="text-center">
-                                    <p class="text-xs text-gray-400">Risultato</p>
-                                    <p class="text-white font-bold">${actualSymbol}</p>
+                                    <p class="text-[9px] text-gray-500">Esito</p>
+                                    <p class="text-white font-bold">${p.actualResult || '-'}</p>
                                 </div>
-                                <span class="text-xl">${icon}</span>
+                                <span class="text-xl">${isCorrect ? '✅' : '❌'}</span>
                             ` : ''}
                         </div>
                     </div>
@@ -544,40 +525,71 @@ window.SchedinaUI = {
             `;
         }).join('');
 
-        // Mostra in un overlay
+        // Mostra in un overlay fullscreen mobile
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black/80 z-[10000] flex items-center justify-center p-4';
+        overlay.className = 'fixed inset-0 bg-slate-900 z-[10000] overflow-y-auto';
+
+        const correct = schedina.results?.correctPredictions || 0;
+        const total = schedina.results?.totalMatches || 0;
+        const reward = schedina.results?.totalReward || 0;
+        const isPerfect = correct === total && total > 0;
+
         overlay.innerHTML = `
-            <div class="bg-gray-900 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto border border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">Giornata ${schedina.roundNumber}</h3>
-                    <button id="close-schedina-details" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-                </div>
-                ${schedina.status === 'calculated' ? `
-                    <div class="mb-4 p-3 rounded-lg ${schedina.results?.correctPredictions === schedina.results?.totalMatches ? 'bg-green-900/50' : 'bg-gray-800'}">
-                        <p class="text-center text-white font-bold">
-                            ${schedina.results?.correctPredictions || 0}/${schedina.results?.totalMatches || 0} corretti
-                            ${schedina.results?.totalReward > 0 ? `<span class="text-green-400 ml-2">+${schedina.results.totalReward} CS</span>` : ''}
-                        </p>
+            <div class="min-h-screen pb-20">
+
+                <!-- Header Sticky -->
+                <div class="sticky top-0 z-10 bg-gradient-to-b from-slate-900 to-slate-900/95 backdrop-blur-sm border-b border-gray-700/50 px-4 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🎯</span>
+                            <div>
+                                <h2 class="text-lg font-black text-white">Giornata ${schedina.roundNumber}</h2>
+                                <p class="text-[10px] text-gray-400">${new Date(schedina.submittedAt).toLocaleDateString('it-IT')}</p>
+                            </div>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()"
+                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800/80 border border-gray-700 text-gray-400 hover:text-white hover:bg-red-500/30 transition">
+                            <span class="text-xl">×</span>
+                        </button>
                     </div>
-                ` : `
-                    <div class="mb-4 p-3 rounded-lg bg-yellow-900/50">
-                        <p class="text-center text-yellow-400">In attesa dei risultati</p>
-                    </div>
-                `}
-                <div class="space-y-2">
-                    ${detailsHtml}
                 </div>
+
+                <!-- Content -->
+                <div class="px-4 py-4 space-y-3">
+
+                    ${isCalculated ? `
+                        <!-- Riepilogo -->
+                        <div class="bg-gradient-to-r ${isPerfect ? 'from-yellow-600 to-amber-500' : 'from-gray-700 to-gray-600'} rounded-xl p-4 text-center">
+                            <p class="text-white font-black text-lg">
+                                ${isPerfect ? '🏆 Perfetta!' : `${correct}/${total} Corretti`}
+                            </p>
+                            ${reward > 0 ? `<p class="text-green-300 text-xl font-black mt-1">+${reward} CS</p>` : ''}
+                        </div>
+                    ` : `
+                        <div class="bg-gradient-to-br from-yellow-900/30 to-gray-900/60 border border-yellow-500/40 rounded-xl p-4 text-center">
+                            <p class="text-yellow-400 font-bold">⏳ In attesa dei risultati</p>
+                        </div>
+                    `}
+
+                    <!-- Pronostici -->
+                    <div class="space-y-2">
+                        ${detailsHtml}
+                    </div>
+
+                </div>
+
+                <!-- Footer Sticky -->
+                <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent">
+                    <button onclick="this.closest('.fixed').remove()"
+                            class="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white font-bold py-3 px-6 rounded-xl transition">
+                        Chiudi
+                    </button>
+                </div>
+
             </div>
         `;
 
         document.body.appendChild(overlay);
-
-        // Close handlers
-        document.getElementById('close-schedina-details').addEventListener('click', () => overlay.remove());
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.remove();
-        });
     },
 
     // ==================== LOGICA PRONOSTICI ====================
@@ -600,14 +612,15 @@ window.SchedinaUI = {
                 const p = btn.dataset.prediction;
                 const isSelected = this.predictions[matchKey] === p;
 
-                btn.classList.remove('bg-green-600', 'bg-yellow-600', 'bg-blue-600', 'ring-2', 'ring-green-400', 'ring-yellow-400', 'ring-blue-400');
-                btn.classList.add('bg-gray-700', 'text-gray-300');
+                // Reset classes
+                btn.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-blue-500', 'text-white', 'text-black', 'shadow-lg', 'shadow-green-500/30', 'shadow-yellow-500/30', 'shadow-blue-500/30', 'scale-105');
+                btn.classList.add('bg-gray-700/80', 'text-gray-400');
 
                 if (isSelected) {
-                    btn.classList.remove('bg-gray-700', 'text-gray-300');
-                    if (p === '1') btn.classList.add('bg-green-600', 'text-white', 'ring-2', 'ring-green-400');
-                    if (p === 'X') btn.classList.add('bg-yellow-600', 'text-white', 'ring-2', 'ring-yellow-400');
-                    if (p === '2') btn.classList.add('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-400');
+                    btn.classList.remove('bg-gray-700/80', 'text-gray-400');
+                    if (p === '1') btn.classList.add('bg-green-500', 'text-white', 'shadow-lg', 'shadow-green-500/30', 'scale-105');
+                    if (p === 'X') btn.classList.add('bg-yellow-500', 'text-black', 'shadow-lg', 'shadow-yellow-500/30', 'scale-105');
+                    if (p === '2') btn.classList.add('bg-blue-500', 'text-white', 'shadow-lg', 'shadow-blue-500/30', 'scale-105');
                 }
             });
         }
@@ -622,7 +635,7 @@ window.SchedinaUI = {
         const btn = document.getElementById('schedina-submit-btn');
         const status = document.getElementById('schedina-submit-status');
 
-        if (!this.currentRound) return;
+        if (!this.currentRound || !btn || !status) return;
 
         // Conta partite non giocate
         const unplayedMatches = this.currentRound.matches.filter(m => !m.result);
@@ -632,8 +645,8 @@ window.SchedinaUI = {
 
         btn.disabled = !allPredicted;
         status.textContent = allPredicted
-            ? 'Tutti i pronostici inseriti'
-            : `${predictedCount}/${unplayedMatches.length} pronostici inseriti`;
+            ? '✓ Tutti i pronostici inseriti'
+            : `${predictedCount}/${unplayedMatches.length} pronostici`;
     },
 
     /**
@@ -643,7 +656,7 @@ window.SchedinaUI = {
         const btn = document.getElementById('schedina-submit-btn');
         const originalText = btn.textContent;
         btn.disabled = true;
-        btn.textContent = 'Invio in corso...';
+        btn.textContent = 'Invio...';
 
         try {
             const teamId = window.InterfacciaCore?.currentTeamId;
@@ -655,7 +668,7 @@ window.SchedinaUI = {
 
             // Prepara array pronostici
             const predictionsArray = this.currentRound.matches
-                .filter(m => !m.result) // Solo partite non giocate
+                .filter(m => !m.result)
                 .map(match => {
                     const key = `${match.homeId}_${match.awayId}`;
                     return {
@@ -676,7 +689,7 @@ window.SchedinaUI = {
                 predictionsArray
             );
 
-            window.Toast?.success('Schedina inviata con successo!');
+            window.Toast?.success('Schedina inviata!');
 
             // Aggiorna stato
             this.existingPrediction = {
@@ -685,7 +698,7 @@ window.SchedinaUI = {
             };
 
             // Refresh UI
-            this.renderCurrentRound();
+            this.render();
 
         } catch (error) {
             console.error('[SchedinaUI] Errore invio:', error);
@@ -701,40 +714,49 @@ window.SchedinaUI = {
     /**
      * Setup countdown
      */
-    setupCountdown(canSubmitInfo) {
-        const container = document.getElementById('schedina-countdown-container');
+    async setupCountdown() {
+        const box = document.getElementById('schedina-countdown-box');
         const countdown = document.getElementById('schedina-countdown');
+        const submitBtn = document.getElementById('schedina-submit-btn');
 
-        if (!canSubmitInfo.canSubmit) {
-            container.classList.remove('hidden');
-            countdown.textContent = canSubmitInfo.reason || 'Chiuso';
-            countdown.classList.add('text-red-400');
-            document.getElementById('schedina-submit-btn').disabled = true;
-            return;
-        }
+        if (!box || !countdown) return;
 
-        if (!canSubmitInfo.closingTime) {
-            container.classList.add('hidden');
-            return;
-        }
+        try {
+            const canSubmitInfo = await window.Schedina.canSubmitPredictions(this.currentRound.roundNumber);
 
-        container.classList.remove('hidden');
-        countdown.classList.remove('text-red-400');
-
-        this.stopCountdown();
-        this.countdownInterval = setInterval(() => {
-            const remaining = this.formatCountdown(canSubmitInfo.closingTime);
-            countdown.textContent = remaining;
-
-            if (remaining === 'Chiuso') {
-                this.stopCountdown();
+            if (!canSubmitInfo.canSubmit) {
+                box.classList.remove('hidden');
+                countdown.textContent = canSubmitInfo.reason || 'Chiuso';
                 countdown.classList.add('text-red-400');
-                document.getElementById('schedina-submit-btn').disabled = true;
+                if (submitBtn) submitBtn.disabled = true;
+                return;
             }
-        }, 1000);
 
-        // Aggiorna subito
-        countdown.textContent = this.formatCountdown(canSubmitInfo.closingTime);
+            if (!canSubmitInfo.closingTime) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            box.classList.remove('hidden');
+            countdown.classList.remove('text-red-400');
+
+            this.stopCountdown();
+            this.countdownInterval = setInterval(() => {
+                const remaining = this.formatCountdown(canSubmitInfo.closingTime);
+                countdown.textContent = remaining;
+
+                if (remaining === 'Chiuso') {
+                    this.stopCountdown();
+                    countdown.classList.add('text-red-400');
+                    if (submitBtn) submitBtn.disabled = true;
+                }
+            }, 1000);
+
+            countdown.textContent = this.formatCountdown(canSubmitInfo.closingTime);
+
+        } catch (error) {
+            console.error('[SchedinaUI] Errore countdown:', error);
+        }
     },
 
     /**
