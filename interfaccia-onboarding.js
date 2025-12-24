@@ -91,7 +91,7 @@ window.InterfacciaOnboarding = {
                  <img src="${photoUrl}"
                       alt="Icona ${player.name}"
                       class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-gray-500"
-                      onerror="this.src='https://placehold.co/96x96/A0522D/ffffff?text=Icona'">
+                      onerror="this.src='https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/bemolle.jpg?raw=true'">
 
                  <p class="text-lg font-extrabold text-white">${player.name}</p>
                  <p class="text-sm font-semibold text-yellow-400">${player.role} (${player.type})</p>

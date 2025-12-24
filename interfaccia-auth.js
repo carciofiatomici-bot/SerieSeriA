@@ -1007,8 +1007,8 @@ window.InterfacciaAuth = {
                     <img src="${window.sanitizeGitHubUrl(icona.photoUrl)}"
                          alt="${icona.name}"
                          class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400"
-                         onerror="this.src='https://placehold.co/96x96/A0522D/ffffff?text=Icona'">
-                    <p class="text-lg font-extrabold text-white">${icona.name} 👑</p>
+                         onerror="this.src='https://github.com/carciofiatomici-bot/immaginiserie/blob/main/Icone/bemolle.jpg?raw=true'">
+                    <p class="text-lg font-extrabold text-white">${icona.name}</p>
                     <p class="text-sm text-yellow-400">${icona.role} - ${icona.type}</p>
                     <div class="mt-2 space-y-1">
                         <p class="text-xs text-amber-400 font-semibold">Icona</p>
@@ -1080,7 +1080,7 @@ window.InterfacciaAuth = {
                              class="w-16 h-16 rounded-full object-cover border-3 border-yellow-400"
                              onerror="this.src='https://placehold.co/64x64/A0522D/ffffff?text=Icona'">
                         <div>
-                            <h3 class="text-xl font-bold text-white">${icona.name} 👑</h3>
+                            <h3 class="text-xl font-bold text-white">${icona.name}</h3>
                             <p class="text-sm text-yellow-400">${icona.role} - ${icona.type} - Lv. Iniziale: 10</p>
                         </div>
                     </div>

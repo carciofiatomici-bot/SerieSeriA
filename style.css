@@ -6751,3 +6751,1174 @@ select,
         transform: translateY(0) scale(1);
     }
 }
+
+/* ============================================
+   15.17 FIGURINE MOBILE ENHANCED EXPERIENCE
+   Touch-friendly, compact, animated
+   ============================================ */
+
+/* Collection Header Mobile Enhancement */
+@media (max-width: 640px) {
+    /* Animated collection icon bounce */
+    .collection-toggle .text-2xl {
+        display: inline-block;
+        animation: album-icon-float 3s ease-in-out infinite;
+    }
+
+    .collection-toggle:nth-child(odd) .text-2xl {
+        animation-delay: 0.5s;
+    }
+
+    .collection-toggle:nth-child(even) .text-2xl {
+        animation-delay: 1s;
+    }
+
+    /* Touch feedback - Active state */
+    .collection-toggle:active {
+        transform: scale(0.97);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%) !important;
+    }
+
+    .figurine-card:active {
+        transform: scale(0.94);
+        box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+    }
+
+    /* Collection toggle glow effect on expand */
+    .collection-toggle[aria-expanded="true"] {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%) !important;
+        border-left: 3px solid var(--album-accent, #8b5cf6) !important;
+    }
+
+    .collection-toggle[aria-expanded="true"] .text-2xl {
+        animation: album-icon-pulse 1s ease-in-out infinite;
+    }
+
+    /* Compact progress indicator in collection header */
+    .collection-toggle .flex.items-center.gap-2 {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem !important;
+    }
+
+    .collection-toggle .text-xs.text-gray-400 {
+        font-size: 0.6rem !important;
+        background: rgba(139, 92, 246, 0.2);
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        color: #c4b5fd !important;
+    }
+
+    /* Rarity Legend Mobile - Sticky and compact */
+    #figurine-content .flex.flex-wrap.gap-2.text-xs {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.95) 80%, transparent 100%);
+        padding: 0.5rem 0.75rem 0.75rem !important;
+        margin: 0 -0.75rem 0.5rem !important;
+        gap: 0.375rem !important;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span {
+        font-size: 0.55rem !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 0.375rem;
+        background: rgba(31, 41, 55, 0.8);
+        border: 1px solid rgba(75, 85, 99, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Rarity badge colors enhanced */
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span:nth-child(1) { /* Comune */
+        border-color: rgba(156, 163, 175, 0.5);
+    }
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span:nth-child(2) { /* Non Comune */
+        border-color: rgba(34, 197, 94, 0.5);
+        background: rgba(34, 197, 94, 0.1);
+    }
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span:nth-child(3) { /* Raro */
+        border-color: rgba(59, 130, 246, 0.5);
+        background: rgba(59, 130, 246, 0.1);
+    }
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span:nth-child(4) { /* Epico */
+        border-color: rgba(168, 85, 247, 0.5);
+        background: rgba(168, 85, 247, 0.15);
+    }
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span:nth-child(5) { /* Leggendario */
+        border-color: rgba(251, 191, 36, 0.6);
+        background: rgba(251, 191, 36, 0.15);
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+    }
+
+    /* Card grid - 4 columns ultra compact */
+    .collection-content .grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 0.375rem !important;
+        padding: 0.375rem !important;
+    }
+
+    /* Ultra compact cards */
+    .figurine-card {
+        padding: 0.25rem !important;
+        border-radius: 0.5rem !important;
+        min-height: auto !important;
+        aspect-ratio: 3/4;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .figurine-card img,
+    .figurine-card .w-12.h-12 {
+        width: 2rem !important;
+        height: 2rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+
+    .figurine-card p {
+        font-size: 0.5rem !important;
+        line-height: 1.1 !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Hide duplicate count on very small screens */
+    .figurine-card .flex.justify-center.gap-1 {
+        display: none !important;
+    }
+
+    /* Tab bar mobile enhancement */
+    .figurine-tab {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .figurine-tab::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--album-accent, #8b5cf6), var(--album-secondary, #3b82f6));
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .figurine-tab.active::before,
+    .figurine-tab:active::before {
+        width: 80%;
+    }
+
+    .figurine-tab:active {
+        background: rgba(139, 92, 246, 0.2) !important;
+    }
+
+    /* Stats bar compact */
+    #figurine-modal .bg-gray-800.rounded-lg.p-3 {
+        padding: 0.5rem 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Open pack button mobile */
+    .open-pack-btn {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.875rem !important;
+    }
+
+    /* Swipe hint animation for collections */
+    .collection-content {
+        position: relative;
+    }
+
+    .collection-content::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        background: linear-gradient(135deg, transparent 40%, rgba(139, 92, 246, 0.3) 100%);
+        border-radius: 50%;
+        opacity: 0;
+        animation: album-swipe-hint 3s ease-in-out infinite;
+        animation-delay: 2s;
+        pointer-events: none;
+    }
+
+    /* Quick scroll to top button area */
+    #figurine-content {
+        scroll-padding-top: 3rem;
+    }
+}
+
+/* Floating icon animation */
+@keyframes album-icon-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Pulse animation for expanded */
+@keyframes album-icon-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.8;
+    }
+}
+
+/* Swipe hint */
+@keyframes album-swipe-hint {
+    0%, 70%, 100% {
+        opacity: 0;
+        transform: translateX(0);
+    }
+    80% {
+        opacity: 0.6;
+        transform: translateX(-5px);
+    }
+    90% {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+}
+
+/* Extra small screens (iPhone SE, etc) */
+@media (max-width: 375px) {
+    .collection-content .grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .figurine-card img,
+    .figurine-card .w-12.h-12 {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+
+    .collection-toggle h3 {
+        font-size: 0.8rem !important;
+    }
+
+    #figurine-content .flex.flex-wrap.gap-2.text-xs > span {
+        font-size: 0.5rem !important;
+        padding: 0.15rem 0.375rem !important;
+    }
+}
+
+/* ============================================
+   15.18 CSS SHOP - CREDITI SUPER SERI PANEL
+   Luxury Gold Theme for Mobile
+   ============================================ */
+
+/* CSS Variables for Shop */
+:root {
+    --shop-gold: #f59e0b;
+    --shop-gold-light: #fbbf24;
+    --shop-gold-dark: #d97706;
+    --shop-amber-glow: rgba(245, 158, 11, 0.3);
+    --shop-surface: rgba(17, 24, 39, 0.95);
+    --shop-card: rgba(31, 41, 55, 0.9);
+}
+
+/* Overlay con pattern sottile */
+#css-potenziamento-overlay {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 15, 5, 0.98) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#css-potenziamento-overlay::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Header del pannello */
+#css-potenziamento-overlay .container > .flex:first-child {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Titolo con shimmer dorato */
+#css-potenziamento-overlay h2 {
+    background: linear-gradient(90deg, #f59e0b 0%, #fcd34d 25%, #f59e0b 50%, #fcd34d 75%, #f59e0b 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shop-gold-shimmer 4s linear infinite;
+}
+
+@keyframes shop-gold-shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+/* Saldo box con glow */
+#css-potenziamento-overlay .bg-amber-900 {
+    background: linear-gradient(135deg, rgba(120, 53, 15, 0.8) 0%, rgba(180, 83, 9, 0.6) 100%) !important;
+    border: 1px solid rgba(251, 191, 36, 0.5) !important;
+    box-shadow:
+        0 0 20px rgba(245, 158, 11, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: shop-saldo-pulse 3s ease-in-out infinite;
+}
+
+@keyframes shop-saldo-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
+    50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.4); }
+}
+
+/* Tab buttons con stile premium */
+#css-potenziamento-overlay .tab-btn {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#css-potenziamento-overlay .tab-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#css-potenziamento-overlay .tab-btn:hover::before {
+    opacity: 1;
+}
+
+#css-potenziamento-overlay .tab-btn.active {
+    background: linear-gradient(135deg, var(--shop-gold) 0%, var(--shop-gold-dark) 100%) !important;
+    border-color: var(--shop-gold-light);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+/* Content area */
+#css-panel-content {
+    background: linear-gradient(180deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Player cards nella griglia */
+#css-panel-content .grid[class*="grid-cols-12"] > div {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+#css-panel-content .grid[class*="grid-cols-12"] > div:hover {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Upgrade button con effetto lusso */
+#css-panel-content button[class*="bg-amber"] {
+    background: linear-gradient(135deg, var(--shop-gold) 0%, var(--shop-gold-dark) 100%) !important;
+    border: 1px solid var(--shop-gold-light);
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+    transition: all 0.2s ease;
+}
+
+#css-panel-content button[class*="bg-amber"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.5);
+}
+
+#css-panel-content button[class*="bg-amber"]:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+#css-panel-content button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(50%);
+}
+
+/* Close button */
+#btn-close-css-panel {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+    border: 1px solid #4b5563;
+    transition: all 0.2s ease;
+}
+
+#btn-close-css-panel:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+    border-color: #6b7280;
+}
+
+/* ============================================
+   CSS SHOP MOBILE OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 768px) {
+    /* Full screen modal su mobile */
+    #css-potenziamento-overlay .container {
+        padding: 1rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Header compatto */
+    #css-potenziamento-overlay .container > .flex:first-child {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        padding: 0.875rem 1rem !important;
+        text-align: center;
+    }
+
+    #css-potenziamento-overlay h2 {
+        font-size: 1.5rem !important;
+    }
+
+    #css-potenziamento-overlay .container > .flex:first-child p {
+        font-size: 0.75rem !important;
+    }
+
+    /* Saldo e Close button in riga */
+    #css-potenziamento-overlay .container > .flex:first-child > .flex {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #css-potenziamento-overlay .bg-amber-900 {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    #css-potenziamento-overlay .bg-amber-900 span:first-child {
+        font-size: 0.65rem !important;
+    }
+
+    #css-potenziamento-overlay #css-saldo-display {
+        font-size: 1rem !important;
+        margin-left: 0.375rem !important;
+    }
+
+    #btn-close-css-panel {
+        padding: 0.5rem 0.875rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Tab bar scrollabile */
+    #css-potenziamento-overlay .flex.flex-wrap.gap-2.mb-6 {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: visible;
+        padding-bottom: 0.75rem;
+        padding-right: 1rem;
+        margin-bottom: 1rem !important;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        gap: 0.5rem !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        position: relative;
+    }
+
+    /* Gradient fade per indicare scroll */
+    #css-potenziamento-overlay .flex.flex-wrap.gap-2.mb-6::after {
+        content: '';
+        position: sticky;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 2rem;
+        flex-shrink: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(17, 24, 39, 0.9) 100%);
+        pointer-events: none;
+    }
+
+    #css-potenziamento-overlay .flex.flex-wrap.gap-2.mb-6::-webkit-scrollbar {
+        display: none;
+    }
+
+    #css-potenziamento-overlay .tab-btn {
+        flex-shrink: 0;
+        padding: 0.625rem 0.875rem !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap;
+        border-radius: 9999px !important;
+    }
+
+    /* Assicura che tutti i tab siano visibili */
+    #css-potenziamento-overlay #tab-potenziamento,
+    #css-potenziamento-overlay #tab-abilita,
+    #css-potenziamento-overlay #tab-rimuovi,
+    #css-potenziamento-overlay #tab-upgrade-max,
+    #css-potenziamento-overlay #tab-servizi {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Content area mobile */
+    #css-panel-content {
+        padding: 1rem !important;
+        border-radius: 0.75rem !important;
+    }
+
+    /* Player list - card layout invece di griglia */
+    #css-panel-content .space-y-4 > .grid.grid-cols-12 {
+        display: none !important; /* Nascondi header */
+    }
+
+    #css-panel-content .space-y-4 > div:not(:first-child) {
+        display: flex !important;
+        flex-direction: column !important;
+        background: rgba(31, 41, 55, 0.6);
+        border: 1px solid rgba(75, 85, 99, 0.4);
+        border-radius: 0.75rem;
+        padding: 0.875rem !important;
+        margin-bottom: 0.625rem;
+        gap: 0.5rem;
+    }
+
+    /* Player card mobile layout */
+    #css-panel-content .grid.grid-cols-12:not(:first-child) {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto !important;
+        grid-template-rows: auto auto !important;
+        gap: 0.375rem 0.75rem !important;
+        align-items: center;
+    }
+
+    /* Ruolo badge */
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:first-child {
+        grid-row: 1 / 3;
+        font-size: 1.25rem !important;
+        background: rgba(17, 24, 39, 0.6);
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        min-width: 2.5rem;
+    }
+
+    /* Nome giocatore */
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:nth-child(2) {
+        grid-column: 2;
+        font-size: 0.9rem !important;
+        font-weight: 600;
+    }
+
+    /* Livello info */
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:nth-child(3),
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:nth-child(4),
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:nth-child(5) {
+        font-size: 0.7rem !important;
+    }
+
+    /* Upgrade button mobile */
+    #css-panel-content .grid.grid-cols-12:not(:first-child) > div:last-child {
+        grid-column: 3;
+        grid-row: 1 / 3;
+    }
+
+    #css-panel-content .grid.grid-cols-12:not(:first-child) button {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.7rem !important;
+        border-radius: 0.5rem !important;
+    }
+
+    /* Touch feedback */
+    #css-panel-content .space-y-4 > div:not(:first-child):active {
+        transform: scale(0.98);
+        background: rgba(245, 158, 11, 0.15);
+    }
+
+    /* Abilita tab mobile - lista cards */
+    #css-panel-content .grid.grid-cols-2,
+    #css-panel-content .grid.grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Ability cards */
+    #css-panel-content .grid.grid-cols-2 > div,
+    #css-panel-content .grid.grid-cols-3 > div {
+        background: rgba(31, 41, 55, 0.7);
+        border: 1px solid rgba(75, 85, 99, 0.5);
+        border-radius: 0.75rem;
+        padding: 1rem !important;
+    }
+
+    /* Servizi tab cards */
+    #css-panel-content > div > div {
+        border-radius: 0.75rem !important;
+    }
+}
+
+/* Extra small mobile */
+@media (max-width: 375px) {
+    #css-potenziamento-overlay h2 {
+        font-size: 1.25rem !important;
+    }
+
+    #css-potenziamento-overlay .tab-btn {
+        padding: 0.5rem 0.625rem !important;
+        font-size: 0.625rem !important;
+    }
+
+    #css-panel-content {
+        padding: 0.75rem !important;
+    }
+}
+
+/* ============================================
+   RISORSE-NEGOZIO BUTTON ENHANCEMENT
+   Bottone shop nell'header risorse
+   ============================================ */
+#risorse-negozio {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(120, 53, 15, 0.6) 0%, rgba(180, 83, 9, 0.4) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.5) !important;
+    transition: all 0.3s ease;
+}
+
+#risorse-negozio::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 70%
+    );
+    animation: shop-btn-shine 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes shop-btn-shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+#risorse-negozio:hover {
+    background: linear-gradient(135deg, rgba(180, 83, 9, 0.7) 0%, rgba(217, 119, 6, 0.5) 100%);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    transform: scale(1.05);
+}
+
+#risorse-negozio:active {
+    transform: scale(0.95);
+}
+
+#risorse-negozio span.text-lg {
+    animation: shop-icon-bounce 2s ease-in-out infinite;
+}
+
+@keyframes shop-icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+/* ============================================
+   15.19 LISTA ICONE MODAL - ROYAL GALLERY
+   Regal gold theme with card showcase
+   ============================================ */
+
+/* CSS Variables for Icons Gallery */
+:root {
+    --icone-gold: #eab308;
+    --icone-gold-light: #facc15;
+    --icone-gold-dark: #ca8a04;
+    --icone-crown-glow: rgba(234, 179, 8, 0.4);
+    --icone-card-bg: rgba(31, 41, 55, 0.95);
+}
+
+/* Modal Overlay - Royal atmosphere */
+#lista-icone-modal {
+    background: radial-gradient(ellipse at center top, rgba(234, 179, 8, 0.08) 0%, rgba(0, 0, 0, 0.95) 60%);
+}
+
+#lista-icone-modal::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 20px,
+            rgba(234, 179, 8, 0.02) 20px,
+            rgba(234, 179, 8, 0.02) 40px
+        );
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Main container */
+#lista-icone-modal > .football-box {
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(31, 41, 55, 0.95) 100%);
+    border: 2px solid rgba(234, 179, 8, 0.4) !important;
+    border-radius: 1.25rem !important;
+    box-shadow:
+        0 0 60px rgba(234, 179, 8, 0.15),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Header with crown effect */
+#lista-icone-modal .flex.justify-between.items-center.mb-4 {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.1) 50%, rgba(234, 179, 8, 0.15) 100%);
+    border-bottom: 2px solid rgba(234, 179, 8, 0.5) !important;
+    border-radius: 1rem 1rem 0 0;
+    padding: 1rem 1.25rem !important;
+    margin: -1rem -1rem 1rem -1rem !important;
+    position: relative;
+    overflow: hidden;
+}
+
+#lista-icone-modal .flex.justify-between.items-center.mb-4::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+    );
+    animation: icone-header-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes icone-header-shimmer {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50%); }
+}
+
+/* Title with royal styling */
+#lista-icone-modal h3 {
+    background: linear-gradient(135deg, #fcd34d 0%, #eab308 30%, #fcd34d 50%, #eab308 70%, #fcd34d 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: icone-title-shine 3s linear infinite;
+    text-shadow: none;
+    position: relative;
+}
+
+@keyframes icone-title-shine {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+/* Close button */
+#btn-close-lista-icone {
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem !important;
+    transition: all 0.2s ease;
+}
+
+#btn-close-lista-icone:hover {
+    background: rgba(239, 68, 68, 0.4);
+    transform: rotate(90deg);
+}
+
+/* Subtitle */
+#lista-icone-modal > .football-box > p {
+    color: #9ca3af;
+    font-style: italic;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+#lista-icone-modal > .football-box > p::before,
+#lista-icone-modal > .football-box > p::after {
+    content: '✦';
+    color: var(--icone-gold);
+    margin: 0 0.5rem;
+    font-size: 0.6rem;
+    vertical-align: middle;
+}
+
+/* Icons Grid Container */
+#lista-icone-container {
+    gap: 0.75rem !important;
+}
+
+/* Icon Cards - Premium styling */
+#lista-icone-container > div {
+    background: linear-gradient(145deg, rgba(55, 65, 81, 0.9) 0%, rgba(31, 41, 55, 0.95) 100%);
+    border: 2px solid rgba(234, 179, 8, 0.4) !important;
+    border-radius: 1rem !important;
+    padding: 1rem !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Card hover effect */
+#lista-icone-container > div:hover {
+    border-color: var(--icone-gold-light) !important;
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 8px 30px rgba(234, 179, 8, 0.25),
+        0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Card corner decorations */
+#lista-icone-container > div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border-top: 2px solid var(--icone-gold);
+    border-left: 2px solid var(--icone-gold);
+    border-radius: 0.5rem 0 0 0;
+    opacity: 0.6;
+}
+
+#lista-icone-container > div::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    border-bottom: 2px solid var(--icone-gold);
+    border-right: 2px solid var(--icone-gold);
+    border-radius: 0 0 0.5rem 0;
+    opacity: 0.6;
+}
+
+/* Avatar image */
+#lista-icone-container > div img {
+    border: 3px solid var(--icone-gold) !important;
+    box-shadow:
+        0 0 20px rgba(234, 179, 8, 0.3),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+#lista-icone-container > div:hover img {
+    box-shadow:
+        0 0 30px rgba(234, 179, 8, 0.5),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+}
+
+/* Name with crown */
+#lista-icone-container > div > p:first-of-type {
+    font-size: 1rem !important;
+    letter-spacing: 0.025em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Role/Type info */
+#lista-icone-container > div > p:nth-of-type(2) {
+    color: var(--icone-gold-light) !important;
+    font-weight: 600;
+}
+
+/* Abilities section */
+#lista-icone-container > div .space-y-1 {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem !important;
+}
+
+/* Ability badges */
+#lista-icone-container > div .space-y-1 p {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(202, 138, 4, 0.15) 100%);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    margin: 0.125rem;
+}
+
+/* "Clicca per dettagli" hint */
+#lista-icone-container > div > p:last-of-type {
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.3s ease;
+}
+
+#lista-icone-container > div:hover > p:last-of-type {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Close button at bottom */
+#btn-back-to-login {
+    background: linear-gradient(135deg, var(--icone-gold) 0%, var(--icone-gold-dark) 100%) !important;
+    border: none;
+    color: #1f2937 !important;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#btn-back-to-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+#btn-back-to-login:hover::before {
+    left: 100%;
+}
+
+#btn-back-to-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(234, 179, 8, 0.4);
+}
+
+/* ============================================
+   LISTA ICONE MOBILE OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 768px) {
+    /* Modal full screen feeling */
+    #lista-icone-modal {
+        padding: 0.5rem !important;
+        padding-top: 0.5rem !important;
+    }
+
+    #lista-icone-modal > .football-box {
+        border-radius: 1rem !important;
+        padding: 0.75rem !important;
+        max-height: 98vh !important;
+    }
+
+    /* Compact header */
+    #lista-icone-modal .flex.justify-between.items-center.mb-4 {
+        padding: 0.75rem 1rem !important;
+        margin: -0.75rem -0.75rem 0.75rem -0.75rem !important;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    #lista-icone-modal h3 {
+        font-size: 1.25rem !important;
+    }
+
+    #btn-close-lista-icone {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem !important;
+    }
+
+    /* Hide subtitle on mobile */
+    #lista-icone-modal > .football-box > p:first-of-type {
+        font-size: 0.7rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Single column - one icon per row */
+    #lista-icone-container {
+        grid-template-columns: 1fr !important;
+        gap: 0.625rem !important;
+    }
+
+    /* Card as grid layout: avatar | name+role | abilities */
+    #lista-icone-container > div {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto !important;
+        grid-template-rows: auto auto !important;
+        align-items: center !important;
+        padding: 0.625rem 0.875rem !important;
+        border-radius: 0.875rem !important;
+        gap: 0.25rem 0.625rem;
+        text-align: left !important;
+    }
+
+    /* Avatar on the left - spans 2 rows */
+    #lista-icone-container > div img {
+        grid-column: 1;
+        grid-row: 1 / 3;
+        width: 3.5rem !important;
+        height: 3.5rem !important;
+        min-width: 3.5rem !important;
+        margin: 0 !important;
+        border-width: 2px !important;
+    }
+
+    /* Name - top middle */
+    #lista-icone-container > div > p:first-of-type {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: 0.9rem !important;
+        margin: 0 !important;
+        line-height: 1.3;
+        align-self: end;
+    }
+
+    /* Role/Type - bottom middle */
+    #lista-icone-container > div > p:nth-of-type(2) {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: 0.65rem !important;
+        margin: 0 !important;
+        line-height: 1.2;
+        align-self: start;
+    }
+
+    /* Abilities - right side, spans 2 rows */
+    #lista-icone-container > div .space-y-1 {
+        grid-column: 3;
+        grid-row: 1 / 3;
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.25rem 0.4rem;
+        margin: 0 !important;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.375rem;
+        align-self: center;
+    }
+
+    #lista-icone-container > div .space-y-1 p {
+        font-size: 0.55rem !important;
+        padding: 0.1rem 0.35rem;
+        margin: 0 !important;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    /* Hide "clicca per dettagli" on mobile */
+    #lista-icone-container > div > p:last-of-type {
+        display: none !important;
+    }
+
+    /* Corner decorations adjusted for horizontal card */
+    #lista-icone-container > div::before,
+    #lista-icone-container > div::after {
+        width: 12px;
+        height: 12px;
+    }
+
+    /* Touch feedback */
+    #lista-icone-container > div:active {
+        transform: scale(0.96);
+        border-color: var(--icone-gold) !important;
+    }
+
+    /* Bottom button */
+    #btn-back-to-login {
+        padding: 0.75rem !important;
+        font-size: 0.875rem !important;
+        margin-top: 0.75rem !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 375px) {
+    #lista-icone-modal h3 {
+        font-size: 1.1rem !important;
+    }
+
+    #lista-icone-container > div {
+        padding: 0.625rem 0.75rem !important;
+        gap: 0.625rem;
+    }
+
+    #lista-icone-container > div img {
+        width: 3.5rem !important;
+        height: 3.5rem !important;
+    }
+
+    #lista-icone-container > div > p:first-of-type {
+        font-size: 0.875rem !important;
+    }
+
+    #lista-icone-container > div > p:nth-of-type(2) {
+        font-size: 0.65rem !important;
+    }
+
+    #lista-icone-container > div .space-y-1 p {
+        font-size: 0.6rem !important;
+    }
+}
+
+/* Card entrance animation */
+#lista-icone-container > div {
+    animation: icone-card-entrance 0.4s ease-out backwards;
+}
+
+#lista-icone-container > div:nth-child(1) { animation-delay: 0.05s; }
+#lista-icone-container > div:nth-child(2) { animation-delay: 0.1s; }
+#lista-icone-container > div:nth-child(3) { animation-delay: 0.15s; }
+#lista-icone-container > div:nth-child(4) { animation-delay: 0.2s; }
+#lista-icone-container > div:nth-child(5) { animation-delay: 0.25s; }
+#lista-icone-container > div:nth-child(6) { animation-delay: 0.3s; }
+#lista-icone-container > div:nth-child(7) { animation-delay: 0.35s; }
+#lista-icone-container > div:nth-child(8) { animation-delay: 0.4s; }
+#lista-icone-container > div:nth-child(9) { animation-delay: 0.45s; }
+#lista-icone-container > div:nth-child(10) { animation-delay: 0.5s; }
+#lista-icone-container > div:nth-child(11) { animation-delay: 0.55s; }
+#lista-icone-container > div:nth-child(12) { animation-delay: 0.6s; }
+#lista-icone-container > div:nth-child(13) { animation-delay: 0.65s; }
+#lista-icone-container > div:nth-child(14) { animation-delay: 0.7s; }
+#lista-icone-container > div:nth-child(15) { animation-delay: 0.75s; }
+
+@keyframes icone-card-entrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
