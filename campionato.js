@@ -7,7 +7,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const championshipContent = document.getElementById('championship-content');
     const championshipToolsContainer = document.getElementById('championship-tools-container');
-    const championshipBackButton = document.getElementById('championship-back-button');
     const adminContent = document.getElementById('admin-content');
     
     let db;
@@ -747,9 +746,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    championshipBackButton.addEventListener('click', () => {
-        if (window.showScreen && adminContent) window.showScreen(adminContent);
-    });
 
     document.addEventListener('championshipPanelLoaded', renderChampionshipPanel);
     

@@ -1,9 +1,9 @@
 //
 // ====================================================================
-// SFIDE MINIGAME - Futsal Tactics (Gioco Tattico a Turni)
+// SFIDE MINIGAME - Tattiche Serie (Gioco Tattico a Turni)
 // ====================================================================
 // Gioco tattico su griglia per sfide (btn-challenge)
-// - Campo 11x7 celle
+// - Campo 12x8 celle
 // - 5 giocatori per squadra (GK, FIX, ALA, ALA, PIV)
 // - 3 azioni per turno
 // - Primo a 3 gol vince
@@ -16,8 +16,8 @@
     // ========================================
     // CONFIGURAZIONE
     // ========================================
-    const GRID_W = 11;
-    const GRID_H = 7;
+    const GRID_W = 12;
+    const GRID_H = 8;
     const GOAL_LIMIT = 3;
 
     // ========================================
@@ -39,16 +39,16 @@
 
     const initialPlayers = [
         { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
-        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 3, mod: 6, isGK: false, mura: false, muraCells: [] },
+        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 4, mod: 6, isGK: false, mura: false, muraCells: [] },
         { id: 'A3', team: 'A', name: 'ALA', x: 4, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 5, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 3, mod: 7, isGK: false, mura: false, muraCells: [] },
+        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 6, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 4, mod: 7, isGK: false, mura: false, muraCells: [] },
 
-        { id: 'B1', team: 'B', name: 'GK', x: 10, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
-        { id: 'B2', team: 'B', name: 'FIX', x: 8, y: 3, mod: 6, isGK: false, mura: false, muraCells: [] },
-        { id: 'B3', team: 'B', name: 'ALA', x: 6, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'B4', team: 'B', name: 'ALA', x: 6, y: 5, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'B5', team: 'B', name: 'PIV', x: 6, y: 3, mod: 7, isGK: false, mura: false, muraCells: [] }
+        { id: 'B1', team: 'B', name: 'GK', x: 11, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
+        { id: 'B2', team: 'B', name: 'FIX', x: 9, y: 4, mod: 6, isGK: false, mura: false, muraCells: [] },
+        { id: 'B3', team: 'B', name: 'ALA', x: 7, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B4', team: 'B', name: 'ALA', x: 7, y: 6, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B5', team: 'B', name: 'PIV', x: 7, y: 4, mod: 7, isGK: false, mura: false, muraCells: [] }
     ];
 
     let players = [];
@@ -70,24 +70,24 @@
             <style>
                 #sfide-minigame-modal .pitch {
                     display: grid;
-                    grid-template-columns: repeat(11, 1fr);
-                    grid-template-rows: repeat(7, 1fr);
+                    grid-template-columns: repeat(12, 1fr);
+                    grid-template-rows: repeat(8, 1fr);
                     background-color: #15803d;
                     border: 4px solid #f8fafc;
                     position: relative;
-                    aspect-ratio: 11 / 7;
+                    aspect-ratio: 12 / 8;
                     width: 95%;
-                    max-width: 800px;
+                    max-width: 850px;
                     margin: 0 auto;
                     box-shadow: 0 0 50px rgba(0,0,0,0.5);
                 }
 
-                /* Mobile Portrait: Campo verticale (7x11 invece di 11x7) */
+                /* Mobile Portrait: Campo verticale (8x12 invece di 12x8) */
                 @media screen and (max-width: 768px) and (orientation: portrait) {
                     #sfide-minigame-modal .pitch {
-                        grid-template-columns: repeat(7, 1fr);
-                        grid-template-rows: repeat(11, 1fr);
-                        aspect-ratio: 7 / 11;
+                        grid-template-columns: repeat(8, 1fr);
+                        grid-template-rows: repeat(12, 1fr);
+                        aspect-ratio: 8 / 12;
                         width: 85%;
                         max-width: none;
                     }
@@ -1158,6 +1158,6 @@
         })
     };
 
-    console.log('[OK] Modulo SfideMinigame (Futsal Tactics) caricato.');
+    console.log('[OK] Modulo SfideMinigame (Tattiche Serie) caricato.');
 
 })();
