@@ -1,6 +1,10 @@
 frontend-design
 
-in tutti i bordi devono avere il colore del colorpicker e
+deve avere il colore del colorpicker team-color-picker-container  per i bordi del box e
     background: rgba(17, 24, 39, 0.6);
     border-radius: 12px;
     padding: 12px !important; 
+
+ rimanendo coerente con la grafica dell'app usa il frontend design per rendere più accattivante la
+  grafica del contenuto di btn-shop-negozio soprattutto per mobile come hai fatto per il campionato
+ 

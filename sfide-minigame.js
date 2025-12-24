@@ -16,8 +16,8 @@
     // ========================================
     // CONFIGURAZIONE
     // ========================================
-    const GRID_W = 12;
-    const GRID_H = 8;
+    const GRID_W = 13;
+    const GRID_H = 9;
     const GOAL_LIMIT = 3;
 
     // ========================================
@@ -38,16 +38,18 @@
     };
 
     const initialPlayers = [
-        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
-        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 4, mod: 6, isGK: false, mura: false, muraCells: [] },
+        // Squadra A (sinistra) - campo 13x9
+        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 4, mod: 8, isGK: true, mura: false, muraCells: [] },
+        { id: 'A2', team: 'A', name: 'FIX', x: 3, y: 4, mod: 6, isGK: false, mura: false, muraCells: [] },
         { id: 'A3', team: 'A', name: 'ALA', x: 4, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 6, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 7, mod: 5, isGK: false, mura: false, muraCells: [] },
         { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 4, mod: 7, isGK: false, mura: false, muraCells: [] },
 
-        { id: 'B1', team: 'B', name: 'GK', x: 11, y: 3, mod: 8, isGK: true, mura: false, muraCells: [] },
+        // Squadra B (destra) - campo 13x9
+        { id: 'B1', team: 'B', name: 'GK', x: 12, y: 4, mod: 8, isGK: true, mura: false, muraCells: [] },
         { id: 'B2', team: 'B', name: 'FIX', x: 9, y: 4, mod: 6, isGK: false, mura: false, muraCells: [] },
-        { id: 'B3', team: 'B', name: 'ALA', x: 7, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
-        { id: 'B4', team: 'B', name: 'ALA', x: 7, y: 6, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B3', team: 'B', name: 'ALA', x: 8, y: 1, mod: 5, isGK: false, mura: false, muraCells: [] },
+        { id: 'B4', team: 'B', name: 'ALA', x: 8, y: 7, mod: 5, isGK: false, mura: false, muraCells: [] },
         { id: 'B5', team: 'B', name: 'PIV', x: 7, y: 4, mod: 7, isGK: false, mura: false, muraCells: [] }
     ];
 
@@ -70,32 +72,33 @@
             <style>
                 #sfide-minigame-modal .pitch {
                     display: grid;
-                    grid-template-columns: repeat(12, 1fr);
-                    grid-template-rows: repeat(8, 1fr);
+                    grid-template-columns: repeat(13, 1fr);
+                    grid-template-rows: repeat(9, 1fr);
                     background-color: #15803d;
                     border: 4px solid #f8fafc;
                     position: relative;
-                    aspect-ratio: 12 / 8;
+                    aspect-ratio: 13 / 9;
                     width: 95%;
-                    max-width: 850px;
+                    max-width: 900px;
                     margin: 0 auto;
                     box-shadow: 0 0 50px rgba(0,0,0,0.5);
                 }
 
-                /* Mobile Portrait: Campo verticale (8x12 invece di 12x8) */
+                /* Mobile Portrait: Campo verticale (9x13 invece di 13x9) */
                 @media screen and (max-width: 768px) and (orientation: portrait) {
                     #sfide-minigame-modal .pitch {
-                        grid-template-columns: repeat(8, 1fr);
-                        grid-template-rows: repeat(12, 1fr);
-                        aspect-ratio: 8 / 12;
+                        grid-template-columns: repeat(9, 1fr);
+                        grid-template-rows: repeat(13, 1fr);
+                        aspect-ratio: 9 / 13;
                         width: 98%;
                         max-width: none;
                         max-height: 55vh;
                     }
+                    /* Porte 2 celle: 2/9 = 22.22%, posizione 3.5/9 = 38.89% */
                     #sfide-minigame-modal .goal-post {
-                        width: 42.85% !important;
+                        width: 22.22% !important;
                         height: 10px !important;
-                        left: 28.57% !important;
+                        left: 38.89% !important;
                         top: auto !important;
                         right: auto !important;
                     }
@@ -194,17 +197,162 @@
                     pointer-events: none;
                 }
 
+                /* Porte: 2 celle centrali su 9 = 22.22% altezza, top 38.89% */
                 #sfide-minigame-modal .goal-post {
                     position: absolute;
                     width: 10px;
-                    height: 42.85%;
-                    top: 28.57%;
+                    height: 22.22%;
+                    top: 38.89%;
                     background: #fff;
                     border: 2px solid #333;
                     z-index: 5;
                 }
                 #sfide-minigame-modal .goal-left { left: -10px; border-radius: 4px 0 0 4px; }
                 #sfide-minigame-modal .goal-right { right: -10px; border-radius: 0 4px 4px 0; }
+
+                /* Linee campo calcio */
+                #sfide-minigame-modal .pitch-lines {
+                    position: absolute;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 1;
+                }
+                /* Linea di centrocampo */
+                #sfide-minigame-modal .center-line {
+                    position: absolute;
+                    left: 50%;
+                    top: 0;
+                    bottom: 0;
+                    width: 2px;
+                    background: rgba(255,255,255,0.5);
+                    transform: translateX(-50%);
+                }
+                /* Cerchio di centrocampo */
+                #sfide-minigame-modal .center-circle {
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    width: 20%;
+                    aspect-ratio: 1;
+                    border: 2px solid rgba(255,255,255,0.5);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                }
+                /* Punto di centrocampo */
+                #sfide-minigame-modal .center-spot {
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    width: 8px;
+                    height: 8px;
+                    background: rgba(255,255,255,0.6);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                }
+                /* Area portiere sinistra */
+                #sfide-minigame-modal .penalty-area-left {
+                    position: absolute;
+                    left: 0;
+                    top: 18.75%;
+                    width: 16.66%;
+                    height: 62.5%;
+                    border: 2px solid rgba(255,255,255,0.5);
+                    border-left: none;
+                    border-radius: 0 4px 4px 0;
+                }
+                /* Area portiere destra */
+                #sfide-minigame-modal .penalty-area-right {
+                    position: absolute;
+                    right: 0;
+                    top: 18.75%;
+                    width: 16.66%;
+                    height: 62.5%;
+                    border: 2px solid rgba(255,255,255,0.5);
+                    border-right: none;
+                    border-radius: 4px 0 0 4px;
+                }
+                /* Area piccola sinistra */
+                #sfide-minigame-modal .goal-area-left {
+                    position: absolute;
+                    left: 0;
+                    top: 31.25%;
+                    width: 8.33%;
+                    height: 37.5%;
+                    border: 2px solid rgba(255,255,255,0.5);
+                    border-left: none;
+                    border-radius: 0 2px 2px 0;
+                }
+                /* Area piccola destra */
+                #sfide-minigame-modal .goal-area-right {
+                    position: absolute;
+                    right: 0;
+                    top: 31.25%;
+                    width: 8.33%;
+                    height: 37.5%;
+                    border: 2px solid rgba(255,255,255,0.5);
+                    border-right: none;
+                    border-radius: 2px 0 0 2px;
+                }
+
+                /* Mobile Portrait: ruota le linee */
+                @media screen and (max-width: 768px) and (orientation: portrait) {
+                    #sfide-minigame-modal .center-line {
+                        left: 0;
+                        right: 0;
+                        top: 50%;
+                        bottom: auto;
+                        width: 100%;
+                        height: 2px;
+                        transform: translateY(-50%);
+                    }
+                    #sfide-minigame-modal .center-circle {
+                        width: 25%;
+                    }
+                    #sfide-minigame-modal .penalty-area-left {
+                        left: 18.75%;
+                        top: 0;
+                        width: 62.5%;
+                        height: 16.66%;
+                        border: 2px solid rgba(255,255,255,0.5);
+                        border-top: none;
+                        border-left: 2px solid rgba(255,255,255,0.5);
+                        border-radius: 0 0 4px 4px;
+                    }
+                    #sfide-minigame-modal .penalty-area-right {
+                        right: auto;
+                        left: 18.75%;
+                        top: auto;
+                        bottom: 0;
+                        width: 62.5%;
+                        height: 16.66%;
+                        border: 2px solid rgba(255,255,255,0.5);
+                        border-bottom: none;
+                        border-right: 2px solid rgba(255,255,255,0.5);
+                        border-radius: 4px 4px 0 0;
+                    }
+                    #sfide-minigame-modal .goal-area-left {
+                        left: 31.25%;
+                        top: 0;
+                        width: 37.5%;
+                        height: 8.33%;
+                        border: 2px solid rgba(255,255,255,0.5);
+                        border-top: none;
+                        border-left: 2px solid rgba(255,255,255,0.5);
+                        border-radius: 0 0 2px 2px;
+                    }
+                    #sfide-minigame-modal .goal-area-right {
+                        right: auto;
+                        left: 31.25%;
+                        top: auto;
+                        bottom: 0;
+                        width: 37.5%;
+                        height: 8.33%;
+                        border: 2px solid rgba(255,255,255,0.5);
+                        border-bottom: none;
+                        border-right: 2px solid rgba(255,255,255,0.5);
+                        border-radius: 2px 2px 0 0;
+                    }
+                }
 
                 @keyframes smg-bounce {
                     0%, 100% { transform: translateY(0); }
@@ -217,6 +365,35 @@
                 @keyframes smg-slideIn {
                     from { opacity: 0; transform: translateX(-10px); }
                     to { opacity: 1; transform: translateX(0); }
+                }
+
+                /* Log espandibile */
+                #sfide-minigame-modal #smg-log {
+                    cursor: pointer;
+                    transition: max-height 0.3s ease;
+                    position: relative;
+                }
+                #sfide-minigame-modal #smg-log::after {
+                    content: '⬇️';
+                    position: absolute;
+                    bottom: 2px;
+                    right: 4px;
+                    font-size: 0.6rem;
+                    opacity: 0.5;
+                }
+                #sfide-minigame-modal #smg-log.expanded {
+                    max-height: 60vh !important;
+                    position: fixed;
+                    left: 5%;
+                    right: 5%;
+                    bottom: 10%;
+                    top: auto;
+                    z-index: 100;
+                    background: rgba(0,0,0,0.95) !important;
+                    border: 2px solid #6366f1 !important;
+                }
+                #sfide-minigame-modal #smg-log.expanded::after {
+                    content: '⬆️';
                 }
 
                 /* Bottoni azione attivi */
@@ -263,6 +440,16 @@
                 <!-- Campo -->
                 <div class="flex-grow flex items-center justify-center p-2 overflow-hidden">
                     <div class="pitch" id="smg-pitch">
+                        <!-- Linee campo -->
+                        <div class="pitch-lines">
+                            <div class="center-line"></div>
+                            <div class="center-circle"></div>
+                            <div class="center-spot"></div>
+                            <div class="penalty-area-left"></div>
+                            <div class="penalty-area-right"></div>
+                            <div class="goal-area-left"></div>
+                            <div class="goal-area-right"></div>
+                        </div>
                         <div class="goal-post goal-left"></div>
                         <div class="goal-post goal-right"></div>
                         <div id="smg-ball" class="ball-token"></div>
@@ -335,6 +522,11 @@
         });
         document.getElementById('smg-btn-restart').addEventListener('click', resetGame);
         document.getElementById('smg-btn-exit').addEventListener('click', close);
+
+        // Toggle espansione log
+        document.getElementById('smg-log').addEventListener('click', (e) => {
+            e.currentTarget.classList.toggle('expanded');
+        });
     }
 
     function isPortrait() {
@@ -428,21 +620,164 @@
     function resetGame() {
         state.scoreA = 0;
         state.scoreB = 0;
-        state.currentTeam = 'A';
+        // Squadra iniziale random
+        state.currentTeam = Math.random() < 0.5 ? 'A' : 'B';
         state.actionsLeft = 3;
-        state.ballCarrierId = 'A5';
-        state.ballPosition = null;
         state.isGameOver = false;
         state.selectedPlayer = null;
         state.actionMode = null;
+        state.ballPosition = null;
 
-        players = JSON.parse(JSON.stringify(initialPlayers));
+        // Genera giocatori dalle formazioni
+        players = generatePlayersFromFormations();
+
+        // Assegna palla al pivot della squadra che inizia
+        const starterPivot = players.find(p => p.team === state.currentTeam && p.name === 'PIV');
+        state.ballCarrierId = starterPivot ? starterPivot.id : (state.currentTeam === 'A' ? 'A5' : 'B5');
 
         document.getElementById('smg-game-over').classList.add('hidden');
-        document.getElementById('smg-log').innerHTML = '<div class="text-yellow-500">Nuova Partita! Inizia la Squadra Rossa.</div>';
+        const teamName = state.currentTeam === 'A' ? 'Rossa' : 'Blu';
+        const teamColor = state.currentTeam === 'A' ? 'text-red-400' : 'text-blue-400';
+        document.getElementById('smg-log').innerHTML = `<div class="text-yellow-500">Nuova Partita!</div><div class="${teamColor}">Inizia la Squadra ${teamName}.</div>`;
 
         buildPitch();
         update();
+    }
+
+    /**
+     * Genera i giocatori basandosi sulla formazione dell'utente (Team A) e una formazione AI (Team B)
+     */
+    function generatePlayersFromFormations() {
+        const result = [];
+        const teamData = window.InterfacciaCore?.currentTeamData;
+
+        // Mappatura ruoli alle posizioni sul campo 13x9
+        // Team A (sinistra): GK a x=0, D a x=2-3, C a x=4-5, A a x=5-6
+        // Team B (destra): GK a x=12, D a x=10-11, C a x=7-8, A a x=6-7
+
+        const positionsA = getTeamPositions('A', teamData);
+        const positionsB = getTeamPositions('B', null); // AI team
+
+        positionsA.forEach((p, i) => {
+            result.push({
+                id: `A${i+1}`,
+                team: 'A',
+                name: p.name,
+                x: p.x,
+                y: p.y,
+                mod: p.mod,
+                isGK: p.isGK,
+                mura: false,
+                muraCells: []
+            });
+        });
+
+        positionsB.forEach((p, i) => {
+            result.push({
+                id: `B${i+1}`,
+                team: 'B',
+                name: p.name,
+                x: p.x,
+                y: p.y,
+                mod: p.mod,
+                isGK: p.isGK,
+                mura: false,
+                muraCells: []
+            });
+        });
+
+        return result;
+    }
+
+    /**
+     * Ottieni posizioni dei giocatori per una squadra
+     */
+    function getTeamPositions(team, teamData) {
+        const positions = [];
+        const isLeft = team === 'A';
+        const centerY = Math.floor(GRID_H / 2); // 4 per campo 9
+
+        // Portiere sempre al centro della porta
+        positions.push({
+            name: 'GK',
+            x: isLeft ? 0 : GRID_W - 1,
+            y: centerY,
+            mod: 8,
+            isGK: true
+        });
+
+        // Se abbiamo dati squadra, usa la formazione
+        if (teamData?.formation?.titolari) {
+            const titolari = teamData.formation.titolari;
+            const modulo = teamData.formation.modulo || '1-1-2-1';
+
+            // Conta ruoli nel modulo
+            const roleCount = { D: 0, C: 0, A: 0 };
+            titolari.forEach(p => {
+                if (p.ruolo !== 'P') roleCount[p.ruolo] = (roleCount[p.ruolo] || 0) + 1;
+            });
+
+            // Posizioni base per ruoli
+            let dIdx = 0, cIdx = 0, aIdx = 0;
+            titolari.forEach(p => {
+                if (p.ruolo === 'P') return; // Già aggiunto GK
+
+                const pos = getPositionForRole(p.ruolo, isLeft, roleCount,
+                    p.ruolo === 'D' ? dIdx++ : p.ruolo === 'C' ? cIdx++ : aIdx++);
+
+                positions.push({
+                    name: getRoleName(p.ruolo),
+                    x: pos.x,
+                    y: pos.y,
+                    mod: Math.min(10, 5 + Math.floor((p.modificatore || 0) / 3)),
+                    isGK: false
+                });
+            });
+        } else {
+            // Formazione default 1-1-2-1
+            positions.push(
+                { name: 'FIX', x: isLeft ? 3 : GRID_W - 4, y: centerY, mod: 6, isGK: false },
+                { name: 'ALA', x: isLeft ? 4 : GRID_W - 5, y: 1, mod: 5, isGK: false },
+                { name: 'ALA', x: isLeft ? 4 : GRID_W - 5, y: GRID_H - 2, mod: 5, isGK: false },
+                { name: 'PIV', x: isLeft ? 5 : GRID_W - 6, y: centerY, mod: 7, isGK: false }
+            );
+        }
+
+        return positions;
+    }
+
+    function getPositionForRole(ruolo, isLeft, roleCount, index) {
+        const centerY = Math.floor(GRID_H / 2);
+        const count = roleCount[ruolo] || 1;
+
+        // Calcola Y: distribuisci uniformemente
+        let y;
+        if (count === 1) {
+            y = centerY;
+        } else if (count === 2) {
+            y = index === 0 ? 2 : GRID_H - 3;
+        } else if (count === 3) {
+            y = index === 0 ? 1 : index === 1 ? centerY : GRID_H - 2;
+        } else {
+            y = Math.round(1 + index * (GRID_H - 3) / (count - 1));
+        }
+
+        // Calcola X in base al ruolo
+        let x;
+        if (ruolo === 'D') {
+            x = isLeft ? 2 + Math.floor(index / 2) : GRID_W - 3 - Math.floor(index / 2);
+        } else if (ruolo === 'C') {
+            x = isLeft ? 4 + Math.floor(index / 2) : GRID_W - 5 - Math.floor(index / 2);
+        } else { // A
+            x = isLeft ? 5 + Math.floor(index / 2) : GRID_W - 6 - Math.floor(index / 2);
+        }
+
+        return { x, y };
+    }
+
+    function getRoleName(ruolo) {
+        const names = { D: 'FIX', C: 'ALA', A: 'PIV' };
+        return names[ruolo] || ruolo;
     }
 
     // ========================================
