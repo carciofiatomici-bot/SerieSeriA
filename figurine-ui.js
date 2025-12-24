@@ -79,50 +79,69 @@ window.FigurineUI = {
         modal.className = 'fixed inset-0 z-[1000] hidden';
         modal.innerHTML = `
             <!-- Overlay -->
-            <div class="absolute inset-0 bg-black/80" id="figurine-overlay"></div>
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" id="figurine-overlay"></div>
 
-            <!-- Container -->
-            <div class="relative h-full flex items-center justify-center p-2 sm:p-4">
-                <div class="bg-gray-900 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden border-2 border-purple-500 shadow-2xl flex flex-col">
+            <!-- Container - Full screen mobile -->
+            <div class="relative h-full flex flex-col sm:items-center sm:justify-center sm:p-4">
+                <div class="bg-gray-900 w-full h-full sm:h-auto sm:rounded-2xl sm:max-w-2xl sm:max-h-[90vh] overflow-hidden border-0 sm:border border-purple-500/30 shadow-2xl flex flex-col">
 
-                    <!-- Header -->
-                    <div class="bg-gradient-to-r from-purple-800 to-indigo-700 px-4 py-3 flex items-center justify-between">
-                        <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                            <span class="text-2xl">🎴</span> Album Figurine
-                        </h2>
-                        <button id="figurine-close" class="text-white hover:text-gray-300 text-2xl">&times;</button>
-                    </div>
-
-                    <!-- Stats Bar -->
-                    <div class="bg-gray-800 px-4 py-2 border-b border-gray-700">
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-4">
-                                <span id="figurine-progress" class="text-purple-300">Completamento: 0%</span>
-                                <span id="figurine-count" class="text-gray-400">0/64 figurine</span>
+                    <!-- Header - Sticky & Compact -->
+                    <div class="sticky top-0 z-20 bg-gradient-to-r from-purple-900/95 via-indigo-900/95 to-purple-900/95 backdrop-blur-md border-b border-purple-500/30">
+                        <div class="px-3 py-2.5 flex items-center justify-between gap-3">
+                            <!-- Close + Title -->
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <button id="figurine-close" class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-red-600/80 hover:bg-red-500 text-white rounded-lg transition shadow-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                                <div class="min-w-0">
+                                    <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-1.5 truncate">
+                                        <span>🎴</span> <span class="bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">Album Figurine</span>
+                                    </h2>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <span id="figurine-exp-bonus" class="text-teal-400 text-xs" title="Bonus EXP per partita">📈 +0% EXP</span>
-                                <span id="figurine-mod-bonus" class="text-yellow-400 text-xs" title="Bonus modificatore partita">⚔️ +0.00 Mod</span>
-                                <div id="figurine-free-pack" class="text-green-400 text-xs"></div>
+                            <!-- Free Pack Indicator -->
+                            <div id="figurine-free-pack" class="flex-shrink-0 text-xs"></div>
+                        </div>
+
+                        <!-- Stats Row - Compact -->
+                        <div class="px-3 pb-2">
+                            <div class="flex items-center gap-2 text-[10px] sm:text-xs">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span id="figurine-progress" class="text-purple-300 font-semibold">0%</span>
+                                        <span class="text-gray-500">|</span>
+                                        <span id="figurine-count" class="text-gray-400">0/64</span>
+                                    </div>
+                                    <div class="bg-gray-800/80 rounded-full h-1.5 overflow-hidden">
+                                        <div id="figurine-progress-bar" class="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 h-full transition-all duration-500 relative" style="width: 0%">
+                                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 flex items-center gap-2 pl-2 border-l border-gray-700">
+                                    <span id="figurine-exp-bonus" class="text-teal-400 font-medium" title="Bonus EXP">📈+0%</span>
+                                    <span id="figurine-mod-bonus" class="text-yellow-400 font-medium" title="Bonus Mod">⚔️+0</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-2 bg-gray-700 rounded-full h-2 overflow-hidden">
-                            <div id="figurine-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
                     </div>
 
-                    <!-- Tabs -->
-                    <div class="flex border-b border-gray-700 bg-gray-800">
-                        <button class="figurine-tab flex-1 py-2 text-sm font-semibold text-gray-400 hover:text-white transition border-b-2 border-transparent" data-tab="album">
-                            📖 Album
-                        </button>
-                        <button class="figurine-tab flex-1 py-2 text-sm font-semibold text-gray-400 hover:text-white transition border-b-2 border-transparent" data-tab="pack">
-                            📦 Pacchetti
-                        </button>
+                    <!-- Tabs - Pill Style -->
+                    <div class="px-3 py-2 bg-gray-900/80 border-b border-gray-800">
+                        <div class="flex gap-2 bg-gray-800/50 rounded-xl p-1">
+                            <button class="figurine-tab flex-1 py-2 px-3 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="album">
+                                📖 Album
+                            </button>
+                            <button class="figurine-tab flex-1 py-2 px-3 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="pack">
+                                📦 Pacchetti
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Content -->
-                    <div id="figurine-content" class="flex-1 overflow-y-auto p-4">
+                    <div id="figurine-content" class="flex-1 overflow-y-auto p-3 sm:p-4">
                         <!-- Contenuto dinamico -->
                     </div>
 
@@ -225,28 +244,27 @@ window.FigurineUI = {
         const expBonusEl = document.getElementById('figurine-exp-bonus');
         const modBonusEl = document.getElementById('figurine-mod-bonus');
 
-        if (progressEl) progressEl.textContent = `Completamento: ${percentage}%`;
-        if (countEl) countEl.textContent = `${unique}/${maxFigurine} figurine`;
+        // Compact format
+        if (progressEl) progressEl.textContent = `${percentage}%`;
+        if (countEl) countEl.textContent = `${unique}/${maxFigurine}`;
         if (progressBarEl) progressBarEl.style.width = `${percentage}%`;
 
         // Calcola bonus EXP: +0.1% per figurina unica
         const expBonusPercent = (unique * 0.1).toFixed(1);
-        if (expBonusEl) expBonusEl.textContent = `📈 +${expBonusPercent}% EXP`;
+        if (expBonusEl) expBonusEl.textContent = `📈+${expBonusPercent}%`;
 
         // Calcola bonus Mod partita: +0.01 per figurina unica
         const modBonus = (unique * 0.01).toFixed(2);
-        if (modBonusEl) modBonusEl.textContent = `⚔️ +${modBonus} Mod`;
+        if (modBonusEl) modBonusEl.textContent = `⚔️+${modBonus}`;
 
-        // Free pack
+        // Free pack - compact badge
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
         if (freePackEl) {
             if (canFree) {
-                freePackEl.innerHTML = '🎁 Pacchetto GRATIS disponibile!';
-                freePackEl.className = 'text-green-400 text-xs font-bold animate-pulse';
+                freePackEl.innerHTML = '<span class="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">🎁 GRATIS</span>';
             } else {
                 const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
-                freePackEl.innerHTML = timeLeft ? `Prossimo gratis: ${timeLeft.formatted}` : '';
-                freePackEl.className = 'text-gray-400 text-xs';
+                freePackEl.innerHTML = timeLeft ? `<span class="text-gray-500 text-[10px]">⏱️ ${timeLeft.formatted}</span>` : '';
             }
         }
     },
@@ -257,14 +275,14 @@ window.FigurineUI = {
     switchTab(tabName) {
         this.currentTab = tabName;
 
-        // Aggiorna stile tabs
+        // Aggiorna stile tabs - pill style
         document.querySelectorAll('.figurine-tab').forEach(tab => {
             if (tab.dataset.tab === tabName) {
-                tab.classList.add('text-purple-400', 'border-purple-400');
-                tab.classList.remove('text-gray-400', 'border-transparent');
+                tab.classList.add('bg-purple-600', 'text-white', 'shadow-lg');
+                tab.classList.remove('text-gray-400', 'bg-transparent');
             } else {
-                tab.classList.remove('text-purple-400', 'border-purple-400');
-                tab.classList.add('text-gray-400', 'border-transparent');
+                tab.classList.remove('bg-purple-600', 'text-white', 'shadow-lg');
+                tab.classList.add('text-gray-400', 'bg-transparent');
             }
         });
 
@@ -286,55 +304,64 @@ window.FigurineUI = {
         const content = document.getElementById('figurine-content');
         const collections = window.FigurineSystem.COLLECTIONS;
 
-        let html = '';
+        let html = '<div class="space-y-2">';
 
         // Renderizza ogni collezione come sezione espandibile
         Object.entries(collections).forEach(([collId, collDef]) => {
             if (!collDef.enabled) return;
 
             const files = window.FigurineSystem.getCollectionFiles(collId);
-            if (Object.keys(files).length === 0 && collId !== 'icone') return; // Salta collezioni vuote (tranne icone)
+            if (Object.keys(files).length === 0 && collId !== 'icone') return;
 
             const isExpanded = this.expandedCollections[collId];
             const percentage = collId === 'icone'
                 ? window.FigurineSystem.getCompletionPercentage(this.currentAlbum?.collection || {})
                 : window.FigurineSystem.getCollectionCompletionPercentage(this.currentAlbum?.collections, collId);
 
+            // Progress color based on percentage
+            const progressColor = percentage >= 100 ? 'bg-green-500' : percentage >= 50 ? 'bg-purple-500' : 'bg-gray-600';
+
             html += `
-                <div class="mb-4">
+                <div class="rounded-xl overflow-hidden border border-gray-700/50">
                     <!-- Header Collezione (cliccabile) -->
-                    <button class="collection-toggle w-full flex items-center justify-between bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 rounded-lg p-3 transition" data-collection="${collId}">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">${collDef.icon}</span>
-                            <div class="text-left">
-                                <h3 class="font-bold text-white">${collDef.name}</h3>
-                                <p class="text-xs text-gray-400">${collDef.description}</p>
+                    <button class="collection-toggle w-full flex items-center gap-3 bg-gray-800/80 hover:bg-gray-700/80 p-2.5 sm:p-3 transition active:scale-[0.99]" data-collection="${collId}">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-lg flex items-center justify-center border border-gray-700">
+                            <span class="text-xl">${collDef.icon}</span>
+                        </div>
+                        <div class="flex-1 min-w-0 text-left">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-white text-sm truncate">${collDef.name}</h3>
+                                <span class="text-xs text-purple-400 font-bold">${percentage}%</span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="${progressColor} h-full rounded-full transition-all" style="width: ${percentage}%"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm text-purple-400 font-semibold">${percentage}%</span>
-                            <span class="text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}">▼</span>
-                        </div>
+                        <span class="flex-shrink-0 text-gray-500 text-xs transition-transform ${isExpanded ? 'rotate-180' : ''}">▼</span>
                     </button>
 
                     <!-- Contenuto Collezione -->
-                    <div class="collection-content ${isExpanded ? '' : 'hidden'}" data-collection-content="${collId}">
+                    <div class="collection-content ${isExpanded ? '' : 'hidden'} bg-gray-900/50" data-collection-content="${collId}">
                         ${this.renderCollectionItems(collId, collDef)}
                     </div>
                 </div>
             `;
         });
 
-        // Legenda con rarita coerenti
+        html += '</div>';
+
+        // Legenda compatta
         html += `
-            <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs text-gray-400">
-                <p class="font-semibold mb-1">Tocca una figurina per vedere tutte le varianti</p>
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span> <span class="text-gray-400">Comune</span></span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> <span class="text-green-400">Non Comune</span></span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span> <span class="text-blue-400">Rara</span></span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span> <span class="text-purple-400">Epica</span></span>
-                    <span><span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span> <span class="text-yellow-400">Leggendaria</span></span>
+            <div class="mt-3 p-2.5 bg-gray-800/50 rounded-xl border border-gray-700/30">
+                <p class="text-[10px] text-gray-500 mb-1.5">Tocca una figurina per i dettagli</p>
+                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span><span class="text-gray-400">C</span></span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400">NC</span></span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-blue-400">R</span></span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-purple-400">E</span></span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span><span class="text-yellow-400">L</span></span>
                 </div>
             </div>
         `;
