@@ -62,31 +62,68 @@
 
         const PRIZES = window.DailyWheel.PRIZES;
 
-        // Crea il popup
+        // Genera particles HTML
+        const particlesHtml = Array.from({length: 12}, (_, i) => {
+            const left = 10 + Math.random() * 80;
+            const delay = i * 0.3;
+            return `<div class="wheel-particle" style="left: ${left}%; animation-delay: ${delay}s;"></div>`;
+        }).join('');
+
+        // Crea il popup con design Monte Carlo
         const popup = document.createElement('div');
         popup.id = 'daily-wheel-popup';
-        popup.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+        popup.className = 'fixed inset-0 bg-black/85 flex items-center justify-center z-50';
         popup.innerHTML = `
-            <div class="bg-gray-900 rounded-2xl p-6 max-w-md w-full mx-4 border-2 border-yellow-500 shadow-2xl">
-                <h2 class="text-2xl font-bold text-center text-yellow-400 mb-4">
-                    🎡 Ruota della Fortuna
+            <div class="fortune-wheel-container rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl relative">
+                <!-- Corner decorations -->
+                <div class="wheel-corner-decoration top-left"></div>
+                <div class="wheel-corner-decoration top-right"></div>
+                <div class="wheel-corner-decoration bottom-left"></div>
+                <div class="wheel-corner-decoration bottom-right"></div>
+
+                <!-- Floating particles -->
+                <div class="wheel-particles">${particlesHtml}</div>
+
+                <!-- Title -->
+                <h2 class="wheel-title text-2xl font-bold text-center mb-5">
+                    Ruota della Fortuna
                 </h2>
 
-                <!-- Ruota -->
-                <div class="relative w-72 h-72 mx-auto mb-6">
-                    <!-- Indicatore -->
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-                        <div class="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400"></div>
+                <!-- Wheel wrapper -->
+                <div class="wheel-wrapper w-72 h-72 mx-auto mb-6 relative">
+                    <!-- Light rays -->
+                    <div class="wheel-light-rays"></div>
+
+                    <!-- Outer golden ring -->
+                    <div class="wheel-outer-ring">
+                        <div class="wheel-outer-ring-inner"></div>
                     </div>
 
-                    <!-- Ruota SVG -->
-                    <svg id="wheel-svg" viewBox="0 0 300 300" class="w-full h-full transition-transform" style="transform: rotate(${currentRotation}deg)">
+                    <!-- Premium indicator -->
+                    <div class="wheel-indicator">
+                        <div class="wheel-indicator-arrow"></div>
+                    </div>
+
+                    <!-- Wheel SVG -->
+                    <svg id="wheel-svg" viewBox="0 0 300 300" class="w-full h-full transition-transform absolute inset-0" style="transform: rotate(${currentRotation}deg)">
+                        <!-- Gradient definitions -->
+                        <defs>
+                            ${PRIZES.map((prize, i) => `
+                                <linearGradient id="prize-gradient-${i}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:${prize.color};stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:${prize.color};stop-opacity:0.85" />
+                                    <stop offset="100%" style="stop-color:${prize.color};stop-opacity:1" />
+                                </linearGradient>
+                            `).join('')}
+                            <filter id="wheel-inner-shadow">
+                                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                            </filter>
+                        </defs>
                         ${PRIZES.map((prize, i) => {
                             const angle = 360 / PRIZES.length;
                             const startAngle = i * angle - 90;
                             const endAngle = startAngle + angle;
 
-                            // Calcola i punti dell'arco
                             const startRad = (startAngle * Math.PI) / 180;
                             const endRad = (endAngle * Math.PI) / 180;
                             const x1 = 150 + 140 * Math.cos(startRad);
@@ -94,68 +131,68 @@
                             const x2 = 150 + 140 * Math.cos(endRad);
                             const y2 = 150 + 140 * Math.sin(endRad);
 
-                            // Posizione testo
                             const textAngle = startAngle + angle / 2;
                             const textRad = (textAngle * Math.PI) / 180;
-                            const textX = 150 + 90 * Math.cos(textRad);
-                            const textY = 150 + 90 * Math.sin(textRad);
+                            const textX = 150 + 85 * Math.cos(textRad);
+                            const textY = 150 + 85 * Math.sin(textRad);
 
                             return `
                                 <path d="M150,150 L${x1},${y1} A140,140 0 0,1 ${x2},${y2} Z"
-                                      fill="${prize.color}" stroke="#1f2937" stroke-width="2"/>
+                                      fill="url(#prize-gradient-${i})" stroke="#d4af37" stroke-width="1.5" filter="url(#wheel-inner-shadow)"/>
                                 <text x="${textX}" y="${textY}"
                                       text-anchor="middle" dominant-baseline="middle"
-                                      fill="white" font-size="12" font-weight="bold"
+                                      fill="white" font-size="18" font-weight="bold"
+                                      style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);"
                                       transform="rotate(${textAngle + 90}, ${textX}, ${textY})">
                                     ${prize.icon}
                                 </text>
                             `;
                         }).join('')}
-                        <circle cx="150" cy="150" r="25" fill="#1f2937" stroke="#fbbf24" stroke-width="3"/>
-                        <text x="150" y="150" text-anchor="middle" dominant-baseline="middle" fill="#fbbf24" font-size="16">🎡</text>
+                        <!-- Center hub -->
+                        <circle cx="150" cy="150" r="30" fill="#0a0f1a" stroke="#d4af37" stroke-width="4"/>
+                        <circle cx="150" cy="150" r="22" fill="url(#prize-gradient-0)" opacity="0.3"/>
+                        <text x="150" y="150" text-anchor="middle" dominant-baseline="middle" fill="#fbbf24" font-size="20" style="text-shadow: 0 0 10px rgba(251,191,36,0.8);">🎰</text>
                     </svg>
                 </div>
 
-                <!-- Legenda premi con percentuali -->
-                <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
+                <!-- Prize legend -->
+                <div class="wheel-prize-legend grid grid-cols-2 gap-2 mb-5 p-3 rounded-xl text-xs">
                     ${(() => {
                         const totalProb = PRIZES.reduce((sum, p) => sum + p.probability, 0);
                         return PRIZES.map(prize => {
                             const percent = ((prize.probability / totalProb) * 100).toFixed(0);
                             return `
-                                <div class="flex items-center justify-between gap-1 bg-gray-800/50 px-2 py-1 rounded">
-                                    <div class="flex items-center gap-1">
-                                        <span class="w-3 h-3 rounded-full" style="background: ${prize.color}"></span>
-                                        <span class="text-gray-300">${prize.label}</span>
+                                <div class="wheel-prize-item flex items-center justify-between gap-2 px-3 py-2 rounded-lg">
+                                    <div class="flex items-center gap-2">
+                                        <span class="wheel-prize-color w-3 h-3 rounded-full" style="background: ${prize.color}; color: ${prize.color};"></span>
+                                        <span class="text-gray-200">${prize.label}</span>
                                     </div>
-                                    <span class="text-yellow-400 font-bold">${percent}%</span>
+                                    <span class="wheel-prize-percent font-bold">${percent}%</span>
                                 </div>
                             `;
                         }).join('');
                     })()}
                 </div>
 
-                <!-- Bottoni -->
+                <!-- Buttons -->
                 <div class="flex gap-3">
                     ${canSpin ? `
-                    <button id="btn-spin-wheel"
-                            class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-bold py-3 px-6 rounded-xl hover:from-yellow-400 hover:to-orange-400 transition-all transform hover:scale-105 shadow-lg">
-                        🎲 GIRA LA RUOTA!
+                    <button id="btn-spin-wheel" class="wheel-spin-btn flex-1 py-4 px-6 rounded-xl text-lg">
+                        🎲 Gira la Ruota
                     </button>
                     ` : `
-                    <div class="flex-1 bg-gray-700 text-center py-3 px-6 rounded-xl">
-                        <p class="text-gray-400 text-sm">Prossimo giro disponibile tra:</p>
-                        <p id="wheel-countdown" class="text-yellow-400 font-bold text-xl">${getTimeUntilNextSpin(teamData).formatted}</p>
+                    <div class="wheel-countdown-container flex-1 text-center py-3 px-6 rounded-xl">
+                        <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Prossimo giro tra</p>
+                        <p id="wheel-countdown" class="wheel-countdown-value">${getTimeUntilNextSpin(teamData).formatted}</p>
                     </div>
                     `}
-                    <button id="btn-close-wheel"
-                            class="bg-gray-700 text-gray-300 font-bold py-3 px-4 rounded-xl hover:bg-gray-600 transition">
-                        ✖
+                    <button id="btn-close-wheel" class="wheel-close-btn font-bold py-3 px-5 rounded-xl text-lg">
+                        ✕
                     </button>
                 </div>
 
-                <!-- Risultato (nascosto) -->
-                <div id="wheel-result" class="hidden mt-4 p-4 rounded-xl text-center">
+                <!-- Result (hidden) -->
+                <div id="wheel-result" class="wheel-result hidden mt-4 p-5 rounded-xl text-center">
                     <p class="text-lg font-bold" id="wheel-result-text"></p>
                 </div>
             </div>
@@ -261,14 +298,14 @@
         // Assegna premio
         const result = await window.DailyWheel.awardPrize(prize, teamId);
 
-        // Mostra risultato
+        // Mostra risultato con stile premium
         resultDiv.classList.remove('hidden');
         if (result.success) {
-            resultDiv.classList.add('bg-green-900/50', 'border', 'border-green-500');
+            resultDiv.classList.remove('error');
             resultText.innerHTML = `
-                <span class="text-4xl block mb-2">${prize.icon}</span>
-                <span class="text-green-400">Complimenti! Hai vinto:</span><br>
-                <span class="text-2xl text-yellow-400">${prize.label}</span>
+                <span class="wheel-result-icon text-5xl block mb-3">${prize.icon}</span>
+                <span class="text-green-400 text-sm uppercase tracking-wider">Complimenti! Hai vinto</span><br>
+                <span class="text-2xl font-bold" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${prize.label}</span>
             `;
 
             // NON nascondere il box della ruota nella dashboard (rimane visibile con cooldown)
@@ -286,16 +323,17 @@
             // Aggiorna dashboard
             document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
         } else {
-            resultDiv.classList.add('bg-red-900/50', 'border', 'border-red-500');
+            resultDiv.classList.add('error');
             resultText.innerHTML = `
-                <span class="text-red-400">Errore: ${result.message}</span>
+                <span class="text-red-400 text-lg">Errore: ${result.message}</span>
             `;
         }
 
-        // Cambia bottone in "Chiudi"
+        // Cambia bottone in "Chiudi" con stile premium
         spinBtn.textContent = '✓ Chiudi';
-        spinBtn.classList.remove('from-yellow-500', 'to-orange-500', 'hover:from-yellow-400', 'hover:to-orange-400');
-        spinBtn.classList.add('bg-gray-600', 'hover:bg-gray-500');
+        spinBtn.classList.remove('wheel-spin-btn');
+        spinBtn.classList.add('wheel-close-btn');
+        spinBtn.style.flex = '1';
         spinBtn.disabled = false;
         spinBtn.onclick = closeWheelPopup;
 
@@ -326,17 +364,17 @@
         if (!canSpin) return ''; // Nascondi se gia girato
 
         return `
-            <div class="bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-xl p-4 border-2 border-yellow-500/50 hover:border-yellow-400 transition-all cursor-pointer"
+            <div class="dashboard-wheel-box-premium rounded-xl p-4 hover:border-yellow-400/60 transition-all cursor-pointer"
                  id="dashboard-wheel-box">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between relative z-10">
                     <div>
-                        <h3 class="text-yellow-400 font-bold text-lg flex items-center gap-2">
-                            <span class="text-2xl animate-pulse">🎡</span> Ruota della Fortuna
+                        <h3 class="wheel-title text-lg flex items-center gap-2">
+                            <span class="text-2xl" style="animation: wheel-rays-rotate 4s linear infinite;">🎰</span>
+                            Ruota della Fortuna
                         </h3>
-                        <p class="text-gray-400 text-sm mt-1">Giro giornaliero disponibile!</p>
+                        <p class="text-gray-400 text-sm mt-1">Giro disponibile!</p>
                     </div>
-                    <button id="btn-open-wheel"
-                            class="bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-bold py-2 px-4 rounded-lg hover:from-yellow-400 hover:to-orange-400 transition-all transform hover:scale-105 shadow-lg">
+                    <button id="btn-open-wheel" class="wheel-spin-btn py-2 px-5 rounded-lg text-sm">
                         GIRA!
                     </button>
                 </div>
