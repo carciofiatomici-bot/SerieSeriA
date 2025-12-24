@@ -32,7 +32,7 @@ window.SchedinaUI = {
 
         this.modal = document.createElement('div');
         this.modal.id = 'schedina-modal';
-        this.modal.className = 'fixed inset-0 z-[9999] bg-slate-900 hidden overflow-y-auto';
+        this.modal.className = 'fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm hidden overflow-y-auto';
         this.modal.innerHTML = `<div id="schedina-modal-content"></div>`;
 
         document.body.appendChild(this.modal);
