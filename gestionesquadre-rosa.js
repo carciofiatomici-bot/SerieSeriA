@@ -26,67 +26,90 @@ window.GestioneSquadreRosa = {
         const centrocampisti = players.filter(p => p.role === 'C' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
         const attaccanti = players.filter(p => p.role === 'A' && p !== icona).sort((a, b) => (b.level || 1) - (a.level || 1));
 
-        const roleColors = {
-            icona: { border: 'border-yellow-500', bg: 'bg-yellow-900 bg-opacity-20', text: 'text-yellow-400', icon: '👑' },
-            P: { border: 'border-blue-500', bg: 'bg-blue-900 bg-opacity-20', text: 'text-blue-400', icon: '🧤' },
-            D: { border: 'border-green-500', bg: 'bg-green-900 bg-opacity-20', text: 'text-green-400', icon: '🛡️' },
-            C: { border: 'border-purple-500', bg: 'bg-purple-900 bg-opacity-20', text: 'text-purple-400', icon: '⚽' },
-            A: { border: 'border-red-500', bg: 'bg-red-900 bg-opacity-20', text: 'text-red-400', icon: '👟' }
+        // Role configuration con colori e gradient per design compatto
+        const roleConfig = {
+            icona: { gradient: 'from-yellow-600/30 to-amber-900/20', border: 'border-yellow-500/50', text: 'text-yellow-400', icon: '👑', label: 'Icona' },
+            P: { gradient: 'from-blue-600/30 to-blue-900/20', border: 'border-blue-500/50', text: 'text-blue-400', icon: '🧤', label: 'POR' },
+            D: { gradient: 'from-emerald-600/30 to-green-900/20', border: 'border-green-500/50', text: 'text-green-400', icon: '🛡️', label: 'DIF' },
+            C: { gradient: 'from-purple-600/30 to-indigo-900/20', border: 'border-purple-500/50', text: 'text-purple-400', icon: '⚽', label: 'CEN' },
+            A: { gradient: 'from-red-600/30 to-rose-900/20', border: 'border-red-500/50', text: 'text-red-400', icon: '🎯', label: 'ATT' }
         };
 
-        const renderRoleSection = (role, title, playersList, colors) => {
+        // Compatto role section renderer
+        const renderRoleSection = (role, playersList, config) => {
             if (playersList.length === 0 && role !== 'icona') return '';
             if (role === 'icona' && !icona) return '';
 
             const playersToRender = role === 'icona' ? [icona] : playersList;
 
             return `
-                <div class="role-section mb-4 ${colors.bg} rounded-lg border ${colors.border} overflow-hidden">
-                    <div class="role-section-header flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700 transition-colors"
-                         data-role="${role}">
-                        <div class="flex items-center gap-2">
-                            <span class="role-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                            <span class="${colors.text} font-bold text-lg">${colors.icon} ${title}</span>
-                            <span class="text-gray-400 text-sm">(${playersToRender.length})</span>
-                        </div>
+                <div class="role-section mb-2" data-role="${role}">
+                    <div class="role-section-header flex items-center gap-2 px-2 py-1.5 cursor-pointer
+                                bg-gradient-to-r ${config.gradient} rounded-lg border ${config.border}
+                                hover:brightness-110 transition-all duration-200 active:scale-[0.99]">
+                        <span class="role-toggle-icon text-gray-400 text-xs transition-transform duration-200">▶</span>
+                        <span class="${config.text} font-bold text-sm">${config.icon}</span>
+                        <span class="${config.text} font-semibold text-sm">${config.label}</span>
+                        <span class="text-gray-400 text-xs ml-auto">${playersToRender.length}</span>
                     </div>
-                    <div class="role-section-content p-3 pt-0 space-y-2 hidden">
+                    <div class="role-section-content hidden mt-1 space-y-1 pl-1">
                         ${playersToRender.map(player => this.renderPlayerCard(player, teamData)).join('')}
                     </div>
                 </div>
             `;
         };
 
-        squadraToolsContainer.innerHTML = `
-            <div id="player-list-box" class="rounded-xl border relative" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 8px;">
-                <div class="flex justify-between items-center mb-2 sm:mb-4">
-                    <h3 class="text-lg sm:text-2xl font-bold text-green-400">I Tuoi Calciatori</h3>
-                    <button id="btn-toggle-licenzia"
-                            class="text-gray-400 hover:text-white hover:bg-gray-600 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition text-lg sm:text-xl"
-                            title="Mostra/Nascondi opzioni licenziamento">⚙️</button>
-                </div>
-                <div id="player-list-message" class="text-center mb-2 sm:mb-4 text-green-500 text-sm"></div>
+        // Conta giocatori totali per statistiche
+        const totalPlayers = players.length;
+        const maxPlayers = window.InterfacciaConstants?.MAX_ROSA_PLAYERS || 12;
 
-                <div id="player-list">
+        squadraToolsContainer.innerHTML = `
+            <div id="player-list-box" class="rounded-xl border relative overflow-hidden"
+                 style="background: rgba(17, 24, 39, 0.6); border-radius: 12px;">
+
+                <!-- Header compatto con stats e azioni -->
+                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700/50 bg-gray-800/50">
+                    <div class="flex items-center gap-2">
+                        <span class="text-green-400 font-bold text-base">Rosa</span>
+                        <span class="text-xs text-gray-400 bg-gray-700/50 px-1.5 py-0.5 rounded">${totalPlayers}/${maxPlayers}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button id="btn-training-rosa"
+                                class="text-xs bg-gradient-to-r from-green-600 to-emerald-500 text-white font-semibold
+                                       px-2 py-1 rounded-md hover:brightness-110 transition-all duration-150
+                                       flex items-center gap-1 active:scale-95">
+                            <span class="text-sm">⚽</span>
+                            <span class="hidden sm:inline">Allenamento</span>
+                        </button>
+                        <button id="btn-toggle-licenzia"
+                                class="text-gray-400 hover:text-red-400 hover:bg-red-900/30
+                                       w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150"
+                                title="Mostra/Nascondi licenziamento">
+                            <span class="text-sm">⚙️</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Messaggio feedback -->
+                <div id="player-list-message" class="hidden text-center py-1.5 text-sm border-b border-gray-700/30"></div>
+
+                <!-- Lista giocatori -->
+                <div id="player-list" class="p-2 space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto overscroll-contain">
                     ${players.length === 0
-                        ? '<p class="text-gray-400">Nessun calciatore in rosa. Vai al Draft per acquistarne!</p>'
+                        ? `<div class="text-center py-8 text-gray-400">
+                               <div class="text-3xl mb-2">⚽</div>
+                               <p class="text-sm">Nessun calciatore in rosa</p>
+                               <p class="text-xs text-gray-500 mt-1">Vai al Draft per acquistarne!</p>
+                           </div>`
                         : `
-                            ${renderRoleSection('icona', 'Icona', [], roleColors.icona)}
-                            ${renderRoleSection('P', 'Portieri', portieri, roleColors.P)}
-                            ${renderRoleSection('D', 'Difensori', difensori, roleColors.D)}
-                            ${renderRoleSection('C', 'Centrocampisti', centrocampisti, roleColors.C)}
-                            ${renderRoleSection('A', 'Attaccanti', attaccanti, roleColors.A)}
+                            ${renderRoleSection('icona', [], roleConfig.icona)}
+                            ${renderRoleSection('P', portieri, roleConfig.P)}
+                            ${renderRoleSection('D', difensori, roleConfig.D)}
+                            ${renderRoleSection('C', centrocampisti, roleConfig.C)}
+                            ${renderRoleSection('A', attaccanti, roleConfig.A)}
                         `
                     }
                 </div>
-            </div>
-
-            <!-- BOTTONE ALLENAMENTO (in fondo) -->
-            <div class="flex justify-center mt-6">
-                <button id="btn-training-rosa"
-                        class="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold py-3 px-8 rounded-lg shadow-xl hover:from-green-500 hover:to-emerald-400 transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                    <span>⚽</span> Allenamento
-                </button>
             </div>
         `;
 
@@ -94,283 +117,169 @@ window.GestioneSquadreRosa = {
     },
 
     /**
-     * Renderizza una singola card giocatore
+     * Renderizza una singola card giocatore - versione compatta per mobile
      */
     renderPlayerCard(player, teamData) {
         const refundCost = player.cost > 0 ? Math.floor(player.cost / 2) : 0;
         const isCaptain = player.isCaptain;
-        // Verifica se è Icona: tramite abilities OPPURE tramite iconaId nel teamData
         const isIcona = (player.abilities && player.abilities.includes('Icona')) ||
                         (teamData.iconaId && player.id === teamData.iconaId);
-        const captainMarker = isCaptain ? ' Ⓒ' : '';
 
-        // Marker Icona
-        let iconaMarker = '';
-
-        if (isIcona) {
-            iconaMarker = ' <span class="bg-yellow-800 text-yellow-300 px-2 py-0.5 rounded-full text-xs font-extrabold">ICONA</span>';
-        }
-
-        // Marker Infortunio
-        let injuryMarker = '';
+        // Status indicators (compatti)
         const isInjured = window.Injuries?.isPlayerInjured(player);
-        if (isInjured) {
-            const remaining = window.Injuries.getRemainingMatches(player);
-            injuryMarker = ` <span class="bg-red-800 text-red-300 px-2 py-0.5 rounded-full text-xs font-extrabold" title="Infortunato per ${remaining} partite">🏥 ${remaining}</span>`;
-        }
+        const injuryRemaining = isInjured ? window.Injuries.getRemainingMatches(player) : 0;
 
-        // Marker Giocatore Base (immune agli infortuni)
-        let basePlayerMarker = '';
         const playerLevel = player.level || 1;
         const playerCost = player.cost || 0;
-        const isBasePlayer = player.isBase ||
-                            player.isBasePlayer ||
+        const isBasePlayer = player.isBase || player.isBasePlayer ||
                             (player.name?.includes('Base')) ||
                             (((playerLevel === 1) || (playerLevel === 5)) && playerCost === 0 && !isIcona);
-        if (isBasePlayer) {
-            basePlayerMarker = ' <span class="bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Base - immune agli infortuni">🌱</span>';
-        }
 
-        // Marker Giocatore Serio (livello massimo 10)
-        let seriousPlayerMarker = '';
-        if (player.isSeriousPlayer) {
-            seriousPlayerMarker = ' <span class="bg-orange-700 text-orange-200 px-2 py-0.5 rounded-full text-xs font-semibold" title="Giocatore Serio - livello massimo 10">🎯</span>';
-        }
-
-        // Marker Contratto
-        const contractBadge = window.Contracts?.renderContractBadge(player, teamData) || '';
-
-        // Colore nome basato sulla forma del giocatore
+        // Form color
         const formData = teamData.playersFormStatus?.[player.id];
         const formModifier = formData?.mod ?? 0;
-        let formColorClass = 'text-white'; // neutro
-        if (formModifier > 0) {
-            formColorClass = 'text-green-400'; // in forma
-        } else if (formModifier < 0) {
-            formColorClass = 'text-red-400'; // fuori forma
-        }
-        // Il capitano ha sempre il colore arancione che sovrascrive la forma
-        const nameColorClass = isCaptain ? 'text-orange-400 font-extrabold' : `${formColorClass} font-semibold`;
+        let nameColor = 'text-white';
+        if (isCaptain) nameColor = 'text-orange-400';
+        else if (formModifier > 0) nameColor = 'text-green-400';
+        else if (formModifier < 0) nameColor = 'text-red-400';
 
-        // Badge tipologia (PlayerTypeBadge)
+        // Type badge compatto
         const playerType = player.type || 'N/A';
-        const typeBadgeHtml = window.GestioneSquadreConstants.getTypeBadgeHtml(playerType, 'sm');
+        const typeColors = { Potenza: 'bg-red-600', Tecnica: 'bg-blue-600', Velocita: 'bg-green-600' };
+        const typeBg = typeColors[playerType] || 'bg-gray-600';
 
-        // Abilita (mostra tutte, inclusa Icona e abilita uniche in dorato)
+        // Abilita compatte
         const playerAbilities = player.abilities || [];
         const UNIQUE_ABILITIES = ['Icona', "Fatto d'acciaio", "L'uomo in piu", 'Tiro Dritto', 'Avanti un altro', 'Contrasto di gomito', 'Calcolo delle probabilita', 'Amici di panchina', 'Continua a provare', 'Stazionario', 'Osservatore', 'Relax', 'Scheggia impazzita', 'Assist-man'];
-        const abilitiesHtml = playerAbilities.length > 0
-            ? `<p class="text-xs text-indigo-300 mt-1">Abilita: ${playerAbilities.map(a => UNIQUE_ABILITIES.includes(a) ? `<span class="text-yellow-400 font-bold">${a}</span>` : a).join(', ')}</p>`
-            : `<p class="text-xs text-gray-500 mt-1">Abilita: Nessuna</p>`;
 
-        // Potenziale basato su secretMaxLevel o tipo giocatore (solo per giocatori normali, non icone)
-        let potenzialHtml = '';
+        // Potenziale
+        let potenziale = null;
+        let potenzialColor = '';
         if (!isIcona) {
-            // Determina il livello massimo effettivo
-            let maxLvl = null;
-
-            // Giocatore Serio: max 10
-            if (player.isSeriousPlayer) {
-                maxLvl = 10;
-            }
-            // Giocatore Base: max 5
-            else if (isBasePlayer) {
-                maxLvl = 5;
-            }
-            // Giocatore normale con secretMaxLevel
-            else if (player.secretMaxLevel !== undefined && player.secretMaxLevel !== null) {
-                maxLvl = player.secretMaxLevel;
-            }
-
-            if (maxLvl !== null) {
-                let potenziale = '';
-                let potenzialColor = '';
-                if (maxLvl <= 5) {
-                    potenziale = 'Dilettante';
-                    potenzialColor = 'text-gray-400';
-                } else if (maxLvl <= 10) {
-                    potenziale = 'Accettabile';
-                    potenzialColor = 'text-white';
-                } else if (maxLvl <= 15) {
-                    potenziale = 'Professionista';
-                    potenzialColor = 'text-green-400';
-                } else if (maxLvl <= 19) {
-                    potenziale = 'Fuoriclasse';
-                    potenzialColor = 'text-blue-400';
-                } else if (maxLvl <= 24) {
-                    potenziale = 'Leggenda';
-                    potenzialColor = 'text-purple-400';
-                } else {
-                    potenziale = 'GOAT';
-                    potenzialColor = 'text-orange-400';
-                }
-                // Mostra livello max segreto se admin ha il flag attivo
-                const showSecretLevel = window.FeatureFlags?.isEnabled('adminViewSecretMaxLevel');
-                const secretLevelText = showSecretLevel ? ` <span class="text-purple-300">(Max: ${maxLvl})</span>` : '';
-                potenzialHtml = `<p class="text-xs mt-1">Potenziale: <span class="${potenzialColor} font-semibold">${potenziale}</span>${secretLevelText}</p>`;
+            let maxLvl = player.isSeriousPlayer ? 10 : isBasePlayer ? 5 : player.secretMaxLevel;
+            if (maxLvl) {
+                if (maxLvl <= 5) { potenziale = 'Dilettante'; potenzialColor = 'text-gray-400'; }
+                else if (maxLvl <= 10) { potenziale = 'Accettabile'; potenzialColor = 'text-white'; }
+                else if (maxLvl <= 15) { potenziale = 'Pro'; potenzialColor = 'text-green-400'; }
+                else if (maxLvl <= 19) { potenziale = 'Fuoriclasse'; potenzialColor = 'text-blue-400'; }
+                else if (maxLvl <= 24) { potenziale = 'Leggenda'; potenzialColor = 'text-purple-400'; }
+                else { potenziale = 'GOAT'; potenzialColor = 'text-orange-400'; }
             }
         }
 
-        // Barra EXP
+        // EXP bar
         let expBarHtml = '';
         if (window.PlayerExp && window.PlayerExpUI) {
-            // Migra il giocatore se necessario
-            if (player.exp === undefined) {
-                window.PlayerExp.migratePlayer(player);
-            }
-            expBarHtml = `<div class="mt-2 w-full max-w-xs">${window.PlayerExpUI.renderExpBar(player, { showText: true, size: 'small' })}</div>`;
+            if (player.exp === undefined) window.PlayerExp.migratePlayer(player);
+            expBarHtml = `<div class="mt-1.5 w-full">${window.PlayerExpUI.renderExpBar(player, { showText: true, size: 'small' })}</div>`;
         }
 
-        // Equipaggiamento (solo se feature flag attivo)
-        let equipmentHtml = '';
-        if (window.FeatureFlags?.isEnabled('marketObjects')) {
-            const equipment = player.equipment || {};
-            const slots = ['cappello', 'maglia', 'guanti', 'parastinchi', 'scarpini'];
-            const icons = { cappello: '🧢', maglia: '👕', guanti: '🧤', parastinchi: '🦵', scarpini: '👟' };
-            const equippedCount = slots.filter(s => equipment[s]).length;
+        // Contratto badge
+        const contractBadge = window.Contracts?.renderContractBadge(player, teamData) || '';
 
-            equipmentHtml = `
-                <div class="mt-2 flex items-center gap-2">
-                    <span class="text-xs text-gray-400">Equip:</span>
-                    <div class="flex gap-1">
-                        ${slots.map(slot => `
-                            <span class="text-sm ${equipment[slot] ? 'opacity-100' : 'opacity-30'}" title="${equipment[slot]?.name || 'Nessun ' + slot}">${icons[slot]}</span>
-                        `).join('')}
-                    </div>
-                    <button data-player-id="${player.id}"
-                            data-player-name="${player.name}"
-                            data-action="open-equipment"
-                            class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded transition">
-                        ${equippedCount > 0 ? `Modifica (${equippedCount}/5)` : 'Equipaggia'}
-                    </button>
-                </div>
-            `;
-        }
+        // Border per status
+        const borderColor = isInjured ? 'border-l-red-500' : 'border-l-transparent';
 
-        // Pulsante Capitano
-        const captainButton = isCaptain
-            ? `<button class="bg-gray-500 text-gray-300 text-sm px-4 py-2 rounded-lg cursor-default shadow-md" disabled>Capitano Attuale</button>`
-            : `<button data-player-id="${player.id}"
-                    data-player-name="${player.name}"
-                    data-action="assign-captain"
-                    class="bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md">
-                Nomina Capitano
-            </button>`;
-
-        // Pulsante Prolunga Contratto (solo se sistema contratti attivo e giocatore soggetto)
-        let contractButton = '';
-        if (window.Contracts?.isEnabled() && window.Contracts.isSubjectToContract(player, teamData)) {
-            const extensionCost = window.Contracts.calculateExtensionCost(player);
-            const currentContract = player.contract || 1;
-            const hasTimer = window.Contracts.hasExpireTimer(player);
-            contractButton = `
-                <button data-player-id="${player.id}"
-                        data-player-name="${player.name}"
-                        data-extension-cost="${extensionCost}"
-                        data-current-contract="${currentContract}"
-                        data-action="extend-contract"
-                        class="bg-teal-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-teal-500 transition duration-150 shadow-md flex items-center gap-1">
-                    📝 Prolunga (${extensionCost} CS)
-                </button>
-            `;
-        }
-
-        // Bottone Licenziamento (nascosto di default, visibile tramite toggle ⚙️)
-        const isLicenziabile = !isIcona;
-        const licenziaButton = `
-            <button data-player-id="${player.id}"
-                    data-original-cost="${player.cost}"
-                    data-refund-cost="${refundCost}"
-                    data-player-name="${player.name}"
-                    data-action="licenzia"
-                    class="licenzia-btn hidden bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition duration-150 shadow-md
-                    ${isLicenziabile ? 'hover:bg-red-700' : 'opacity-50 cursor-not-allowed'}"
-                    ${isLicenziabile ? '' : 'disabled'}>
-                Licenzia (Rimborso: ${refundCost} CS)
-            </button>
-        `;
-
-        // Bottone Allenamento EXP (se feature abilitata) - cooldown per ruolo
-        let trainingExpButton = '';
+        // Training EXP button
+        let trainingExpBtn = '';
         if (window.FeatureFlags?.isEnabled('trainingExp')) {
             const isInCooldown = window.TrainingExpMinigame?.isInCooldown(player.role);
             const testMode = window.FeatureFlags?.isEnabled('trainingExpTestMode');
-
             if (isInCooldown && !testMode) {
-                // Mostra countdown invece del bottone (per questo ruolo)
                 const countdown = window.TrainingExpMinigame?.getCooldownCountdown() || '...';
-                trainingExpButton = `
-                    <div class="text-xs text-orange-400 bg-orange-900 bg-opacity-30 px-3 py-2 rounded-lg border border-orange-600 flex items-center gap-1">
-                        <span>⏳</span> ${player.role} gia allenato (${countdown})
-                    </div>
-                `;
+                trainingExpBtn = `<span class="text-xs text-orange-400">⏳ ${countdown}</span>`;
             } else {
-                trainingExpButton = `
-                    <button data-player-id="${player.id}"
-                            data-player-name="${player.name}"
-                            data-player-role="${player.role}"
+                trainingExpBtn = `
+                    <button data-player-id="${player.id}" data-player-name="${player.name}" data-player-role="${player.role}"
                             data-action="training-exp"
-                            class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-sm px-3 py-2 rounded-lg hover:from-purple-500 hover:to-indigo-400 transition duration-150 shadow-md flex items-center gap-1">
-                        <span>🎮</span> Allenamento EXP${testMode ? ' (Test)' : ''}
-                    </button>
-                `;
+                            class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded transition-all">
+                        🎮 EXP${testMode ? '*' : ''}
+                    </button>`;
             }
         }
 
-        // Border rosso se infortunato
-        const borderClass = isInjured ? 'border-red-500' : 'border-green-700';
-
-        // Bottone statistiche (se feature attiva) - seconda riga header
-        const statsButton = window.FeatureFlags?.isEnabled('playerStats')
-            ? `<button data-action="view-player-stats"
-                       data-player-id="${player.id}"
-                       data-player-name="${player.name}"
-                       data-player-role="${player.role}"
-                       class="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1"
-                       title="Statistiche ${player.name}">📊 Statistiche</button>`
-            : '';
+        // Statistiche button
+        const statsBtn = window.FeatureFlags?.isEnabled('playerStats')
+            ? `<button data-action="view-player-stats" data-player-id="${player.id}" data-player-name="${player.name}" data-player-role="${player.role}"
+                       class="text-xs text-blue-400 hover:text-blue-300">📊</button>` : '';
 
         return `
-            <div class="bg-gray-800 rounded-lg border ${borderClass} overflow-hidden">
-                <!-- Header cliccabile -->
-                <div class="player-card-header p-3 sm:p-4 cursor-pointer hover:bg-gray-750 transition-colors"
-                     data-player-id="${player.id}">
-                    <!-- Prima riga: nome e info -->
-                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span class="player-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                        <span class="${nameColorClass}" title="Forma: ${formModifier >= 0 ? '+' : ''}${formModifier}">${player.name}${isIcona ? ' 👑' : ''}${captainMarker}</span>
-                        ${iconaMarker}
-                        ${basePlayerMarker}
-                        ${seriousPlayerMarker}
-                        ${injuryMarker}
-                        <span class="text-yellow-400">(${player.role})</span>
-                        ${typeBadgeHtml}
-                        <span class="text-gray-500 text-sm ml-2">Lv.${player.level || player.currentLevel || 1}</span>
+            <div class="bg-gray-800/80 rounded-lg border-l-2 ${borderColor} border border-gray-700/50 overflow-hidden
+                        hover:bg-gray-750 transition-all duration-150">
+                <!-- Header compatto -->
+                <div class="player-card-header px-2 py-1.5 cursor-pointer flex items-center gap-2" data-player-id="${player.id}">
+                    <span class="player-toggle-icon text-gray-500 text-xs transition-transform duration-200">▶</span>
+
+                    <!-- Info principale -->
+                    <div class="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
+                        <span class="${nameColor} font-semibold text-sm truncate">${player.name}</span>
+                        ${isCaptain ? '<span class="text-orange-400 text-xs">Ⓒ</span>' : ''}
+                        ${isIcona ? '<span class="text-yellow-400 text-xs">👑</span>' : ''}
+                        ${isInjured ? `<span class="text-red-400 text-xs">🏥${injuryRemaining}</span>` : ''}
+                        ${isBasePlayer ? '<span class="text-gray-400 text-xs">🌱</span>' : ''}
+                        ${player.isSeriousPlayer ? '<span class="text-orange-400 text-xs">🎯</span>' : ''}
+                    </div>
+
+                    <!-- Badges compatti -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <span class="${typeBg} text-white text-xs px-1 py-0.5 rounded font-medium">${playerType.charAt(0)}</span>
+                        <span class="text-gray-400 text-xs">Lv.${playerLevel}</span>
                         ${contractBadge}
                     </div>
-                    <!-- Seconda riga: bottone statistiche -->
-                    ${statsButton ? `<div class="mt-1 ml-5">${statsButton}</div>` : ''}
                 </div>
-                <!-- Contenuto espandibile (chiuso di default) -->
-                <div class="player-card-content hidden px-4 pb-4 border-t border-gray-700">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3">
-                        <div class="mb-3 sm:mb-0 sm:w-1/2">
-                            <p class="text-sm text-gray-400">Acquistato per: ${player.cost || 0} CS</p>
-                            ${abilitiesHtml}
-                            ${potenzialHtml}
+
+                <!-- Contenuto espandibile -->
+                <div class="player-card-content hidden border-t border-gray-700/50 px-2 py-2 bg-gray-900/30">
+                    <!-- Info row -->
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                                <span>Costo: ${playerCost} CS</span>
+                                ${potenziale ? `<span class="${potenzialColor}">${potenziale}</span>` : ''}
+                            </div>
+                            ${playerAbilities.length > 0
+                                ? `<div class="text-xs text-indigo-300 truncate">
+                                       ${playerAbilities.map(a => UNIQUE_ABILITIES.includes(a) ? `<span class="text-yellow-400">${a}</span>` : a).join(', ')}
+                                   </div>`
+                                : '<div class="text-xs text-gray-500">Nessuna abilita</div>'
+                            }
                             ${expBarHtml}
-                            ${equipmentHtml}
                         </div>
-                        <div class="flex flex-col w-full sm:w-auto items-end gap-2">
-                            <div class="flex flex-row items-center gap-2">
-                                ${trainingExpButton}
-                                ${captainButton}
-                            </div>
-                            <div class="flex flex-row items-center gap-2">
-                                ${contractButton}
-                            </div>
-                            ${licenziaButton}
+                        <div class="flex items-center gap-1">
+                            ${statsBtn}
                         </div>
+                    </div>
+
+                    <!-- Actions row -->
+                    <div class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-gray-700/30">
+                        ${trainingExpBtn}
+                        ${isCaptain
+                            ? '<span class="text-xs text-gray-400 bg-gray-700/50 px-2 py-1 rounded">Capitano</span>'
+                            : `<button data-player-id="${player.id}" data-player-name="${player.name}" data-action="assign-captain"
+                                       class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded transition-all">
+                                   👑 Capitano
+                               </button>`
+                        }
+                        ${window.Contracts?.isEnabled() && window.Contracts.isSubjectToContract(player, teamData)
+                            ? `<button data-player-id="${player.id}" data-player-name="${player.name}"
+                                       data-extension-cost="${window.Contracts.calculateExtensionCost(player)}"
+                                       data-current-contract="${player.contract || 1}" data-action="extend-contract"
+                                       class="text-xs bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded transition-all">
+                                   📝 Prolunga
+                               </button>` : ''
+                        }
+                        ${window.FeatureFlags?.isEnabled('marketObjects')
+                            ? `<button data-player-id="${player.id}" data-player-name="${player.name}" data-action="open-equipment"
+                                       class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded transition-all">
+                                   🎒 Equip
+                               </button>` : ''
+                        }
+                        <button data-player-id="${player.id}" data-original-cost="${playerCost}"
+                                data-refund-cost="${refundCost}" data-player-name="${player.name}" data-action="licenzia"
+                                class="licenzia-btn hidden text-xs bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded transition-all
+                                       ${isIcona ? 'opacity-50 cursor-not-allowed' : ''}" ${isIcona ? 'disabled' : ''}>
+                            🗑️ ${refundCost} CS
+                        </button>
                     </div>
                 </div>
             </div>
