@@ -2941,6 +2941,7 @@ html {
     width: 100%;
     max-width: 100vw;
     height: 100%;
+    height: 100dvh;
 }
 
 body {
@@ -2953,6 +2954,17 @@ body {
     /* Previene scroll extra oltre il contenuto */
     overscroll-behavior: none;
     overscroll-behavior-y: none;
+}
+
+/* Main content non deve forzare altezza minima */
+#main-content {
+    min-height: auto !important;
+}
+
+/* App content e login box - nessuna altezza minima forzata */
+#app-content,
+#login-box {
+    min-height: auto !important;
 }
 
 /* ===================== FIX OVERSCROLL SU TUTTE LE SCHERMATE ===================== */
