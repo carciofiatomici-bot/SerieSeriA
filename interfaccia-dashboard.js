@@ -134,6 +134,21 @@ window.InterfacciaDashboard = {
         // NUOVO: Aggiorna il toggle partecipazione coppa
         this.updateCupParticipationUI();
 
+        // Aggiorna statistiche classifica utente
+        this.updateUserLeagueStats();
+
+        // Aggiorna stato coppa utente
+        this.updateUserCupStatus();
+
+        // Aggiorna stato supercoppa utente
+        this.updateUserSupercoppaStatus();
+
+        // Aggiorna cooldown sfida amichevole
+        this.updateChallengeCooldownAlert();
+
+        // Aggiorna cooldown leghe private
+        this.updatePrivateLeagueCooldownAlert();
+
         // Inizializza il widget Crediti Super Seri
         this.initCreditiSuperSeriWidget();
 
@@ -2905,6 +2920,412 @@ window.InterfacciaDashboard = {
             if (window.UserCompetitions?.loadCampionatoScreen) {
                 window.UserCompetitions.loadCampionatoScreen();
             }
+        }
+    },
+
+    // ====================================================================
+    // USER LEAGUE STATS - Statistiche Classifica Utente
+    // ====================================================================
+
+    /**
+     * Aggiorna le statistiche della classifica utente nel box serieseria-box
+     */
+    async updateUserLeagueStats() {
+        const positionEl = document.getElementById('user-league-position');
+        const playedEl = document.getElementById('user-league-played');
+        const winsEl = document.getElementById('user-league-wins');
+        const drawsEl = document.getElementById('user-league-draws');
+        const lossesEl = document.getElementById('user-league-losses');
+        const gdEl = document.getElementById('user-league-gd');
+        const statsContainer = document.getElementById('user-league-stats');
+
+        if (!statsContainer) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId) {
+            statsContainer.classList.add('hidden');
+            return;
+        }
+
+        try {
+            // Ottieni classifica dal listener condiviso
+            let leaderboardData = null;
+            if (window.LeaderboardListener) {
+                leaderboardData = await window.LeaderboardListener.getLeaderboard();
+            }
+
+            if (!leaderboardData || !leaderboardData.standings) {
+                // Nessun dato classifica
+                if (positionEl) positionEl.textContent = '--°';
+                return;
+            }
+
+            const standings = leaderboardData.standings;
+            const teamIndex = standings.findIndex(t => t.teamId === currentTeamId);
+
+            if (teamIndex === -1) {
+                // Squadra non in classifica
+                if (positionEl) positionEl.textContent = '--°';
+                return;
+            }
+
+            const teamStats = standings[teamIndex];
+            const position = teamIndex + 1;
+
+            // Aggiorna UI
+            if (positionEl) positionEl.textContent = `${position}°`;
+            if (playedEl) playedEl.textContent = teamStats.played || 0;
+            if (winsEl) winsEl.textContent = teamStats.wins || 0;
+            if (drawsEl) drawsEl.textContent = teamStats.draws || 0;
+            if (lossesEl) lossesEl.textContent = teamStats.losses || 0;
+
+            const gd = (teamStats.goalsFor || 0) - (teamStats.goalsAgainst || 0);
+            if (gdEl) gdEl.textContent = gd >= 0 ? `+${gd}` : gd;
+
+            statsContainer.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('[UserLeagueStats] Errore:', error);
+        }
+    },
+
+    // ====================================================================
+    // USER CUP STATUS - Stato Coppa Utente
+    // ====================================================================
+
+    /**
+     * Aggiorna lo stato della coppa per l'utente nel box coppa-box
+     */
+    async updateUserCupStatus() {
+        const stageEl = document.getElementById('user-cup-stage');
+        const eliminatedEl = document.getElementById('user-cup-eliminated');
+        const statusContainer = document.getElementById('user-cup-status');
+
+        if (!statusContainer) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+
+        if (!currentTeamId) {
+            statusContainer.classList.add('hidden');
+            return;
+        }
+
+        try {
+            // Verifica se partecipa alla coppa
+            const isCupParticipating = currentTeamData?.isCupParticipating || false;
+
+            if (!isCupParticipating) {
+                if (stageEl) stageEl.textContent = 'Non iscritto';
+                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+                return;
+            }
+
+            // Carica il bracket della coppa dal percorso corretto
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const COPPA_SCHEDULE_DOC_ID = window.CoppaConstants?.COPPA_SCHEDULE_DOC_ID || 'coppa_schedule';
+            const cupDocRef = doc(window.db, `artifacts/${appId}/public/data/schedule`, COPPA_SCHEDULE_DOC_ID);
+
+            let cupDoc;
+            if (window.FirestoreCache) {
+                cupDoc = await window.FirestoreCache.getDoc(cupDocRef, 'coppa', COPPA_SCHEDULE_DOC_ID, 60000);
+            } else {
+                cupDoc = await getDoc(cupDocRef);
+            }
+
+            if (!cupDoc.exists()) {
+                if (stageEl) stageEl.textContent = 'In attesa';
+                return;
+            }
+
+            const cupData = cupDoc.data();
+            const rounds = cupData.rounds || [];
+
+            // Verifica se la coppa e' completata e c'e' un vincitore
+            if (cupData.status === 'completed' && cupData.winner) {
+                const isWinner = cupData.winner.teamId === currentTeamId;
+                const isRunnerUp = cupData.runnerUp?.teamId === currentTeamId;
+
+                if (isWinner) {
+                    if (stageEl) {
+                        stageEl.textContent = 'VINCITORE!';
+                        stageEl.classList.remove('text-purple-400', 'text-red-400');
+                        stageEl.classList.add('text-yellow-400');
+                    }
+                    if (eliminatedEl) eliminatedEl.classList.add('hidden');
+                    return;
+                } else if (isRunnerUp) {
+                    if (stageEl) {
+                        stageEl.textContent = 'Finalista';
+                        stageEl.classList.remove('text-purple-400', 'text-yellow-400');
+                        stageEl.classList.add('text-red-400');
+                    }
+                    if (eliminatedEl) eliminatedEl.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            // Trova lo stato della squadra nel bracket
+            let isEliminated = false;
+            let eliminatedAtRound = null;
+            let currentRound = null;
+            let foundInBracket = false;
+
+            // Controlla ogni round
+            for (let i = 0; i < rounds.length; i++) {
+                const round = rounds[i];
+                if (!round.matches) continue;
+
+                for (const match of round.matches) {
+                    // Struttura coppa: homeTeam.teamId / awayTeam.teamId
+                    const homeId = match.homeTeam?.teamId;
+                    const awayId = match.awayTeam?.teamId;
+
+                    if (homeId === currentTeamId || awayId === currentTeamId) {
+                        foundInBracket = true;
+
+                        // Controlla se c'e' un vincitore
+                        if (match.winner) {
+                            const isHome = homeId === currentTeamId;
+                            const won = match.winner.teamId === currentTeamId;
+
+                            if (!won) {
+                                isEliminated = true;
+                                eliminatedAtRound = round.roundName || `Turno ${i + 1}`;
+                            } else {
+                                // Ha vinto, passa al prossimo turno
+                                currentRound = rounds[i + 1]?.roundName || 'Prossimo turno';
+                            }
+                        } else if (match.leg1Result || match.leg2Result) {
+                            // Partita in corso
+                            currentRound = round.roundName || `Turno ${i + 1}`;
+                        } else {
+                            // Partita non ancora giocata
+                            currentRound = round.roundName || `Turno ${i + 1}`;
+                        }
+                    }
+                }
+
+                // Se eliminato, esci dal loop
+                if (isEliminated) break;
+            }
+
+            // Controlla se la squadra ha un bye
+            if (!foundInBracket && cupData.teamsWithBye) {
+                const hasBye = cupData.teamsWithBye.some(t => t.teamId === currentTeamId);
+                if (hasBye) {
+                    foundInBracket = true;
+                    // Trova il primo round dove deve giocare
+                    currentRound = rounds[1]?.roundName || rounds[0]?.roundName || 'Prossimo turno';
+                }
+            }
+
+            // Aggiorna UI
+            if (isEliminated) {
+                if (stageEl) {
+                    stageEl.textContent = `Eliminato - ${eliminatedAtRound}`;
+                    stageEl.classList.remove('text-purple-400', 'text-yellow-400');
+                    stageEl.classList.add('text-red-400');
+                }
+                if (eliminatedEl) eliminatedEl.classList.remove('hidden');
+            } else if (currentRound) {
+                if (stageEl) {
+                    stageEl.textContent = currentRound;
+                    stageEl.classList.remove('text-red-400', 'text-yellow-400');
+                    stageEl.classList.add('text-purple-400');
+                }
+                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+            } else if (!foundInBracket) {
+                if (stageEl) stageEl.textContent = 'Non nel tabellone';
+                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+            } else {
+                if (stageEl) stageEl.textContent = 'In attesa';
+                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+            }
+
+        } catch (error) {
+            console.error('[UserCupStatus] Errore:', error);
+            if (stageEl) stageEl.textContent = '--';
+        }
+    },
+
+    // ====================================================================
+    // PRIVATE LEAGUE COOLDOWN - Alert prossima lega privata
+    // ====================================================================
+
+    /**
+     * Aggiorna l'alert per il cooldown delle leghe private
+     */
+    updatePrivateLeagueCooldownAlert() {
+        const alertContainer = document.getElementById('private-league-cooldown-alert');
+        if (!alertContainer) return;
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        if (!currentTeamData) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Controlla se c'e' un cooldown attivo
+        const lastPrivateLeague = currentTeamData.lastPrivateLeagueJoin;
+        if (!lastPrivateLeague) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Converti timestamp Firestore se necessario
+        let lastJoinTime = lastPrivateLeague;
+        if (typeof lastPrivateLeague.toMillis === 'function') {
+            lastJoinTime = lastPrivateLeague.toMillis();
+        }
+
+        // Cooldown di 24 ore
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+        const timeRemaining = (lastJoinTime + COOLDOWN_MS) - Date.now();
+
+        if (timeRemaining <= 0) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Mostra alert con countdown
+        const hours = Math.floor(timeRemaining / (60 * 60 * 1000));
+        const minutes = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
+
+        alertContainer.innerHTML = `<span class="text-yellow-400 text-xs">⏳ Prossima lega disponibile tra ${hours}h ${minutes}m</span>`;
+        alertContainer.classList.remove('hidden');
+    },
+
+    /**
+     * Aggiorna l'alert per il cooldown delle sfide amichevoli
+     */
+    updateChallengeCooldownAlert() {
+        const alertContainer = document.getElementById('challenge-cooldown-alert');
+        if (!alertContainer) return;
+
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        if (!currentTeamData) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Controlla se c'e' un cooldown attivo
+        const lastChallenge = currentTeamData.lastChallengeTime;
+        if (!lastChallenge) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Converti timestamp Firestore se necessario
+        let lastChallengeTime = lastChallenge;
+        if (typeof lastChallenge.toMillis === 'function') {
+            lastChallengeTime = lastChallenge.toMillis();
+        }
+
+        // Cooldown di 15 minuti (come ACQUISITION_COOLDOWN_MS)
+        const COOLDOWN_MS = 15 * 60 * 1000;
+        const timeRemaining = (lastChallengeTime + COOLDOWN_MS) - Date.now();
+
+        if (timeRemaining <= 0) {
+            alertContainer.classList.add('hidden');
+            return;
+        }
+
+        // Mostra alert con countdown
+        const minutes = Math.floor(timeRemaining / (60 * 1000));
+        const seconds = Math.floor((timeRemaining % (60 * 1000)) / 1000);
+
+        alertContainer.innerHTML = `<span class="text-orange-400 text-xs">⏳ Prossima sfida tra ${minutes}m ${seconds}s</span>`;
+        alertContainer.classList.remove('hidden');
+    },
+
+    // ====================================================================
+    // USER SUPERCOPPA STATUS - Stato Supercoppa Utente
+    // ====================================================================
+
+    /**
+     * Aggiorna lo stato della supercoppa per l'utente
+     */
+    async updateUserSupercoppaStatus() {
+        const matchEl = document.getElementById('user-supercoppa-match');
+        const statusContainer = document.getElementById('user-supercoppa-status');
+
+        if (!statusContainer || !matchEl) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId) {
+            matchEl.textContent = '--';
+            return;
+        }
+
+        try {
+            const { doc, getDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const supercoppaDocRef = doc(window.db, `artifacts/${appId}/public/data/supercoppa`, 'match');
+
+            let supercoppaDoc;
+            if (window.FirestoreCache) {
+                supercoppaDoc = await window.FirestoreCache.getDoc(supercoppaDocRef, 'supercoppa', 'match', 60000);
+            } else {
+                supercoppaDoc = await getDoc(supercoppaDocRef);
+            }
+
+            if (!supercoppaDoc.exists()) {
+                matchEl.textContent = 'Non ancora generata';
+                matchEl.classList.add('text-gray-400');
+                return;
+            }
+
+            const supercoppaData = supercoppaDoc.data();
+
+            // Verifica se la squadra partecipa
+            const isHome = supercoppaData.homeId === currentTeamId;
+            const isAway = supercoppaData.awayId === currentTeamId;
+
+            if (!isHome && !isAway) {
+                matchEl.textContent = 'Non qualificato';
+                matchEl.classList.add('text-gray-400');
+                return;
+            }
+
+            const homeName = supercoppaData.homeName || 'Casa';
+            const awayName = supercoppaData.awayName || 'Ospite';
+
+            // Controlla se la partita e' stata giocata
+            if (supercoppaData.result) {
+                const homeScore = supercoppaData.result.homeScore || 0;
+                const awayScore = supercoppaData.result.awayScore || 0;
+
+                // Determina se ha vinto
+                const won = (isHome && homeScore > awayScore) || (isAway && awayScore > homeScore);
+                const draw = homeScore === awayScore;
+
+                matchEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="${isHome ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(homeName)}</span>
+                        <span class="text-white font-bold">${homeScore} - ${awayScore}</span>
+                        <span class="${isAway ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(awayName)}</span>
+                    </div>
+                    <div class="text-center mt-1 ${won ? 'text-green-400' : draw ? 'text-yellow-400' : 'text-red-400'} font-bold">
+                        ${won ? 'VITTORIA!' : draw ? 'PAREGGIO' : 'SCONFITTA'}
+                    </div>
+                `;
+            } else {
+                // Partita non ancora giocata
+                matchEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="${isHome ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(homeName)}</span>
+                        <span class="text-gray-500">vs</span>
+                        <span class="${isAway ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(awayName)}</span>
+                    </div>
+                    <div class="text-center mt-1 text-gray-400 text-xs">In attesa</div>
+                `;
+            }
+
+        } catch (error) {
+            console.error('[UserSupercoppaStatus] Errore:', error);
+            matchEl.textContent = '--';
         }
     }
 };

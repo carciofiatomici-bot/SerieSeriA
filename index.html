@@ -1130,61 +1130,105 @@
             </div>
 
             <!-- ========== TAB 3: COMPETIZIONI ========== -->
-            <div id="tab-competitions" class="tab-content hidden">
-                <!-- BOX COMPETIZIONI (con toggle integrati) -->
-                <div id="competizioni-box" class="rounded-lg border border-green-500/50">
-                    <div class="space-y-1.5">
-                        <!-- SerieSeriA con toggle -->
-                        <div class="flex items-stretch gap-1.5">
-                            <button id="btn-user-campionato"
-                                    class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                                <span class="text-base sm:text-lg">🏅</span>
-                                <span class="text-sm sm:text-base">SerieSeriA</span>
-                            </button>
-                            <div class="flex items-center bg-green-800/50 rounded-md px-2" title="Partecipa al campionato">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
-                                    <div class="relative w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                                </label>
-                            </div>
-                        </div>
-                        <!-- CoppaSeriA con toggle -->
-                        <div class="flex items-stretch gap-1.5">
-                            <button id="btn-user-coppa"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                                <span class="text-base sm:text-lg">🏆</span>
-                                <span class="text-sm sm:text-base">CoppaSeriA</span>
-                            </button>
-                            <div class="flex items-center bg-purple-800/50 rounded-md px-2" title="Partecipa alla coppa">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
-                                    <div class="relative w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
-                                </label>
-                            </div>
-                        </div>
-                        <!-- Super CoppaSeriA (senza toggle) -->
-                        <button id="btn-user-supercoppa"
-                                class="w-full bg-gradient-to-r from-red-800 to-red-900 text-white font-extrabold py-2 sm:py-2.5 rounded-md shadow-lg hover:from-red-700 hover:to-red-800 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1">
-                            <span class="text-base sm:text-lg">⭐</span>
-                            <span class="text-sm sm:text-base">Super CoppaSeriA</span>
+            <div id="tab-competitions" class="tab-content hidden space-y-2">
+                <!-- BOX SERIESERIA -->
+                <div id="serieseria-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <div class="flex items-stretch gap-2">
+                        <button id="btn-user-campionato"
+                                class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-green-500 hover:to-green-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                            <span class="text-lg sm:text-xl">🏅</span>
+                            <span class="text-sm sm:text-base" style="color: white !important;">SerieSeriA</span>
                         </button>
+                        <div class="flex items-center bg-green-800/50 rounded-lg px-3" title="Partecipa al campionato">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="championship-participation-toggle" class="sr-only peer">
+                                <div class="relative w-10 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Bottone Classifica Campionato -->
+                    <button id="btn-view-leaderboard"
+                            class="w-full mt-2 bg-gray-700/80 hover:bg-gray-600/80 text-white font-medium py-2 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm">
+                        <span>📊</span>
+                        <span>Classifica Campionato</span>
+                    </button>
+                    <!-- Statistiche Classifica Utente -->
+                    <div id="user-league-stats" class="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs sm:text-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span id="user-league-position" class="font-bold text-green-400 text-base sm:text-lg">--°</span>
+                                <span class="text-gray-400">posizione</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-gray-300">
+                                <span title="Partite giocate"><span class="text-gray-500">G:</span> <span id="user-league-played">0</span></span>
+                                <span title="Vittorie" class="text-green-400"><span class="text-gray-500">V:</span> <span id="user-league-wins">0</span></span>
+                                <span title="Pareggi" class="text-yellow-400"><span class="text-gray-500">P:</span> <span id="user-league-draws">0</span></span>
+                                <span title="Sconfitte" class="text-red-400"><span class="text-gray-500">S:</span> <span id="user-league-losses">0</span></span>
+                                <span title="Differenza reti" class="text-blue-400"><span class="text-gray-500">DR:</span> <span id="user-league-gd">0</span></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Sfida -->
-                <div class="mt-2">
-                    <button id="btn-challenge"
-                            class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-                        <span>⚔️</span> Sfida Amichevole
+                <!-- BOX COPPASERIA -->
+                <div id="coppa-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <div class="flex items-stretch gap-2">
+                        <button id="btn-user-coppa"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-purple-500 hover:to-purple-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                            <span class="text-lg sm:text-xl">🏆</span>
+                            <span class="text-sm sm:text-base">CoppaSeriA</span>
+                        </button>
+                        <div class="flex items-center bg-purple-800/50 rounded-lg px-3" title="Partecipa alla coppa">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cup-participation-toggle" class="sr-only peer">
+                                <div class="relative w-10 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Bottone Tabellone Coppa -->
+                    <button id="btn-view-cup-bracket"
+                            class="w-full mt-2 bg-gray-700/80 hover:bg-gray-600/80 text-white font-medium py-2 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm">
+                        <span>🏆</span>
+                        <span>Tabellone Coppa</span>
                     </button>
+                    <!-- Stato Coppa Utente -->
+                    <div id="user-cup-status" class="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs sm:text-sm">
+                        <div class="flex items-center justify-between">
+                            <span id="user-cup-stage" class="text-purple-400 font-medium">--</span>
+                            <span id="user-cup-eliminated" class="text-gray-400 hidden">Eliminato</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- BOX LEGA PRIVATA -->
-                <div id="private-leagues-box" class="hidden mt-2 rounded-lg border border-green-500/50 flex justify-center">
-                    <button id="btn-private-leagues"
-                            class="flex-1 max-w-xs bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 text-xs sm:text-base rounded-md shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95">
-                        👥 Lega Privata
+                <!-- BOX SUPER COPPASERIA -->
+                <div id="supercoppa-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <button id="btn-user-supercoppa"
+                            class="w-full bg-gradient-to-r from-yellow-600 to-amber-600 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-yellow-500 hover:to-amber-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-lg sm:text-xl">⭐</span>
+                        <span class="text-sm sm:text-base">Super CoppaSeriA</span>
                     </button>
+                    <!-- Stato Supercoppa Utente -->
+                    <div id="user-supercoppa-status" class="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs sm:text-sm">
+                        <div id="user-supercoppa-match" class="text-center text-gray-400">--</div>
+                    </div>
+                </div>
+
+                <!-- BOX SFIDA E LEGA PRIVATA -->
+                <div id="private-leagues-box" class="competition-box rounded-xl p-3 space-y-2" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <button id="btn-challenge"
+                            class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-orange-500 hover:to-red-500 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-lg sm:text-xl">⚔️</span>
+                        <span class="text-sm sm:text-base">Sfida Amichevole</span>
+                    </button>
+                    <!-- Alert cooldown sfida amichevole -->
+                    <div id="challenge-cooldown-alert" class="hidden text-center"></div>
+                    <button id="btn-private-leagues"
+                            class="w-full bg-gradient-to-r from-purple-600 to-violet-500 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-purple-500 hover:to-violet-400 transition duration-150 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-lg sm:text-xl">👥</span>
+                        <span class="text-sm sm:text-base">Leghe Private</span>
+                    </button>
+                    <!-- Alert cooldown leghe private -->
+                    <div id="private-league-cooldown-alert" class="hidden text-center"></div>
                 </div>
             </div>
 
@@ -1481,6 +1525,23 @@
              </div>
         </div>
 
+        <!-- 7B2. CONTENUTO CLASSIFICA CAMPIONATO -->
+        <div id="leaderboard-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
+            <h2 class="text-4xl font-extrabold text-green-400 text-center mb-4 border-b-4 border-green-700 pb-2">📊 Classifica Campionato</h2>
+            <div id="leaderboard-container" class="mt-4">
+                <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border-2 border-blue-500 shadow-lg overflow-hidden">
+                    <div class="p-3">
+                        <h3 class="text-xl font-bold text-blue-400 flex items-center gap-2">
+                            <span>📊</span> Classifica SerieSeriA
+                        </h3>
+                    </div>
+                    <div id="leaderboard-table-container" class="bg-black bg-opacity-30 rounded-lg overflow-x-auto mx-3 mb-3">
+                        <p class="text-center text-gray-400 py-4">Caricamento classifica...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 7C. CONTENUTO AREA COPPA UTENTE (NUOVA) -->
         <div id="user-coppa-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 CoppaSeriA</h2>
@@ -1488,6 +1549,23 @@
              <div id="user-coppa-container" class="mt-6 space-y-6">
                 <p class="text-center text-gray-400">Caricamento dati coppa...</p>
              </div>
+        </div>
+
+        <!-- 7C2. CONTENUTO TABELLONE COPPA -->
+        <div id="cup-bracket-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
+            <h2 class="text-4xl font-extrabold text-indigo-400 text-center mb-4 border-b-4 border-indigo-700 pb-2">🏆 Tabellone CoppaSeriA</h2>
+            <div id="cup-bracket-container" class="mt-4">
+                <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-lg p-4 border-2 border-indigo-500 shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
+                            <span>📋</span> Tabellone Completo
+                        </h3>
+                    </div>
+                    <div id="cup-bracket-table-container">
+                        <p class="text-center text-gray-400 py-4">Caricamento tabellone...</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 7D. CONTENUTO AREA SUPERCOPPA UTENTE (NUOVA) -->

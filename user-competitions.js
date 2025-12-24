@@ -1139,12 +1139,30 @@ window.UserCompetitions = {
             });
         }
 
+        // Bottone Classifica Campionato
+        const btnLeaderboard = document.getElementById('btn-view-leaderboard');
+        if (btnLeaderboard) {
+            btnLeaderboard.addEventListener('click', () => {
+                window.showScreen(document.getElementById('leaderboard-content'));
+                this.loadLeaderboardScreen();
+            });
+        }
+
         // Bottone Coppa
         const btnCoppa = document.getElementById('btn-user-coppa');
         if (btnCoppa) {
             btnCoppa.addEventListener('click', () => {
                 window.showScreen(document.getElementById('user-coppa-content'));
                 this.loadCoppaScreen();
+            });
+        }
+
+        // Bottone Tabellone Coppa
+        const btnCupBracket = document.getElementById('btn-view-cup-bracket');
+        if (btnCupBracket) {
+            btnCupBracket.addEventListener('click', () => {
+                window.showScreen(document.getElementById('cup-bracket-content'));
+                this.loadCupBracketScreen();
             });
         }
 
@@ -1177,6 +1195,289 @@ window.UserCompetitions = {
                 icon.textContent = '▼';
             }
         }
+    },
+
+    /**
+     * Carica la schermata Classifica Campionato
+     */
+    async loadLeaderboardScreen() {
+        const container = document.getElementById('leaderboard-table-container');
+        if (!container) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-400">Caricamento classifica...</p>
+            </div>
+        `;
+
+        try {
+            // Carica classifica
+            const leaderboardData = await window.LeaderboardListener?.getLeaderboard();
+            const standings = leaderboardData?.standings || [];
+
+            if (standings.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 py-4">Nessuna classifica disponibile</p>`;
+                return;
+            }
+
+            // Carica dati squadre per livello medio
+            const { collection, getDocs } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
+
+            let teamsData = {};
+            try {
+                const teamsSnap = await getDocs(collection(db, TEAMS_COLLECTION_PATH));
+                teamsSnap.forEach(doc => {
+                    teamsData[doc.id] = doc.data();
+                });
+            } catch (e) {
+                console.warn('[Leaderboard] Impossibile caricare dati squadre:', e);
+            }
+
+            // Genera tabella classifica
+            let tableHtml = `
+                <table class="w-full text-sm min-w-[400px]">
+                    <thead class="bg-gray-800">
+                        <tr>
+                            <th class="py-2 px-3 text-left text-gray-400">#</th>
+                            <th class="py-2 px-2 text-center text-gray-400" title="Media Livello Rosa">Lv</th>
+                            <th class="py-2 px-3 text-left text-gray-400">Squadra</th>
+                            <th class="py-2 px-3 text-center text-gray-400">Pt</th>
+                            <th class="py-2 px-3 text-center text-gray-400">G</th>
+                            <th class="py-2 px-3 text-center text-gray-400">V</th>
+                            <th class="py-2 px-3 text-center text-gray-400">P</th>
+                            <th class="py-2 px-3 text-center text-gray-400">S</th>
+                            <th class="py-2 px-3 text-center text-gray-400">DR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            standings.forEach((team, index) => {
+                const position = index + 1;
+                const isCurrentTeam = team.teamId === currentTeamId;
+                const rowBg = isCurrentTeam ? 'bg-yellow-900 bg-opacity-50' : (index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800');
+                const textColor = isCurrentTeam ? 'text-yellow-400 font-bold' : 'text-white';
+
+                // Calcola livello medio rosa
+                const teamData = teamsData[team.teamId];
+                let avgLevel = '-';
+                if (teamData?.players) {
+                    const players = teamData.players;
+                    if (players.length > 0) {
+                        const totalLevel = players.reduce((sum, p) => sum + (p.level || 1), 0);
+                        avgLevel = (totalLevel / players.length).toFixed(1);
+                    }
+                }
+
+                const gd = (team.goalsFor || 0) - (team.goalsAgainst || 0);
+                const gdText = gd >= 0 ? `+${gd}` : gd;
+                const gdColor = gd > 0 ? 'text-green-400' : (gd < 0 ? 'text-red-400' : 'text-gray-400');
+
+                tableHtml += `
+                    <tr class="${rowBg}">
+                        <td class="py-2 px-3 ${textColor}">${position}</td>
+                        <td class="py-2 px-2 text-center text-cyan-400 text-xs font-semibold">${avgLevel}</td>
+                        <td class="py-2 px-3 ${textColor}">${this._escapeHtml(team.teamName || 'Squadra')}</td>
+                        <td class="py-2 px-3 text-center font-bold ${textColor}">${team.points || 0}</td>
+                        <td class="py-2 px-3 text-center text-gray-400">${team.played || 0}</td>
+                        <td class="py-2 px-3 text-center text-green-400">${team.wins || 0}</td>
+                        <td class="py-2 px-3 text-center text-yellow-400">${team.draws || 0}</td>
+                        <td class="py-2 px-3 text-center text-red-400">${team.losses || 0}</td>
+                        <td class="py-2 px-3 text-center ${gdColor}">${gdText}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHtml;
+
+        } catch (error) {
+            console.error('[Leaderboard] Errore:', error);
+            container.innerHTML = `<p class="text-center text-red-400 py-4">Errore nel caricamento della classifica</p>`;
+        }
+    },
+
+    /**
+     * Carica la schermata Tabellone Coppa
+     */
+    async loadCupBracketScreen() {
+        const container = document.getElementById('cup-bracket-table-container');
+        if (!container) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-indigo-500 mx-auto mb-4"></div>
+                <p class="text-gray-400">Caricamento tabellone...</p>
+            </div>
+        `;
+
+        try {
+            // Carica bracket coppa
+            const { doc, getDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+            const COPPA_SCHEDULE_DOC_ID = window.CoppaConstants?.COPPA_SCHEDULE_DOC_ID || 'coppa_schedule';
+            const cupDocRef = doc(db, `artifacts/${appId}/public/data/schedule`, COPPA_SCHEDULE_DOC_ID);
+
+            const cupDoc = await getDoc(cupDocRef);
+
+            if (!cupDoc.exists()) {
+                container.innerHTML = `<p class="text-center text-gray-400 py-4">Tabellone non ancora generato</p>`;
+                return;
+            }
+
+            const cupData = cupDoc.data();
+            const rounds = cupData.rounds || [];
+
+            if (rounds.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 py-4">Nessun turno disponibile</p>`;
+                return;
+            }
+
+            // Conta turni completati
+            const completedRounds = rounds.filter(r => r.status === 'completed').length;
+            const totalRounds = rounds.length;
+
+            // HTML per il tabellone
+            let html = '';
+
+            // Mostra vincitore se coppa completata
+            if (cupData.status === 'completed' && cupData.winner) {
+                html += `
+                    <div class="mb-4 p-3 bg-yellow-900 bg-opacity-50 rounded-lg text-center">
+                        <p class="text-yellow-400 font-bold text-lg">🏆 Vincitore: ${this._escapeHtml(cupData.winner.teamName)}</p>
+                    </div>
+                `;
+            }
+
+            html += `<div class="max-h-96 overflow-y-auto space-y-2" id="cup-bracket-accordion">`;
+
+            // Genera ogni round
+            rounds.forEach((round, roundIndex) => {
+                const isCompleted = round.status === 'completed';
+                const hasUserMatch = round.matches?.some(m =>
+                    m.homeTeam?.teamId === currentTeamId || m.awayTeam?.teamId === currentTeamId
+                );
+
+                html += `
+                    <div class="bg-black bg-opacity-30 rounded-lg overflow-hidden">
+                        <button class="coppa-round-header w-full flex items-center justify-between p-3 hover:bg-black hover:bg-opacity-20 transition cursor-pointer" data-accordion="cup-bracket-round-${roundIndex}" aria-expanded="false">
+                            <span class="text-indigo-300 font-bold flex items-center gap-2">
+                                ${isCompleted ? '✅' : '⏳'} ${round.roundName || `Turno ${roundIndex + 1}`}
+                                ${hasUserMatch ? '<span class="text-yellow-400 text-xs">(tua partita)</span>' : ''}
+                            </span>
+                            <span class="coppa-round-arrow text-indigo-400 transition-transform">▼</span>
+                        </button>
+                        <div id="cup-bracket-round-${roundIndex}" class="coppa-round-content hidden px-3 pb-3 space-y-2">
+                `;
+
+                // Genera ogni match del round
+                if (round.matches) {
+                    round.matches.forEach(match => {
+                        const homeName = match.homeTeam?.teamName || 'TBD';
+                        const awayName = match.awayTeam?.teamName || 'TBD';
+                        const isUserMatch = match.homeTeam?.teamId === currentTeamId || match.awayTeam?.teamId === currentTeamId;
+                        const matchBg = isUserMatch ? 'bg-purple-900 bg-opacity-50' : 'bg-gray-800 bg-opacity-50';
+
+                        let scoreHtml = '';
+                        let homeClass = 'text-white';
+                        let awayClass = 'text-white';
+
+                        if (match.winner) {
+                            const homeWon = match.winner.teamId === match.homeTeam?.teamId;
+                            homeClass = homeWon ? 'text-green-400 font-bold' : 'text-red-400';
+                            awayClass = homeWon ? 'text-red-400' : 'text-green-400 font-bold';
+
+                            // Risultati
+                            if (match.leg1Result && match.leg2Result) {
+                                const agg1 = (match.leg1Result.homeScore || 0) + (match.leg2Result.awayScore || 0);
+                                const agg2 = (match.leg1Result.awayScore || 0) + (match.leg2Result.homeScore || 0);
+                                scoreHtml = `<span class="text-gray-400 text-xs">${agg1}-${agg2}</span> / <span class="text-white font-bold">${match.leg2Result.homeScore || 0}-${match.leg2Result.awayScore || 0}</span>`;
+                            } else if (match.leg1Result) {
+                                scoreHtml = `<span class="text-white font-bold">${match.leg1Result.homeScore || 0}-${match.leg1Result.awayScore || 0}</span>`;
+                            }
+                        } else {
+                            scoreHtml = '<span class="text-gray-500">vs</span>';
+                        }
+
+                        const homeHighlight = match.homeTeam?.teamId === currentTeamId ? 'text-yellow-400' : '';
+                        const awayHighlight = match.awayTeam?.teamId === currentTeamId ? 'text-yellow-400' : '';
+
+                        html += `
+                            <div class="flex justify-between items-center text-sm p-2 rounded ${matchBg}">
+                                <span class="${homeClass} flex-1 ${homeHighlight}">${homeHighlight ? '⭐ ' : ''}${this._escapeHtml(homeName)}</span>
+                                <span class="text-gray-400 mx-3 text-center min-w-16">${scoreHtml}</span>
+                                <span class="${awayClass} flex-1 text-right ${awayHighlight}">${this._escapeHtml(awayName)}${awayHighlight ? ' ⭐' : ''}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+
+            container.innerHTML = html;
+
+            // Aggiungi listener per accordion
+            this.initCupBracketAccordions();
+
+        } catch (error) {
+            console.error('[CupBracket] Errore:', error);
+            container.innerHTML = `<p class="text-center text-red-400 py-4">Errore nel caricamento del tabellone</p>`;
+        }
+    },
+
+    /**
+     * Inizializza gli accordion del tabellone coppa
+     */
+    initCupBracketAccordions() {
+        const headers = document.querySelectorAll('#cup-bracket-accordion .coppa-round-header');
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const targetId = header.getAttribute('data-accordion');
+                const content = document.getElementById(targetId);
+                const arrow = header.querySelector('.coppa-round-arrow');
+
+                if (content) {
+                    const isHidden = content.classList.contains('hidden');
+                    content.classList.toggle('hidden');
+                    if (arrow) {
+                        arrow.style.transform = isHidden ? 'rotate(180deg)' : '';
+                    }
+                    header.setAttribute('aria-expanded', isHidden);
+                }
+            });
+        });
+    },
+
+    /**
+     * Escape HTML per sicurezza
+     */
+    _escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 };
 
