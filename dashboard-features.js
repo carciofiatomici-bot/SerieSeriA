@@ -408,8 +408,6 @@ window.DashboardFeatures = {
         // Bottone Leghe Private
         const btnPrivateLeagues = document.getElementById('btn-private-leagues');
         const privateLeaguesContent = document.getElementById('private-leagues-content');
-        const privateLeaguesBackButton = document.getElementById('private-leagues-back-button');
-        // appContent già dichiarato sopra
 
         if (btnPrivateLeagues) {
             btnPrivateLeagues.addEventListener('click', async () => {
@@ -429,12 +427,6 @@ window.DashboardFeatures = {
                 } else {
                     if (window.Toast) window.Toast.error("Sistema Leghe Private non disponibile");
                 }
-            });
-        }
-
-        if (privateLeaguesBackButton && appContent) {
-            privateLeaguesBackButton.addEventListener('click', () => {
-                window.showScreen(appContent);
             });
         }
     },

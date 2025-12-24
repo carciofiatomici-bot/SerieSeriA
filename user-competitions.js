@@ -1157,21 +1157,6 @@ window.UserCompetitions = {
             });
         }
 
-        // Bottoni Back
-        const backButtons = [
-            'user-campionato-back-button',
-            'user-coppa-back-button',
-            'user-supercoppa-back-button'
-        ];
-
-        backButtons.forEach(btnId => {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    window.showScreen(document.getElementById('app-content'));
-                });
-            }
-        });
     },
 
     /**
