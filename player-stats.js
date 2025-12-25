@@ -780,7 +780,7 @@ window.PlayerStats = {
         const stats = {
             goals: [],           // [{playerId, playerName}]
             assists: [],         // [{playerId, playerName}]
-            interceptions: [],   // [{playerId, playerName}] - contrasti riusciti
+            interceptions: [],   // [{playerId, playerName}] - contrasti riusciti (blocchi)
             saves: [],           // [{playerId, playerName}] - parate
             passesSuccessful: [],// [{playerId, playerName}] - passaggi riusciti (costruzione)
             passesFailed: []     // [{playerId, playerName}] - passaggi falliti (costruzione)
@@ -788,25 +788,60 @@ window.PlayerStats = {
 
         if (!matchEvents || matchEvents.length === 0) return stats;
 
-        // Probabilità per ruolo in ogni fase
-        const WEIGHTS = {
-            construction: { D: 0.25, C: 0.70, A: 0.05 },  // Chi fa il passaggio in costruzione
-            defense: { D: 0.50, C: 0.45, A: 0.05 },       // Chi effettua il contrasto
-            shot: { A: 0.75, C: 0.15, D: 0.05 }           // Chi segna il gol
-        };
-
         matchEvents.forEach(event => {
-            const isTeamAttacking = event.attackingTeam === teamName;
-            const isTeamDefending = event.defendingTeam === teamName;
+            // Determina se la squadra sta attaccando
+            const isTeamAttacking = event.teamName === teamName ||
+                                   event.attackingTeam === teamName;
+            const isTeamDefending = !isTeamAttacking;
 
-            // ===== FASE COSTRUZIONE =====
+            // ===== NUOVO FORMATO (simulate.js automation): phases è un array =====
+            if (Array.isArray(event.phases)) {
+                event.phases.forEach(phase => {
+                    const playerName = phase.player || 'Giocatore';
+
+                    if (isTeamAttacking) {
+                        // Squadra attacca
+                        if (phase.phase === 'costruzione') {
+                            if (phase.success) {
+                                stats.passesSuccessful.push({ playerName, playerRole: 'C' });
+                            } else {
+                                stats.passesFailed.push({ playerName, playerRole: 'C' });
+                            }
+                        }
+                    } else {
+                        // Squadra difende - se l'attacco fallisce, è un blocco
+                        if ((phase.phase === 'attacco' || phase.phase === 'costruzione') && !phase.success) {
+                            stats.interceptions.push({ playerName: 'Difensore', playerRole: 'D' });
+                        }
+                    }
+                });
+
+                // Gol e assist dal nuovo formato
+                if (event.isGoal && isTeamAttacking) {
+                    const scorerName = event.scorer || 'Attaccante';
+                    stats.goals.push({ playerName: scorerName, playerRole: 'A' });
+
+                    // Assist se presente
+                    if (event.assist) {
+                        stats.assists.push({ playerName: event.assist, playerRole: 'C' });
+                    }
+                }
+
+                // Parata se non gol e squadra difende
+                if (!event.isGoal && isTeamDefending && event.phases.some(p => p.phase === 'tiro')) {
+                    stats.saves.push({ playerName: 'Portiere', playerRole: 'P' });
+                }
+
+                return; // Finito con il nuovo formato
+            }
+
+            // ===== VECCHIO FORMATO (client simulation): phases è un oggetto =====
             const construction = event.phases?.construction;
             if (construction && !construction.skipped) {
                 if (isTeamAttacking) {
-                    // Squadra attacca in costruzione
                     const attackers = construction.players?.attacker || [];
                     if (attackers.length > 0) {
-                        const player = this.selectPlayerByWeight(attackers, WEIGHTS.construction);
+                        const player = this.selectPlayerByWeight(attackers, { D: 0.25, C: 0.70, A: 0.05 });
                         if (player) {
                             if (construction.result === 'success' || construction.result === 'lucky') {
                                 stats.passesSuccessful.push({ playerName: player.name, playerRole: player.role });
@@ -818,16 +853,13 @@ window.PlayerStats = {
                 }
             }
 
-            // ===== FASE ATTACCO =====
             const attack = event.phases?.attack;
             if (attack && !attack.interrupted) {
                 if (isTeamDefending) {
-                    // Squadra difende in attacco
-                    // Se la difesa vince (attacco fallisce), è un contrasto
                     if (attack.result === 'fail') {
                         const defenders = attack.players?.defender || [];
                         if (defenders.length > 0) {
-                            const player = this.selectPlayerByWeight(defenders, WEIGHTS.defense);
+                            const player = this.selectPlayerByWeight(defenders, { D: 0.50, C: 0.45, A: 0.05 });
                             if (player) {
                                 stats.interceptions.push({ playerName: player.name, playerRole: player.role });
                             }
@@ -836,30 +868,22 @@ window.PlayerStats = {
                 }
             }
 
-            // ===== FASE TIRO =====
             const shot = event.phases?.shot;
             if (shot) {
-                // GOL: solo se la squadra attacca e segna
                 if (isTeamAttacking && event.result === 'goal') {
                     const attackers = attack?.players?.attacker || [];
-
-                    // Seleziona il marcatore con probabilità pesate
-                    const scorer = this.selectPlayerByWeight(attackers, WEIGHTS.shot);
+                    const scorer = this.selectPlayerByWeight(attackers, { A: 0.75, C: 0.15, D: 0.05 });
 
                     if (scorer) {
                         stats.goals.push({ playerName: scorer.name, playerRole: scorer.role });
 
-                        // ASSIST: chi ha vinto la fase attacco, se diverso dal marcatore
-                        // Selezioniamo un altro giocatore dalla fase attacco come assistman
                         const potentialAssisters = attackers.filter(p => p.name !== scorer.name);
                         if (potentialAssisters.length > 0) {
-                            // Per l'assist, usa le probabilità della fase attacco (C più probabile)
                             const assister = this.selectPlayerByWeight(potentialAssisters, { C: 0.45, A: 0.50, D: 0.05 });
                             if (assister) {
                                 stats.assists.push({ playerName: assister.name, playerRole: assister.role });
                             }
                         }
-                        // Se non ci sono altri giocatori, niente assist (gol in solitaria)
                     }
                 }
 
