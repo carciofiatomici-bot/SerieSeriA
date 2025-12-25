@@ -457,14 +457,16 @@ window.MatchHistory = {
             });
         });
 
-        // Event listeners per bottoni telecronaca
+        // Event listeners per bottoni telecronaca (highlights)
         container.querySelectorAll('.btn-telecronaca').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const matchId = e.target.closest('.btn-telecronaca').dataset.matchId;
                 const match = this.currentHistory.find(m => m.id === matchId);
-                if (match && match.details?.matchLog) {
+                // Preferisci matchEvents (tutte le occasioni) per gli highlights
+                const events = match?.details?.matchEvents || match?.details?.matchLog || [];
+                if (match && events.length > 0) {
                     this.showTelecronacaModal(
-                        match.details.matchLog,
+                        events,
                         match.homeTeam.name,
                         match.awayTeam.name,
                         match.homeScore,
@@ -574,9 +576,14 @@ window.MatchHistory = {
     },
 
     /**
-     * Mostra il modal della telecronaca
+     * Mostra il modal degli highlights (riassunto di tutte le occasioni)
+     * @param {Array} matchEvents - Array di eventi (matchEvents, non matchLog)
+     * @param {string} homeTeam - Nome squadra casa
+     * @param {string} awayTeam - Nome squadra ospite
+     * @param {number} homeScore - Gol squadra casa
+     * @param {number} awayScore - Gol squadra ospite
      */
-    showTelecronacaModal(matchLog, homeTeam, awayTeam, homeScore, awayScore) {
+    showTelecronacaModal(matchEvents, homeTeam, awayTeam, homeScore, awayScore) {
         // Rimuovi modal esistente se presente
         const existingModal = document.getElementById('telecronaca-modal');
         if (existingModal) existingModal.remove();
@@ -585,50 +592,95 @@ window.MatchHistory = {
         modal.id = 'telecronaca-modal';
         modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4';
 
-        const logHtml = matchLog.map(line => {
-            // Supporta sia stringhe (vecchio formato) che oggetti (nuovo formato)
-            if (typeof line === 'object' && line !== null) {
-                // Nuovo formato: oggetto con type, teamName, scorer, etc.
-                if (line.type === 'goal') {
-                    const assistText = line.assist ? ` su assist di ${line.assist}` : '';
-                    const scoreText = line.homeScore !== undefined ? ` (${line.homeScore}-${line.awayScore})` : '';
-                    return `<p class="text-green-400 font-bold">${line.minute}' - ⚽ GOL! ${line.scorer} (${line.teamName})${assistText}${scoreText}</p>`;
-                } else if (line.description) {
-                    return `<p class="text-gray-400">${line.description}</p>`;
-                } else {
-                    return `<p class="text-gray-400">${JSON.stringify(line)}</p>`;
+        // Genera highlights riassuntivi per ogni occasione
+        const highlightsHtml = matchEvents.map((event, idx) => {
+            const isGoal = event.isGoal === true || event.result === 'goal';
+            const isHome = event.side === 'home' || event.team === 'home';
+            const minute = event.minute || Math.floor(((idx + 1) / 50) * 90);
+            const attackingTeamName = event.teamName || event.attackingTeam || (isHome ? homeTeam : awayTeam);
+
+            // Determina cosa e' successo in questa occasione
+            let summary = '';
+            let summaryClass = 'text-gray-400';
+            let icon = '';
+
+            if (isGoal) {
+                // GOL!
+                const scorer = event.scorer || 'Attaccante';
+                const assist = event.assist ? ` (assist: ${event.assist})` : '';
+                summary = `GOL di ${scorer}${assist}`;
+                summaryClass = 'text-green-400 font-bold';
+                icon = '⚽';
+            } else if (Array.isArray(event.phases) && event.phases.length > 0) {
+                // Nuovo formato: trova dove si e' fermata l'azione
+                const lastPhase = event.phases[event.phases.length - 1];
+                if (!lastPhase.success) {
+                    const defender = lastPhase.defender || (lastPhase.phase === 'tiro' ? 'Portiere' : 'Difensore');
+                    if (lastPhase.phase === 'costruzione') {
+                        summary = `Passaggio intercettato da ${defender}`;
+                        icon = '🦶';
+                    } else if (lastPhase.phase === 'attacco') {
+                        summary = `Contrasto vinto da ${defender}`;
+                        icon = '🛡️';
+                    } else if (lastPhase.phase === 'tiro') {
+                        summary = `Parata di ${defender}`;
+                        icon = '🧤';
+                        summaryClass = 'text-yellow-400';
+                    }
+                }
+            } else if (event.phases && typeof event.phases === 'object') {
+                // Vecchio formato
+                const construction = event.phases.construction;
+                const attack = event.phases.attack;
+                const shot = event.phases.shot;
+
+                if (construction && construction.result === 'fail') {
+                    const defender = construction.players?.defender?.[0]?.name || 'Difensore';
+                    summary = `Passaggio intercettato da ${defender}`;
+                    icon = '🦶';
+                } else if (attack && attack.result === 'fail') {
+                    const defender = attack.players?.defender?.[0]?.name || 'Difensore';
+                    summary = `Contrasto vinto da ${defender}`;
+                    icon = '🛡️';
+                } else if (attack?.interrupted) {
+                    summary = `Attacco interrotto`;
+                    icon = '🚫';
+                } else if (shot && !isGoal) {
+                    const goalkeeper = shot.goalkeeper?.name || 'Portiere';
+                    summary = `Parata di ${goalkeeper}`;
+                    icon = '🧤';
+                    summaryClass = 'text-yellow-400';
                 }
             }
 
-            // Vecchio formato: stringa
-            if (typeof line !== 'string') return '';
-
-            if (line.includes('GOL!') || line.includes('GOAL!')) {
-                return `<p class="text-green-400 font-bold">${line}</p>`;
-            } else if (line.includes('OCCASIONE')) {
-                return `<p class="text-yellow-400 font-semibold">${line}</p>`;
-            } else if (line.includes('Fase 1') || line.includes('Fase 2') || line.includes('Fase 3')) {
-                return `<p class="text-cyan-400">${line}</p>`;
-            } else if (line.includes('ATT:') || line.includes('DEF:')) {
-                return `<p class="text-gray-300 text-sm pl-4">${line}</p>`;
-            } else if (line.includes('===')) {
-                return `<p class="text-white font-bold text-center my-2 border-b border-gray-600 pb-2">${line.replace(/=/g, '')}</p>`;
-            } else {
-                return `<p class="text-gray-400">${line}</p>`;
+            if (!summary) {
+                summary = 'Azione non conclusa';
+                icon = '⚪';
             }
+
+            const teamColor = isHome ? 'text-blue-400' : 'text-red-400';
+
+            return `
+                <div class="flex items-center gap-2 py-1 border-b border-gray-800 text-sm">
+                    <span class="text-gray-500 w-8 text-right font-mono">${minute}'</span>
+                    <span class="w-6 text-center">${icon}</span>
+                    <span class="${teamColor} w-24 truncate text-xs">${attackingTeamName}</span>
+                    <span class="${summaryClass} flex-1">${summary}</span>
+                </div>
+            `;
         }).join('');
 
         modal.innerHTML = `
-            <div class="bg-gray-900 rounded-lg border-2 border-cyan-500 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="bg-gray-900 rounded-lg border-2 border-cyan-500 max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col">
                 <div class="p-4 bg-gradient-to-r from-cyan-800 to-cyan-600 flex justify-between items-center">
                     <div>
-                        <h3 class="text-xl font-bold text-white">📺 Telecronaca</h3>
+                        <h3 class="text-xl font-bold text-white">📋 Highlights</h3>
                         <p class="text-cyan-200 text-sm">${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}</p>
                     </div>
                     <button id="close-telecronaca-modal" class="text-white hover:text-cyan-200 text-2xl">&times;</button>
                 </div>
-                <div class="p-4 overflow-y-auto flex-1 space-y-1 font-mono text-xs">
-                    ${logHtml}
+                <div class="p-3 overflow-y-auto flex-1">
+                    ${highlightsHtml}
                 </div>
                 <div class="p-3 bg-gray-800 text-center">
                     <button id="close-telecronaca-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-6 rounded-lg transition">
@@ -675,25 +727,31 @@ window.MatchHistory = {
             const bgColor = isGoal ? 'bg-green-900 bg-opacity-30 border-green-500' : 'bg-gray-800 border-gray-600';
 
             // Formatta minuto
-            const minute = event.minute || (idx + 1);
+            const minute = event.minute || Math.floor(((idx + 1) / 50) * 90);
+            const attackingTeamName = event.teamName || event.attackingTeam || (isHome ? homeTeam : awayTeam);
+            const defendingTeamName = event.defendingTeamName || (isHome ? awayTeam : homeTeam);
 
             // Fasi della partita
             let phasesHtml = '';
 
             // Supporta sia il vecchio formato (phases come oggetto) che il nuovo (phases come array)
             if (Array.isArray(event.phases)) {
-                // Nuovo formato: array di oggetti {phase, success, player, description}
+                // Nuovo formato: array di oggetti {phase, success, player, defender}
                 event.phases.forEach(p => {
                     const resultIcon = p.success ? '✅' : '❌';
-                    const resultClass = p.success ? 'text-green-400' : 'text-red-400';
                     const phaseColor = p.phase === 'costruzione' ? 'text-cyan-400' :
                                        p.phase === 'attacco' ? 'text-yellow-400' : 'text-orange-400';
                     const phaseName = p.phase.charAt(0).toUpperCase() + p.phase.slice(1);
+                    const attackerName = p.player || 'Giocatore';
+                    const defenderName = p.defender || (p.phase === 'tiro' ? 'Portiere' : 'Difensore');
+
                     phasesHtml += `
-                        <div class="pl-4 text-xs">
-                            <span class="${phaseColor}">${phaseName}:</span>
-                            <span class="${resultClass}">${resultIcon}</span>
-                            <span class="text-gray-400 ml-1">${p.player || ''}</span>
+                        <div class="pl-4 text-xs flex items-center gap-1 py-0.5">
+                            <span class="${phaseColor} font-medium w-24">${phaseName}:</span>
+                            <span class="${teamColor}">${attackerName}</span>
+                            <span class="text-gray-500">vs</span>
+                            <span class="${isHome ? 'text-red-400' : 'text-blue-400'}">${defenderName}</span>
+                            <span class="ml-1">${resultIcon}</span>
                         </div>
                     `;
                 });
@@ -702,43 +760,55 @@ window.MatchHistory = {
                 const construction = event.phases.construction;
                 if (construction && !construction.skipped) {
                     const resultIcon = construction.result === 'success' || construction.result === 'lucky' ? '✅' : '❌';
-                    const resultClass = construction.result === 'success' || construction.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                    const attackers = construction.players?.attacker || [];
+                    const defenders = construction.players?.defender || [];
+                    const attackerName = attackers[0]?.name || 'Centrocampista';
+                    const defenderName = defenders[0]?.name || 'Difensore';
                     phasesHtml += `
-                        <div class="pl-4 text-xs">
-                            <span class="text-cyan-400">Costruzione:</span>
-                            <span class="${resultClass}">${resultIcon} ${construction.result === 'lucky' ? 'Fortuna!' : construction.result}</span>
-                            ${construction.totals ? `<span class="text-gray-500 ml-2">(${construction.totals.attacker?.toFixed(1) || '?'} vs ${construction.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                        <div class="pl-4 text-xs flex items-center gap-1 py-0.5">
+                            <span class="text-cyan-400 font-medium w-24">Costruzione:</span>
+                            <span class="${teamColor}">${attackerName}</span>
+                            <span class="text-gray-500">vs</span>
+                            <span class="${isHome ? 'text-red-400' : 'text-blue-400'}">${defenderName}</span>
+                            <span class="ml-1">${resultIcon}</span>
                         </div>
                     `;
                 } else if (construction?.skipped) {
-                    phasesHtml += `<div class="pl-4 text-xs text-gray-500">Costruzione: Saltata (${construction.reason})</div>`;
+                    phasesHtml += `<div class="pl-4 text-xs text-gray-500 py-0.5">Costruzione: Saltata (${construction.reason})</div>`;
                 }
 
                 const attack = event.phases.attack;
                 if (attack && !attack.interrupted) {
                     const resultIcon = attack.result === 'success' || attack.result === 'lucky' ? '✅' : '❌';
-                    const resultClass = attack.result === 'success' || attack.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                    const attackers = attack.players?.attacker || [];
+                    const defenders = attack.players?.defender || [];
+                    const attackerName = attackers[0]?.name || 'Attaccante';
+                    const defenderName = defenders[0]?.name || 'Difensore';
                     phasesHtml += `
-                        <div class="pl-4 text-xs">
-                            <span class="text-yellow-400">Attacco:</span>
-                            <span class="${resultClass}">${resultIcon} ${attack.result === 'lucky' ? 'Fortuna!' : attack.result}</span>
-                            ${attack.totals ? `<span class="text-gray-500 ml-2">(${attack.totals.attacker?.toFixed(1) || '?'} vs ${attack.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                        <div class="pl-4 text-xs flex items-center gap-1 py-0.5">
+                            <span class="text-yellow-400 font-medium w-24">Attacco:</span>
+                            <span class="${teamColor}">${attackerName}</span>
+                            <span class="text-gray-500">vs</span>
+                            <span class="${isHome ? 'text-red-400' : 'text-blue-400'}">${defenderName}</span>
+                            <span class="ml-1">${resultIcon}</span>
                         </div>
                     `;
                 } else if (attack?.interrupted) {
-                    phasesHtml += `<div class="pl-4 text-xs text-gray-500">Attacco: Interrotto</div>`;
+                    phasesHtml += `<div class="pl-4 text-xs text-gray-500 py-0.5">Attacco: Interrotto</div>`;
                 }
 
                 const shot = event.phases.shot;
                 if (shot) {
                     const resultIcon = isGoal ? '⚽' : '🧤';
-                    const resultClass = isGoal ? 'text-green-400 font-bold' : 'text-red-400';
-                    const shotResult = isGoal ? 'GOL!' : 'Parato';
+                    const shooterName = shot.shooter?.name || 'Attaccante';
+                    const goalkeeperName = shot.goalkeeper?.name || 'Portiere';
                     phasesHtml += `
-                        <div class="pl-4 text-xs">
-                            <span class="text-orange-400">Tiro:</span>
-                            <span class="${resultClass}">${resultIcon} ${shotResult}</span>
-                            ${shot.totalGoalkeeper ? `<span class="text-gray-500 ml-2">(Portiere: ${shot.totalGoalkeeper.toFixed(1)})</span>` : ''}
+                        <div class="pl-4 text-xs flex items-center gap-1 py-0.5">
+                            <span class="text-orange-400 font-medium w-24">Tiro:</span>
+                            <span class="${teamColor}">${shooterName}</span>
+                            <span class="text-gray-500">vs</span>
+                            <span class="${isHome ? 'text-red-400' : 'text-blue-400'}">${goalkeeperName}</span>
+                            <span class="ml-1">${resultIcon}</span>
                         </div>
                     `;
                 }
@@ -747,15 +817,15 @@ window.MatchHistory = {
             // Abilita attivate
             let abilitiesHtml = '';
             if (event.abilities && event.abilities.length > 0) {
-                abilitiesHtml = `<div class="pl-4 text-xs text-purple-400">✨ ${event.abilities.join(', ')}</div>`;
+                abilitiesHtml = `<div class="pl-4 text-xs text-purple-400 py-0.5">✨ ${event.abilities.join(', ')}</div>`;
             }
 
             return `
                 <div class="border-l-2 ${bgColor} pl-3 py-2 mb-2 rounded-r">
-                    <div class="flex items-center gap-2">
-                        <span class="text-white font-bold">${minute}'</span>
-                        <span class="${teamColor} font-semibold">${event.teamName || event.attackingTeam || (isHome ? homeTeam : awayTeam)}</span>
-                        ${isGoal ? '<span class="text-green-400 font-bold">⚽ GOL!</span>' : '<span class="text-gray-400">Occasione</span>'}
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-gray-700 text-white text-xs font-bold px-2 py-0.5 rounded">${event.occasion || (idx + 1)}</span>
+                        <span class="${teamColor} font-semibold">${attackingTeamName}</span>
+                        ${isGoal ? '<span class="text-green-400 font-bold ml-auto">⚽ GOL!</span>' : ''}
                     </div>
                     ${phasesHtml}
                     ${abilitiesHtml}

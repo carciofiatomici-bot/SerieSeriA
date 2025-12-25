@@ -881,6 +881,7 @@ function simulateMatch(homeTeam, awayTeam) {
             minute,
             team: isHomeAction ? 'home' : 'away',
             teamName: attackingTeam.teamName,
+            defendingTeamName: defendingTeam.teamName,
             phases: []
         };
 
@@ -889,10 +890,18 @@ function simulateMatch(homeTeam, awayTeam) {
             const successChance = phase === 'costruzione' ? 0.7 : (phase === 'attacco' ? 0.5 : 0.3);
             const adjustedChance = successChance * (isHomeAction ? homeProb / 0.5 : awayProb / 0.5);
 
+            // Seleziona giocatore attaccante in base alla fase
             const player = selectRandomPlayer(attackingTeam,
                 phase === 'costruzione' ? ['C', 'D'] :
                 phase === 'attacco' ? ['C', 'A'] :
                 ['A', 'C']
+            );
+
+            // Seleziona giocatore difensore in base alla fase
+            const defender = selectRandomPlayer(defendingTeam,
+                phase === 'costruzione' ? ['C', 'D'] :
+                phase === 'attacco' ? ['D', 'C'] :
+                ['P'] // Portiere per la fase tiro
             );
 
             if (phaseRoll > adjustedChance) {
@@ -902,6 +911,8 @@ function simulateMatch(homeTeam, awayTeam) {
                     success: false,
                     player: player?.nome || player?.name || 'Giocatore',
                     playerId: player?.id,
+                    defender: defender?.nome || defender?.name || (phase === 'tiro' ? 'Portiere' : 'Difensore'),
+                    defenderId: defender?.id,
                     description: generateActionDescription(phase, attackingTeam, player, 'fail', false)
                 });
                 actionSuccess = false;
@@ -914,6 +925,8 @@ function simulateMatch(homeTeam, awayTeam) {
                 success: true,
                 player: player?.nome || player?.name || 'Giocatore',
                 playerId: player?.id,
+                defender: defender?.nome || defender?.name || (phase === 'tiro' ? 'Portiere' : 'Difensore'),
+                defenderId: defender?.id,
                 description: generateActionDescription(phase, attackingTeam, player, 'success', phase === 'tiro')
             });
 
