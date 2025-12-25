@@ -86,7 +86,7 @@ window.SchedinaUI = {
             : 'Nessuna giornata';
 
         container.innerHTML = `
-            <div class="min-h-screen pb-24">
+            <div class="min-h-screen pb-32">
 
                 <!-- Header Sticky Mobile-First -->
                 <div class="sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-3 px-3">
@@ -125,7 +125,7 @@ window.SchedinaUI = {
             </div>
 
             <!-- Footer Sticky (solo per tab current) -->
-            <div id="schedina-footer" class="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent hidden">
+            <div id="schedina-footer" class="sticky bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent hidden z-40">
                 <button id="schedina-submit-btn" onclick="window.SchedinaUI.submitPredictions()"
                         class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl text-white font-bold text-base shadow-lg shadow-green-900/30 transition">
                     Invia Schedina

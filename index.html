@@ -2009,22 +2009,26 @@
             </div>
         </div>
 
-        <!-- 16B. MODALE LISTA SQUADRE -->
-        <div id="lista-squadre-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-2 pt-4 z-50 hidden overflow-y-auto">
-            <div class="football-box w-full max-w-4xl mx-auto mb-4 max-h-[95vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4 border-b border-green-600 pb-2 sticky top-0 bg-gray-800 pt-2 -mt-2 z-10">
-                    <h3 class="text-2xl md:text-3xl font-bold text-green-400">📋 Squadre</h3>
-                    <button id="btn-close-lista-squadre" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
+        <!-- 16B. MODALE LISTA SQUADRE (Premium Design) -->
+        <div id="lista-squadre-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+            <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-none sm:rounded-2xl w-full max-w-2xl max-h-screen sm:max-h-[85vh] overflow-hidden sm:m-4 flex flex-col border-0 sm:border-2 border-green-500/30">
+                <!-- Sticky Header -->
+                <div class="sticky top-0 z-10 px-4 py-3 bg-slate-900/95 backdrop-blur border-b border-green-500/30 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                            <span class="text-xl">🏆</span>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">Squadre della Lega</h2>
+                            <p class="text-xs text-green-400" id="squadre-count">Caricamento...</p>
+                        </div>
+                    </div>
+                    <button id="btn-close-lista-squadre" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/40 transition-all text-xl font-bold">✕</button>
                 </div>
-                <p class="text-gray-300 mb-4 text-center text-sm">Tutte le squadre della lega</p>
-                <div id="lista-squadre-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <!-- Le squadre vengono caricate dinamicamente -->
-                    <p class="text-center text-gray-400 col-span-2">Caricamento squadre...</p>
+                <!-- Content -->
+                <div id="lista-squadre-container" class="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <p class="text-center text-slate-400 col-span-full py-8">Caricamento squadre...</p>
                 </div>
-                <button id="btn-back-from-squadre"
-                        class="mt-4 w-full bg-green-500 text-gray-900 font-extrabold py-3 rounded-lg shadow-xl hover:bg-green-400 transition duration-150">
-                    Chiudi
-                </button>
             </div>
         </div>
 

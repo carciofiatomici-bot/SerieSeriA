@@ -1155,64 +1155,84 @@ window.InterfacciaAuth = {
             // Salva i dati delle squadre per la visualizzazione rosa
             this._squadreCache = squadre;
 
-            // Popola il container
+            // Aggiorna conteggio nell'header
+            const countEl = document.getElementById('squadre-count');
+            if (countEl) countEl.textContent = `${squadre.length} squadre registrate`;
+
+            // Popola il container con design premium
             container.innerHTML = squadre.map((squadra, index) => {
                 const teamName = squadra.teamName || 'Squadra Sconosciuta';
                 const teamColor = squadra.primaryColor || '#22c55e';
                 const players = squadra.players || [];
                 const playersCount = players.length;
-                // Sanitizza URL per convertire vecchi formati GitHub
                 const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
-                // Trova l'icona (capitano) - prima per abilita, poi per iconaId
+                // Trova l'icona (capitano)
                 let icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
-
-                // Fallback: cerca usando iconaId della squadra
                 if (!icona && squadra.iconaId) {
                     icona = players.find(p => p.id === squadra.iconaId);
                 }
 
-                // Cerca il photoUrl corretto: prima dal template ICONE, poi dal giocatore salvato
                 let iconaPhoto = 'https://placehold.co/40x40/374151/9ca3af?text=?';
+                let iconaName = '';
                 if (icona) {
-                    // Cerca nel template delle icone per avere sempre il link aggiornato
                     const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t =>
                         t.id === icona.id || t.name === icona.name
                     );
-                    if (iconaTemplate && iconaTemplate.photoUrl) {
+                    if (iconaTemplate?.photoUrl) {
                         iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
                     } else if (icona.photoUrl) {
                         iconaPhoto = window.sanitizeGitHubUrl(icona.photoUrl);
                     }
+                    iconaName = icona.name || '';
                 } else if (squadra.iconaId) {
-                    // Fallback: cerca direttamente nel template usando iconaId
                     const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t => t.id === squadra.iconaId);
-                    if (iconaTemplate && iconaTemplate.photoUrl) {
+                    if (iconaTemplate?.photoUrl) {
                         iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
+                        iconaName = iconaTemplate.name || '';
                     }
                 }
 
                 return `
-                    <div class="p-4 bg-gray-700 rounded-lg border-2 shadow-lg" style="border-color: ${teamColor};">
-                        <div class="flex items-center gap-3 mb-3">
-                            <img src="${logoUrl}"
-                                 alt="${teamName}"
-                                 class="w-12 h-12 rounded-lg object-cover border-2"
-                                 style="border-color: ${teamColor};"
-                                 onerror="this.src='https://placehold.co/80x80/374151/9ca3af?text=Logo'">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-base font-extrabold truncate" style="color: ${teamColor};">${teamName}</p>
-                                <p class="text-xs text-gray-400">${playersCount} giocatori</p>
+                    <div class="group bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700 hover:border-green-500/50 transition-all duration-300 overflow-hidden"
+                         style="animation: slideUp 0.3s ease-out ${index * 0.05}s both;">
+                        <!-- Team Header with gradient -->
+                        <div class="relative h-16 overflow-hidden">
+                            <div class="absolute inset-0 opacity-30" style="background: linear-gradient(135deg, ${teamColor} 0%, transparent 70%);"></div>
+                            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/90"></div>
+                            <div class="absolute bottom-2 left-3 right-3 flex items-end gap-3">
+                                <img src="${logoUrl}"
+                                     alt="${teamName}"
+                                     class="w-12 h-12 rounded-lg object-cover border-2 shadow-lg bg-slate-900"
+                                     style="border-color: ${teamColor};"
+                                     onerror="this.src='https://placehold.co/80x80/374151/9ca3af?text=Logo'">
+                                <div class="flex-1 min-w-0 pb-1">
+                                    <p class="text-sm font-bold text-white truncate drop-shadow">${teamName}</p>
+                                    <p class="text-xs text-slate-400">${playersCount} giocatori</p>
+                                </div>
                             </div>
-                            <img src="${iconaPhoto}"
-                                 alt="Icona"
-                                 class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400 flex-shrink-0"
-                                 onerror="this.src='https://placehold.co/40x40/374151/9ca3af?text=?'">
                         </div>
-                        <button onclick="window.InterfacciaAuth.showRosaSquadra(${index})"
-                                class="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg shadow-md hover:bg-purple-500 transition duration-150 transform hover:scale-[1.02]">
-                            📋 Rosa
-                        </button>
+
+                        <!-- Content -->
+                        <div class="p-3 pt-2">
+                            <!-- Icona badge -->
+                            <div class="flex items-center gap-2 mb-3 px-2 py-1.5 bg-slate-900/50 rounded-lg">
+                                <img src="${iconaPhoto}"
+                                     alt="Icona"
+                                     class="w-8 h-8 rounded-full object-cover border-2 border-yellow-500/70 shadow"
+                                     onerror="this.src='https://placehold.co/40x40/374151/9ca3af?text=?'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] text-yellow-500/70 uppercase tracking-wider font-medium">Icona</p>
+                                    <p class="text-xs text-white font-semibold truncate">${iconaName || 'Non assegnata'}</p>
+                                </div>
+                            </div>
+
+                            <!-- Button -->
+                            <button onclick="window.InterfacciaAuth.showRosaSquadra(${index})"
+                                    class="w-full py-2 rounded-lg text-sm font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-green-500/20 hover:text-green-400 border border-slate-600 hover:border-green-500/50">
+                                📋 Vedi Rosa
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');

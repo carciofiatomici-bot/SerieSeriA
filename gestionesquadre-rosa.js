@@ -404,27 +404,42 @@ window.GestioneSquadreRosa = {
 
         displayMessage(msgContainerId, `Tentativo di nominare ${newCaptainName} Capitano...`, 'info');
 
+        // Helper per rimuovere campi undefined (Firestore non li accetta)
+        const cleanObject = (obj) => {
+            const cleaned = {};
+            for (const [key, value] of Object.entries(obj)) {
+                if (value !== undefined) {
+                    cleaned[key] = value;
+                }
+            }
+            return cleaned;
+        };
+
         try {
             const { doc, updateDoc } = firestoreTools;
             const teamDocRef = doc(db, TEAMS_COLLECTION_PATH, currentTeamId);
 
             const updatedPlayers = currentTeamData.players.map(player => {
-                const isNewCaptain = player.id === newCaptainId;
-                return {
+                return cleanObject({
                     ...player,
-                    isCaptain: isNewCaptain,
-                };
+                    isCaptain: player.id === newCaptainId,
+                });
             });
+
+            // Verifica che formation esista
+            const formation = currentTeamData.formation || {};
+            const titolari = formation.titolari || [];
+            const panchina = formation.panchina || [];
 
             await updateDoc(teamDocRef, {
                 players: updatedPlayers,
                 formation: {
-                    ...currentTeamData.formation,
-                    titolari: currentTeamData.formation.titolari.map(p => ({
+                    ...formation,
+                    titolari: titolari.map(p => cleanObject({
                         ...p,
                         isCaptain: p.id === newCaptainId
                     })),
-                    panchina: currentTeamData.formation.panchina.map(p => ({
+                    panchina: panchina.map(p => cleanObject({
                         ...p,
                         isCaptain: p.id === newCaptainId
                     })),
