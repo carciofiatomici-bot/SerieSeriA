@@ -586,7 +586,23 @@ window.MatchHistory = {
         modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4';
 
         const logHtml = matchLog.map(line => {
-            // Colora le linee in base al contenuto
+            // Supporta sia stringhe (vecchio formato) che oggetti (nuovo formato)
+            if (typeof line === 'object' && line !== null) {
+                // Nuovo formato: oggetto con type, teamName, scorer, etc.
+                if (line.type === 'goal') {
+                    const assistText = line.assist ? ` su assist di ${line.assist}` : '';
+                    const scoreText = line.homeScore !== undefined ? ` (${line.homeScore}-${line.awayScore})` : '';
+                    return `<p class="text-green-400 font-bold">${line.minute}' - ⚽ GOL! ${line.scorer} (${line.teamName})${assistText}${scoreText}</p>`;
+                } else if (line.description) {
+                    return `<p class="text-gray-400">${line.description}</p>`;
+                } else {
+                    return `<p class="text-gray-400">${JSON.stringify(line)}</p>`;
+                }
+            }
+
+            // Vecchio formato: stringa
+            if (typeof line !== 'string') return '';
+
             if (line.includes('GOL!') || line.includes('GOAL!')) {
                 return `<p class="text-green-400 font-bold">${line}</p>`;
             } else if (line.includes('OCCASIONE')) {
@@ -651,8 +667,10 @@ window.MatchHistory = {
 
         // Genera HTML per ogni occasione
         const eventsHtml = matchEvents.map((event, idx) => {
-            const isGoal = event.result === 'goal';
-            const isHome = event.side === 'home';
+            // Supporta sia vecchio formato (result: 'goal') che nuovo (isGoal: true)
+            const isGoal = event.isGoal === true || event.result === 'goal';
+            // Supporta sia vecchio formato (side: 'home') che nuovo (team: 'home')
+            const isHome = event.side === 'home' || event.team === 'home';
             const teamColor = isHome ? 'text-blue-400' : 'text-red-400';
             const bgColor = isGoal ? 'bg-green-900 bg-opacity-30 border-green-500' : 'bg-gray-800 border-gray-600';
 
@@ -662,51 +680,68 @@ window.MatchHistory = {
             // Fasi della partita
             let phasesHtml = '';
 
-            // Fase Costruzione
-            const construction = event.phases?.construction;
-            if (construction && !construction.skipped) {
-                const resultIcon = construction.result === 'success' || construction.result === 'lucky' ? '✅' : '❌';
-                const resultClass = construction.result === 'success' || construction.result === 'lucky' ? 'text-green-400' : 'text-red-400';
-                phasesHtml += `
-                    <div class="pl-4 text-xs">
-                        <span class="text-cyan-400">Costruzione:</span>
-                        <span class="${resultClass}">${resultIcon} ${construction.result === 'lucky' ? 'Fortuna!' : construction.result}</span>
-                        ${construction.totals ? `<span class="text-gray-500 ml-2">(${construction.totals.attacker?.toFixed(1) || '?'} vs ${construction.totals.defender?.toFixed(1) || '?'})</span>` : ''}
-                    </div>
-                `;
-            } else if (construction?.skipped) {
-                phasesHtml += `<div class="pl-4 text-xs text-gray-500">Costruzione: Saltata (${construction.reason})</div>`;
-            }
+            // Supporta sia il vecchio formato (phases come oggetto) che il nuovo (phases come array)
+            if (Array.isArray(event.phases)) {
+                // Nuovo formato: array di oggetti {phase, success, player, description}
+                event.phases.forEach(p => {
+                    const resultIcon = p.success ? '✅' : '❌';
+                    const resultClass = p.success ? 'text-green-400' : 'text-red-400';
+                    const phaseColor = p.phase === 'costruzione' ? 'text-cyan-400' :
+                                       p.phase === 'attacco' ? 'text-yellow-400' : 'text-orange-400';
+                    const phaseName = p.phase.charAt(0).toUpperCase() + p.phase.slice(1);
+                    phasesHtml += `
+                        <div class="pl-4 text-xs">
+                            <span class="${phaseColor}">${phaseName}:</span>
+                            <span class="${resultClass}">${resultIcon}</span>
+                            <span class="text-gray-400 ml-1">${p.player || ''}</span>
+                        </div>
+                    `;
+                });
+            } else if (event.phases && typeof event.phases === 'object') {
+                // Vecchio formato: oggetto con construction, attack, shot
+                const construction = event.phases.construction;
+                if (construction && !construction.skipped) {
+                    const resultIcon = construction.result === 'success' || construction.result === 'lucky' ? '✅' : '❌';
+                    const resultClass = construction.result === 'success' || construction.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                    phasesHtml += `
+                        <div class="pl-4 text-xs">
+                            <span class="text-cyan-400">Costruzione:</span>
+                            <span class="${resultClass}">${resultIcon} ${construction.result === 'lucky' ? 'Fortuna!' : construction.result}</span>
+                            ${construction.totals ? `<span class="text-gray-500 ml-2">(${construction.totals.attacker?.toFixed(1) || '?'} vs ${construction.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                        </div>
+                    `;
+                } else if (construction?.skipped) {
+                    phasesHtml += `<div class="pl-4 text-xs text-gray-500">Costruzione: Saltata (${construction.reason})</div>`;
+                }
 
-            // Fase Attacco
-            const attack = event.phases?.attack;
-            if (attack && !attack.interrupted) {
-                const resultIcon = attack.result === 'success' || attack.result === 'lucky' ? '✅' : '❌';
-                const resultClass = attack.result === 'success' || attack.result === 'lucky' ? 'text-green-400' : 'text-red-400';
-                phasesHtml += `
-                    <div class="pl-4 text-xs">
-                        <span class="text-yellow-400">Attacco:</span>
-                        <span class="${resultClass}">${resultIcon} ${attack.result === 'lucky' ? 'Fortuna!' : attack.result}</span>
-                        ${attack.totals ? `<span class="text-gray-500 ml-2">(${attack.totals.attacker?.toFixed(1) || '?'} vs ${attack.totals.defender?.toFixed(1) || '?'})</span>` : ''}
-                    </div>
-                `;
-            } else if (attack?.interrupted) {
-                phasesHtml += `<div class="pl-4 text-xs text-gray-500">Attacco: Interrotto</div>`;
-            }
+                const attack = event.phases.attack;
+                if (attack && !attack.interrupted) {
+                    const resultIcon = attack.result === 'success' || attack.result === 'lucky' ? '✅' : '❌';
+                    const resultClass = attack.result === 'success' || attack.result === 'lucky' ? 'text-green-400' : 'text-red-400';
+                    phasesHtml += `
+                        <div class="pl-4 text-xs">
+                            <span class="text-yellow-400">Attacco:</span>
+                            <span class="${resultClass}">${resultIcon} ${attack.result === 'lucky' ? 'Fortuna!' : attack.result}</span>
+                            ${attack.totals ? `<span class="text-gray-500 ml-2">(${attack.totals.attacker?.toFixed(1) || '?'} vs ${attack.totals.defender?.toFixed(1) || '?'})</span>` : ''}
+                        </div>
+                    `;
+                } else if (attack?.interrupted) {
+                    phasesHtml += `<div class="pl-4 text-xs text-gray-500">Attacco: Interrotto</div>`;
+                }
 
-            // Fase Tiro
-            const shot = event.phases?.shot;
-            if (shot) {
-                const resultIcon = isGoal ? '⚽' : '🧤';
-                const resultClass = isGoal ? 'text-green-400 font-bold' : 'text-red-400';
-                const shotResult = isGoal ? 'GOL!' : 'Parato';
-                phasesHtml += `
-                    <div class="pl-4 text-xs">
-                        <span class="text-orange-400">Tiro:</span>
-                        <span class="${resultClass}">${resultIcon} ${shotResult}</span>
-                        ${shot.totalGoalkeeper ? `<span class="text-gray-500 ml-2">(Portiere: ${shot.totalGoalkeeper.toFixed(1)})</span>` : ''}
-                    </div>
-                `;
+                const shot = event.phases.shot;
+                if (shot) {
+                    const resultIcon = isGoal ? '⚽' : '🧤';
+                    const resultClass = isGoal ? 'text-green-400 font-bold' : 'text-red-400';
+                    const shotResult = isGoal ? 'GOL!' : 'Parato';
+                    phasesHtml += `
+                        <div class="pl-4 text-xs">
+                            <span class="text-orange-400">Tiro:</span>
+                            <span class="${resultClass}">${resultIcon} ${shotResult}</span>
+                            ${shot.totalGoalkeeper ? `<span class="text-gray-500 ml-2">(Portiere: ${shot.totalGoalkeeper.toFixed(1)})</span>` : ''}
+                        </div>
+                    `;
+                }
             }
 
             // Abilita attivate
@@ -719,7 +754,7 @@ window.MatchHistory = {
                 <div class="border-l-2 ${bgColor} pl-3 py-2 mb-2 rounded-r">
                     <div class="flex items-center gap-2">
                         <span class="text-white font-bold">${minute}'</span>
-                        <span class="${teamColor} font-semibold">${event.attackingTeam}</span>
+                        <span class="${teamColor} font-semibold">${event.teamName || event.attackingTeam || (isHome ? homeTeam : awayTeam)}</span>
                         ${isGoal ? '<span class="text-green-400 font-bold">⚽ GOL!</span>' : '<span class="text-gray-400">Occasione</span>'}
                     </div>
                     ${phasesHtml}
