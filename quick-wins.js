@@ -7,7 +7,43 @@
 //
 
 window.QuickWins = {
-    
+
+    // Dati ultima partita per click handler
+    lastMatchData: null,
+
+    /**
+     * Apre gli highlights dell'ultima partita
+     */
+    openLastMatchHighlights() {
+        const match = this.lastMatchData;
+        if (!match) {
+            if (window.Toast) window.Toast.info("Nessuna partita disponibile");
+            return;
+        }
+
+        // Prepara i dati per MatchAnimations
+        const homeTeam = match.homeTeam || { id: 'home', name: 'Casa' };
+        const awayTeam = match.awayTeam || { id: 'away', name: 'Trasferta' };
+        const result = `${match.homeScore ?? 0}-${match.awayScore ?? 0}`;
+
+        if (window.MatchAnimations) {
+            window.MatchAnimations.open({
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                result: result,
+                score: result,
+                highlightsOnly: true
+            });
+        } else {
+            // Fallback: mostra storico partite
+            if (window.MatchHistory?.show) {
+                window.MatchHistory.show();
+            } else if (window.Toast) {
+                window.Toast.info("Animazioni non disponibili");
+            }
+        }
+    },
+
     /**
      * QUICK WIN 1: Countdown cooldown visibile
      */
@@ -150,8 +186,11 @@ window.QuickWins = {
             // Icona tipo partita (usata come emoji principale)
             const typeIcon = window.MatchHistory?.TYPE_ICONS?.[lastMatch.type] || '⚽';
 
+            // Salva dati partita per il click handler
+            this.lastMatchData = lastMatch;
+
             lastMatchEl.innerHTML = `
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 transition-colors rounded-lg -m-2 p-2">
                     <!-- Icona competizione -->
                     <div class="text-3xl">${typeIcon}</div>
 
@@ -165,9 +204,19 @@ window.QuickWins = {
                     <div class="text-right">
                         <p class="text-2xl font-extrabold ${scoreColor}">${myGoals} - ${theirGoals}</p>
                     </div>
+
+                    <!-- Freccia per indicare clickable -->
+                    <div class="text-gray-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
                 </div>
             `;
             lastMatchEl.classList.remove('hidden');
+
+            // Aggiungi click handler per aprire highlights
+            lastMatchEl.onclick = () => this.openLastMatchHighlights();
 
         } catch (error) {
             console.error("Errore caricamento ultima partita:", error);
