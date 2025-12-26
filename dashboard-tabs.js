@@ -15,10 +15,28 @@ window.DashboardTabs = {
             tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
         });
 
+        // Rimuovi le classi di colore hardcoded dall'HTML all'init
+        this.resetAllTabStyles();
+
         // Nascondi il bottone regole flottante quando la dashboard e visibile
         this.hideFloatingRulesButton();
 
         console.log('[DashboardTabs] Inizializzato');
+    },
+
+    /**
+     * Resetta tutti i tab allo stato inattivo (rimuove classi hardcoded)
+     */
+    resetAllTabStyles() {
+        document.querySelectorAll('.dashboard-tab').forEach(tab => {
+            // Rimuovi tutte le classi di colore hardcoded
+            tab.classList.remove('bg-green-600', 'border-green-400', 'text-white', 'tab-active');
+            tab.classList.add('bg-gray-900', 'text-gray-400', 'border-transparent');
+            // Rimuovi stili inline
+            tab.style.backgroundColor = '';
+            tab.style.background = '';
+            tab.style.borderTopColor = '';
+        });
     },
 
     /**
@@ -173,24 +191,37 @@ window.DashboardTabs = {
      * @param {string} activeTab - Nome del tab attivo
      */
     updateTabStyles(activeTab) {
-        // Ottieni il colore team dal color picker o usa default
+        // Ottieni il colore team dal color picker (fonte principale)
         const colorPicker = document.getElementById('team-color-picker');
-        const teamColor = colorPicker?.value || window.InterfacciaCore?.currentTeamData?.primaryColor || '#22c55e';
+        const teamDataColor = window.InterfacciaCore?.currentTeamData?.primaryColor;
+
+        // Usa il valore del color picker se esiste, altrimenti teamData, altrimenti default
+        let teamColor = colorPicker?.value || teamDataColor || '#22c55e';
+
+        this.updateTabStylesWithColor(activeTab, teamColor);
+    },
+
+    /**
+     * Aggiorna gli stili visivi dei bottoni tab con un colore specifico
+     * @param {string} activeTab - Nome del tab attivo
+     * @param {string} teamColor - Colore da usare
+     */
+    updateTabStylesWithColor(activeTab, teamColor) {
+        console.log('[DashboardTabs] updateTabStylesWithColor:', activeTab, teamColor);
 
         // Aggiorna stili dei bottoni tab (bottom navigation con border-top)
         document.querySelectorAll('.dashboard-tab').forEach(tab => {
             if (tab.dataset.tab === activeTab) {
-                // Tab attivo - usa colore team
-                tab.classList.remove('bg-gray-900', 'text-gray-400', 'border-transparent');
-                tab.classList.add('text-white');
-                tab.style.backgroundColor = teamColor;
-                tab.style.borderTopColor = this.lightenColor(teamColor, 20);
+                // Tab attivo - usa colore team con !important via cssText
+                tab.classList.remove('bg-gray-900', 'bg-green-600', 'text-gray-400', 'border-transparent', 'border-green-400');
+                tab.classList.add('text-white', 'tab-active');
+                tab.style.cssText = `background-color: ${teamColor} !important; border-top-color: ${this.lightenColor(teamColor, 20)} !important; border-radius: 6px;`;
             } else {
-                // Tab inattivo
-                tab.classList.remove('text-white');
+                // Tab inattivo - rimuovi tutte le classi di stato attivo
+                tab.classList.remove('text-white', 'tab-active', 'bg-green-600', 'border-green-400');
                 tab.classList.add('bg-gray-900', 'text-gray-400', 'border-transparent');
-                tab.style.backgroundColor = '';
-                tab.style.borderTopColor = '';
+                // Rimuovi stili inline completamente
+                tab.style.cssText = '';
             }
         });
     },

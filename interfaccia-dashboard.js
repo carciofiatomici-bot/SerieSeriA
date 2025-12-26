@@ -473,6 +473,13 @@ window.InterfacciaDashboard = {
      * Applica il colore primario alla dashboard
      */
     applyPrimaryColor(color) {
+        // Imposta le variabili CSS sul root per il colore del team
+        const root = document.documentElement;
+        root.style.setProperty('--team-primary-color', color);
+        root.style.setProperty('--team-primary-light', this.lightenColor(color, 20));
+        root.style.setProperty('--team-primary-dark', this.darkenColor(color, 15));
+        root.style.setProperty('--team-primary-glow', this.hexToRgba(color, 0.4));
+
         // Usa LayoutManager per applicare il tema globale
         if (window.LayoutManager?.setPrimaryColor) {
             window.LayoutManager.setPrimaryColor(color);
@@ -767,6 +774,12 @@ window.InterfacciaDashboard = {
         const colorPicker = document.getElementById('team-color-picker');
         if (colorPicker) {
             colorPicker.value = color;
+        }
+
+        // Aggiorna anche i tab della bottom navigation con il nuovo colore
+        if (window.DashboardTabs) {
+            // Passa direttamente il colore invece di farlo rileggere
+            window.DashboardTabs.updateTabStylesWithColor(window.DashboardTabs.currentTab || 'home', color);
         }
     },
 

@@ -2615,9 +2615,17 @@ const simulateOneOccasionWithLog = (attackingTeam, defendingTeam, occasionNumber
     log.push(`  PARATA: dado=${rollP} + mod=${modPortiere.toFixed(1)} + coach=${coachP.toFixed(1)} = ${totalPortiere.toFixed(1)}`);
     log.push(`  Differenza parata: ${saveResult.toFixed(1)} (soglia: ${saveThreshold})`);
 
+    // Determina il tiratore principale (miglior attaccante per livello)
+    const shooterPlayer = playersA_A?.length > 0
+        ? playersA_A.reduce((best, p) => (p.currentLevel || 0) > (best.currentLevel || 0) ? p : best)
+        : (playersA_C2?.length > 0
+            ? playersA_C2.reduce((best, p) => (p.currentLevel || 0) > (best.currentLevel || 0) ? p : best)
+            : null);
+
     // Raccolta dati evento Fase 3
     eventData.phases.shot = {
         noGoalkeeper: false,
+        shooter: shooterPlayer ? { name: shooterPlayer.name, role: shooterPlayer.role, level: shooterPlayer.currentLevel, type: shooterPlayer.type } : null,
         goalkeeper: { name: portiere.name, level: portiere.currentLevel, type: portiere.type },
         attackValue: effectiveAttack,
         rolls: { goalkeeper: rollP },

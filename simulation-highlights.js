@@ -229,8 +229,8 @@
             const coachP = shot.coach?.goalkeeper || 0;
             const totalP = shot.totalGoalkeeper || (rollP + modP + coachP);
 
-            // Trova l'attaccante che ha tirato (il migliore dalla fase attacco)
-            const shooter = getMainPlayer(attack?.players?.attacker, 'A');
+            // Trova l'attaccante che ha tirato (prima dalla fase shot, poi dalla fase attacco)
+            const shooter = shot?.shooter || getMainPlayer(attack?.players?.attacker, 'A');
             scorer = shooter?.name || assister || 'Attaccante';
 
             // Abilità speciali portiere
@@ -292,7 +292,7 @@
 
         // Gol segnato
         if (result === 'goal' || result === 'lucky_goal' || result === 'draw_goal') {
-            const shooter = getMainPlayer(attack?.players?.attacker, 'A');
+            const shooter = shot?.shooter || getMainPlayer(attack?.players?.attacker, 'A');
             const scorer = shooter?.name || 'Attaccante';
             const assisterPlayer = getMainPlayer(construction?.players?.attacker, 'C');
             const assister = assisterPlayer?.name;

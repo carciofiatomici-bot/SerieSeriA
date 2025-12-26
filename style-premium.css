@@ -1,0 +1,806 @@
+/*
+================================================================================
+ STYLE-PREMIUM.CSS - Serie SeriA Premium Theme
+ "Luxury Sports Club" Aesthetic
+================================================================================
+
+ DESIGN PHILOSOPHY:
+ - Deep navy/midnight blue as primary dark
+ - Gold/champagne accents for premium feel
+ - Emerald green as secondary (football field connection)
+ - Glass morphism cards with subtle gradients
+ - Refined typography with Playfair Display + DM Sans
+ - Smooth micro-animations
+ - Mobile-first luxury experience
+
+================================================================================
+*/
+
+/* ===================== PREMIUM FONTS ===================== */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ===================== PREMIUM CSS VARIABLES ===================== */
+:root {
+    /* Team Dynamic Color (set by JavaScript via colorpicker) */
+    --team-primary-color: #22c55e;
+    --team-primary-light: #4ade80;
+    --team-primary-dark: #16a34a;
+    --team-primary-glow: rgba(34, 197, 94, 0.4);
+
+    /* Primary Colors - Deep Midnight */
+    --premium-bg-deep: #0a0e1a;
+    --premium-bg-dark: #0d1321;
+    --premium-bg-card: #131a2b;
+    --premium-bg-elevated: #1a2337;
+    --premium-bg-hover: #212d44;
+
+    /* Gold/Champagne Accent */
+    --premium-gold: #d4a853;
+    --premium-gold-light: #e8c778;
+    --premium-gold-dark: #b8923f;
+    --premium-gold-glow: rgba(212, 168, 83, 0.4);
+
+    /* Emerald Accent (Field Green) */
+    --premium-emerald: #10b981;
+    --premium-emerald-light: #34d399;
+    --premium-emerald-dark: #059669;
+    --premium-emerald-glow: rgba(16, 185, 129, 0.3);
+
+    /* Neutral Palette */
+    --premium-text-primary: #f8fafc;
+    --premium-text-secondary: #94a3b8;
+    --premium-text-muted: #64748b;
+    --premium-border: rgba(255, 255, 255, 0.08);
+    --premium-border-light: rgba(255, 255, 255, 0.12);
+
+    /* Semantic Colors */
+    --premium-success: #22c55e;
+    --premium-warning: #f59e0b;
+    --premium-error: #ef4444;
+    --premium-info: #3b82f6;
+
+    /* Glass Effect */
+    --glass-bg: rgba(19, 26, 43, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    /* Typography */
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    /* Spacing Scale */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===================== BASE OVERRIDES ===================== */
+html {
+    background: var(--premium-bg-deep);
+}
+
+body {
+    font-family: var(--font-body) !important;
+    /* Mantiene lo sfondo originale dall'app, aggiunge solo overlay sottile */
+    color: var(--premium-text-primary);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Overlay sottile sopra lo sfondo per migliorare leggibilità */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at top, rgba(212, 168, 83, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ===================== TYPOGRAPHY HIERARCHY ===================== */
+
+/* Display/Hero Text */
+.premium-display,
+h1 {
+    font-family: var(--font-display) !important;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+/* Headings */
+.premium-heading,
+h2, h3 {
+    font-family: var(--font-heading) !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+h4, h5, h6 {
+    font-family: var(--font-heading) !important;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+/* Team Name Special */
+.team-name-fancy {
+    font-family: var(--font-display) !important;
+    background: linear-gradient(135deg, var(--premium-gold) 0%, var(--premium-gold-light) 50%, var(--premium-gold) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 2px 8px var(--premium-gold-glow)) !important;
+}
+
+/* ===================== PREMIUM CARDS ===================== */
+
+/* Glass Card Base - Solo per box principali, non per elementi interni */
+.football-box,
+.premium-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--team-primary-color) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 20px -5px var(--team-primary-glow) !important;
+    transition: all var(--transition-base) !important;
+}
+
+.football-box:hover,
+.premium-card:hover {
+    border-color: var(--team-primary-light) !important;
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 30px -5px var(--team-primary-glow) !important;
+    transform: translateY(-2px);
+}
+
+/* Card with Team Color Accent (replaces gold) */
+.premium-card-gold,
+[class*="border-green-500"] {
+    border-color: var(--team-primary-color) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px var(--team-primary-color),
+        0 0 40px -10px var(--team-primary-glow) !important;
+}
+
+/* Card with Emerald Accent */
+.premium-card-emerald {
+    border-color: var(--premium-emerald) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px var(--premium-emerald),
+        0 0 40px -10px var(--premium-emerald-glow) !important;
+}
+
+/* ===================== PREMIUM BUTTONS ===================== */
+
+/* Primary Button - Team Color */
+.premium-btn-primary,
+button[class*="bg-green-600"],
+button[class*="bg-green-700"],
+.btn-primary {
+    background: linear-gradient(135deg, var(--team-primary-color) 0%, var(--team-primary-dark) 100%) !important;
+    color: white !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    border: 1px solid var(--team-primary-light) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px 24px !important;
+    box-shadow:
+        0 4px 14px var(--team-primary-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: all var(--transition-base) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.875rem;
+}
+
+.premium-btn-primary:hover,
+button[class*="bg-green-600"]:hover,
+button[class*="bg-green-700"]:hover {
+    background: linear-gradient(135deg, var(--team-primary-light) 0%, var(--team-primary-color) 100%) !important;
+    box-shadow:
+        0 6px 20px var(--team-primary-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+.premium-btn-primary:active,
+button[class*="bg-green-600"]:active,
+button[class*="bg-green-700"]:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+/* Secondary Button - Ghost */
+.premium-btn-secondary,
+button[class*="bg-gray-700"],
+button[class*="bg-gray-600"] {
+    background: transparent !important;
+    color: var(--premium-text-primary) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 500 !important;
+    border: 1px solid var(--team-primary-color) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px 24px !important;
+    transition: all var(--transition-base) !important;
+}
+
+.premium-btn-secondary:hover,
+button[class*="bg-gray-700"]:hover,
+button[class*="bg-gray-600"]:hover {
+    background: var(--premium-bg-hover) !important;
+    border-color: var(--team-primary-light) !important;
+    color: var(--team-primary-color) !important;
+}
+
+/* Emerald Button */
+.premium-btn-emerald {
+    background: linear-gradient(135deg, var(--premium-emerald) 0%, var(--premium-emerald-dark) 100%) !important;
+    color: white !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 4px 14px var(--premium-emerald-glow) !important;
+}
+
+/* Danger Button */
+button[class*="bg-red-600"],
+button[class*="bg-red-700"] {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Yellow/Warning Button */
+button[class*="bg-yellow-600"],
+button[class*="bg-yellow-500"] {
+    background: linear-gradient(135deg, var(--team-primary-color) 0%, var(--team-primary-dark) 100%) !important;
+    color: white !important;
+    border: 1px solid var(--team-primary-light) !important;
+    box-shadow: 0 4px 14px var(--team-primary-glow) !important;
+}
+
+/* ===================== PREMIUM INPUTS ===================== */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
+    background: var(--premium-bg-elevated) !important;
+    border: 1px solid var(--premium-border) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--premium-text-primary) !important;
+    font-family: var(--font-body) !important;
+    transition: all var(--transition-base) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--team-primary-color) !important;
+    box-shadow: 0 0 0 3px var(--team-primary-glow) !important;
+    outline: none !important;
+}
+
+/* ===================== PREMIUM BADGES & LABELS ===================== */
+
+.premium-badge {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+.premium-badge-gold {
+    background: linear-gradient(135deg, var(--premium-gold) 0%, var(--premium-gold-dark) 100%);
+    color: var(--premium-bg-deep);
+}
+
+.premium-badge-emerald {
+    background: linear-gradient(135deg, var(--premium-emerald) 0%, var(--premium-emerald-dark) 100%);
+    color: white;
+}
+
+/* Status badges override */
+[class*="bg-green-500"],
+[class*="bg-green-600"] {
+    background: linear-gradient(135deg, var(--premium-emerald) 0%, var(--premium-emerald-dark) 100%) !important;
+}
+
+/* ===================== PREMIUM MODALS ===================== */
+
+[class*="modal"],
+[id*="modal"],
+.premium-modal {
+    background: var(--premium-bg-card) !important;
+    border: 1px solid var(--premium-border-light) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.6),
+        0 0 0 1px var(--premium-border) !important;
+}
+
+/* Modal Backdrop */
+[class*="bg-black/"],
+[class*="bg-opacity-"] {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* ===================== PREMIUM NAVIGATION ===================== */
+
+nav,
+.premium-nav {
+    background: rgba(10, 14, 26, 0.9) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid var(--premium-border) !important;
+}
+
+/* Nav Links */
+nav a,
+.nav-link {
+    color: var(--premium-text-secondary) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 500 !important;
+    transition: all var(--transition-fast) !important;
+}
+
+nav a:hover,
+.nav-link:hover {
+    color: var(--team-primary-color) !important;
+}
+
+nav a.active,
+.nav-link.active {
+    color: var(--team-primary-color) !important;
+    border-bottom: 2px solid var(--team-primary-color) !important;
+}
+
+/* ===================== PREMIUM STATS & NUMBERS ===================== */
+
+.premium-stat {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--team-primary-color) 0%, var(--team-primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Stat Cards */
+.stat-card,
+[class*="stat"] {
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-family: var(--font-display) !important;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--team-primary-color);
+}
+
+.stat-card .stat-label {
+    font-family: var(--font-heading) !important;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--premium-text-muted);
+}
+
+/* ===================== PREMIUM TABLES ===================== */
+
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th {
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--premium-text-muted) !important;
+    border-bottom: 1px solid var(--premium-border) !important;
+    padding: 12px 16px !important;
+}
+
+td {
+    font-family: var(--font-body) !important;
+    border-bottom: 1px solid var(--premium-border) !important;
+    padding: 12px 16px !important;
+}
+
+tr:hover td {
+    background: var(--premium-bg-hover) !important;
+}
+
+/* ===================== PREMIUM DIVIDERS ===================== */
+
+hr,
+.divider {
+    border: none !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, var(--premium-border-light), transparent) !important;
+    margin: var(--space-lg) 0 !important;
+}
+
+/* ===================== PREMIUM SCROLLBAR ===================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--premium-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--premium-bg-hover);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--premium-bg-deep);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--team-primary-color);
+}
+
+/* ===================== PREMIUM ANIMATIONS ===================== */
+
+@keyframes premium-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes premium-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes premium-glow-pulse {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--team-primary-glow);
+    }
+    50% {
+        box-shadow: 0 0 40px var(--team-primary-glow);
+    }
+}
+
+@keyframes premium-shimmer {
+    0% {
+        background-position: -200% center;
+    }
+    100% {
+        background-position: 200% center;
+    }
+}
+
+.animate-premium-fade {
+    animation: premium-fade-in 0.5s ease-out forwards;
+}
+
+.animate-premium-scale {
+    animation: premium-scale-in 0.3s ease-out forwards;
+}
+
+.animate-premium-glow {
+    animation: premium-glow-pulse 2s ease-in-out infinite;
+}
+
+/* Staggered animations for lists */
+.premium-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.premium-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.premium-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.premium-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.premium-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.premium-stagger > *:nth-child(6) { animation-delay: 250ms; }
+
+/* ===================== PREMIUM LOADING STATES ===================== */
+
+.premium-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--premium-bg-elevated) 0%,
+        var(--premium-bg-hover) 50%,
+        var(--premium-bg-elevated) 100%
+    );
+    background-size: 200% 100%;
+    animation: premium-shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+/* ===================== PREMIUM TOAST NOTIFICATIONS ===================== */
+
+.toast,
+[class*="toast"] {
+    background: var(--premium-bg-card) !important;
+    border: 1px solid var(--premium-border-light) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    font-family: var(--font-body) !important;
+}
+
+.toast-success {
+    border-left: 4px solid var(--premium-emerald) !important;
+}
+
+.toast-error {
+    border-left: 4px solid var(--premium-error) !important;
+}
+
+.toast-warning {
+    border-left: 4px solid var(--team-primary-color) !important;
+}
+
+/* ===================== TEXT COLOR OVERRIDES ===================== */
+
+/* Gold accents */
+[class*="text-green-400"],
+[class*="text-green-500"],
+[class*="text-emerald-400"] {
+    color: var(--premium-emerald-light) !important;
+}
+
+[class*="text-yellow-400"],
+[class*="text-yellow-500"],
+[class*="text-amber-400"] {
+    color: var(--premium-gold) !important;
+}
+
+/* Muted text */
+[class*="text-gray-400"],
+[class*="text-gray-500"],
+[class*="text-slate-400"] {
+    color: var(--premium-text-muted) !important;
+}
+
+[class*="text-gray-300"],
+[class*="text-slate-300"] {
+    color: var(--premium-text-secondary) !important;
+}
+
+/* ===================== SPECIAL COMPONENTS ===================== */
+
+/* Player Card Premium */
+.player-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.player-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--team-primary-color), var(--team-primary-light), var(--team-primary-color));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.player-card:hover::before {
+    opacity: 1;
+}
+
+/* Match Score Display */
+.match-score {
+    font-family: var(--font-display) !important;
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Last Match Preview - Center Content */
+#last-match-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#last-match-preview > * {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* League Table Rows */
+.league-row {
+    transition: all var(--transition-fast);
+}
+
+.league-row:hover {
+    background: var(--premium-bg-hover);
+    transform: translateX(4px);
+}
+
+.league-row.top-4 {
+    border-left: 3px solid var(--premium-emerald);
+}
+
+.league-row.relegated {
+    border-left: 3px solid var(--premium-error);
+}
+
+/* ===================== DASHBOARD HEADER ===================== */
+
+/* Hamburger Menu Button - Center Icon */
+#dashboard-menu-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#dashboard-menu-btn span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+/* ===================== TAB SQUAD BOXES ===================== */
+
+/* Tutti i box nel tab squadra - bordi con colore team */
+#tab-squad > div[class*="rounded"],
+#tab-squad .near-level-up-widget,
+#divisa-livello-box,
+#coach-box-container,
+#stadio-hall-box,
+#gestione-box,
+#near-level-up-widget-container > div {
+    border-color: var(--team-primary-color) !important;
+}
+
+/* ===================== TAB BAR / BOTTOM NAVIGATION ===================== */
+
+/* Container della tab bar */
+#dashboard-tabs {
+    background: rgba(10, 14, 26, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-top: 1px solid var(--premium-border) !important;
+}
+
+/* Tutti i tab - stile base */
+.dashboard-tab {
+    transition: all 0.2s ease !important;
+    border-radius: 6px !important;
+    margin: 4px 2px !important;
+    padding: 6px 4px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Testo nei tab - assicura che stia dentro */
+.dashboard-tab span {
+    display: block !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
+/* Icone nei tab */
+.dashboard-tab span:first-child {
+    transition: transform 0.2s ease !important;
+    font-size: 1rem !important;
+}
+
+/* Testo label nei tab */
+.dashboard-tab span:last-child {
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+}
+
+.dashboard-tab.tab-active span:first-child {
+    transform: scale(1.1);
+}
+
+/* ===================== RESPONSIVE PREMIUM ===================== */
+
+@media (max-width: 640px) {
+    :root {
+        --space-md: 12px;
+        --space-lg: 16px;
+        --space-xl: 24px;
+    }
+
+    .football-box,
+    .premium-card {
+        border-radius: var(--radius-md) !important;
+        /* Non forzare padding - rispetta quello definito inline */
+    }
+
+    .premium-btn-primary,
+    button[class*="bg-green-600"],
+    button[class*="bg-green-700"] {
+        padding: 10px 20px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* ===================== REDUCED MOTION ===================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===================== HIGH CONTRAST MODE ===================== */
+
+@media (prefers-contrast: high) {
+    :root {
+        --premium-border: rgba(255, 255, 255, 0.3);
+        --premium-border-light: rgba(255, 255, 255, 0.5);
+    }
+
+    .football-box,
+    .premium-card {
+        border-width: 2px !important;
+    }
+}
