@@ -637,13 +637,14 @@ window.UserCompetitions = {
                     awayScore
                 );
             } else {
-                // Azioni salienti (default)
-                if (!matchLog || matchLog.length === 0) {
+                // Highlights - preferisci matchEvents (tutte le occasioni), fallback su matchLog (solo gol)
+                const eventsData = (matchEvents && matchEvents.length > 0) ? matchEvents : matchLog;
+                if (!eventsData || eventsData.length === 0) {
                     if (window.Toast) window.Toast.info('Telecronaca non disponibile per questa partita');
                     return;
                 }
                 window.MatchHistory.showTelecronacaModal(
-                    matchLog,
+                    eventsData,
                     homeName,
                     awayName,
                     homeScore,

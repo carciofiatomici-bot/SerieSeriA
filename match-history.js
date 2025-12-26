@@ -594,7 +594,8 @@ window.MatchHistory = {
 
         // Genera highlights riassuntivi per ogni occasione
         const highlightsHtml = matchEvents.map((event, idx) => {
-            const isGoal = event.isGoal === true || event.result === 'goal';
+            // Supporta tutti i formati: isGoal (nuovo), result: 'goal' (vecchio client), type: 'goal' (matchLog)
+            const isGoal = event.isGoal === true || event.result === 'goal' || event.type === 'goal';
             const isHome = event.side === 'home' || event.team === 'home';
             const minute = event.minute || Math.floor(((idx + 1) / 50) * 90);
             const attackingTeamName = event.teamName || event.attackingTeam || (isHome ? homeTeam : awayTeam);
