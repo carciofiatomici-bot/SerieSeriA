@@ -1219,26 +1219,18 @@
             <div id="tab-shop" class="tab-content hidden space-y-3">
 
                 <!-- BOX DRAFT -->
-                <div id="draft-box" class="rounded-xl" style="background: rgba(17, 24, 39, 0.6); border-radius: 12px; padding: 12px !important; border: 1px solid var(--team-primary-color, #22c55e);">
-                    <div id="btn-draft-container"
-                         class="bg-gradient-to-r from-yellow-600 to-amber-500 text-white font-extrabold text-sm sm:text-base rounded-md shadow-lg hover:from-yellow-500 hover:to-amber-400 transition duration-150 flex items-center overflow-hidden">
-                        <!-- Parte cliccabile per navigazione -->
+                <div id="draft-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <div class="flex items-stretch gap-2">
                         <button id="btn-draft-utente"
-                                class="flex-1 py-2.5 sm:py-3 px-2 text-left flex items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95">
-                            📝 Draft Calciatori
+                                class="flex-1 bg-gradient-to-r from-red-600 to-red-700 font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-red-500 hover:to-red-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+                                style="color: white !important;">
+                            <span class="text-lg sm:text-xl">📝</span>
+                            <span class="text-sm sm:text-base">Draft Calciatori</span>
                         </button>
-                        <!-- Separatore -->
-                        <div class="w-px h-8 bg-yellow-800/50"></div>
-                        <!-- Toggle Switch per partecipazione Draft -->
-                        <div id="draft-toggle-container" class="px-2 sm:px-3 py-2 flex items-center" title="Partecipa al Draft">
+                        <div id="draft-toggle-wrapper" class="flex items-center bg-red-900/60 rounded-lg px-3" title="Partecipa al Draft">
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="draft-participation-toggle" class="sr-only peer">
-                                <div class="w-9 h-5 sm:w-10 sm:h-6 bg-yellow-900/60 peer-focus:outline-none rounded-full peer
-                                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                            after:bg-white after:border-gray-300 after:border after:rounded-full
-                                            after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all
-                                            peer-checked:bg-green-500"></div>
+                                <div class="relative w-10 h-5 bg-red-950 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
                             </label>
                         </div>
                     </div>

@@ -17,7 +17,7 @@
 */
 
 /* ===================== PREMIUM FONTS ===================== */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap');
 
 /* ===================== PREMIUM CSS VARIABLES ===================== */
 :root {
@@ -146,15 +146,120 @@ h4, h5, h6 {
     letter-spacing: 0;
 }
 
-/* Team Name Special */
+/* Team Name Special - Stadium Scoreboard Elite Style */
 .team-name-fancy {
-    font-family: var(--font-display) !important;
-    background: linear-gradient(135deg, var(--premium-gold) 0%, var(--premium-gold-light) 50%, var(--premium-gold) 100%) !important;
+    font-family: 'Teko', 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    position: relative !important;
+    display: inline-block !important;
+}
+
+/* Il testo interno con gli effetti */
+#team-dashboard-title-text {
+    font-family: 'Teko', 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 1.8rem !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    position: relative !important;
+    display: inline-block !important;
+
+    /* Gradiente metallico usando il colore del team */
+    background: linear-gradient(
+        180deg,
+        var(--team-primary-light) 0%,
+        var(--team-primary-color) 25%,
+        var(--team-primary-light) 50%,
+        var(--team-primary-color) 75%,
+        var(--team-primary-dark) 100%
+    ) !important;
+    background-size: 100% 200% !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
-    text-shadow: none !important;
-    filter: drop-shadow(0 2px 8px var(--premium-gold-glow)) !important;
+
+    /* Animazione shimmer metallico */
+    animation: team-name-shimmer 3s ease-in-out infinite !important;
+
+    /* Ombra per profondità */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))
+            drop-shadow(0 0 20px var(--team-primary-glow)) !important;
+}
+
+/* Effetto bordo/stroke simulato con pseudo-elemento */
+#team-dashboard-title::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    font-family: 'Teko', 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 1.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    -webkit-text-stroke: 3px var(--team-primary-dark);
+    color: transparent;
+    opacity: 0.5;
+}
+
+/* Animazione shimmer metallico */
+@keyframes team-name-shimmer {
+    0%, 100% {
+        background-position: 0% 0%;
+    }
+    50% {
+        background-position: 0% 100%;
+    }
+}
+
+/* Effetto glow pulsante sottile */
+@keyframes team-name-glow {
+    0%, 100% {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))
+                drop-shadow(0 0 15px var(--team-primary-glow));
+    }
+    50% {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))
+                drop-shadow(0 0 25px var(--team-primary-glow))
+                drop-shadow(0 0 35px var(--team-primary-glow));
+    }
+}
+
+/* Decorazioni laterali - speed lines */
+#team-dashboard-title::after {
+    content: '';
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 60%;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        var(--team-primary-color) 20%,
+        var(--team-primary-light) 50%,
+        var(--team-primary-color) 80%,
+        transparent 100%
+    );
+    opacity: 0.7;
+    border-radius: 2px;
+}
+
+/* Responsive per mobile */
+@media (max-width: 640px) {
+    #team-dashboard-title-text {
+        font-size: 1.4rem !important;
+        letter-spacing: 0.08em !important;
+    }
+
+    #team-dashboard-title::after {
+        width: 5px;
+        right: -10px;
+    }
 }
 
 /* ===================== PREMIUM CARDS ===================== */
@@ -693,17 +798,40 @@ hr,
     line-height: 1 !important;
 }
 
-/* ===================== TAB SQUAD BOXES ===================== */
+/* ===================== ALL TAB BOXES - Uniform styling ===================== */
 
-/* Tutti i box nel tab squadra - bordi con colore team */
+/* Stile uniforme per tutti i box in tutte le tab */
+#tab-home > div[class*="rounded"],
 #tab-squad > div[class*="rounded"],
+#tab-competitions > div[class*="rounded"],
+#tab-shop > div[class*="rounded"],
+#tab-rules > div[class*="rounded"],
 #tab-squad .near-level-up-widget,
 #divisa-livello-box,
 #coach-box-container,
 #stadio-hall-box,
 #gestione-box,
-#near-level-up-widget-container > div {
-    border-color: var(--team-primary-color) !important;
+#near-level-up-widget-container > div,
+.competition-box,
+#draft-box,
+#mercato-box,
+#scambi-box,
+#serieseria-box,
+#coppa-box,
+#supercoppa-box,
+#amichevole-box,
+#private-leagues-box,
+#schedina-box,
+#risorse-box,
+#crediti-box,
+#css-box {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--team-primary-color) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 20px -5px var(--team-primary-glow) !important;
 }
 
 /* ===================== TAB BAR / BOTTOM NAVIGATION ===================== */

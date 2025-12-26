@@ -8649,14 +8649,7 @@ select,
     padding-bottom: 0 !important;
 }
 
-/* Rimuovi sfondo hover da btn-draft-utente */
-#tab-shop #btn-draft-utente {
-    background: transparent !important;
-}
-
-#tab-shop #btn-draft-utente:hover {
-    background: transparent !important;
-}
+/* btn-draft-utente ora usa colore del colorpicker - gestito da JS */
 
 @media (min-width: 640px) {
     #tab-shop #btn-draft-container,

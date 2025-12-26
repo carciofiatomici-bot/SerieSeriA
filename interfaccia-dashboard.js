@@ -593,26 +593,8 @@ window.InterfacciaDashboard = {
             teamNameBox.style.borderColor = color;
         }
 
-        // Colore testo nome squadra (usa gradiente per effetto fancy - applica allo span interno)
-        const teamTitleText = document.getElementById('team-dashboard-title-text');
-        const teamTitle = teamTitleText || document.getElementById('team-dashboard-title');
-        if (teamTitle) {
-            // Genera varianti del colore per il gradiente
-            const lighterColor = this.lightenColor(color, 20);
-            const darkerColor = this.darkenColor(color, 10);
-
-            // Applica il gradiente
-            teamTitle.style.background = `linear-gradient(135deg, ${color} 0%, ${darkerColor} 50%, ${lighterColor} 100%)`;
-            teamTitle.style.webkitBackgroundClip = 'text';
-            teamTitle.style.backgroundClip = 'text';
-            teamTitle.style.webkitTextFillColor = 'transparent';
-
-            // Aggiorna le ombre
-            const rgbaColor = this.hexToRgba(color, 0.4);
-            const rgbaColorLight = this.hexToRgba(color, 0.2);
-            teamTitle.style.textShadow = `0 0 20px ${rgbaColor}, 0 0 40px ${rgbaColorLight}`;
-            teamTitle.style.filter = `drop-shadow(0 0 8px ${this.hexToRgba(color, 0.3)})`;
-        }
+        // Colore testo nome squadra - ora gestito via CSS variables (--team-primary-color)
+        // Il CSS in style-premium.css usa le variabili per il gradiente metallico animato
 
         // Bordo box Lega Privata
         const privateLeaguesBox = document.getElementById('private-leagues-box');
@@ -769,6 +751,19 @@ window.InterfacciaDashboard = {
                 albumBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
             };
         }
+
+        // Colore bottone Draft (usa colore del team)
+        const draftBtn = document.getElementById('btn-draft-utente');
+        if (draftBtn) {
+            draftBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            draftBtn.onmouseenter = () => {
+                draftBtn.style.background = `linear-gradient(to right, ${lighterColor}, ${color})`;
+            };
+            draftBtn.onmouseleave = () => {
+                draftBtn.style.background = `linear-gradient(to right, ${color}, ${darkerColor})`;
+            };
+        }
+        // Toggle container Draft rimane rosso fisso (bg-red-900/60 in HTML)
 
         // Aggiorna il color picker
         const colorPicker = document.getElementById('team-color-picker');
