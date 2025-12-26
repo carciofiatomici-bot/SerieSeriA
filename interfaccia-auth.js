@@ -675,6 +675,11 @@ window.InterfacciaAuth = {
 
         console.log("Utente torna alla schermata di login (sessione mantenuta).");
 
+        // Ferma heartbeat presenza online (l'utente non e' piu' in dashboard)
+        if (window.SfideMultiplayer?.stopPresenceHeartbeat) {
+            window.SfideMultiplayer.stopPresenceHeartbeat();
+        }
+
         // NON cancellare la sessione - mantienila per il "Rientra in Dashboard"
         localStorage.removeItem('fanta_admin_viewing_team');
 
@@ -691,6 +696,11 @@ window.InterfacciaAuth = {
         const { DEFAULT_LOGO_URL } = window.InterfacciaConstants;
 
         console.log("Logout completo effettuato.");
+
+        // Ferma heartbeat presenza online (Sfide Tattiche)
+        if (window.SfideMultiplayer?.stopPresenceHeartbeat) {
+            window.SfideMultiplayer.stopPresenceHeartbeat();
+        }
 
         this.clearSession();
         localStorage.removeItem('fanta_admin_viewing_team');
@@ -835,6 +845,11 @@ window.InterfacciaAuth = {
             }
 
             console.log("Rientro in dashboard completato per:", teamData.teamName);
+
+            // Riavvia heartbeat presenza online (Sfide Tattiche)
+            if (window.SfideMultiplayer?.startPresenceHeartbeat) {
+                window.SfideMultiplayer.startPresenceHeartbeat();
+            }
 
         } catch (error) {
             console.error("Errore nel rientro dashboard:", error);

@@ -20,7 +20,9 @@ window.SfideMultiplayer = (function() {
         TURN_TIMEOUT_MS: 30000,  // 30 secondi per mossa
         CHALLENGE_EXPIRE_MS: 5 * 60 * 1000, // 5 minuti per accettare
         GOAL_LIMIT: 3,
-        TEAMS_CACHE_MS: 5 * 60 * 1000 // Cache squadre 5 minuti
+        TEAMS_CACHE_MS: 5 * 60 * 1000, // Cache squadre 5 minuti
+        PRESENCE_HEARTBEAT_MS: 30000, // Heartbeat ogni 30 secondi
+        PRESENCE_TIMEOUT_MS: 2 * 60 * 1000 // Considera offline dopo 2 minuti
     };
 
     // Cache per ridurre letture
@@ -28,6 +30,9 @@ window.SfideMultiplayer = (function() {
         data: null,
         timestamp: 0
     };
+
+    // Presenza online
+    let presenceInterval = null;
 
     // ========================================
     // STATO
@@ -69,6 +74,9 @@ window.SfideMultiplayer = (function() {
             return;
         }
 
+        // Avvia heartbeat presenza
+        startPresenceHeartbeat();
+
         // Ascolta sfide in arrivo
         startListeningForChallenges();
 
@@ -76,6 +84,112 @@ window.SfideMultiplayer = (function() {
         checkForActiveMatch();
 
         console.log('[SfideMultiplayer] Inizializzato per team:', state.myTeamId);
+    }
+
+    // ========================================
+    // SISTEMA PRESENZA ONLINE
+    // ========================================
+
+    /**
+     * Avvia heartbeat per segnalare che l'utente e' online
+     */
+    function startPresenceHeartbeat() {
+        if (presenceInterval) {
+            clearInterval(presenceInterval);
+        }
+
+        // Aggiorna subito
+        updatePresence();
+
+        // Poi ogni 30 secondi
+        presenceInterval = setInterval(() => {
+            updatePresence();
+        }, CONFIG.PRESENCE_HEARTBEAT_MS);
+
+        // Aggiorna anche quando la finestra torna in focus
+        window.addEventListener('focus', updatePresence);
+
+        // Setta offline quando l'utente chiude il browser/tab
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        console.log('[SfideMultiplayer] Heartbeat presenza avviato');
+    }
+
+    /**
+     * Handler per chiusura browser/tab
+     */
+    function handleBeforeUnload() {
+        // Usa sendBeacon per garantire che la richiesta arrivi
+        // anche durante la chiusura della pagina
+        setOffline();
+    }
+
+    /**
+     * Ferma heartbeat presenza (logout/chiusura)
+     */
+    function stopPresenceHeartbeat() {
+        if (presenceInterval) {
+            clearInterval(presenceInterval);
+            presenceInterval = null;
+        }
+        window.removeEventListener('focus', updatePresence);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+
+        // Setta offline
+        setOffline();
+
+        console.log('[SfideMultiplayer] Heartbeat presenza fermato');
+    }
+
+    /**
+     * Aggiorna timestamp presenza su Firestore
+     */
+    async function updatePresence() {
+        if (!state.myTeamId || state.myTeamId === 'admin') return;
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const path = getTeamsPath();
+            if (!path) return;
+
+            const teamDocRef = doc(window.db, path, state.myTeamId);
+            await updateDoc(teamDocRef, {
+                lastSeen: Date.now(),
+                isOnline: true
+            });
+        } catch (error) {
+            // Silently fail - non bloccare l'app per errori di presenza
+            console.warn('[SfideMultiplayer] Errore aggiornamento presenza:', error.message);
+        }
+    }
+
+    /**
+     * Setta utente come offline
+     */
+    async function setOffline() {
+        if (!state.myTeamId || state.myTeamId === 'admin') return;
+
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const path = getTeamsPath();
+            if (!path) return;
+
+            const teamDocRef = doc(window.db, path, state.myTeamId);
+            await updateDoc(teamDocRef, {
+                isOnline: false
+            });
+        } catch (error) {
+            console.warn('[SfideMultiplayer] Errore set offline:', error.message);
+        }
+    }
+
+    /**
+     * Verifica se un team e' online (lastSeen negli ultimi 2 minuti)
+     */
+    function isTeamOnline(teamData) {
+        if (!teamData?.lastSeen) return false;
+        const now = Date.now();
+        return (now - teamData.lastSeen) < CONFIG.PRESENCE_TIMEOUT_MS;
     }
 
     // ========================================
@@ -208,49 +322,98 @@ window.SfideMultiplayer = (function() {
         // Crea modal
         const modal = document.createElement('div');
         modal.id = 'minigame-challenge-modal';
-        modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-gray-800 rounded-xl max-w-md w-full p-6 border-2 border-indigo-500 shadow-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-indigo-400 flex items-center gap-2">
-                        <span>🎮</span> Sfida Tattica
-                    </h2>
-                    <button id="close-minigame-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-                </div>
+            <div class="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl max-w-md w-full p-1 shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                <!-- Decorative corner accents -->
+                <div class="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-transparent"></div>
+                <div class="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-cyan-500/10 to-transparent"></div>
+                <div class="absolute top-0 right-0 w-1 h-16 bg-gradient-to-b from-emerald-400 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 h-1 w-24 bg-gradient-to-r from-cyan-400 to-transparent"></div>
 
-                <p class="text-gray-300 mb-4">
-                    Sfida un'altra squadra nel minigame tattico!
-                    I ruoli (attaccante/difensore) saranno assegnati casualmente.
-                </p>
+                <!-- Inner content wrapper -->
+                <div class="relative bg-slate-900/80 backdrop-blur-sm rounded-xl p-6">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/25">
+                                    ⚔️
+                                </div>
+                                <h2 class="text-2xl font-black tracking-tight text-white uppercase">
+                                    Sfida <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Tattica</span>
+                                </h2>
+                            </div>
+                            <p class="text-xs text-slate-500 uppercase tracking-widest ml-13">Minigame PvP</p>
+                        </div>
+                        <button id="close-minigame-modal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 text-slate-500 hover:text-red-400 flex items-center justify-center transition-all duration-200 text-lg">
+                            ×
+                        </button>
+                    </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm text-gray-400 mb-2">Squadra avversaria</label>
-                    <select id="minigame-target-team" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                        <option value="">Caricamento squadre...</option>
-                    </select>
-                </div>
+                    <!-- Description -->
+                    <p class="text-slate-400 text-sm leading-relaxed mb-5 border-l-2 border-emerald-500/30 pl-3">
+                        Sfida un'altra squadra nel minigame tattico! I ruoli <span class="text-emerald-400 font-semibold">attaccante</span>/<span class="text-cyan-400 font-semibold">difensore</span> saranno assegnati casualmente.
+                    </p>
 
-                <div id="minigame-target-info" class="hidden mb-4 p-3 bg-gray-900 rounded-lg">
-                    <p class="text-sm text-gray-400">Info squadra selezionata</p>
-                </div>
+                    <!-- Team selector -->
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2 text-xs text-slate-500 uppercase tracking-wider mb-2 font-semibold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Squadra avversaria
+                        </label>
+                        <div class="relative">
+                            <select id="minigame-target-team" class="w-full p-3.5 pl-4 bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl text-white appearance-none cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium">
+                                <option value="">Caricamento squadre...</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="bg-indigo-900/30 border border-indigo-600/50 rounded-lg p-3 mb-4">
-                    <h4 class="text-indigo-300 font-bold mb-2">Regole:</h4>
-                    <ul class="text-sm text-gray-300 space-y-1">
-                        <li>• 3 mosse per turno</li>
-                        <li>• 20 secondi per mossa</li>
-                        <li>• Primo a 3 gol vince</li>
-                        <li>• Giocatori dalla tua formazione</li>
-                    </ul>
-                </div>
+                    <!-- Target info (hidden by default) -->
+                    <div id="minigame-target-info" class="hidden mb-4 p-4 bg-gradient-to-r from-slate-800 to-slate-800/50 rounded-xl border border-slate-700/50">
+                        <p class="text-sm text-slate-400">Info squadra selezionata</p>
+                    </div>
 
-                <div class="flex gap-3">
-                    <button id="btn-send-minigame-challenge" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
-                        <span>🎮</span> Invia Sfida
-                    </button>
-                    <button id="btn-cancel-minigame" class="px-6 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg transition">
-                        Annulla
-                    </button>
+                    <!-- Rules box -->
+                    <div class="relative mb-5 p-4 rounded-xl bg-gradient-to-br from-emerald-950/40 to-slate-800/40 border border-emerald-500/20 overflow-hidden">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl"></div>
+                        <h4 class="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider mb-3">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            Regole
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="text-emerald-500">◆</span> 3 mosse/turno
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="text-cyan-500">◆</span> 30 sec/mossa
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="text-emerald-500">◆</span> Primo a 3 gol
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="text-cyan-500">◆</span> La tua formazione
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex gap-3">
+                        <button id="btn-send-minigame-challenge" class="flex-1 relative group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]">
+                            <span class="text-lg">⚔️</span>
+                            <span class="uppercase tracking-wide text-sm">Invia Sfida</span>
+                        </button>
+                        <button id="btn-cancel-minigame" class="px-5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-semibold py-3.5 rounded-xl transition-all duration-200 border border-slate-700 hover:border-slate-600 text-sm uppercase tracking-wide">
+                            Annulla
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -280,18 +443,7 @@ window.SfideMultiplayer = (function() {
 
         const myTeamId = window.InterfacciaCore?.currentTeamId;
 
-        // Usa cache se valida (riduce letture Firestore)
-        const cacheValid = teamsCache.data &&
-            (Date.now() - teamsCache.timestamp < CONFIG.TEAMS_CACHE_MS);
-
-        if (cacheValid) {
-            console.log("[SfideMultiplayer] Usando cache squadre");
-            const teams = teamsCache.data.filter(t => t.id !== myTeamId);
-            state.availableTeams = teams;
-            populateTeamsSelect(select, teams);
-            return;
-        }
-
+        // Per la presenza online NON usiamo cache, dobbiamo avere dati freschi
         try {
             const { collection, getDocs } = window.firestoreTools;
             const teamsPath = getTeamsPath();
@@ -303,21 +455,29 @@ window.SfideMultiplayer = (function() {
                 const data = doc.data();
                 // Solo squadre con formazione valida (almeno 5 titolari)
                 if (data.teamName && data.formation?.titolari?.length >= 5) {
-                    allTeams.push({
+                    const teamData = {
                         id: doc.id,
                         teamName: data.teamName,
-                        formation: data.formation
-                    });
+                        formation: data.formation,
+                        lastSeen: data.lastSeen || 0,
+                        isOnline: data.isOnline || false
+                    };
+                    // Calcola se e' realmente online (lastSeen negli ultimi 2 minuti)
+                    teamData.isReallyOnline = isTeamOnline(teamData);
+                    allTeams.push(teamData);
                 }
             });
 
-            // Salva in cache
-            teamsCache = {
-                data: allTeams,
-                timestamp: Date.now()
-            };
-
+            // Filtra escludendo la mia squadra
             const teams = allTeams.filter(t => t.id !== myTeamId);
+
+            // Ordina: prima gli online, poi gli offline
+            teams.sort((a, b) => {
+                if (a.isReallyOnline && !b.isReallyOnline) return -1;
+                if (!a.isReallyOnline && b.isReallyOnline) return 1;
+                return a.teamName.localeCompare(b.teamName);
+            });
+
             state.availableTeams = teams;
             populateTeamsSelect(select, teams);
 
@@ -328,12 +488,28 @@ window.SfideMultiplayer = (function() {
     }
 
     function populateTeamsSelect(select, teams) {
+        // Conta quante squadre sono online
+        const onlineCount = teams.filter(t => t.isReallyOnline).length;
+
         if (teams.length === 0) {
             select.innerHTML = '<option value="">Nessuna squadra disponibile</option>';
             return;
         }
-        select.innerHTML = '<option value="">Seleziona squadra...</option>' +
-            teams.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+
+        if (onlineCount === 0) {
+            // Nessuno online, mostra tutte con nota
+            select.innerHTML = '<option value="">Nessun giocatore online...</option>' +
+                teams.map(t => `<option value="${t.id}">⚫ ${t.teamName} (offline)</option>`).join('');
+            return;
+        }
+
+        // Mostra con indicatore online/offline
+        select.innerHTML = '<option value="">Seleziona squadra... (${onlineCount} online)</option>'.replace('${onlineCount}', onlineCount) +
+            teams.map(t => {
+                const indicator = t.isReallyOnline ? '🟢' : '⚫';
+                const status = t.isReallyOnline ? '' : ' (offline)';
+                return `<option value="${t.id}">${indicator} ${t.teamName}${status}</option>`;
+            }).join('');
     }
 
     function showTargetInfo(teamId) {
@@ -350,14 +526,18 @@ window.SfideMultiplayer = (function() {
         }
 
         const titolariCount = team.formation?.titolari?.length || 0;
+        const onlineStatus = team.isReallyOnline
+            ? '<div class="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold uppercase tracking-wide"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online</div>'
+            : '<div class="flex items-center gap-1.5 text-slate-500 text-xs font-semibold uppercase tracking-wide"><span class="w-2 h-2 rounded-full bg-slate-600"></span> Offline</div>';
 
         infoDiv.innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-2xl">⚽</div>
-                <div>
-                    <p class="font-bold text-white">${team.teamName}</p>
-                    <p class="text-sm text-gray-400">${titolariCount} titolari in formazione</p>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center text-2xl border border-slate-600/50 shadow-inner">⚽</div>
+                <div class="flex-1">
+                    <p class="font-bold text-white text-base">${team.teamName}</p>
+                    <p class="text-xs text-slate-500">${titolariCount} titolari in formazione</p>
                 </div>
+                ${onlineStatus}
             </div>
         `;
         infoDiv.classList.remove('hidden');
@@ -1370,6 +1550,10 @@ window.SfideMultiplayer = (function() {
         init,
         showChallengeModal,
         destroy,
+
+        // Presenza online
+        startPresenceHeartbeat,
+        stopPresenceHeartbeat,
 
         // Getters
         isInMatch: () => state.isInMatch,
