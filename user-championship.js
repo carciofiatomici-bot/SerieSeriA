@@ -272,40 +272,45 @@ window.UserChampionship = {
     
     /**
      * Avvia il replay di una partita
+     * @param {string} homeId - ID squadra casa
+     * @param {string} awayId - ID squadra trasferta
+     * @param {number} homeGoals - Gol casa
+     * @param {number} awayGoals - Gol trasferta
+     * @param {Array} matchEvents - (opzionale) Eventi reali dalla simulazione
      */
-    async watchReplay(homeId, awayId, homeGoals, awayGoals) {
+    async watchReplay(homeId, awayId, homeGoals, awayGoals, matchEvents = null) {
         try {
             const { doc, getDoc } = window.firestoreTools;
             const db = window.db;
             const appId = window.firestoreTools.appId;
-            
+
             // Carica dati squadre
             const homeRef = doc(db, `artifacts/${appId}/public/data/teams/${homeId}`);
             const awayRef = doc(db, `artifacts/${appId}/public/data/teams/${awayId}`);
-            
+
             const homeSnap = await getDoc(homeRef);
             const awaySnap = await getDoc(awayRef);
-            
+
             if (!homeSnap.exists() || !awaySnap.exists()) {
                 alert("Errore: Dati squadre non trovati");
                 return;
             }
-            
+
             const homeTeam = {
                 id: homeId,
                 name: homeSnap.data().teamName,
                 ...homeSnap.data()
             };
-            
+
             const awayTeam = {
                 id: awayId,
                 name: awaySnap.data().teamName,
                 ...awaySnap.data()
             };
-            
-            // Avvia replay
+
+            // Avvia replay con eventi reali se disponibili
             if (window.MatchReplaySimple) {
-                await window.MatchReplaySimple.playFromResult(homeTeam, awayTeam, homeGoals, awayGoals);
+                await window.MatchReplaySimple.playFromResult(homeTeam, awayTeam, homeGoals, awayGoals, matchEvents);
             } else {
                 alert("Sistema replay non disponibile");
             }

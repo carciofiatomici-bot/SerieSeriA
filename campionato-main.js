@@ -261,7 +261,8 @@ window.ChampionshipMain = {
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },
                         homeGoals,
-                        awayGoals
+                        awayGoals,
+                        matchEvents // Passa eventi reali per mostrare nomi giocatori
                     );
                 }
             const resultString = `${homeGoals}-${awayGoals}`;
@@ -564,7 +565,8 @@ window.ChampionshipMain = {
                         { name: homeTeamData.teamName, id: match.homeId },
                         { name: awayTeamData.teamName, id: match.awayId },
                         homeGoals,
-                        awayGoals
+                        awayGoals,
+                        matchEvents // Passa eventi reali per mostrare nomi giocatori
                     );
                 }
                 const resultString = `${homeGoals}-${awayGoals}`;

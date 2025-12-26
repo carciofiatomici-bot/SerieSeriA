@@ -8,56 +8,341 @@
 //
 
 window.MatchReplaySimple = {
-    
+
     isPlaying: false,
     currentSpeed: 1,
-    
+    currentMatchEvents: null, // Cache matchEvents per il replay
+
     /**
      * Genera e mostra replay basato sul risultato della partita
+     * @param {Object} homeTeam - Squadra casa
+     * @param {Object} awayTeam - Squadra trasferta
+     * @param {number} homeGoals - Gol casa
+     * @param {number} awayGoals - Gol trasferta
+     * @param {Array} matchEvents - (opzionale) Eventi reali dalla simulazione
      */
-    async playFromResult(homeTeam, awayTeam, homeGoals, awayGoals) {
+    async playFromResult(homeTeam, awayTeam, homeGoals, awayGoals, matchEvents = null) {
         if (this.isPlaying) return;
-        
+
         this.isPlaying = true;
+        this.currentMatchEvents = matchEvents;
         this.show();
-        
+
         // Intro
         await this.showIntro(homeTeam, awayTeam);
-        
-        // Simula le azioni basandoci sui goal
-        const totalGoals = homeGoals + awayGoals;
-        
-        for (let i = 0; i < totalGoals; i++) {
-            const isHomeGoal = i < homeGoals;
-            const teamScoring = isHomeGoal ? homeTeam : awayTeam;
-            const teamDefending = isHomeGoal ? awayTeam : homeTeam;
-            
-            // Genera azione casuale realistica
-            await this.showGoalSequence(teamScoring, teamDefending, i + 1);
-            
-            await this.wait(500 / this.currentSpeed);
-        }
-        
-        // Mostra parate (partite senza goal o con pochi goal)
-        if (totalGoals < 6) {
-            const saves = 6 - totalGoals;
-            for (let i = 0; i < Math.min(saves, 2); i++) {
-                const randomTeam = Math.random() > 0.5 ? homeTeam : awayTeam;
-                const randomOpponent = randomTeam === homeTeam ? awayTeam : homeTeam;
-                await this.showSaveSequence(randomTeam, randomOpponent);
+
+        // Se abbiamo matchEvents reali, usa quelli
+        if (matchEvents && matchEvents.length > 0) {
+            await this.playWithRealEvents(homeTeam, awayTeam, matchEvents);
+        } else {
+            // Fallback: genera azioni casuali
+            const totalGoals = homeGoals + awayGoals;
+
+            for (let i = 0; i < totalGoals; i++) {
+                const isHomeGoal = i < homeGoals;
+                const teamScoring = isHomeGoal ? homeTeam : awayTeam;
+                const teamDefending = isHomeGoal ? awayTeam : homeTeam;
+
+                await this.showGoalSequence(teamScoring, teamDefending, i + 1);
                 await this.wait(500 / this.currentSpeed);
             }
+
+            if (totalGoals < 6) {
+                const saves = 6 - totalGoals;
+                for (let i = 0; i < Math.min(saves, 2); i++) {
+                    const randomTeam = Math.random() > 0.5 ? homeTeam : awayTeam;
+                    const randomOpponent = randomTeam === homeTeam ? awayTeam : homeTeam;
+                    await this.showSaveSequence(randomTeam, randomOpponent);
+                    await this.wait(500 / this.currentSpeed);
+                }
+            }
         }
-        
+
         // Risultato finale
         await this.showFinalScore(homeTeam, awayTeam, { home: homeGoals, away: awayGoals });
-        
+
         // STATS: Track statistiche partita
         if (window.PlayerStats) {
             await this.trackMatchStats(homeTeam, awayTeam, homeGoals, awayGoals);
         }
-        
+
         this.isPlaying = false;
+        this.currentMatchEvents = null;
+    },
+
+    /**
+     * Replay con eventi reali dalla simulazione
+     */
+    async playWithRealEvents(homeTeam, awayTeam, matchEvents) {
+        // Filtra solo gol e occasioni importanti (max 8 per non annoiare)
+        const goalEvents = matchEvents.filter(e => e.result === 'goal');
+        const failedEvents = matchEvents.filter(e => e.result !== 'goal').slice(0, 3);
+
+        // Mescola gol e occasioni fallite in ordine cronologico
+        const eventsToShow = [...goalEvents, ...failedEvents]
+            .sort((a, b) => a.occasionNumber - b.occasionNumber)
+            .slice(0, 8);
+
+        let goalCount = 0;
+
+        for (const event of eventsToShow) {
+            const isHome = event.side === 'home';
+            const attackTeam = isHome ? homeTeam : awayTeam;
+            const defendTeam = isHome ? awayTeam : homeTeam;
+            const isGoal = event.result === 'goal';
+
+            if (isGoal) goalCount++;
+
+            // Mostra le 3 fasi con dati reali
+            await this.showPhaseOneReal(attackTeam, defendTeam, event);
+            await this.wait(1500 / this.currentSpeed);
+
+            if (!event.phases?.construction?.result || event.phases.construction.result !== 'fail') {
+                await this.showPhaseTwoReal(attackTeam, defendTeam, event);
+                await this.wait(1500 / this.currentSpeed);
+
+                if (!event.phases?.attack?.result || event.phases.attack.result !== 'fail') {
+                    await this.showPhaseThreeReal(attackTeam, defendTeam, event, isGoal ? goalCount : 0);
+                    await this.wait(2000 / this.currentSpeed);
+                }
+            }
+
+            await this.wait(500 / this.currentSpeed);
+        }
+    },
+
+    /**
+     * Fase 1 con dati reali: mostra giocatori coinvolti
+     */
+    async showPhaseOneReal(attackTeam, defendTeam, event) {
+        const phase = event.phases?.construction;
+        if (!phase) return this.showPhaseOne(attackTeam, defendTeam, true);
+
+        const success = phase.result === 'success' || phase.result === 'lucky' || phase.skipped;
+
+        // Estrai nomi giocatori
+        const attackers = phase.players?.attacker || [];
+        const defenders = phase.players?.defender || [];
+        const attackerNames = attackers.slice(0, 3).map(p => p.name).join(', ') || 'Centrocampo';
+        const defenderNames = defenders.slice(0, 2).map(p => p.name).join(', ') || 'Difesa';
+
+        let content = `
+            <div class="replay-action bg-gray-800 border-4 ${success ? 'border-green-500' : 'border-red-500'} rounded-lg p-6 animate-slide-in">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">⚽</div>
+                    <h3 class="text-2xl font-bold text-yellow-400 mb-4">FASE COSTRUZIONE</h3>
+
+                    <p class="text-lg text-white mb-2">
+                        <span class="text-green-400 font-bold">${attackTeam.name}</span> costruisce l'azione
+                    </p>
+        `;
+
+        if (phase.skipped) {
+            content += `
+                <div class="bg-purple-900 border-2 border-purple-500 p-3 rounded-lg mb-4 animate-pulse">
+                    <p class="text-xl font-bold text-purple-300">
+                        🎯 ${phase.reason || 'SKIP'}! Azione diretta!
+                    </p>
+                </div>
+            `;
+        } else {
+            content += `
+                <div class="bg-gray-900 p-4 rounded-lg mb-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="text-left">
+                            <p class="text-xs text-gray-400">ATTACCANO</p>
+                            <p class="text-green-400 font-bold">${attackerNames}</p>
+                        </div>
+                        <div class="text-3xl">⚔️</div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">DIFENDONO</p>
+                            <p class="text-red-400 font-bold">${defenderNames}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-8">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Attacco</p>
+                            <p class="text-3xl font-bold text-green-400">🎲 ${phase.rolls?.attacker || '?'}</p>
+                            <p class="text-xs text-gray-500">Tot: ${phase.totals?.attacker?.toFixed(1) || '?'}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Difesa</p>
+                            <p class="text-3xl font-bold text-red-400">🎲 ${phase.rolls?.defender || '?'}</p>
+                            <p class="text-xs text-gray-500">Tot: ${phase.totals?.defender?.toFixed(1) || '?'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (!success) {
+                content += `
+                    <div class="bg-red-900/50 p-3 rounded-lg mb-4">
+                        <p class="text-red-300">
+                            ❌ <span class="font-bold">${defenderNames}</span> intercetta l'azione!
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        content += `
+                    <div class="text-2xl font-bold ${success ? 'text-green-400' : 'text-red-400'}">
+                        ${success ? '✅ COSTRUZIONE RIUSCITA!' : '❌ AZIONE FERMATA!'}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.updateContent(content);
+    },
+
+    /**
+     * Fase 2 con dati reali: mostra attaccanti vs difensori
+     */
+    async showPhaseTwoReal(attackTeam, defendTeam, event) {
+        const phase = event.phases?.attack;
+        if (!phase) return this.showPhaseTwo(attackTeam, defendTeam, true);
+
+        const success = phase.result === 'success' || phase.result === 'lucky';
+        const interrupted = phase.interrupted;
+
+        const attackers = phase.players?.attacker || [];
+        const defenders = phase.players?.defender || [];
+        const attackerNames = attackers.slice(0, 2).map(p => p.name).join(', ') || 'Attacco';
+        const defenderNames = defenders.slice(0, 2).map(p => p.name).join(', ') || 'Difesa';
+
+        let content = `
+            <div class="replay-action bg-gray-800 border-4 ${success ? 'border-green-500' : 'border-red-500'} rounded-lg p-6 animate-slide-in">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">⚡</div>
+                    <h3 class="text-2xl font-bold text-orange-400 mb-4">FASE ATTACCO</h3>
+
+                    <p class="text-lg text-white mb-2">
+                        <span class="text-green-400 font-bold">${attackerNames}</span> punta la porta!
+                    </p>
+        `;
+
+        if (interrupted) {
+            content += `
+                <div class="bg-red-900 border-2 border-red-500 p-3 rounded-lg mb-4 animate-pulse">
+                    <p class="text-xl font-bold text-red-300">
+                        🛡️ ${phase.reason || 'ANTIFURTO'}! <span class="text-white">${defenderNames}</span> ruba palla!
+                    </p>
+                </div>
+            `;
+        } else {
+            content += `
+                <div class="bg-gray-900 p-4 rounded-lg mb-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="text-left">
+                            <p class="text-xs text-gray-400">ATTACCANO</p>
+                            <p class="text-green-400 font-bold">${attackerNames}</p>
+                        </div>
+                        <div class="text-3xl">💥</div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">DIFENDONO</p>
+                            <p class="text-red-400 font-bold">${defenderNames}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-8">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Forza Attacco</p>
+                            <p class="text-4xl font-bold text-green-400">${phase.totals?.attacker?.toFixed(0) || '?'}</p>
+                        </div>
+                        <div class="text-2xl font-bold text-white self-center">VS</div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Forza Difesa</p>
+                            <p class="text-4xl font-bold text-red-400">${phase.totals?.defender?.toFixed(0) || '?'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (!success) {
+                content += `
+                    <div class="bg-red-900/50 p-3 rounded-lg mb-4">
+                        <p class="text-red-300">
+                            ❌ <span class="font-bold">${defenderNames}</span> blocca l'attacco!
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        content += `
+                    <div class="text-2xl font-bold ${success ? 'text-green-400' : 'text-red-400'}">
+                        ${success ? '✅ DIFESA SUPERATA!' : '❌ ATTACCO RESPINTO!'}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.updateContent(content);
+    },
+
+    /**
+     * Fase 3 con dati reali: mostra tiratore vs portiere
+     */
+    async showPhaseThreeReal(attackTeam, defendTeam, event, goalNumber) {
+        const phase = event.phases?.shot;
+        if (!phase) return this.showPhaseThree(attackTeam, defendTeam, goalNumber > 0, goalNumber);
+
+        const isGoal = ['goal', 'lucky_goal', 'draw_goal'].includes(phase.result);
+
+        // Estrai nomi
+        const shooter = phase.shooter || event.phases?.attack?.players?.attacker?.[0]?.name || 'Attaccante';
+        const goalkeeper = phase.goalkeeper?.name || phase.goalkeeperName || 'Portiere';
+
+        let content = `
+            <div class="replay-action bg-gray-800 border-4 ${isGoal ? 'border-yellow-500' : 'border-blue-500'} rounded-lg p-6 animate-slide-in">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">🥅</div>
+                    <h3 class="text-2xl font-bold text-red-400 mb-4">FASE TIRO</h3>
+
+                    <p class="text-lg text-white mb-4">
+                        <span class="text-yellow-400 font-bold">${shooter}</span> tira in porta!
+                    </p>
+
+                    <div class="bg-gray-900 border-2 border-purple-500 p-4 rounded-lg mb-4">
+                        <div class="flex justify-center gap-8 items-center">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">⚽ Tiro</p>
+                                <p class="text-4xl font-bold text-yellow-400">${phase.attackValue?.toFixed(0) || '?'}</p>
+                                <p class="text-xs text-green-400">${shooter}</p>
+                            </div>
+                            <div class="text-2xl font-bold text-white">VS</div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">🧤 Parata</p>
+                                <p class="text-4xl font-bold text-blue-400">${phase.totalGoalkeeper?.toFixed(0) || '?'}</p>
+                                <p class="text-xs text-blue-400">${goalkeeper}</p>
+                            </div>
+                        </div>
+                    </div>
+        `;
+
+        if (!isGoal) {
+            content += `
+                <div class="bg-blue-900/50 p-3 rounded-lg mb-4">
+                    <p class="text-blue-300">
+                        🧤 <span class="font-bold">${goalkeeper}</span> para il tiro di ${shooter}!
+                    </p>
+                </div>
+            `;
+        }
+
+        content += `
+                    <div class="text-4xl font-bold ${isGoal ? 'text-yellow-400' : 'text-blue-400'} animate-bounce">
+                        ${isGoal ? `⚽ GOOOOOL! ${shooter} segna! 🎉` : `🧤 PARATA! ${goalkeeper} salva!`}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.updateContent(content);
+
+        if (isGoal) {
+            await this.celebrateGoal();
+        }
     },
     
     /**
