@@ -153,7 +153,7 @@ window.NextMatchAlert = {
                     for (const round of schedule) {
                         if (!round.matches) continue;
                         const match = round.matches.find(m =>
-                            m.result === null && (m.homeId === teamId || m.awayId === teamId)
+                            !m.result && (m.homeId === teamId || m.awayId === teamId)
                         );
                         if (match) {
                             const homeAvg = await this.getTeamAverageLevel(match.homeId);
