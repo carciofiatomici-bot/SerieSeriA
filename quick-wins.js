@@ -413,4 +413,10 @@ document.addEventListener('userLoggedIn', () => {
     }, 1000);
 });
 
+// Sincronizza con aggiornamenti partite (emesso da NextMatchAlert)
+document.addEventListener('matchDataUpdated', () => {
+    console.log('[QuickWins] matchDataUpdated - aggiorno ultima partita');
+    window.QuickWins.showLastMatchPreview();
+});
+
 console.log("✅ Modulo quick-wins.js caricato.");

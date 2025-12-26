@@ -15,12 +15,21 @@ window.NextMatchAlert = {
     _countdownInterval: null,
     _isExpanded: false,
     _currentMatch: null,
+    _scheduleSubscriberId: null,
 
     /**
      * Inizializza il box inline
      */
     async init() {
         this.destroy();
+
+        // Sottoscrivi agli aggiornamenti del calendario per sync in tempo reale
+        if (window.ScheduleListener && !this._scheduleSubscriberId) {
+            this._scheduleSubscriberId = window.ScheduleListener.subscribe(() => {
+                console.log('[NextMatchAlert] Calendario aggiornato, refresh...');
+                this._refreshFromScheduleUpdate();
+            }, { useRealtime: true });
+        }
 
         const currentTeamId = window.InterfacciaCore?.currentTeamId;
         if (!currentTeamId) return;
@@ -438,6 +447,39 @@ window.NextMatchAlert = {
         }
         this._currentMatch = null;
         this._isExpanded = false;
+
+        // Unsubscribe dal listener calendario
+        if (this._scheduleSubscriberId && window.ScheduleListener) {
+            window.ScheduleListener.unsubscribe(this._scheduleSubscriberId);
+            this._scheduleSubscriberId = null;
+        }
+    },
+
+    /**
+     * Refresh interno chiamato quando il calendario viene aggiornato
+     * Evita loop infiniti controllando se i dati sono effettivamente cambiati
+     */
+    async _refreshFromScheduleUpdate() {
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId) return;
+
+        const newMatch = await this.getNextMatch(currentTeamId);
+
+        // Controlla se la partita e' cambiata
+        const oldMatchKey = this._currentMatch
+            ? `${this._currentMatch.homeId}_${this._currentMatch.awayId}`
+            : null;
+        const newMatchKey = newMatch
+            ? `${newMatch.homeId}_${newMatch.awayId}`
+            : null;
+
+        if (oldMatchKey !== newMatchKey) {
+            console.log('[NextMatchAlert] Partita cambiata, aggiorno UI');
+            await this.init();
+
+            // Emetti evento per sincronizzare anche last-match-preview
+            document.dispatchEvent(new CustomEvent('matchDataUpdated'));
+        }
     },
 
     /**
@@ -453,6 +495,17 @@ document.addEventListener('featureFlagChanged', (e) => {
     if (e.detail?.flagId === 'schedina') {
         window.NextMatchAlert.updateSchedinaButton();
     }
+});
+
+// Sincronizza con dashboard updates (importante per aggiornare dopo simulazioni)
+document.addEventListener('dashboardNeedsUpdate', () => {
+    // Delay per permettere ai dati Firestore di aggiornarsi
+    setTimeout(() => {
+        if (window.InterfacciaCore?.currentTeamId) {
+            console.log('[NextMatchAlert] Refresh per dashboardNeedsUpdate');
+            window.NextMatchAlert.refresh();
+        }
+    }, 500);
 });
 
 console.log('[NextMatchAlert] Modulo caricato (versione inline)');
