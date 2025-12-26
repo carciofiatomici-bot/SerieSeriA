@@ -294,12 +294,21 @@ window.ChampionshipMain = {
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
 
+            // Invalida cache ScheduleListener per aggiornare next-match e calendario
+            if (window.ScheduleListener) {
+                window.ScheduleListener.invalidateCache();
+                await window.ScheduleListener.refresh();
+            }
+
             // Invalida anche FirestoreCache per aggiornamento istantaneo
             if (window.FirestoreCache?.invalidate) {
                 window.FirestoreCache.invalidate('schedule', 'full_schedule');
                 window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule'); // Retrocompatibilita
                 window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
             }
+
+            // Emetti evento per aggiornare dashboard
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 
             // 8. Dispatch evento matchSimulated per notifiche push
             document.dispatchEvent(new CustomEvent('matchSimulated', {
@@ -642,12 +651,22 @@ window.ChampionshipMain = {
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
 
+            // Invalida cache ScheduleListener per aggiornare next-match e calendario
+            if (window.ScheduleListener) {
+                window.ScheduleListener.invalidateCache();
+                // Forza refresh per notificare tutti i subscriber (next-match, calendario, etc)
+                await window.ScheduleListener.refresh();
+            }
+
             // Invalida anche FirestoreCache per aggiornamento istantaneo
             if (window.FirestoreCache?.invalidate) {
                 window.FirestoreCache.invalidate('schedule', 'full_schedule');
                 window.FirestoreCache.invalidate('SCHEDULE', 'full_schedule'); // Retrocompatibilita
                 window.FirestoreCache.invalidate('LEADERBOARD', 'standings');
             }
+
+            // Emetti evento per aggiornare tutti i componenti della dashboard
+            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
 
             if (renderCallback) {
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);
