@@ -90,18 +90,23 @@ window.InterfacciaNavigation = {
             });
         }
 
-        // Sfida un'altra squadra
+        // Sfida Tattica (minigame multiplayer)
         if (elements.btnChallenge) {
             elements.btnChallenge.addEventListener('click', () => {
-                // Verifica se le sfide sono abilitate
-                if (!window.FeatureFlags?.isEnabled('challenges')) {
-                    if (window.Toast) window.Toast.info("Sfide non aperte");
+                // Verifica se le sfide tattiche sono abilitate
+                if (!window.FeatureFlags?.isEnabled('tacticalChallenges')) {
+                    if (window.Toast) window.Toast.info("Sfide Tattiche non disponibili");
                     return;
                 }
-                if (window.Challenges) {
-                    window.Challenges.showChallengeModal();
+
+                // Usa il sistema sfide tattiche multiplayer
+                if (window.SfideMultiplayer) {
+                    window.SfideMultiplayer.showChallengeModal();
+                } else if (window.SfideMinigame) {
+                    // Fallback: modalita' test locale
+                    window.SfideMinigame.open({ testMode: true });
                 } else {
-                    if (window.Toast) window.Toast.error("Sistema sfide non disponibile");
+                    if (window.Toast) window.Toast.error("Sistema sfide tattiche non disponibile");
                 }
             });
         }

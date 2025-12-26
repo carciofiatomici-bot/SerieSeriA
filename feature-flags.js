@@ -288,6 +288,26 @@ window.FeatureFlags = {
                 <p class="mt-2 text-yellow-400">Di default ogni utente puo' fare/ricevere solo 1 sfida al giorno (reset a mezzanotte).</p>
                 <p class="mt-2 text-cyan-400">Richiede che il flag "Sfide tra Squadre" sia abilitato.</p>`
         },
+        tacticalChallenges: {
+            id: 'tacticalChallenges',
+            name: 'Sfide Tattiche (Minigame)',
+            description: 'Sfida altri utenti nel minigame tattico su griglia 13x9',
+            icon: '🎮',
+            enabled: true,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Minigame tattico su griglia 13x9 (campo da calcetto)</li>
+                    <li>5 giocatori per squadra dalla formazione titolare</li>
+                    <li>Ruoli attaccante/difensore assegnati casualmente</li>
+                    <li>3 mosse per turno, turni alternati</li>
+                    <li>20 secondi timeout per mossa</li>
+                    <li>Primo a 3 gol vince</li>
+                    <li>Azioni: movimento, passaggio, tiro</li>
+                    <li>Difesa: mura (blocca tiri), intercetto (blocca passaggi), blocco (blocca movimento)</li>
+                </ul>
+                <p class="mt-2 text-indigo-400">Sfida i tuoi amici in battaglie tattiche in tempo reale!</p>`
+        },
         tutorial: {
             id: 'tutorial',
             name: 'Tutorial Interattivo',
