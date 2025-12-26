@@ -133,11 +133,13 @@ window.Notifications = {
         this.bellButton = document.createElement('button');
         this.bellButton.id = 'notifications-bell';
         this.bellButton.className = `
-            fixed bottom-16 right-2 z-[9998] w-10 h-10
+            fixed z-[9998] w-10 h-10
             bg-transparent
             flex items-center justify-center
             transition-all duration-200 hover:scale-110
         `.replace(/\s+/g, ' ').trim();
+        this.bellButton.style.bottom = '58px';
+        this.bellButton.style.right = '4px';
 
         this.bellButton.innerHTML = `
             <span class="text-xl">🔔</span>
@@ -148,10 +150,12 @@ window.Notifications = {
         this.dropdown = document.createElement('div');
         this.dropdown.id = 'notifications-dropdown';
         this.dropdown.className = `
-            fixed bottom-28 right-2 z-[9997] w-80 max-h-96
+            fixed z-[9997] w-80 max-h-96
             bg-gray-800 rounded-xl shadow-2xl border-2 border-gray-600
             overflow-hidden hidden
         `.replace(/\s+/g, ' ').trim();
+        this.dropdown.style.bottom = '105px';
+        this.dropdown.style.right = '4px';
 
         this.dropdown.innerHTML = `
             <div class="p-3 bg-gray-700 border-b border-gray-600 flex justify-between items-center">
