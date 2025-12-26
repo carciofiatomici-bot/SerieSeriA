@@ -139,7 +139,7 @@ window.Notifications = {
             transition-all duration-200 hover:scale-110
         `.replace(/\s+/g, ' ').trim();
         this.bellButton.style.bottom = '52px';
-        this.bellButton.style.right = '2px';
+        this.bellButton.style.right = '0px';
 
         this.bellButton.innerHTML = `
             <span class="text-xl">🔔</span>
@@ -155,7 +155,7 @@ window.Notifications = {
             overflow-hidden hidden
         `.replace(/\s+/g, ' ').trim();
         this.dropdown.style.bottom = '100px';
-        this.dropdown.style.right = '2px';
+        this.dropdown.style.right = '0px';
 
         this.dropdown.innerHTML = `
             <div class="p-3 bg-gray-700 border-b border-gray-600 flex justify-between items-center">
