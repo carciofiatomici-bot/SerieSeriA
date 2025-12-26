@@ -29,6 +29,10 @@ window.NextMatchAlert = {
                 console.log('[NextMatchAlert] Calendario aggiornato, refresh...');
                 this._refreshFromScheduleUpdate();
             }, { useRealtime: true });
+
+            // Forza refresh del calendario per avere dati aggiornati
+            window.ScheduleListener.invalidateCache();
+            await window.ScheduleListener.refresh();
         }
 
         const currentTeamId = window.InterfacciaCore?.currentTeamId;
@@ -128,12 +132,24 @@ window.NextMatchAlert = {
 
         const getChampionshipMatch = async () => {
             try {
-                const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
-                const scheduleRef = doc(db, schedulePath);
-                const scheduleDoc = await getDoc(scheduleRef);
+                // Usa ScheduleListener per dati sincronizzati (se disponibile)
+                let scheduleData = null;
+                if (window.ScheduleListener) {
+                    scheduleData = await window.ScheduleListener.getSchedule();
+                }
 
-                if (scheduleDoc.exists()) {
-                    const schedule = scheduleDoc.data().matches || [];
+                // Fallback: query diretta
+                if (!scheduleData) {
+                    const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+                    const scheduleRef = doc(db, schedulePath);
+                    const scheduleDoc = await getDoc(scheduleRef);
+                    if (scheduleDoc.exists()) {
+                        scheduleData = scheduleDoc.data();
+                    }
+                }
+
+                if (scheduleData) {
+                    const schedule = scheduleData.matches || [];
                     for (const round of schedule) {
                         if (!round.matches) continue;
                         const match = round.matches.find(m =>
