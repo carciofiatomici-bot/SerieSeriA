@@ -364,12 +364,18 @@ window.ChampionshipMain = {
         const LEADERBOARD_DOC_ID = 'standings';
         
         let round = schedule[roundIndex];
-        let matchesToSimulate = round.matches.filter(match => match.result === null);
-        
+        // Usa !match.result per catturare null, undefined e stringa vuota
+        let matchesToSimulate = round.matches.filter(match => !match.result);
+
+        console.log(`[ChampionshipMain] Giornata ${round.round}, partite da simulare: ${matchesToSimulate.length}`);
+        console.log(`[ChampionshipMain] Partite:`, matchesToSimulate.map(m => `${m.homeName} vs ${m.awayName} (result: ${m.result})`));
+
         // Raccoglie tutti gli ID delle squadre coinvolte nella giornata per il reset finale
         const teamsInRound = new Set();
 
         if (matchesToSimulate.length === 0) {
+            console.log(`[ChampionshipMain] Nessuna partita da simulare nella giornata ${round.round}`);
+            console.log(`[ChampionshipMain] Stato partite:`, round.matches.map(m => `${m.homeName} vs ${m.awayName}: ${m.result}`));
             if (renderCallback) {
                 const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
                 const reloadedScheduleDoc = await getDoc(scheduleDocRef);

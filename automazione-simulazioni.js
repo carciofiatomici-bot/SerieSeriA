@@ -204,14 +204,28 @@ window.AutomazioneSimulazioni = {
 
             const schedule = scheduleDoc.data().matches || [];
 
-            // Trova la prossima giornata da simulare
+            // Debug: mostra stato giornate
+            console.log('[Automazione] Stato giornate:');
+            schedule.forEach((round, i) => {
+                const unplayed = round.matches.filter(m => !m.result).length;
+                const played = round.matches.filter(m => m.result).length;
+                if (unplayed > 0) {
+                    console.log(`  Giornata ${round.round || i+1}: ${played} giocate, ${unplayed} da giocare`);
+                }
+            });
+
+            // Trova la prossima giornata da simulare (usa !result per catturare null, undefined, "")
             const nextRoundIndex = schedule.findIndex(round =>
-                round.matches.some(match => match.result === null)
+                round.matches.some(match => !match.result)
             );
 
             if (nextRoundIndex === -1) {
-                throw new Error('Nessuna giornata da simulare');
+                console.log('[Automazione] Tutte le giornate sono state giocate!');
+                return { success: false, reason: 'Tutte le giornate sono state giocate' };
             }
+
+            console.log(`[Automazione] Prossima giornata da simulare: ${nextRoundIndex + 1} (index: ${nextRoundIndex})`);
+            console.log(`[Automazione] Partite da simulare:`, schedule[nextRoundIndex].matches.filter(m => !m.result).map(m => `${m.homeName} vs ${m.awayName}`));
 
             // Carica tutte le squadre
             const { collection, getDocs } = window.firestoreTools;
