@@ -793,17 +793,47 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Simula giornata campionato
+        // Simula giornata campionato con barra di progresso
         const btnSimulateRound = document.getElementById('btn-simulate-championship-round');
         if (btnSimulateRound) {
             btnSimulateRound.addEventListener('click', async () => {
+                // Crea container per progress bar
+                const btnContainer = btnSimulateRound.parentElement;
+                let progressContainer = document.getElementById('simulate-progress-container');
+                if (!progressContainer) {
+                    progressContainer = document.createElement('div');
+                    progressContainer.id = 'simulate-progress-container';
+                    progressContainer.className = 'mt-2 hidden';
+                    progressContainer.innerHTML = `
+                        <div class="bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="simulate-progress-bar" class="bg-gradient-to-r from-yellow-500 to-green-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="simulate-progress-text" class="text-xs text-gray-400 text-center mt-1">Preparazione...</p>
+                    `;
+                    btnContainer.appendChild(progressContainer);
+                }
+
+                const progressBar = document.getElementById('simulate-progress-bar');
+                const progressText = document.getElementById('simulate-progress-text');
+
                 try {
                     btnSimulateRound.disabled = true;
                     btnSimulateRound.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Simulando...';
+                    progressContainer.classList.remove('hidden');
+                    progressBar.style.width = '0%';
+                    progressText.textContent = 'Caricamento calendario...';
 
-                    // Usa il sistema di automazione per simulare
+                    // Usa simulazione con progresso
                     if (window.AutomazioneSimulazioni) {
-                        const result = await window.AutomazioneSimulazioni.simulateChampionshipRound();
+                        const result = await window.AutomazioneSimulazioni.simulateChampionshipRoundWithProgress((current, total, matchName) => {
+                            const percent = Math.round((current / total) * 100);
+                            progressBar.style.width = `${percent}%`;
+                            progressText.textContent = `Partita ${current}/${total}: ${matchName}`;
+                        });
+
+                        progressBar.style.width = '100%';
+                        progressText.textContent = 'Completato!';
+
                         if (result.success) {
                             displayMessage(`Giornata ${result.round} simulata!`, 'success', 'toggle-status-message');
                             // Ricarica dati
@@ -819,9 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error('Errore simulazione giornata:', error);
                     displayMessage('Errore: ' + error.message, 'error', 'toggle-status-message');
+                    progressText.textContent = 'Errore!';
                 } finally {
                     btnSimulateRound.disabled = false;
                     btnSimulateRound.innerHTML = '<i class="fas fa-play mr-1"></i> Simula Giornata';
+                    // Nascondi progress bar dopo 2 secondi
+                    setTimeout(() => {
+                        progressContainer.classList.add('hidden');
+                    }, 2000);
                 }
             });
         }

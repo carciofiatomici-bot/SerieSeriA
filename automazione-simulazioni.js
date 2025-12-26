@@ -737,6 +737,93 @@ window.AutomazioneSimulazioni = {
      */
     async simulateChampionshipRound() {
         return await this.simulateChampionship();
+    },
+
+    /**
+     * Simula campionato con callback di progresso per UI
+     * @param {Function} onProgress - Callback (current, total, matchName) => void
+     */
+    async simulateChampionshipRoundWithProgress(onProgress) {
+        const { doc, getDoc, setDoc, collection, getDocs, appId } = window.firestoreTools;
+        const db = window.db;
+
+        const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
+        const scheduleRef = doc(db, schedulePath);
+
+        try {
+            const scheduleDoc = await getDoc(scheduleRef);
+            if (!scheduleDoc.exists()) {
+                throw new Error('Calendario campionato non trovato');
+            }
+
+            const schedule = scheduleDoc.data().matches || [];
+
+            // Trova la prossima giornata da simulare
+            const nextRoundIndex = schedule.findIndex(round =>
+                round.matches.some(match => match.result === null)
+            );
+
+            if (nextRoundIndex === -1) {
+                return { success: false, reason: 'Nessuna giornata da simulare' };
+            }
+
+            const round = schedule[nextRoundIndex];
+            const matchesToSimulate = round.matches.filter(m => m.result === null);
+            const totalMatches = matchesToSimulate.length;
+
+            if (totalMatches === 0) {
+                return { success: false, reason: 'Nessuna partita da simulare in questa giornata' };
+            }
+
+            // Carica tutte le squadre
+            const teamsPath = `artifacts/${appId}/public/data/teams`;
+            const teamsRef = collection(db, teamsPath);
+            const teamsSnapshot = await getDocs(teamsRef);
+            const allTeams = teamsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                name: doc.data().teamName,
+                isParticipating: doc.data().isParticipating || false
+            }));
+
+            // Simula con callback di progresso
+            let currentMatch = 0;
+            for (const match of matchesToSimulate) {
+                currentMatch++;
+                const matchName = `${match.homeName || 'Casa'} vs ${match.awayName || 'Ospite'}`;
+                if (onProgress) {
+                    onProgress(currentMatch, totalMatches, matchName);
+                }
+
+                // Piccolo delay per permettere update UI
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            // Esegui la simulazione vera tramite ChampionshipMain
+            await window.ChampionshipMain.simulateCurrentRound(
+                nextRoundIndex, schedule, allTeams, null
+            );
+
+            const roundNumber = schedule[nextRoundIndex].round;
+            console.log(`[Automazione] Simulata giornata ${roundNumber} del campionato`);
+
+            // Processa schedine
+            await this.processSchedinaForRound(roundNumber);
+
+            return {
+                success: true,
+                type: 'campionato',
+                round: roundNumber,
+                message: `Giornata ${roundNumber} del campionato simulata`
+            };
+
+        } catch (error) {
+            console.error('Errore simulazione campionato con progresso:', error);
+            return {
+                success: false,
+                type: 'campionato',
+                error: error.message
+            };
+        }
     }
 };
 
