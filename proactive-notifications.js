@@ -17,13 +17,17 @@ window.ProactiveNotifications = {
     _checkInterval: null,
     _checkIntervalMs: 60000, // Controlla ogni minuto
 
-    // Cache per evitare notifiche duplicate
+    // Cache per evitare notifiche duplicate (persistita in localStorage)
     _notifiedEvents: {},
+    _storageKey: 'proactiveNotifications_cache',
 
     /**
      * Inizializza il sistema di notifiche proattive
      */
     init() {
+        // Carica cache da localStorage
+        this.loadNotificationCache();
+
         // Richiedi permesso notifiche
         this.requestNotificationPermission();
 
@@ -34,6 +38,58 @@ window.ProactiveNotifications = {
         this.setupEventListeners();
 
         console.log('[ProactiveNotifications] Sistema inizializzato');
+    },
+
+    /**
+     * Carica la cache da localStorage
+     */
+    loadNotificationCache() {
+        try {
+            const cached = localStorage.getItem(this._storageKey);
+            if (cached) {
+                const data = JSON.parse(cached);
+                // Pulisci eventi vecchi di piu' di 2 giorni
+                const twoDaysAgo = Date.now() - (2 * 24 * 60 * 60 * 1000);
+                const cleaned = {};
+                Object.keys(data).forEach(key => {
+                    if (data[key] > twoDaysAgo || data[key] === true) {
+                        // Migra vecchi boolean a timestamp
+                        cleaned[key] = typeof data[key] === 'number' ? data[key] : Date.now();
+                    }
+                });
+                this._notifiedEvents = cleaned;
+                this.saveNotificationCache();
+            }
+        } catch (e) {
+            console.warn('[ProactiveNotifications] Errore caricamento cache:', e);
+            this._notifiedEvents = {};
+        }
+    },
+
+    /**
+     * Salva la cache in localStorage
+     */
+    saveNotificationCache() {
+        try {
+            localStorage.setItem(this._storageKey, JSON.stringify(this._notifiedEvents));
+        } catch (e) {
+            console.warn('[ProactiveNotifications] Errore salvataggio cache:', e);
+        }
+    },
+
+    /**
+     * Segna un evento come notificato (con timestamp)
+     */
+    markAsNotified(key) {
+        this._notifiedEvents[key] = Date.now();
+        this.saveNotificationCache();
+    },
+
+    /**
+     * Verifica se un evento e' gia' stato notificato
+     */
+    wasNotified(key) {
+        return !!this._notifiedEvents[key];
     },
 
     /**
@@ -171,8 +227,21 @@ window.ProactiveNotifications = {
                 const dateKey = deadlineTime.toDateString();
                 const notifKey = `schedina_deadline_${dateKey}`;
 
-                if (!this._notifiedEvents[notifKey]) {
-                    this._notifiedEvents[notifKey] = true;
+                // Usa wasNotified invece di controllo diretto
+                if (!this.wasNotified(notifKey)) {
+                    // Controlla se l'utente ha gia' giocato la schedina per questa giornata
+                    const nextRound = await window.Schedina.getNextRoundMatches?.();
+                    if (nextRound) {
+                        const existingPredictions = await window.Schedina.getPredictionsForRound?.(teamId, nextRound.roundNumber);
+                        if (existingPredictions && existingPredictions.predictions && existingPredictions.predictions.length > 0) {
+                            // L'utente ha gia' giocato la schedina, non notificare
+                            this.markAsNotified(notifKey);
+                            return;
+                        }
+                    }
+
+                    // Segna come notificato (persiste in localStorage)
+                    this.markAsNotified(notifKey);
 
                     const minutes = Math.round(timeUntilDeadline / 60000);
                     const deadlineHour = deadlineTime.getHours();
@@ -228,8 +297,8 @@ window.ProactiveNotifications = {
                 const dateKey = simulationTime.toDateString();
                 const notifKey = `simulation_${dateKey}`;
 
-                if (!this._notifiedEvents[notifKey]) {
-                    this._notifiedEvents[notifKey] = true;
+                if (!this.wasNotified(notifKey)) {
+                    this.markAsNotified(notifKey);
 
                     const minutes = Math.round(timeUntilSimulation / 60000);
                     const nextType = automationState.nextSimulationType || 'campionato';
@@ -275,8 +344,8 @@ window.ProactiveNotifications = {
             // Notifica apertura draft
             if (isDraftOpen && isDraftActive) {
                 const notifKey = `draft_open_${draftTurns.createdAt || 'active'}`;
-                if (!this._notifiedEvents[notifKey]) {
-                    this._notifiedEvents[notifKey] = true;
+                if (!this.wasNotified(notifKey)) {
+                    this.markAsNotified(notifKey);
 
                     // Controlla se e' il turno dell'utente
                     const currentRound = draftTurns.currentRound || 1;
@@ -427,6 +496,11 @@ window.ProactiveNotifications = {
      */
     clearNotificationCache() {
         this._notifiedEvents = {};
+        try {
+            localStorage.removeItem(this._storageKey);
+        } catch (e) {
+            // Ignora errori localStorage
+        }
     },
 
     /**

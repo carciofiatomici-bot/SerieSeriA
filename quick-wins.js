@@ -21,26 +21,33 @@ window.QuickWins = {
             return;
         }
 
-        // Prepara i dati per MatchAnimations
+        // Prepara i dati
         const homeTeam = match.homeTeam || { id: 'home', name: 'Casa' };
         const awayTeam = match.awayTeam || { id: 'away', name: 'Trasferta' };
-        const result = `${match.homeScore ?? 0}-${match.awayScore ?? 0}`;
+        const homeScore = match.homeScore ?? 0;
+        const awayScore = match.awayScore ?? 0;
 
-        if (window.MatchAnimations) {
+        // Verifica se animazioni complete sono disponibili
+        const fullAnimEnabled = window.FeatureFlags?.isEnabled('matchAnimations');
+        const highlightsEnabled = window.FeatureFlags?.isEnabled('matchHighlights');
+
+        if ((fullAnimEnabled || highlightsEnabled) && window.MatchAnimations) {
+            // Usa MatchAnimations se uno dei flag e' abilitato
             window.MatchAnimations.open({
                 homeTeam: homeTeam,
                 awayTeam: awayTeam,
-                result: result,
-                score: result,
+                result: `${homeScore}-${awayScore}`,
+                score: `${homeScore}-${awayScore}`,
                 highlightsOnly: true
             });
-        } else {
-            // Fallback: mostra storico partite
-            if (window.MatchHistory?.show) {
-                window.MatchHistory.show();
-            } else if (window.Toast) {
-                window.Toast.info("Animazioni non disponibili");
-            }
+        } else if (window.MatchReplaySimple) {
+            // Fallback: usa MatchReplaySimple che genera replay dal risultato
+            window.MatchReplaySimple.playFromResult(homeTeam, awayTeam, homeScore, awayScore);
+        } else if (window.MatchHistory?.show) {
+            // Ultimo fallback: mostra storico partite
+            window.MatchHistory.show();
+        } else if (window.Toast) {
+            window.Toast.info("Replay non disponibile");
         }
     },
 

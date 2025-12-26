@@ -93,7 +93,13 @@
 
 /* ===================== BASE OVERRIDES ===================== */
 html {
-    background: var(--premium-bg-deep);
+    /* Sfondo immagine esteso anche su html per coprire la safe-area iPhone */
+    background-image: url('https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/sfondo%20app.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center center;
+    background-color: var(--premium-bg-deep); /* Fallback durante caricamento */
 }
 
 body {

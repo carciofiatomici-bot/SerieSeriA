@@ -16,27 +16,32 @@ window.AdminUI = {
         const participatingTeamsCount = allTeams.filter(t => t.isParticipating).length;
 
         adminDashboardContainer.innerHTML = `
-            <!-- STATO GENERALE - In cima alla pagina -->
-            <div class="mb-6 bg-gray-900 rounded-lg p-4 border border-gray-700">
-                <h3 class="text-xl font-bold text-orange-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
-                    <span class="mr-2">⚙️</span> Stato Generale
-                </h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
-                        <p class="text-2xl font-bold text-yellow-400">${participatingTeamsCount}</p>
-                        <p class="text-xs text-gray-400">Squadre Iscritte</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
-                        <p class="text-2xl font-bold ${draftOpen ? 'text-green-400' : 'text-red-400'}">${draftOpen ? 'APERTO' : 'CHIUSO'}</p>
-                        <p class="text-xs text-gray-400">Draft</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
-                        <p class="text-2xl font-bold ${marketOpen ? 'text-green-400' : 'text-red-400'}">${marketOpen ? 'APERTO' : 'CHIUSO'}</p>
-                        <p class="text-xs text-gray-400">Mercato</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
-                        <p class="text-2xl font-bold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVI' : 'DISATTIVI'}</p>
-                        <p class="text-xs text-gray-400">Crediti Super Seri</p>
+            <!-- STATO GENERALE - Collapsabile, chiuso di default -->
+            <div class="mb-6">
+                <button id="btn-toggle-stato-generale" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-between hover:bg-gray-800 transition">
+                    <span class="flex items-center text-orange-400 font-bold">
+                        <span class="mr-2">⚙️</span> Stato Generale
+                    </span>
+                    <i id="stato-generale-chevron" class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                </button>
+                <div id="stato-generale-content" class="hidden mt-2 bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                            <p class="text-2xl font-bold text-yellow-400">${participatingTeamsCount}</p>
+                            <p class="text-xs text-gray-400">Squadre Iscritte</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                            <p class="text-2xl font-bold ${draftOpen ? 'text-green-400' : 'text-red-400'}">${draftOpen ? 'APERTO' : 'CHIUSO'}</p>
+                            <p class="text-xs text-gray-400">Draft</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                            <p class="text-2xl font-bold ${marketOpen ? 'text-green-400' : 'text-red-400'}">${marketOpen ? 'APERTO' : 'CHIUSO'}</p>
+                            <p class="text-xs text-gray-400">Mercato</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 text-center border border-gray-600">
+                            <p class="text-2xl font-bold ${cssEnabled ? 'text-green-400' : 'text-red-400'}">${cssEnabled ? 'ATTIVI' : 'DISATTIVI'}</p>
+                            <p class="text-xs text-gray-400">Crediti Super Seri</p>
+                        </div>
                     </div>
                 </div>
             </div>

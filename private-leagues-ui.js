@@ -1,6 +1,7 @@
 //
 // ====================================================================
 // PRIVATE-LEAGUES-UI.JS - Interfaccia Utente Leghe Private
+// Premium Mobile-First Design
 // ====================================================================
 //
 
@@ -66,15 +67,8 @@ window.PrivateLeaguesUI = {
         const container = document.getElementById('private-leagues-panel');
         if (!container) return;
 
-        // Verifica cooldown prima di tutto
-        const cooldownCheck = await window.PrivateLeagues.isTeamInCooldown(this.currentTeamId);
-
         if (!this.currentLeague) {
-            if (cooldownCheck.inCooldown) {
-                this.renderCooldown(container, cooldownCheck);
-            } else {
-                await this.renderNoLeague(container);
-            }
+            await this.renderNoLeague(container);
         } else if (this.currentLeague.status === 'waiting') {
             this.renderWaitingLeague(container);
         } else if (this.currentLeague.status === 'in_progress') {
@@ -85,36 +79,1227 @@ window.PrivateLeaguesUI = {
     },
 
     // ================================================================
-    // VISTA: COOLDOWN
+    // STILI CSS INLINE (Premium Mobile-First)
     // ================================================================
 
-    renderCooldown(container, cooldownCheck) {
-        const dateStr = window.PrivateLeagues.formatCooldownDate(cooldownCheck.cooldownUntil);
+    getStyles() {
+        return `
+            <style>
+                .pl-container {
+                    padding: 20px 16px;
+                    max-width: 100%;
+                    animation: pl-fade-in 0.4s ease-out;
+                }
 
-        container.innerHTML = `
-            <div class="p-4 space-y-6">
-                <!-- Header -->
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-purple-400">Leghe Private</h2>
-                    <p class="text-gray-400 text-sm mt-1">Crea o unisciti a un mini-campionato con gli amici</p>
-                </div>
+                @keyframes pl-fade-in {
+                    from { opacity: 0; transform: translateY(12px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
 
-                <!-- Messaggio Cooldown -->
-                <div class="bg-orange-900/30 border border-orange-600/50 rounded-xl p-6 text-center">
-                    <div class="text-5xl mb-4">&#9203;</div>
-                    <h3 class="text-xl font-bold text-orange-400 mb-2">Periodo di Attesa</h3>
-                    <p class="text-gray-300 mb-4">
-                        Hai completato una lega di recente.<br>
-                        Potrai partecipare a una nuova lega dal:
-                    </p>
-                    <div class="bg-gray-800 rounded-lg p-4 inline-block">
-                        <span class="text-2xl font-bold text-white">${dateStr}</span>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-4">
-                        Questo periodo di attesa si resetta il primo giorno di ogni mese.
-                    </p>
-                </div>
-            </div>
+                @keyframes pl-pulse-soft {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.7; }
+                }
+
+                @keyframes pl-glow {
+                    0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+                    50% { box-shadow: 0 0 35px rgba(168, 85, 247, 0.5); }
+                }
+
+                @keyframes pl-shimmer {
+                    0% { background-position: -200% center; }
+                    100% { background-position: 200% center; }
+                }
+
+                @keyframes pl-bounce-in {
+                    0% { transform: scale(0.9); opacity: 0; }
+                    50% { transform: scale(1.02); }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+
+                .pl-header {
+                    text-align: center;
+                    margin-bottom: 24px;
+                    position: relative;
+                }
+
+                .pl-header::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -12px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 60px;
+                    height: 3px;
+                    background: linear-gradient(90deg, transparent, #a855f7, transparent);
+                    border-radius: 2px;
+                }
+
+                .pl-title {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.75rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #7c3aed 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    margin-bottom: 6px;
+                    letter-spacing: -0.02em;
+                }
+
+                .pl-subtitle {
+                    font-family: 'DM Sans', sans-serif;
+                    color: #94a3b8;
+                    font-size: 0.875rem;
+                    font-weight: 400;
+                }
+
+                .pl-card {
+                    background: linear-gradient(145deg, rgba(30, 27, 75, 0.8) 0%, rgba(20, 18, 50, 0.9) 100%);
+                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    border-radius: 20px;
+                    padding: 20px;
+                    margin-bottom: 16px;
+                    position: relative;
+                    overflow: hidden;
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    transition: all 0.3s ease;
+                }
+
+                .pl-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+                }
+
+                .pl-card:hover {
+                    border-color: rgba(168, 85, 247, 0.4);
+                    transform: translateY(-2px);
+                }
+
+                .pl-card-create {
+                    border-color: rgba(168, 85, 247, 0.35);
+                    background: linear-gradient(145deg, rgba(88, 28, 135, 0.15) 0%, rgba(30, 27, 75, 0.8) 100%);
+                }
+
+                .pl-card-join {
+                    border-color: rgba(59, 130, 246, 0.35);
+                    background: linear-gradient(145deg, rgba(29, 78, 216, 0.15) 0%, rgba(30, 27, 75, 0.8) 100%);
+                }
+
+                .pl-card-join::before {
+                    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+                }
+
+                .pl-section-title {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #e2e8f0;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .pl-section-title-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1rem;
+                }
+
+                .pl-section-title-icon.purple {
+                    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
+                }
+
+                .pl-section-title-icon.blue {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
+                }
+
+                .pl-budget-bar {
+                    background: linear-gradient(145deg, rgba(30, 27, 75, 0.6) 0%, rgba(20, 18, 50, 0.8) 100%);
+                    border: 1px solid rgba(234, 179, 8, 0.25);
+                    border-radius: 14px;
+                    padding: 14px 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 16px;
+                }
+
+                .pl-budget-label {
+                    font-family: 'DM Sans', sans-serif;
+                    color: #94a3b8;
+                    font-size: 0.875rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .pl-budget-value {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                .pl-info-banner {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%);
+                    border: 1px solid rgba(59, 130, 246, 0.2);
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    margin-bottom: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .pl-info-banner-icon {
+                    font-size: 1rem;
+                    flex-shrink: 0;
+                }
+
+                .pl-info-banner-text {
+                    font-family: 'DM Sans', sans-serif;
+                    color: #93c5fd;
+                    font-size: 0.8rem;
+                    line-height: 1.4;
+                }
+
+                .pl-input-group {
+                    margin-bottom: 18px;
+                }
+
+                .pl-label {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    color: #94a3b8;
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+
+                .pl-label-value {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 600;
+                    color: #c084fc;
+                }
+
+                .pl-label-value.gold {
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                .pl-input {
+                    width: 100%;
+                    background: rgba(15, 23, 42, 0.8);
+                    border: 1px solid rgba(148, 163, 184, 0.2);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 1rem;
+                    color: #f1f5f9;
+                    transition: all 0.25s ease;
+                    -webkit-appearance: none;
+                }
+
+                .pl-input:focus {
+                    outline: none;
+                    border-color: #a855f7;
+                    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+                }
+
+                .pl-input::placeholder {
+                    color: #64748b;
+                }
+
+                .pl-input-code {
+                    text-align: center;
+                    font-size: 1.5rem;
+                    font-family: 'Outfit', monospace;
+                    font-weight: 600;
+                    letter-spacing: 0.3em;
+                    text-transform: uppercase;
+                }
+
+                .pl-slider {
+                    width: 100%;
+                    height: 6px;
+                    border-radius: 3px;
+                    background: rgba(51, 65, 85, 0.6);
+                    -webkit-appearance: none;
+                    appearance: none;
+                    cursor: pointer;
+                }
+
+                .pl-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                    border: 3px solid #1e1b4b;
+                    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+                    cursor: pointer;
+                    transition: transform 0.2s ease;
+                }
+
+                .pl-slider::-webkit-slider-thumb:hover {
+                    transform: scale(1.1);
+                }
+
+                .pl-slider-labels {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 8px;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.7rem;
+                    color: #64748b;
+                }
+
+                .pl-prize-preview {
+                    background: rgba(15, 23, 42, 0.6);
+                    border-radius: 14px;
+                    padding: 16px;
+                    margin-top: 16px;
+                    border: 1px solid rgba(234, 179, 8, 0.15);
+                }
+
+                .pl-prize-header {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-bottom: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .pl-prize-pool {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 700;
+                    color: #fbbf24;
+                }
+
+                .pl-prize-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                    gap: 8px;
+                }
+
+                .pl-prize-item {
+                    background: rgba(30, 27, 75, 0.5);
+                    border-radius: 10px;
+                    padding: 10px 6px;
+                    text-align: center;
+                    border: 1px solid transparent;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-prize-item.winner {
+                    background: linear-gradient(145deg, rgba(234, 179, 8, 0.15) 0%, rgba(180, 83, 9, 0.1) 100%);
+                    border-color: rgba(234, 179, 8, 0.3);
+                }
+
+                .pl-prize-medal {
+                    font-size: 1.25rem;
+                    margin-bottom: 4px;
+                }
+
+                .pl-prize-amount {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                }
+
+                .pl-prize-net {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.65rem;
+                    margin-top: 2px;
+                }
+
+                .pl-prize-net.positive { color: #4ade80; }
+                .pl-prize-net.negative { color: #f87171; }
+
+                .pl-prize-bonus {
+                    font-size: 0.6rem;
+                    color: #fbbf24;
+                    margin-top: 2px;
+                }
+
+                .pl-warning {
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.25);
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    margin-top: 12px;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    color: #fca5a5;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .pl-btn {
+                    width: 100%;
+                    padding: 16px 24px;
+                    border: none;
+                    border-radius: 14px;
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .pl-btn::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+                    transition: left 0.5s ease;
+                }
+
+                .pl-btn:hover::before {
+                    left: 100%;
+                }
+
+                .pl-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                    transform: none !important;
+                }
+
+                .pl-btn-primary {
+                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                    color: white;
+                    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35);
+                }
+
+                .pl-btn-primary:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 25px rgba(168, 85, 247, 0.45);
+                }
+
+                .pl-btn-primary:active:not(:disabled) {
+                    transform: translateY(0) scale(0.98);
+                }
+
+                .pl-btn-secondary {
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                    color: white;
+                    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
+                }
+
+                .pl-btn-secondary:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.45);
+                }
+
+                .pl-btn-danger {
+                    background: transparent;
+                    border: 1px solid rgba(239, 68, 68, 0.4);
+                    color: #f87171;
+                }
+
+                .pl-btn-danger:hover:not(:disabled) {
+                    background: rgba(239, 68, 68, 0.1);
+                    border-color: rgba(239, 68, 68, 0.6);
+                }
+
+                .pl-btn-success {
+                    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                    color: white;
+                    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35);
+                }
+
+                .pl-btn-success:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 25px rgba(34, 197, 94, 0.45);
+                }
+
+                /* Invite Code Display */
+                .pl-invite-box {
+                    background: linear-gradient(145deg, rgba(88, 28, 135, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+                    border: 1px solid rgba(168, 85, 247, 0.3);
+                    border-radius: 16px;
+                    padding: 20px;
+                    text-align: center;
+                    margin-bottom: 16px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .pl-invite-box::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(45deg, transparent 30%, rgba(168, 85, 247, 0.05) 50%, transparent 70%);
+                    background-size: 200% 200%;
+                    animation: pl-shimmer 3s ease-in-out infinite;
+                }
+
+                .pl-invite-label {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-bottom: 10px;
+                    position: relative;
+                }
+
+                .pl-invite-code-wrapper {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 12px;
+                    position: relative;
+                }
+
+                .pl-invite-code {
+                    font-family: 'Outfit', monospace;
+                    font-size: 2rem;
+                    font-weight: 700;
+                    letter-spacing: 0.2em;
+                    background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                .pl-copy-btn {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 10px;
+                    background: rgba(30, 27, 75, 0.8);
+                    border: 1px solid rgba(148, 163, 184, 0.2);
+                    color: #94a3b8;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-copy-btn:hover {
+                    background: rgba(168, 85, 247, 0.2);
+                    border-color: rgba(168, 85, 247, 0.4);
+                    color: #c084fc;
+                }
+
+                /* Team List */
+                .pl-team-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .pl-team-item {
+                    background: rgba(30, 27, 75, 0.5);
+                    border: 1px solid rgba(148, 163, 184, 0.1);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-team-item:hover {
+                    background: rgba(30, 27, 75, 0.7);
+                }
+
+                .pl-team-item.highlight {
+                    border-color: rgba(168, 85, 247, 0.3);
+                    background: rgba(88, 28, 135, 0.15);
+                }
+
+                .pl-team-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .pl-team-number {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 8px;
+                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: white;
+                }
+
+                .pl-team-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    color: #f1f5f9;
+                }
+
+                .pl-team-badge {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.65rem;
+                    font-weight: 500;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    background: rgba(168, 85, 247, 0.2);
+                    color: #c084fc;
+                    margin-left: 8px;
+                }
+
+                .pl-team-status {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.75rem;
+                    color: #4ade80;
+                }
+
+                .pl-team-slot-empty {
+                    background: rgba(15, 23, 42, 0.4);
+                    border: 2px dashed rgba(148, 163, 184, 0.2);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    text-align: center;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                    color: #64748b;
+                    animation: pl-pulse-soft 2s ease-in-out infinite;
+                }
+
+                /* Timer Box */
+                .pl-timer-box {
+                    border-radius: 16px;
+                    padding: 20px;
+                    text-align: center;
+                    margin-bottom: 16px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .pl-timer-box.waiting {
+                    background: linear-gradient(145deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+                    border: 1px solid rgba(59, 130, 246, 0.25);
+                }
+
+                .pl-timer-box.ready {
+                    background: linear-gradient(145deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+                    border: 1px solid rgba(34, 197, 94, 0.3);
+                    animation: pl-glow 2s ease-in-out infinite;
+                }
+
+                .pl-timer-label {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-bottom: 8px;
+                }
+
+                .pl-timer-value {
+                    font-family: 'Outfit', monospace;
+                    font-size: 2.25rem;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                }
+
+                .pl-timer-value.waiting { color: #60a5fa; }
+                .pl-timer-value.ready { color: #4ade80; }
+
+                .pl-timer-hint {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.7rem;
+                    color: #64748b;
+                    margin-top: 8px;
+                }
+
+                /* Standings Table */
+                .pl-standings {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .pl-standings table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    min-width: 320px;
+                }
+
+                .pl-standings th {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.65rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: #64748b;
+                    padding: 10px 6px;
+                    text-align: center;
+                    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+                    white-space: nowrap;
+                }
+
+                .pl-standings th:first-child,
+                .pl-standings th:nth-child(2) {
+                    text-align: left;
+                }
+
+                .pl-standings th.points {
+                    color: #fbbf24;
+                }
+
+                .pl-standings td {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    padding: 12px 6px;
+                    text-align: center;
+                    color: #cbd5e1;
+                    border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+                }
+
+                .pl-standings td:first-child,
+                .pl-standings td:nth-child(2) {
+                    text-align: left;
+                }
+
+                .pl-standings tr.my-team {
+                    background: rgba(168, 85, 247, 0.1);
+                }
+
+                .pl-standings tr.my-team td:first-child {
+                    position: relative;
+                }
+
+                .pl-standings tr.my-team td:first-child::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 3px;
+                    background: #a855f7;
+                    border-radius: 0 2px 2px 0;
+                }
+
+                .pl-standings .pos-1 { color: #fbbf24; font-weight: 600; }
+                .pl-standings .wins { color: #4ade80; }
+                .pl-standings .losses { color: #f87171; }
+                .pl-standings .points-col {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 700;
+                    color: #fbbf24;
+                }
+
+                .pl-standings .team-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 500;
+                    color: #f1f5f9;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                /* Schedule */
+                .pl-schedule-round {
+                    margin-bottom: 20px;
+                    padding: 14px;
+                    border-radius: 12px;
+                    background: rgba(15, 23, 42, 0.4);
+                    border: 1px solid rgba(148, 163, 184, 0.08);
+                }
+
+                .pl-schedule-round.current {
+                    background: rgba(168, 85, 247, 0.1);
+                    border-color: rgba(168, 85, 247, 0.25);
+                }
+
+                .pl-schedule-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 12px;
+                }
+
+                .pl-schedule-title {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: #94a3b8;
+                }
+
+                .pl-schedule-round.current .pl-schedule-title {
+                    color: #c084fc;
+                }
+
+                .pl-schedule-badge {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                    color: white;
+                    text-transform: uppercase;
+                }
+
+                .pl-match {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                }
+
+                .pl-match-team {
+                    flex: 1;
+                    color: #94a3b8;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .pl-match-team.home { text-align: right; padding-right: 10px; }
+                .pl-match-team.away { text-align: left; padding-left: 10px; }
+                .pl-match-team.winner { color: #4ade80; font-weight: 600; }
+
+                .pl-match-score {
+                    font-family: 'Outfit', monospace;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                    min-width: 50px;
+                    text-align: center;
+                }
+
+                .pl-match-score.pending {
+                    color: #64748b;
+                }
+
+                /* Winner Header */
+                .pl-winner-header {
+                    background: linear-gradient(145deg, rgba(234, 179, 8, 0.15) 0%, rgba(180, 83, 9, 0.1) 100%);
+                    border: 1px solid rgba(234, 179, 8, 0.3);
+                    border-radius: 20px;
+                    padding: 28px 20px;
+                    text-align: center;
+                    margin-bottom: 20px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .pl-winner-header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(45deg, transparent 30%, rgba(234, 179, 8, 0.08) 50%, transparent 70%);
+                    background-size: 200% 200%;
+                    animation: pl-shimmer 3s ease-in-out infinite;
+                }
+
+                .pl-winner-trophy {
+                    font-size: 3.5rem;
+                    margin-bottom: 12px;
+                    animation: pl-bounce-in 0.6s ease-out;
+                    position: relative;
+                }
+
+                .pl-winner-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    margin-bottom: 6px;
+                    position: relative;
+                }
+
+                .pl-winner-subtitle {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                    color: #94a3b8;
+                    position: relative;
+                }
+
+                /* Final Standings Item */
+                .pl-final-item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 14px 16px;
+                    border-radius: 12px;
+                    margin-bottom: 8px;
+                    background: rgba(30, 27, 75, 0.5);
+                    border: 1px solid rgba(148, 163, 184, 0.1);
+                    transition: all 0.2s ease;
+                }
+
+                .pl-final-item.winner {
+                    background: linear-gradient(145deg, rgba(234, 179, 8, 0.12) 0%, rgba(180, 83, 9, 0.08) 100%);
+                    border-color: rgba(234, 179, 8, 0.25);
+                }
+
+                .pl-final-item.my-team {
+                    border-color: rgba(168, 85, 247, 0.4);
+                    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.15);
+                }
+
+                .pl-final-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .pl-final-medal {
+                    font-size: 1.5rem;
+                }
+
+                .pl-final-info {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .pl-final-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .pl-final-points {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.75rem;
+                    color: #94a3b8;
+                }
+
+                .pl-champion-badge {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.55rem;
+                    font-weight: 700;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    color: #1e1b4b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .pl-final-right {
+                    text-align: right;
+                }
+
+                .pl-final-prize {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1rem;
+                    font-weight: 700;
+                }
+
+                .pl-final-prize.positive { color: #4ade80; }
+                .pl-final-prize.negative { color: #f87171; }
+
+                .pl-final-bonus {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.65rem;
+                    color: #fbbf24;
+                }
+
+                /* Modal */
+                .pl-modal-backdrop {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.3s ease;
+                }
+
+                .pl-modal-backdrop.active {
+                    opacity: 1;
+                    visibility: visible;
+                }
+
+                .pl-modal {
+                    background: linear-gradient(145deg, rgba(30, 27, 75, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    border-radius: 20px;
+                    width: 100%;
+                    max-width: 400px;
+                    max-height: 80vh;
+                    display: flex;
+                    flex-direction: column;
+                    transform: scale(0.95) translateY(20px);
+                    transition: transform 0.3s ease;
+                }
+
+                .pl-modal-backdrop.active .pl-modal {
+                    transform: scale(1) translateY(0);
+                }
+
+                .pl-modal-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 18px 20px;
+                    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+                }
+
+                .pl-modal-title {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                }
+
+                .pl-modal-close {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    background: rgba(51, 65, 85, 0.5);
+                    border: none;
+                    color: #94a3b8;
+                    font-size: 1.25rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-modal-close:hover {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #f87171;
+                }
+
+                .pl-modal-body {
+                    padding: 16px 20px;
+                    overflow-y: auto;
+                    flex: 1;
+                }
+
+                .pl-invite-item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 12px 14px;
+                    background: rgba(30, 27, 75, 0.5);
+                    border: 1px solid rgba(148, 163, 184, 0.1);
+                    border-radius: 12px;
+                    margin-bottom: 10px;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-invite-item:hover {
+                    background: rgba(30, 27, 75, 0.7);
+                    border-color: rgba(148, 163, 184, 0.2);
+                }
+
+                .pl-invite-info h4 {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                    margin-bottom: 2px;
+                }
+
+                .pl-invite-info p {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.7rem;
+                    color: #64748b;
+                }
+
+                .pl-invite-btn {
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    border: none;
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                    color: white;
+                }
+
+                .pl-invite-btn:hover:not(:disabled) {
+                    transform: translateY(-1px);
+                }
+
+                .pl-invite-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                .pl-invite-btn.sent {
+                    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                }
+
+                /* Fee Info */
+                .pl-fee-info {
+                    background: linear-gradient(145deg, rgba(234, 179, 8, 0.1) 0%, rgba(180, 83, 9, 0.05) 100%);
+                    border: 1px solid rgba(234, 179, 8, 0.2);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    margin-bottom: 16px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    text-align: center;
+                }
+
+                .pl-fee-cost {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                    color: #fbbf24;
+                }
+
+                .pl-fee-pool {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.75rem;
+                    color: #b45309;
+                }
+
+                /* Success Info */
+                .pl-success-info {
+                    background: linear-gradient(145deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+                    border: 1px solid rgba(34, 197, 94, 0.25);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    margin-bottom: 16px;
+                    text-align: center;
+                }
+
+                .pl-success-info p {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                    color: #4ade80;
+                }
+
+                /* Join Info */
+                .pl-join-info {
+                    background: rgba(30, 27, 75, 0.5);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    margin-top: 12px;
+                }
+
+                .pl-join-info-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: #f1f5f9;
+                    margin-bottom: 6px;
+                }
+
+                .pl-join-info-detail {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-bottom: 3px;
+                }
+
+                .pl-join-info-cost {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                }
+
+                .pl-join-info-cost.free { color: #4ade80; }
+                .pl-join-info-cost.paid { color: #fbbf24; }
+
+                /* Actions */
+                .pl-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+
+                .pl-danger-hint {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.7rem;
+                    color: #f87171;
+                    text-align: center;
+                    margin-top: 6px;
+                }
+
+                /* Prizepool banner */
+                .pl-prizepool-banner {
+                    background: linear-gradient(145deg, rgba(234, 179, 8, 0.08) 0%, rgba(180, 83, 9, 0.04) 100%);
+                    border: 1px solid rgba(234, 179, 8, 0.2);
+                    border-radius: 10px;
+                    padding: 10px 16px;
+                    text-align: center;
+                    margin-bottom: 16px;
+                }
+
+                .pl-prizepool-banner span {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.85rem;
+                    color: #fbbf24;
+                }
+
+                .pl-prizepool-banner strong {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 700;
+                }
+
+                /* Mobile optimizations */
+                @media (max-width: 380px) {
+                    .pl-container { padding: 16px 12px; }
+                    .pl-card { padding: 16px; }
+                    .pl-title { font-size: 1.5rem; }
+                    .pl-invite-code { font-size: 1.5rem; letter-spacing: 0.15em; }
+                    .pl-timer-value { font-size: 1.75rem; }
+                    .pl-standings td, .pl-standings th { padding: 8px 4px; font-size: 0.7rem; }
+                    .pl-btn { padding: 14px 20px; font-size: 0.9rem; }
+                }
+            </style>
         `;
     },
 
@@ -135,103 +1320,103 @@ window.PrivateLeaguesUI = {
         const maxTeams = window.PrivateLeagues.MAX_TEAMS;
 
         container.innerHTML = `
-            <div class="p-4 space-y-6">
+            ${this.getStyles()}
+            <div class="pl-container">
                 <!-- Header -->
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-purple-400">Leghe Private</h2>
-                    <p class="text-gray-400 text-sm mt-1">Crea o unisciti a un mini-campionato con gli amici</p>
+                <div class="pl-header">
+                    <h2 class="pl-title">Leghe Private</h2>
+                    <p class="pl-subtitle">Sfida i tuoi amici in mini-campionati esclusivi</p>
                 </div>
 
-                <!-- Info Budget disponibile -->
-                <div class="bg-gray-700 rounded-lg p-3 text-center">
-                    <span class="text-gray-400">Budget:</span>
-                    <span class="text-yellow-400 font-bold ml-2">${currentCS} CS</span>
+                <!-- Budget Display -->
+                <div class="pl-budget-bar">
+                    <span class="pl-budget-label">
+                        <span>💰</span> Il tuo Budget
+                    </span>
+                    <span class="pl-budget-value">${currentCS} CS</span>
                 </div>
 
-                <!-- Info limite mensile -->
-                <div class="bg-blue-900/30 rounded-lg p-3 text-center border border-blue-600/30">
-                    <p class="text-blue-400 text-sm">
-                        <strong>Nota:</strong> Puoi partecipare a max 1 lega privata al mese
-                    </p>
+                <!-- Info Banner -->
+                <div class="pl-info-banner">
+                    <span class="pl-info-banner-icon">ℹ️</span>
+                    <span class="pl-info-banner-text">Puoi partecipare a <strong>1 lega privata</strong> per volta</span>
                 </div>
 
-                <!-- Crea Nuova Lega -->
-                <div class="bg-gray-800 rounded-xl p-5 border border-purple-500/30">
-                    <h3 class="text-lg font-bold text-purple-400 mb-4">Crea Nuova Lega</h3>
+                <!-- Create League Card -->
+                <div class="pl-card pl-card-create">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon purple">🏆</span>
+                        Crea Nuova Lega
+                    </h3>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-gray-400 text-sm mb-1">Nome Lega</label>
-                            <input type="text" id="create-league-name" maxlength="30"
-                                   class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
-                                   placeholder="Es: Lega degli Amici">
-                        </div>
-
-                        <!-- Selettore numero squadre -->
-                        <div>
-                            <label class="block text-gray-400 text-sm mb-1">
-                                Numero Squadre: <span id="team-count-display" class="text-purple-400 font-bold">4</span>
-                            </label>
-                            <input type="range" id="create-league-teams" min="${minTeams}" max="${maxTeams}" step="1" value="4"
-                                   class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
-                            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>${minTeams} squadre</span>
-                                <span>${maxTeams} squadre</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-400 text-sm mb-1">
-                                Costo d'Ingresso: <span id="entry-fee-display" class="text-yellow-400 font-bold">0 CS</span>
-                            </label>
-                            <input type="range" id="create-league-fee" min="0" max="${maxFee}" step="50" value="0"
-                                   class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
-                            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>Gratis</span>
-                                <span>${maxFee} CS</span>
-                            </div>
-                        </div>
-
-                        <!-- Preview Montepremi -->
-                        <div id="prize-preview" class="bg-gray-700/50 rounded-lg p-3 hidden">
-                            <p class="text-sm text-gray-400 mb-2">Montepremi totale: <span id="total-pool" class="text-yellow-400 font-bold">0 CS</span></p>
-                            <div id="prize-grid" class="grid gap-2 text-xs text-center">
-                                <!-- Generato dinamicamente -->
-                            </div>
-                        </div>
-
-                        <div id="create-warning" class="text-red-400 text-sm hidden"></div>
-
-                        <button id="btn-create-league"
-                                class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            Crea Lega
-                        </button>
+                    <div class="pl-input-group">
+                        <label class="pl-label">Nome della Lega</label>
+                        <input type="text" id="create-league-name" maxlength="30" class="pl-input" placeholder="Es: Lega Champions">
                     </div>
+
+                    <div class="pl-input-group">
+                        <label class="pl-label">
+                            <span>Numero Squadre</span>
+                            <span class="pl-label-value" id="team-count-display">4</span>
+                        </label>
+                        <input type="range" id="create-league-teams" min="${minTeams}" max="${maxTeams}" step="1" value="4" class="pl-slider">
+                        <div class="pl-slider-labels">
+                            <span>${minTeams} squadre</span>
+                            <span>${maxTeams} squadre</span>
+                        </div>
+                    </div>
+
+                    <div class="pl-input-group">
+                        <label class="pl-label">
+                            <span>Quota d'Ingresso</span>
+                            <span class="pl-label-value gold" id="entry-fee-display">0 CS</span>
+                        </label>
+                        <input type="range" id="create-league-fee" min="0" max="${maxFee}" step="50" value="0" class="pl-slider">
+                        <div class="pl-slider-labels">
+                            <span>Gratis</span>
+                            <span>${maxFee} CS</span>
+                        </div>
+                    </div>
+
+                    <div id="prize-preview" class="pl-prize-preview" style="display: none;">
+                        <div class="pl-prize-header">
+                            <span>🏅</span> Montepremi: <span id="total-pool" class="pl-prize-pool">0 CS</span>
+                        </div>
+                        <div id="prize-grid" class="pl-prize-grid"></div>
+                    </div>
+
+                    <div id="create-warning" class="pl-warning" style="display: none;">
+                        <span>⚠️</span>
+                        <span id="create-warning-text"></span>
+                    </div>
+
+                    <button id="btn-create-league" class="pl-btn pl-btn-primary" style="margin-top: 16px;">
+                        <span>✨</span> Crea Lega
+                    </button>
                 </div>
 
-                <!-- Unisciti a Lega -->
-                <div class="bg-gray-800 rounded-xl p-5 border border-blue-500/30">
-                    <h3 class="text-lg font-bold text-blue-400 mb-4">Unisciti a una Lega</h3>
+                <!-- Join League Card -->
+                <div class="pl-card pl-card-join">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon blue">🎫</span>
+                        Unisciti a una Lega
+                    </h3>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-gray-400 text-sm mb-1">Codice Invito</label>
-                            <input type="text" id="join-league-code" maxlength="6"
-                                   class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none uppercase text-center text-xl tracking-widest"
-                                   placeholder="ABC123">
-                        </div>
-
-                        <div id="join-league-info" class="hidden bg-gray-700/50 rounded-lg p-3">
-                            <!-- Info lega trovata -->
-                        </div>
-
-                        <div id="join-warning" class="text-red-400 text-sm hidden"></div>
-
-                        <button id="btn-join-league"
-                                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            Cerca Lega
-                        </button>
+                    <div class="pl-input-group">
+                        <label class="pl-label">Codice Invito</label>
+                        <input type="text" id="join-league-code" maxlength="6" class="pl-input pl-input-code" placeholder="ABC123">
                     </div>
+
+                    <div id="join-league-info" class="pl-join-info" style="display: none;"></div>
+
+                    <div id="join-warning" class="pl-warning" style="display: none;">
+                        <span>⚠️</span>
+                        <span id="join-warning-text"></span>
+                    </div>
+
+                    <button id="btn-join-league" class="pl-btn pl-btn-secondary" style="margin-top: 16px;">
+                        <span>🔍</span> Cerca Lega
+                    </button>
                 </div>
             </div>
         `;
@@ -247,6 +1432,7 @@ window.PrivateLeaguesUI = {
         const prizePreview = container.querySelector('#prize-preview');
         const prizeGrid = container.querySelector('#prize-grid');
         const createWarning = container.querySelector('#create-warning');
+        const createWarningText = container.querySelector('#create-warning-text');
         const btnCreate = container.querySelector('#btn-create-league');
 
         // Cache dei CS (budget) per evitare chiamate async nel listener
@@ -262,40 +1448,35 @@ window.PrivateLeaguesUI = {
             feeDisplay.textContent = `${fee} CS`;
 
             if (fee > 0) {
-                prizePreview.classList.remove('hidden');
+                prizePreview.style.display = 'block';
                 const gains = window.PrivateLeagues.calculateNetGains(fee, numTeams);
                 container.querySelector('#total-pool').textContent = `${fee * numTeams} CS`;
 
-                // Genera griglia premi dinamica
-                const colors = ['yellow', 'gray', 'amber', 'gray', 'gray', 'gray'];
                 const medals = ['🥇', '🥈', '🥉', '4°', '5°', '6°'];
-                prizeGrid.className = `grid grid-cols-${Math.min(numTeams, 4)} gap-2 text-xs text-center`;
-
                 prizeGrid.innerHTML = gains.map((g, i) => `
-                    <div class="bg-${colors[i]}-900/30 rounded p-2 ${i === 0 ? 'border border-yellow-500' : ''}">
-                        <div class="text-${colors[i]}-400 font-bold">${medals[i]}</div>
-                        <div class="text-white">${g.prize} CS</div>
-                        <div class="text-${g.netGain >= 0 ? 'green' : 'red'}-400 text-[10px]">(${g.netGain >= 0 ? '+' : ''}${g.netGain})</div>
-                        ${i === 0 ? '<div class="text-yellow-300 text-[8px]">+bonus</div>' : ''}
+                    <div class="pl-prize-item ${i === 0 ? 'winner' : ''}">
+                        <div class="pl-prize-medal">${medals[i]}</div>
+                        <div class="pl-prize-amount">${g.prize} CS</div>
+                        <div class="pl-prize-net ${g.netGain >= 0 ? 'positive' : 'negative'}">${g.netGain >= 0 ? '+' : ''}${g.netGain}</div>
+                        ${i === 0 ? '<div class="pl-prize-bonus">+bonus</div>' : ''}
                     </div>
                 `).join('');
 
                 if (currentCS < fee) {
-                    createWarning.textContent = `CS insufficienti! Hai ${currentCS} CS`;
-                    createWarning.classList.remove('hidden');
+                    createWarningText.textContent = `CS insufficienti! Hai ${currentCS} CS`;
+                    createWarning.style.display = 'flex';
                     btnCreate.disabled = true;
                 } else {
-                    createWarning.classList.add('hidden');
+                    createWarning.style.display = 'none';
                     btnCreate.disabled = false;
                 }
             } else {
-                prizePreview.classList.add('hidden');
-                createWarning.classList.add('hidden');
+                prizePreview.style.display = 'none';
+                createWarning.style.display = 'none';
                 btnCreate.disabled = false;
             }
         };
 
-        // Aggiorna preview fee e teams
         feeSlider?.addEventListener('input', updatePrizePreview);
         teamsSlider?.addEventListener('input', updatePrizePreview);
 
@@ -306,13 +1487,13 @@ window.PrivateLeaguesUI = {
             const numTeams = parseInt(teamsSlider.value) || 4;
 
             if (!name || name.length < 3) {
-                createWarning.textContent = 'Nome troppo corto (min 3 caratteri)';
-                createWarning.classList.remove('hidden');
+                createWarningText.textContent = 'Nome troppo corto (min 3 caratteri)';
+                createWarning.style.display = 'flex';
                 return;
             }
 
             btnCreate.disabled = true;
-            btnCreate.textContent = 'Creazione...';
+            btnCreate.innerHTML = '<span>⏳</span> Creazione...';
 
             const result = await window.PrivateLeagues.createLeague(
                 name,
@@ -324,15 +1505,14 @@ window.PrivateLeaguesUI = {
 
             if (result.success) {
                 if (window.Toast) window.Toast.success(`Lega creata! Codice: ${result.inviteCode}`);
-                // Ricarica dati squadra
                 await this.refreshTeamData();
                 this.currentLeague = await window.PrivateLeagues.getLeagueById(result.leagueId);
                 this.render();
             } else {
-                createWarning.textContent = result.error;
-                createWarning.classList.remove('hidden');
+                createWarningText.textContent = result.error;
+                createWarning.style.display = 'flex';
                 btnCreate.disabled = false;
-                btnCreate.textContent = 'Crea Lega';
+                btnCreate.innerHTML = '<span>✨</span> Crea Lega';
             }
         });
 
@@ -341,6 +1521,7 @@ window.PrivateLeaguesUI = {
         const codeInput = container.querySelector('#join-league-code');
         const joinInfo = container.querySelector('#join-league-info');
         const joinWarning = container.querySelector('#join-warning');
+        const joinWarningText = container.querySelector('#join-warning-text');
 
         let foundLeague = null;
 
@@ -348,15 +1529,14 @@ window.PrivateLeaguesUI = {
             const code = codeInput.value.trim().toUpperCase();
 
             if (!code || code.length < 4) {
-                joinWarning.textContent = 'Inserisci un codice valido';
-                joinWarning.classList.remove('hidden');
+                joinWarningText.textContent = 'Inserisci un codice valido';
+                joinWarning.style.display = 'flex';
                 return;
             }
 
-            // Se abbiamo gia trovato una lega, prova a unirti
-            if (foundLeague && btnJoin.textContent === 'Unisciti') {
+            if (foundLeague && btnJoin.textContent.includes('Unisciti')) {
                 btnJoin.disabled = true;
-                btnJoin.textContent = 'Iscrizione...';
+                btnJoin.innerHTML = '<span>⏳</span> Iscrizione...';
 
                 const result = await window.PrivateLeagues.joinLeague(
                     code,
@@ -374,54 +1554,52 @@ window.PrivateLeaguesUI = {
                     this.currentLeague = await window.PrivateLeagues.getLeagueById(result.leagueId);
                     this.render();
                 } else {
-                    joinWarning.textContent = result.error;
-                    joinWarning.classList.remove('hidden');
+                    joinWarningText.textContent = result.error;
+                    joinWarning.style.display = 'flex';
                     btnJoin.disabled = false;
-                    btnJoin.textContent = 'Unisciti';
+                    btnJoin.innerHTML = '<span>🎯</span> Unisciti';
                 }
                 return;
             }
 
-            // Cerca la lega
             btnJoin.disabled = true;
-            btnJoin.textContent = 'Ricerca...';
+            btnJoin.innerHTML = '<span>⏳</span> Ricerca...';
 
             foundLeague = await window.PrivateLeagues.getLeagueByInviteCode(code);
 
             if (!foundLeague) {
-                joinWarning.textContent = 'Codice non valido';
-                joinWarning.classList.remove('hidden');
-                joinInfo.classList.add('hidden');
+                joinWarningText.textContent = 'Codice non valido';
+                joinWarning.style.display = 'flex';
+                joinInfo.style.display = 'none';
                 btnJoin.disabled = false;
-                btnJoin.textContent = 'Cerca Lega';
+                btnJoin.innerHTML = '<span>🔍</span> Cerca Lega';
                 return;
             }
 
-            // Mostra info lega
             const canAfford = window.PrivateLeagues.canAffordEntry(cachedCS, foundLeague.entryFee);
 
             joinInfo.innerHTML = `
-                <p class="font-bold text-white">${foundLeague.name}</p>
-                <p class="text-sm text-gray-400">Squadre: ${foundLeague.teams.length}/${foundLeague.maxTeams}</p>
-                <p class="text-sm ${foundLeague.entryFee > 0 ? 'text-yellow-400' : 'text-green-400'}">
-                    Costo: ${foundLeague.entryFee > 0 ? foundLeague.entryFee + ' CS' : 'Gratis'}
-                </p>
-                ${!canAfford ? `<p class="text-red-400 text-sm mt-2">CS insufficienti! (Hai ${cachedCS} CS)</p>` : ''}
+                <div class="pl-join-info-name">${foundLeague.name}</div>
+                <div class="pl-join-info-detail">Squadre: ${foundLeague.teams.length}/${foundLeague.maxTeams}</div>
+                <div class="pl-join-info-cost ${foundLeague.entryFee > 0 ? 'paid' : 'free'}">
+                    ${foundLeague.entryFee > 0 ? `Quota: ${foundLeague.entryFee} CS` : '✅ Ingresso Gratuito'}
+                </div>
+                ${!canAfford ? `<div style="color: #f87171; font-size: 0.8rem; margin-top: 8px;">⚠️ CS insufficienti (Hai ${cachedCS} CS)</div>` : ''}
             `;
-            joinInfo.classList.remove('hidden');
-            joinWarning.classList.add('hidden');
+            joinInfo.style.display = 'block';
+            joinWarning.style.display = 'none';
 
             if (foundLeague.teams.length >= foundLeague.maxTeams) {
-                joinWarning.textContent = 'Lega al completo';
-                joinWarning.classList.remove('hidden');
+                joinWarningText.textContent = 'Lega al completo';
+                joinWarning.style.display = 'flex';
                 btnJoin.disabled = false;
-                btnJoin.textContent = 'Cerca Lega';
+                btnJoin.innerHTML = '<span>🔍</span> Cerca Lega';
             } else if (!canAfford) {
                 btnJoin.disabled = true;
-                btnJoin.textContent = 'CS Insufficienti';
+                btnJoin.innerHTML = '<span>💸</span> CS Insufficienti';
             } else {
                 btnJoin.disabled = false;
-                btnJoin.textContent = 'Unisciti';
+                btnJoin.innerHTML = '<span>🎯</span> Unisciti';
             }
         });
     },
@@ -432,100 +1610,90 @@ window.PrivateLeaguesUI = {
 
     renderWaitingLeague(container) {
         const league = this.currentLeague;
-        const isCreator = league.createdBy === this.currentTeamId;
 
         container.innerHTML = `
-            <div class="p-4 space-y-6">
+            ${this.getStyles()}
+            <div class="pl-container">
                 <!-- Header -->
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-bold text-purple-400">${league.name}</h2>
-                    <p class="text-gray-400 text-sm">In attesa di giocatori...</p>
+                <div class="pl-header">
+                    <h2 class="pl-title">${league.name}</h2>
+                    <p class="pl-subtitle">In attesa di giocatori...</p>
                 </div>
 
-                <!-- Codice Invito -->
-                <div class="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-4 text-center">
-                    <p class="text-gray-400 text-sm mb-2">Condividi il codice invito</p>
-                    <div class="flex items-center justify-center gap-3">
-                        <span class="text-3xl font-mono font-bold text-white tracking-widest">${league.inviteCode}</span>
-                        <button id="btn-copy-code" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" title="Copia">
-                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Invite Code Box -->
+                <div class="pl-invite-box">
+                    <div class="pl-invite-label">Condividi il codice invito</div>
+                    <div class="pl-invite-code-wrapper">
+                        <span class="pl-invite-code">${league.inviteCode}</span>
+                        <button id="btn-copy-code" class="pl-copy-btn" title="Copia codice">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
                     </div>
                 </div>
 
-                <!-- Info Lega -->
-                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-sm">
-                        Il campionato iniziera automaticamente quando tutte le ${league.maxTeams} squadre si saranno iscritte
-                    </p>
+                <!-- Info -->
+                <div class="pl-info-banner">
+                    <span class="pl-info-banner-icon">⚡</span>
+                    <span class="pl-info-banner-text">Il campionato inizia automaticamente quando tutte le <strong>${league.maxTeams} squadre</strong> si iscrivono</span>
                 </div>
 
-                <!-- Info Costo -->
                 ${league.entryFee > 0 ? `
-                    <div class="bg-yellow-900/30 rounded-lg p-3 text-center border border-yellow-600/30">
-                        <p class="text-yellow-400">
-                            Costo d'ingresso: <span class="font-bold">${league.entryFee} CS</span>
-                        </p>
-                        <p class="text-yellow-600 text-sm">
-                            Montepremi: <span class="font-bold">${league.entryFee * league.maxTeams} CS</span>
-                        </p>
+                    <div class="pl-fee-info">
+                        <span class="pl-fee-cost">💰 Quota: <strong>${league.entryFee} CS</strong></span>
+                        <span class="pl-fee-pool">Montepremi: <strong>${league.entryFee * league.maxTeams} CS</strong></span>
                     </div>
                 ` : ''}
 
-                <!-- Lista Squadre -->
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <h3 class="text-lg font-bold text-white mb-3">
-                        Squadre Iscritte (${league.teams.length}/${league.maxTeams})
+                <!-- Team List -->
+                <div class="pl-card">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon purple">👥</span>
+                        Squadre (${league.teams.length}/${league.maxTeams})
                     </h3>
-                    <div class="space-y-2">
+
+                    <div class="pl-team-list">
                         ${league.teams.map((team, i) => `
-                            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
-                                <div class="flex items-center gap-3">
-                                    <span class="w-6 h-6 flex items-center justify-center bg-purple-600 rounded-full text-sm font-bold">${i + 1}</span>
-                                    <span class="text-white">${team.teamName}</span>
-                                    ${team.teamId === league.createdBy ? '<span class="text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded">Creatore</span>' : ''}
+                            <div class="pl-team-item ${team.teamId === this.currentTeamId ? 'highlight' : ''}">
+                                <div class="pl-team-info">
+                                    <span class="pl-team-number">${i + 1}</span>
+                                    <span class="pl-team-name">${team.teamName}</span>
+                                    ${team.teamId === league.createdBy ? '<span class="pl-team-badge">Creatore</span>' : ''}
                                 </div>
-                                ${league.entryFee > 0 ? '<span class="text-green-400 text-sm">Pagato</span>' : ''}
+                                ${league.entryFee > 0 ? '<span class="pl-team-status">✓ Pagato</span>' : ''}
                             </div>
                         `).join('')}
 
                         ${Array(league.maxTeams - league.teams.length).fill(0).map(() => `
-                            <div class="flex items-center justify-center bg-gray-700/30 rounded-lg p-3 border-2 border-dashed border-gray-600">
-                                <span class="text-gray-500">In attesa...</span>
-                            </div>
+                            <div class="pl-team-slot-empty">⏳ In attesa...</div>
                         `).join('')}
                     </div>
                 </div>
 
-                <!-- Azioni -->
-                <div class="space-y-3">
-                    <button id="btn-invite-user" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
-                        <span>📨</span> Invita Utente
+                <!-- Actions -->
+                <div class="pl-actions">
+                    <button id="btn-invite-user" class="pl-btn pl-btn-secondary">
+                        <span>📨</span> Invita Giocatori
                     </button>
-
-                    <button id="btn-leave-league" class="w-full bg-red-600/30 hover:bg-red-600/50 text-red-400 font-bold py-3 rounded-lg transition border border-red-600/50">
+                    <button id="btn-leave-league" class="pl-btn pl-btn-danger">
                         Abbandona Lega
                     </button>
-
                     ${league.entryFee > 0 ? `
-                        <p class="text-center text-red-400 text-xs">
-                            Attenzione: abbandonando perderai ${league.entryFee} CS!
-                        </p>
+                        <p class="pl-danger-hint">⚠️ Abbandonando perderai ${league.entryFee} CS</p>
                     ` : ''}
                 </div>
             </div>
 
-            <!-- Modal Invita Utente -->
-            <div id="invite-modal" class="fixed inset-0 bg-black/70 z-[9999] hidden items-center justify-center p-4">
-                <div class="bg-gray-800 rounded-xl max-w-md w-full max-h-[80vh] flex flex-col">
-                    <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-white">Invita Squadra</h3>
-                        <button id="close-invite-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            <!-- Invite Modal -->
+            <div id="invite-modal" class="pl-modal-backdrop">
+                <div class="pl-modal">
+                    <div class="pl-modal-header">
+                        <span class="pl-modal-title">📨 Invita Squadra</span>
+                        <button id="close-invite-modal" class="pl-modal-close">&times;</button>
                     </div>
-                    <div id="invite-teams-list" class="p-4 overflow-y-auto flex-1">
-                        <p class="text-gray-400 text-center">Caricamento squadre...</p>
+                    <div id="invite-teams-list" class="pl-modal-body">
+                        <p style="text-align: center; color: #64748b;">Caricamento squadre...</p>
                     </div>
                 </div>
             </div>
@@ -541,38 +1709,34 @@ window.PrivateLeaguesUI = {
             if (window.Toast) window.Toast.success('Codice copiato!');
         });
 
-        // Apri modal inviti
+        // Modal inviti
         const inviteModal = container.querySelector('#invite-modal');
         const inviteTeamsList = container.querySelector('#invite-teams-list');
 
         container.querySelector('#btn-invite-user')?.addEventListener('click', async () => {
-            inviteModal.classList.remove('hidden');
-            inviteModal.classList.add('flex');
+            inviteModal.classList.add('active');
 
-            // Carica squadre disponibili
-            inviteTeamsList.innerHTML = '<p class="text-gray-400 text-center">Caricamento squadre...</p>';
+            inviteTeamsList.innerHTML = '<p style="text-align: center; color: #64748b;">Caricamento squadre...</p>';
 
             const teams = await window.PrivateLeagues.getAvailableTeamsForInvite(this.currentLeague.leagueId);
 
             if (teams.length === 0) {
-                inviteTeamsList.innerHTML = '<p class="text-gray-400 text-center">Nessuna squadra disponibile per l\'invito</p>';
+                inviteTeamsList.innerHTML = '<p style="text-align: center; color: #64748b;">Nessuna squadra disponibile</p>';
                 return;
             }
 
             inviteTeamsList.innerHTML = teams.map(team => `
-                <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3 mb-2 hover:bg-gray-700 transition">
-                    <div>
-                        <p class="text-white font-bold">${team.teamName}</p>
-                        <p class="text-gray-400 text-xs">Budget: ${team.budget} CS</p>
+                <div class="pl-invite-item">
+                    <div class="pl-invite-info">
+                        <h4>${team.teamName}</h4>
+                        <p>Budget: ${team.budget} CS</p>
                     </div>
-                    <button class="btn-send-invite bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2 px-4 rounded-lg transition"
-                            data-team-id="${team.teamId}" data-team-name="${team.teamName}">
+                    <button class="pl-invite-btn btn-send-invite" data-team-id="${team.teamId}" data-team-name="${team.teamName}">
                         Invita
                     </button>
                 </div>
             `).join('');
 
-            // Aggiungi listener ai bottoni invita
             inviteTeamsList.querySelectorAll('.btn-send-invite').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const targetTeamId = e.target.dataset.teamId;
@@ -590,8 +1754,7 @@ window.PrivateLeaguesUI = {
                     if (result.success) {
                         if (window.Toast) window.Toast.success(`Invito inviato a ${targetTeamName}!`);
                         e.target.textContent = 'Inviato ✓';
-                        e.target.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-                        e.target.classList.add('bg-green-600');
+                        e.target.classList.add('sent');
                     } else {
                         if (window.Toast) window.Toast.error(result.error);
                         e.target.disabled = false;
@@ -603,15 +1766,12 @@ window.PrivateLeaguesUI = {
 
         // Chiudi modal
         container.querySelector('#close-invite-modal')?.addEventListener('click', () => {
-            inviteModal.classList.add('hidden');
-            inviteModal.classList.remove('flex');
+            inviteModal.classList.remove('active');
         });
 
-        // Chiudi cliccando fuori
         inviteModal?.addEventListener('click', (e) => {
             if (e.target === inviteModal) {
-                inviteModal.classList.add('hidden');
-                inviteModal.classList.remove('flex');
+                inviteModal.classList.remove('active');
             }
         });
 
@@ -646,78 +1806,80 @@ window.PrivateLeaguesUI = {
         const currentRound = league.currentRound || 1;
         const totalRounds = league.schedule.length;
 
-        // Calcola tempo rimanente
         const timeRemaining = window.PrivateLeagues.getTimeUntilNextSimulation(league);
         const canForceSimulate = timeRemaining !== null && timeRemaining <= 0;
 
-        // Ordina classifica
         const sortedStandings = [...league.standings].sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             return (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst);
         });
 
         container.innerHTML = `
-            <div class="p-4 space-y-4">
+            ${this.getStyles()}
+            <div class="pl-container">
                 <!-- Header -->
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-bold text-purple-400">${league.name}</h2>
-                    <p class="text-gray-400 text-sm">Giornata ${Math.min(currentRound, totalRounds)}/${totalRounds}</p>
+                <div class="pl-header">
+                    <h2 class="pl-title">${league.name}</h2>
+                    <p class="pl-subtitle">Giornata ${Math.min(currentRound, totalRounds)} di ${totalRounds}</p>
                 </div>
 
-                <!-- Timer Prossima Simulazione -->
+                <!-- Timer -->
                 ${currentRound <= totalRounds ? `
-                    <div id="timer-box" class="bg-gradient-to-r ${canForceSimulate ? 'from-green-900/50 to-emerald-900/50 border-green-600/50' : 'from-blue-900/50 to-cyan-900/50 border-blue-600/50'} rounded-xl p-4 text-center border">
-                        <p class="text-gray-400 text-sm mb-1">Prossima giornata tra:</p>
-                        <div id="timer-display" class="text-3xl font-mono font-bold ${canForceSimulate ? 'text-green-400' : 'text-blue-400'}">
+                    <div class="pl-timer-box ${canForceSimulate ? 'ready' : 'waiting'}" id="timer-box">
+                        <div class="pl-timer-label">Prossima giornata tra:</div>
+                        <div class="pl-timer-value ${canForceSimulate ? 'ready' : 'waiting'}" id="timer-display">
                             ${canForceSimulate ? 'PRONTA!' : window.PrivateLeagues.formatTimeRemaining(timeRemaining)}
                         </div>
                         ${canForceSimulate ? `
-                            <button id="btn-force-simulate" class="mt-3 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-lg transition">
-                                Forza Simulazione
+                            <button id="btn-force-simulate" class="pl-btn pl-btn-success" style="margin-top: 12px; width: auto; padding: 12px 28px;">
+                                <span>⚡</span> Simula Ora
                             </button>
                         ` : `
-                            <p class="text-gray-500 text-xs mt-2">La simulazione avviene automaticamente ogni 48 ore</p>
+                            <div class="pl-timer-hint">Simulazione automatica ogni 24 ore</div>
                         `}
                     </div>
                 ` : ''}
 
-                <!-- Montepremi -->
                 ${league.entryFee > 0 ? `
-                    <div class="bg-yellow-900/20 rounded-lg p-2 text-center border border-yellow-600/30">
-                        <span class="text-yellow-400 text-sm">Montepremi: <span class="font-bold">${league.entryFee * league.maxTeams} CS</span></span>
+                    <div class="pl-prizepool-banner">
+                        <span>🏆 Montepremi: <strong>${league.entryFee * league.maxTeams} CS</strong></span>
                     </div>
                 ` : ''}
 
-                <!-- Classifica -->
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <h3 class="text-lg font-bold text-white mb-3">Classifica</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
+                <!-- Standings -->
+                <div class="pl-card">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon purple">📊</span>
+                        Classifica
+                    </h3>
+
+                    <div class="pl-standings">
+                        <table>
                             <thead>
-                                <tr class="text-gray-400 text-xs">
-                                    <th class="text-left pb-2">#</th>
-                                    <th class="text-left pb-2">Squadra</th>
-                                    <th class="text-center pb-2">G</th>
-                                    <th class="text-center pb-2">V</th>
-                                    <th class="text-center pb-2">P</th>
-                                    <th class="text-center pb-2">S</th>
-                                    <th class="text-center pb-2">GF</th>
-                                    <th class="text-center pb-2">GS</th>
-                                    <th class="text-center pb-2 text-yellow-400">Pt</th>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Squadra</th>
+                                    <th>G</th>
+                                    <th>V</th>
+                                    <th>P</th>
+                                    <th>S</th>
+                                    <th>GF</th>
+                                    <th>GS</th>
+                                    <th class="points">Pt</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${sortedStandings.map((team, i) => `
-                                    <tr class="${team.teamId === this.currentTeamId ? 'bg-purple-900/30' : ''} border-t border-gray-700">
-                                        <td class="py-2 ${i === 0 ? 'text-yellow-400' : ''}">${i + 1}</td>
-                                        <td class="py-2 text-white ${team.teamId === this.currentTeamId ? 'font-bold' : ''}">${team.teamName}</td>
-                                        <td class="text-center py-2">${team.played}</td>
-                                        <td class="text-center py-2 text-green-400">${team.wins}</td>
-                                        <td class="text-center py-2">${team.draws}</td>
-                                        <td class="text-center py-2 text-red-400">${team.losses}</td>
-                                        <td class="text-center py-2">${team.goalsFor}</td>
-                                        <td class="text-center py-2">${team.goalsAgainst}</td>
-                                        <td class="text-center py-2 font-bold text-yellow-400">${team.points}</td>
+                                    <tr class="${team.teamId === this.currentTeamId ? 'my-team' : ''}">
+                                        <td class="${i === 0 ? 'pos-1' : ''}">${i + 1}</td>
+                                        <td class="team-name">${team.teamName}</td>
+                                        <td>${team.played}</td>
+                                        <td class="wins">${team.wins}</td>
+                                        <td>${team.draws}</td>
+                                        <td class="losses">${team.losses}</td>
+                                        <td>${team.goalsFor}</td>
+                                        <td>${team.goalsAgainst}</td>
+                                        <td class="points-col">${team.points}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -725,10 +1887,11 @@ window.PrivateLeaguesUI = {
                     </div>
                 </div>
 
-                <!-- Prossima Giornata / Calendario -->
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <h3 class="text-lg font-bold text-white mb-3">
-                        ${currentRound <= totalRounds ? `Giornata ${currentRound}` : 'Campionato Terminato'}
+                <!-- Schedule -->
+                <div class="pl-card">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon blue">📅</span>
+                        Calendario
                     </h3>
 
                     ${this.renderSchedule(league.schedule, currentRound)}
@@ -743,27 +1906,22 @@ window.PrivateLeaguesUI = {
     renderSchedule(schedule, currentRound) {
         return schedule.map(round => {
             const isCurrent = round.round === currentRound;
-            const isPast = round.round < currentRound;
 
             return `
-                <div class="mb-4 ${isCurrent ? 'bg-purple-900/20 rounded-lg p-2' : ''}">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-sm font-bold ${isCurrent ? 'text-purple-400' : 'text-gray-400'}">
-                            G${round.round} - ${round.type}
-                        </span>
-                        ${isCurrent ? '<span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Attuale</span>' : ''}
+                <div class="pl-schedule-round ${isCurrent ? 'current' : ''}">
+                    <div class="pl-schedule-header">
+                        <span class="pl-schedule-title">G${round.round} - ${round.type}</span>
+                        ${isCurrent ? '<span class="pl-schedule-badge">Attuale</span>' : ''}
                     </div>
-                    <div class="space-y-1">
-                        ${round.matches.map(match => `
-                            <div class="flex items-center justify-between text-sm ${match.result ? '' : 'text-gray-400'}">
-                                <span class="flex-1 text-right ${match.result && match.result.homeGoals > match.result.awayGoals ? 'text-green-400 font-bold' : ''}">${match.homeName}</span>
-                                <span class="mx-3 font-mono ${match.result ? 'text-white' : 'text-gray-500'}">
-                                    ${match.result ? `${match.result.homeGoals} - ${match.result.awayGoals}` : '- : -'}
-                                </span>
-                                <span class="flex-1 text-left ${match.result && match.result.awayGoals > match.result.homeGoals ? 'text-green-400 font-bold' : ''}">${match.awayName}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                    ${round.matches.map(match => `
+                        <div class="pl-match">
+                            <span class="pl-match-team home ${match.result && match.result.homeGoals > match.result.awayGoals ? 'winner' : ''}">${match.homeName}</span>
+                            <span class="pl-match-score ${match.result ? '' : 'pending'}">
+                                ${match.result ? `${match.result.homeGoals} - ${match.result.awayGoals}` : '- : -'}
+                            </span>
+                            <span class="pl-match-team away ${match.result && match.result.awayGoals > match.result.homeGoals ? 'winner' : ''}">${match.awayName}</span>
+                        </div>
+                    `).join('')}
                 </div>
             `;
         }).join('');
@@ -773,7 +1931,7 @@ window.PrivateLeaguesUI = {
         container.querySelector('#btn-force-simulate')?.addEventListener('click', async () => {
             const btn = container.querySelector('#btn-force-simulate');
             btn.disabled = true;
-            btn.textContent = 'Simulazione...';
+            btn.innerHTML = '<span>⏳</span> Simulazione...';
 
             const result = await window.PrivateLeagues.simulateRound(this.currentLeague.leagueId);
 
@@ -784,32 +1942,28 @@ window.PrivateLeaguesUI = {
                     if (window.Toast) window.Toast.success('Giornata simulata!');
                 }
 
-                // Ricarica dati
                 await this.refreshTeamData();
                 this.currentLeague = await window.PrivateLeagues.getLeagueById(this.currentLeague.leagueId);
                 this.render();
             } else {
                 if (window.Toast) window.Toast.error(result.error);
                 btn.disabled = false;
-                btn.textContent = 'Forza Simulazione';
+                btn.innerHTML = '<span>⚡</span> Simula Ora';
             }
         });
     },
 
     startTimerUpdate(container) {
-        // Pulisci timer precedenti
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
 
-        // Aggiorna ogni minuto
         this.timerInterval = setInterval(async () => {
             if (!this.currentLeague || this.currentLeague.status !== 'in_progress') {
                 clearInterval(this.timerInterval);
                 return;
             }
 
-            // Ricarica dati lega per timer aggiornato
             this.currentLeague = await window.PrivateLeagues.getLeagueById(this.currentLeague.leagueId);
 
             if (!this.currentLeague || this.currentLeague.status !== 'in_progress') {
@@ -827,15 +1981,13 @@ window.PrivateLeaguesUI = {
             if (timerDisplay) {
                 if (canForceSimulate) {
                     timerDisplay.textContent = 'PRONTA!';
-                    timerDisplay.className = 'text-3xl font-mono font-bold text-green-400';
+                    timerDisplay.className = 'pl-timer-value ready';
 
-                    // Aggiorna box
                     if (timerBox && !container.querySelector('#btn-force-simulate')) {
-                        timerBox.className = 'bg-gradient-to-r from-green-900/50 to-emerald-900/50 border-green-600/50 rounded-xl p-4 text-center border';
-                        // Aggiungi bottone se non esiste
+                        timerBox.className = 'pl-timer-box ready';
                         const btnHtml = `
-                            <button id="btn-force-simulate" class="mt-3 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-lg transition">
-                                Forza Simulazione
+                            <button id="btn-force-simulate" class="pl-btn pl-btn-success" style="margin-top: 12px; width: auto; padding: 12px 28px;">
+                                <span>⚡</span> Simula Ora
                             </button>
                         `;
                         timerDisplay.insertAdjacentHTML('afterend', btnHtml);
@@ -845,7 +1997,7 @@ window.PrivateLeaguesUI = {
                     timerDisplay.textContent = window.PrivateLeagues.formatTimeRemaining(timeRemaining);
                 }
             }
-        }, 60000); // Ogni minuto
+        }, 60000);
     },
 
     // ================================================================
@@ -855,88 +2007,86 @@ window.PrivateLeaguesUI = {
     renderCompletedLeague(container) {
         const league = this.currentLeague;
 
-        // Ordina classifica
         const sortedStandings = [...league.standings].sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             return (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst);
         });
 
-        // Calcola premi netti
         const prizeResults = league.prizeResults || [];
+        const medals = ['🥇', '🥈', '🥉', '4°', '5°', '6°'];
 
         container.innerHTML = `
-            <div class="p-4 space-y-4">
-                <!-- Header Vincitore -->
-                <div class="text-center mb-4 bg-gradient-to-r from-yellow-900/50 to-amber-900/50 rounded-xl p-6">
-                    <div class="text-5xl mb-2">&#127942;</div>
-                    <h2 class="text-2xl font-bold text-yellow-400">${league.winner?.teamName || 'Vincitore'}</h2>
-                    <p class="text-gray-400">Campione di ${league.name}</p>
+            ${this.getStyles()}
+            <div class="pl-container">
+                <!-- Winner Header -->
+                <div class="pl-winner-header">
+                    <div class="pl-winner-trophy">🏆</div>
+                    <h2 class="pl-winner-name">${league.winner?.teamName || 'Vincitore'}</h2>
+                    <p class="pl-winner-subtitle">Campione di ${league.name}</p>
                 </div>
 
-                <!-- Classifica Finale -->
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <h3 class="text-lg font-bold text-white mb-3">Classifica Finale</h3>
-                    <div class="space-y-2">
-                        ${sortedStandings.map((team, i) => {
-                            const prizeInfo = prizeResults.find(p => p.teamId === team.teamId);
-                            const medals = ['&#129351;', '&#129352;', '&#129353;'];
-                            const medal = i < 3 ? medals[i] : `${i + 1}°`;
-                            const isWinner = i === 0;
+                <!-- Final Standings -->
+                <div class="pl-card">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon purple">🏅</span>
+                        Classifica Finale
+                    </h3>
 
-                            return `
-                                <div class="flex items-center justify-between ${isWinner ? 'bg-yellow-900/30 border border-yellow-600/50' : 'bg-gray-700/50'} rounded-lg p-3 ${team.teamId === this.currentTeamId ? 'ring-2 ring-purple-500' : ''}">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-xl">${medal}</span>
-                                        <div>
-                                            <span class="text-white font-bold">${team.teamName}</span>
-                                            <span class="text-gray-400 text-sm ml-2">${team.points} pt</span>
-                                            ${isWinner ? '<span class="ml-2 text-xs bg-yellow-600 text-white px-2 py-0.5 rounded">CAMPIONE</span>' : ''}
-                                        </div>
+                    ${sortedStandings.map((team, i) => {
+                        const prizeInfo = prizeResults.find(p => p.teamId === team.teamId);
+                        const isWinner = i === 0;
+                        const isMyTeam = team.teamId === this.currentTeamId;
+
+                        return `
+                            <div class="pl-final-item ${isWinner ? 'winner' : ''} ${isMyTeam ? 'my-team' : ''}">
+                                <div class="pl-final-left">
+                                    <span class="pl-final-medal">${medals[i]}</span>
+                                    <div class="pl-final-info">
+                                        <span class="pl-final-name">
+                                            ${team.teamName}
+                                            ${isWinner ? '<span class="pl-champion-badge">Campione</span>' : ''}
+                                        </span>
+                                        <span class="pl-final-points">${team.points} punti</span>
                                     </div>
-                                    ${prizeInfo && (prizeInfo.prize > 0 || prizeInfo.netGain !== 0) ? `
-                                        <div class="text-right">
-                                            <span class="${prizeInfo.netGain >= 0 ? 'text-green-400' : 'text-red-400'} font-bold">
-                                                ${prizeInfo.netGain >= 0 ? '+' : ''}${prizeInfo.netGain} CS
-                                            </span>
-                                            ${prizeInfo.winnerBonus > 0 ? `
-                                                <span class="text-yellow-400 text-xs block">
-                                                    (bonus vincitore!)
-                                                </span>
-                                            ` : prizeInfo.prize > 0 ? `
-                                                <span class="text-gray-500 text-xs block">
-                                                    (${prizeInfo.prize} CS)
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    ` : ''}
                                 </div>
-                            `;
-                        }).join('')}
-                    </div>
+                                ${prizeInfo && (prizeInfo.prize > 0 || prizeInfo.netGain !== 0) ? `
+                                    <div class="pl-final-right">
+                                        <span class="pl-final-prize ${prizeInfo.netGain >= 0 ? 'positive' : 'negative'}">
+                                            ${prizeInfo.netGain >= 0 ? '+' : ''}${prizeInfo.netGain} CS
+                                        </span>
+                                        ${prizeInfo.winnerBonus > 0 ? `
+                                            <span class="pl-final-bonus">bonus vincitore!</span>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
 
-                <!-- Storico Partite -->
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <h3 class="text-lg font-bold text-white mb-3">Tutte le Partite</h3>
+                <!-- Match History -->
+                <div class="pl-card">
+                    <h3 class="pl-section-title">
+                        <span class="pl-section-title-icon blue">📜</span>
+                        Storico Partite
+                    </h3>
                     ${this.renderSchedule(league.schedule, 999)}
                 </div>
 
-                <!-- Info Cooldown -->
-                <div class="bg-orange-900/30 rounded-lg p-4 text-center border border-orange-600/30">
-                    <p class="text-orange-400 text-sm">
-                        <strong>Nota:</strong> Dopo aver abbandonato questa lega, dovrai attendere il 1° del prossimo mese per partecipare a una nuova lega.
-                    </p>
+                <!-- Success Info -->
+                <div class="pl-success-info">
+                    <p>🎉 Puoi abbandonare questa lega e iniziarne subito una nuova!</p>
                 </div>
 
-                <!-- Abbandona -->
-                <button id="btn-leave-completed" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg transition">
-                    Abbandona Lega (per iniziarne una nuova)
+                <!-- Leave Button -->
+                <button id="btn-leave-completed" class="pl-btn pl-btn-primary">
+                    <span>🚀</span> Esci e Inizia Nuova Lega
                 </button>
             </div>
         `;
 
         container.querySelector('#btn-leave-completed')?.addEventListener('click', async () => {
-            if (!confirm('Vuoi abbandonare questa lega? Dovrai attendere il 1° del prossimo mese per unirti a una nuova lega.')) return;
+            if (!confirm('Vuoi abbandonare questa lega e iniziarne una nuova?')) return;
 
             const result = await window.PrivateLeagues.leaveLeague(this.currentTeamId);
 
@@ -970,21 +2120,14 @@ window.PrivateLeaguesUI = {
         }
     },
 
-    /**
-     * Ottiene i CS (Crediti Seri = budget) della squadra
-     */
     async getTeamCS() {
-        // CS = Crediti Seri = budget (NON creditiSuperSeri che sono i CSS)
-
-        // Prendi dai dati squadra locali
         if (this.currentTeamData?.budget !== undefined) {
             return this.currentTeamData.budget;
         }
 
-        // Ricarica dati dal DB
         await this.refreshTeamData();
         return this.currentTeamData?.budget || 0;
     }
 };
 
-console.log("Modulo PrivateLeaguesUI caricato (con timer 48H e cooldown mensile).");
+console.log("Modulo PrivateLeaguesUI caricato (Premium Mobile-First Design).");

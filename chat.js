@@ -7,6 +7,7 @@
 window.Chat = {
     // Container elementi UI
     panel: null,
+    chatButton: null,
     isOpen: false,
     currentChannel: 'global',
 
@@ -28,6 +29,14 @@ window.Chat = {
     _inactivityTimer: null,
     _listenerPaused: false,
 
+    // Drag state
+    _isDragging: false,
+    _dragStartX: 0,
+    _dragStartY: 0,
+    _buttonStartX: 0,
+    _buttonStartY: 0,
+    _hasMoved: false,
+
     /**
      * Inizializza la chat
      */
@@ -41,6 +50,11 @@ window.Chat = {
         this.startRealtimeListener();
         this.setupListeners();
 
+        // Ripristina stato nascosto se era stato nascosto
+        if (localStorage.getItem('chat_button_hidden') === 'true') {
+            this.hideChatButton();
+        }
+
         console.log("Chat inizializzata");
     },
 
@@ -51,21 +65,46 @@ window.Chat = {
         // Rimuovi se esiste
         const existing = document.getElementById('chat-container');
         if (existing) existing.remove();
+        const existingButton = document.getElementById('chat-button');
+        if (existingButton) existingButton.remove();
+        const existingShow = document.getElementById('chat-show-button');
+        if (existingShow) existingShow.remove();
 
-        // Bottone chat flottante
-        const chatButton = document.createElement('button');
-        chatButton.id = 'chat-button';
-        chatButton.className = `
-            fixed bottom-4 left-4 z-[9997] w-14 h-14
-            bg-cyan-600 hover:bg-cyan-500
+        // Carica posizione salvata
+        const savedPos = this.loadPosition();
+
+        // Bottone chat flottante (trascinabile)
+        this.chatButton = document.createElement('button');
+        this.chatButton.id = 'chat-button';
+        this.chatButton.className = `
+            fixed z-[9997] w-12 h-12
+            bg-cyan-600/90 hover:bg-cyan-500
+            rounded-full shadow-lg
+            flex items-center justify-center
+            transition-colors duration-200
+            touch-none select-none cursor-grab active:cursor-grabbing
+        `.replace(/\s+/g, ' ').trim();
+        this.chatButton.style.left = savedPos.x + 'px';
+        this.chatButton.style.top = savedPos.y + 'px';
+        this.chatButton.innerHTML = `
+            <span class="text-xl pointer-events-none">💬</span>
+            <span id="chat-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full items-center justify-center hidden pointer-events-none">0</span>
+            <span class="absolute -bottom-1 -left-1 w-4 h-4 bg-gray-700 text-white text-[8px] rounded-full flex items-center justify-center pointer-events-none opacity-60">✕</span>
+        `;
+
+        // Bottone per mostrare chat (quando nascosta)
+        const showButton = document.createElement('button');
+        showButton.id = 'chat-show-button';
+        showButton.className = `
+            fixed bottom-4 left-4 z-[9997] w-8 h-8
+            bg-cyan-600/50 hover:bg-cyan-500
             rounded-full shadow-lg
             flex items-center justify-center
             transition-all duration-200 hover:scale-110
+            hidden
         `.replace(/\s+/g, ' ').trim();
-        chatButton.innerHTML = `
-            <span class="text-2xl">💬</span>
-            <span id="chat-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full items-center justify-center hidden">0</span>
-        `;
+        showButton.innerHTML = `<span class="text-sm">💬</span>`;
+        showButton.addEventListener('click', () => this.showChatButton());
 
         // Pannello chat
         this.panel = document.createElement('div');
@@ -109,12 +148,14 @@ window.Chat = {
             </div>
         `;
 
-        document.body.appendChild(chatButton);
+        document.body.appendChild(this.chatButton);
+        document.body.appendChild(showButton);
         document.body.appendChild(this.panel);
 
-        // Event listeners
-        chatButton.addEventListener('click', () => this.toggle());
+        // Setup drag events
+        this.setupDragEvents();
 
+        // Event listeners
         document.getElementById('chat-send').addEventListener('click', () => this.sendMessage());
         document.getElementById('chat-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
@@ -122,6 +163,154 @@ window.Chat = {
         document.getElementById('chat-input').addEventListener('input', (e) => {
             document.getElementById('chat-char-count').textContent = e.target.value.length;
         });
+    },
+
+    /**
+     * Setup eventi drag per il bottone chat
+     */
+    setupDragEvents() {
+        const btn = this.chatButton;
+        if (!btn) return;
+
+        // Mouse events
+        btn.addEventListener('mousedown', (e) => this.startDrag(e));
+        document.addEventListener('mousemove', (e) => this.onDrag(e));
+        document.addEventListener('mouseup', (e) => this.endDrag(e));
+
+        // Touch events
+        btn.addEventListener('touchstart', (e) => this.startDrag(e), { passive: false });
+        document.addEventListener('touchmove', (e) => this.onDrag(e), { passive: false });
+        document.addEventListener('touchend', (e) => this.endDrag(e));
+    },
+
+    /**
+     * Inizia trascinamento
+     */
+    startDrag(e) {
+        if (this.isOpen) return; // Non trascinare se chat aperta
+
+        this._isDragging = true;
+        this._hasMoved = false;
+
+        const touch = e.touches ? e.touches[0] : e;
+        this._dragStartX = touch.clientX;
+        this._dragStartY = touch.clientY;
+
+        const rect = this.chatButton.getBoundingClientRect();
+        this._buttonStartX = rect.left;
+        this._buttonStartY = rect.top;
+
+        this.chatButton.style.transition = 'none';
+        e.preventDefault();
+    },
+
+    /**
+     * Durante trascinamento
+     */
+    onDrag(e) {
+        if (!this._isDragging) return;
+
+        const touch = e.touches ? e.touches[0] : e;
+        const deltaX = touch.clientX - this._dragStartX;
+        const deltaY = touch.clientY - this._dragStartY;
+
+        // Considera movimento solo se > 5px
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            this._hasMoved = true;
+        }
+
+        let newX = this._buttonStartX + deltaX;
+        let newY = this._buttonStartY + deltaY;
+
+        // Limiti schermo
+        const btnSize = 48;
+        newX = Math.max(0, Math.min(window.innerWidth - btnSize, newX));
+        newY = Math.max(0, Math.min(window.innerHeight - btnSize, newY));
+
+        this.chatButton.style.left = newX + 'px';
+        this.chatButton.style.top = newY + 'px';
+
+        e.preventDefault();
+    },
+
+    /**
+     * Fine trascinamento
+     */
+    endDrag(e) {
+        if (!this._isDragging) return;
+
+        this._isDragging = false;
+        this.chatButton.style.transition = '';
+
+        // Salva posizione
+        const rect = this.chatButton.getBoundingClientRect();
+
+        // Se trascinato fuori dal bordo sinistro, nascondi
+        if (rect.left < -20 && this._hasMoved) {
+            this.hideChatButton();
+            return;
+        }
+
+        this.savePosition(rect.left, rect.top);
+
+        // Se non si e' mosso, era un click
+        if (!this._hasMoved) {
+            this.toggle();
+        }
+    },
+
+    /**
+     * Salva posizione bottone
+     */
+    savePosition(x, y) {
+        localStorage.setItem('chat_button_pos', JSON.stringify({ x, y }));
+    },
+
+    /**
+     * Carica posizione bottone
+     */
+    loadPosition() {
+        try {
+            const saved = localStorage.getItem('chat_button_pos');
+            if (saved) {
+                const pos = JSON.parse(saved);
+                // Verifica che sia dentro lo schermo
+                const btnSize = 48;
+                pos.x = Math.max(0, Math.min(window.innerWidth - btnSize, pos.x));
+                pos.y = Math.max(0, Math.min(window.innerHeight - btnSize, pos.y));
+                return pos;
+            }
+        } catch (e) {}
+        // Default: bottom-left
+        return { x: 16, y: window.innerHeight - 64 };
+    },
+
+    /**
+     * Nascondi bottone chat
+     */
+    hideChatButton() {
+        if (this.chatButton) {
+            this.chatButton.classList.add('hidden');
+        }
+        const showBtn = document.getElementById('chat-show-button');
+        if (showBtn) {
+            showBtn.classList.remove('hidden');
+        }
+        localStorage.setItem('chat_button_hidden', 'true');
+    },
+
+    /**
+     * Mostra bottone chat
+     */
+    showChatButton() {
+        if (this.chatButton) {
+            this.chatButton.classList.remove('hidden');
+        }
+        const showBtn = document.getElementById('chat-show-button');
+        if (showBtn) {
+            showBtn.classList.add('hidden');
+        }
+        localStorage.removeItem('chat_button_hidden');
     },
 
     /**

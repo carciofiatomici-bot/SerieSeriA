@@ -11,103 +11,17 @@ window.PrivateLeagues = {
     SIMULATION_COOLDOWN_MS: 24 * 60 * 60 * 1000, // 24 ore in millisecondi
 
     // ================================================================
-    // COOLDOWN MENSILE (1° del mese successivo)
+    // LIMITE: 1 LEGA PER VOLTA (nessun cooldown temporale)
     // ================================================================
 
     /**
-     * Calcola la data del 1° giorno del mese successivo
-     */
-    getFirstDayOfNextMonth() {
-        const now = new Date();
-        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
-        return nextMonth.toISOString();
-    },
-
-    /**
-     * Verifica se la squadra e' in cooldown
+     * Verifica se la squadra e' gia in una lega
+     * (Non c'e piu cooldown temporale, solo limite di 1 lega per volta)
      */
     async isTeamInCooldown(teamId) {
-        try {
-            const { doc, getDoc } = window.firestoreTools;
-            const db = window.db;
-            const appId = window.firestoreTools.appId;
-
-            const teamDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/teams`, teamId));
-            if (!teamDoc.exists()) return { inCooldown: false };
-
-            const teamData = teamDoc.data();
-            if (!teamData.privateLeagueCooldownUntil) return { inCooldown: false };
-
-            const cooldownDate = new Date(teamData.privateLeagueCooldownUntil);
-            const now = new Date();
-
-            if (now < cooldownDate) {
-                return {
-                    inCooldown: true,
-                    cooldownUntil: teamData.privateLeagueCooldownUntil,
-                    cooldownDate: cooldownDate
-                };
-            }
-
-            return { inCooldown: false };
-        } catch (error) {
-            console.error('Errore verifica cooldown:', error);
-            return { inCooldown: false };
-        }
-    },
-
-    /**
-     * Formatta la data di fine cooldown
-     */
-    formatCooldownDate(isoDate) {
-        const date = new Date(isoDate);
-        const day = date.getDate();
-        const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-                           'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-        return `1 ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-    },
-
-    /**
-     * Imposta il cooldown per una squadra
-     */
-    async setTeamCooldown(teamId) {
-        try {
-            const { doc, updateDoc } = window.firestoreTools;
-            const db = window.db;
-            const appId = window.firestoreTools.appId;
-
-            const cooldownUntil = this.getFirstDayOfNextMonth();
-            await updateDoc(doc(db, `artifacts/${appId}/public/data/teams`, teamId), {
-                privateLeagueCooldownUntil: cooldownUntil
-            });
-
-            console.log(`PrivateLeagues: Cooldown impostato per ${teamId} fino a ${cooldownUntil}`);
-            return true;
-        } catch (error) {
-            console.error('Errore impostazione cooldown:', error);
-            return false;
-        }
-    },
-
-    /**
-     * Rimuove il cooldown di una squadra (usato per acquisto CSS)
-     */
-    async clearCooldown(teamId) {
-        try {
-            const { doc, updateDoc, deleteField } = window.firestoreTools;
-            const db = window.db;
-            const appId = window.firestoreTools.appId;
-
-            await updateDoc(doc(db, `artifacts/${appId}/public/data/teams`, teamId), {
-                privateLeagueCooldownUntil: deleteField()
-            });
-
-            console.log(`PrivateLeagues: Cooldown rimosso per ${teamId}`);
-            return { success: true };
-        } catch (error) {
-            console.error('Errore rimozione cooldown:', error);
-            return { success: false, error: error.message };
-        }
+        // Nessun cooldown temporale - restituisce sempre false
+        // Il controllo "sei gia in una lega" viene fatto in createLeague/joinLeague
+        return { inCooldown: false };
     },
 
     // Distribuzione premi per numero di squadre
@@ -147,13 +61,6 @@ window.PrivateLeagues = {
 
             entryFee = Math.max(0, Math.min(this.MAX_ENTRY_FEE, parseInt(entryFee) || 0));
             maxTeams = Math.max(this.MIN_TEAMS, Math.min(this.MAX_TEAMS, parseInt(maxTeams) || 4));
-
-            // Verifica cooldown mensile
-            const cooldownCheck = await this.isTeamInCooldown(creatorTeamId);
-            if (cooldownCheck.inCooldown) {
-                const dateStr = this.formatCooldownDate(cooldownCheck.cooldownUntil);
-                return { success: false, error: `Devi attendere il ${dateStr} per partecipare a una nuova lega` };
-            }
 
             // Verifica che la squadra non sia gia in una lega
             const teamDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/teams`, creatorTeamId));
@@ -230,13 +137,6 @@ window.PrivateLeagues = {
             const { doc, getDoc, updateDoc } = window.firestoreTools;
             const db = window.db;
             const appId = window.firestoreTools.appId;
-
-            // Verifica cooldown mensile
-            const cooldownCheck = await this.isTeamInCooldown(teamId);
-            if (cooldownCheck.inCooldown) {
-                const dateStr = this.formatCooldownDate(cooldownCheck.cooldownUntil);
-                return { success: false, error: `Devi attendere il ${dateStr} per partecipare a una nuova lega` };
-            }
 
             // Trova lega con questo codice
             const league = await this.getLeagueByInviteCode(inviteCode);
@@ -389,16 +289,12 @@ window.PrivateLeagues = {
                 }
             }
 
-            // Se la lega era completata, imposta cooldown fino al 1° del mese successivo
-            if (league.status === 'completed') {
-                teamUpdate.privateLeagueCooldownUntil = this.getFirstDayOfNextMonth();
-                console.log(`PrivateLeagues: Cooldown impostato per ${teamId} fino al ${teamUpdate.privateLeagueCooldownUntil}`);
-            }
+            // Nessun cooldown - puoi iniziare subito una nuova lega
 
             await updateDoc(doc(db, `artifacts/${appId}/public/data/teams`, teamId), teamUpdate);
 
             console.log(`PrivateLeagues: Squadra ${teamId} ha abbandonato la lega "${league.name}"`);
-            return { success: true, cooldownSet: league.status === 'completed' };
+            return { success: true };
 
         } catch (error) {
             console.error('Errore abbandono lega:', error);
@@ -1161,4 +1057,4 @@ window.PrivateLeagues = {
     }
 };
 
-console.log("Modulo PrivateLeagues caricato (3-6 squadre, timer 24H).");
+console.log("Modulo PrivateLeagues caricato (3-6 squadre, 1 lega per volta, timer 24H).");

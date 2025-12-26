@@ -605,22 +605,24 @@ window.SchedinaUI = {
             this.predictions[matchKey] = prediction;
         }
 
-        // Aggiorna UI bottoni
-        const matchCard = document.querySelector(`[data-match-key="${matchKey}"]`);
+        // Aggiorna UI bottoni - trova il div del match (non il bottone)
+        const matchCard = document.querySelector(`div[data-match-key="${matchKey}"]`);
         if (matchCard) {
             matchCard.querySelectorAll('.pred-btn').forEach(btn => {
                 const p = btn.dataset.prediction;
                 const isSelected = this.predictions[matchKey] === p;
 
-                // Reset classes
-                btn.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-blue-500', 'text-white', 'text-black', 'shadow-lg', 'shadow-green-500/30', 'shadow-yellow-500/30', 'shadow-blue-500/30', 'scale-105');
-                btn.classList.add('bg-gray-700/80', 'text-gray-400');
+                // Reset completo stili
+                btn.className = 'pred-btn flex-1 max-w-[80px] h-11 rounded-xl font-black text-lg transition-all';
 
                 if (isSelected) {
-                    btn.classList.remove('bg-gray-700/80', 'text-gray-400');
-                    if (p === '1') btn.classList.add('bg-green-500', 'text-white', 'shadow-lg', 'shadow-green-500/30', 'scale-105');
-                    if (p === 'X') btn.classList.add('bg-yellow-500', 'text-black', 'shadow-lg', 'shadow-yellow-500/30', 'scale-105');
-                    if (p === '2') btn.classList.add('bg-blue-500', 'text-white', 'shadow-lg', 'shadow-blue-500/30', 'scale-105');
+                    // Stile selezionato
+                    if (p === '1') btn.className += ' bg-green-500 text-white shadow-lg shadow-green-500/30 scale-105';
+                    if (p === 'X') btn.className += ' bg-yellow-500 text-black shadow-lg shadow-yellow-500/30 scale-105';
+                    if (p === '2') btn.className += ' bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105';
+                } else {
+                    // Stile non selezionato
+                    btn.className += ' bg-gray-700/80 text-gray-400 hover:bg-gray-600';
                 }
             });
         }
