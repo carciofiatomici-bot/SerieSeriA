@@ -24,25 +24,19 @@ window.Notifications = {
 
     // Configurazione
     config: {
-        maxNotifications: 50,
-        persistDays: 7,
+        maxNotifications: 5,          // Max 5 notifiche alla volta
+        persistDays: 3,               // Elimina dopo 3 giorni
         cacheDurationMs: 5 * 60 * 1000, // 5 minuti di cache
         lazyLoad: true // Carica da server solo al click
     },
 
-    // Tipi di notifica
+    // Tipi di notifica (6 tipi attivi)
     types: {
         draft_turn: { icon: '📋', color: 'yellow', priority: 'high' },
         draft_steal: { icon: '🏴‍☠️', color: 'red', priority: 'high' },
-        match_result: { icon: '⚽', color: 'green', priority: 'medium' },
-        market_player: { icon: '💰', color: 'blue', priority: 'low' },
         trade_request: { icon: '🔄', color: 'purple', priority: 'high' },
-        achievement: { icon: '🏆', color: 'amber', priority: 'medium' },
-        system: { icon: '⚙️', color: 'gray', priority: 'low' },
-        chat: { icon: '💬', color: 'cyan', priority: 'medium' },
         challenge: { icon: '⚔️', color: 'orange', priority: 'high' },
-        out_of_position: { icon: '⚠️', color: 'orange', priority: 'medium' },
-        credits_received: { icon: '💎', color: 'emerald', priority: 'high' },
+        minigame_challenge: { icon: '🎮', color: 'indigo', priority: 'high' },
         league_invite: { icon: '👥', color: 'purple', priority: 'high' }
     },
 
@@ -135,13 +129,12 @@ window.Notifications = {
         const existing = document.getElementById('notifications-bell');
         if (existing) existing.remove();
 
-        // Crea bottone campanella
+        // Crea bottone campanella (trasparente, solo emoji visibile)
         this.bellButton = document.createElement('button');
         this.bellButton.id = 'notifications-bell';
         this.bellButton.className = `
-            fixed top-4 right-4 z-[9998] w-12 h-12
-            bg-gray-800 hover:bg-gray-700
-            rounded-full shadow-lg border-2 border-gray-600
+            fixed top-4 right-4 z-[9998] w-10 h-10
+            bg-transparent
             flex items-center justify-center
             transition-all duration-200 hover:scale-110
         `.replace(/\s+/g, ' ').trim();
@@ -228,9 +221,24 @@ window.Notifications = {
         if (saved) {
             try {
                 this.notifications = JSON.parse(saved);
-                // Filtra notifiche vecchie
+                // Filtra notifiche vecchie (oltre 3 giorni)
                 const cutoff = Date.now() - (this.config.persistDays * 24 * 60 * 60 * 1000);
-                this.notifications = this.notifications.filter(n => n.timestamp > cutoff);
+                const beforeCount = this.notifications.length;
+                this.notifications = this.notifications.filter(n => {
+                    // Rimuovi se troppo vecchia
+                    if (n.timestamp < cutoff) return false;
+                    // Rimuovi se già risposta (per sfide/inviti)
+                    if (n.responded) return false;
+                    return true;
+                });
+                // Limita a max notifiche
+                if (this.notifications.length > this.config.maxNotifications) {
+                    this.notifications = this.notifications.slice(0, this.config.maxNotifications);
+                }
+                if (beforeCount !== this.notifications.length) {
+                    console.log(`[Notifiche] Pulite ${beforeCount - this.notifications.length} notifiche vecchie/risposte`);
+                    this.saveToLocalStorage();
+                }
             } catch (e) {
                 this.notifications = [];
             }
@@ -276,22 +284,32 @@ window.Notifications = {
             const appId = window.firestoreTools.appId;
             const notifPath = `artifacts/${appId}/public/data/notifications`;
 
-            // Query semplificata: solo per questo team (evita 'in' che richiede indice)
-            const q = query(
-                collection(window.db, notifPath),
-                where('targetTeamId', '==', teamId),
-                orderBy('timestamp', 'desc'),
-                limit(15)
-            );
-
-            const snapshot = await getDocs(q);
+            let snapshot;
+            try {
+                // Query con ordinamento (richiede indice Firestore)
+                const q = query(
+                    collection(window.db, notifPath),
+                    where('targetTeamId', '==', teamId),
+                    orderBy('timestamp', 'desc'),
+                    limit(15)
+                );
+                snapshot = await getDocs(q);
+            } catch (indexError) {
+                // Fallback: query senza ordinamento se indice mancante
+                console.warn('[Notifiche] Indice mancante, usando query semplice:', indexError.message);
+                const qSimple = query(
+                    collection(window.db, notifPath),
+                    where('targetTeamId', '==', teamId)
+                );
+                snapshot = await getDocs(qSimple);
+            }
             let newCount = 0;
 
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const existing = this.notifications.find(n => n.id === doc.id);
-                // Salta notifiche gia presenti o eliminate dall'utente
-                if (!existing && !this._deletedIds.has(doc.id)) {
+                // Salta notifiche gia presenti, eliminate, o gia risposte (per inviti lega)
+                if (!existing && !this._deletedIds.has(doc.id) && !data.responded) {
                     this.notifications.unshift({
                         id: doc.id,
                         ...data,
@@ -330,12 +348,22 @@ window.Notifications = {
             const appId = window.firestoreTools.appId;
             const notifPath = `artifacts/${appId}/public/data/notifications`;
 
-            const q = query(
-                collection(window.db, notifPath),
-                where('targetTeamId', '==', teamId),
-                orderBy('timestamp', 'desc'),
-                limit(10)
-            );
+            // Prova con ordinamento, fallback a query semplice se indice mancante
+            let q;
+            try {
+                q = query(
+                    collection(window.db, notifPath),
+                    where('targetTeamId', '==', teamId),
+                    orderBy('timestamp', 'desc'),
+                    limit(10)
+                );
+            } catch (e) {
+                console.warn('[Notifiche] Listener: usando query senza ordinamento');
+                q = query(
+                    collection(window.db, notifPath),
+                    where('targetTeamId', '==', teamId)
+                );
+            }
 
             this._unsubscribe = onSnapshot(q, (snapshot) => {
                 let newCount = 0;
@@ -346,8 +374,8 @@ window.Notifications = {
                         const doc = change.doc;
                         const data = doc.data();
                         const existing = this.notifications.find(n => n.id === doc.id);
-                        // Salta notifiche gia presenti o eliminate dall'utente
-                        if (!existing && !this._deletedIds.has(doc.id)) {
+                        // Salta notifiche gia presenti, eliminate, o gia risposte
+                        if (!existing && !this._deletedIds.has(doc.id) && !data.responded) {
                             const notif = {
                                 id: doc.id,
                                 ...data,
@@ -366,7 +394,7 @@ window.Notifications = {
 
                     // Invia push browser per notifiche high priority
                     newNotifications.forEach(notif => {
-                        const typeConfig = this.types[notif.type] || this.types.system;
+                        const typeConfig = this.types[notif.type] || { icon: '📢', color: 'gray', priority: 'low' };
                         if (typeConfig.priority === 'high') {
                             this.sendBrowserPush(
                                 `${typeConfig.icon} ${notif.title}`,
@@ -424,7 +452,7 @@ window.Notifications = {
      * Aggiunge una notifica locale
      */
     add(notification) {
-        const typeConfig = this.types[notification.type] || this.types.system;
+        const typeConfig = this.types[notification.type] || { icon: '📢', color: 'gray', priority: 'low' };
 
         // Se le notifiche sono disabilitate, mostra almeno un Toast per le notifiche importanti
         if (!window.FeatureFlags?.isEnabled('notifications')) {
@@ -442,6 +470,12 @@ window.Notifications = {
         };
 
         this.notifications.unshift(notif);
+
+        // Mantieni solo le ultime 5 notifiche
+        if (this.notifications.length > this.config.maxNotifications) {
+            this.notifications = this.notifications.slice(0, this.config.maxNotifications);
+        }
+
         this.saveToLocalStorage();
         this.updateUI();
 
@@ -454,7 +488,7 @@ window.Notifications = {
     },
 
     /**
-     * Notifiche predefinite
+     * Notifiche predefinite (solo 4 tipi attivi)
      */
     notify: {
         draftTurn(teamName) {
@@ -463,24 +497,6 @@ window.Notifications = {
                 title: 'E\' il tuo turno!',
                 message: `Tocca a te scegliere nel draft!`,
                 action: { type: 'navigate', target: 'draft-content' }
-            });
-        },
-
-        matchResult(opponent, result, won) {
-            window.Notifications.add({
-                type: 'match_result',
-                title: won ? 'Vittoria!' : (result.includes('-') && result.split('-')[0] === result.split('-')[1] ? 'Pareggio' : 'Sconfitta'),
-                message: `Risultato vs ${opponent}: ${result}`,
-                action: { type: 'navigate', target: 'user-campionato-content' }
-            });
-        },
-
-        newMarketPlayer(playerName, role) {
-            window.Notifications.add({
-                type: 'market_player',
-                title: 'Nuovo nel mercato!',
-                message: `${playerName} (${role}) e' disponibile`,
-                action: { type: 'navigate', target: 'mercato-content' }
             });
         },
 
@@ -493,76 +509,12 @@ window.Notifications = {
             });
         },
 
-        achievement(title, description) {
-            window.Notifications.add({
-                type: 'achievement',
-                title: `🏆 ${title}`,
-                message: description,
-                action: { type: 'openAchievements' }
-            });
-        },
-
-        system(title, message) {
-            window.Notifications.add({
-                type: 'system',
-                title: title,
-                message: message
-            });
-        },
-
-        marketOpened() {
-            window.Notifications.add({
-                type: 'market_player',
-                title: 'Mercato Aperto!',
-                message: 'Il mercato e\' stato aperto, puoi acquistare nuovi giocatori!',
-                action: { type: 'navigate', target: 'mercato-content' }
-            });
-        },
-
-        marketClosed() {
-            window.Notifications.add({
-                type: 'market_player',
-                title: 'Mercato Chiuso',
-                message: 'Il mercato e\' stato chiuso. Attendi la prossima apertura.',
-                action: null
-            });
-        },
-
-        draftOpened() {
-            window.Notifications.add({
-                type: 'draft_turn',
-                title: 'Draft Aperto!',
-                message: 'Il draft e\' stato aperto, preparati a scegliere!',
-                action: { type: 'navigate', target: 'draft-content' }
-            });
-        },
-
-        draftClosed() {
-            window.Notifications.add({
-                type: 'draft_turn',
-                title: 'Draft Chiuso',
-                message: 'Il draft e\' terminato. Buona fortuna con la tua rosa!',
-                action: null
-            });
-        },
-
         challengeReceived(fromTeam, betAmount) {
             window.Notifications.add({
                 type: 'challenge',
                 title: 'Nuova Sfida!',
                 message: betAmount > 0 ? `${fromTeam} ti sfida con ${betAmount} CS in palio!` : `${fromTeam} ti ha sfidato!`,
                 action: { type: 'navigate', target: 'app-content' }
-            });
-        },
-
-        outOfPosition(playersCount, playerNames) {
-            window.Notifications.add({
-                type: 'out_of_position',
-                title: 'Giocatori Fuori Ruolo!',
-                message: playersCount === 1
-                    ? `${playerNames[0]} sta giocando fuori ruolo (-15% livello)`
-                    : `${playersCount} giocatori fuori ruolo: ${playerNames.join(', ')} (-15% livello)`,
-                action: { type: 'navigate', target: 'gestione-content' }
             });
         },
 
@@ -575,14 +527,17 @@ window.Notifications = {
             });
         },
 
-        creditsReceived(amount, motivo) {
+        minigameChallengeReceived(fromTeam, challengeId, myRole) {
+            const roleText = myRole === 'attacker' ? 'Attaccante' : 'Difensore';
             window.Notifications.add({
-                type: 'credits_received',
-                title: `+${amount} Crediti Super Seri!`,
-                message: motivo || 'Hai ricevuto dei crediti',
-                action: { type: 'navigate', target: 'gestione-content' }
+                type: 'minigame_challenge',
+                title: 'Sfida Tattica!',
+                message: `${fromTeam} ti sfida! Sarai ${roleText}`,
+                minigameChallengeId: challengeId,
+                action: { type: 'openMinigameChallenge', challengeId: challengeId }
             });
         }
+        // league_invite è gestito via notifiche server, non serve helper locale
     },
 
     /**
@@ -624,7 +579,7 @@ window.Notifications = {
         }
 
         list.innerHTML = this.notifications.map(notif => {
-            const typeConfig = this.types[notif.type] || this.types.system;
+            const typeConfig = this.types[notif.type] || { icon: '📢', color: 'gray', priority: 'low' };
             const timeAgo = this.getTimeAgo(notif.timestamp);
             const unreadClass = notif.read ? '' : 'bg-gray-700';
 
@@ -654,6 +609,22 @@ window.Notifications = {
                             ✅ Accetta
                         </button>
                         <button onclick="event.stopPropagation(); window.Notifications.declineLeagueInvite('${notif.id}')"
+                                class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            ❌ Rifiuta
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Bottoni azione per sfide tattiche (minigame)
+            if (notif.type === 'minigame_challenge' && notif.minigameChallengeId && !notif.responded) {
+                actionButtons = `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="event.stopPropagation(); window.Notifications.acceptMinigameChallenge('${notif.id}', '${notif.minigameChallengeId}')"
+                                class="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
+                            🎮 Accetta
+                        </button>
+                        <button onclick="event.stopPropagation(); window.Notifications.declineMinigameChallenge('${notif.id}', '${notif.minigameChallengeId}')"
                                 class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
                             ❌ Rifiuta
                         </button>
@@ -865,12 +836,24 @@ window.Notifications = {
      * Accetta invito lega privata dalla notifica
      */
     async acceptLeagueInvite(notifId, leagueId, inviteCode) {
-        // Marca la notifica come risposta
+        // Marca la notifica come risposta (locale + Firestore)
         const notif = this.notifications.find(n => n.id === notifId);
         if (notif) {
             notif.responded = true;
             notif.read = true;
             this.saveToLocalStorage();
+
+            // Aggiorna anche su Firestore per evitare che riappaia
+            try {
+                const { doc, updateDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                await updateDoc(doc(window.db, `artifacts/${appId}/public/data/notifications`, notifId), {
+                    responded: true,
+                    read: true
+                });
+            } catch (e) {
+                console.warn('[Notifiche] Errore aggiornamento notifica su Firestore:', e);
+            }
         }
 
         // Chiudi dropdown notifiche
@@ -911,6 +894,34 @@ window.Notifications = {
      * Rifiuta invito lega privata dalla notifica
      */
     async declineLeagueInvite(notifId) {
+        // Marca la notifica come risposta (locale + Firestore)
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+
+            // Aggiorna anche su Firestore per evitare che riappaia
+            try {
+                const { doc, updateDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                await updateDoc(doc(window.db, `artifacts/${appId}/public/data/notifications`, notifId), {
+                    responded: true,
+                    read: true
+                });
+            } catch (e) {
+                console.warn('[Notifiche] Errore aggiornamento notifica su Firestore:', e);
+            }
+        }
+
+        if (window.Toast) window.Toast.info('Invito rifiutato');
+        this.updateUI();
+    },
+
+    /**
+     * Accetta sfida tattica (minigame) dalla notifica
+     */
+    async acceptMinigameChallenge(notifId, challengeId) {
         // Marca la notifica come risposta
         const notif = this.notifications.find(n => n.id === notifId);
         if (notif) {
@@ -919,40 +930,284 @@ window.Notifications = {
             this.saveToLocalStorage();
         }
 
-        if (window.Toast) window.Toast.info('Invito rifiutato');
+        // Chiudi dropdown notifiche
+        this.closeDropdown();
+
+        // Accetta tramite SfideMultiplayer
+        if (window.SfideMultiplayer) {
+            try {
+                const { doc, getDoc } = window.firestoreTools;
+                const appId = window.firestoreTools.appId;
+                const challengePath = `artifacts/${appId}/public/data/minigame-challenges`;
+                const challengeDoc = await getDoc(doc(window.db, challengePath, challengeId));
+
+                if (challengeDoc.exists()) {
+                    const challenge = { id: challengeDoc.id, ...challengeDoc.data() };
+
+                    // Verifica che la sfida sia ancora pending
+                    if (challenge.status !== 'pending') {
+                        if (window.Toast) window.Toast.warning('Questa sfida non e\' piu\' disponibile');
+                        this.updateUI();
+                        return;
+                    }
+
+                    // Accetta la sfida (il metodo e' interno a SfideMultiplayer, dobbiamo usarlo)
+                    // Chiamiamo direttamente la logica di accettazione
+                    const { updateDoc, Timestamp } = window.firestoreTools;
+
+                    // Inizializza stato di gioco
+                    const initialGameState = this._createMinigameInitialState(challenge);
+
+                    await updateDoc(doc(window.db, challengePath, challengeId), {
+                        status: 'in_progress',
+                        acceptedAt: Timestamp.now(),
+                        gameState: initialGameState
+                    });
+
+                    if (window.Toast) window.Toast.success("Sfida accettata! Partita in corso...");
+
+                    // Avvia il minigame
+                    if (window.SfideMinigame) {
+                        const myTeamId = window.InterfacciaCore?.currentTeamId;
+                        const myRole = challenge.attackerId === myTeamId ? 'attacker' : 'defender';
+
+                        window.SfideMinigame.open({
+                            testMode: false,
+                            multiplayer: true,
+                            challengeId: challengeId,
+                            myRole: myRole,
+                            gameState: initialGameState,
+                            onMove: (move) => this._syncMinigameMove(challengeId, move),
+                            onComplete: (result) => this._handleMinigameComplete(challengeId, result)
+                        });
+                    }
+                } else {
+                    if (window.Toast) window.Toast.error('Sfida non trovata o scaduta');
+                }
+            } catch (error) {
+                console.error('Errore accettazione sfida minigame:', error);
+                if (window.Toast) window.Toast.error('Errore nell\'accettare la sfida');
+            }
+        } else {
+            if (window.Toast) window.Toast.error('Sistema sfide tattiche non disponibile');
+        }
+
         this.updateUI();
     },
 
     /**
-     * Setup event listeners
+     * Rifiuta sfida tattica (minigame) dalla notifica
+     */
+    async declineMinigameChallenge(notifId, challengeId) {
+        // Marca la notifica come risposta
+        const notif = this.notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.responded = true;
+            notif.read = true;
+            this.saveToLocalStorage();
+        }
+
+        // Rifiuta la sfida su Firestore
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const challengePath = `artifacts/${appId}/public/data/minigame-challenges`;
+
+            await updateDoc(doc(window.db, challengePath, challengeId), {
+                status: 'declined'
+            });
+
+            if (window.Toast) window.Toast.info('Sfida rifiutata');
+        } catch (error) {
+            console.error('Errore rifiuto sfida minigame:', error);
+        }
+
+        this.updateUI();
+    },
+
+    /**
+     * Helper: crea stato iniziale per minigame
+     */
+    _createMinigameInitialState(challenge) {
+        const GRID_W = 13;
+        const GRID_H = 9;
+        const centerY = Math.floor(GRID_H / 2);
+
+        // Genera giocatori per entrambe le squadre
+        const attackerPlayers = this._generateMinigamePlayers(
+            challenge.attackerId === challenge.challengerId
+                ? challenge.challengerFormation
+                : challenge.challengedFormation,
+            'A', GRID_W, GRID_H
+        );
+
+        const defenderPlayers = this._generateMinigamePlayers(
+            challenge.defenderId === challenge.challengerId
+                ? challenge.challengerFormation
+                : challenge.challengedFormation,
+            'B', GRID_W, GRID_H
+        );
+
+        const attackerPivot = attackerPlayers.find(p => p.name === 'PIV') || attackerPlayers[attackerPlayers.length - 1];
+
+        return {
+            players: [...attackerPlayers, ...defenderPlayers],
+            scoreA: 0,
+            scoreB: 0,
+            currentTurn: challenge.attackerId,
+            movesLeft: 3,
+            ballCarrierId: attackerPivot.id,
+            ballPosition: null,
+            lastMoveAt: Date.now(),
+            isGameOver: false,
+            winner: null
+        };
+    },
+
+    /**
+     * Helper: genera giocatori per minigame
+     */
+    _generateMinigamePlayers(formation, team, GRID_W, GRID_H) {
+        const players = [];
+        const isLeft = team === 'A';
+        const centerY = Math.floor(GRID_H / 2);
+
+        const titolari = formation?.slice(0, 5) || [];
+
+        const rolePositions = {
+            'A': {
+                'P': { x: 0, y: centerY, name: 'GK', mod: 8, isGK: true },
+                'D': { x: 3, y: centerY, name: 'FIX', mod: 6, isGK: false },
+                'C': [
+                    { x: 4, y: 1, name: 'ALA', mod: 5, isGK: false },
+                    { x: 4, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
+                ],
+                'A': { x: 5, y: centerY, name: 'PIV', mod: 7, isGK: false }
+            },
+            'B': {
+                'P': { x: GRID_W - 1, y: centerY, name: 'GK', mod: 8, isGK: true },
+                'D': { x: GRID_W - 4, y: centerY, name: 'FIX', mod: 6, isGK: false },
+                'C': [
+                    { x: GRID_W - 5, y: 1, name: 'ALA', mod: 5, isGK: false },
+                    { x: GRID_W - 5, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
+                ],
+                'A': { x: GRID_W - 6, y: centerY, name: 'PIV', mod: 7, isGK: false }
+            }
+        };
+
+        let cIndex = 0;
+        let playerIndex = 1;
+
+        titolari.forEach(p => {
+            const role = p.ruolo || p.assignedPosition || 'C';
+            const pos = rolePositions[team][role];
+
+            let playerPos;
+            if (Array.isArray(pos)) {
+                playerPos = pos[cIndex % pos.length];
+                cIndex++;
+            } else {
+                playerPos = pos;
+            }
+
+            if (!playerPos) {
+                playerPos = rolePositions[team]['C'][0];
+            }
+
+            const level = p.level || p.currentLevel || p.livello || 5;
+            const mod = Math.min(10, 5 + Math.floor(level / 6));
+
+            players.push({
+                id: `${team}${playerIndex}`,
+                team: team,
+                name: playerPos.name,
+                playerName: p.name || 'Giocatore',
+                x: playerPos.x,
+                y: playerPos.y,
+                mod: mod,
+                isGK: playerPos.isGK,
+                defenseMode: null,
+                defenseCells: []
+            });
+
+            playerIndex++;
+        });
+
+        // Riempi fino a 5 giocatori
+        while (players.length < 5) {
+            const defaultPos = rolePositions[team]['C'][players.length % 2];
+            players.push({
+                id: `${team}${players.length + 1}`,
+                team: team,
+                name: 'ALA',
+                playerName: 'Riserva',
+                x: defaultPos.x + (players.length % 2),
+                y: defaultPos.y,
+                mod: 5,
+                isGK: false,
+                defenseMode: null,
+                defenseCells: []
+            });
+        }
+
+        return players;
+    },
+
+    /**
+     * Helper: sincronizza mossa minigame
+     */
+    async _syncMinigameMove(challengeId, gameState) {
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const challengePath = `artifacts/${appId}/public/data/minigame-challenges`;
+
+            await updateDoc(doc(window.db, challengePath, challengeId), {
+                gameState: gameState,
+                'gameState.lastMoveAt': Date.now()
+            });
+        } catch (error) {
+            console.error('[Notifiche] Errore sync mossa minigame:', error);
+        }
+    },
+
+    /**
+     * Helper: gestisce fine partita minigame
+     */
+    async _handleMinigameComplete(challengeId, result) {
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const appId = window.firestoreTools.appId;
+            const challengePath = `artifacts/${appId}/public/data/minigame-challenges`;
+
+            await updateDoc(doc(window.db, challengePath, challengeId), {
+                status: 'completed',
+                result: {
+                    scoreA: result.scoreA,
+                    scoreB: result.scoreB,
+                    winner: result.winner
+                }
+            });
+        } catch (error) {
+            console.error('[Notifiche] Errore completamento minigame:', error);
+        }
+    },
+
+    /**
+     * Setup event listeners (solo per i 4 tipi attivi)
      */
     setupListeners() {
-        // Ascolta eventi di gioco
+        // Ascolta turno draft
         document.addEventListener('draftTurnStarted', (e) => {
             if (e.detail?.teamId === window.InterfacciaCore?.currentTeamId) {
                 this.notify.draftTurn();
             }
         });
 
-        document.addEventListener('matchSimulated', (e) => {
-            const { homeTeam, awayTeam, result, type } = e.detail || {};
-            const myTeamId = window.InterfacciaCore?.currentTeamId;
-            if (homeTeam?.id === myTeamId || awayTeam?.id === myTeamId) {
-                const opponent = homeTeam?.id === myTeamId ? awayTeam?.name : homeTeam?.name;
-                const [homeScore, awayScore] = (result || '0-0').split('-').map(s => parseInt(s));
-                const myScore = homeTeam?.id === myTeamId ? homeScore : awayScore;
-                const oppScore = homeTeam?.id === myTeamId ? awayScore : homeScore;
-                const won = myScore > oppScore;
-                const draw = myScore === oppScore;
-
-                // Notifica in-app
-                this.notify.matchResult(opponent, result, won);
-
-                // Push browser
-                const matchType = type || 'Partita';
-                const title = won ? '⚽ Vittoria!' : (draw ? '⚽ Pareggio' : '⚽ Sconfitta');
-                const body = `${matchType}: ${result} vs ${opponent}`;
-                this.sendBrowserPush(title, body, 'match_result');
+        // Ascolta sfide ricevute
+        document.addEventListener('challengeReceived', (e) => {
+            if (e.detail) {
+                this.notify.challengeReceived(e.detail.fromTeam, e.detail.betAmount || 0);
             }
         });
 
@@ -967,32 +1222,7 @@ window.Notifications = {
             }
         });
 
-        // Ascolta apertura/chiusura mercato
-        document.addEventListener('marketStatusChanged', (e) => {
-            if (e.detail?.isOpen) {
-                this.notify.marketOpened();
-            } else {
-                this.notify.marketClosed();
-            }
-        });
-
-        // Ascolta apertura/chiusura draft
-        document.addEventListener('draftStatusChanged', (e) => {
-            if (e.detail?.isOpen) {
-                this.notify.draftOpened();
-            } else {
-                this.notify.draftClosed();
-            }
-        });
-
-        // Ascolta sfide ricevute
-        document.addEventListener('challengeReceived', (e) => {
-            if (e.detail) {
-                this.notify.challengeReceived(e.detail.fromTeam, e.detail.betAmount || 0);
-            }
-        });
-
-        // Ascolta cambio squadra (se implementato altrove)
+        // Ascolta cambio squadra
         document.addEventListener('teamChanged', () => {
             console.log('[Notifiche] Cambio squadra rilevato, ricarico notifiche');
             this.stopRealtimeListener();

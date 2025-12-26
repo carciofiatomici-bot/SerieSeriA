@@ -367,8 +367,9 @@ window.InterfacciaAuth = {
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
         const { ADMIN_USERNAME_LOWER, DEFAULT_LOGO_URL } = window.InterfacciaConstants;
-        const INITIAL_SQUAD = window.INITIAL_SQUAD;
-        
+        // Genera rosa iniziale con giocatori random (nomi, tipi, eta casuali)
+        const generateInitialSquad = window.generateInitialSquad;
+
         const inputTeamName = elements.loginUsernameInput.value.trim();
         const password = elements.loginPasswordInput.value.trim();
         // FIX: Controllo di nullita per window.auth.currentUser
@@ -544,6 +545,9 @@ window.InterfacciaAuth = {
 
                 const initialBudget = 500;
 
+                // Genera giocatori base con nomi, tipi ed eta casuali
+                const initialSquadPlayers = generateInitialSquad();
+
                 teamData = {
                     teamName: teamNameForDisplay,
                     ownerUserId: userId,
@@ -551,17 +555,17 @@ window.InterfacciaAuth = {
                     budget: initialBudget,
                     creationDate: new Date().toISOString(),
                     logoUrl: DEFAULT_LOGO_URL,
-                    players: INITIAL_SQUAD,
+                    players: initialSquadPlayers,
                     coach: null,
                     iconaId: null,
                     formation: {
                         modulo: '1-1-2-1',
-                        titolari: INITIAL_SQUAD,
+                        titolari: initialSquadPlayers,
                         panchina: []
                     },
                     isParticipating: false,
                     // COOLDOWN SEPARATI INIZIALIZZATI
-                    lastDraftAcquisitionTimestamp: 0, 
+                    lastDraftAcquisitionTimestamp: 0,
                     lastMarketAcquisitionTimestamp: 0,
                 };
 

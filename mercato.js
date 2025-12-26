@@ -47,16 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let marketDiscountCache = 0; // Sconto stadio (0.05 = 5%, 0.10 = 10%, 0.15 = 15%)
 
     // === GIOCATORI BASE GRATUITI ===
-    const BASE_PLAYER_NAMES = [
-        'Rossi', 'Bianchi', 'Ferrari', 'Russo', 'Romano', 'Gallo', 'Costa', 'Fontana',
-        'Conti', 'Esposito', 'Ricci', 'Bruno', 'De Luca', 'Moretti', 'Marino', 'Greco',
-        'Barbieri', 'Lombardi', 'Giordano', 'Colombo', 'Mancini', 'Longo', 'Leone', 'Martinelli'
-    ];
-    const BASE_PLAYER_FIRST_NAMES = [
-        'Marco', 'Luca', 'Andrea', 'Giuseppe', 'Giovanni', 'Paolo', 'Antonio', 'Francesco',
-        'Alessandro', 'Matteo', 'Lorenzo', 'Davide', 'Simone', 'Fabio', 'Stefano', 'Roberto'
-    ];
-    const PLAYER_TYPES = ['Potenza', 'Tecnica', 'Velocita'];
+    // Usa le costanti globali definite in interfaccia-core.js
     const ROLE_LABELS = { P: 'Portiere', D: 'Difensore', C: 'Centrocampista', A: 'Attaccante' };
     const ROLE_COLORS = { P: 'blue', D: 'green', C: 'yellow', A: 'red' };
 
@@ -97,28 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'both': 'Entrambi'
     };
 
-    /**
-     * Genera un nome casuale per un giocatore base
-     */
-    const generateBasePlayerName = () => {
-        const firstName = BASE_PLAYER_FIRST_NAMES[Math.floor(Math.random() * BASE_PLAYER_FIRST_NAMES.length)];
-        const lastName = BASE_PLAYER_NAMES[Math.floor(Math.random() * BASE_PLAYER_NAMES.length)];
-        return `${firstName} ${lastName}`;
-    };
-
-    /**
-     * Genera un tipo casuale per un giocatore base
-     */
-    const generateBasePlayerType = () => {
-        return PLAYER_TYPES[Math.floor(Math.random() * PLAYER_TYPES.length)];
-    };
-
-    /**
-     * Genera un'eta casuale per un giocatore base (18-25)
-     */
-    const generateBasePlayerAge = () => {
-        return Math.floor(Math.random() * 8) + 18; // 18-25
-    };
+    // Usa le funzioni globali definite in interfaccia-core.js
+    const generateBasePlayerName = () => window.generateBasePlayerName();
+    const generateBasePlayerType = () => window.generateBasePlayerType();
+    const generateBasePlayerAge = () => window.generateBasePlayerAge();
 
     /**
      * Renderizza la sezione giocatori base gratuiti

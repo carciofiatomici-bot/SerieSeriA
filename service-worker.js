@@ -57,6 +57,7 @@ const STATIC_ASSETS = [
     './challenge-match.js',
     './challenge-minigame.js',
     './sfide-minigame.js',
+    './sfide-multiplayer.js',
     './dashboard-features.js',
     './dashboard-tabs.js',
     './next-match-alert.js',

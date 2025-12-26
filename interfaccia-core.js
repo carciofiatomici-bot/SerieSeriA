@@ -238,13 +238,90 @@ window.showIfBeta = function(featureName) {
     return isBeta;
 };
 
+// --- GENERAZIONE GIOCATORI BASE ---
+// Array nomi per giocatori base (usati anche in mercato.js)
+window.BASE_PLAYER_NAMES = [
+    'Rossi', 'Bianchi', 'Ferrari', 'Russo', 'Romano', 'Gallo', 'Costa', 'Fontana',
+    'Conti', 'Esposito', 'Ricci', 'Bruno', 'De Luca', 'Moretti', 'Marino', 'Greco',
+    'Barbieri', 'Lombardi', 'Giordano', 'Colombo', 'Mancini', 'Longo', 'Leone', 'Martinelli'
+];
+window.BASE_PLAYER_FIRST_NAMES = [
+    'Marco', 'Luca', 'Andrea', 'Giuseppe', 'Giovanni', 'Paolo', 'Antonio', 'Francesco',
+    'Alessandro', 'Matteo', 'Lorenzo', 'Davide', 'Simone', 'Fabio', 'Stefano', 'Roberto'
+];
+window.PLAYER_TYPES = ['Potenza', 'Tecnica', 'Velocita'];
+
+/**
+ * Genera un nome casuale per un giocatore base
+ */
+window.generateBasePlayerName = function() {
+    const firstName = window.BASE_PLAYER_FIRST_NAMES[Math.floor(Math.random() * window.BASE_PLAYER_FIRST_NAMES.length)];
+    const lastName = window.BASE_PLAYER_NAMES[Math.floor(Math.random() * window.BASE_PLAYER_NAMES.length)];
+    return `${firstName} ${lastName}`;
+};
+
+/**
+ * Genera un tipo casuale per un giocatore base
+ */
+window.generateBasePlayerType = function() {
+    return window.PLAYER_TYPES[Math.floor(Math.random() * window.PLAYER_TYPES.length)];
+};
+
+/**
+ * Genera un'eta casuale per un giocatore base (18-25)
+ */
+window.generateBasePlayerAge = function() {
+    return Math.floor(Math.random() * 8) + 18; // 18-25
+};
+
+/**
+ * Genera un singolo giocatore base per la rosa iniziale
+ * @param {string} role - Ruolo del giocatore (P, D, C, A)
+ * @param {number} index - Indice per l'ID univoco
+ * @returns {Object} - Oggetto giocatore
+ */
+window.generateBasePlayer = function(role, index = 0) {
+    const playerId = `base_${role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return {
+        id: playerId,
+        name: window.generateBasePlayerName(),
+        role: role,
+        levelRange: [5, 5],
+        age: window.generateBasePlayerAge(),
+        cost: 0,
+        level: 5,
+        isCaptain: false,
+        isBase: true,
+        isBasePlayer: true,
+        type: window.generateBasePlayerType(),
+        abilities: []
+    };
+};
+
+/**
+ * Genera la rosa iniziale di 5 giocatori base (P, D, C, C, A)
+ * Ogni chiamata genera giocatori diversi con nomi, tipi ed eta casuali
+ * @returns {Array<Object>} - Array di 5 giocatori base
+ */
+window.generateInitialSquad = function() {
+    return [
+        window.generateBasePlayer('P', 0),
+        window.generateBasePlayer('D', 1),
+        window.generateBasePlayer('C', 2),
+        window.generateBasePlayer('C', 3),
+        window.generateBasePlayer('A', 4)
+    ];
+};
+
 // --- ROSA INIZIALE (5 GIOCATORI: P, D, C, C, A) ---
+// DEPRECATED: Usa window.generateInitialSquad() per generare giocatori con nomi casuali
+// Mantenuto per retrocompatibilita con codice esistente
 window.INITIAL_SQUAD = [
-    { id: 'p001', name: 'Portiere Base', role: 'P', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
-    { id: 'd001', name: 'Difensore Base', role: 'D', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] },
-    { id: 'c001', name: 'Centrocampista Base 1', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_TECNICA || 'Tecnica', abilities: [] },
-    { id: 'c002', name: 'Centrocampista Base 2', role: 'C', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_VELOCITA || 'Velocita', abilities: [] },
-    { id: 'a001', name: 'Attaccante Base', role: 'A', levelRange: [1, 1], age: 50, cost: 0, level: 1, isCaptain: false, isBase: true, type: window.TYPE_POTENZA || 'Potenza', abilities: [] }
+    { id: 'p001', name: 'Portiere Base', role: 'P', levelRange: [5, 5], age: 20, cost: 0, level: 5, isCaptain: false, isBase: true, isBasePlayer: true, type: 'Potenza', abilities: [] },
+    { id: 'd001', name: 'Difensore Base', role: 'D', levelRange: [5, 5], age: 20, cost: 0, level: 5, isCaptain: false, isBase: true, isBasePlayer: true, type: 'Potenza', abilities: [] },
+    { id: 'c001', name: 'Centrocampista Base 1', role: 'C', levelRange: [5, 5], age: 20, cost: 0, level: 5, isCaptain: false, isBase: true, isBasePlayer: true, type: 'Tecnica', abilities: [] },
+    { id: 'c002', name: 'Centrocampista Base 2', role: 'C', levelRange: [5, 5], age: 20, cost: 0, level: 5, isCaptain: false, isBase: true, isBasePlayer: true, type: 'Velocita', abilities: [] },
+    { id: 'a001', name: 'Attaccante Base', role: 'A', levelRange: [5, 5], age: 20, cost: 0, level: 5, isCaptain: false, isBase: true, isBasePlayer: true, type: 'Potenza', abilities: [] }
 ];
 
 // --- HELPER GLOBALE PER NUMERI CASUALI ---

@@ -636,6 +636,24 @@ document.addEventListener('DOMContentLoaded', () => {
      * Cabla gli eventi della dashboard
      */
     const setupAdminDashboardEvents = () => {
+        // Toggle menu Stato Generale (chiuso di default)
+        const btnToggleStatoGenerale = document.getElementById('btn-toggle-stato-generale');
+        const statoGeneraleContent = document.getElementById('stato-generale-content');
+        const statoGeneraleChevron = document.getElementById('stato-generale-chevron');
+
+        if (btnToggleStatoGenerale && statoGeneraleContent) {
+            btnToggleStatoGenerale.addEventListener('click', () => {
+                const isHidden = statoGeneraleContent.classList.contains('hidden');
+                if (isHidden) {
+                    statoGeneraleContent.classList.remove('hidden');
+                    statoGeneraleChevron?.classList.add('rotate-180');
+                } else {
+                    statoGeneraleContent.classList.add('hidden');
+                    statoGeneraleChevron?.classList.remove('rotate-180');
+                }
+            });
+        }
+
         // Toggle menu Gestione Lega
         const btnToggleLeague = document.getElementById('btn-toggle-league-management');
         const leagueContent = document.getElementById('league-management-content');
@@ -934,14 +952,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Test Sfide Minigame - bottone sezione separata (sopra Boss Battle)
+        // Sfide Minigame Multiplayer - bottone sezione separata (sopra Boss Battle)
         const btnTestSfideMinigameSection = document.getElementById('btn-test-sfide-minigame-section');
         if (btnTestSfideMinigameSection) {
             btnTestSfideMinigameSection.addEventListener('click', () => {
-                if (window.SfideMinigame) {
+                // Prima opzione: usa il sistema multiplayer
+                if (window.SfideMultiplayer) {
+                    window.SfideMultiplayer.showChallengeModal();
+                }
+                // Fallback: modalita' test locale
+                else if (window.SfideMinigame) {
                     window.SfideMinigame.open({ testMode: true });
                 } else {
-                    window.Toast?.error("Minigioco Sfide non disponibile");
+                    window.Toast?.error("Sistema Sfide non disponibile");
                 }
             });
         }

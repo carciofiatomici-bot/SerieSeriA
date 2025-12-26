@@ -151,11 +151,10 @@ window.InterfacciaOnboarding = {
      * Gestisce la conferma dell'Icona e salva in Firestore.
      */
     async handleCaptainConfirmation(elements) {
-        const { doc, updateDoc } = window.firestoreTools;
+        const { doc, updateDoc, getDoc } = window.firestoreTools;
         const appId = window.firestoreTools.appId;
         const TEAMS_COLLECTION_PATH = window.InterfacciaConstants.getTeamsCollectionPath(appId);
-        const INITIAL_SQUAD = window.INITIAL_SQUAD;
-        
+
         const selectedCaptainId = elements.btnConfirmCaptain.dataset.selectedCaptainId;
         const savedCoachName = localStorage.getItem('fanta_coach_name');
         const currentTeamId = window.InterfacciaCore.currentTeamId;
@@ -167,7 +166,7 @@ window.InterfacciaOnboarding = {
             elements.btnConfirmCaptain.disabled = true;
             return;
         }
-        
+
         if (!savedCoachName) {
             elements.captainSelectionError.textContent = "Errore critico: Nome Allenatore mancante. Torna al login.";
             elements.captainSelectionError.classList.add('text-red-400');
@@ -176,22 +175,35 @@ window.InterfacciaOnboarding = {
         }
 
         const selectedCaptain = captainCandidates.find(p => p.id === selectedCaptainId);
-        
+
         if (!selectedCaptain) {
             elements.captainSelectionError.textContent = "Errore critico: Icona non trovata. Riprova il login.";
             elements.captainSelectionError.classList.add('text-red-400');
             elements.btnConfirmCaptain.disabled = true;
             return;
         }
-        
+
         elements.btnConfirmCaptain.textContent = 'Salvataggio Rosa...';
         elements.btnConfirmCaptain.disabled = true;
 
         try {
             const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, currentTeamId);
-            
-            // 1. ROSA INIZIALE CORRENTE (P, D, C1, C2, A)
-            const initialSquad = [...INITIAL_SQUAD];
+
+            // 1. ROSA INIZIALE: leggi i giocatori salvati dalla squadra (generati con nomi random)
+            // Usa i dati dalla cache globale o carica da Firestore se necessario
+            let initialSquad = [];
+            if (window.InterfacciaCore.currentTeamData?.players?.length > 0) {
+                initialSquad = [...window.InterfacciaCore.currentTeamData.players];
+            } else {
+                // Fallback: leggi da Firestore
+                const teamDoc = await getDoc(teamDocRef);
+                if (teamDoc.exists() && teamDoc.data().players) {
+                    initialSquad = [...teamDoc.data().players];
+                } else {
+                    // Ultimo fallback: genera nuovi giocatori
+                    initialSquad = window.generateInitialSquad ? window.generateInitialSquad() : [...window.INITIAL_SQUAD];
+                }
+            }
             
             // 2. Ruolo dell'Icona scelto
             const iconaRole = selectedCaptain.role;
