@@ -17,7 +17,7 @@ window.SfideMultiplayer = (function() {
     // ========================================
     const CONFIG = {
         MOVES_PER_TURN: 3,
-        TURN_TIMEOUT_MS: 20000,  // 20 secondi per mossa
+        TURN_TIMEOUT_MS: 30000,  // 30 secondi per mossa
         CHALLENGE_EXPIRE_MS: 5 * 60 * 1000, // 5 minuti per accettare
         GOAL_LIMIT: 3,
         TEAMS_CACHE_MS: 5 * 60 * 1000 // Cache squadre 5 minuti
@@ -72,7 +72,113 @@ window.SfideMultiplayer = (function() {
         // Ascolta sfide in arrivo
         startListeningForChallenges();
 
+        // Controlla se c'e' una partita in corso da riprendere
+        checkForActiveMatch();
+
         console.log('[SfideMultiplayer] Inizializzato per team:', state.myTeamId);
+    }
+
+    // ========================================
+    // RICONNESSIONE PARTITA IN CORSO
+    // ========================================
+    async function checkForActiveMatch() {
+        try {
+            const { collection, query, where, getDocs } = window.firestoreTools;
+            const path = getMinigameChallengesPath();
+            if (!path) return;
+
+            // Query 1: partite dove sono lo sfidante
+            const q1 = query(
+                collection(window.db, path),
+                where('status', '==', 'in_progress'),
+                where('challengerId', '==', state.myTeamId)
+            );
+
+            // Query 2: partite dove sono lo sfidato
+            const q2 = query(
+                collection(window.db, path),
+                where('status', '==', 'in_progress'),
+                where('challengedId', '==', state.myTeamId)
+            );
+
+            const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+
+            // Prendi la prima partita trovata
+            const matchDoc = snap1.docs[0] || snap2.docs[0];
+
+            if (matchDoc) {
+                const match = { id: matchDoc.id, ...matchDoc.data() };
+                console.log('[SfideMultiplayer] Trovata partita in corso:', match.id);
+                showReconnectModal(match);
+            }
+        } catch (error) {
+            console.error('[SfideMultiplayer] Errore check partita attiva:', error);
+        }
+    }
+
+    function showReconnectModal(match) {
+        const opponentName = match.challengerId === state.myTeamId
+            ? match.challengedName
+            : match.challengerName;
+
+        const modal = document.createElement('div');
+        modal.id = 'reconnect-match-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 border-2 border-yellow-500 text-center">
+                <div class="text-5xl mb-4">⚠️</div>
+                <h2 class="text-xl font-bold text-yellow-400 mb-2">Partita in Sospeso!</h2>
+                <p class="text-gray-300 mb-4">
+                    Hai una sfida in corso contro <span class="text-indigo-400 font-bold">${opponentName}</span>
+                </p>
+                <p class="text-sm text-gray-400 mb-4">
+                    Punteggio: <span class="text-red-400">${match.gameState?.scoreA || 0}</span> -
+                    <span class="text-blue-400">${match.gameState?.scoreB || 0}</span>
+                </p>
+                <div class="flex gap-3 justify-center">
+                    <button id="btn-reconnect-match" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-lg transition">
+                        🎮 Riprendi
+                    </button>
+                    <button id="btn-abandon-match" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Abbandona
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('btn-reconnect-match').addEventListener('click', () => {
+            modal.remove();
+            joinMatch(match.id, match);
+        });
+
+        document.getElementById('btn-abandon-match').addEventListener('click', async () => {
+            modal.remove();
+            await abandonMatch(match.id);
+        });
+    }
+
+    async function abandonMatch(matchId) {
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const path = getMinigameChallengesPath();
+
+            // Chi abbandona perde
+            const myTeamLetter = state.myTeamId === state.challengerId ? 'A' : 'B';
+            const winnerId = myTeamLetter === 'A' ? 'B' : 'A';
+
+            await updateDoc(doc(window.db, path, matchId), {
+                status: 'completed',
+                'gameState.isGameOver': true,
+                'gameState.winner': winnerId,
+                'gameState.abandonedBy': state.myTeamId
+            });
+
+            if (window.Toast) window.Toast.info('Partita abbandonata');
+        } catch (error) {
+            console.error('[SfideMultiplayer] Errore abbandono:', error);
+        }
     }
 
     // ========================================
@@ -602,11 +708,15 @@ window.SfideMultiplayer = (function() {
         state.myTeamId = window.InterfacciaCore?.currentTeamId;
         state.myRole = challenge.attackerId === state.myTeamId ? 'attacker' : 'defender';
 
+        // Determina il mio team (A=rosso=challenger, B=blu=challenged)
+        const myTeamLetter = state.myTeamId === challenge.challengerId ? 'A' : 'B';
+
         // Apri minigame in modalita' test con giocatori corretti
         if (window.SfideMinigame) {
             window.SfideMinigame.open({
                 testMode: true,
                 multiplayer: false,
+                myTeam: myTeamLetter, // A=rosso, B=blu
                 // Passa il gameState per usare i giocatori corretti
                 gameState: challenge.gameState,
                 useGameState: true, // Flag per usare gameState anche in testMode
@@ -615,12 +725,16 @@ window.SfideMultiplayer = (function() {
                     state.isInMatch = false;
                     state.currentChallengeId = null;
 
-                    if (result.scoreA > result.scoreB) {
-                        if (window.Toast) window.Toast.success(`Hai vinto ${result.scoreA}-${result.scoreB}!`);
-                    } else if (result.scoreB > result.scoreA) {
-                        if (window.Toast) window.Toast.info(`Hai perso ${result.scoreA}-${result.scoreB}`);
+                    // Risultato in base al mio team
+                    const myScore = myTeamLetter === 'A' ? result.scoreA : result.scoreB;
+                    const oppScore = myTeamLetter === 'A' ? result.scoreB : result.scoreA;
+
+                    if (myScore > oppScore) {
+                        if (window.Toast) window.Toast.success(`Hai vinto ${myScore}-${oppScore}!`);
+                    } else if (oppScore > myScore) {
+                        if (window.Toast) window.Toast.info(`Hai perso ${myScore}-${oppScore}`);
                     } else {
-                        if (window.Toast) window.Toast.info(`Pareggio ${result.scoreA}-${result.scoreB}!`);
+                        if (window.Toast) window.Toast.info(`Pareggio ${myScore}-${oppScore}!`);
                     }
                 }
             });
@@ -651,37 +765,46 @@ window.SfideMultiplayer = (function() {
         const GRID_H = 9;
         const centerY = Math.floor(GRID_H / 2);
 
-        // Genera giocatori dalle formazioni
-        const attackerPlayers = generateTeamPlayers(
-            challenge.attackerId === challenge.challengerId
-                ? challenge.challengerFormation
-                : challenge.challengedFormation,
-            'A', // Attacker = Team A (sinistra)
+        // Team A (Rosso, sinistra) = Challenger (chi sfida)
+        // Team B (Blu, destra) = Challenged (chi viene sfidato)
+        const challengerPlayers = generateTeamPlayers(
+            challenge.challengerFormation,
+            'A', // Challenger = Team A (rosso, sinistra)
             GRID_W, GRID_H
         );
 
-        const defenderPlayers = generateTeamPlayers(
-            challenge.defenderId === challenge.challengerId
-                ? challenge.challengerFormation
-                : challenge.challengedFormation,
-            'B', // Defender = Team B (destra)
+        const challengedPlayers = generateTeamPlayers(
+            challenge.challengedFormation,
+            'B', // Challenged = Team B (blu, destra)
             GRID_W, GRID_H
         );
 
-        // L'attaccante inizia con la palla
-        const attackerPivot = attackerPlayers.find(p => p.name === 'PIV') || attackerPlayers[attackerPlayers.length - 1];
+        // Chi inizia con la palla? Chi e' stato assegnato come attaccante
+        const challengerStarts = challenge.attackerId === challenge.challengerId;
+        const startingTeamPlayers = challengerStarts ? challengerPlayers : challengedPlayers;
+        const startingPivot = startingTeamPlayers.find(p => p.name === 'PIV') || startingTeamPlayers[startingTeamPlayers.length - 1];
 
         return {
-            players: [...attackerPlayers, ...defenderPlayers],
-            scoreA: 0, // Attacker score
-            scoreB: 0, // Defender score
-            currentTurn: challenge.attackerId, // Attaccante inizia
+            players: [...challengerPlayers, ...challengedPlayers],
+            scoreA: 0, // Challenger (rosso) score
+            scoreB: 0, // Challenged (blu) score
+            currentTurn: challenge.attackerId, // Chi attacca inizia
             movesLeft: CONFIG.MOVES_PER_TURN,
-            ballCarrierId: attackerPivot.id,
+            ballCarrierId: startingPivot.id,
             ballPosition: null,
             lastMoveAt: Date.now(),
             isGameOver: false,
-            winner: null
+            winner: null,
+            // Turni saltati consecutivi (3 = sconfitta)
+            skippedTurns: {
+                [challenge.challengerId]: 0,
+                [challenge.challengedId]: 0
+            },
+            // Mappa teamId -> team letter per riferimento
+            teamMapping: {
+                [challenge.challengerId]: 'A',
+                [challenge.challengedId]: 'B'
+            }
         };
     }
 
@@ -786,8 +909,11 @@ window.SfideMultiplayer = (function() {
         state.myTeamId = window.InterfacciaCore?.currentTeamId;
         state.myRole = challenge.attackerId === state.myTeamId ? 'attacker' : 'defender';
 
+        // Determina il mio team (A=rosso=challenger, B=blu=challenged)
+        state.myTeamLetter = state.myTeamId === challenge.challengerId ? 'A' : 'B';
+
         // Inizia a sincronizzare con Firestore
-        startMatchSync(challengeId);
+        startMatchSync(challengeId, challenge);
 
         // Apri il minigame con modalita' multiplayer
         if (window.SfideMinigame) {
@@ -796,6 +922,7 @@ window.SfideMultiplayer = (function() {
                 multiplayer: true,
                 challengeId: challengeId,
                 myRole: state.myRole,
+                myTeam: state.myTeamLetter, // A=rosso, B=blu
                 gameState: challenge.gameState,
                 onMove: (move) => sendMove(challengeId, move),
                 onComplete: (result) => handleMatchComplete(challengeId, result)
@@ -803,7 +930,7 @@ window.SfideMultiplayer = (function() {
         }
     }
 
-    function startMatchSync(challengeId) {
+    function startMatchSync(challengeId, challenge) {
         const { doc, onSnapshot } = window.firestoreTools;
         const path = getMinigameChallengesPath();
 
@@ -823,7 +950,8 @@ window.SfideMultiplayer = (function() {
 
             // Aggiorna stato locale nel minigame
             if (window.SfideMinigame && data.gameState) {
-                const myTeam = state.myRole === 'attacker' ? 'A' : 'B';
+                // Usa teamMapping o fallback a state.myTeamLetter
+                const myTeam = data.gameState.teamMapping?.[state.myTeamId] || state.myTeamLetter || 'A';
                 const isMyTurn = data.gameState.currentTurn === state.myTeamId;
 
                 state.isMyTurn = isMyTurn;
@@ -863,15 +991,19 @@ window.SfideMultiplayer = (function() {
             const data = snapshot.data();
             let gameState = { ...data.gameState };
 
+            // Reset turni saltati quando faccio una mossa
+            if (gameState.skippedTurns && gameState.skippedTurns[state.myTeamId]) {
+                gameState.skippedTurns[state.myTeamId] = 0;
+            }
+
             // Applica la mossa
             gameState = applyMove(gameState, move);
 
             // Verifica fine partita
             if (gameState.scoreA >= CONFIG.GOAL_LIMIT || gameState.scoreB >= CONFIG.GOAL_LIMIT) {
                 gameState.isGameOver = true;
-                gameState.winner = gameState.scoreA >= CONFIG.GOAL_LIMIT
-                    ? data.attackerId
-                    : data.defenderId;
+                // A = challenger (rosso), B = challenged (blu)
+                gameState.winner = gameState.scoreA >= CONFIG.GOAL_LIMIT ? 'A' : 'B';
             }
 
             // Aggiorna Firestore
@@ -960,17 +1092,43 @@ window.SfideMultiplayer = (function() {
             const data = snapshot.data();
             let gameState = { ...data.gameState };
 
+            // Incrementa turni saltati per me
+            if (!gameState.skippedTurns) {
+                gameState.skippedTurns = {};
+            }
+            gameState.skippedTurns[state.myTeamId] = (gameState.skippedTurns[state.myTeamId] || 0) + 1;
+
+            console.log(`[SfideMultiplayer] Turni saltati da ${state.myTeamId}: ${gameState.skippedTurns[state.myTeamId]}`);
+
+            // Se 3 turni saltati, partita persa!
+            if (gameState.skippedTurns[state.myTeamId] >= 3) {
+                const myTeamLetter = gameState.teamMapping?.[state.myTeamId] || 'A';
+                const winnerTeam = myTeamLetter === 'A' ? 'B' : 'A';
+
+                gameState.isGameOver = true;
+                gameState.winner = winnerTeam;
+                gameState.lostByTimeout = state.myTeamId;
+
+                await updateDoc(docRef, {
+                    gameState,
+                    status: 'completed'
+                });
+
+                if (window.Toast) window.Toast.error("Hai saltato 3 turni! Partita persa.");
+                return;
+            }
+
             // Passa il turno all'avversario
-            const otherTeamId = data.attackerId === state.myTeamId
-                ? data.defenderId
-                : data.attackerId;
+            const otherTeamId = data.challengerId === state.myTeamId
+                ? data.challengedId
+                : data.challengerId;
 
             gameState.currentTurn = otherTeamId;
             gameState.movesLeft = CONFIG.MOVES_PER_TURN;
             gameState.lastMoveAt = Date.now();
 
             // Reset difese del team che sta per giocare
-            const otherTeam = data.attackerId === otherTeamId ? 'A' : 'B';
+            const otherTeam = gameState.teamMapping?.[otherTeamId] || 'B';
             gameState.players = gameState.players.map(p => {
                 if (p.team === otherTeam) {
                     return { ...p, defenseMode: null, defenseCells: [] };
@@ -980,7 +1138,7 @@ window.SfideMultiplayer = (function() {
 
             await updateDoc(docRef, { gameState });
 
-            if (window.Toast) window.Toast.warning("Tempo scaduto! Turno passato all'avversario.");
+            if (window.Toast) window.Toast.warning(`Tempo scaduto! Turno saltato (${gameState.skippedTurns[state.myTeamId]}/3)`);
 
         } catch (error) {
             console.error("[SfideMultiplayer] Errore timeout:", error);
@@ -1005,13 +1163,17 @@ window.SfideMultiplayer = (function() {
 
         // Mostra risultato
         if (result) {
-            const myTeam = state.myRole === 'attacker' ? 'A' : 'B';
+            // Usa myTeamLetter (A=challenger/rosso, B=challenged/blu) o fallback a teamMapping
+            const myTeam = state.myTeamLetter || result.teamMapping?.[state.myTeamId] || 'A';
             const myScore = myTeam === 'A' ? result.scoreA : result.scoreB;
             const theirScore = myTeam === 'A' ? result.scoreB : result.scoreA;
-            const iWon = (myTeam === 'A' && result.scoreA > result.scoreB) ||
-                         (myTeam === 'B' && result.scoreB > result.scoreA);
 
-            if (iWon) {
+            // Controlla se ha perso per timeout
+            if (result.lostByTimeout === state.myTeamId) {
+                if (window.Toast) window.Toast.error(`Hai perso per timeout (3 turni saltati)`);
+            } else if (result.lostByTimeout) {
+                if (window.Toast) window.Toast.success(`Hai vinto! L'avversario ha saltato 3 turni.`);
+            } else if (result.winner === myTeam) {
                 if (window.Toast) window.Toast.success(`Hai vinto ${myScore}-${theirScore}!`);
             } else if (myScore === theirScore) {
                 if (window.Toast) window.Toast.info(`Pareggio ${myScore}-${theirScore}!`);
@@ -1042,6 +1204,11 @@ window.SfideMultiplayer = (function() {
     // UTILITIES
     // ========================================
     async function hasActiveChallenge(teamId) {
+        // Bypass per testing (flag admin)
+        if (window.FeatureFlags?.isEnabled('unlimitedChallenges')) {
+            return false;
+        }
+
         try {
             const { collection, query, where, getDocs } = window.firestoreTools;
             const path = getMinigameChallengesPath();

@@ -809,7 +809,8 @@
         state.multiplayer = options.multiplayer || false;
         state.challengeId = options.challengeId || null;
         state.myRole = options.myRole || null;
-        state.myTeam = state.myRole === 'attacker' ? 'A' : 'B';
+        // myTeam: A=rosso (challenger), B=blu (challenged) - usa options.myTeam se fornito
+        state.myTeam = options.myTeam || (state.myRole === 'attacker' ? 'A' : 'B');
         state.onMove = options.onMove || null;
         state.isMyTurn = true; // Default, aggiornato da updateMultiplayerState
 

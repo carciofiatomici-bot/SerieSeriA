@@ -133,7 +133,7 @@ window.Notifications = {
         this.bellButton = document.createElement('button');
         this.bellButton.id = 'notifications-bell';
         this.bellButton.className = `
-            fixed top-4 right-4 z-[9998] w-10 h-10
+            fixed bottom-16 right-2 z-[9998] w-10 h-10
             bg-transparent
             flex items-center justify-center
             transition-all duration-200 hover:scale-110
@@ -144,11 +144,11 @@ window.Notifications = {
             <span id="notification-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full items-center justify-center hidden">0</span>
         `;
 
-        // Crea dropdown
+        // Crea dropdown (si apre verso l'alto, sopra la tab bar)
         this.dropdown = document.createElement('div');
         this.dropdown.id = 'notifications-dropdown';
         this.dropdown.className = `
-            fixed top-20 right-4 z-[9997] w-80 max-h-96
+            fixed bottom-28 right-2 z-[9997] w-80 max-h-96
             bg-gray-800 rounded-xl shadow-2xl border-2 border-gray-600
             overflow-hidden hidden
         `.replace(/\s+/g, ' ').trim();

@@ -308,6 +308,21 @@ window.FeatureFlags = {
                 </ul>
                 <p class="mt-2 text-indigo-400">Sfida i tuoi amici in battaglie tattiche in tempo reale!</p>`
         },
+        unlimitedChallenges: {
+            id: 'unlimitedChallenges',
+            name: 'Sfide Illimitate (Test)',
+            description: 'Rimuove il limite di una sfida attiva alla volta - SOLO PER TEST',
+            icon: '🔓',
+            enabled: false,
+            category: 'debug',
+            details: `<strong>Solo per testing!</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Bypassa il controllo "hai gia' una sfida attiva"</li>
+                    <li>Permette sfide multiple contemporanee</li>
+                    <li>Utile per testare senza attendere</li>
+                </ul>
+                <p class="mt-2 text-red-400">⚠️ Disattiva in produzione!</p>`
+        },
         tutorial: {
             id: 'tutorial',
             name: 'Tutorial Interattivo',
