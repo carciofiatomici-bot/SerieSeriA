@@ -2421,10 +2421,33 @@ window.GestioneSquadreFormazione = {
             const appId = window.firestoreTools?.appId;
             if (currentTeamId && appId) {
                 const teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, currentTeamId);
+
+                // Sanitizza players rimuovendo valori undefined
+                const sanitizedPlayers = teamData.players.map(p => {
+                    const clean = {};
+                    for (const [key, value] of Object.entries(p)) {
+                        if (value !== undefined) clean[key] = value;
+                    }
+                    return clean;
+                });
+
+                // Sanitizza playersFormStatus
+                const sanitizedFormStatus = {};
+                if (teamData.playersFormStatus) {
+                    for (const [id, status] of Object.entries(teamData.playersFormStatus)) {
+                        if (status && typeof status === 'object') {
+                            sanitizedFormStatus[id] = {};
+                            for (const [key, value] of Object.entries(status)) {
+                                if (value !== undefined) sanitizedFormStatus[id][key] = value;
+                            }
+                        }
+                    }
+                }
+
                 await updateDoc(teamDocRef, {
                     budget: newBudget,
-                    players: teamData.players,
-                    playersFormStatus: teamData.playersFormStatus
+                    players: sanitizedPlayers,
+                    playersFormStatus: sanitizedFormStatus
                 });
             }
 
