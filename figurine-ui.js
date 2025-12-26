@@ -144,12 +144,15 @@ window.FigurineUI = {
 
                     <!-- Tabs - Pill Style -->
                     <div class="px-3 py-2 bg-gray-900/80 border-b border-gray-800">
-                        <div class="flex gap-2 bg-gray-800/50 rounded-xl p-1">
-                            <button class="figurine-tab flex-1 py-2 px-3 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="album">
+                        <div class="flex gap-1 bg-gray-800/50 rounded-xl p-1">
+                            <button class="figurine-tab flex-1 py-2 px-2 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="album">
                                 📖 Album
                             </button>
-                            <button class="figurine-tab flex-1 py-2 px-3 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="pack">
+                            <button class="figurine-tab flex-1 py-2 px-2 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="pack">
                                 📦 Pacchetti
+                            </button>
+                            <button class="figurine-tab flex-1 py-2 px-2 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition rounded-lg" data-tab="trades">
+                                🔄 Scambi
                             </button>
                         </div>
                     </div>
@@ -271,10 +274,20 @@ window.FigurineUI = {
         const modBonus = (unique * 0.01).toFixed(2);
         if (modBonusEl) modBonusEl.textContent = `⚔️+${modBonus}`;
 
-        // Free pack - solo emoji quando disponibile
+        // Free pack - emoji quando disponibile, altrimenti countdown
         const canFree = window.FigurineSystem.canOpenFreePack(this.currentAlbum);
         if (freePackEl) {
-            freePackEl.innerHTML = canFree ? '<span class="text-xl animate-bounce">🎁</span>' : '';
+            if (canFree) {
+                freePackEl.innerHTML = '<span class="text-xl animate-bounce">🎁</span>';
+            } else {
+                // Mostra countdown nel header
+                const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
+                if (timeLeft > 0) {
+                    freePackEl.innerHTML = `<span class="text-yellow-400 font-mono text-xs">🎁 ${this.formatTimeLeft(timeLeft)}</span>`;
+                } else {
+                    freePackEl.innerHTML = '';
+                }
+            }
         }
     },
 
@@ -302,6 +315,9 @@ window.FigurineUI = {
                 break;
             case 'pack':
                 this.renderPacks();
+                break;
+            case 'trades':
+                this.renderTrades();
                 break;
         }
     },
@@ -1168,41 +1184,6 @@ window.FigurineUI = {
                     </div>
                 </div>
 
-                <!-- Scambio Figurine Duplicate - Compatto -->
-                <div class="bg-amber-900/30 rounded-xl p-2.5 border border-amber-500/50">
-                    <div class="flex items-center justify-between mb-2 px-1">
-                        <h4 class="font-semibold text-amber-400 text-xs">🔄 Scambia Doppioni</h4>
-                        <span class="text-[10px] text-gray-400">${tradeRequired} = CS</span>
-                    </div>
-                    <div class="grid grid-cols-6 gap-1">
-                        <button data-trade="normale" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.normale || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.normale || 0) < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-gray-300">⚪${duplicates.normale || 0}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.normale}</span>
-                        </button>
-                        <button data-trade="evoluto" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.evoluto || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.evoluto || 0) < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-green-300">🟢${duplicates.evoluto || 0}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.evoluto}</span>
-                        </button>
-                        <button data-trade="alternative" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.alternative || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.alternative || 0) < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-blue-300">🔵${duplicates.alternative || 0}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.alternative}</span>
-                        </button>
-                        <button data-trade="ultimate" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.ultimate || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.ultimate || 0) < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-purple-300">🟣${duplicates.ultimate || 0}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.ultimate}</span>
-                        </button>
-                        <button data-trade="fantasy" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${(duplicates.fantasy || 0) < tradeRequired ? 'opacity-40' : ''}" ${(duplicates.fantasy || 0) < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-yellow-300">🟠${duplicates.fantasy || 0}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.fantasy}</span>
-                        </button>
-                        <button data-trade="base" class="trade-btn flex flex-col items-center gap-0.5 bg-gray-700/50 hover:bg-gray-600 p-1.5 rounded-lg transition ${baseDuplicates < tradeRequired ? 'opacity-40' : ''}" ${baseDuplicates < tradeRequired ? 'disabled' : ''}>
-                            <span class="text-[10px] text-cyan-300">🖼️${baseDuplicates}</span>
-                            <span class="text-[9px] text-amber-400 font-bold">${tradeRewards.base || 30}</span>
-                        </button>
-                    </div>
-                    <p id="trade-result" class="text-center text-[10px] mt-1.5"></p>
-                </div>
-
                 <!-- Container risultato apertura -->
                 <div id="pack-result" class="hidden"></div>
             </div>
@@ -1267,12 +1248,131 @@ window.FigurineUI = {
             });
         });
 
-        // Bind trade buttons - usa il content container per event delegation
-        const tradeContainer = content.querySelector('.grid.grid-cols-6');
-        if (tradeContainer) {
-            tradeContainer.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.trade-btn');
-                if (!btn) return;
+    },
+
+    /**
+     * Renderizza tab Scambi Doppioni
+     */
+    async renderTrades() {
+        const content = document.getElementById('figurine-content');
+        const config = await window.FigurineSystem.loadConfig();
+
+        // Conta doppioni per LIVELLO DI RARITA' (1-5) da TUTTE le collezioni
+        const duplicatesByRarity = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+        // 1. Conta doppioni dalle ICONE (usano varianti: normale=1, evoluto=2, etc.)
+        const iconeCollection = this.currentAlbum?.collection || {};
+        const iconeDuplicates = window.FigurineSystem.countTradableDuplicates(iconeCollection);
+        // Mappa varianti icone a livelli rarità
+        duplicatesByRarity[1] += iconeDuplicates.normale || 0;   // Comune
+        duplicatesByRarity[2] += iconeDuplicates.evoluto || 0;   // Non Comune
+        duplicatesByRarity[3] += iconeDuplicates.alternative || 0; // Rara
+        duplicatesByRarity[4] += iconeDuplicates.ultimate || 0;  // Epica
+        duplicatesByRarity[5] += iconeDuplicates.fantasy || 0;   // Leggendaria
+
+        // 2. Conta doppioni dalle ALTRE COLLEZIONI (usano base come contatore)
+        const albumCollections = this.currentAlbum?.collections || {};
+        for (const [collId, collData] of Object.entries(albumCollections)) {
+            if (collId === 'icone') continue;
+            for (const [itemId, item] of Object.entries(collData || {})) {
+                const count = item.base || 0;
+                if (count > 1) {
+                    // Ottieni la rarità della figurina dalla definizione
+                    const rarityLevel = window.FigurineSystem?.getFigurineRarity(collId, itemId) || 1;
+                    duplicatesByRarity[rarityLevel] += (count - 1);
+                }
+            }
+        }
+
+        const tradeRequired = config.tradeRequiredCount || 3;
+        const tradeRewards = config.tradeRewards || {
+            normale: 50,
+            evoluto: 75,
+            alternative: 150,
+            ultimate: 200,
+            fantasy: 200,
+            base: 25
+        };
+
+        // Mappa livelli rarità a rewards
+        const rarityRewards = {
+            1: tradeRewards.normale || 50,    // Comune
+            2: tradeRewards.evoluto || 75,    // Non Comune
+            3: tradeRewards.alternative || 150, // Rara
+            4: tradeRewards.ultimate || 200,  // Epica
+            5: tradeRewards.fantasy || 200    // Leggendaria
+        };
+
+        content.innerHTML = `
+            <div class="space-y-4">
+                <!-- Header Scambi -->
+                <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-xl p-4 border border-amber-500/50">
+                    <h3 class="text-lg font-bold text-amber-400 mb-2">🔄 Scambia Doppioni</h3>
+                    <p class="text-sm text-gray-300 mb-3">Scambia ${tradeRequired} figurine duplicate della stessa rarita per ottenere Crediti Seri (CS)!</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span>📊 ${tradeRequired} doppioni = CS</span>
+                    </div>
+                </div>
+
+                <!-- Griglia Scambi per Rarita -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Comune (Rarity 1) -->
+                    <button data-trade="1" class="trade-btn flex flex-col items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-xl border border-gray-600/50 transition ${duplicatesByRarity[1] < tradeRequired ? 'opacity-40 cursor-not-allowed' : 'hover:border-gray-400'}" ${duplicatesByRarity[1] < tradeRequired ? 'disabled' : ''}>
+                        <span class="text-2xl">⚪</span>
+                        <span class="text-sm text-gray-300 font-medium">Comune</span>
+                        <span class="text-xs text-gray-400">Doppioni: <span class="text-white font-bold">${duplicatesByRarity[1]}</span></span>
+                        <span class="text-sm text-amber-400 font-bold">+${rarityRewards[1]} CS</span>
+                    </button>
+
+                    <!-- Non Comune (Rarity 2) -->
+                    <button data-trade="2" class="trade-btn flex flex-col items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-xl border border-green-600/50 transition ${duplicatesByRarity[2] < tradeRequired ? 'opacity-40 cursor-not-allowed' : 'hover:border-green-400'}" ${duplicatesByRarity[2] < tradeRequired ? 'disabled' : ''}>
+                        <span class="text-2xl">🟢</span>
+                        <span class="text-sm text-green-300 font-medium">Non Comune</span>
+                        <span class="text-xs text-gray-400">Doppioni: <span class="text-white font-bold">${duplicatesByRarity[2]}</span></span>
+                        <span class="text-sm text-amber-400 font-bold">+${rarityRewards[2]} CS</span>
+                    </button>
+
+                    <!-- Rara (Rarity 3) -->
+                    <button data-trade="3" class="trade-btn flex flex-col items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-xl border border-blue-600/50 transition ${duplicatesByRarity[3] < tradeRequired ? 'opacity-40 cursor-not-allowed' : 'hover:border-blue-400'}" ${duplicatesByRarity[3] < tradeRequired ? 'disabled' : ''}>
+                        <span class="text-2xl">🔵</span>
+                        <span class="text-sm text-blue-300 font-medium">Rara</span>
+                        <span class="text-xs text-gray-400">Doppioni: <span class="text-white font-bold">${duplicatesByRarity[3]}</span></span>
+                        <span class="text-sm text-amber-400 font-bold">+${rarityRewards[3]} CS</span>
+                    </button>
+
+                    <!-- Epica (Rarity 4) -->
+                    <button data-trade="4" class="trade-btn flex flex-col items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-xl border border-purple-600/50 transition ${duplicatesByRarity[4] < tradeRequired ? 'opacity-40 cursor-not-allowed' : 'hover:border-purple-400'}" ${duplicatesByRarity[4] < tradeRequired ? 'disabled' : ''}>
+                        <span class="text-2xl">🟣</span>
+                        <span class="text-sm text-purple-300 font-medium">Epica</span>
+                        <span class="text-xs text-gray-400">Doppioni: <span class="text-white font-bold">${duplicatesByRarity[4]}</span></span>
+                        <span class="text-sm text-amber-400 font-bold">+${rarityRewards[4]} CS</span>
+                    </button>
+
+                    <!-- Leggendaria (Rarity 5) -->
+                    <button data-trade="5" class="trade-btn flex flex-col items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-xl border border-yellow-600/50 transition ${duplicatesByRarity[5] < tradeRequired ? 'opacity-40 cursor-not-allowed' : 'hover:border-yellow-400'}" ${duplicatesByRarity[5] < tradeRequired ? 'disabled' : ''}>
+                        <span class="text-2xl">🟠</span>
+                        <span class="text-sm text-yellow-300 font-medium">Leggendaria</span>
+                        <span class="text-xs text-gray-400">Doppioni: <span class="text-white font-bold">${duplicatesByRarity[5]}</span></span>
+                        <span class="text-sm text-amber-400 font-bold">+${rarityRewards[5]} CS</span>
+                    </button>
+                </div>
+
+                <!-- Risultato scambio -->
+                <p id="trade-result" class="text-center text-sm mt-2"></p>
+
+                <!-- Info -->
+                <div class="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50 text-xs text-gray-400">
+                    <p class="flex items-center gap-2">
+                        <span>💡</span>
+                        <span>I doppioni sono figurine che possiedi piu di una volta per la stessa rarita. Scambiane ${tradeRequired} per ottenere CS!</span>
+                    </p>
+                </div>
+            </div>
+        `;
+
+        // Bind trade buttons
+        content.querySelectorAll('.trade-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
                 if (btn.disabled || btn.classList.contains('opacity-40')) {
                     window.Toast?.info('Non hai abbastanza doppioni per questo scambio');
                     return;
@@ -1281,7 +1381,7 @@ window.FigurineUI = {
                 if (!rarity) return;
                 await this.tradeDuplicates(rarity);
             });
-        }
+        });
     },
 
     /**
@@ -1368,7 +1468,7 @@ window.FigurineUI = {
 
                 // Ricarica album e UI (questo ricarica tutto incluso il contatore CS)
                 this.currentAlbum = await window.FigurineSystem.loadTeamAlbum(teamId);
-                await this.renderPacks();
+                await this.renderTrades();
             } else {
                 if (resultEl) {
                     resultEl.textContent = result.message;

@@ -1657,7 +1657,7 @@ window.FigurineSystem = {
     /**
      * Esegue uno scambio di figurine duplicate per CS
      * @param {string} teamId - ID squadra
-     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate, fantasy, base)
+     * @param {string|number} rarity - Livello rarita (1-5) o nome variante icone per retrocompatibilita
      * @param {number} count - Numero di scambi da fare (default 1)
      * @returns {Object} { success, csEarned, message }
      */
@@ -1665,8 +1665,33 @@ window.FigurineSystem = {
         const config = await this.loadConfig();
         const album = await this.loadTeamAlbum(teamId);
         const requiredCount = config.tradeRequiredCount || 3;
-        const rewards = config.tradeRewards || { normale: 50, evoluto: 75, alternative: 150, ultimate: 300, fantasy: 300, base: 30 };
-        const reward = rewards[rarity] || 0;
+
+        // Rewards per livello di rarita
+        const rarityRewards = {
+            1: config.tradeRewards?.normale || 50,    // Comune
+            2: config.tradeRewards?.evoluto || 75,    // Non Comune
+            3: config.tradeRewards?.alternative || 150, // Rara
+            4: config.tradeRewards?.ultimate || 200,  // Epica
+            5: config.tradeRewards?.fantasy || 200    // Leggendaria
+        };
+
+        // Mappa varianti icone a livelli rarita per retrocompatibilita
+        const variantToLevel = {
+            'normale': 1, 'evoluto': 2, 'alternative': 3, 'ultimate': 4, 'fantasy': 5
+        };
+        const levelToVariant = {
+            1: 'normale', 2: 'evoluto', 3: 'alternative', 4: 'ultimate', 5: 'fantasy'
+        };
+
+        // Normalizza rarity a numero
+        let rarityLevel = typeof rarity === 'number' ? rarity : parseInt(rarity);
+        if (isNaN(rarityLevel)) {
+            rarityLevel = variantToLevel[rarity] || 1;
+        }
+
+        const reward = rarityRewards[rarityLevel] || 0;
+        const variantName = levelToVariant[rarityLevel] || 'normale';
+        const rarityName = this.FIGURINE_RARITIES[rarityLevel]?.name || 'Comune';
 
         if (!reward) {
             return { success: false, message: `Rarita "${rarity}" non valida` };
@@ -1674,28 +1699,54 @@ window.FigurineSystem = {
 
         const totalRequired = requiredCount * count;
 
-        // Per rarita "base", gestisci le collezioni non-icone
-        if (rarity === 'base') {
-            let baseDuplicates = 0;
-            const albumCollections = album.collections || {};
-            Object.entries(albumCollections).forEach(([collId, collData]) => {
-                if (collId === 'icone') return;
-                Object.values(collData || {}).forEach(item => {
-                    if ((item.base || 0) > 1) {
-                        baseDuplicates += item.base - 1;
+        // Conta doppioni per livello di rarita da TUTTE le collezioni
+        let duplicateCount = 0;
+
+        // 1. Conta dalle ICONE
+        const iconeDuplicates = this.countTradableDuplicates(album.collection || {});
+        duplicateCount += iconeDuplicates[variantName] || 0;
+
+        // 2. Conta dalle ALTRE COLLEZIONI
+        const albumCollections = album.collections || {};
+        for (const collId in albumCollections) {
+            if (collId === 'icone') continue;
+            const collData = albumCollections[collId];
+            for (const itemId in collData) {
+                const item = collData[itemId];
+                const baseCount = item.base || 0;
+                if (baseCount > 1) {
+                    const itemRarity = this.getFigurineRarity(collId, itemId);
+                    if (itemRarity === rarityLevel) {
+                        duplicateCount += (baseCount - 1);
                     }
-                });
-            });
-
-            if (baseDuplicates < totalRequired) {
-                return {
-                    success: false,
-                    message: `Figurine insufficienti: hai ${baseDuplicates} duplicate base, servono ${totalRequired}`
-                };
+                }
             }
+        }
 
-            // Rimuovi le figurine base duplicate
-            let toRemove = totalRequired;
+        if (duplicateCount < totalRequired) {
+            return {
+                success: false,
+                message: `Figurine insufficienti: hai ${duplicateCount} duplicate ${rarityName}, servono ${totalRequired}`
+            };
+        }
+
+        // Rimuovi le figurine (prima dalle icone, poi dalle altre collezioni)
+        let toRemove = totalRequired;
+
+        // 1. Rimuovi dalle ICONE
+        for (const iconaId in album.collection) {
+            if (toRemove <= 0) break;
+            const iconaCounts = album.collection[iconaId];
+            if ((iconaCounts[variantName] || 0) > 1) {
+                const removable = iconaCounts[variantName] - 1;
+                const removeNow = Math.min(removable, toRemove);
+                iconaCounts[variantName] -= removeNow;
+                toRemove -= removeNow;
+            }
+        }
+
+        // 2. Rimuovi dalle ALTRE COLLEZIONI se necessario
+        if (toRemove > 0) {
             for (const collId in albumCollections) {
                 if (collId === 'icone') continue;
                 if (toRemove <= 0) break;
@@ -1704,36 +1755,16 @@ window.FigurineSystem = {
                 for (const itemId in collData) {
                     if (toRemove <= 0) break;
                     const item = collData[itemId];
-                    if ((item.base || 0) > 1) {
-                        const removable = item.base - 1;
-                        const removeNow = Math.min(removable, toRemove);
-                        item.base -= removeNow;
-                        toRemove -= removeNow;
+                    const baseCount = item.base || 0;
+                    if (baseCount > 1) {
+                        const itemRarity = this.getFigurineRarity(collId, itemId);
+                        if (itemRarity === rarityLevel) {
+                            const removable = baseCount - 1;
+                            const removeNow = Math.min(removable, toRemove);
+                            item.base -= removeNow;
+                            toRemove -= removeNow;
+                        }
                     }
-                }
-            }
-        } else {
-            // Gestione normale per icone
-            const duplicates = this.countTradableDuplicates(album.collection || {});
-
-            if ((duplicates[rarity] || 0) < totalRequired) {
-                return {
-                    success: false,
-                    message: `Figurine insufficienti: hai ${duplicates[rarity] || 0} duplicate ${rarity}, servono ${totalRequired}`
-                };
-            }
-
-            // Rimuovi le figurine dalla collezione (le duplicate, non la prima)
-            let toRemove = totalRequired;
-            for (const iconaId in album.collection) {
-                if (toRemove <= 0) break;
-
-                const iconaCounts = album.collection[iconaId];
-                if ((iconaCounts[rarity] || 0) > 1) {
-                    const removable = iconaCounts[rarity] - 1; // Lascia sempre almeno 1
-                    const removeNow = Math.min(removable, toRemove);
-                    iconaCounts[rarity] -= removeNow;
-                    toRemove -= removeNow;
                 }
             }
         }
@@ -1749,15 +1780,15 @@ window.FigurineSystem = {
             success: true,
             csEarned: csEarned,
             traded: totalRequired,
-            rarity: rarity,
-            message: `Scambiate ${totalRequired} figurine ${rarity} per ${csEarned} CS!`
+            rarity: rarityLevel,
+            message: `Scambiate ${totalRequired} figurine ${rarityName} per ${csEarned} CS!`
         };
     },
 
     /**
      * Scambia tutte le figurine duplicate di una rarita
      * @param {string} teamId - ID squadra
-     * @param {string} rarity - Rarita da scambiare (normale, evoluto, alternative, ultimate, fantasy, base)
+     * @param {string|number} rarity - Livello rarita (1-5) o nome variante per retrocompatibilita
      * @returns {Object} { success, csEarned, traded, message }
      */
     async tradeAllDuplicates(teamId, rarity) {
@@ -1765,21 +1796,45 @@ window.FigurineSystem = {
         const album = await this.loadTeamAlbum(teamId);
         const requiredCount = config.tradeRequiredCount || 3;
 
-        // Per rarita "base", conta i duplicati da tutte le collezioni non-icone
+        // Mappa varianti icone a livelli rarita per retrocompatibilita
+        const variantToLevel = {
+            'normale': 1, 'evoluto': 2, 'alternative': 3, 'ultimate': 4, 'fantasy': 5
+        };
+        const levelToVariant = {
+            1: 'normale', 2: 'evoluto', 3: 'alternative', 4: 'ultimate', 5: 'fantasy'
+        };
+
+        // Normalizza rarity a numero
+        let rarityLevel = typeof rarity === 'number' ? rarity : parseInt(rarity);
+        if (isNaN(rarityLevel)) {
+            rarityLevel = variantToLevel[rarity] || 1;
+        }
+
+        const variantName = levelToVariant[rarityLevel] || 'normale';
+        const rarityName = this.FIGURINE_RARITIES[rarityLevel]?.name || 'Comune';
+
+        // Conta doppioni per livello di rarita da TUTTE le collezioni
         let duplicateCount = 0;
-        if (rarity === 'base') {
-            const albumCollections = album.collections || {};
-            Object.entries(albumCollections).forEach(([collId, collData]) => {
-                if (collId === 'icone') return;
-                Object.values(collData || {}).forEach(item => {
-                    if ((item.base || 0) > 1) {
-                        duplicateCount += item.base - 1;
+
+        // 1. Conta dalle ICONE
+        const iconeDuplicates = this.countTradableDuplicates(album.collection || {});
+        duplicateCount += iconeDuplicates[variantName] || 0;
+
+        // 2. Conta dalle ALTRE COLLEZIONI
+        const albumCollections = album.collections || {};
+        for (const collId in albumCollections) {
+            if (collId === 'icone') continue;
+            const collData = albumCollections[collId];
+            for (const itemId in collData) {
+                const item = collData[itemId];
+                const baseCount = item.base || 0;
+                if (baseCount > 1) {
+                    const itemRarity = this.getFigurineRarity(collId, itemId);
+                    if (itemRarity === rarityLevel) {
+                        duplicateCount += (baseCount - 1);
                     }
-                });
-            });
-        } else {
-            const duplicates = this.countTradableDuplicates(album.collection || {});
-            duplicateCount = duplicates[rarity] || 0;
+                }
+            }
         }
 
         const possibleTrades = Math.floor(duplicateCount / requiredCount);
@@ -1787,11 +1842,11 @@ window.FigurineSystem = {
         if (possibleTrades === 0) {
             return {
                 success: false,
-                message: `Non hai abbastanza figurine ${rarity} duplicate (servono ${requiredCount})`
+                message: `Non hai abbastanza figurine ${rarityName} duplicate (servono ${requiredCount})`
             };
         }
 
-        return await this.tradeDuplicates(teamId, rarity, possibleTrades);
+        return await this.tradeDuplicates(teamId, rarityLevel, possibleTrades);
     },
 
     // ==================== UTILITIES ====================
