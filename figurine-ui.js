@@ -282,7 +282,7 @@ window.FigurineUI = {
             } else {
                 // Mostra countdown nel header
                 const timeLeft = window.FigurineSystem.getTimeUntilFreePack(this.currentAlbum);
-                if (timeLeft > 0) {
+                if (timeLeft) {
                     freePackEl.innerHTML = `<span class="text-yellow-400 font-mono text-xs">🎁 ${this.formatTimeLeft(timeLeft)}</span>`;
                 } else {
                     freePackEl.innerHTML = '';
