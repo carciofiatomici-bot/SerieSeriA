@@ -1054,6 +1054,71 @@ window.PrivateLeagues = {
     getTotalRounds(numTeams) {
         const n = numTeams % 2 === 0 ? numTeams : numTeams + 1;
         return (n - 1) * 2; // Andata + Ritorno
+    },
+
+    /**
+     * Modifica il numero massimo di squadre della lega
+     * (solo se in stato 'waiting' e solo dal creatore)
+     * @param {string} leagueId - ID della lega
+     * @param {string} requestingTeamId - ID della squadra che richiede la modifica
+     * @param {number} newMaxTeams - Nuovo numero massimo squadre (3-6)
+     * @returns {Object} { success, error }
+     */
+    async updateMaxTeams(leagueId, requestingTeamId, newMaxTeams) {
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
+            // Recupera la lega
+            const league = await this.getLeagueById(leagueId);
+            if (!league) {
+                return { success: false, error: 'Lega non trovata' };
+            }
+
+            // Verifica che sia ancora in attesa
+            if (league.status !== 'waiting') {
+                return { success: false, error: 'Non puoi modificare una lega gia iniziata' };
+            }
+
+            // Verifica che sia il creatore
+            if (league.createdBy !== requestingTeamId) {
+                return { success: false, error: 'Solo il creatore puo modificare la lega' };
+            }
+
+            // Valida newMaxTeams
+            newMaxTeams = parseInt(newMaxTeams);
+            if (isNaN(newMaxTeams) || newMaxTeams < this.MIN_TEAMS || newMaxTeams > this.MAX_TEAMS) {
+                return { success: false, error: `Numero squadre deve essere tra ${this.MIN_TEAMS} e ${this.MAX_TEAMS}` };
+            }
+
+            // Non puo essere inferiore al numero attuale di squadre iscritte
+            const currentTeamCount = league.teams.length;
+            if (newMaxTeams < currentTeamCount) {
+                return { success: false, error: `Ci sono gia ${currentTeamCount} squadre iscritte` };
+            }
+
+            // Se non cambia, esci
+            if (newMaxTeams === league.maxTeams) {
+                return { success: true, unchanged: true };
+            }
+
+            // Aggiorna la lega
+            const leaguePath = `artifacts/${appId}/public/data/privateLeagues/${leagueId}`;
+            const updateData = {
+                maxTeams: newMaxTeams,
+                prizePool: league.entryFee * newMaxTeams // Aggiorna anche il montepremi
+            };
+
+            await updateDoc(doc(db, leaguePath), updateData);
+
+            console.log(`PrivateLeagues: maxTeams aggiornato da ${league.maxTeams} a ${newMaxTeams} per "${league.name}"`);
+            return { success: true, oldMaxTeams: league.maxTeams, newMaxTeams };
+
+        } catch (error) {
+            console.error('Errore aggiornamento maxTeams:', error);
+            return { success: false, error: 'Errore durante l\'aggiornamento' };
+        }
     }
 };
 

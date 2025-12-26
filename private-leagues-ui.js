@@ -1289,6 +1289,38 @@ window.PrivateLeaguesUI = {
                     font-weight: 700;
                 }
 
+                /* Team adjust buttons */
+                .pl-team-adjust-btn {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    background: rgba(168, 85, 247, 0.2);
+                    border: 1px solid rgba(168, 85, 247, 0.3);
+                    color: #c084fc;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                }
+
+                .pl-team-adjust-btn:hover:not(:disabled) {
+                    background: rgba(168, 85, 247, 0.35);
+                    border-color: rgba(168, 85, 247, 0.5);
+                    transform: scale(1.05);
+                }
+
+                .pl-team-adjust-btn:active:not(:disabled) {
+                    transform: scale(0.95);
+                }
+
+                .pl-team-adjust-btn:disabled {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                }
+
                 /* Mobile optimizations */
                 @media (max-width: 380px) {
                     .pl-container { padding: 16px 12px; }
@@ -1639,6 +1671,26 @@ window.PrivateLeaguesUI = {
                     <span class="pl-info-banner-text">Il campionato inizia automaticamente quando tutte le <strong>${league.maxTeams} squadre</strong> si iscrivono</span>
                 </div>
 
+                ${league.createdBy === this.currentTeamId ? `
+                <!-- Modifica Numero Squadre (solo creatore) -->
+                <div class="pl-card" style="padding: 14px 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1rem;">⚙️</span>
+                            <span style="font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #94a3b8;">Numero Squadre</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="btn-decrease-teams" class="pl-team-adjust-btn" ${league.teams.length >= league.maxTeams - 1 || league.maxTeams <= window.PrivateLeagues.MIN_TEAMS ? 'disabled' : ''}>−</button>
+                            <span id="current-max-teams" style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; color: #c084fc; min-width: 24px; text-align: center;">${league.maxTeams}</span>
+                            <button id="btn-increase-teams" class="pl-team-adjust-btn" ${league.maxTeams >= window.PrivateLeagues.MAX_TEAMS ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>
+                    <p style="font-family: 'DM Sans', sans-serif; font-size: 0.7rem; color: #64748b; margin-top: 8px; text-align: center;">
+                        Min: ${league.teams.length} (iscritti) • Max: ${window.PrivateLeagues.MAX_TEAMS}
+                    </p>
+                </div>
+                ` : ''}
+
                 ${league.entryFee > 0 ? `
                     <div class="pl-fee-info">
                         <span class="pl-fee-cost">💰 Quota: <strong>${league.entryFee} CS</strong></span>
@@ -1708,6 +1760,53 @@ window.PrivateLeaguesUI = {
             navigator.clipboard.writeText(this.currentLeague.inviteCode);
             if (window.Toast) window.Toast.success('Codice copiato!');
         });
+
+        // Modifica numero squadre (solo creatore)
+        const btnDecrease = container.querySelector('#btn-decrease-teams');
+        const btnIncrease = container.querySelector('#btn-increase-teams');
+        const maxTeamsDisplay = container.querySelector('#current-max-teams');
+
+        if (btnDecrease && btnIncrease && maxTeamsDisplay) {
+            const updateMaxTeams = async (delta) => {
+                const currentMax = parseInt(maxTeamsDisplay.textContent);
+                const newMax = currentMax + delta;
+
+                // Disabilita i pulsanti durante l'aggiornamento
+                btnDecrease.disabled = true;
+                btnIncrease.disabled = true;
+
+                const result = await window.PrivateLeagues.updateMaxTeams(
+                    this.currentLeague.leagueId,
+                    this.currentTeamId,
+                    newMax
+                );
+
+                if (result.success && !result.unchanged) {
+                    // Aggiorna il display
+                    maxTeamsDisplay.textContent = newMax;
+                    this.currentLeague.maxTeams = newMax;
+
+                    // Aggiorna lo stato dei pulsanti
+                    const minTeams = Math.max(this.currentLeague.teams.length, window.PrivateLeagues.MIN_TEAMS);
+                    btnDecrease.disabled = newMax <= minTeams;
+                    btnIncrease.disabled = newMax >= window.PrivateLeagues.MAX_TEAMS;
+
+                    if (window.Toast) window.Toast.success(`Numero squadre aggiornato a ${newMax}`);
+
+                    // Refresh UI per aggiornare tutto
+                    this.render();
+                } else if (!result.success) {
+                    if (window.Toast) window.Toast.error(result.error);
+                    // Ripristina lo stato dei pulsanti
+                    const minTeams = Math.max(this.currentLeague.teams.length, window.PrivateLeagues.MIN_TEAMS);
+                    btnDecrease.disabled = currentMax <= minTeams;
+                    btnIncrease.disabled = currentMax >= window.PrivateLeagues.MAX_TEAMS;
+                }
+            };
+
+            btnDecrease.addEventListener('click', () => updateMaxTeams(-1));
+            btnIncrease.addEventListener('click', () => updateMaxTeams(1));
+        }
 
         // Modal inviti
         const inviteModal = container.querySelector('#invite-modal');
