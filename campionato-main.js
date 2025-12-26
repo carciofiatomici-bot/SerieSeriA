@@ -294,10 +294,9 @@ window.ChampionshipMain = {
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
 
-            // Invalida cache ScheduleListener per aggiornare next-match e calendario
+            // Invalida cache ScheduleListener - il realtime listener si aggiornera' automaticamente
             if (window.ScheduleListener) {
                 window.ScheduleListener.invalidateCache();
-                await window.ScheduleListener.refresh();
             }
 
             // Invalida anche FirestoreCache per aggiornamento istantaneo
@@ -651,11 +650,9 @@ window.ChampionshipMain = {
             // Invalida cache LeaderboardListener dopo salvataggio
             window.LeaderboardListener.invalidateCache();
 
-            // Invalida cache ScheduleListener per aggiornare next-match e calendario
+            // Invalida cache ScheduleListener - il realtime listener si aggiornera' automaticamente
             if (window.ScheduleListener) {
                 window.ScheduleListener.invalidateCache();
-                // Forza refresh per notificare tutti i subscriber (next-match, calendario, etc)
-                await window.ScheduleListener.refresh();
             }
 
             // Invalida anche FirestoreCache per aggiornamento istantaneo
