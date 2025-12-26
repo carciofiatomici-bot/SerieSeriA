@@ -823,13 +823,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     progressBar.style.width = '0%';
                     progressText.textContent = 'Caricamento calendario...';
 
-                    // Usa simulazione con progresso
+                    // Usa simulazione standard (il progresso viene mostrato da campionato-main)
                     if (window.AutomazioneSimulazioni) {
-                        const result = await window.AutomazioneSimulazioni.simulateChampionshipRoundWithProgress((current, total, matchName) => {
-                            const percent = Math.round((current / total) * 100);
-                            progressBar.style.width = `${percent}%`;
-                            progressText.textContent = `Partita ${current}/${total}: ${matchName}`;
-                        });
+                        progressText.textContent = 'Simulazione in corso...';
+                        progressBar.style.width = '50%';
+
+                        const result = await window.AutomazioneSimulazioni.simulateChampionshipRound();
 
                         progressBar.style.width = '100%';
                         progressText.textContent = 'Completato!';
