@@ -93,9 +93,9 @@ window.AutomazioneSimulazioni = {
             const schedule = scheduleDoc.data().matches || [];
             if (schedule.length === 0) return false;
 
-            // Cerca una giornata con partite non giocate
+            // Cerca una giornata con partite non giocate (usa !result per catturare null, undefined, "")
             const hasUnplayedMatches = schedule.some(round =>
-                round.matches.some(match => match.result === null)
+                round.matches.some(match => !match.result)
             );
 
             return hasUnplayedMatches;
@@ -772,9 +772,9 @@ window.AutomazioneSimulazioni = {
 
             const schedule = scheduleDoc.data().matches || [];
 
-            // Trova la prossima giornata da simulare
+            // Trova la prossima giornata da simulare (usa !result per catturare null, undefined, "")
             const nextRoundIndex = schedule.findIndex(round =>
-                round.matches.some(match => match.result === null)
+                round.matches.some(match => !match.result)
             );
 
             if (nextRoundIndex === -1) {
@@ -782,7 +782,7 @@ window.AutomazioneSimulazioni = {
             }
 
             const round = schedule[nextRoundIndex];
-            const matchesToSimulate = round.matches.filter(m => m.result === null);
+            const matchesToSimulate = round.matches.filter(m => !m.result);
             const totalMatches = matchesToSimulate.length;
 
             if (totalMatches === 0) {

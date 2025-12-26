@@ -12,6 +12,20 @@ window.FigurineUI = {
     expandedCollections: {}, // Collezioni espanse (tutte chiuse di default)
 
     /**
+     * Formatta il tempo rimanente in ore e minuti
+     * @param {object} timeLeft - Oggetto con { hours, minutes, seconds }
+     */
+    formatTimeLeft(timeLeft) {
+        if (!timeLeft) return '--:--';
+        const hours = timeLeft.hours || 0;
+        const minutes = timeLeft.minutes || 0;
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        }
+        return `${minutes}m`;
+    },
+
+    /**
      * Inizializza UI
      */
     init() {
@@ -1080,7 +1094,7 @@ window.FigurineUI = {
                     </div>
                 </div>
 
-                <!-- Pacchetto Gratis - Solo quando disponibile -->
+                <!-- Pacchetto Gratis -->
                 ${canFree ? `
                 <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl p-3 border border-green-500/50">
                     <h3 class="text-sm font-bold text-green-400 mb-2">🎁 Pacchetto Giornaliero</h3>
@@ -1097,7 +1111,22 @@ window.FigurineUI = {
                         }).join('')}
                     </div>
                 </div>
-                ` : ''}
+                ` : `
+                <!-- Timer pacchetto gratis -->
+                <div class="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-xl p-3 border border-gray-600/50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-gray-400">🎁 Pacchetto Giornaliero</h3>
+                        <div id="free-pack-timer" class="text-right">
+                            ${timeLeft ? `
+                                <p class="text-xs text-gray-500">Prossimo tra:</p>
+                                <p class="text-lg font-bold text-yellow-400" id="free-pack-countdown">${this.formatTimeLeft(timeLeft)}</p>
+                            ` : `
+                                <p class="text-xs text-gray-500">In attesa...</p>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `}
 
                 <!-- Pacchetti per Collezione - Compatto -->
                 <div class="bg-gray-800/50 rounded-xl p-2.5 border border-gray-700/50">

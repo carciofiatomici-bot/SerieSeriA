@@ -91,6 +91,11 @@ window.AdminUI = {
                                 <i class="fas fa-play mr-1"></i> Simula Giornata
                             </button>
                         </div>
+                        <div class="mb-4">
+                            <button id="btn-clean-schedule-data" class="w-full bg-red-700 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition text-sm">
+                                <i class="fas fa-broom mr-1"></i> Pulisci Dati Schedule (Risolve errore 1MB)
+                            </button>
+                        </div>
 
                         <!-- Prossima Giornata -->
                         <div id="serieseria-next-round" class="mb-3">

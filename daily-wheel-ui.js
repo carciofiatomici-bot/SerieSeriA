@@ -72,9 +72,9 @@
         // Crea il popup con design Monte Carlo
         const popup = document.createElement('div');
         popup.id = 'daily-wheel-popup';
-        popup.className = 'fixed inset-0 bg-black/85 flex items-center justify-center z-50';
+        popup.className = 'fixed inset-0 bg-black/85 flex items-start justify-center z-50 overflow-y-auto py-4';
         popup.innerHTML = `
-            <div class="fortune-wheel-container rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl relative">
+            <div class="fortune-wheel-container rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl relative my-auto">
                 <!-- Corner decorations -->
                 <div class="wheel-corner-decoration top-left"></div>
                 <div class="wheel-corner-decoration top-right"></div>

@@ -6,6 +6,76 @@
 
 window.ChampionshipMain = {
 
+    // Numero di giornate recenti da mantenere con dati completi (matchLog, matchEvents)
+    KEEP_RECENT_ROUNDS: 2,
+
+    /**
+     * Pulisce i dati pesanti (matchLog, matchEvents) dallo schedule, mantenendo solo le ultime N giornate.
+     * Eseguire dalla console: window.ChampionshipMain.cleanScheduleData()
+     */
+    async cleanScheduleData() {
+        const { doc, getDoc, setDoc, appId } = window.firestoreTools;
+        const db = window.db;
+        const SCHEDULE_COLLECTION_PATH = `artifacts/${appId}/public/data/schedule`;
+        const SCHEDULE_DOC_ID = 'full_schedule';
+
+        console.log('[ChampionshipMain] Pulizia dati schedule in corso...');
+
+        try {
+            const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
+            const scheduleDoc = await getDoc(scheduleDocRef);
+
+            if (!scheduleDoc.exists()) {
+                console.log('[ChampionshipMain] Schedule non trovato');
+                return { success: false, reason: 'not_found' };
+            }
+
+            const schedule = scheduleDoc.data().matches || [];
+
+            // Trova le ultime N giornate giocate
+            const playedRounds = schedule
+                .map((round, index) => ({ round, index, hasResults: round.matches.some(m => m.result) }))
+                .filter(r => r.hasResults)
+                .slice(-this.KEEP_RECENT_ROUNDS)
+                .map(r => r.index);
+
+            let cleanedCount = 0;
+
+            // Rimuovi matchLog e matchEvents dalle giornate vecchie
+            schedule.forEach((round, roundIndex) => {
+                const isRecent = playedRounds.includes(roundIndex);
+
+                round.matches.forEach(match => {
+                    if (!isRecent) {
+                        // Giornata vecchia: rimuovi dati pesanti
+                        if (match.matchLog) {
+                            delete match.matchLog;
+                            cleanedCount++;
+                        }
+                        if (match.matchEvents) {
+                            delete match.matchEvents;
+                            cleanedCount++;
+                        }
+                    }
+                    // Compatta scorers se e' un array di oggetti
+                    if (match.scorers && match.scorers.length > 0 && typeof match.scorers[0] === 'object') {
+                        match.scorers = match.scorers.map(s => s.name || s);
+                    }
+                });
+            });
+
+            // Salva schedule pulito
+            await setDoc(scheduleDocRef, { matches: schedule });
+
+            console.log(`[ChampionshipMain] Pulizia completata! Rimossi ${cleanedCount} campi pesanti. Mantenute ultime ${this.KEEP_RECENT_ROUNDS} giornate.`);
+            return { success: true, cleanedCount, keptRounds: playedRounds.length };
+
+        } catch (error) {
+            console.error('[ChampionshipMain] Errore pulizia schedule:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
     /**
      * Resetta i modificatori di forma dei giocatori su Firestore dopo la simulazione.
      * @param {string} teamId - ID della squadra da aggiornare.
@@ -196,11 +266,10 @@ window.ChampionshipMain = {
                 }
             const resultString = `${homeGoals}-${awayGoals}`;
             match.result = resultString;
-            // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
+            // Salva matchLog e matchEvents per telecronaca (verranno puliti nelle giornate vecchie)
             match.matchLog = highlights || [];
-            match.scorers = scorers || [];
-            // Salva matchEvents completi per telecronaca dettagliata
             match.matchEvents = matchEvents || [];
+            match.scorers = (scorers || []).map(s => s.name || s);
 
             // 4. Aggiorna statistiche classifica
             const initializeTeamStats = (teamId, teamName) => ({
@@ -500,14 +569,15 @@ window.ChampionshipMain = {
                 }
                 const resultString = `${homeGoals}-${awayGoals}`;
 
-                const matchIndexInRound = round.matches.findIndex(m => m.homeId === match.homeId && m.awayId === match.awayId && m.result === null);
+                const matchIndexInRound = round.matches.findIndex(m => m.homeId === match.homeId && m.awayId === match.awayId && !m.result);
+                console.log(`[ChampionshipMain] Partita ${match.homeName} vs ${match.awayName}: risultato ${resultString}, index trovato: ${matchIndexInRound}`);
                 if (matchIndexInRound !== -1) {
                     round.matches[matchIndexInRound].result = resultString;
-                    // Salva matchLog nello schedule per telecronaca (indipendente dal flag matchHistory)
+                    console.log(`[ChampionshipMain] Risultato salvato in round.matches[${matchIndexInRound}]`);
+                    // Salva matchLog e matchEvents per telecronaca (verranno puliti nelle giornate vecchie)
                     round.matches[matchIndexInRound].matchLog = highlights || [];
-                    round.matches[matchIndexInRound].scorers = scorers || [];
-                    // Salva matchEvents completi per telecronaca dettagliata
                     round.matches[matchIndexInRound].matchEvents = matchEvents || [];
+                    round.matches[matchIndexInRound].scorers = (scorers || []).map(s => s.name || s);
                 }
 
                 const initializeTeamStats = (teamId, teamName) => ({
@@ -639,9 +709,39 @@ window.ChampionshipMain = {
 
             // RIMOSSO: Il reset forme non è più necessario con il nuovo sistema basato su prestazioni
             // Le forme vengono aggiornate (non resettate) dopo ogni partita
-            
+
+            console.log(`[ChampionshipMain] Simulazione completata, salvataggio su Firestore...`);
+            console.log(`[ChampionshipMain] Risultati da salvare:`, round.matches.map(m => `${m.homeName} vs ${m.awayName}: ${m.result}`));
+            console.log(`[ChampionshipMain] Schedule completo (tutte le giornate):`, schedule.map((r, i) => ({
+                giornata: r.round || i+1,
+                partiteConRisultato: r.matches.filter(m => m.result).length,
+                partiteSenzaRisultato: r.matches.filter(m => !m.result).length
+            })));
+
+            // Pulisci dati pesanti dalle giornate vecchie prima di salvare
+            const playedRounds = schedule
+                .map((r, i) => ({ index: i, hasResults: r.matches.some(m => m.result) }))
+                .filter(r => r.hasResults)
+                .slice(-this.KEEP_RECENT_ROUNDS)
+                .map(r => r.index);
+
+            schedule.forEach((r, i) => {
+                if (!playedRounds.includes(i)) {
+                    r.matches.forEach(m => {
+                        delete m.matchLog;
+                        delete m.matchEvents;
+                    });
+                }
+            });
+
             const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
-            await setDoc(scheduleDocRef, { matches: schedule }, { merge: true });
+            try {
+                await setDoc(scheduleDocRef, { matches: schedule }, { merge: true });
+                console.log(`[ChampionshipMain] Schedule salvato su Firestore con successo!`);
+            } catch (saveError) {
+                console.error(`[ChampionshipMain] ERRORE salvataggio Firestore:`, saveError);
+                throw saveError;
+            }
 
             const updatedStandings = Array.from(standingsMap.values()).sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
@@ -699,3 +799,5 @@ window.ChampionshipMain = {
         }
     }
 };
+
+console.log('Modulo campionato-main.js caricato.');

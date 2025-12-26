@@ -793,6 +793,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Pulisci dati schedule (risolve errore 1MB) - usa event delegation
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('#btn-clean-schedule-data');
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Pulizia in corso...';
+
+            try {
+                const result = await window.ChampionshipMain.cleanScheduleData();
+                if (result.success) {
+                    displayMessage(`Pulizia completata! Rimossi ${result.cleanedCount} campi. Ora puoi simulare.`, 'success', 'toggle-status-message');
+                } else {
+                    displayMessage(`Errore pulizia: ${result.reason || result.error}`, 'error', 'toggle-status-message');
+                }
+            } catch (error) {
+                displayMessage(`Errore: ${error.message}`, 'error', 'toggle-status-message');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-broom mr-1"></i> Pulisci Dati Schedule (Risolve errore 1MB)';
+            }
+        });
+
         // Simula giornata campionato con barra di progresso
         const btnSimulateRound = document.getElementById('btn-simulate-championship-round');
         if (btnSimulateRound) {
@@ -5070,7 +5093,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.addEventListener('adminLoggedIn', initializeAdminPanel);
-    
+
+    // Pulizia automatica schedule all'avvio admin
+    document.addEventListener('adminLoggedIn', async () => {
+        setTimeout(async () => {
+            try {
+                if (window.ChampionshipMain?.cleanScheduleData) {
+                    console.log('[Admin] Pulizia automatica schedule...');
+                    await window.ChampionshipMain.cleanScheduleData();
+                }
+            } catch (error) {
+                console.warn('[Admin] Pulizia automatica fallita:', error.message);
+            }
+        }, 2000);
+    });
+
     window.loadDraftPlayersAdmin = () => window.AdminPlayers.loadDraftPlayers(DRAFT_PLAYERS_COLLECTION_PATH);
     window.loadMarketPlayersAdmin = () => window.AdminPlayers.loadMarketPlayers(MARKET_PLAYERS_COLLECTION_PATH);
 });
