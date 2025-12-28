@@ -3315,6 +3315,51 @@ body.user-logged-in #admin-content {
     }
 }
 
+/* ===================== ANDROID NAVIGATION BAR SAFE AREA ===================== */
+/* Android non supporta env(safe-area-inset-bottom) come iOS.
+   Aggiungiamo padding fisso per dispositivi Android con gesture navigation (~48px)
+   o navigation bar classica a 3 pulsanti (~48px) */
+@media screen and (max-width: 767px) {
+    /* Contenitori scroll principali - padding extra per Android */
+    .pl-container,
+    .tab-content,
+    .modal-content,
+    .overlay-content,
+    .panel-content,
+    [data-scroll-container] {
+        padding-bottom: max(100px, calc(60px + env(safe-area-inset-bottom, 20px))) !important;
+    }
+
+    /* Pulsanti fissi in fondo ai container - margin extra */
+    .pl-btn-primary:last-child,
+    .pl-btn-danger:last-child,
+    button[id*="leave"]:last-child,
+    button[id*="close"]:last-child,
+    .bottom-action-btn {
+        margin-bottom: max(40px, env(safe-area-inset-bottom, 20px)) !important;
+    }
+
+    /* Fix per overlay fullscreen su Android */
+    .fixed.inset-0,
+    .fixed.top-0.left-0.right-0.bottom-0 {
+        padding-bottom: max(60px, env(safe-area-inset-bottom, 20px));
+    }
+}
+
+/* PWA standalone su Android - padding extra per navigation gestures */
+@media screen and (display-mode: standalone) and (max-width: 767px) {
+    .pl-container,
+    .tab-content,
+    .panel-content {
+        padding-bottom: max(120px, calc(80px + env(safe-area-inset-bottom, 20px))) !important;
+    }
+
+    /* Bottom navigation - spazio extra su Android PWA */
+    #dashboard-tabs {
+        padding-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    }
+}
+
 /* ===================== LANDSCAPE MOBILE FIXES ===================== */
 @media (max-height: 500px) and (orientation: landscape) {
     main {
