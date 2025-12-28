@@ -511,7 +511,8 @@ window.Achievements = {
      */
     check: {
         matchPlayed() {
-            const matches = parseInt(localStorage.getItem('fanta_matches_played') || '0') + 1;
+            const stored = parseInt(localStorage.getItem('fanta_matches_played') || '0');
+            const matches = (isNaN(stored) ? 0 : stored) + 1;
             localStorage.setItem('fanta_matches_played', matches);
 
             window.Achievements.unlock('first_match');
@@ -532,7 +533,8 @@ window.Achievements = {
             }
 
             // Winning streak
-            const streak = parseInt(localStorage.getItem('fanta_win_streak') || '0') + 1;
+            const storedStreak = parseInt(localStorage.getItem('fanta_win_streak') || '0');
+            const streak = (isNaN(storedStreak) ? 0 : storedStreak) + 1;
             localStorage.setItem('fanta_win_streak', streak);
 
             if (streak >= 3) window.Achievements.unlock('winning_streak_3');
@@ -546,7 +548,8 @@ window.Achievements = {
         goalScored(count = 1) {
             window.Achievements.unlock('first_goal');
 
-            const totalGoals = parseInt(localStorage.getItem('fanta_total_goals') || '0') + count;
+            const storedGoals = parseInt(localStorage.getItem('fanta_total_goals') || '0');
+            const totalGoals = (isNaN(storedGoals) ? 0 : storedGoals) + count;
             localStorage.setItem('fanta_total_goals', totalGoals);
 
             if (totalGoals >= 10) window.Achievements.unlock('ten_goals');
@@ -557,7 +560,8 @@ window.Achievements = {
         playerPurchased() {
             window.Achievements.unlock('first_purchase');
 
-            const purchases = parseInt(localStorage.getItem('fanta_purchases') || '0') + 1;
+            const storedPurchases = parseInt(localStorage.getItem('fanta_purchases') || '0');
+            const purchases = (isNaN(storedPurchases) ? 0 : storedPurchases) + 1;
             localStorage.setItem('fanta_purchases', purchases);
 
             if (purchases >= 5) window.Achievements.unlock('market_master');
@@ -583,7 +587,8 @@ window.Achievements = {
             if (lastLogin !== today) {
                 localStorage.setItem('fanta_last_login', today);
 
-                const streak = parseInt(localStorage.getItem('fanta_login_streak') || '0') + 1;
+                const storedLoginStreak = parseInt(localStorage.getItem('fanta_login_streak') || '0');
+                const streak = (isNaN(storedLoginStreak) ? 0 : storedLoginStreak) + 1;
                 localStorage.setItem('fanta_login_streak', streak);
 
                 if (streak >= 7) window.Achievements.unlock('loyal_fan');

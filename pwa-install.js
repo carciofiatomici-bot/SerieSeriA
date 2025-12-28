@@ -144,7 +144,7 @@ if ('serviceWorker' in navigator) {
                 window.PWAUpdater.registration = registration;
 
                 // Controlla aggiornamenti ogni 60 minuti
-                setInterval(() => {
+                window.PWAUpdater._updateInterval = setInterval(() => {
                     registration.update();
                 }, 60 * 60 * 1000);
 

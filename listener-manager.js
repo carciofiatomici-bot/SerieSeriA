@@ -196,7 +196,15 @@ window.ListenerManager = {
         });
 
         // Controlla inattivita' ogni minuto
-        setInterval(() => this.checkInactivity(), 60 * 1000);
+        this._inactivityInterval = setInterval(() => this.checkInactivity(), 60 * 1000);
+
+        // Cleanup on logout
+        document.addEventListener('userLoggedOut', () => {
+            if (this._inactivityInterval) {
+                clearInterval(this._inactivityInterval);
+                this._inactivityInterval = null;
+            }
+        });
 
         // Pausa quando tab non visibile
         document.addEventListener('visibilitychange', () => {

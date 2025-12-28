@@ -212,7 +212,8 @@ window.Notifications = {
 
         // Carica da localStorage con chiave specifica per squadra
         const saved = localStorage.getItem(this.getStorageKey());
-        const lastFetch = parseInt(localStorage.getItem(this.getStorageKey('_fetch')) || '0');
+        const storedFetch = parseInt(localStorage.getItem(this.getStorageKey('_fetch')) || '0');
+        const lastFetch = isNaN(storedFetch) ? 0 : storedFetch;
 
         // Carica ID delle notifiche eliminate (specifiche per squadra)
         const deletedIds = localStorage.getItem(this.getStorageKey('_deleted'));
