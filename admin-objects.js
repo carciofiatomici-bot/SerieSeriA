@@ -471,34 +471,50 @@ window.AdminObjects = {
             if (e.target.id === 'create-object-form') {
                 e.preventDefault();
 
-                const name = document.getElementById('obj-name').value.trim();
-                const type = document.getElementById('obj-type').value;
-                const bonus = parseFloat(document.getElementById('obj-bonus').value);
-                const phase = document.getElementById('obj-phase').value;
-                const applyTo = document.getElementById('obj-apply').value;
-
-                const messageEl = document.getElementById('create-object-message');
-
-                if (!name) {
-                    messageEl.className = 'bg-red-900 border border-red-500 text-red-200 p-3 rounded-lg';
-                    messageEl.textContent = 'Inserisci un nome per l\'oggetto';
-                    messageEl.classList.remove('hidden');
-                    return;
-                }
-
                 try {
-                    messageEl.className = 'bg-blue-900 border border-blue-500 text-blue-200 p-3 rounded-lg';
-                    messageEl.textContent = 'Creazione in corso...';
-                    messageEl.classList.remove('hidden');
+                    const nameEl = document.getElementById('obj-name');
+                    const typeEl = document.getElementById('obj-type');
+                    const bonusEl = document.getElementById('obj-bonus');
+                    const phaseEl = document.getElementById('obj-phase');
+                    const applyEl = document.getElementById('obj-apply');
+                    const messageEl = document.getElementById('create-object-message');
+
+                    if (!nameEl || !typeEl || !bonusEl || !phaseEl || !applyEl) {
+                        console.error('[AdminObjects] Elementi form mancanti');
+                        return;
+                    }
+
+                    const name = nameEl.value.trim();
+                    const type = typeEl.value;
+                    const bonus = parseFloat(bonusEl.value);
+                    const phase = phaseEl.value;
+                    const applyTo = applyEl.value;
+
+                    if (!name) {
+                        if (messageEl) {
+                            messageEl.className = 'bg-red-900 border border-red-500 text-red-200 p-3 rounded-lg';
+                            messageEl.textContent = 'Inserisci un nome per l\'oggetto';
+                            messageEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    if (messageEl) {
+                        messageEl.className = 'bg-blue-900 border border-blue-500 text-blue-200 p-3 rounded-lg';
+                        messageEl.textContent = 'Creazione in corso...';
+                        messageEl.classList.remove('hidden');
+                    }
 
                     await this.createObject({ name, type, bonus, phase, applyTo, isDefault: false });
 
-                    messageEl.className = 'bg-green-900 border border-green-500 text-green-200 p-3 rounded-lg';
-                    messageEl.textContent = `Oggetto "${name}" creato con successo!`;
+                    if (messageEl) {
+                        messageEl.className = 'bg-green-900 border border-green-500 text-green-200 p-3 rounded-lg';
+                        messageEl.textContent = `Oggetto "${name}" creato con successo!`;
+                    }
 
                     // Reset form
-                    document.getElementById('obj-name').value = '';
-                    document.getElementById('obj-bonus').value = '1';
+                    nameEl.value = '';
+                    bonusEl.value = '1';
                     this.updateCostPreview();
 
                     // Ricarica lista
@@ -506,8 +522,11 @@ window.AdminObjects = {
 
                 } catch (error) {
                     console.error('[AdminObjects] Errore creazione:', error);
-                    messageEl.className = 'bg-red-900 border border-red-500 text-red-200 p-3 rounded-lg';
-                    messageEl.textContent = `Errore: ${error.message}`;
+                    const messageEl = document.getElementById('create-object-message');
+                    if (messageEl) {
+                        messageEl.className = 'bg-red-900 border border-red-500 text-red-200 p-3 rounded-lg';
+                        messageEl.textContent = `Errore: ${error.message}`;
+                    }
                 }
             }
         });
