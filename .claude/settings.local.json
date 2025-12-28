@@ -48,7 +48,8 @@
       "Skill(frontend-design)",
       "Bash(git checkout:*)",
       "Bash(git revert:*)",
-      "Bash(start \"\" \"C:\\\\Users\\\\PowerUser\\\\Desktop\\\\Repository\\\\New Porgetto Calcetto\\\\Claude Working Space\\\\index.html\")"
+      "Bash(start \"\" \"C:\\\\Users\\\\PowerUser\\\\Desktop\\\\Repository\\\\New Porgetto Calcetto\\\\Claude Working Space\\\\index.html\")",
+      "Bash(xargs -I {} bash -c 'echo \"\"=== {} ===\"\" && grep -A3 \"\"getDoc\\\\|getDocs\"\" {} | grep -A3 \"\"\\\\.data\\(\\)\"\" | head -20')"
     ],
     "deny": [],
     "ask": [],

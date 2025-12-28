@@ -452,20 +452,26 @@ window.CoppaMain = {
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
 
-        // Vincitore: 1 CSS (solo se sistema CSS abilitato)
+        // Vincitore: 1 CSS (solo se sistema CSS abilitato) + incrementa coppeSerieVinte
         if (bracket.winner) {
-            const cssEnabled = window.CreditiSuperSeri ? await window.CreditiSuperSeri.isEnabled() : false;
-            if (cssEnabled) {
-                const winnerRef = doc(db, `artifacts/${appId}/public/data/teams`, bracket.winner.teamId);
-                const winnerDoc = await getDoc(winnerRef);
-                if (winnerDoc.exists()) {
-                    await updateDoc(winnerRef, {
-                        creditiSuperSeri: (winnerDoc.data().creditiSuperSeri || 0) + REWARDS.WINNER_CSS
-                    });
+            const winnerRef = doc(db, `artifacts/${appId}/public/data/teams`, bracket.winner.teamId);
+            const winnerDoc = await getDoc(winnerRef);
+            if (winnerDoc.exists()) {
+                const updateData = {
+                    coppeSerieVinte: (winnerDoc.data().coppeSerieVinte || 0) + 1
+                };
+
+                // Aggiungi CSS solo se sistema abilitato
+                const cssEnabled = window.CreditiSuperSeri ? await window.CreditiSuperSeri.isEnabled() : false;
+                if (cssEnabled) {
+                    updateData.creditiSuperSeri = (winnerDoc.data().creditiSuperSeri || 0) + REWARDS.WINNER_CSS;
                     console.log(`Premio CSS vincitore assegnato a ${bracket.winner.teamName}`);
+                } else {
+                    console.log(`Sistema CSS disabilitato - premio CSS non assegnato a ${bracket.winner.teamName}`);
                 }
-            } else {
-                console.log(`Sistema CSS disabilitato - premio CSS non assegnato a ${bracket.winner.teamName}`);
+
+                await updateDoc(winnerRef, updateData);
+                console.log(`Coppa Serie vinta registrata per ${bracket.winner.teamName} (totale: ${(winnerDoc.data().coppeSerieVinte || 0) + 1})`);
             }
         }
 

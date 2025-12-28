@@ -8,6 +8,51 @@ window.DashboardTabs = {
     currentTab: 'home',
 
     /**
+     * Chiude tutti i modal e overlay aperti
+     */
+    closeAllModalsAndOverlays() {
+        // Chiudi modal per ID comuni
+        const modalIds = [
+            'lista-squadre-modal',
+            'edit-team-modal',
+            'abilities-encyclopedia-overlay',
+            'player-details-modal',
+            'match-replay-modal',
+            'figurine-overlay',
+            'private-leagues-overlay',
+            'achievements-modal',
+            'schedina-modal',
+            'chat-modal',
+            'sfida-tattica-modal',
+            'notifications-modal'
+        ];
+
+        modalIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+            }
+        });
+
+        // Chiudi tutti gli elementi con classe che contiene 'modal' o 'overlay' che sono visibili
+        document.querySelectorAll('[class*="fixed"][class*="inset-0"]:not(.hidden)').forEach(el => {
+            // Non chiudere la tab bar stessa o elementi di navigazione
+            if (!el.classList.contains('dashboard-tab') && !el.id?.includes('nav-')) {
+                el.classList.add('hidden');
+            }
+        });
+
+        // Chiudi modal specifici tramite i loro metodi close se esistono
+        if (window.AbilitiesEncyclopedia?.close) window.AbilitiesEncyclopedia.close();
+        if (window.FigurineUI?.close) window.FigurineUI.close();
+        if (window.PrivateLeaguesUI?.closeOverlay) window.PrivateLeaguesUI.closeOverlay();
+        if (window.AdminTeams?.closeEditTeamModal) window.AdminTeams.closeEditTeamModal();
+
+        console.log('[DashboardTabs] Chiusi tutti i modal e overlay');
+    },
+
+    /**
      * Inizializza i listener per i tab
      */
     init() {
@@ -76,6 +121,9 @@ window.DashboardTabs = {
      * @param {string} tabName - Nome del tab: 'home', 'squad', 'competitions', 'shop', 'rules', 'admin'
      */
     switchTab(tabName) {
+        // Chiudi tutti i modal e overlay aperti prima di cambiare tab
+        this.closeAllModalsAndOverlays();
+
         // Gestione speciale per tab login - porta alla schermata login/home
         if (tabName === 'login') {
             const loginBox = document.getElementById('login-box');

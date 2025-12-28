@@ -655,8 +655,8 @@ window.AdminTeams = {
         const mainElement = document.querySelector('main');
 
         const modalHtml = `
-            <div id="edit-team-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 overflow-y-auto">
-                <div class="football-box w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div id="edit-team-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-4 pb-24 z-50 overflow-y-auto">
+                <div class="football-box w-full max-w-6xl my-4 mb-20">
                     <h3 class="text-3xl font-bold text-blue-400 mb-4 border-b border-blue-600 pb-2">✏️ Modifica Squadra: ${teamData.teamName}</h3>
                     <p id="edit-message" class="text-center text-sm mb-4"></p>
 
@@ -693,6 +693,29 @@ window.AdminTeams = {
                                 <input type="number" id="edit-css" value="${teamData.creditiSuperSeri || 0}" min="0"
                                     class="p-3 rounded-lg bg-gray-700 border border-amber-500 text-white focus:ring-amber-400">
                                 <p class="text-xs text-amber-400 mt-1">CSS - Valuta premium per potenziamenti</p>
+                            </div>
+                        </div>
+
+                        <!-- Sezione Trofei -->
+                        <div class="mt-6 p-4 bg-yellow-900/50 rounded-lg border border-yellow-500">
+                            <h4 class="text-lg font-bold text-yellow-400 mb-2">🏆 Bacheca Trofei</h4>
+                            <p class="text-sm text-gray-300 mb-3">Modifica manualmente i trofei vinti dalla squadra.</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="flex flex-col items-center">
+                                    <label class="text-yellow-400 mb-1 text-sm font-bold">🏆 Campionati</label>
+                                    <input type="number" id="edit-campionati" value="${teamData.campionatiVinti || 0}" min="0"
+                                        class="w-full p-2 rounded-lg bg-gray-700 border border-yellow-500 text-white text-center">
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <label class="text-orange-400 mb-1 text-sm font-bold">🏅 Coppe</label>
+                                    <input type="number" id="edit-coppe" value="${teamData.coppeSerieVinte || 0}" min="0"
+                                        class="w-full p-2 rounded-lg bg-gray-700 border border-orange-500 text-white text-center">
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <label class="text-purple-400 mb-1 text-sm font-bold">⭐ Supercoppe</label>
+                                    <input type="number" id="edit-supercoppe" value="${teamData.supercoppeSerieVinte || 0}" min="0"
+                                        class="w-full p-2 rounded-lg bg-gray-700 border border-purple-500 text-white text-center">
+                                </div>
                             </div>
                         </div>
 
@@ -1360,6 +1383,12 @@ window.AdminTeams = {
         const isAdmin = document.getElementById('edit-is-admin')?.checked || false;
         const draft_enabled = document.getElementById('edit-draft-enabled')?.checked || false;
 
+        // Trofei
+        const campionatiVinti = parseInt(document.getElementById('edit-campionati')?.value) || 0;
+        const coppeSerieVinte = parseInt(document.getElementById('edit-coppe')?.value) || 0;
+        const supercoppeSerieVinte = parseInt(document.getElementById('edit-supercoppe')?.value) || 0;
+        console.log('[AdminTeams] Salvando trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte });
+
         if (!teamName || teamName.length < 3) {
             alert('Il nome squadra deve avere almeno 3 caratteri!');
             return;
@@ -1392,12 +1421,16 @@ window.AdminTeams = {
                 creditiSuperSeri,
                 isAdmin,
                 draft_enabled,
+                campionatiVinti,
+                coppeSerieVinte,
+                supercoppeSerieVinte,
                 players: this.currentEditingPlayers,
                 formation: updatedFormation,
                 playersFormStatus: updatedFormStatus
             });
             
-            msgElement.textContent = ' Modifiche salvate con successo!';
+            console.log('[AdminTeams] Squadra salvata con successo, trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte });
+            msgElement.textContent = '✅ Modifiche salvate con successo!';
             msgElement.className = 'text-center text-sm mb-4 text-green-400';
             
             setTimeout(() => {

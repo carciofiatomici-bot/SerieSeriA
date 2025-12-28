@@ -866,10 +866,11 @@
                         <button id="dashboard-menu-btn" class="w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 rounded transition flex-shrink-0" title="Menu">
                             <span class="text-sm">☰</span>
                         </button>
-                        <!-- Testo Nome Squadra (centrato) -->
-                        <h2 id="team-dashboard-title" class="flex-1 text-lg sm:text-2xl md:text-3xl font-extrabold uppercase team-name-fancy leading-none text-center">
-                            <span id="team-dashboard-title-text">NOME SQUADRA</span>
-                        </h2>
+                        <!-- Testo Nome Squadra (centrato) + Trofei -->
+                        <div id="team-dashboard-title" class="flex-1 flex flex-col items-center justify-center leading-none text-center">
+                            <span id="team-dashboard-title-text" class="text-lg sm:text-2xl md:text-3xl font-extrabold uppercase team-name-fancy">NOME SQUADRA</span>
+                            <div id="team-dashboard-trophies" class="hidden flex items-center justify-center gap-2 mt-0.5 text-xs opacity-80"></div>
+                        </div>
                         <!-- Selettore Colore (destra) -->
                         <div id="team-color-picker-container" class="w-8 h-8 flex items-center justify-center flex-shrink-0">
                             <input type="color" id="team-color-picker"
