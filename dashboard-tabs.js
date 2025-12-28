@@ -46,7 +46,7 @@ window.DashboardTabs = {
     restoreSavedTab(goToBoard = true) {
         if (goToBoard) {
             // Vai a Board (home)
-            localStorage.setItem('dashboard_current_tab', 'home');
+            try { localStorage.setItem('dashboard_current_tab', 'home'); } catch (e) {}
             this.switchTab('home');
         } else {
             // Ripristina il tab salvato (usato solo per refresh in-app)
@@ -147,7 +147,7 @@ window.DashboardTabs = {
 
         // Salva in localStorage per persistenza (escludi rules che non ha persistenza)
         if (tabName !== 'rules') {
-            localStorage.setItem('dashboard_current_tab', tabName);
+            try { localStorage.setItem('dashboard_current_tab', tabName); } catch (e) {}
         }
 
         // Nascondi tutti i contenuti tab

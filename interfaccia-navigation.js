@@ -22,11 +22,15 @@ window.InterfacciaNavigation = {
             'mercato-content'     // Richiede teamId specifico
         ];
 
-        if (screenId && !excludedScreens.includes(screenId)) {
-            localStorage.setItem('fanta_last_screen', screenId);
-        } else if (screenId === 'app-content') {
-            // La Dashboard e il punto di partenza, lo salviamo
-            localStorage.setItem('fanta_last_screen', screenId);
+        try {
+            if (screenId && !excludedScreens.includes(screenId)) {
+                localStorage.setItem('fanta_last_screen', screenId);
+            } else if (screenId === 'app-content') {
+                // La Dashboard e il punto di partenza, lo salviamo
+                localStorage.setItem('fanta_last_screen', screenId);
+            }
+        } catch (e) {
+            // Ignora errori localStorage (quota exceeded)
         }
     },
 

@@ -372,7 +372,7 @@ window.AdminTeams = {
             window.InterfacciaCore.currentTeamId = teamId;
 
             // Salva la sessione come admin che sta visualizzando una squadra
-            localStorage.setItem('fanta_admin_viewing_team', teamId);
+            try { localStorage.setItem('fanta_admin_viewing_team', teamId); } catch (e) {}
 
             // Carica i loghi delle squadre
             if (window.fetchAllTeamLogos) {

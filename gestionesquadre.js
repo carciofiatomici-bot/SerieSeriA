@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mode = event.detail.mode;
 
         // Traccia la sotto-modalita per la persistenza
-        localStorage.setItem('fanta_squadra_mode', mode);
+        try { localStorage.setItem('fanta_squadra_mode', mode); } catch (e) {}
 
         // Ricarica forzata da Firestore
         loadTeamDataFromFirestore(currentTeamId, mode);

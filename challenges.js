@@ -154,7 +154,7 @@ window.Challenges = {
     recordBetTime() {
         const myTeamId = window.InterfacciaCore?.currentTeamId;
         if (myTeamId) {
-            localStorage.setItem(`fanta_last_bet_${myTeamId}`, Date.now().toString());
+            try { localStorage.setItem(`fanta_last_bet_${myTeamId}`, Date.now().toString()); } catch (e) {}
         }
     },
 

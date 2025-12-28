@@ -9,6 +9,15 @@ window.Achievements = {
     panel: null,
     isOpen: false,
 
+    // Helper per localStorage sicuro (evita crash su quota exceeded)
+    _safeSetItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn('[Achievements] localStorage.setItem fallito:', e.message);
+        }
+    },
+
     // Achievements sbloccati
     unlockedAchievements: [],
 
@@ -513,7 +522,7 @@ window.Achievements = {
         matchPlayed() {
             const stored = parseInt(localStorage.getItem('fanta_matches_played') || '0');
             const matches = (isNaN(stored) ? 0 : stored) + 1;
-            localStorage.setItem('fanta_matches_played', matches);
+            window.Achievements._safeSetItem('fanta_matches_played', matches);
 
             window.Achievements.unlock('first_match');
             if (matches >= 10) window.Achievements.unlock('ten_matches');
@@ -535,14 +544,14 @@ window.Achievements = {
             // Winning streak
             const storedStreak = parseInt(localStorage.getItem('fanta_win_streak') || '0');
             const streak = (isNaN(storedStreak) ? 0 : storedStreak) + 1;
-            localStorage.setItem('fanta_win_streak', streak);
+            window.Achievements._safeSetItem('fanta_win_streak', streak);
 
             if (streak >= 3) window.Achievements.unlock('winning_streak_3');
             if (streak >= 5) window.Achievements.unlock('winning_streak_5');
         },
 
         matchLost() {
-            localStorage.setItem('fanta_win_streak', '0');
+            window.Achievements._safeSetItem('fanta_win_streak', '0');
         },
 
         goalScored(count = 1) {
@@ -550,7 +559,7 @@ window.Achievements = {
 
             const storedGoals = parseInt(localStorage.getItem('fanta_total_goals') || '0');
             const totalGoals = (isNaN(storedGoals) ? 0 : storedGoals) + count;
-            localStorage.setItem('fanta_total_goals', totalGoals);
+            window.Achievements._safeSetItem('fanta_total_goals', totalGoals);
 
             if (totalGoals >= 10) window.Achievements.unlock('ten_goals');
 
@@ -562,7 +571,7 @@ window.Achievements = {
 
             const storedPurchases = parseInt(localStorage.getItem('fanta_purchases') || '0');
             const purchases = (isNaN(storedPurchases) ? 0 : storedPurchases) + 1;
-            localStorage.setItem('fanta_purchases', purchases);
+            window.Achievements._safeSetItem('fanta_purchases', purchases);
 
             if (purchases >= 5) window.Achievements.unlock('market_master');
         },
@@ -585,11 +594,11 @@ window.Achievements = {
             const today = new Date().toDateString();
 
             if (lastLogin !== today) {
-                localStorage.setItem('fanta_last_login', today);
+                window.Achievements._safeSetItem('fanta_last_login', today);
 
                 const storedLoginStreak = parseInt(localStorage.getItem('fanta_login_streak') || '0');
                 const streak = (isNaN(storedLoginStreak) ? 0 : storedLoginStreak) + 1;
-                localStorage.setItem('fanta_login_streak', streak);
+                window.Achievements._safeSetItem('fanta_login_streak', streak);
 
                 if (streak >= 7) window.Achievements.unlock('loyal_fan');
             }

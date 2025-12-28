@@ -273,7 +273,11 @@ window.Chat = {
      * Salva posizione bottone
      */
     savePosition(x, y) {
-        localStorage.setItem('chat_button_pos', JSON.stringify({ x, y }));
+        try {
+            localStorage.setItem('chat_button_pos', JSON.stringify({ x, y }));
+        } catch (e) {
+            console.warn('[Chat] localStorage.setItem fallito:', e.message);
+        }
     },
 
     /**
