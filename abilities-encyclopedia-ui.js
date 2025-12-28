@@ -194,10 +194,11 @@ window.AbilitiesUI = {
         };
 
         const style = rarityStyles[ability.rarity] || rarityStyles['Comune'];
+        const safeName = (ability.name || '').replace(/'/g, "\\'");
 
         return `
             <div class="ability-card bg-gradient-to-br ${style.bg} to-gray-900/80 rounded-xl p-3 border ${style.border} hover:border-white/50 transition-all cursor-pointer active:scale-[0.98]"
-                 onclick="window.AbilitiesUI.showDetails('${ability.name}')">
+                 onclick="window.AbilitiesUI.showDetails('${safeName}')">
 
                 <!-- Header -->
                 <div class="flex items-start gap-2 mb-2">

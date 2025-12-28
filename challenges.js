@@ -1244,7 +1244,8 @@ window.Challenges = {
             }
 
             eventEl.className = eventClass;
-            eventEl.innerHTML = `<span class="text-gray-500">${event.minute}'</span> ${prefix}${event.text}`;
+            const safeText = window.escapeHtml ? window.escapeHtml(event.text || '') : (event.text || '');
+            eventEl.innerHTML = `<span class="text-gray-500">${event.minute}'</span> ${prefix}${safeText}`;
             eventsEl.appendChild(eventEl);
             eventsEl.scrollTop = eventsEl.scrollHeight;
 

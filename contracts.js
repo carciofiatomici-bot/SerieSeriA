@@ -507,10 +507,17 @@ window.Contracts = {
 // Listener per quando il flag viene attivato
 document.addEventListener('featureFlagChanged', async (e) => {
     if (e.detail.flagId === 'contracts' && e.detail.enabled) {
-        // Applica contratti a tutti i giocatori esistenti
-        await window.Contracts.applyContractsToAllTeams();
-        if (window.Toast) {
-            window.Toast.success('Sistema Contratti attivato! Contratti applicati ai giocatori esistenti.');
+        try {
+            // Applica contratti a tutti i giocatori esistenti
+            await window.Contracts.applyContractsToAllTeams();
+            if (window.Toast) {
+                window.Toast.success('Sistema Contratti attivato! Contratti applicati ai giocatori esistenti.');
+            }
+        } catch (error) {
+            console.error('[Contracts] Errore attivazione sistema contratti:', error);
+            if (window.Toast) {
+                window.Toast.error('Errore nell\'attivazione del sistema contratti');
+            }
         }
     }
 });

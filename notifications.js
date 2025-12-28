@@ -590,13 +590,16 @@ window.Notifications = {
             // Bottoni azione per sfide
             let actionButtons = '';
             if (notif.type === 'challenge' && notif.challengeId && !notif.responded) {
+                // Escape IDs per prevenire XSS in onclick
+                const safeNotifId = (notif.id || '').replace(/'/g, "\\'");
+                const safeChallengeId = (notif.challengeId || '').replace(/'/g, "\\'");
                 actionButtons = `
                     <div class="flex gap-2 mt-2">
-                        <button onclick="event.stopPropagation(); window.Notifications.acceptChallenge('${notif.id}', '${notif.challengeId}')"
+                        <button onclick="event.stopPropagation(); window.Notifications.acceptChallenge('${safeNotifId}', '${safeChallengeId}')"
                                 class="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
                             ✅ Accetta
                         </button>
-                        <button onclick="event.stopPropagation(); window.Notifications.declineChallenge('${notif.id}', '${notif.challengeId}')"
+                        <button onclick="event.stopPropagation(); window.Notifications.declineChallenge('${safeNotifId}', '${safeChallengeId}')"
                                 class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
                             ❌ Rifiuta
                         </button>
@@ -606,13 +609,17 @@ window.Notifications = {
 
             // Bottoni azione per inviti lega privata
             if (notif.type === 'league_invite' && notif.leagueId && !notif.responded) {
+                // Escape IDs per prevenire XSS in onclick
+                const safeNotifId = (notif.id || '').replace(/'/g, "\\'");
+                const safeLeagueId = (notif.leagueId || '').replace(/'/g, "\\'");
+                const safeInviteCode = (notif.inviteCode || '').replace(/'/g, "\\'");
                 actionButtons = `
                     <div class="flex gap-2 mt-2">
-                        <button onclick="event.stopPropagation(); window.Notifications.acceptLeagueInvite('${notif.id}', '${notif.leagueId}', '${notif.inviteCode}')"
+                        <button onclick="event.stopPropagation(); window.Notifications.acceptLeagueInvite('${safeNotifId}', '${safeLeagueId}', '${safeInviteCode}')"
                                 class="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
                             ✅ Accetta
                         </button>
-                        <button onclick="event.stopPropagation(); window.Notifications.declineLeagueInvite('${notif.id}')"
+                        <button onclick="event.stopPropagation(); window.Notifications.declineLeagueInvite('${safeNotifId}')"
                                 class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded transition">
                             ❌ Rifiuta
                         </button>

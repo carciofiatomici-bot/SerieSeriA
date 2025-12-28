@@ -1258,10 +1258,11 @@ window.InterfacciaAuth = {
 
         } catch (error) {
             console.error("Errore nel caricamento squadre:", error);
+            const escapedMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
             container.innerHTML = `
                 <div class="col-span-2 text-center">
                     <p class="text-red-400 font-bold">Errore nel caricamento</p>
-                    <p class="text-gray-400 text-sm">${error.message}</p>
+                    <p class="text-gray-400 text-sm">${escapedMsg}</p>
                     <button onclick="window.InterfacciaAuth.showListaSquadre()"
                             class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500 transition">
                         Riprova

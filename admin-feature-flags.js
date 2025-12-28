@@ -385,9 +385,11 @@ window.AdminFeatureFlags = {
                 .replace(/^_+|_+$/g, '');
         }
 
-        // Converti cssReward e conditionValue in numeri
-        data.cssReward = parseInt(data.cssReward) || 10;
-        data.conditionValue = parseInt(data.conditionValue) || 1;
+        // Converti cssReward e conditionValue in numeri (usa ?? per preservare 0 come valore valido)
+        const parsedCssReward = parseInt(data.cssReward, 10);
+        const parsedConditionValue = parseInt(data.conditionValue, 10);
+        data.cssReward = isNaN(parsedCssReward) ? 10 : parsedCssReward;
+        data.conditionValue = isNaN(parsedConditionValue) ? 1 : parsedConditionValue;
 
         try {
             // Aggiorna le definizioni locali

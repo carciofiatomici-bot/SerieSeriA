@@ -1710,7 +1710,9 @@ window.AdminTeams = {
 
         // Mostra risultato
         if (fixes.length > 0) {
-            msgElement.innerHTML = `<span class="text-green-400">✅ Corrette ${fixes.length} icone duplicate:</span><br><span class="text-xs text-gray-300">${fixes.join('<br>')}</span><br><span class="text-yellow-400 text-xs mt-2">Icona mantenuta: ${iconaVera.name}</span>`;
+            const escapedFixes = fixes.map(f => window.escapeHtml ? window.escapeHtml(f) : f).join('<br>');
+            const escapedName = window.escapeHtml ? window.escapeHtml(iconaVera.name) : iconaVera.name;
+            msgElement.innerHTML = `<span class="text-green-400">✅ Corrette ${fixes.length} icone duplicate:</span><br><span class="text-xs text-gray-300">${escapedFixes}</span><br><span class="text-yellow-400 text-xs mt-2">Icona mantenuta: ${escapedName}</span>`;
             msgElement.className = 'text-center text-sm mt-2';
         }
     },
