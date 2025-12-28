@@ -127,7 +127,7 @@
 
         // Animazione entrata
         requestAnimationFrame(() => {
-            modal.querySelector('.bg-gray-800').classList.remove('scale-95', 'opacity-0');
+            modal.querySelector('.bg-gray-800')?.classList.remove('scale-95', 'opacity-0');
         });
 
         // Chiudi con click fuori

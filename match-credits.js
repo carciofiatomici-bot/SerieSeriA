@@ -94,9 +94,9 @@ window.MatchCredits = {
         let awayGoals = 0;
 
         if (resultString) {
-            const parts = resultString.split(' ')[0].split('-');
-            homeGoals = parseInt(parts[0]) || 0;
-            awayGoals = parseInt(parts[1]) || 0;
+            const resultPart = (resultString.split(' ')[0] || '').split('-');
+            homeGoals = parseInt(resultPart[0]) || 0;
+            awayGoals = parseInt(resultPart[1]) || 0;
         }
 
         return { homeGoals, awayGoals };

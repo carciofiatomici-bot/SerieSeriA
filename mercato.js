@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Annulla
-            modal.querySelector('#type-modal-cancel').addEventListener('click', () => {
+            modal.querySelector('#type-modal-cancel')?.addEventListener('click', () => {
                 modal.remove();
                 reject(new Error('Operazione annullata'));
             });

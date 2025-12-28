@@ -439,8 +439,9 @@ window.UserCompetitions = {
                 return window.InterfacciaCore?.teamLogosMap?.[teamId] || window.InterfacciaConstants?.DEFAULT_LOGO_URL || 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/placeholder.jpg';
             };
 
-            const homeGoals = parseInt(lastPlayedMatch.result.split('-')[0]);
-            const awayGoals = parseInt(lastPlayedMatch.result.split('-')[1]);
+            // resultParts già definito sopra
+            const homeGoals = parseInt(resultParts[0]) || 0;
+            const awayGoals = parseInt(resultParts[1]) || 0;
 
             html += `
                 <div class="last-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${style.gradient} ${style.border} border shadow-xl">

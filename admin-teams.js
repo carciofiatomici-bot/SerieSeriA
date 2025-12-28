@@ -808,34 +808,39 @@ window.AdminTeams = {
         if (!toggle) return;
 
         toggle.addEventListener('change', async (e) => {
-            if (e.target.checked) {
-                // Chiedi conferma quando si ATTIVA il flag admin
-                let confirmed = false;
-                if (window.ConfirmDialog?.show) {
-                    confirmed = await window.ConfirmDialog.show({
-                        title: 'Conferma Permessi Admin',
-                        message: 'Sei sicuro di voler concedere i permessi admin a questa squadra? Potra accedere al pannello di amministrazione.',
-                        confirmText: 'Si, Concedi Admin',
-                        cancelText: 'Annulla',
-                        type: 'warning'
-                    });
+            try {
+                if (e.target.checked) {
+                    // Chiedi conferma quando si ATTIVA il flag admin
+                    let confirmed = false;
+                    if (window.ConfirmDialog?.show) {
+                        confirmed = await window.ConfirmDialog.show({
+                            title: 'Conferma Permessi Admin',
+                            message: 'Sei sicuro di voler concedere i permessi admin a questa squadra? Potra accedere al pannello di amministrazione.',
+                            confirmText: 'Si, Concedi Admin',
+                            cancelText: 'Annulla',
+                            type: 'warning'
+                        });
+                    } else {
+                        confirmed = confirm('Sei sicuro di voler concedere i permessi admin a questa squadra?');
+                    }
+
+                    if (!confirmed) {
+                        e.target.checked = false;
+                        return;
+                    }
+                }
+
+                // Aggiorna testo stato
+                if (e.target.checked) {
+                    statusText.textContent = 'Questa squadra ha accesso al pannello admin';
+                    statusText.className = 'text-xs mt-2 text-red-400';
                 } else {
-                    confirmed = confirm('Sei sicuro di voler concedere i permessi admin a questa squadra?');
+                    statusText.textContent = 'Squadra normale senza permessi admin';
+                    statusText.className = 'text-xs mt-2 text-gray-500';
                 }
-
-                if (!confirmed) {
-                    e.target.checked = false;
-                    return;
-                }
-            }
-
-            // Aggiorna testo stato
-            if (e.target.checked) {
-                statusText.textContent = 'Questa squadra ha accesso al pannello admin';
-                statusText.className = 'text-xs mt-2 text-red-400';
-            } else {
-                statusText.textContent = 'Squadra normale senza permessi admin';
-                statusText.className = 'text-xs mt-2 text-gray-500';
+            } catch (error) {
+                console.error('[AdminTeams] Errore toggle admin:', error);
+                e.target.checked = !e.target.checked; // Ripristina stato
             }
         });
     },

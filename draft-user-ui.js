@@ -727,7 +727,7 @@ window.DraftUserUI = {
             `;
 
             this.clearTurnTimer();
-            document.getElementById('btn-refresh-draft').addEventListener('click', () => this.render(context));
+            document.getElementById('btn-refresh-draft')?.addEventListener('click', () => this.render(context));
             return;
         }
 
@@ -833,7 +833,7 @@ window.DraftUserUI = {
                 this.startTurnCountdown(context, turnInfo.turnStartTime, turnInfo.currentTimeout);
             }
 
-            document.getElementById('btn-refresh-draft').addEventListener('click', () => this.render(context));
+            document.getElementById('btn-refresh-draft')?.addEventListener('click', () => this.render(context));
 
             const stealBtn = document.getElementById('btn-steal-turn');
             if (stealBtn) {

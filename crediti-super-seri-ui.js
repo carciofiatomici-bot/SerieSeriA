@@ -1400,7 +1400,7 @@ window.CreditiSuperSeriUI = {
         });
 
         // Handler annulla
-        modal.querySelector('#btn-cancel-negative').addEventListener('click', () => {
+        modal.querySelector('#btn-cancel-negative')?.addEventListener('click', () => {
             modal.remove();
         });
 

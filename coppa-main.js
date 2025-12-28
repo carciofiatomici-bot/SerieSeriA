@@ -135,9 +135,9 @@ window.CoppaMain = {
         // Registra statistiche stagionali per la coppa
         if (result.resultString && window.PlayerSeasonStats) {
             try {
-                const parts = result.resultString.split(' ')[0].split('-');
-                const homeGoals = parseInt(parts[0]) || 0;
-                const awayGoals = parseInt(parts[1]) || 0;
+                const resultPart = (result.resultString.split(' ')[0] || '').split('-');
+                const homeGoals = parseInt(resultPart[0]) || 0;
+                const awayGoals = parseInt(resultPart[1]) || 0;
 
                 // Aggiungi ID alle squadre per PlayerSeasonStats
                 const homeWithId = { ...actualHome, id: legType === 'leg2' ? match.awayTeam.teamId : match.homeTeam.teamId };
@@ -229,9 +229,9 @@ window.CoppaMain = {
 
         // SEMPRE: Salva nello storico partite per entrambe le squadre (sia andata che ritorno)
         if (window.MatchHistory && result.resultString) {
-            const parts = result.resultString.split(' ')[0].split('-');
-            const homeGoals = parseInt(parts[0]) || 0;
-            const awayGoals = parseInt(parts[1]) || 0;
+            const resultPart = (result.resultString.split(' ')[0] || '').split('-');
+            const homeGoals = parseInt(resultPart[0]) || 0;
+            const awayGoals = parseInt(resultPart[1]) || 0;
 
             // Salva per squadra di casa
             // Prepara dettagli con highlights e matchLog per telecronaca
