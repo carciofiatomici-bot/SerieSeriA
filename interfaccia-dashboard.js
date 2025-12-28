@@ -35,6 +35,7 @@ window.InterfacciaDashboard = {
             const campionati = currentTeamData.campionatiVinti || 0;
             const coppe = currentTeamData.coppeSerieVinte || 0;
             const supercoppe = currentTeamData.supercoppeSerieVinte || 0;
+            console.log('[Dashboard] Trofei squadra:', { campionati, coppe, supercoppe, teamName });
 
             // Mostra solo se ha almeno un trofeo
             if (campionati > 0 || coppe > 0 || supercoppe > 0) {
