@@ -160,6 +160,16 @@ window.ChampionshipMain = {
         const SCHEDULE_DOC_ID = 'full_schedule';
         const LEADERBOARD_DOC_ID = 'standings';
 
+        // Bug #27: Bounds check prima di accedere all'array
+        if (!schedule || !schedule[roundIndex] || !schedule[roundIndex].matches || !schedule[roundIndex].matches[matchIndex]) {
+            console.error('[ChampionshipMain] Indici partita non validi:', { roundIndex, matchIndex, scheduleLength: schedule?.length });
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Simula';
+            }
+            return;
+        }
+
         let match = schedule[roundIndex].matches[matchIndex];
 
         try {
