@@ -201,7 +201,8 @@ window.AbilitiesUI = {
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'abilities-encyclopedia-overlay';
-            overlay.className = 'fixed inset-0 z-50 hidden';
+            overlay.className = 'fixed inset-0 z-50 hidden overflow-y-auto overscroll-contain';
+            overlay.style.cssText = 'background: linear-gradient(to bottom, #020617, #0f172a, #020617);';
             document.body.appendChild(overlay);
         }
 
