@@ -751,7 +751,13 @@ window.Trades = {
                 // Fallback localStorage per demo
                 trade.id = `trade_${Date.now()}`;
                 trade.timestamp = Date.now();
-                const savedTrades = JSON.parse(localStorage.getItem('fanta_trades') || '[]');
+                let savedTrades = [];
+                try {
+                    savedTrades = JSON.parse(localStorage.getItem('fanta_trades') || '[]');
+                } catch (e) {
+                    console.warn('[Trades] localStorage corrotto, reset:', e);
+                    localStorage.removeItem('fanta_trades');
+                }
                 savedTrades.push(trade);
                 localStorage.setItem('fanta_trades', JSON.stringify(savedTrades));
                 if (window.Toast) window.Toast.success('Proposta salvata (demo mode)');

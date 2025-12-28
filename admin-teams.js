@@ -124,7 +124,7 @@ window.AdminTeams = {
                             <div>
                                 <p class="text-lg font-bold text-white">${teamData.teamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}${teamData.draft_enabled ? ' <span class="text-green-400" title="Partecipa al Draft">📝</span>' : ''}</p>
                                 <p class="text-xs text-gray-400">ID: ${teamId}</p>
-                                <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${teamData.players.length} gioc. | Creazione: ${date}</p>
+                                <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${(teamData.players || []).length} gioc. | Creazione: ${date}</p>
                                 <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
                             </div>
                         </div>
@@ -665,7 +665,7 @@ window.AdminTeams = {
                         </button>
                         <button onclick="window.AdminTeams.switchTab('players')" id="tab-players" 
                                 class="px-4 py-2 font-bold bg-gray-700 text-gray-300 rounded-t hover:bg-gray-600 transition">
-                            ⚽ Giocatori (${teamData.players.length})
+                            ⚽ Giocatori (${(teamData.players || []).length})
                         </button>
                     </div>
 
