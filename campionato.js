@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         displayConfigMessage("Terminazione Campionato in corso: Calcolo premi e progressione allenatori...", 'info');
         
-        const { doc, setDoc, getDoc, deleteDoc } = firestoreTools;
+        const { doc, setDoc, getDoc, deleteDoc } = window.firestoreTools;
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
         const leaderboardDocRef = doc(db, LEADERBOARD_COLLECTION_PATH, LEADERBOARD_DOC_ID);
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const standings = leaderboardData.standings;
             
             const result = await window.ChampionshipRewards.applySeasonEndRewards(standings);
-            const { totalTeams, levelUps } = result;
+            const { totalTeams, cssAwarded } = result;
 
             // Decrementa contratti di tutti i giocatori (se sistema contratti attivo)
             let contractsMessage = '';
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             displayConfigMessage(
-                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${levelUps} allenatori sono saliti di livello (20% chance).${contractsMessage}${supercoppaMess} Calendario eliminato.`,
+                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${cssAwarded} squadre hanno ricevuto 1 CSS.${contractsMessage}${supercoppaMess} Calendario eliminato.`,
                 'success'
             );
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         displayConfigMessage("Terminazione Campionato forzata per testing... (NESSUN PREMIO O LIVELLO ASSEGNATO)", 'info');
         
-        const { doc, setDoc, deleteDoc } = firestoreTools;
+        const { doc, setDoc, deleteDoc } = window.firestoreTools;
         const configDocRef = doc(db, CHAMPIONSHIP_CONFIG_PATH, CONFIG_DOC_ID);
         const scheduleDocRef = doc(db, SCHEDULE_COLLECTION_PATH, SCHEDULE_DOC_ID);
         
@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Verifica se il campionato e' in corso (ci sono partite giocate)
         try {
+            const { appId, doc, getDoc } = window.firestoreTools;
             const schedulePath = `artifacts/${appId}/public/data/schedule/full_schedule`;
             const scheduleRef = doc(db, schedulePath);
             const scheduleSnap = await getDoc(scheduleRef);
@@ -185,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         displayConfigMessage("Generazione calendario in corso...", 'info');
         const button = document.getElementById('btn-generate-schedule');
-        button.disabled = true;
+        if (button) button.disabled = true;
 
         try {
             const schedule = window.ChampionshipSchedule.generateRoundRobinSchedule(teams);

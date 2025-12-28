@@ -347,6 +347,86 @@
     // ========================================
 
     /**
+     * Estrae statistiche giocatori (gol/assist) dai matchEvents
+     * Bug #4 Fix: Funzione helper per costruire playerStats dalla simulazione
+     * @param {Array} matchEvents - Eventi della partita dalla simulazione
+     * @param {Object} teamData - Dati squadra con rosa
+     * @param {boolean} isHome - true se squadra casa
+     * @returns {Object} playerStats mappato per playerId { playerId: { goals, assists } }
+     */
+    function extractPlayerStatsFromEvents(matchEvents, teamData, isHome) {
+        if (!matchEvents || !Array.isArray(matchEvents)) return {};
+        if (!teamData) return {};
+
+        const playerStats = {};
+        const roster = teamData.players || teamData.rosa || teamData.roster || [];
+        const formation = teamData.formation?.titolari || teamData.formazione?.titolari || [];
+        const allPlayers = [...roster, ...formation];
+
+        // Helper: trova player ID da nome
+        const findPlayerIdByName = (name) => {
+            if (!name) return null;
+            const normalizedName = name.toLowerCase().trim();
+            for (const player of allPlayers) {
+                if (!player) continue;
+                const playerName = (player.nome || player.name || '').toLowerCase().trim();
+                if (playerName === normalizedName) {
+                    return player.id || player.visitorId;
+                }
+            }
+            return null;
+        };
+
+        // Itera sugli eventi della partita
+        const teamSide = isHome ? 'home' : 'away';
+        matchEvents.forEach(event => {
+            // Solo eventi di questa squadra
+            if (event.side !== teamSide && event.team !== teamSide) return;
+
+            // Verifica se e' un gol
+            const isGoal = event.isGoal === true || event.result === 'goal' || event.type === 'goal';
+            if (!isGoal) return;
+
+            // Estrai scorer
+            let scorerName = event.scorer || null;
+            if (!scorerName && Array.isArray(event.phases)) {
+                const shotPhase = event.phases.find(p => p.phase === 'tiro');
+                if (shotPhase) scorerName = shotPhase.player;
+            }
+            if (!scorerName && event.phases?.shot?.shooter?.name) {
+                scorerName = event.phases.shot.shooter.name;
+            }
+
+            // Estrai assister
+            let assisterName = event.assist || null;
+            if (!assisterName && Array.isArray(event.phases)) {
+                const successPhases = event.phases.filter(p => p.success && p.phase !== 'tiro');
+                if (successPhases.length > 0) {
+                    assisterName = successPhases[successPhases.length - 1].player;
+                }
+            }
+            if (!assisterName && event.phases?.attack?.players?.attacker?.[0]?.name) {
+                assisterName = event.phases.attack.players.attacker[0].name;
+            }
+
+            // Mappa nomi a ID e aggiungi statistiche
+            const scorerId = findPlayerIdByName(scorerName);
+            const assisterId = findPlayerIdByName(assisterName);
+
+            if (scorerId) {
+                if (!playerStats[scorerId]) playerStats[scorerId] = { goals: 0, assists: 0 };
+                playerStats[scorerId].goals++;
+            }
+            if (assisterId && assisterId !== scorerId) {
+                if (!playerStats[assisterId]) playerStats[assisterId] = { goals: 0, assists: 0 };
+                playerStats[assisterId].assists++;
+            }
+        });
+
+        return playerStats;
+    }
+
+    /**
      * Processa l'EXP per tutti i giocatori di una squadra dopo una partita
      * @param {Object} teamData - Dati squadra con formazione e rosa
      * @param {Object} matchResult - Risultato partita {homeGoals, awayGoals, isHome, playerStats}
@@ -1245,7 +1325,8 @@
                             exp: expData.exp,
                             level: expData.level,
                             expToNextLevel: expData.expToNextLevel,
-                            totalMatchesPlayed: expData.totalMatchesPlayed || player.totalMatchesPlayed || 0
+                            // Bug #17: Usa nullish coalescing per preservare 0 legittimi
+                            totalMatchesPlayed: expData.totalMatchesPlayed ?? player.totalMatchesPlayed ?? 0
                         };
                     }
                     return player;
@@ -1321,7 +1402,7 @@
                 player.exp = expData.exp || 0;
                 player.level = expData.level || player.level || 1;
                 player.expToNextLevel = expData.expToNextLevel || 0;
-                player.totalMatchesPlayed = expData.totalMatchesPlayed || 0;
+                player.totalMatchesPlayed = expData.totalMatchesPlayed ?? 0;
                 appliedCount++;
             } else if (player.exp !== undefined && player.exp > 0) {
                 // Mantieni l'EXP gia presente nel giocatore (da array players su Firestore)
@@ -1390,6 +1471,7 @@
         applyExp,
         checkLevelUp,
         processMatchExp,
+        extractPlayerStatsFromEvents, // Bug #4 Fix: Helper per estrarre stats da matchEvents
 
         // Allenatore
         calculateCoachMatchExp,

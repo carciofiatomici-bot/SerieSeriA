@@ -109,6 +109,40 @@ window.NextMatchAlert = {
     },
 
     /**
+     * Ottiene la Supercoppa se in programma (visibile a TUTTI)
+     */
+    async getSupercoppaMatch() {
+        try {
+            if (!window.Supercoppa) return null;
+
+            const bracket = await window.Supercoppa.loadSupercoppa();
+            if (!bracket || bracket.isCompleted) return null;
+
+            // Supercoppa in programma - mostra a tutti
+            const homeAvg = await this.getTeamAverageLevel(bracket.homeTeam.teamId);
+            const awayAvg = await this.getTeamAverageLevel(bracket.awayTeam.teamId);
+
+            return {
+                type: 'supercoppa',
+                round: 'Partita Secca',
+                homeName: bracket.homeTeam.teamName,
+                awayName: bracket.awayTeam.teamName,
+                homeId: bracket.homeTeam.teamId,
+                awayId: bracket.awayTeam.teamId,
+                homeQualification: bracket.homeTeam.qualification,
+                awayQualification: bracket.awayTeam.qualification,
+                isHome: false, // Non e' la squadra dell'utente (mostrata a tutti)
+                homeAvg,
+                awayAvg,
+                isGlobalEvent: true // Flag per indicare evento globale
+            };
+        } catch (error) {
+            console.error('[NextMatchAlert] Errore caricamento supercoppa:', error);
+            return null;
+        }
+    },
+
+    /**
      * Ottiene la prossima partita della squadra (campionato o coppa)
      * Usa la stessa logica di findNextValidSimulation per determinare
      * quale competizione verra' effettivamente simulata
@@ -116,6 +150,17 @@ window.NextMatchAlert = {
     async getNextMatch(teamId) {
         const { doc, getDoc, appId } = window.firestoreTools;
         const db = window.db;
+
+        // PRIORITA' 1: Supercoppa (visibile a TUTTI se in programma)
+        const supercoppaMatch = await this.getSupercoppaMatch();
+        if (supercoppaMatch) {
+            // Controlla se l'utente partecipa alla Supercoppa
+            if (supercoppaMatch.homeId === teamId || supercoppaMatch.awayId === teamId) {
+                supercoppaMatch.isHome = supercoppaMatch.homeId === teamId;
+                supercoppaMatch.isGlobalEvent = false; // E' la sua partita
+            }
+            return supercoppaMatch;
+        }
 
         const automationState = await this.getAutomationState();
 
@@ -184,7 +229,8 @@ window.NextMatchAlert = {
             try {
                 const bracket = await window.CoppaSchedule?.loadCupSchedule();
                 if (bracket) {
-                    const teamMatches = window.CoppaSchedule.getTeamMatches(bracket, teamId);
+                    // Bug #10: Usa optional chaining
+                    const teamMatches = window.CoppaSchedule?.getTeamMatches(bracket, teamId) || [];
                     const nextCupMatch = teamMatches.find(m => !m.winner);
                     if (nextCupMatch && nextCupMatch.homeTeam && nextCupMatch.awayTeam) {
                         const homeAvg = await this.getTeamAverageLevel(nextCupMatch.homeTeam.teamId);
@@ -329,20 +375,29 @@ window.NextMatchAlert = {
         // Trova il container next-match-content (dentro next-match-inline-box)
         const contentContainer = document.getElementById('next-match-content') || container;
 
+        // Stile speciale per Supercoppa
+        const isSupercoppa = nextMatch.type === 'supercoppa';
+        const supercoppaGradient = isSupercoppa ? 'bg-gradient-to-r from-yellow-900/30 via-transparent to-yellow-900/30' : '';
+
         contentContainer.innerHTML = `
             <!-- Badge Competizione -->
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <span class="text-2xl">${typeIcon}</span>
+            <div class="flex items-center justify-center gap-2 mb-4 ${supercoppaGradient} py-2 rounded-lg">
+                <span class="text-2xl ${isSupercoppa ? 'animate-pulse' : ''}">${typeIcon}</span>
                 <span class="text-base sm:text-lg font-bold text-${typeColor}-400">${typeName}</span>
                 ${nextMatch.round ? `<span class="text-sm text-gray-400">- ${nextMatch.round}</span>` : ''}
             </div>
+
+            ${nextMatch.isGlobalEvent ? `
+                <p class="text-center text-xs text-yellow-400/80 mb-3 italic">Evento speciale visibile a tutti</p>
+            ` : ''}
 
             <!-- Squadre VS -->
             <div class="flex items-center justify-between px-2 sm:px-4">
                 <!-- Squadra Casa -->
                 <div class="flex flex-col items-center flex-1">
+                    ${isSupercoppa && nextMatch.homeQualification ? `<span class="text-[10px] text-yellow-400 uppercase tracking-wider mb-1">${nextMatch.homeQualification}</span>` : ''}
                     <img src="${homeLogoUrl}" alt="${nextMatch.homeName}"
-                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${nextMatch.isHome ? 'border-yellow-400 shadow-yellow-400/30' : 'border-gray-600'} object-cover shadow-lg"
+                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${nextMatch.isHome ? 'border-yellow-400 shadow-yellow-400/30' : (isSupercoppa ? 'border-yellow-600' : 'border-gray-600')} object-cover shadow-lg"
                          loading="lazy" decoding="async">
                     <span class="text-sm sm:text-base font-bold mt-2 max-w-[100px] sm:max-w-[120px] truncate text-center ${nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.homeName}</span>
                     <span class="text-xs text-gray-400 mt-0.5">Lv. ${nextMatch.homeAvg}</span>
@@ -350,15 +405,17 @@ window.NextMatchAlert = {
 
                 <!-- VS -->
                 <div class="flex flex-col items-center px-3">
-                    <span class="text-2xl sm:text-3xl font-black text-gray-500">VS</span>
+                    ${isSupercoppa ? `<span class="text-3xl mb-1">🏆</span>` : ''}
+                    <span class="text-2xl sm:text-3xl font-black ${isSupercoppa ? 'text-yellow-500' : 'text-gray-500'}">VS</span>
                 </div>
 
                 <!-- Squadra Trasferta -->
                 <div class="flex flex-col items-center flex-1">
+                    ${isSupercoppa && nextMatch.awayQualification ? `<span class="text-[10px] text-yellow-400 uppercase tracking-wider mb-1">${nextMatch.awayQualification}</span>` : ''}
                     <img src="${awayLogoUrl}" alt="${nextMatch.awayName}"
-                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${!nextMatch.isHome ? 'border-yellow-400 shadow-yellow-400/30' : 'border-gray-600'} object-cover shadow-lg"
+                         class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 ${!nextMatch.isHome && !nextMatch.isGlobalEvent ? 'border-yellow-400 shadow-yellow-400/30' : (isSupercoppa ? 'border-yellow-600' : 'border-gray-600')} object-cover shadow-lg"
                          loading="lazy" decoding="async">
-                    <span class="text-sm sm:text-base font-bold mt-2 max-w-[100px] sm:max-w-[120px] truncate text-center ${!nextMatch.isHome ? 'text-yellow-400' : 'text-white'}">${nextMatch.awayName}</span>
+                    <span class="text-sm sm:text-base font-bold mt-2 max-w-[100px] sm:max-w-[120px] truncate text-center ${!nextMatch.isHome && !nextMatch.isGlobalEvent ? 'text-yellow-400' : 'text-white'}">${nextMatch.awayName}</span>
                     <span class="text-xs text-gray-400 mt-0.5">Lv. ${nextMatch.awayAvg}</span>
                 </div>
             </div>
@@ -476,25 +533,30 @@ window.NextMatchAlert = {
      * Evita loop infiniti controllando se i dati sono effettivamente cambiati
      */
     async _refreshFromScheduleUpdate() {
-        const currentTeamId = window.InterfacciaCore?.currentTeamId;
-        if (!currentTeamId) return;
+        // Bug #12: Wrappa in try-catch per evitare crash
+        try {
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            if (!currentTeamId) return;
 
-        const newMatch = await this.getNextMatch(currentTeamId);
+            const newMatch = await this.getNextMatch(currentTeamId);
 
-        // Controlla se la partita e' cambiata
-        const oldMatchKey = this._currentMatch
-            ? `${this._currentMatch.homeId}_${this._currentMatch.awayId}`
-            : null;
-        const newMatchKey = newMatch
-            ? `${newMatch.homeId}_${newMatch.awayId}`
-            : null;
+            // Controlla se la partita e' cambiata
+            const oldMatchKey = this._currentMatch
+                ? `${this._currentMatch.homeId}_${this._currentMatch.awayId}`
+                : null;
+            const newMatchKey = newMatch
+                ? `${newMatch.homeId}_${newMatch.awayId}`
+                : null;
 
-        if (oldMatchKey !== newMatchKey) {
-            console.log('[NextMatchAlert] Partita cambiata, aggiorno UI');
-            await this.init();
+            if (oldMatchKey !== newMatchKey) {
+                console.log('[NextMatchAlert] Partita cambiata, aggiorno UI');
+                await this.init();
 
-            // Emetti evento per sincronizzare anche last-match-preview
-            document.dispatchEvent(new CustomEvent('matchDataUpdated'));
+                // Emetti evento per sincronizzare anche last-match-preview
+                document.dispatchEvent(new CustomEvent('matchDataUpdated'));
+            }
+        } catch (error) {
+            console.error('[NextMatchAlert] Errore in _refreshFromScheduleUpdate:', error);
         }
     },
 

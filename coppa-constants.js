@@ -16,7 +16,7 @@ window.CoppaConstants = {
     get REWARDS() {
         return {
             WINNER_CSS: window.RewardsConfig?.rewardCoppaCSS || 1,
-            PLACES_2_3_4_CS: window.RewardsConfig?.rewardCoppa234CS || 100,
+            PLACES_2_3_4_CS: window.RewardsConfig?.rewardCoppa234CS || 350,
             MATCH_WIN_CS: window.RewardsConfig?.rewardVittoriaCS || 25,
             GOAL_CS: window.RewardsConfig?.rewardGoalCS || 5
         };

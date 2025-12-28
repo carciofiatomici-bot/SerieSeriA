@@ -135,8 +135,13 @@ window.ChampionshipRewards = {
         // Calcola i premi
         const rewardsMap = this.calculateSeasonEndRewards(standings);
 
-        // Identifica il vincitore del campionato (primo in classifica)
-        const championTeamId = standings.length > 0 ? standings[0].teamId : null;
+        // Identifica le ultime 3 squadre (escluse dal premio CSS)
+        const numTeams = standings.length;
+        const bottom3TeamIds = new Set(
+            standings.slice(Math.max(0, numTeams - 3)).map(t => t.teamId)
+        );
+        // Set di tutti i partecipanti al campionato (per verificare chi ha partecipato)
+        const participantTeamIds = new Set(standings.map(t => t.teamId));
 
         // Applica i premi a tutte le squadre
         const teamsCollectionRef = collection(db, TEAMS_COLLECTION_PATH);
@@ -164,15 +169,20 @@ window.ChampionshipRewards = {
                 lastAcquisitionTimestamp: 0,
             };
 
-            // Premio speciale: 1 CSS al vincitore del campionato (solo se sistema CSS abilitato)
-            if (teamId === championTeamId) {
+            // Premio CSS: 1 CSS a tutti i partecipanti al campionato TRANNE le ultime 3 squadre
+            const hasParticipated = participantTeamIds.has(teamId);
+            const isBottom3 = bottom3TeamIds.has(teamId);
+
+            if (hasParticipated && !isBottom3) {
                 const cssEnabled = window.CreditiSuperSeri ? await window.CreditiSuperSeri.isEnabled() : false;
                 if (cssEnabled) {
                     updateData.creditiSuperSeri = currentCSS + 1;
-                    console.log(`Premio campionato: 1 CSS assegnato al vincitore ${teamData.teamName || teamId}`);
+                    console.log(`Premio campionato: 1 CSS assegnato a ${teamData.teamName || teamId}`);
                 } else {
                     console.log(`Sistema CSS disabilitato - premio CSS non assegnato a ${teamData.teamName || teamId}`);
                 }
+            } else if (isBottom3) {
+                console.log(`${teamData.teamName || teamId} nelle ultime 3 posizioni - nessun CSS`);
             }
 
             // Aggiorna la squadra su Firestore
@@ -181,7 +191,7 @@ window.ChampionshipRewards = {
 
         return {
             totalTeams: teamsSnapshot.size,
-            championId: championTeamId
+            cssAwarded: numTeams - bottom3TeamIds.size
         };
     }
 };

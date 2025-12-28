@@ -147,13 +147,31 @@ window.AutomazioneSimulazioni = {
 
     /**
      * Determina il prossimo tipo di simulazione in base alla sequenza
-     * Sequenza: coppa_andata -> campionato -> coppa_ritorno -> campionato -> coppa_andata ...
+     * Sequenza: coppa_andata -> campionato -> coppa_ritorno -> campionato -> ...
+     * NOTA: La Supercoppa NON e' nella sequenza normale - viene simulata
+     * automaticamente quando campionato E coppa sono entrambi finiti
      */
     getNextSimulationType(currentType) {
         const sequence = ['coppa_andata', 'campionato', 'coppa_ritorno', 'campionato'];
         const currentIndex = sequence.indexOf(currentType);
         const nextIndex = (currentIndex + 1) % sequence.length;
         return sequence[nextIndex];
+    },
+
+    /**
+     * Verifica se c'e' una Supercoppa da simulare
+     */
+    async hasSupercoppaToPlay() {
+        try {
+            if (!window.Supercoppa) return false;
+
+            const bracket = await window.Supercoppa.loadSupercoppa();
+            // C'e' una supercoppa da giocare se esiste e non e' completata
+            return bracket && !bracket.isCompleted;
+        } catch (error) {
+            console.error('Errore verifica supercoppa:', error);
+            return false;
+        }
     },
 
     /**
@@ -166,6 +184,15 @@ window.AutomazioneSimulazioni = {
             // coppa_andata o coppa_ritorno
             return await this.hasCupMatchesToPlay();
         }
+    },
+
+    /**
+     * Verifica se sia campionato che coppa sono finiti (condizione per Supercoppa)
+     */
+    async areBothCompetitionsFinished() {
+        const hasChampionship = await this.hasChampionshipMatchesToPlay();
+        const hasCup = await this.hasCupMatchesToPlay();
+        return !hasChampionship && !hasCup;
     },
 
     /**
@@ -183,7 +210,91 @@ window.AutomazioneSimulazioni = {
             currentType = this.getNextSimulationType(currentType);
         }
 
+        // Se campionato E coppa sono entrambi finiti, gestisci fine stagione
+        const bothFinished = await this.areBothCompetitionsFinished();
+        if (bothFinished) {
+            // Gestisci fine stagione (premi, creazione supercoppa)
+            await this.handleSeasonEnd();
+
+            // Verifica se c'e' una Supercoppa da simulare
+            // La Supercoppa viene simulata solo alle 20:30 (GitHub Action serale)
+            if (await this.hasSupercoppaToPlay()) {
+                const now = new Date();
+                const isEveningTime = now.getHours() >= 20;
+
+                if (isEveningTime) {
+                    return 'supercoppa';
+                } else {
+                    console.log('[Automazione] Supercoppa disponibile - verra simulata alle 20:30');
+                    return null;
+                }
+            }
+        }
+
         return null; // Nessuna simulazione disponibile
+    },
+
+    /**
+     * Gestisce la fine della stagione: assegna premi e crea Supercoppa
+     * Chiamato solo quando ENTRAMBE le competizioni (campionato E coppa) sono finite
+     */
+    async handleSeasonEnd() {
+        const { doc, getDoc, setDoc, appId } = window.firestoreTools;
+        const db = window.db;
+
+        try {
+            const configRef = doc(db, `artifacts/${appId}/public/data/config`, 'settings');
+            const configDoc = await getDoc(configRef);
+            const config = configDoc.exists() ? configDoc.data() : {};
+
+            // Verifica se il campionato e' finito ma non ancora terminato ufficialmente
+            const hasChampionship = await this.hasChampionshipMatchesToPlay();
+
+            // Se il campionato e' finito (nessuna partita) ma isSeasonOver e' false
+            if (!hasChampionship && !config.isSeasonOver) {
+                console.log('[Automazione] Campionato terminato - Assegnazione premi automatica...');
+
+                // Carica la classifica
+                const leaderboardData = await window.LeaderboardListener?.getLeaderboard();
+                if (leaderboardData?.standings && leaderboardData.standings.length > 0) {
+                    // Assegna premi di fine stagione
+                    const result = await window.ChampionshipRewards.applySeasonEndRewards(leaderboardData.standings);
+                    console.log(`[Automazione] Premi fine stagione assegnati a ${result.totalTeams} squadre (${result.cssAwarded} CSS assegnati)`);
+
+                    // Decrementa contratti (se sistema attivo)
+                    if (window.Contracts?.isEnabled()) {
+                        await window.Contracts.decrementAllContracts();
+                        console.log('[Automazione] Contratti decrementati');
+                    }
+
+                    // Imposta isSeasonOver = true
+                    await setDoc(configRef, {
+                        isSeasonOver: true,
+                        isDraftOpen: false,
+                        isMarketOpen: false,
+                        lastAutoSimulatedDate: 0
+                    }, { merge: true });
+
+                    console.log('[Automazione] Flag isSeasonOver impostato a true');
+
+                    // Notifica UI
+                    if (window.Toast) {
+                        window.Toast.success('Campionato terminato! Premi assegnati automaticamente.');
+                    }
+                }
+            }
+
+            // Verifica se creare la Supercoppa automaticamente
+            if (window.Supercoppa?.checkAndCreateSupercoppa) {
+                const supercoppResult = await window.Supercoppa.checkAndCreateSupercoppa();
+                if (supercoppResult.created) {
+                    console.log(`[Automazione] Supercoppa creata automaticamente: ${supercoppResult.bracket.homeTeam.teamName} vs ${supercoppResult.bracket.awayTeam.teamName}`);
+                }
+            }
+
+        } catch (error) {
+            console.error('[Automazione] Errore gestione fine stagione:', error);
+        }
     },
 
     /**
@@ -322,6 +433,49 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
+     * Simula la Supercoppa automaticamente
+     */
+    async simulateSupercoppaAuto() {
+        try {
+            if (!window.Supercoppa) {
+                throw new Error('Modulo Supercoppa non disponibile');
+            }
+
+            const bracket = await window.Supercoppa.loadSupercoppa();
+            if (!bracket) {
+                throw new Error('Nessuna Supercoppa in programma');
+            }
+
+            if (bracket.isCompleted) {
+                throw new Error('Supercoppa gia completata');
+            }
+
+            console.log(`[Automazione] Simulazione Supercoppa: ${bracket.homeTeam.teamName} vs ${bracket.awayTeam.teamName}`);
+
+            // Simula la Supercoppa
+            const result = await window.Supercoppa.simulateSupercoppa();
+
+            console.log(`[Automazione] Supercoppa completata! Vincitore: ${result.winner.teamName} (${result.result})`);
+
+            return {
+                success: true,
+                type: 'supercoppa',
+                winner: result.winner.teamName,
+                result: result.result,
+                message: `Supercoppa: ${result.homeTeam.teamName} vs ${result.awayTeam.teamName} - ${result.result}. Vincitore: ${result.winner.teamName}`
+            };
+
+        } catch (error) {
+            console.error('Errore simulazione Supercoppa:', error);
+            return {
+                success: false,
+                type: 'supercoppa',
+                error: error.message
+            };
+        }
+    },
+
+    /**
      * Esegue la simulazione automatica
      */
     async executeSimulation() {
@@ -341,6 +495,14 @@ window.AutomazioneSimulazioni = {
         const nextType = await this.findNextValidSimulation(state.nextSimulationType);
 
         if (!nextType) {
+            // Verifica se c'e' una Supercoppa in attesa (simula solo alle 20:30)
+            const hasPendingSupercoppa = await this.hasSupercoppaToPlay();
+            if (hasPendingSupercoppa) {
+                console.log('[Automazione] Supercoppa in attesa - verra simulata alle 20:30');
+                // NON disabilitare l'automazione, la Supercoppa verra' simulata stasera
+                return null;
+            }
+
             console.log('[Automazione] Nessuna partita da simulare - tutte le competizioni sono finite');
             // Disabilita automaticamente l'automazione
             await this.saveAutomationState({
@@ -354,6 +516,8 @@ window.AutomazioneSimulazioni = {
         let result;
         if (nextType === 'campionato') {
             result = await this.simulateChampionship();
+        } else if (nextType === 'supercoppa') {
+            result = await this.simulateSupercoppaAuto();
         } else {
             result = await this.simulateCup(nextType);
         }

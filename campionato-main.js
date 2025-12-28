@@ -219,8 +219,12 @@ window.ChampionshipMain = {
 
             // 3.6. Processa EXP giocatori (NUOVO SISTEMA)
             if (window.PlayerExp) {
-                const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
-                const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+                // Bug #4 Fix: Estrai playerStats da matchEvents per bonus gol/assist
+                const homePlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, homeTeamData, true) || {};
+                const awayPlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, awayTeamData, false) || {};
+
+                const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true, playerStats: homePlayerStats });
+                const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false, playerStats: awayPlayerStats });
 
                 // NUOVO: Salva EXP in campo separato 'playersExp'
                 if (homeExpResults.length > 0) {
@@ -523,8 +527,12 @@ window.ChampionshipMain = {
 
                 // Processa EXP giocatori (NUOVO SISTEMA)
                 if (window.PlayerExp) {
-                    const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true });
-                    const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false });
+                    // Bug #4 Fix: Estrai playerStats da matchEvents per bonus gol/assist
+                    const homePlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, homeTeamData, true) || {};
+                    const awayPlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, awayTeamData, false) || {};
+
+                    const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, { homeGoals, awayGoals, isHome: true, playerStats: homePlayerStats });
+                    const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, { homeGoals, awayGoals, isHome: false, playerStats: awayPlayerStats });
 
                     // NUOVO: Salva EXP in campo separato 'playersExp'
                     if (homeExpResults.length > 0) {

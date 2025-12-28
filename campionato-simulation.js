@@ -593,21 +593,24 @@ window.ChampionshipSimulation = {
             return {
                 homeGoals: 0, awayGoals: 0, forfeit: 'both',
                 highlights: ['FORFAIT DOPPIO: Entrambe le squadre hanno meno di 5 titolari'],
-                highlightsText: 'FORFAIT DOPPIO'
+                highlightsText: 'FORFAIT DOPPIO',
+                matchEvents: [] // Bug #5: Aggiunto matchEvents per evitare undefined
             };
         }
         if (homeTitolari < 5) {
             return {
                 homeGoals: 0, awayGoals: 3, forfeit: 'home',
                 highlights: [`FORFAIT: ${homeTeamData.teamName} ha solo ${homeTitolari} titolari - perde 0-3`],
-                highlightsText: `FORFAIT: ${homeTeamData.teamName} perde 0-3`
+                highlightsText: `FORFAIT: ${homeTeamData.teamName} perde 0-3`,
+                matchEvents: [] // Bug #5: Aggiunto matchEvents per evitare undefined
             };
         }
         if (awayTitolari < 5) {
             return {
                 homeGoals: 3, awayGoals: 0, forfeit: 'away',
                 highlights: [`FORFAIT: ${awayTeamData.teamName} ha solo ${awayTitolari} titolari - perde 3-0`],
-                highlightsText: `FORFAIT: ${awayTeamData.teamName} perde 3-0`
+                highlightsText: `FORFAIT: ${awayTeamData.teamName} perde 3-0`,
+                matchEvents: [] // Bug #5: Aggiunto matchEvents per evitare undefined
             };
         }
 

@@ -47,7 +47,8 @@
       "Bash(rm \"C:\\\\Users\\\\PowerUser\\\\Desktop\\\\Repository\\\\New Porgetto Calcetto\\\\Claude Working Space\\\\nul\")",
       "Skill(frontend-design)",
       "Bash(git checkout:*)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\PowerUser\\\\Desktop\\\\Repository\\\\New Porgetto Calcetto\\\\Claude Working Space\\\\index.html\")"
     ],
     "deny": [],
     "ask": [],

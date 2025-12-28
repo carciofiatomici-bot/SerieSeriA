@@ -9,7 +9,7 @@
 // Se sono la stessa squadra: 1° vs 2° classificato
 //
 // Formato: Partita secca, rigori in caso di pareggio
-// Premio: 1 CSS al vincitore
+// Premio: 3 CSS al vincitore
 //
 
 window.Supercoppa = {
@@ -18,7 +18,7 @@ window.Supercoppa = {
 
     // Getter dinamico per premio CSS
     get REWARD_CSS() {
-        return window.RewardsConfig?.rewardSupercoppaCSS || 1;
+        return window.RewardsConfig?.rewardSupercoppaCSS || 3;
     },
 
     /**
@@ -277,15 +277,22 @@ window.Supercoppa = {
 
         // Processa EXP giocatori (NUOVO SISTEMA)
         if (window.PlayerExp) {
+            // Bug #4 Fix: Estrai playerStats da matchEvents per bonus gol/assist
+            const matchEvents = matchResult.matchEvents || [];
+            const homePlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, homeTeamData, true) || {};
+            const awayPlayerStats = window.PlayerExp.extractPlayerStatsFromEvents?.(matchEvents, awayTeamData, false) || {};
+
             const homeExpResults = window.PlayerExp.processMatchExp(homeTeamData, {
                 homeGoals: matchResult.homeGoals,
                 awayGoals: matchResult.awayGoals,
-                isHome: true
+                isHome: true,
+                playerStats: homePlayerStats
             });
             const awayExpResults = window.PlayerExp.processMatchExp(awayTeamData, {
                 homeGoals: matchResult.homeGoals,
                 awayGoals: matchResult.awayGoals,
-                isHome: false
+                isHome: false,
+                playerStats: awayPlayerStats
             });
 
             // NUOVO: Salva EXP in campo separato 'playersExp'

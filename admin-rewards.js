@@ -23,7 +23,7 @@ window.AdminRewards = {
         rewardAltriCS: 100,
 
         // Reward CS - Coppa
-        rewardCoppa234CS: 100,
+        rewardCoppa234CS: 350,
 
         // Reward CSS - Competizioni
         rewardCampionatoCSS: 1,

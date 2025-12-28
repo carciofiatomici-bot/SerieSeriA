@@ -530,7 +530,7 @@ window.MatchHistory = {
         const scorersLine = match.details?.scorers?.length > 0 ? `
             <div class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-500">
                 <span>⚽</span>
-                <span class="truncate">${match.details.scorers.slice(0, 3).map(s => typeof s === 'string' ? s : s.name).join(', ')}${match.details.scorers.length > 3 ? '...' : ''}</span>
+                <span class="truncate">${match.details.scorers.filter(s => s).slice(0, 3).map(s => typeof s === 'string' ? s : (s?.name || 'Gol')).join(', ')}${match.details.scorers.length > 3 ? '...' : ''}</span>
             </div>
         ` : '';
 
@@ -592,6 +592,11 @@ window.MatchHistory = {
         modal.id = 'telecronaca-modal';
         modal.className = 'fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4';
 
+        // Bug #6: Controllo null per matchEvents
+        if (!matchEvents || !Array.isArray(matchEvents)) {
+            matchEvents = [];
+        }
+
         // Genera highlights riassuntivi per ogni occasione
         const highlightsHtml = matchEvents.map((event, idx) => {
             // Supporta tutti i formati: isGoal (nuovo), result: 'goal' (vecchio client), type: 'goal' (matchLog)
@@ -606,10 +611,32 @@ window.MatchHistory = {
             let icon = '';
 
             if (isGoal) {
-                // GOL!
-                const scorer = event.scorer || 'Attaccante';
-                const assist = event.assist ? ` (assist: ${event.assist})` : '';
-                summary = `GOL di ${scorer}${assist}`;
+                // GOL! - Estrai nome marcatore da varie fonti possibili
+                let scorer = event.scorer || null;
+                let assister = event.assist || null;
+
+                // Prova a estrarre dal nuovo formato (phases come array)
+                if (!scorer && Array.isArray(event.phases)) {
+                    const shotPhase = event.phases.find(p => p.phase === 'tiro');
+                    if (shotPhase) scorer = shotPhase.player;
+                    // Assister dall'ultima fase di successo prima del tiro
+                    const successPhases = event.phases.filter(p => p.success && p.phase !== 'tiro');
+                    if (successPhases.length > 0 && !assister) {
+                        assister = successPhases[successPhases.length - 1].player;
+                    }
+                }
+
+                // Prova a estrarre dal vecchio formato (phases come oggetto)
+                if (!scorer && event.phases?.shot?.shooter?.name) {
+                    scorer = event.phases.shot.shooter.name;
+                }
+                if (!assister && event.phases?.attack?.players?.attacker?.[0]?.name) {
+                    assister = event.phases.attack.players.attacker[0].name;
+                }
+
+                scorer = scorer || 'Attaccante';
+                const assistText = assister ? ` (assist: ${assister})` : '';
+                summary = `GOL di ${scorer}${assistText}`;
                 summaryClass = 'text-green-400 font-bold';
                 icon = '⚽';
             } else if (Array.isArray(event.phases) && event.phases.length > 0) {
@@ -739,6 +766,8 @@ window.MatchHistory = {
             if (Array.isArray(event.phases)) {
                 // Nuovo formato: array di oggetti {phase, success, player, defender}
                 event.phases.forEach(p => {
+                    // Bug #14: Controllo null per p.phase
+                    if (!p || !p.phase) return;
                     const resultIcon = p.success ? '✅' : '❌';
                     const phaseColor = p.phase === 'costruzione' ? 'text-cyan-400' :
                                        p.phase === 'attacco' ? 'text-yellow-400' : 'text-orange-400';
