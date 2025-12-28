@@ -29,7 +29,7 @@ window.InterfacciaDashboard = {
         }
         elements.teamFirestoreId.textContent = teamDocId;
 
-        // Mostra trofei sotto il nome squadra
+        // Mostra trofei sotto il nome squadra (sempre visibili, dimmed se 0)
         const trophiesEl = document.getElementById('team-dashboard-trophies');
         if (trophiesEl && currentTeamData) {
             const campionati = currentTeamData.campionatiVinti || 0;
@@ -37,17 +37,15 @@ window.InterfacciaDashboard = {
             const supercoppe = currentTeamData.supercoppeSerieVinte || 0;
             console.log('[Dashboard] Trofei squadra:', { campionati, coppe, supercoppe, teamName });
 
-            // Mostra solo se ha almeno un trofeo
-            if (campionati > 0 || coppe > 0 || supercoppe > 0) {
-                const trophyParts = [];
-                if (campionati > 0) trophyParts.push(`🏆${campionati}`);
-                if (coppe > 0) trophyParts.push(`🏅${coppe}`);
-                if (supercoppe > 0) trophyParts.push(`⭐${supercoppe}`);
-                trophiesEl.innerHTML = trophyParts.join(' <span class="text-gray-500">•</span> ');
-                trophiesEl.classList.remove('hidden');
-            } else {
-                trophiesEl.classList.add('hidden');
-            }
+            // Mostra sempre i trofei, con colori dimmed se 0
+            trophiesEl.innerHTML = `
+                <span class="${campionati > 0 ? 'text-yellow-400' : 'text-gray-600'}">🏆${campionati}</span>
+                <span class="text-gray-600">•</span>
+                <span class="${coppe > 0 ? 'text-orange-400' : 'text-gray-600'}">🏅${coppe}</span>
+                <span class="text-gray-600">•</span>
+                <span class="${supercoppe > 0 ? 'text-purple-400' : 'text-gray-600'}">⭐${supercoppe}</span>
+            `;
+            trophiesEl.classList.remove('hidden');
         }
 
         window.InterfacciaCore.currentTeamId = teamDocId;
