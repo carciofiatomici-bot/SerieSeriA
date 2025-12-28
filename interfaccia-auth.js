@@ -1219,15 +1219,12 @@ window.InterfacciaAuth = {
                 const playersCount = players.length;
                 const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
-                // Calcola media squadra (overall dei giocatori)
-                let teamAverage = 0;
-                if (players.length > 0) {
-                    const totalOverall = players.reduce((sum, p) => {
-                        const overall = p.stats?.overall || p.overall || 0;
-                        return sum + overall;
-                    }, 0);
-                    teamAverage = (totalOverall / players.length).toFixed(1);
-                }
+                // Calcola media squadra (livello medio giocatori)
+                const teamAverage = window.calculateAverageLevel ?
+                    window.calculateAverageLevel(players) :
+                    (players.length > 0 ?
+                        (players.reduce((sum, p) => sum + (p.currentLevel || p.level || 1), 0) / players.length).toFixed(1)
+                        : 0);
 
                 // Calcola delay per animazione staggered
                 const delay = index * 0.06;
