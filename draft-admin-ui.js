@@ -15,8 +15,10 @@ window.DraftAdminUI = {
         const { TYPES } = window.DraftConstants;
         const { displayMessage } = window.DraftUtils;
 
-        draftBackButton.textContent = "Torna al Pannello Admin";
-        draftBackButton.onclick = () => window.showScreen(adminContent);
+        if (draftBackButton) {
+            draftBackButton.textContent = "Torna al Pannello Admin";
+            draftBackButton.onclick = () => window.showScreen(adminContent);
+        }
 
         // Inizializzazione per la gestione dello stato Draft
         const { doc, getDoc } = firestoreTools;

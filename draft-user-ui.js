@@ -569,13 +569,15 @@ window.DraftUserUI = {
 
         this.clearTurnTimer();
 
-        draftBackButton.textContent = "← Dashboard";
-        draftBackButton.className = "w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition mt-4";
-        draftBackButton.onclick = () => {
-            this.clearTurnTimer();
-            this.stopConfigListener();
-            window.showScreen(appContent);
-        };
+        if (draftBackButton) {
+            draftBackButton.textContent = "← Dashboard";
+            draftBackButton.className = "w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition mt-4";
+            draftBackButton.onclick = () => {
+                this.clearTurnTimer();
+                this.stopConfigListener();
+                window.showScreen(appContent);
+            };
+        }
 
         draftToolsContainer.innerHTML = `
             <div class="flex items-center justify-center py-12">
