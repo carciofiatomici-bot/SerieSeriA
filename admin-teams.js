@@ -1936,7 +1936,9 @@ window.AdminTeams = {
         iconeTemplates.forEach(icona => {
             ICONE_ABILITIES[icona.id] = icona.abilities || ['Icona'];
             // Aggiungi anche per nome (fallback)
-            ICONE_ABILITIES[icona.name.toLowerCase()] = icona.abilities || ['Icona'];
+            if (icona.name) {
+                ICONE_ABILITIES[icona.name.toLowerCase()] = icona.abilities || ['Icona'];
+            }
         });
 
         console.log('📋 Mappa abilita icone:', ICONE_ABILITIES);

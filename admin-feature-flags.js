@@ -385,7 +385,7 @@ window.AdminFeatureFlags = {
 
         // Genera ID se nuovo
         if (!isEdit) {
-            data.id = data.name.toLowerCase()
+            data.id = (data.name || '').toLowerCase()
                 .replace(/[^a-z0-9]+/g, '_')
                 .replace(/^_+|_+$/g, '');
         }

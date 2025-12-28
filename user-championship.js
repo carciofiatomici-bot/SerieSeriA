@@ -191,7 +191,7 @@ window.UserChampionship = {
                     </div>
                 ` : `
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        ${playedMatches.reverse().map(match => {
+                        ${playedMatches.slice().reverse().map(match => {
                             const [homeGoals, awayGoals] = match.result.split('-').map(Number);
                             const isHome = match.homeId === currentTeamId;
                             const myGoals = isHome ? homeGoals : awayGoals;

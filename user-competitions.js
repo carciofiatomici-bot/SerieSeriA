@@ -138,7 +138,8 @@ window.UserCompetitions = {
 
         } catch (error) {
             console.error('Errore caricamento campionato:', error);
-            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${safeMsg}</p>`;
         }
     },
 
@@ -722,7 +723,8 @@ window.UserCompetitions = {
             this.renderCoppaScreen(container, bracket, currentTeamId, teamsData);
         } catch (error) {
             console.error('Errore caricamento coppa:', error);
-            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${safeMsg}</p>`;
         }
     },
 
@@ -1205,7 +1207,8 @@ window.UserCompetitions = {
             this.renderSupercoppScreen(container, bracket, currentTeamId, teamsData);
         } catch (error) {
             console.error('Errore caricamento supercoppa:', error);
-            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${safeMsg}</p>`;
         }
     },
 

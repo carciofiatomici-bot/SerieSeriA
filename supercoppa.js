@@ -569,7 +569,8 @@ window.Supercoppa = {
                     }
                 }).catch(error => {
                     console.error('[Supercoppa] Errore verifica creazione:', error);
-                    container.innerHTML = `<p class="text-red-400 text-center">Errore: ${error.message}</p>`;
+                    const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+                    container.innerHTML = `<p class="text-red-400 text-center">Errore: ${safeMsg}</p>`;
                 });
             } else {
                 const isCompleted = bracket.isCompleted;

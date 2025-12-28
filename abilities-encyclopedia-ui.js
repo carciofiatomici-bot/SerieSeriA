@@ -389,10 +389,11 @@ window.AbilitiesUI = {
 
         // Filtro ricerca
         if (this.currentSearch) {
+            const search = this.currentSearch.toLowerCase();
             abilities = abilities.filter(a =>
-                a.name.toLowerCase().includes(this.currentSearch.toLowerCase()) ||
-                a.description.toLowerCase().includes(this.currentSearch.toLowerCase()) ||
-                a.effect.toLowerCase().includes(this.currentSearch.toLowerCase())
+                (a.name || '').toLowerCase().includes(search) ||
+                (a.description || '').toLowerCase().includes(search) ||
+                (a.effect || '').toLowerCase().includes(search)
             );
         }
 

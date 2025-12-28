@@ -74,7 +74,8 @@ window.DraftAdminPlayers = {
 
         } catch (error) {
             console.error("Errore nel caricamento dei giocatori Draft:", error);
-            playersListContainer.innerHTML = `<p class="text-center text-red-500">Errore di caricamento: ${error.message}</p>`;
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            playersListContainer.innerHTML = `<p class="text-center text-red-500">Errore di caricamento: ${safeMsg}</p>`;
         }
     },
 

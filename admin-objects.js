@@ -353,7 +353,8 @@ window.AdminObjects = {
 
         } catch (error) {
             console.error('[AdminObjects] Errore caricamento:', error);
-            container.innerHTML = `<p class="text-red-400 text-center py-8">Errore: ${error.message}</p>`;
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            container.innerHTML = `<p class="text-red-400 text-center py-8">Errore: ${safeMsg}</p>`;
         }
     },
 
