@@ -298,7 +298,8 @@ window.Achievements = {
         document.body.appendChild(this.panel);
 
         // Event listeners
-        document.getElementById('close-achievements-panel').addEventListener('click', () => this.close());
+        const closeBtn = document.getElementById('close-achievements-panel');
+        if (closeBtn) closeBtn.addEventListener('click', () => this.close());
         this.panel.addEventListener('click', (e) => {
             if (e.target === this.panel) this.close();
         });

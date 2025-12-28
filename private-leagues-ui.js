@@ -86,9 +86,10 @@ window.PrivateLeaguesUI = {
         return `
             <style>
                 .pl-container {
-                    padding: 20px 16px;
+                    padding: 20px 16px 100px 16px;
                     max-width: 100%;
                     animation: pl-fade-in 0.4s ease-out;
+                    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
                 }
 
                 @keyframes pl-fade-in {
@@ -1725,11 +1726,11 @@ window.PrivateLeaguesUI = {
                 </div>
 
                 <!-- Actions -->
-                <div class="pl-actions">
-                    <button id="btn-invite-user" class="pl-btn pl-btn-secondary">
+                <div class="pl-actions" style="margin-bottom: 40px;">
+                    <button id="btn-invite-user" class="pl-btn pl-btn-secondary" style="min-height: 56px;">
                         <span>📨</span> Invita Giocatori
                     </button>
-                    <button id="btn-leave-league" class="pl-btn pl-btn-danger">
+                    <button id="btn-leave-league" class="pl-btn pl-btn-danger" style="min-height: 56px;">
                         Abbandona Lega
                     </button>
                     ${league.entryFee > 0 ? `
@@ -2179,7 +2180,7 @@ window.PrivateLeaguesUI = {
                 </div>
 
                 <!-- Leave Button -->
-                <button id="btn-leave-completed" class="pl-btn pl-btn-primary">
+                <button id="btn-leave-completed" class="pl-btn pl-btn-primary" style="margin-bottom: 40px; min-height: 56px;">
                     <span>🚀</span> Esci e Inizia Nuova Lega
                 </button>
             </div>

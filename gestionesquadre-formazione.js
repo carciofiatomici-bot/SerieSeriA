@@ -1035,7 +1035,8 @@ window.GestioneSquadreFormazione = {
             return `<div class="jersey-container">${this.createPlayerSlot('B', index, player, context)}</div>`;
         }).join('');
 
-        panchinaSlots.innerHTML += Array(3 - teamData.formation.panchina.length).fill().map((_, index) => {
+        const emptyBenchSlots = Math.max(0, 3 - teamData.formation.panchina.length);
+        panchinaSlots.innerHTML += Array(emptyBenchSlots).fill().map((_, index) => {
             return `<div class="jersey-container">${this.createPlayerSlot('B', teamData.formation.panchina.length + index, null, context)}</div>`;
         }).join('');
 

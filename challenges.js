@@ -731,7 +731,7 @@ window.Challenges = {
                     return `
                         <div class="flex items-center gap-1 text-xs bg-gray-700 rounded px-1.5 py-0.5 ${isOutOfPosition ? 'border border-orange-500' : ''}">
                             <span class="${roleColors[role] || 'bg-gray-500'} text-white px-1 rounded text-[10px]">${role}</span>
-                            <span class="text-gray-200 truncate max-w-[60px]">${p.name?.split(' ').pop() || '?'}</span>
+                            <span class="text-gray-200 truncate max-w-[60px]">${(p.name?.split(' ').pop() || '').trim() || '?'}</span>
                             <span class="text-gray-400 text-[10px]">${p.level || p.currentLevel || '?'}</span>
                             ${outOfPosIcon}
                         </div>

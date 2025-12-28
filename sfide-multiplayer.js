@@ -217,8 +217,9 @@ window.SfideMultiplayer = (function() {
 
             const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
 
-            // Prendi la prima partita trovata
-            const matchDoc = snap1.docs[0] || snap2.docs[0];
+            // Prendi la prima partita trovata (con bounds check)
+            const matchDoc = (snap1.docs.length > 0 ? snap1.docs[0] : null) ||
+                             (snap2.docs.length > 0 ? snap2.docs[0] : null);
 
             if (matchDoc) {
                 const match = { id: matchDoc.id, ...matchDoc.data() };
