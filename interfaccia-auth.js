@@ -1219,6 +1219,16 @@ window.InterfacciaAuth = {
                 const playersCount = players.length;
                 const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
+                // Calcola media squadra (overall dei giocatori)
+                let teamAverage = 0;
+                if (players.length > 0) {
+                    const totalOverall = players.reduce((sum, p) => {
+                        const overall = p.stats?.overall || p.overall || 0;
+                        return sum + overall;
+                    }, 0);
+                    teamAverage = (totalOverall / players.length).toFixed(1);
+                }
+
                 // Calcola delay per animazione staggered
                 const delay = index * 0.06;
 
@@ -1252,16 +1262,19 @@ window.InterfacciaAuth = {
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-base font-bold text-white truncate mb-1"
                                     style="text-shadow: 0 0 20px ${teamColor}40;">${teamName}</h3>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
                                           style="background: ${teamColor}20; color: ${teamColor};">
                                         <span>👥</span> ${playersCount}
                                     </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
+                                        <span>⭐</span> ${teamAverage}
+                                    </span>
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1"
+                            <!-- Arrow (pushed to right) -->
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1 ml-auto"
                                  style="background: ${teamColor}20;">
                                 <svg class="w-4 h-4" style="color: ${teamColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
