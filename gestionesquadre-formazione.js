@@ -853,6 +853,10 @@ window.GestioneSquadreFormazione = {
         const slotId = `${role}-${index}`;
         const playerWithForm = player;
 
+        // Escape per XSS
+        const escapeHtml = window.escapeHtml || (s => s);
+        const safeName = playerWithForm ? escapeHtml(playerWithForm.name || '') : '';
+
         const playerName = playerWithForm ? playerWithForm.name : `Slot ${role}`;
         const playerRole = playerWithForm ? playerWithForm.role : role;
         const levelText = playerWithForm ? (playerWithForm.currentLevel || playerWithForm.level || 1) : '';
@@ -867,7 +871,7 @@ window.GestioneSquadreFormazione = {
         const isOutOfPosition = playerWithForm && role !== 'B' && playerWithForm.role !== role;
 
         if (isOutOfPosition) {
-            tooltipText = `ATTENZIONE: ${playerWithForm.name} e un ${playerWithForm.role} ma gioca come ${role}. L'impatto in partita sara minore.`;
+            tooltipText = `ATTENZIONE: ${safeName} e un ${playerWithForm.role} ma gioca come ${role}. L'impatto in partita sara minore.`;
             warningHtml = `
                 <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 cursor-help"
                       title="${tooltipText}">
@@ -893,7 +897,7 @@ window.GestioneSquadreFormazione = {
 
         const playerContent = playerWithForm ?
             `<div class="jersey-inner">
-                <span class="jersey-name" title="${playerWithForm.name}">${playerWithForm.name}</span>
+                <span class="jersey-name" title="${safeName}">${safeName}</span>
                 <span class="jersey-role ${internalLabelColor} flex items-center justify-center gap-1">
                     ${playerRole} ${typeBadgeHtml}
                 </span>

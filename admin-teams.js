@@ -91,6 +91,9 @@ window.AdminTeams = {
                 const isDraftEnabled = teamData.draft_enabled || false;
                 const draftCheckboxColorClasses = isDraftEnabled ? 'bg-green-500 border-green-500' : 'bg-gray-700 border-gray-500';
 
+                // Escape teamName per XSS
+                const safeTeamName = window.escapeHtml ? window.escapeHtml(teamData.teamName || '') : (teamData.teamName || '');
+
                 teamsHtml += `
                     <div class="team-item flex flex-col sm:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-500 transition duration-150">
                         <div class="flex flex-col space-y-2 mb-2 sm:mb-0">
@@ -116,13 +119,13 @@ window.AdminTeams = {
 
                         <div class="flex items-center w-full sm:w-auto mb-2 sm:mb-0">
                             <img src="${logoUrl}"
-                                 alt="Logo ${teamData.teamName}"
+                                 alt="Logo ${safeTeamName}"
                                  data-team-id="${teamId}"
                                  data-action="change-logo"
                                  class="w-16 h-16 rounded-full border-2 border-yellow-500 mr-4 cursor-pointer hover:border-yellow-300 hover:scale-110 transition object-cover"
                                  title="Clicca per cambiare il logo">
                             <div>
-                                <p class="text-lg font-bold text-white">${teamData.teamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}${teamData.draft_enabled ? ' <span class="text-green-400" title="Partecipa al Draft">📝</span>' : ''}</p>
+                                <p class="text-lg font-bold text-white">${safeTeamName}${teamData.isAdmin ? ' <span class="text-red-400" title="Squadra Admin">🔧</span>' : ''}${teamData.draft_enabled ? ' <span class="text-green-400" title="Partecipa al Draft">📝</span>' : ''}</p>
                                 <p class="text-xs text-gray-400">ID: ${teamId}</p>
                                 <p class="text-sm text-gray-400">Budget: ${teamData.budget} CS | CSS: ${teamData.creditiSuperSeri || 0} | Rosa: ${(teamData.players || []).length} gioc. | Creazione: ${date}</p>
                                 <p class="text-sm text-gray-400">Coach: ${teamData.coach?.name || 'N/A'} (Liv: ${teamData.coach?.level || 0})</p>
@@ -1698,7 +1701,7 @@ window.AdminTeams = {
         // Rimuovi l'abilita "Icona" dalle icone false
         this.currentEditingPlayers = this.currentEditingPlayers.map(player => {
             if (iconeFalse.includes(player)) {
-                const newAbilita = (player.abilities || []).filter(a => a !== 'Icona');
+                const newAbilities = (player.abilities || []).filter(a => a !== 'Icona');
                 fixes.push(`Rimossa abilita "Icona" da ${player.name}`);
                 return {
                     ...player,

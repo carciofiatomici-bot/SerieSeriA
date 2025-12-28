@@ -170,7 +170,8 @@ window.Trades = {
                 this.renderTeamSelection(content);
                 break;
             case 'targetRoster':
-                title.innerHTML = `<span>⚽</span><span>Rosa di ${this.selectedTargetTeam?.teamName || 'Squadra'}</span>`;
+                const safeTeamName = window.escapeHtml ? window.escapeHtml(this.selectedTargetTeam?.teamName || 'Squadra') : (this.selectedTargetTeam?.teamName || 'Squadra');
+                title.innerHTML = `<span>⚽</span><span>Rosa di ${safeTeamName}</span>`;
                 breadcrumb.innerHTML = '<span class="text-gray-500">Ricevuti → Squadra</span> → <span class="text-purple-400">Seleziona Giocatore</span>';
                 this.renderTargetRoster(content);
                 break;

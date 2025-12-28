@@ -1286,14 +1286,15 @@ window.Challenges = {
             const betResultEl = document.createElement('div');
             betResultEl.className = 'mt-4 p-3 rounded-lg text-center';
 
+            const escapeHtml = window.escapeHtml || (s => s);
             if (betResult.error) {
                 betResultEl.classList.add('bg-red-900/50', 'border', 'border-red-500');
-                betResultEl.innerHTML = `<p class="text-red-400">⚠️ ${betResult.message}</p>`;
+                betResultEl.innerHTML = `<p class="text-red-400">⚠️ ${escapeHtml(betResult.message || '')}</p>`;
             } else if (betResult.isDraw) {
                 betResultEl.classList.add('bg-gray-700', 'border', 'border-gray-500');
                 betResultEl.innerHTML = `
                     <p class="text-yellow-400 font-bold text-lg">💎 SCOMMESSA</p>
-                    <p class="text-gray-300">${betResult.message}</p>
+                    <p class="text-gray-300">${escapeHtml(betResult.message || '')}</p>
                 `;
             } else {
                 const myTeamId = window.InterfacciaCore?.currentTeamId;
@@ -1304,14 +1305,14 @@ window.Challenges = {
                     betResultEl.innerHTML = `
                         <p class="text-green-400 font-bold text-lg">💎 HAI VINTO!</p>
                         <p class="text-2xl font-bold text-yellow-300">+${betResult.winnings} CS</p>
-                        ${betResult.multiplierReason ? `<p class="text-xs text-gray-400 mt-1">${betResult.multiplierReason}</p>` : ''}
+                        ${betResult.multiplierReason ? `<p class="text-xs text-gray-400 mt-1">${escapeHtml(betResult.multiplierReason)}</p>` : ''}
                     `;
                 } else {
                     betResultEl.classList.add('bg-red-900/50', 'border', 'border-red-500');
                     betResultEl.innerHTML = `
                         <p class="text-red-400 font-bold text-lg">💎 HAI PERSO</p>
                         <p class="text-2xl font-bold text-red-300">-${betResult.betAmount} CS</p>
-                        <p class="text-xs text-gray-400 mt-1">${betResult.winnerName} vince ${betResult.winnings} CS</p>
+                        <p class="text-xs text-gray-400 mt-1">${escapeHtml(betResult.winnerName || '')} vince ${betResult.winnings} CS</p>
                     `;
                 }
             }
