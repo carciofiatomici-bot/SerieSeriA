@@ -568,7 +568,9 @@ window.GestioneSquadreFormazione = {
         const fullSquadList = document.getElementById('full-squad-list');
 
         [fieldArea, panchinaSlots, fullSquadList].forEach(container => {
-            if (container) {
+            // Skip if already has touch listeners (avoid duplicates)
+            if (container && !container.dataset.touchListenersAttached) {
+                container.dataset.touchListenersAttached = 'true';
                 container.addEventListener('touchstart', (e) => this.handleTouchStart(e, context), { passive: false });
                 container.addEventListener('touchmove', (e) => this.handleTouchMove(e, context), { passive: false });
                 container.addEventListener('touchend', (e) => this.handleTouchEnd(e, context));

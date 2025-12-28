@@ -172,15 +172,25 @@ window.Chat = {
         const btn = this.chatButton;
         if (!btn) return;
 
+        // Store bound handlers for cleanup
+        this._dragHandlers = {
+            mousedown: (e) => this.startDrag(e),
+            mousemove: (e) => this.onDrag(e),
+            mouseup: (e) => this.endDrag(e),
+            touchstart: (e) => this.startDrag(e),
+            touchmove: (e) => this.onDrag(e),
+            touchend: (e) => this.endDrag(e)
+        };
+
         // Mouse events
-        btn.addEventListener('mousedown', (e) => this.startDrag(e));
-        document.addEventListener('mousemove', (e) => this.onDrag(e));
-        document.addEventListener('mouseup', (e) => this.endDrag(e));
+        btn.addEventListener('mousedown', this._dragHandlers.mousedown);
+        document.addEventListener('mousemove', this._dragHandlers.mousemove);
+        document.addEventListener('mouseup', this._dragHandlers.mouseup);
 
         // Touch events
-        btn.addEventListener('touchstart', (e) => this.startDrag(e), { passive: false });
-        document.addEventListener('touchmove', (e) => this.onDrag(e), { passive: false });
-        document.addEventListener('touchend', (e) => this.endDrag(e));
+        btn.addEventListener('touchstart', this._dragHandlers.touchstart, { passive: false });
+        document.addEventListener('touchmove', this._dragHandlers.touchmove, { passive: false });
+        document.addEventListener('touchend', this._dragHandlers.touchend);
     },
 
     /**
@@ -771,6 +781,15 @@ window.Chat = {
         if (this._inactivityTimer) {
             clearTimeout(this._inactivityTimer);
             this._inactivityTimer = null;
+        }
+
+        // Rimuovi drag event listeners
+        if (this._dragHandlers) {
+            document.removeEventListener('mousemove', this._dragHandlers.mousemove);
+            document.removeEventListener('mouseup', this._dragHandlers.mouseup);
+            document.removeEventListener('touchmove', this._dragHandlers.touchmove);
+            document.removeEventListener('touchend', this._dragHandlers.touchend);
+            this._dragHandlers = null;
         }
 
         this._listenerPaused = false;
