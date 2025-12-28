@@ -1469,7 +1469,7 @@ window.PrivateLeaguesUI = {
 
         // Cache dei CS (budget) per evitare chiamate async nel listener
         let cachedCS = this.currentTeamData?.budget || 0;
-        this.getTeamCS().then(cs => { cachedCS = cs; });
+        this.getTeamCS().then(cs => { cachedCS = cs; }).catch(err => console.error('[PrivateLeagues] Errore caricamento CS:', err));
 
         const updatePrizePreview = () => {
             const fee = parseInt(feeSlider.value);

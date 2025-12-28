@@ -680,6 +680,9 @@ window.GestioneSquadreRosa = {
                 const docExistsInMarket = marketDoc.exists();
 
                 const teamDoc = await getDoc(teamDocRef);
+                if (!teamDoc.exists()) {
+                    throw new Error("Dati squadra non trovati in Firestore!");
+                }
                 const teamData = teamDoc.data();
                 const currentPlayers = teamData.players || [];
 

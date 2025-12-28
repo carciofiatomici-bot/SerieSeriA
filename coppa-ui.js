@@ -744,6 +744,8 @@ window.CoppaUI = {
                     // Fallback: ricarica tabellone standard
                     window.CoppaSchedule.loadCupSchedule().then(bracket => {
                         this.renderAdminBracket(bracket, container);
+                    }).catch(error => {
+                        console.error('[CoppaUI] Errore caricamento tabellone:', error);
                     });
                 }
             });

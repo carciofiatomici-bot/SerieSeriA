@@ -250,17 +250,31 @@ window.FirestoreCache = {
     }
 };
 
-// Cleanup automatico ogni 5 minuti
-setInterval(() => {
+// Cleanup automatico ogni 5 minuti (salvato per eventuale cleanup)
+window.FirestoreCache._cleanupInterval = setInterval(() => {
     window.FirestoreCache.cleanup();
 }, 5 * 60 * 1000);
 
 // Log stats ogni 2 minuti (solo in development)
-setInterval(() => {
+window.FirestoreCache._statsInterval = setInterval(() => {
     if (window.FirestoreCache.stats.hits + window.FirestoreCache.stats.misses > 0) {
         window.FirestoreCache.logStats();
     }
 }, 2 * 60 * 1000);
+
+// Cleanup al logout
+document.addEventListener('userLoggedOut', () => {
+    if (window.FirestoreCache?._cleanupInterval) {
+        clearInterval(window.FirestoreCache._cleanupInterval);
+        window.FirestoreCache._cleanupInterval = null;
+    }
+    if (window.FirestoreCache?._statsInterval) {
+        clearInterval(window.FirestoreCache._statsInterval);
+        window.FirestoreCache._statsInterval = null;
+    }
+    // Pulisci anche la cache
+    window.FirestoreCache?.clear();
+});
 
 // ====================================================================
 // UTILITY DEBOUNCE E THROTTLE

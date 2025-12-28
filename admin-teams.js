@@ -1587,10 +1587,11 @@ window.AdminTeams = {
                 if (iconaTemplate && iconaTemplate.abilities) {
                     // Controlla se mancano abilities (es. solo ['Icona'] invece di ['Icona', 'Tiro Dritto'])
                     const templateAbilities = iconaTemplate.abilities;
-                    const missingAbilities = templateAbilities.filter(a => !player.abilities.includes(a));
+                    const playerAbilities = player.abilities || [];
+                    const missingAbilities = templateAbilities.filter(a => !playerAbilities.includes(a));
 
                     if (missingAbilities.length > 0) {
-                        correctAbilities = [...new Set([...player.abilities, ...templateAbilities])];
+                        correctAbilities = [...new Set([...playerAbilities, ...templateAbilities])];
                         needsAbilitiesFix = true;
                     }
                 }
@@ -1606,7 +1607,8 @@ window.AdminTeams = {
                     fixes.push('rimossi campi obsoleti');
                 }
                 if (needsAbilitiesFix) {
-                    const added = correctAbilities.filter(a => !player.abilities.includes(a));
+                    const originalAbilities = player.abilities || [];
+                    const added = correctAbilities.filter(a => !originalAbilities.includes(a));
                     fixes.push(`+${added.join(', ')}`);
                 }
                 repairNote += fixes.join(', ');

@@ -150,7 +150,8 @@ window.LayoutManager = {
         };
 
         // Controlla periodicamente (ogni 500ms) per sicurezza
-        setInterval(ensureLoginBoxHidden, 500);
+        // Salva l'interval ID per eventuale cleanup
+        this._scrollProtectionInterval = setInterval(ensureLoginBoxHidden, 500);
 
         // Controlla anche su scroll e touchmove
         let scrollTimeout;
@@ -640,6 +641,14 @@ document.addEventListener('DOMContentLoaded', () => {
         colorPicker.addEventListener('input', (e) => {
             window.LayoutManager.setPrimaryColor(e.target.value);
         });
+    }
+});
+
+// Cleanup al logout per prevenire memory leak
+document.addEventListener('userLoggedOut', () => {
+    if (window.LayoutManager?._scrollProtectionInterval) {
+        clearInterval(window.LayoutManager._scrollProtectionInterval);
+        window.LayoutManager._scrollProtectionInterval = null;
     }
 });
 
