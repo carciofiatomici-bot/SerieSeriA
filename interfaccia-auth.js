@@ -1178,6 +1178,39 @@ window.InterfacciaAuth = {
             const countEl = document.getElementById('squadre-count');
             if (countEl) countEl.textContent = `${squadre.length} squadre registrate`;
 
+            // Inietta stili animazione se non esistono
+            if (!document.getElementById('lista-squadre-styles')) {
+                const style = document.createElement('style');
+                style.id = 'lista-squadre-styles';
+                style.textContent = `
+                    @keyframes teamCardSlideIn {
+                        from {
+                            opacity: 0;
+                            transform: translateY(20px) scale(0.95);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0) scale(1);
+                        }
+                    }
+                    .team-card-animate {
+                        animation: teamCardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                        opacity: 0;
+                    }
+                    .team-card-premium {
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .team-card-premium:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.5);
+                    }
+                    .team-card-premium:active {
+                        transform: scale(0.98);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
             // Popola il container con design premium
             container.innerHTML = squadre.map((squadra, index) => {
                 const teamName = squadra.teamName || 'Squadra Sconosciuta';
@@ -1186,71 +1219,54 @@ window.InterfacciaAuth = {
                 const playersCount = players.length;
                 const logoUrl = window.sanitizeGitHubUrl(squadra.logoUrl) || 'https://placehold.co/80x80/374151/9ca3af?text=Logo';
 
-                // Trova l'icona (capitano)
-                let icona = players.find(p => p.abilities && p.abilities.includes('Icona'));
-                if (!icona && squadra.iconaId) {
-                    icona = players.find(p => p.id === squadra.iconaId);
-                }
-
-                let iconaPhoto = 'https://placehold.co/40x40/374151/9ca3af?text=?';
-                let iconaName = '';
-                if (icona) {
-                    const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t =>
-                        t.id === icona.id || t.name === icona.name
-                    );
-                    if (iconaTemplate?.photoUrl) {
-                        iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
-                    } else if (icona.photoUrl) {
-                        iconaPhoto = window.sanitizeGitHubUrl(icona.photoUrl);
-                    }
-                    iconaName = icona.name || '';
-                } else if (squadra.iconaId) {
-                    const iconaTemplate = (window.CAPTAIN_CANDIDATES_TEMPLATES || []).find(t => t.id === squadra.iconaId);
-                    if (iconaTemplate?.photoUrl) {
-                        iconaPhoto = window.sanitizeGitHubUrl(iconaTemplate.photoUrl);
-                        iconaName = iconaTemplate.name || '';
-                    }
-                }
+                // Calcola delay per animazione staggered
+                const delay = index * 0.06;
 
                 return `
-                    <div class="group bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700 hover:border-green-500/50 transition-all duration-300 overflow-hidden"
-                         style="animation: slideUp 0.3s ease-out ${index * 0.05}s both;">
-                        <!-- Team Header with gradient -->
-                        <div class="relative h-16 overflow-hidden">
-                            <div class="absolute inset-0 opacity-30" style="background: linear-gradient(135deg, ${teamColor} 0%, transparent 70%);"></div>
-                            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/90"></div>
-                            <div class="absolute bottom-2 left-3 right-3 flex items-end gap-3">
-                                <img src="${logoUrl}"
-                                     alt="${teamName}"
-                                     class="w-12 h-12 rounded-lg object-cover border-2 shadow-lg bg-slate-900"
-                                     style="border-color: ${teamColor};"
-                                     onerror="this.src='https://placehold.co/80x80/374151/9ca3af?text=Logo'">
-                                <div class="flex-1 min-w-0 pb-1">
-                                    <p class="text-sm font-bold text-white truncate drop-shadow">${teamName}</p>
-                                    <p class="text-xs text-slate-400">${playersCount} giocatori</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="team-card-premium team-card-animate relative overflow-hidden rounded-2xl cursor-pointer"
+                         style="animation-delay: ${delay}s; background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);"
+                         onclick="window.InterfacciaAuth.showRosaSquadra(${index})">
+
+                        <!-- Glow effect del colore team -->
+                        <div class="absolute inset-0 opacity-20 pointer-events-none"
+                             style="background: radial-gradient(circle at top left, ${teamColor} 0%, transparent 50%);"></div>
+
+                        <!-- Border gradient -->
+                        <div class="absolute inset-0 rounded-2xl pointer-events-none"
+                             style="border: 1px solid transparent; background: linear-gradient(145deg, ${teamColor}40, transparent 50%) border-box; -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;"></div>
 
                         <!-- Content -->
-                        <div class="p-3 pt-2">
-                            <!-- Icona badge -->
-                            <div class="flex items-center gap-2 mb-3 px-2 py-1.5 bg-slate-900/50 rounded-lg">
-                                <img src="${iconaPhoto}"
-                                     alt="Icona"
-                                     class="w-8 h-8 rounded-full object-cover border-2 border-yellow-500/70 shadow"
-                                     onerror="this.src='https://placehold.co/40x40/374151/9ca3af?text=?'">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-[10px] text-yellow-500/70 uppercase tracking-wider font-medium">Icona</p>
-                                    <p class="text-xs text-white font-semibold truncate">${iconaName || 'Non assegnata'}</p>
+                        <div class="relative flex items-center gap-4 p-4">
+                            <!-- Logo con glow -->
+                            <div class="relative flex-shrink-0">
+                                <div class="absolute inset-0 rounded-xl blur-md opacity-50"
+                                     style="background: ${teamColor};"></div>
+                                <img src="${logoUrl}"
+                                     alt="${teamName}"
+                                     class="relative w-14 h-14 rounded-xl object-cover border-2 shadow-xl bg-slate-900"
+                                     style="border-color: ${teamColor};"
+                                     onerror="this.src='https://placehold.co/80x80/374151/9ca3af?text=Logo'">
+                            </div>
+
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-base font-bold text-white truncate mb-1"
+                                    style="text-shadow: 0 0 20px ${teamColor}40;">${teamName}</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                                          style="background: ${teamColor}20; color: ${teamColor};">
+                                        <span>👥</span> ${playersCount}
+                                    </span>
                                 </div>
                             </div>
 
-                            <!-- Button -->
-                            <button onclick="window.InterfacciaAuth.showRosaSquadra(${index})"
-                                    class="w-full py-2 rounded-lg text-sm font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-green-500/20 hover:text-green-400 border border-slate-600 hover:border-green-500/50">
-                                📋 Vedi Rosa
-                            </button>
+                            <!-- Arrow -->
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1"
+                                 style="background: ${teamColor}20;">
+                                <svg class="w-4 h-4" style="color: ${teamColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 `;
