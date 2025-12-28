@@ -1324,6 +1324,12 @@ window.InterfacciaAuth = {
         const teamColor = squadra.primaryColor || '#22c55e';
         const players = squadra.players || [];
 
+        // Titoli vinti
+        const campionati = squadra.campionatiVinti || 0;
+        const coppe = squadra.coppeSerieVinte || 0;
+        const supercoppe = squadra.supercoppeSerieVinte || 0;
+        const hasTrophies = campionati > 0 || coppe > 0 || supercoppe > 0;
+
         // Ordina i giocatori per ruolo (P, D, C, A) e poi per livello
         const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
         const sortedPlayers = [...players].sort((a, b) => {
@@ -1341,6 +1347,34 @@ window.InterfacciaAuth = {
                         <h3 class="text-2xl font-bold" style="color: ${teamColor};">📋 Rosa ${teamName}</h3>
                         <button onclick="window.InterfacciaAuth.hideRosaSquadra()" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
                     </div>
+
+                    ${hasTrophies ? `
+                    <!-- Bacheca Trofei -->
+                    <div class="flex justify-center gap-4 mb-4 p-3 bg-gradient-to-r from-yellow-900/30 via-amber-900/20 to-yellow-900/30 rounded-xl border border-yellow-500/30">
+                        ${campionati > 0 ? `
+                            <div class="flex flex-col items-center">
+                                <span class="text-2xl">🏆</span>
+                                <span class="text-lg font-bold text-yellow-400">${campionati}</span>
+                                <span class="text-[10px] text-yellow-400/70 uppercase">Camp.</span>
+                            </div>
+                        ` : ''}
+                        ${coppe > 0 ? `
+                            <div class="flex flex-col items-center">
+                                <span class="text-2xl">🥈</span>
+                                <span class="text-lg font-bold text-gray-300">${coppe}</span>
+                                <span class="text-[10px] text-gray-400 uppercase">Coppe</span>
+                            </div>
+                        ` : ''}
+                        ${supercoppe > 0 ? `
+                            <div class="flex flex-col items-center">
+                                <span class="text-2xl">⭐</span>
+                                <span class="text-lg font-bold text-amber-400">${supercoppe}</span>
+                                <span class="text-[10px] text-amber-400/70 uppercase">Super.</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+
                     <p class="text-gray-400 text-sm mb-4 text-center">${sortedPlayers.length} giocatori in rosa</p>
                     <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
                         ${sortedPlayers.length === 0 ?
