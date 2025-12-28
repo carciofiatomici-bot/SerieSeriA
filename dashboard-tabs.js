@@ -24,26 +24,35 @@ window.DashboardTabs = {
             'schedina-modal',
             'chat-modal',
             'sfida-tattica-modal',
-            'notifications-modal'
+            'notifications-modal',
+            'lista-icone-modal',
+            'player-roster-modal',
+            'team-roster-modal'
         ];
 
         modalIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.classList.add('hidden');
-                el.style.display = 'none';
+                el.classList.remove('flex'); // Importante: rimuovi flex che viene usato per mostrare
+                el.style.display = '';
             }
         });
 
-        // Chiudi tutti gli elementi con classe che contiene 'modal' o 'overlay' che sono visibili
-        document.querySelectorAll('[class*="fixed"][class*="inset-0"]:not(.hidden)').forEach(el => {
-            // Non chiudere la tab bar stessa o elementi di navigazione
-            if (!el.classList.contains('dashboard-tab') && !el.id?.includes('nav-')) {
+        // Chiudi tutti gli elementi con fixed inset-0 (fullscreen overlays)
+        document.querySelectorAll('.fixed.inset-0:not(.hidden)').forEach(el => {
+            // Non chiudere la tab bar stessa o elementi di sistema
+            if (!el.classList.contains('dashboard-tab') &&
+                !el.id?.includes('nav-') &&
+                !el.id?.includes('tab-bar')) {
                 el.classList.add('hidden');
+                el.classList.remove('flex');
             }
         });
 
         // Chiudi modal specifici tramite i loro metodi close se esistono
+        if (window.InterfacciaAuth?.hideListaSquadre) window.InterfacciaAuth.hideListaSquadre();
+        if (window.InterfacciaAuth?.hideListaIcone) window.InterfacciaAuth.hideListaIcone();
         if (window.AbilitiesEncyclopedia?.close) window.AbilitiesEncyclopedia.close();
         if (window.FigurineUI?.close) window.FigurineUI.close();
         if (window.PrivateLeaguesUI?.closeOverlay) window.PrivateLeaguesUI.closeOverlay();
