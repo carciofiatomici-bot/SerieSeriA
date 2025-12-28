@@ -1784,6 +1784,15 @@ window.PrivateLeaguesUI = {
                 );
 
                 if (result.success && !result.unchanged) {
+                    // Se la lega è stata avviata, mostra messaggio e ricarica
+                    if (result.leagueStarted) {
+                        if (window.Toast) window.Toast.success('🏆 Lega avviata! Il campionato è iniziato!');
+                        // Ricarica i dati freschi da Firestore
+                        this.currentLeague = await window.PrivateLeagues.getLeagueById(this.currentLeague.leagueId);
+                        this.render();
+                        return;
+                    }
+
                     // Aggiorna il display
                     maxTeamsDisplay.textContent = newMax;
                     this.currentLeague.maxTeams = newMax;

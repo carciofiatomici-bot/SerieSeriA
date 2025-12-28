@@ -1110,10 +1110,34 @@ window.PrivateLeagues = {
                 prizePool: league.entryFee * newMaxTeams // Aggiorna anche il montepremi
             };
 
+            // Se la lega diventa completa, avviala automaticamente
+            const isNowComplete = currentTeamCount >= newMaxTeams;
+            if (isNowComplete) {
+                const schedule = this.generateSchedule(league.teams, newMaxTeams);
+                const standings = league.teams.map(t => ({
+                    teamId: t.teamId,
+                    teamName: t.teamName,
+                    points: 0,
+                    played: 0,
+                    wins: 0,
+                    draws: 0,
+                    losses: 0,
+                    goalsFor: 0,
+                    goalsAgainst: 0
+                }));
+
+                updateData.status = 'in_progress';
+                updateData.schedule = schedule;
+                updateData.standings = standings;
+                updateData.currentRound = 1;
+                updateData.lastSimulationTime = null;
+                updateData.leagueStartedAt = new Date().toISOString();
+            }
+
             await updateDoc(doc(db, leaguePath), updateData);
 
-            console.log(`PrivateLeagues: maxTeams aggiornato da ${league.maxTeams} a ${newMaxTeams} per "${league.name}"`);
-            return { success: true, oldMaxTeams: league.maxTeams, newMaxTeams };
+            console.log(`PrivateLeagues: maxTeams aggiornato da ${league.maxTeams} a ${newMaxTeams} per "${league.name}"${isNowComplete ? ' - Lega avviata!' : ''}`);
+            return { success: true, oldMaxTeams: league.maxTeams, newMaxTeams, leagueStarted: isNowComplete };
 
         } catch (error) {
             console.error('Errore aggiornamento maxTeams:', error);
