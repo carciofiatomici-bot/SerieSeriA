@@ -368,7 +368,12 @@ window.AdminFeatureFlags = {
         // Form submit
         document.getElementById('achievement-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await this.saveAchievement(new FormData(e.target), isEdit);
+            try {
+                await this.saveAchievement(new FormData(e.target), isEdit);
+            } catch (error) {
+                console.error('[Achievements] Errore salvataggio:', error);
+                alert('Errore durante il salvataggio: ' + error.message);
+            }
         });
     },
 

@@ -873,8 +873,10 @@ window.Training = {
         container.innerHTML = `
             <div class="space-y-3">
                 ${this.matchHistory.slice().reverse().map(match => {
-                    const resultClass = match.won ? 'border-green-500' : match.result.split('-')[0] === match.result.split('-')[1] ? 'border-yellow-500' : 'border-red-500';
-                    const resultEmoji = match.won ? '✅' : match.result.split('-')[0] === match.result.split('-')[1] ? '🟡' : '❌';
+                    const resultParts = (match.result || '').split('-');
+                    const isDraw = resultParts[0] === resultParts[1];
+                    const resultClass = match.won ? 'border-green-500' : isDraw ? 'border-yellow-500' : 'border-red-500';
+                    const resultEmoji = match.won ? '✅' : isDraw ? '🟡' : '❌';
 
                     return `
                         <div class="bg-gray-700 rounded-lg p-4 border-l-4 ${resultClass}">

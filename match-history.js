@@ -937,9 +937,12 @@ window.MatchHistory = {
                         if (trophySection) {
                             const trophyDivs = trophySection.querySelectorAll('.bg-gray-900');
                             if (trophyDivs.length >= 3) {
-                                trophyDivs[0].querySelector('.text-2xl').textContent = newTrophies.campionatiVinti;
-                                trophyDivs[1].querySelector('.text-2xl').textContent = newTrophies.coppeSerieVinte;
-                                trophyDivs[2].querySelector('.text-2xl').textContent = newTrophies.supercoppeSerieVinte;
+                                const el0 = trophyDivs[0].querySelector('.text-2xl');
+                                const el1 = trophyDivs[1].querySelector('.text-2xl');
+                                const el2 = trophyDivs[2].querySelector('.text-2xl');
+                                if (el0) el0.textContent = newTrophies.campionatiVinti;
+                                if (el1) el1.textContent = newTrophies.coppeSerieVinte;
+                                if (el2) el2.textContent = newTrophies.supercoppeSerieVinte;
                             }
                         }
                     }

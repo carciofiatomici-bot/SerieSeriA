@@ -1482,7 +1482,8 @@ window.PrivateLeaguesUI = {
             if (fee > 0) {
                 prizePreview.style.display = 'block';
                 const gains = window.PrivateLeagues.calculateNetGains(fee, numTeams);
-                container.querySelector('#total-pool').textContent = `${fee * numTeams} CS`;
+                const totalPoolEl = container.querySelector('#total-pool');
+                if (totalPoolEl) totalPoolEl.textContent = `${fee * numTeams} CS`;
 
                 const medals = ['🥇', '🥈', '🥉', '4°', '5°', '6°'];
                 prizeGrid.innerHTML = gains.map((g, i) => `

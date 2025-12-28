@@ -142,7 +142,8 @@ window.InterfacciaOnboarding = {
         // Abilita il bottone di conferma
         elements.btnConfirmCaptain.dataset.selectedCaptainId = selectedId;
         elements.btnConfirmCaptain.disabled = false;
-        elements.captainSelectionError.textContent = `Icona ${card.querySelector('.text-lg').textContent} selezionata! Premi conferma.`;
+        const iconaName = card.querySelector('.text-lg')?.textContent || 'Icona';
+        elements.captainSelectionError.textContent = `Icona ${iconaName} selezionata! Premi conferma.`;
         elements.captainSelectionError.classList.remove('text-red-400');
         elements.captainSelectionError.classList.add('text-green-500');
     },

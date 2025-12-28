@@ -412,7 +412,12 @@ window.DraftTurns = {
                 if (currentRound < DRAFT_TOTAL_ROUNDS) {
                     const nextRound = currentRound + 1;
                     const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                    const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+                    const nextOrderSource = draftTurns[nextOrderKey] || [];
+                    if (!nextOrderSource.length) {
+                        console.error(`[Draft] nextOrder vuoto per ${nextOrderKey}, impossibile procedere`);
+                        return;
+                    }
+                    const nextOrder = nextOrderSource.map(t => ({ ...t }));
 
                     nextOrder.forEach(t => {
                         t.hasDrafted = false;
@@ -491,7 +496,12 @@ window.DraftTurns = {
                     // Passa al round successivo
                     const nextRound = currentRound + 1;
                     const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                    const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+                    const nextOrderSource = draftTurns[nextOrderKey] || [];
+                    if (!nextOrderSource.length) {
+                        console.error(`[Draft] nextOrder vuoto per ${nextOrderKey}, impossibile procedere`);
+                        return;
+                    }
+                    const nextOrder = nextOrderSource.map(t => ({ ...t }));
 
                     // Reset hasDrafted e timeoutStrikes per il nuovo round
                     nextOrder.forEach(t => {
@@ -821,7 +831,12 @@ window.DraftTurns = {
                 // Passa al round successivo
                 const nextRound = currentRound + 1;
                 const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+                const nextOrderSource = draftTurns[nextOrderKey] || [];
+                if (!nextOrderSource.length) {
+                    console.error(`[AUTO-ASSIGN] nextOrder vuoto per ${nextOrderKey}, impossibile procedere`);
+                    return;
+                }
+                const nextOrder = nextOrderSource.map(t => ({ ...t }));
 
                 // Reset hasDrafted e timeoutStrikes per il nuovo round
                 nextOrder.forEach(t => {
@@ -1046,7 +1061,12 @@ window.DraftTurns = {
                     // Passa al round successivo
                     const nextRound = currentRound + 1;
                     const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                    const nextOrder = [...draftTurns[nextOrderKey]];
+                    const nextOrderSource = draftTurns[nextOrderKey] || [];
+                    if (!nextOrderSource.length) {
+                        console.error(`[Draft] nextOrder vuoto per ${nextOrderKey}, impossibile procedere`);
+                        return;
+                    }
+                    const nextOrder = [...nextOrderSource];
 
                     // Reset hasDrafted per il nuovo round
                     nextOrder.forEach(t => {
@@ -1563,7 +1583,12 @@ window.DraftTurns = {
                     // Passa al round successivo
                     const nextRound = currentRound + 1;
                     const nextOrderKey = nextRound === 1 ? 'round1Order' : 'round2Order';
-                    const nextOrder = draftTurns[nextOrderKey].map(t => ({ ...t }));
+                    const nextOrderSource = draftTurns[nextOrderKey] || [];
+                    if (!nextOrderSource.length) {
+                        console.error(`[RINUNCIA] nextOrder vuoto per ${nextOrderKey}, impossibile procedere`);
+                        return;
+                    }
+                    const nextOrder = nextOrderSource.map(t => ({ ...t }));
 
                     // Reset hasDrafted e timeoutStrikes per il nuovo round
                     nextOrder.forEach(t => {

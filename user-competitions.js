@@ -403,8 +403,9 @@ window.UserCompetitions = {
         const lastPlayedMatch = this.findLastPlayedMatch(scheduleData, currentTeamId);
         if (lastPlayedMatch) {
             const isHome = lastPlayedMatch.homeId === currentTeamId;
-            const myGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[0]) : parseInt(lastPlayedMatch.result.split('-')[1]);
-            const opponentGoals = isHome ? parseInt(lastPlayedMatch.result.split('-')[1]) : parseInt(lastPlayedMatch.result.split('-')[0]);
+            const resultParts = (lastPlayedMatch.result || '').split('-');
+            const myGoals = isHome ? (parseInt(resultParts[0]) || 0) : (parseInt(resultParts[1]) || 0);
+            const opponentGoals = isHome ? (parseInt(resultParts[1]) || 0) : (parseInt(resultParts[0]) || 0);
             const resultType = myGoals > opponentGoals ? 'win' : myGoals < opponentGoals ? 'loss' : 'draw';
 
             // Colori e stili basati sul risultato

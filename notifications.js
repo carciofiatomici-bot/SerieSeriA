@@ -72,8 +72,12 @@ window.Notifications = {
         if (Notification.permission === 'default') {
             // Richiedi dopo un breve delay per non essere invasivi
             setTimeout(async () => {
-                const permission = await Notification.requestPermission();
-                console.log('[Push] Permesso notifiche:', permission);
+                try {
+                    const permission = await Notification.requestPermission();
+                    console.log('[Push] Permesso notifiche:', permission);
+                } catch (error) {
+                    console.warn('[Push] Errore richiesta permesso:', error);
+                }
             }, 5000);
         }
     },
@@ -404,7 +408,7 @@ window.Notifications = {
                                 `${typeConfig.icon} ${notif.title}`,
                                 notif.message,
                                 notif.type
-                            );
+                            ).catch(err => console.warn('[Push] Errore invio:', err));
                         }
                     });
                 }
@@ -728,10 +732,14 @@ window.Notifications = {
 
         // Lazy load: carica notifiche server al primo click
         if (wasHidden && this.config.lazyLoad && !this._serverNotificationsLoaded) {
-            await this.fetchServerNotifications();
-            this.updateUI();
-            // Dopo il primo caricamento, avvia il listener realtime
-            this.startRealtimeListener();
+            try {
+                await this.fetchServerNotifications();
+                this.updateUI();
+                // Dopo il primo caricamento, avvia il listener realtime
+                this.startRealtimeListener();
+            } catch (error) {
+                console.warn('[Notifiche] Errore caricamento dropdown:', error);
+            }
         }
     },
 

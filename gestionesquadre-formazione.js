@@ -417,7 +417,8 @@ window.GestioneSquadreFormazione = {
             this.renderFieldSlots(context.currentTeamData, context);
             displayMessage('formation-message', `Modulo cambiato in ${newModule}. Rischiera i tuoi giocatori.`, 'info');
             document.getElementById('module-description').textContent = MODULI[newModule].description;
-            document.querySelector('#field-area h4').textContent = `Campo (Titolari) - Modulo: ${newModule}`;
+            const fieldHeader = document.querySelector('#field-area h4');
+            if (fieldHeader) fieldHeader.textContent = `Campo (Titolari) - Modulo: ${newModule}`;
             // Aggiorna barra XP formazione (se presente)
             this.updateFormationXpBar(context.currentTeamData);
             // Aggiorna label nel header del menu a scomparsa
