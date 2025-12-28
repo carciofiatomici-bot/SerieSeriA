@@ -1682,7 +1682,7 @@ window.PrivateLeaguesUI = {
                             <span style="font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #94a3b8;">Numero Squadre</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button id="btn-decrease-teams" class="pl-team-adjust-btn" ${league.teams.length >= league.maxTeams - 1 || league.maxTeams <= window.PrivateLeagues.MIN_TEAMS ? 'disabled' : ''}>−</button>
+                            <button id="btn-decrease-teams" class="pl-team-adjust-btn" ${league.maxTeams <= league.teams.length || league.maxTeams <= window.PrivateLeagues.MIN_TEAMS ? 'disabled' : ''}>−</button>
                             <span id="current-max-teams" style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; color: #c084fc; min-width: 24px; text-align: center;">${league.maxTeams}</span>
                             <button id="btn-increase-teams" class="pl-team-adjust-btn" ${league.maxTeams >= window.PrivateLeagues.MAX_TEAMS ? 'disabled' : ''}>+</button>
                         </div>
