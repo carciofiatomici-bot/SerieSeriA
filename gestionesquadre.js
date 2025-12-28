@@ -112,14 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Aggiorna il dato globale
-            window.InterfacciaCore.currentTeamData = teamDoc.data();
-            currentTeamData = teamDoc.data();
+            // Aggiorna il dato globale (salva in variabile per evitare doppia chiamata .data())
+            const teamData = teamDoc.data();
+            window.InterfacciaCore.currentTeamData = teamData;
+            currentTeamData = teamData;
 
             // Applica EXP dal nuovo campo playersExp ai giocatori
             if (window.PlayerExp?.applyExpFromFirestore) {
-                window.PlayerExp.applyExpFromFirestore(window.InterfacciaCore.currentTeamData);
-                window.PlayerExp.applyExpFromFirestore(currentTeamData);
+                window.PlayerExp.applyExpFromFirestore(teamData);
             }
 
             // Procedi con il rendering

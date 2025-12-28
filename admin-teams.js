@@ -1909,7 +1909,11 @@ window.AdminTeams = {
      * da icone.js (legge da CAPTAIN_CANDIDATES_TEMPLATES)
      */
     async updateIconeAbilities() {
-        const appId = window.firestoreTools?.appId || window.currentAppId || 'default-app-id';
+        const appId = window.firestoreTools?.appId || window.currentAppId;
+        if (!appId) {
+            console.error('[AdminTeams] appId non disponibile');
+            return;
+        }
         const TEAMS_COLLECTION_PATH = `artifacts/${appId}/public/data/teams`;
 
         const { collection, getDocs, doc, updateDoc } = window.firestoreTools;

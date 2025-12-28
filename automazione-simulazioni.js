@@ -1011,6 +1011,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('adminLoggedIn', () => {
         window.AutomazioneSimulazioni.initialize();
     });
+
+    // Cleanup al logout per prevenire memory leak
+    document.addEventListener('userLoggedOut', () => {
+        window.AutomazioneSimulazioni?.stopPeriodicCheck();
+    });
 });
 
 console.log("Modulo automazione-simulazioni.js caricato.");

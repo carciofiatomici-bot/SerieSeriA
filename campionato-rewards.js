@@ -48,11 +48,11 @@ window.ChampionshipRewards = {
         let homeCreditsEarned = homeGoals * this.GOAL_CS; // 5 CS per gol
         let awayCreditsEarned = awayGoals * this.GOAL_CS; // 5 CS per gol
 
-        // Bonus vittoria: 25 CS
+        // Bonus vittoria (usa getter dinamico)
         if (homeGoals > awayGoals) {
-            homeCreditsEarned += 25;
+            homeCreditsEarned += this.WIN_CS;
         } else if (homeGoals < awayGoals) {
-            awayCreditsEarned += 25;
+            awayCreditsEarned += this.WIN_CS;
         }
 
         // Applica moltiplicatore evento doppi premi

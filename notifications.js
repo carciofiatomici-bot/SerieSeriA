@@ -50,7 +50,7 @@ window.Notifications = {
         }
 
         this.createUI();
-        this.loadNotifications();
+        this.loadNotifications().catch(error => console.error('[Notifiche] Errore caricamento:', error));
         this.setupListeners();
         this.startPolling();
 
@@ -1261,7 +1261,9 @@ window.Notifications = {
 
         // Poll ogni 5 minuti (invece di 2) per risparmiare letture
         this.pollingInterval = setInterval(() => {
-            this.fetchServerNotifications().then(() => this.updateUI());
+            this.fetchServerNotifications()
+                .then(() => this.updateUI())
+                .catch(error => console.error('[Notifiche] Errore polling:', error));
         }, 300000); // 5 minuti
     },
 

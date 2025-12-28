@@ -15,7 +15,11 @@ window.AdminIcons = {
      */
     getIconsPath() {
         if (!this.ICONS_COLLECTION_PATH) {
-            const appId = window.firestoreTools?.appId || 'default';
+            const appId = window.firestoreTools?.appId;
+            if (!appId) {
+                console.error('[AdminIcons] appId non disponibile');
+                return null;
+            }
             this.ICONS_COLLECTION_PATH = `artifacts/${appId}/public/data/icons`;
         }
         return this.ICONS_COLLECTION_PATH;

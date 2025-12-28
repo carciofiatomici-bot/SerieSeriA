@@ -516,15 +516,29 @@ document.addEventListener('featureFlagChanged', async (e) => {
 });
 
 // Controlla periodicamente i timer scaduti (ogni 5 minuti)
-setInterval(async () => {
-    if (window.Contracts?.isEnabled() && window.db && window.firestoreTools) {
-        const result = await window.Contracts.checkAndSellExpiredPlayersAllTeams();
-        if (result.results.length > 0) {
-            console.log('[Contracts] Venduti giocatori con timer scaduto:', result.results);
-            // Aggiorna la dashboard se necessario
-            document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+// Salva l'interval ID per permettere cleanup
+window.Contracts._checkInterval = setInterval(async () => {
+    try {
+        if (window.Contracts?.isEnabled() && window.db && window.firestoreTools) {
+            const result = await window.Contracts.checkAndSellExpiredPlayersAllTeams();
+            if (result.results.length > 0) {
+                console.log('[Contracts] Venduti giocatori con timer scaduto:', result.results);
+                // Aggiorna la dashboard se necessario
+                document.dispatchEvent(new CustomEvent('dashboardNeedsUpdate'));
+            }
         }
+    } catch (error) {
+        console.error('[Contracts] Errore nel controllo timer scaduti:', error);
     }
 }, 5 * 60 * 1000); // 5 minuti
+
+// Cleanup interval al logout
+document.addEventListener('userLoggedOut', () => {
+    if (window.Contracts?._checkInterval) {
+        clearInterval(window.Contracts._checkInterval);
+        window.Contracts._checkInterval = null;
+        console.log('[Contracts] Interval controllo timer fermato');
+    }
+});
 
 console.log("Modulo Contracts caricato.");

@@ -1355,13 +1355,13 @@ const phaseAttack = (teamA, teamB) => {
     }
 
     // Cross? Skip direttamente a tiro con 1d20 + miglior attaccante
-    if (preAbilities.specialEffects.cross) {
-        const bestAttacker = teamA.A?.reduce((best, curr) => {
+    if (preAbilities.specialEffects.cross && teamA.A?.length > 0) {
+        const bestAttacker = teamA.A.reduce((best, curr) => {
             const modBest = calculatePlayerModifier(best, teamA.formationInfo?.isIconaActive, []);
             const modCurr = calculatePlayerModifier(curr, teamA.formationInfo?.isIconaActive, []);
             return modCurr > modBest ? curr : best;
         });
-        
+
         if (bestAttacker) {
             const crossResult = rollDice(1, 20) + calculatePlayerModifier(bestAttacker, teamA.formationInfo?.isIconaActive, []);
             return crossResult;

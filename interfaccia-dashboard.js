@@ -3341,4 +3341,9 @@ window.InterfacciaDashboard = {
     }
 };
 
+// Cleanup al logout per prevenire memory leak
+document.addEventListener('userLoggedOut', () => {
+    window.InterfacciaDashboard?.cleanup();
+});
+
 console.log("✅ Modulo interfaccia-dashboard.js caricato.");

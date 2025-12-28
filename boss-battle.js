@@ -33,12 +33,20 @@
         // ============ PATH FIRESTORE ============
 
         getConfigPath() {
-            const appId = window.InterfacciaConstants?.appId || 'default';
+            const appId = window.InterfacciaConstants?.appId || window.firestoreTools?.appId;
+            if (!appId) {
+                console.error('[BossBattle] appId non disponibile');
+                return null;
+            }
             return `artifacts/${appId}/public/data/config/bossConfig`;
         },
 
         getBossesPath() {
-            const appId = window.InterfacciaConstants?.appId || 'default';
+            const appId = window.InterfacciaConstants?.appId || window.firestoreTools?.appId;
+            if (!appId) {
+                console.error('[BossBattle] appId non disponibile');
+                return null;
+            }
             return `artifacts/${appId}/public/data/bossBattles`;
         },
 

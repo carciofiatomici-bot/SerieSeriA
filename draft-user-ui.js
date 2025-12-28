@@ -228,14 +228,19 @@ window.DraftUserUI = {
         const refreshBtn = document.getElementById('btn-refresh-recent-picks');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', async () => {
-                refreshBtn.textContent = '⏳';
-                await this.loadRecentPicks(context);
-                const container = document.getElementById('recent-picks-container');
-                if (container) {
-                    container.innerHTML = this.renderRecentPicksSection(this.recentPicksCache, context.currentTeamId);
-                    this.setupRecentPicksListeners(context);
+                try {
+                    refreshBtn.textContent = '⏳';
+                    await this.loadRecentPicks(context);
+                    const container = document.getElementById('recent-picks-container');
+                    if (container) {
+                        container.innerHTML = this.renderRecentPicksSection(this.recentPicksCache, context.currentTeamId);
+                        this.setupRecentPicksListeners(context);
+                    }
+                    refreshBtn.textContent = '🔄';
+                } catch (error) {
+                    console.error('[DraftUserUI] Errore refresh picks:', error);
+                    refreshBtn.textContent = '🔄';
                 }
-                refreshBtn.textContent = '🔄';
             });
         }
     },
@@ -833,19 +838,27 @@ window.DraftUserUI = {
             const stealBtn = document.getElementById('btn-steal-turn');
             if (stealBtn) {
                 stealBtn.addEventListener('click', async () => {
-                    stealBtn.disabled = true;
-                    stealBtn.textContent = 'Rubando...';
-                    stealBtn.classList.remove('animate-pulse');
+                    try {
+                        stealBtn.disabled = true;
+                        stealBtn.textContent = 'Rubando...';
+                        stealBtn.classList.remove('animate-pulse');
 
-                    const result = await window.DraftTurns.stealTurn(context, context.currentTeamId);
+                        const result = await window.DraftTurns.stealTurn(context, context.currentTeamId);
 
-                    if (result.success) {
-                        this.render(context);
-                    } else {
+                        if (result.success) {
+                            this.render(context);
+                        } else {
+                            stealBtn.disabled = false;
+                            stealBtn.textContent = '⚡ RUBA TURNO ⚡';
+                            stealBtn.classList.add('animate-pulse');
+                            alert(result.message);
+                        }
+                    } catch (error) {
+                        console.error('[DraftUserUI] Errore steal turn:', error);
                         stealBtn.disabled = false;
                         stealBtn.textContent = '⚡ RUBA TURNO ⚡';
                         stealBtn.classList.add('animate-pulse');
-                        alert(result.message);
+                        alert('Errore durante il tentativo di rubare il turno');
                     }
                 });
             }
@@ -957,20 +970,27 @@ window.DraftUserUI = {
         const skipTurnBtn = document.getElementById('btn-skip-turn');
         if (skipTurnBtn) {
             skipTurnBtn.addEventListener('click', async () => {
-                const confirmed = confirm('Sei sicuro di voler rinunciare al pick?\n\nRiceverai 150 CS come compensazione.');
-                if (!confirmed) return;
+                try {
+                    const confirmed = confirm('Sei sicuro di voler rinunciare al pick?\n\nRiceverai 150 CS come compensazione.');
+                    if (!confirmed) return;
 
-                skipTurnBtn.disabled = true;
-                skipTurnBtn.textContent = 'Rinuncia...';
+                    skipTurnBtn.disabled = true;
+                    skipTurnBtn.textContent = 'Rinuncia...';
 
-                const result = await window.DraftTurns.skipTurn(context, context.currentTeamId);
+                    const result = await window.DraftTurns.skipTurn(context, context.currentTeamId);
 
-                if (result.success) {
-                    this.render(context);
-                } else {
+                    if (result.success) {
+                        this.render(context);
+                    } else {
+                        skipTurnBtn.disabled = false;
+                        skipTurnBtn.textContent = '↪ Rinuncia al Pick (+150 CS)';
+                        alert('Errore: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('[DraftUserUI] Errore skip turn:', error);
                     skipTurnBtn.disabled = false;
                     skipTurnBtn.textContent = '↪ Rinuncia al Pick (+150 CS)';
-                    alert('Errore: ' + result.message);
+                    alert('Errore durante la rinuncia al pick');
                 }
             });
         }
