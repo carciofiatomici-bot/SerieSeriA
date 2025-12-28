@@ -39,6 +39,10 @@ window.GestioneSquadreIcona = {
         }
 
         const currentIcona = teamData.players.find(p => p.abilities && p.abilities.includes('Icona'));
+        if (!currentIcona) {
+            displayMessage(msgContainerId, 'ERRORE: Nessuna Icona trovata nella squadra.', 'error');
+            return;
+        }
         const candidates = window.CAPTAIN_CANDIDATES_TEMPLATES || [];
         const availableIcons = candidates.filter(c => c.name !== currentIcona.name);
 
@@ -102,6 +106,10 @@ window.GestioneSquadreIcona = {
             card.classList.add('border-green-400', 'bg-indigo-700');
 
             selectedIconData = candidates.find(c => c.id === card.dataset.iconId);
+            if (!selectedIconData) {
+                displayMessage('icona-replacement-message', 'Errore: Icona non trovata.', 'error');
+                return;
+            }
 
             btnConfirmReplace.disabled = false;
             btnConfirmReplace.classList.remove('opacity-50', 'cursor-not-allowed');

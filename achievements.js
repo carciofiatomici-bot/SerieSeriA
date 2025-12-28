@@ -341,7 +341,13 @@ window.Achievements = {
     loadAchievements() {
         const saved = localStorage.getItem('fanta_achievements');
         if (saved) {
-            this.unlockedAchievements = JSON.parse(saved);
+            try {
+                this.unlockedAchievements = JSON.parse(saved);
+            } catch (e) {
+                console.warn('[Achievements] Dati localStorage corrotti, reset:', e);
+                localStorage.removeItem('fanta_achievements');
+                this.unlockedAchievements = [];
+            }
         } else {
             // Demo: sblocca alcuni achievements
             this.unlockedAchievements = [

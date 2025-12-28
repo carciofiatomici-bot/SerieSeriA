@@ -141,7 +141,13 @@ window.Training = {
     loadHistory() {
         const saved = localStorage.getItem('fanta_training_history');
         if (saved) {
-            this.matchHistory = JSON.parse(saved);
+            try {
+                this.matchHistory = JSON.parse(saved);
+            } catch (e) {
+                console.warn('[Training] Dati localStorage corrotti, reset:', e);
+                localStorage.removeItem('fanta_training_history');
+                this.matchHistory = [];
+            }
         }
     },
 
