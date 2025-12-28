@@ -1348,32 +1348,24 @@ window.InterfacciaAuth = {
                         <button onclick="window.InterfacciaAuth.hideRosaSquadra()" class="text-white hover:text-red-400 text-3xl font-bold">✕</button>
                     </div>
 
-                    ${hasTrophies ? `
                     <!-- Bacheca Trofei -->
-                    <div class="flex justify-center gap-4 mb-4 p-3 bg-gradient-to-r from-yellow-900/30 via-amber-900/20 to-yellow-900/30 rounded-xl border border-yellow-500/30">
-                        ${campionati > 0 ? `
-                            <div class="flex flex-col items-center">
-                                <span class="text-2xl">🏆</span>
-                                <span class="text-lg font-bold text-yellow-400">${campionati}</span>
-                                <span class="text-[10px] text-yellow-400/70 uppercase">Camp.</span>
-                            </div>
-                        ` : ''}
-                        ${coppe > 0 ? `
-                            <div class="flex flex-col items-center">
-                                <span class="text-2xl">🥈</span>
-                                <span class="text-lg font-bold text-gray-300">${coppe}</span>
-                                <span class="text-[10px] text-gray-400 uppercase">Coppe</span>
-                            </div>
-                        ` : ''}
-                        ${supercoppe > 0 ? `
-                            <div class="flex flex-col items-center">
-                                <span class="text-2xl">⭐</span>
-                                <span class="text-lg font-bold text-amber-400">${supercoppe}</span>
-                                <span class="text-[10px] text-amber-400/70 uppercase">Super.</span>
-                            </div>
-                        ` : ''}
+                    <div class="flex justify-center gap-6 mb-4 p-3 bg-gradient-to-r from-slate-800/50 via-slate-700/30 to-slate-800/50 rounded-xl border border-slate-600/30">
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl">${campionati > 0 ? '🏆' : '🏆'}</span>
+                            <span class="text-lg font-bold ${campionati > 0 ? 'text-yellow-400' : 'text-gray-500'}">${campionati}</span>
+                            <span class="text-[10px] ${campionati > 0 ? 'text-yellow-400/70' : 'text-gray-500'} uppercase">Camp.</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl">${coppe > 0 ? '🥈' : '🥈'}</span>
+                            <span class="text-lg font-bold ${coppe > 0 ? 'text-gray-300' : 'text-gray-500'}">${coppe}</span>
+                            <span class="text-[10px] ${coppe > 0 ? 'text-gray-400' : 'text-gray-500'} uppercase">Coppe</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl">${supercoppe > 0 ? '⭐' : '⭐'}</span>
+                            <span class="text-lg font-bold ${supercoppe > 0 ? 'text-amber-400' : 'text-gray-500'}">${supercoppe}</span>
+                            <span class="text-[10px] ${supercoppe > 0 ? 'text-amber-400/70' : 'text-gray-500'} uppercase">Super.</span>
+                        </div>
                     </div>
-                    ` : ''}
 
                     <p class="text-gray-400 text-sm mb-4 text-center">${sortedPlayers.length} giocatori in rosa</p>
                     <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
