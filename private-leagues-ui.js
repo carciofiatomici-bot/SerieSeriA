@@ -279,6 +279,33 @@ window.PrivateLeaguesUI = {
                     line-height: 1.4;
                 }
 
+                .pl-start-league-btn {
+                    width: 100%;
+                    padding: 16px 24px;
+                    margin-bottom: 20px;
+                    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                    border: none;
+                    border-radius: 12px;
+                    color: white;
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+                }
+
+                .pl-start-league-btn:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+                }
+
+                .pl-start-league-btn:disabled {
+                    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+                    cursor: not-allowed;
+                    box-shadow: none;
+                }
+
                 .pl-input-group {
                     margin-bottom: 18px;
                 }
@@ -1667,11 +1694,17 @@ window.PrivateLeaguesUI = {
                     </div>
                 </div>
 
-                <!-- Info -->
+                <!-- Info / Start Button -->
+                ${league.teams.length >= league.maxTeams && league.createdBy === this.currentTeamId ? `
+                <button id="btn-start-league" class="pl-start-league-btn">
+                    🚀 AVVIA CAMPIONATO
+                </button>
+                ` : `
                 <div class="pl-info-banner">
                     <span class="pl-info-banner-icon">⚡</span>
                     <span class="pl-info-banner-text">Il campionato inizia automaticamente quando tutte le <strong>${league.maxTeams} squadre</strong> si iscrivono</span>
                 </div>
+                `}
 
                 ${league.createdBy === this.currentTeamId ? `
                 <!-- Modifica Numero Squadre (solo creatore) -->
@@ -1761,6 +1794,33 @@ window.PrivateLeaguesUI = {
         container.querySelector('#btn-copy-code')?.addEventListener('click', () => {
             navigator.clipboard.writeText(this.currentLeague.inviteCode);
             if (window.Toast) window.Toast.success('Codice copiato!');
+        });
+
+        // Avvia campionato manualmente (solo creatore)
+        container.querySelector('#btn-start-league')?.addEventListener('click', async () => {
+            const btn = container.querySelector('#btn-start-league');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Avvio in corso...';
+            }
+
+            const result = await window.PrivateLeagues.startLeague(
+                this.currentLeague.leagueId,
+                this.currentTeamId
+            );
+
+            if (result.success) {
+                if (window.Toast) window.Toast.success('🏆 Campionato avviato!');
+                // Ricarica i dati freschi
+                this.currentLeague = await window.PrivateLeagues.getLeagueById(this.currentLeague.leagueId);
+                this.render();
+            } else {
+                if (window.Toast) window.Toast.error(result.error);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 AVVIA CAMPIONATO';
+                }
+            }
         });
 
         // Modifica numero squadre (solo creatore)

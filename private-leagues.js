@@ -1143,6 +1143,66 @@ window.PrivateLeagues = {
             console.error('Errore aggiornamento maxTeams:', error);
             return { success: false, error: 'Errore durante l\'aggiornamento' };
         }
+    },
+
+    /**
+     * Avvia manualmente una lega privata
+     * (solo se in stato 'waiting', completa, e solo dal creatore)
+     */
+    async startLeague(leagueId, requestingTeamId) {
+        try {
+            const { doc, updateDoc } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
+            const league = await this.getLeagueById(leagueId);
+            if (!league) {
+                return { success: false, error: 'Lega non trovata' };
+            }
+
+            if (league.status !== 'waiting') {
+                return { success: false, error: 'La lega è già iniziata' };
+            }
+
+            if (league.createdBy !== requestingTeamId) {
+                return { success: false, error: 'Solo il creatore può avviare la lega' };
+            }
+
+            if (league.teams.length < league.maxTeams) {
+                return { success: false, error: `Servono ${league.maxTeams} squadre per avviare la lega (${league.teams.length} iscritte)` };
+            }
+
+            // Genera calendario e classifica
+            const schedule = this.generateSchedule(league.teams, league.maxTeams);
+            const standings = league.teams.map(t => ({
+                teamId: t.teamId,
+                teamName: t.teamName,
+                points: 0,
+                played: 0,
+                wins: 0,
+                draws: 0,
+                losses: 0,
+                goalsFor: 0,
+                goalsAgainst: 0
+            }));
+
+            const leaguePath = `artifacts/${appId}/public/data/privateLeagues/${leagueId}`;
+            await updateDoc(doc(db, leaguePath), {
+                status: 'in_progress',
+                schedule: schedule,
+                standings: standings,
+                currentRound: 1,
+                lastSimulationTime: null,
+                leagueStartedAt: new Date().toISOString()
+            });
+
+            console.log(`PrivateLeagues: Lega "${league.name}" avviata manualmente!`);
+            return { success: true };
+
+        } catch (error) {
+            console.error('Errore avvio lega:', error);
+            return { success: false, error: 'Errore durante l\'avvio della lega' };
+        }
     }
 };
 
