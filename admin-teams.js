@@ -655,13 +655,15 @@ window.AdminTeams = {
         const mainElement = document.querySelector('main');
 
         const modalHtml = `
-            <div id="edit-team-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-start justify-center p-4 pb-24 z-50 overflow-y-auto">
-                <div class="football-box w-full max-w-6xl my-4 mb-20">
+            <div id="edit-team-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
+                <div class="football-box w-full max-w-6xl max-h-[90vh] flex flex-col">
                     <h3 class="text-3xl font-bold text-blue-400 mb-4 border-b border-blue-600 pb-2">✏️ Modifica Squadra: ${teamData.teamName}</h3>
                     <p id="edit-message" class="text-center text-sm mb-4"></p>
 
-                    <!-- Tabs -->
-                    <div class="flex space-x-2 mb-4 border-b border-gray-700">
+                    <!-- Contenuto scrollabile -->
+                    <div class="flex-grow overflow-y-auto">
+                        <!-- Tabs -->
+                        <div class="flex space-x-2 mb-4 border-b border-gray-700">
                         <button onclick="window.AdminTeams.switchTab('info')" id="tab-info" 
                                 class="px-4 py-2 font-bold bg-blue-600 text-white rounded-t transition">
                             📋 Info Squadra
@@ -788,13 +790,17 @@ window.AdminTeams = {
                         </div>
                     </div>
 
-                    <div class="flex justify-end space-x-4 pt-6 mt-6 border-t border-gray-700">
+                    </div>
+                    <!-- Fine contenuto scrollabile -->
+
+                    <!-- Bottoni fissi in basso (fuori dall'area scrollabile) -->
+                    <div class="flex-shrink-0 border-t border-gray-700 p-4 flex justify-end space-x-4 bg-gray-800" style="padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));">
                         <button type="button" onclick="window.AdminTeams.closeEditTeamModal()"
-                                class="bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-400 transition duration-150">
+                                class="bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-400 transition duration-150">
                             Annulla
                         </button>
                         <button type="button" onclick="window.AdminTeams.saveTeamEdit('${teamId}', '${TEAMS_COLLECTION_PATH}')"
-                                class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-150">
+                                class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-150">
                             💾 Salva Modifiche
                         </button>
                     </div>

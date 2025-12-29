@@ -214,6 +214,11 @@ window.Supercoppa = {
         supercoppaBracket.winner = winner;
         supercoppaBracket.isCompleted = true;
 
+        // IMPORTANTE: Salva SUBITO lo stato completato per evitare risimulazioni
+        // Le operazioni successive possono fallire senza compromettere lo stato
+        await this.saveSupercoppa(supercoppaBracket);
+        console.log(`[Supercoppa] Stato salvato: ${finalResult}, Vincitore: ${winner.teamName}`);
+
         // Registra statistiche stagionali per la supercoppa
         if (window.PlayerSeasonStats) {
             try {
@@ -347,10 +352,8 @@ window.Supercoppa = {
             await window.ChampionshipMain.addFormationXp(supercoppaBracket.awayTeam.teamId, awayTeamData.formation?.modulo);
         }
 
-        // Salva
-        await this.saveSupercoppa(supercoppaBracket);
-
-        console.log(`Supercoppa completata: ${finalResult}. Vincitore: ${winner.teamName}`);
+        // Log completamento (salvataggio gia avvenuto sopra)
+        console.log(`[Supercoppa] Completata: ${finalResult}. Vincitore: ${winner.teamName}`);
 
         // Salva nello storico partite per entrambe le squadre
         if (window.MatchHistory) {
