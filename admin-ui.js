@@ -153,12 +153,9 @@ window.AdminUI = {
                     </div>
 
                     <!-- Coppa Quasi SeriA -->
-                    <div id="coppa-quasi-admin-section" class="p-4 bg-gray-800 rounded-lg border border-amber-500">
-                        <h4 class="text-lg font-bold text-amber-400 mb-3 flex items-center">🪣 Coppa Quasi SeriA</h4>
-                        <p class="text-gray-400 text-xs mb-3">Triangolare ultime 3 classificate</p>
-                        <div id="coppa-quasi-admin-container">
-                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
-                        </div>
+                    <div id="coppa-quasi-admin-section" class="p-3 bg-gray-800 rounded-lg border border-amber-500">
+                        <h4 class="text-sm font-bold text-amber-400 mb-1 flex items-center">🪣 Coppa Quasi SeriA</h4>
+                        <div id="coppa-quasi-admin-container" class="text-gray-400 text-xs">Triangolare ultime 3 classificate</div>
                     </div>
 
                     <!-- Automazione -->
