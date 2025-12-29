@@ -717,7 +717,7 @@ window.AdminTeams = {
                                         class="w-full p-2 rounded-lg bg-gray-700 border border-purple-500 text-white text-center">
                                 </div>
                                 <div class="flex flex-col items-center">
-                                    <label class="text-amber-500 mb-1 text-sm font-bold">🥉 C. Quasi</label>
+                                    <label class="text-amber-500 mb-1 text-sm font-bold">🪣 C. Quasi</label>
                                     <input type="number" id="edit-coppe-quasi" value="${teamData.coppeQuasiSerieVinte || 0}" min="0"
                                         class="w-full p-2 rounded-lg bg-gray-700 border border-amber-500 text-white text-center">
                                 </div>

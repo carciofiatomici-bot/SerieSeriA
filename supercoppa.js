@@ -312,6 +312,17 @@ window.Supercoppa = {
             }
         }
 
+        // Pagamento stipendi (solo per le squadre che giocano)
+        if (window.Stipendi && window.FeatureFlags?.isEnabled('salaries')) {
+            try {
+                await window.Stipendi.processSalaryPayment(supercoppaBracket.homeTeam.teamId, homeTeamData, 'Supercoppa');
+                await window.Stipendi.processSalaryPayment(supercoppaBracket.awayTeam.teamId, awayTeamData, 'Supercoppa');
+                console.log(`[Supercoppa] Stipendi processati per ${homeTeamData.teamName} e ${awayTeamData.teamName}`);
+            } catch (salaryError) {
+                console.warn('[Supercoppa] Errore pagamento stipendi:', salaryError);
+            }
+        }
+
         // Applica premio CSS al vincitore (1 CSS)
         await this.applyReward(winner.teamId);
 
@@ -600,8 +611,7 @@ window.Supercoppa = {
                                     ${bracket.result ?
                                         `<p class="text-3xl font-extrabold text-yellow-400">${bracket.result}</p>
                                          ${bracket.penalties ? `<p class="text-xs text-gray-400">(d.c.r.)</p>` : ''}` :
-                                        `<p class="text-2xl text-gray-400 font-bold">VS</p>
-                                         <p class="text-xs text-gray-500">Partita Secca</p>`
+                                        `<p class="text-2xl text-gray-400 font-bold">VS</p>`
                                     }
                                 </div>
 

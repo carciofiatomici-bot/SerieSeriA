@@ -1246,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCupStatus();
         loadSupercoppPanel();
         loadCoppaQuasiPanel();
+        loadStipendiPanel();
         // loadAutomationPanel(); // Non caricare automaticamente, si carica al click sul menu
     };
 
@@ -3122,6 +3123,98 @@ document.addEventListener('DOMContentLoaded', () => {
             window.CoppaQuasiUI.renderAdminUI(container);
         } else if (container && window.CoppaQuasi) {
             window.CoppaQuasi.renderAdminUI(container);
+        }
+    };
+
+    /**
+     * Carica il pannello Sistema Stipendi
+     */
+    const loadStipendiPanel = async () => {
+        const container = document.getElementById('stipendi-admin-container');
+        if (!container) return;
+
+        if (!window.Stipendi) {
+            container.innerHTML = '<p class="text-gray-400 text-center text-sm">Modulo stipendi non disponibile</p>';
+            return;
+        }
+
+        try {
+            const config = await window.Stipendi.loadConfig();
+            const isEnabled = window.FeatureFlags?.isEnabled('salaries') || false;
+
+            const statusColor = isEnabled ? 'text-green-400' : 'text-red-400';
+            const statusText = isEnabled ? 'ATTIVO' : 'DISATTIVATO';
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <!-- Status -->
+                    <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
+                        <span class="text-sm">Stato:</span>
+                        <span class="font-bold ${statusColor}">${statusText}</span>
+                    </div>
+
+                    <!-- Info Feature Flag -->
+                    <p class="text-xs text-gray-500 text-center">
+                        Attiva/disattiva dai <span class="text-cyan-400">Feature Flags</span>
+                    </p>
+
+                    <!-- Configurazione (solo se attivo) -->
+                    ${isEnabled ? `
+                    <div class="space-y-2 p-2 bg-gray-700 rounded">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-400">Coefficiente:</span>
+                            <input type="number" id="stipendi-coefficient" value="${config.baseCoefficient || 1.36}" min="0.5" max="5" step="0.01" class="w-16 bg-gray-600 text-white text-center text-xs px-2 py-1 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-400">Malus debito:</span>
+                            <input type="number" id="stipendi-penalty" value="${config.debtPenaltyModifier || -1.5}" min="-5" max="0" step="0.5" class="w-16 bg-gray-600 text-white text-center text-xs px-2 py-1 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-400">Max giornate debito:</span>
+                            <input type="number" id="stipendi-max-debt" value="${config.maxDebtMatchdays || 3}" min="1" max="10" class="w-16 bg-gray-600 text-white text-center text-xs px-2 py-1 rounded">
+                        </div>
+                        <button id="btn-save-stipendi" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 rounded transition text-xs mt-2">
+                            Salva Configurazione
+                        </button>
+                    </div>
+                    ` : `
+                    <p class="text-xs text-gray-500 text-center">Attiva dai Feature Flags per configurare</p>
+                    `}
+
+                    <p class="text-xs text-gray-500 text-center mt-2">
+                        Formula: stipendio = livello x ${(config.baseCoefficient || 1.36).toFixed(2)}<br>
+                        5x Lv.25 = ~170 CS | Icone esenti
+                    </p>
+                </div>
+            `;
+
+            const btnSave = document.getElementById('btn-save-stipendi');
+            if (btnSave) {
+                btnSave.addEventListener('click', async () => {
+                    btnSave.disabled = true;
+                    btnSave.textContent = 'Salvataggio...';
+                    try {
+                        const newConfig = {
+                            ...config,
+                            baseCoefficient: parseFloat(document.getElementById('stipendi-coefficient').value) || 1.36,
+                            debtPenaltyModifier: parseFloat(document.getElementById('stipendi-penalty').value) || -1.5,
+                            maxDebtMatchdays: parseInt(document.getElementById('stipendi-max-debt').value) || 3
+                        };
+                        await window.Stipendi.saveConfig(newConfig);
+                        if (window.Toast) window.Toast.success('Configurazione stipendi salvata');
+                        loadStipendiPanel();
+                    } catch (error) {
+                        console.error('Errore salvataggio stipendi:', error);
+                        if (window.Toast) window.Toast.error('Errore salvataggio');
+                        btnSave.textContent = 'ERRORE';
+                        setTimeout(() => loadStipendiPanel(), 2000);
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento pannello stipendi:', error);
+            container.innerHTML = '<p class="text-red-400 text-center text-sm">Errore caricamento</p>';
         }
     };
 

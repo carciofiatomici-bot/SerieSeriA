@@ -196,7 +196,14 @@ window.ChampionshipMain = {
                 window.PlayerExp.applyExpFromFirestore(homeTeamData);
                 window.PlayerExp.applyExpFromFirestore(awayTeamData);
             }
-            
+
+            // 2.5 Imposta malus debito stipendi per la simulazione
+            if (window.Stipendi && window._salaryDebtPenalty) {
+                const homeDebtPenalty = window.Stipendi.getDebtPenalty(homeTeamData);
+                const awayDebtPenalty = window.Stipendi.getDebtPenalty(awayTeamData);
+                window._salaryDebtPenalty = { teamA: homeDebtPenalty, teamB: awayDebtPenalty };
+            }
+
             // 3. Simula partita con highlights
             const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
             const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;
@@ -335,6 +342,23 @@ window.ChampionshipMain = {
                     goalsScored: awayGoals,
                     matchday: roundIndex + 1
                 }, standings);
+            }
+
+            // 5.7 Pagamento stipendi (se sistema attivo)
+            if (window.Stipendi) {
+                try {
+                    const homeSalaryResult = await window.Stipendi.processSalaryPayment(match.homeId, homeTeamData, roundIndex + 1);
+                    const awaySalaryResult = await window.Stipendi.processSalaryPayment(match.awayId, awayTeamData, roundIndex + 1);
+
+                    if (!homeSalaryResult.skipped) {
+                        console.log(`[Stipendi] ${homeTeamData.teamName}: ${homeSalaryResult.paid}/${homeSalaryResult.totalSalary} CS`);
+                    }
+                    if (!awaySalaryResult.skipped) {
+                        console.log(`[Stipendi] ${awayTeamData.teamName}: ${awaySalaryResult.paid}/${awaySalaryResult.totalSalary} CS`);
+                    }
+                } catch (salaryError) {
+                    console.error('[Stipendi] Errore pagamento:', salaryError);
+                }
             }
 
             // 6. NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
@@ -506,6 +530,13 @@ window.ChampionshipMain = {
                     window.PlayerExp.applyExpFromFirestore(awayTeamData);
                 }
 
+                // Imposta malus debito stipendi per la simulazione
+                if (window.Stipendi && window._salaryDebtPenalty) {
+                    const homeDebtPenalty = window.Stipendi.getDebtPenalty(homeTeamData);
+                    const awayDebtPenalty = window.Stipendi.getDebtPenalty(awayTeamData);
+                    window._salaryDebtPenalty = { teamA: homeDebtPenalty, teamB: awayDebtPenalty };
+                }
+
                 const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
                 const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;
 
@@ -646,6 +677,16 @@ window.ChampionshipMain = {
                         goalsScored: awayGoals,
                         matchday: round.round
                     }, currentStandings);
+                }
+
+                // Pagamento stipendi (se sistema attivo)
+                if (window.Stipendi) {
+                    try {
+                        await window.Stipendi.processSalaryPayment(match.homeId, homeTeamData, round.round);
+                        await window.Stipendi.processSalaryPayment(match.awayId, awayTeamData, round.round);
+                    } catch (salaryError) {
+                        console.error('[Stipendi] Errore pagamento:', salaryError);
+                    }
                 }
 
                 // Salva nello storico partite per entrambe le squadre

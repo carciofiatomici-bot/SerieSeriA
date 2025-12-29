@@ -1310,7 +1310,7 @@ window.UserCompetitions = {
                 <div class="supercoppa-match-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${cardGradient} border shadow-xl">
                     <!-- Header con tipo partita e status -->
                     <div class="flex items-center justify-between px-4 py-2 bg-black/30">
-                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Partita Secca</span>
+                        <span class="text-[10px] text-purple-400 uppercase tracking-wider font-semibold">⭐ Supercoppa</span>
                         ${isParticipant ? `<span class="text-[10px] px-2.5 py-0.5 rounded-full border ${statusStyle} font-bold uppercase">${matchStatus}</span>` : ''}
                     </div>
 

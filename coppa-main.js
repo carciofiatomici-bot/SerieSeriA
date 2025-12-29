@@ -227,6 +227,18 @@ window.CoppaMain = {
             // Notifiche level-up rimosse (troppo invasive durante simulazione)
         }
 
+        // Pagamento stipendi (solo per le squadre che giocano)
+        if (window.Stipendi && window.FeatureFlags?.isEnabled('salaries')) {
+            try {
+                const roundLabel = `Coppa - ${round.roundName} ${legType === 'leg2' ? 'Ritorno' : 'Andata'}`;
+                await window.Stipendi.processSalaryPayment(match.homeTeam.teamId, homeTeamData, roundLabel);
+                await window.Stipendi.processSalaryPayment(match.awayTeam.teamId, awayTeamData, roundLabel);
+                console.log(`[CoppaMain] Stipendi processati per ${match.homeTeam.teamName} e ${match.awayTeam.teamName}`);
+            } catch (salaryError) {
+                console.warn('[CoppaMain] Errore pagamento stipendi:', salaryError);
+            }
+        }
+
         // SEMPRE: Salva nello storico partite per entrambe le squadre (sia andata che ritorno)
         if (window.MatchHistory && result.resultString) {
             const resultPart = (result.resultString.split(' ')[0] || '').split('-');

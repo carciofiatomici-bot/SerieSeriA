@@ -586,11 +586,6 @@ window.AbilitiesUI = {
                     </div>
                 </div>
 
-                <!-- Effect Preview -->
-                <div class="mt-3 bg-black/20 rounded-xl p-3">
-                    <p class="text-sm text-white/70 line-clamp-2 leading-relaxed">${ability.effect}</p>
-                </div>
-
                 <!-- Tap hint -->
                 <div class="flex items-center justify-end mt-2 text-white/20">
                     <span class="text-xs">Tocca per dettagli</span>

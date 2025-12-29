@@ -696,6 +696,43 @@ window.FeatureFlags = {
                     <li>Feature potrebbero essere instabili</li>
                 </ul>
                 <p class="mt-2 text-orange-400">Le feature beta potrebbero cambiare o essere rimosse!</p>`
+        },
+        salaries: {
+            id: 'salaries',
+            name: 'Sistema Stipendi',
+            description: 'I giocatori richiedono uno stipendio ogni giornata in base al loro livello',
+            icon: '💰',
+            enabled: false,
+            category: 'economy',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Stipendio = livello x 1.36 (es. Lv.25 = 34 CS)</li>
+                    <li>5 giocatori Lv.25 = ~170 CS/partita</li>
+                    <li>Icone (capitani) sono esenti da stipendio</li>
+                    <li>Pagamento automatico dopo ogni partita simulata</li>
+                    <li>Se budget insufficiente: accumulo debito</li>
+                    <li>Malus in partita se la squadra e' in debito</li>
+                    <li>Vendita forzata del giocatore piu' costoso dopo X giornate in debito</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">Rende difficile mantenere una rosa di tutti giocatori alti!</p>
+                <p class="mt-2 text-cyan-400">Configura il coefficiente dal pannello Admin > Stipendi.</p>`
+        },
+        playerForm: {
+            id: 'playerForm',
+            name: 'Forma Giocatori',
+            description: 'Sistema forma fisica che modifica le prestazioni dei giocatori',
+            icon: '📈',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Ogni giocatore ha un modificatore forma (-3 a +3)</li>
+                    <li>Forma influenza voti e prestazioni in partita</li>
+                    <li>Icone hanno forma speciale (0 a +6)</li>
+                    <li>Indicatore visivo nella gestione rosa</li>
+                    <li>Forma puo' cambiare dopo ogni partita</li>
+                </ul>
+                <p class="mt-2 text-orange-400">Sistema in revisione - attiva solo per test!</p>`
         }
     },
 

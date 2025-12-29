@@ -1268,6 +1268,14 @@ window.InterfacciaAuth = {
                                         <span>⭐</span> ${teamAverage}
                                     </span>
                                 </div>
+                                ${(squadra.campionatiVinti || squadra.coppeSerieVinte || squadra.supercoppeSerieVinte || squadra.coppeQuasiSerieVinte) ? `
+                                <div class="flex items-center gap-1.5 mt-1 text-xs">
+                                    ${squadra.campionatiVinti > 0 ? `<span class="text-yellow-400" title="Campionati">🏆${squadra.campionatiVinti}</span>` : ''}
+                                    ${squadra.coppeSerieVinte > 0 ? `<span class="text-orange-400" title="Coppe">🏅${squadra.coppeSerieVinte}</span>` : ''}
+                                    ${squadra.supercoppeSerieVinte > 0 ? `<span class="text-purple-400" title="Supercoppe">⭐${squadra.supercoppeSerieVinte}</span>` : ''}
+                                    ${squadra.coppeQuasiSerieVinte > 0 ? `<span class="text-amber-500" title="Coppa Quasi SeriA">🪣${squadra.coppeQuasiSerieVinte}</span>` : ''}
+                                </div>
+                                ` : ''}
                             </div>
 
                             <!-- Arrow (pushed to right) -->
@@ -1328,7 +1336,8 @@ window.InterfacciaAuth = {
         const campionati = squadra.campionatiVinti || 0;
         const coppe = squadra.coppeSerieVinte || 0;
         const supercoppe = squadra.supercoppeSerieVinte || 0;
-        const hasTrophies = campionati > 0 || coppe > 0 || supercoppe > 0;
+        const coppeQuasi = squadra.coppeQuasiSerieVinte || 0;
+        const hasTrophies = campionati > 0 || coppe > 0 || supercoppe > 0 || coppeQuasi > 0;
 
         // Ordina i giocatori per ruolo (P, D, C, A) e poi per livello
         const ROLE_ORDER = { 'P': 0, 'D': 1, 'C': 2, 'A': 3 };
@@ -1349,7 +1358,7 @@ window.InterfacciaAuth = {
                     </div>
 
                     <!-- Bacheca Trofei -->
-                    <div class="flex justify-center gap-6 mb-4 p-3 bg-gradient-to-r from-slate-800/50 via-slate-700/30 to-slate-800/50 rounded-xl border border-slate-600/30">
+                    <div class="flex justify-center gap-4 mb-4 p-3 bg-gradient-to-r from-slate-800/50 via-slate-700/30 to-slate-800/50 rounded-xl border border-slate-600/30">
                         <div class="flex flex-col items-center">
                             <span class="text-2xl">${campionati > 0 ? '🏆' : '🏆'}</span>
                             <span class="text-lg font-bold ${campionati > 0 ? 'text-yellow-400' : 'text-gray-500'}">${campionati}</span>
@@ -1364,6 +1373,11 @@ window.InterfacciaAuth = {
                             <span class="text-2xl">${supercoppe > 0 ? '⭐' : '⭐'}</span>
                             <span class="text-lg font-bold ${supercoppe > 0 ? 'text-amber-400' : 'text-gray-500'}">${supercoppe}</span>
                             <span class="text-[10px] ${supercoppe > 0 ? 'text-amber-400/70' : 'text-gray-500'} uppercase">Super.</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl">🪣</span>
+                            <span class="text-lg font-bold ${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-500'}">${coppeQuasi}</span>
+                            <span class="text-[10px] ${coppeQuasi > 0 ? 'text-amber-500/70' : 'text-gray-500'} uppercase">Quasi</span>
                         </div>
                     </div>
 

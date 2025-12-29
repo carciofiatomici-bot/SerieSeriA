@@ -46,7 +46,7 @@ window.InterfacciaDashboard = {
                 <span class="text-gray-600">•</span>
                 <span class="${supercoppe > 0 ? 'text-purple-400' : 'text-gray-600'}">⭐${supercoppe}</span>
                 <span class="text-gray-600">•</span>
-                <span class="${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-600'}" title="Coppa Quasi SeriA">🥉${coppeQuasi}</span>
+                <span class="${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-600'}" title="Coppa Quasi SeriA">🪣${coppeQuasi}</span>
             `;
             trophiesEl.classList.remove('hidden');
         }
@@ -179,6 +179,12 @@ window.InterfacciaDashboard = {
 
         // Inizializza il widget giocatori vicini al level-up
         this.initNearLevelUpWidget();
+
+        // Inizializza il widget stipendi
+        this.initStipendiWidget();
+
+        // Aggiorna il box salario nel tab squadra
+        this.updateTeamSalaryBox();
 
         // Inizializza il box allenatore nel tab squadra
         this.initCoachBoxWidget();
@@ -1276,6 +1282,129 @@ window.InterfacciaDashboard = {
     async initCreditiSuperSeriWidget() {
         if (window.CreditiSuperSeriUI) {
             await window.CreditiSuperSeriUI.initDashboardWidget();
+        }
+    },
+
+    /**
+     * Inizializza il widget Stipendi nella dashboard
+     */
+    async initStipendiWidget() {
+        const container = document.getElementById('stipendi-widget-container');
+        if (!container) return;
+
+        // Verifica se il sistema stipendi e' attivo (Feature Flag)
+        if (!window.Stipendi || !window.FeatureFlags?.isEnabled('salaries')) {
+            container.innerHTML = '';
+            return;
+        }
+
+        try {
+            const currentTeamData = window.InterfacciaCore?.currentTeamData;
+            if (!currentTeamData) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const salaryInfo = await window.Stipendi.getSalaryInfo(currentTeamData);
+            if (!salaryInfo.enabled) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Determina lo stato e il colore
+            let statusColor = 'border-green-500/50';
+            let statusText = '';
+            let statusIcon = '💰';
+
+            if (salaryInfo.debt > 0) {
+                statusColor = 'border-red-500';
+                statusText = `<span class="text-red-400 font-bold">Debito: ${salaryInfo.debt} CS</span>`;
+                statusIcon = '⚠️';
+            }
+
+            container.innerHTML = `
+                <div class="p-2 rounded-lg border ${statusColor} bg-gray-800/50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">${statusIcon}</span>
+                            <span class="text-xs text-gray-400">Stipendi/partita</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-amber-400">${salaryInfo.totalSalary} CS</span>
+                        </div>
+                    </div>
+                    ${statusText ? `<div class="mt-1 text-xs text-center">${statusText}</div>` : ''}
+                    ${salaryInfo.debtMatchdays > 0 ? `
+                        <div class="mt-1 text-xs text-center text-orange-400">
+                            ⚠️ ${salaryInfo.debtMatchdays}/${salaryInfo.maxDebtMatchdays} giornate in debito
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('[Dashboard] Errore widget stipendi:', error);
+            container.innerHTML = '';
+        }
+    },
+
+    /**
+     * Aggiorna il box salario nel tab squadra
+     * Mostra sempre il costo della rosa, indipendentemente dal Feature Flag
+     */
+    async updateTeamSalaryBox() {
+        const salaryBox = document.getElementById('team-salary-box');
+        if (!salaryBox) return;
+
+        try {
+            const currentTeamData = window.InterfacciaCore?.currentTeamData;
+            if (!currentTeamData || !currentTeamData.players) {
+                salaryBox.classList.add('hidden');
+                return;
+            }
+
+            // Calcola il salario totale direttamente (coeff. 1.36)
+            const players = currentTeamData.players || [];
+            let totalSalary = 0;
+            players.forEach(player => {
+                // Icone (capitani) sono esenti
+                const isIcona = player.abilities?.includes('Icona') || player.isCaptain;
+                if (!isIcona) {
+                    const level = player.level || 1;
+                    // Giocatori base (livello 5) sono esenti
+                    if (level > 5) {
+                        totalSalary += Math.round(level * 1.36);
+                    }
+                }
+            });
+
+            // Aggiorna i valori
+            const amountEl = document.getElementById('team-salary-amount');
+            const debtEl = document.getElementById('team-salary-debt');
+
+            if (amountEl) {
+                amountEl.textContent = totalSalary;
+            }
+
+            // Mostra debito se presente e feature flag attivo
+            if (debtEl) {
+                const debt = currentTeamData.salaryDebt || 0;
+                if (debt > 0 && window.FeatureFlags?.isEnabled('salaries')) {
+                    const debtMatchdays = currentTeamData.debtMatchdays || 0;
+                    debtEl.textContent = `⚠️ Debito: ${debt} CS (${debtMatchdays} giornate)`;
+                    debtEl.classList.remove('hidden');
+                    salaryBox.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+                } else {
+                    debtEl.classList.add('hidden');
+                    salaryBox.style.borderColor = 'var(--team-primary-color, rgba(34, 197, 94, 0.5))';
+                }
+            }
+
+            salaryBox.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('[Dashboard] Errore aggiornamento salary box:', error);
+            salaryBox.classList.add('hidden');
         }
     },
 
@@ -3393,17 +3522,17 @@ window.InterfacciaDashboard = {
                 return;
             }
 
-            // Mostra il container
-            statusContainer.classList.remove('hidden');
-
             // Verifica se la squadra partecipa
             const participant = bracket.participants?.find(p => p.teamId === currentTeamId);
 
             if (!participant) {
-                matchEl.textContent = 'Non qualificato';
-                matchEl.classList.add('text-gray-400');
+                // Nascondi il container se l'utente non e' qualificato
+                statusContainer.classList.add('hidden');
                 return;
             }
+
+            // Mostra il container solo se qualificato
+            statusContainer.classList.remove('hidden');
 
             // La squadra partecipa
             if (bracket.isCompleted) {

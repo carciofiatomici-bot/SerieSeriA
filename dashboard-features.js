@@ -644,12 +644,6 @@ window.DashboardFeatures = {
     setupMenuActions() {
         const dropdown = document.getElementById('dashboard-menu-dropdown');
 
-        // Tutorial
-        document.getElementById('menu-tutorial')?.addEventListener('click', () => {
-            dropdown?.classList.add('hidden');
-            window.Tutorial?.start();
-        });
-
         // Changelog
         document.getElementById('menu-changelog')?.addEventListener('click', () => {
             dropdown?.classList.add('hidden');

@@ -25,6 +25,11 @@
 // REPLAY TRACKING
 if (typeof window !== "undefined") { window.replayActions = []; }
 
+// SALARY DEBT PENALTY - Malus debito stipendi
+// Impostato da campionato-main.js prima della simulazione
+// Formato: { teamA: number, teamB: number }
+if (typeof window !== "undefined") { window._salaryDebtPenalty = { teamA: 0, teamB: 0 }; }
+
 // ====================================================================
 // COSTANTI E CONFIGURAZIONE
 // ====================================================================
@@ -343,6 +348,11 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey
     // Capitano nominato: +1 aggiuntivo (diverso dall'Icona)
     if (player.isCaptain === true) {
         modifier += 1.0;
+    }
+
+    // MALUS DEBITO STIPENDI - Se la squadra ha debito, applica malus
+    if (teamKey && window._salaryDebtPenalty?.[teamKey]) {
+        modifier += window._salaryDebtPenalty[teamKey]; // Negativo (es. -1.5)
     }
 
     // Lento a carburare: -3 malus nelle prime 5 occasioni

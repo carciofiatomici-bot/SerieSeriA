@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.31',
+    currentVersion: '2.2.32',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,26 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.32',
+            date: '2025-12-29',
+            time: '18:00',
+            title: 'Sistema Stipendi e Feature Flag Forma',
+            changes: [
+                { text: 'NUOVO: Sistema Stipendi - giocatori costano in base al livello (lv x 1.36 CS/partita)', adminOnly: false },
+                { text: 'Stipendi: solo chi gioca paga (campionato, coppa, supercoppa, coppa quasi)', adminOnly: false },
+                { text: 'Stipendi: giocatori base (lv 1-5) e Icone sono esenti', adminOnly: false },
+                { text: 'Tabella stipendi visibile nella gestione rosa', adminOnly: false },
+                { text: 'NUOVO: Feature Flag per disattivare sistema forma giocatori', adminOnly: true },
+                { text: 'Forma nascosta quando Feature Flag disattivato (mostra livello base)', adminOnly: false },
+                { text: 'Fix conteggio blocchi difensori nelle statistiche avanzate', adminOnly: false },
+                { text: 'Trofeo Coppa Quasi SeriA visibile nella lista squadre', adminOnly: false },
+                { text: 'Fix emoji competizioni in prossima partita', adminOnly: false },
+                { text: 'Rimosso menu tutorial e color picker', adminOnly: true },
+                { text: 'Nascosta sezione stipendi admin', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.31',
             date: '2025-12-24',

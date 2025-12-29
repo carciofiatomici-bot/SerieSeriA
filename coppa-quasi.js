@@ -282,6 +282,17 @@ window.CoppaQuasi = {
         // Processa EXP giocatori
         await this._processPlayerExp(coppaQuasiBracket, match, homeTeamData, awayTeamData, matchResult);
 
+        // Pagamento stipendi (solo per le squadre che giocano)
+        if (window.Stipendi && window.FeatureFlags?.isEnabled('salaries')) {
+            try {
+                await window.Stipendi.processSalaryPayment(match.homeTeam.teamId, homeTeamData, 'Coppa Quasi');
+                await window.Stipendi.processSalaryPayment(match.awayTeam.teamId, awayTeamData, 'Coppa Quasi');
+                console.log(`[CoppaQuasi] Stipendi processati per ${match.homeTeam.teamName} e ${match.awayTeam.teamName}`);
+            } catch (salaryError) {
+                console.warn('[CoppaQuasi] Errore pagamento stipendi:', salaryError);
+            }
+        }
+
         // Verifica se tutte le partite sono completate
         const allCompleted = coppaQuasiBracket.matches.every(m => m.isCompleted);
         if (allCompleted) {

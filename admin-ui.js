@@ -166,6 +166,14 @@ window.AdminUI = {
                             <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
                         </div>
                     </div>
+
+                    <!-- Sistema Stipendi -->
+                    <div id="stipendi-admin-section" class="hidden p-4 bg-gray-800 rounded-lg border border-emerald-500">
+                        <h4 class="text-lg font-bold text-emerald-400 mb-3 flex items-center">💰 Sistema Stipendi</h4>
+                        <div id="stipendi-admin-container">
+                            <p class="text-gray-400 text-center text-xs">Caricamento configurazione...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

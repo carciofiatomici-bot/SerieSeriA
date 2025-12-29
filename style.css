@@ -3146,13 +3146,18 @@ body.user-logged-in #login-box.hidden-on-load {
     }
 
     #squadra-subtitle {
-        font-size: 0.65rem !important;
+        display: none !important; /* Nascosto per design semplificato */
     }
 
     #squadra-tools-container {
         padding: 8px !important;
         border-radius: 12px;
     }
+}
+
+/* Nasconde squadra-subtitle su tutti i dispositivi */
+#squadra-subtitle {
+    display: none !important;
 }
 
 /* Stile modulo-header con colore team dinamico */
@@ -4829,6 +4834,29 @@ body.user-logged-in #admin-content {
     flex-shrink: 0;
 }
 
+/* ==================== 15.6.1 SCROLLABLE CONTENT TAB BAR SPACING ==================== */
+/* Padding extra per container scrollabili che potrebbero essere coperti dalla tab bar
+   quando l'utente è loggato (dashboard-tabs visibile) */
+body.user-logged-in .football-box,
+body.user-logged-in [class*="content"]:not(.hidden):not([class*="header"]):not([class*="tooltip"]):not([class*="modal"]) {
+    /* Assicura che i contenitori non-nascosti abbiano spazio per la tab bar */
+}
+
+/* Container specifici che necessitano padding per la tab bar */
+body.user-logged-in #user-campionato-container,
+body.user-logged-in #user-coppa-container,
+body.user-logged-in #user-supercoppa-container,
+body.user-logged-in #user-coppa-quasi-container,
+body.user-logged-in #private-leagues-panel,
+body.user-logged-in #schedule-content,
+body.user-logged-in #private-leagues-content,
+body.user-logged-in #boss-battle-content,
+body.user-logged-in #achievements-content,
+body.user-logged-in #hall-of-fame-content,
+body.user-logged-in #stadium-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
 /* ==================== 15.7 VISUAL HIERARCHY ==================== */
 
 /* Separatori visivi tra sezioni */
@@ -5411,6 +5439,8 @@ select,
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    /* Padding extra per evitare che tab bar copra ultimo elemento */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Loading state */

@@ -811,7 +811,9 @@ window.PlayerStats = {
                     } else {
                         // Squadra difende - se l'attacco fallisce, è un blocco
                         if ((phase.phase === 'attacco' || phase.phase === 'costruzione') && !phase.success) {
-                            stats.interceptions.push({ playerName: 'Difensore', playerRole: 'D' });
+                            // Prova a ottenere il nome del difensore dalla fase
+                            const defenderName = phase.defender || 'Difensore';
+                            stats.interceptions.push({ playerName: defenderName, playerRole: 'D' });
                         }
                     }
                 });

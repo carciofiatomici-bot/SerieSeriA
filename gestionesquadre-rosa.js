@@ -111,6 +111,34 @@ window.GestioneSquadreRosa = {
                     }
                 </div>
             </div>
+
+            <!-- Box Stipendi Collapsible (sempre visibile) -->
+            <div id="salary-info-box" class="mt-2 rounded-xl border border-amber-500/30 overflow-hidden"
+                 style="background: rgba(17, 24, 39, 0.6);">
+                <div id="salary-info-header" class="flex items-center justify-between px-3 py-2 cursor-pointer
+                            bg-gradient-to-r from-amber-600/20 to-yellow-900/20 hover:brightness-110 transition-all duration-200">
+                    <div class="flex items-center gap-2">
+                        <span id="salary-info-toggle" class="text-gray-400 text-xs transition-transform duration-200">▶</span>
+                        <span class="text-amber-400 font-bold text-sm">💰</span>
+                        <span class="text-amber-400 font-semibold text-sm">Tabella Stipendi</span>
+                    </div>
+                    <span class="text-xs text-gray-400">per livello</span>
+                </div>
+                <div id="salary-info-content" class="hidden p-3 border-t border-amber-500/20">
+                    <p class="text-xs text-gray-400 mb-2">Stipendio = Livello × 1.36 CS (Icone e base esenti)</p>
+                    <div class="grid grid-cols-5 gap-1 text-center text-[10px]">
+                        ${Array.from({length: 30}, (_, i) => {
+                            const level = i + 1;
+                            const cost = level <= 5 ? 0 : Math.round(level * 1.36);
+                            return `<div class="bg-gray-800/50 rounded p-1">
+                                <div class="text-gray-500">${level}</div>
+                                <div class="text-amber-400 font-bold">${cost}</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-2 text-center">5 giocatori Lv.25 = ~170 CS/partita</p>
+                </div>
+            </div>
         `;
 
         this.attachEventListeners(context);
@@ -151,6 +179,9 @@ window.GestioneSquadreRosa = {
         // Abilita compatte
         const playerAbilities = player.abilities || [];
         const UNIQUE_ABILITIES = ['Icona', "Fatto d'acciaio", "L'uomo in piu", 'Tiro Dritto', 'Avanti un altro', 'Contrasto di gomito', 'Calcolo delle probabilita', 'Amici di panchina', 'Continua a provare', 'Stazionario', 'Osservatore', 'Relax', 'Scheggia impazzita', 'Assist-man'];
+
+        // Stipendio (Icone e base esenti)
+        const playerSalary = (isIcona || playerLevel <= 5) ? 0 : Math.round(playerLevel * 1.36);
 
         // Potenziale
         let potenziale = null;
@@ -235,6 +266,7 @@ window.GestioneSquadreRosa = {
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 text-xs text-gray-400 mb-1">
                                 <span>Costo: ${playerCost} CS</span>
+                                <span class="text-amber-400">💰 ${playerSalary} CS/partita</span>
                                 ${potenziale ? `<span class="${potenzialColor}">${potenziale}</span>` : ''}
                             </div>
                             ${playerAbilities.length > 0
@@ -389,6 +421,19 @@ window.GestioneSquadreRosa = {
                 } else {
                     btnToggleLicenzia.classList.remove('text-red-400', 'bg-red-900', 'bg-opacity-30');
                     btnToggleLicenzia.classList.add('text-gray-400');
+                }
+            });
+        }
+
+        // Toggle Box Stipendi (collapsible)
+        const salaryInfoHeader = document.getElementById('salary-info-header');
+        if (salaryInfoHeader) {
+            salaryInfoHeader.addEventListener('click', () => {
+                const content = document.getElementById('salary-info-content');
+                const toggle = document.getElementById('salary-info-toggle');
+                if (content && toggle) {
+                    content.classList.toggle('hidden');
+                    toggle.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
                 }
             });
         }

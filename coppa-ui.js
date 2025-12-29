@@ -262,9 +262,8 @@ window.CoppaUI = {
                             <div>
                                 <p class="text-purple-300 font-bold">${match.roundName}</p>
                                 <p class="text-white">${venue} vs ${opponentName}</p>
-                                ${match.isSingleMatch ?
-                                    `<p class="text-xs text-gray-400">Partita Secca</p>` :
-                                    `<p class="text-xs text-gray-400">Andata: ${match.leg1Result || '-'} | Ritorno: ${match.leg2Result || '-'}</p>`
+                                ${!match.isSingleMatch ?
+                                    `<p class="text-xs text-gray-400">Andata: ${match.leg1Result || '-'} | Ritorno: ${match.leg2Result || '-'}</p>` : ''
                                 }
                             </div>
                             <div class="text-right">

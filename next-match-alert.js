@@ -356,7 +356,7 @@ window.NextMatchAlert = {
         let typeColor, typeIcon, typeName;
         if (nextMatch.type === 'campionato') {
             typeColor = 'green';
-            typeIcon = '🏆';
+            typeIcon = '⚽';
             typeName = 'SerieSeriA';
         } else if (nextMatch.type === 'supercoppa') {
             typeColor = 'yellow';
@@ -364,7 +364,7 @@ window.NextMatchAlert = {
             typeName = 'SuperCoppa';
         } else {
             typeColor = 'purple';
-            typeIcon = '🏅';
+            typeIcon = '🏆';
             typeName = 'CoppaSeriA';
         }
 
@@ -384,10 +384,10 @@ window.NextMatchAlert = {
             <div class="flex items-center justify-center gap-2 mb-4 ${supercoppaGradient} py-2 rounded-lg">
                 <span class="text-2xl ${isSupercoppa ? 'animate-pulse' : ''}">${typeIcon}</span>
                 <span class="text-base sm:text-lg font-bold text-${typeColor}-400">${typeName}</span>
-                ${nextMatch.round ? `<span class="text-sm text-gray-400">- ${nextMatch.round}</span>` : ''}
+                ${nextMatch.round && nextMatch.round !== 'Partita Secca' ? `<span class="text-sm text-gray-400">- ${nextMatch.round}</span>` : ''}
             </div>
 
-            ${nextMatch.isGlobalEvent ? `
+            ${nextMatch.isGlobalEvent && !isSupercoppa ? `
                 <p class="text-center text-xs text-yellow-400/80 mb-3 italic">Evento speciale visibile a tutti</p>
             ` : ''}
 

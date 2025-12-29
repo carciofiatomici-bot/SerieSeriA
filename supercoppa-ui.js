@@ -687,7 +687,6 @@ window.SupercoppaUI = {
                         ${!isCompleted ? `
                             <div class="supercoppa-trophy">🏆</div>
                             <span class="supercoppa-vs">VS</span>
-                            <span class="supercoppa-format">Partita Secca</span>
                         ` : `
                             <div class="supercoppa-result">${bracket.result?.split(' ')[0] || bracket.result}</div>
                             ${bracket.penalties ? '<p class="supercoppa-penalties">d.c.r.</p>' : ''}

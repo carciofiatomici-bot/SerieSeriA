@@ -859,8 +859,10 @@ window.GestioneSquadreFormazione = {
 
         const playerName = playerWithForm ? playerWithForm.name : `Slot ${role}`;
         const playerRole = playerWithForm ? playerWithForm.role : role;
-        const levelText = playerWithForm ? (playerWithForm.currentLevel || playerWithForm.level || 1) : '';
         const baseLevel = playerWithForm ? (playerWithForm.level || playerWithForm.currentLevel || 1) : '';
+        // Se playerForm è disattivato, mostra livello BASE invece di currentLevel
+        const isFormEnabled = window.FeatureFlags?.isEnabled('playerForm');
+        const levelText = playerWithForm ? (isFormEnabled ? (playerWithForm.currentLevel || playerWithForm.level || 1) : baseLevel) : '';
         const bgColor = playerWithForm ? 'bg-gray-200' : 'bg-gray-700';
         const textColor = playerWithForm ? 'text-gray-900' : 'text-gray-400';
 
@@ -882,12 +884,14 @@ window.GestioneSquadreFormazione = {
             `;
         }
 
-        const formIconHtml = playerWithForm ?
+        // Form indicators solo se Feature Flag playerForm è attivo (isFormEnabled già dichiarato sopra)
+
+        const formIconHtml = (playerWithForm && isFormEnabled) ?
             `<i class="${playerWithForm.formIcon} mr-1 text-base"></i>` :
             '';
 
-        const modColor = playerWithForm && playerWithForm.formModifier > 0 ? 'text-green-600' : (playerWithForm && playerWithForm.formModifier < 0 ? 'text-red-600' : 'text-gray-600');
-        const modText = playerWithForm && playerWithForm.formModifier !== 0 ? `(${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier})` : '(0)';
+        const modColor = (playerWithForm && isFormEnabled && playerWithForm.formModifier > 0) ? 'text-green-600' : ((playerWithForm && isFormEnabled && playerWithForm.formModifier < 0) ? 'text-red-600' : 'text-gray-600');
+        const modText = (playerWithForm && isFormEnabled && playerWithForm.formModifier !== 0) ? `(${playerWithForm.formModifier > 0 ? '+' : ''}${playerWithForm.formModifier})` : '';
 
         // Badge tipologia (PlayerTypeBadge)
         const playerType = playerWithForm ? (playerWithForm.type || 'N/A') : 'N/A';
@@ -907,7 +911,7 @@ window.GestioneSquadreFormazione = {
                         ${formIconHtml}
                         <span class="level-text">${levelText}</span>
                     </div>
-                    <span class="mod-text ${modColor}">${modText}</span>
+                    ${modText ? `<span class="mod-text ${modColor}">${modText}</span>` : ''}
                 </div>
             </div>`
             :
@@ -1078,7 +1082,11 @@ window.GestioneSquadreFormazione = {
                 const baseLevel = playerWithForm.level || player.level || 1;
                 const currentLevel = playerWithForm.currentLevel || baseLevel;
                 const formMod = playerWithForm.formModifier || 0;
-                const formModText = formMod !== 0 ? `<span class="${formMod > 0 ? 'text-green-400' : 'text-red-400'}">${formMod > 0 ? '+' : ''}${formMod}</span>` : '';
+                // Form solo se Feature Flag attivo
+                const isFormEnabled = window.FeatureFlags?.isEnabled('playerForm');
+                // Mostra livello BASE se form è disattivato
+                const displayLevel = isFormEnabled ? currentLevel : baseLevel;
+                const formModText = (isFormEnabled && formMod !== 0) ? `<span class="${formMod > 0 ? 'text-green-400' : 'text-red-400'}">${formMod > 0 ? '+' : ''}${formMod}</span>` : '';
 
                 // Colore ruolo
                 const roleColors = { P: 'text-blue-400', D: 'text-green-400', C: 'text-yellow-400', A: 'text-red-400' };
@@ -1094,7 +1102,7 @@ window.GestioneSquadreFormazione = {
                             <span class="${roleColor} font-bold">${player.role}</span>
                         </div>
                         <div class="flex items-center justify-between text-[10px] mt-0.5">
-                            <span class="text-yellow-300">Lv.${currentLevel} ${formModText}</span>
+                            <span class="text-yellow-300">Lv.${displayLevel} ${formModText}</span>
                             <span class="text-gray-500">${injuryBadge}${equipBadge}</span>
                         </div>
                     </div>
