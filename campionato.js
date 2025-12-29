@@ -103,6 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Reset forme giocatori a 0 per nuova stagione
+            if (window.GestioneSquadreUtils?.resetAllTeamsForms) {
+                try {
+                    const resetCount = await window.GestioneSquadreUtils.resetAllTeamsForms();
+                    console.log(`[Campionato] Forme resettate per ${resetCount} squadre`);
+                } catch (formError) {
+                    console.error('[Campionato] Errore reset forme:', formError);
+                }
+            }
+
             await deleteDoc(scheduleDocRef);
             // Resetta lastAutoSimulatedDate a 0
             await setDoc(configDocRef, { isSeasonOver: true, isDraftOpen: false, isMarketOpen: false, lastAutoSimulatedDate: 0 }, { merge: true });

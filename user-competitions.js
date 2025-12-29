@@ -251,10 +251,15 @@ window.UserCompetitions = {
                 <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         `;
 
-        if (standings.length === 0) {
+        // Filtra serieseria dalla classifica
+        const filteredStandings = standings.filter(t =>
+            t.teamName?.toLowerCase() !== 'serieseria'
+        );
+
+        if (filteredStandings.length === 0) {
             html += `<p class="text-gray-500 text-sm py-4 text-center w-full">Classifica non disponibile</p>`;
         } else {
-            standings.slice(0, 4).forEach((team, index) => {
+            filteredStandings.slice(0, 4).forEach((team, index) => {
                 const isCurrentTeam = team.teamId === currentTeamId;
                 const position = index + 1;
                 const posClass = position === 1 ? 'from-yellow-500/30 to-yellow-600/20 border-yellow-500/50' :
@@ -295,7 +300,7 @@ window.UserCompetitions = {
                                 <tbody>
         `;
 
-        standings.forEach((team, index) => {
+        filteredStandings.forEach((team, index) => {
             const isCurrentTeam = team.teamId === currentTeamId;
             const rowClass = isCurrentTeam ? 'bg-yellow-500/10' : '';
             const textClass = isCurrentTeam ? 'text-yellow-400 font-bold' : 'text-white';
@@ -1530,7 +1535,7 @@ window.UserCompetitions = {
         if (!bracket) {
             container.innerHTML = `
                 <div class="coppa-quasi-container p-6 text-center">
-                    <div class="text-4xl mb-4">🪣</div>
+                    <div class="text-4xl mb-4">🤡</div>
                     <h3 class="text-xl font-bold text-amber-400 mb-2">Coppa Quasi SeriA</h3>
                     <p class="text-gray-400">Nessuna Coppa Quasi attiva al momento.</p>
                     <p class="text-gray-500 text-sm mt-2">Il triangolare per le ultime 3 classificate sara creato a fine campionato.</p>
@@ -1554,7 +1559,7 @@ window.UserCompetitions = {
             <div class="coppa-quasi-container">
                 <!-- Header -->
                 <div class="coppa-quasi-header">
-                    <div class="text-4xl mb-2">🪣</div>
+                    <div class="text-4xl mb-2">🤡</div>
                     <h2 class="coppa-quasi-title">Coppa Quasi SeriA</h2>
                     <p class="text-amber-300/70 text-sm">Triangolare Ultime 3 Classificate</p>
                 </div>

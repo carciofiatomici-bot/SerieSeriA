@@ -108,21 +108,133 @@ window.GestioneSquadreUtils = {
     },
 
     /**
+     * Estrae statistiche giocatori per il sistema forma da matchEvents
+     * @param {Array} matchEvents - Eventi della partita dalla simulazione
+     * @param {Object} teamData - Dati squadra
+     * @param {boolean} isHome - true se squadra casa
+     * @returns {Object} { playerId: { goals, assists, blocks, saves } }
+     */
+    extractFormStatsFromEvents(matchEvents, teamData, isHome) {
+        const stats = {};
+        if (!matchEvents || !teamData) return stats;
+
+        const teamName = teamData.teamName || teamData.name || '';
+        const roster = teamData.players || [];
+        const titolari = teamData.formation?.titolari || [];
+        const allPlayers = [...roster, ...titolari];
+
+        // Helper: trova player ID da nome
+        const findPlayerIdByName = (name) => {
+            if (!name) return null;
+            const normalizedName = name.toLowerCase().trim();
+            for (const player of allPlayers) {
+                if (!player) continue;
+                const playerName = (player.name || player.nome || '').toLowerCase().trim();
+                if (playerName === normalizedName) {
+                    return player.id;
+                }
+            }
+            return null;
+        };
+
+        // Inizializza stats per tutti i titolari
+        titolari.forEach(p => {
+            if (p && p.id) {
+                stats[p.id] = { goals: 0, assists: 0, blocks: 0, saves: 0 };
+            }
+        });
+
+        // Itera sugli eventi della partita
+        const teamSide = isHome ? 'home' : 'away';
+
+        matchEvents.forEach(event => {
+            // Determina se questo evento coinvolge la squadra
+            const eventSide = event.side || event.team;
+            const isTeamAttacking = eventSide === teamSide;
+            const isTeamDefending = !isTeamAttacking;
+
+            // Nuovo formato con phases array
+            if (Array.isArray(event.phases)) {
+                event.phases.forEach(phase => {
+                    if (!phase) return;
+
+                    if (isTeamAttacking) {
+                        // Squadra in attacco
+                        if (phase.phase === 'tiro' && event.isGoal) {
+                            // Gol
+                            const scorerName = phase.player || event.scorer;
+                            const scorerId = findPlayerIdByName(scorerName);
+                            if (scorerId && stats[scorerId]) {
+                                stats[scorerId].goals++;
+                            }
+
+                            // Assist (ultima fase riuscita prima del tiro)
+                            const assistPhases = event.phases.filter(p => p.success && p.phase !== 'tiro');
+                            if (assistPhases.length > 0) {
+                                const assisterName = assistPhases[assistPhases.length - 1].player;
+                                const assisterId = findPlayerIdByName(assisterName);
+                                if (assisterId && stats[assisterId] && assisterId !== scorerId) {
+                                    stats[assisterId].assists++;
+                                }
+                            }
+                        }
+                    } else {
+                        // Squadra in difesa
+                        if ((phase.phase === 'attacco' || phase.phase === 'costruzione') && !phase.success) {
+                            // Blocco/intercettazione
+                            const defenderName = phase.defender;
+                            const defenderId = findPlayerIdByName(defenderName);
+                            if (defenderId && stats[defenderId]) {
+                                stats[defenderId].blocks++;
+                            }
+                        }
+                        if (phase.phase === 'tiro' && !event.isGoal) {
+                            // Parata
+                            const gkName = phase.goalkeeper || event.goalkeeper;
+                            const gkId = findPlayerIdByName(gkName);
+                            if (gkId && stats[gkId]) {
+                                stats[gkId].saves++;
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Vecchio formato
+            if (event.phases?.shot && isTeamDefending && !event.isGoal) {
+                const shot = event.phases.shot;
+                if (shot.goalkeeper) {
+                    const gkId = findPlayerIdByName(shot.goalkeeper.name);
+                    if (gkId && stats[gkId]) {
+                        stats[gkId].saves++;
+                    }
+                }
+            }
+        });
+
+        return stats;
+    },
+
+    /**
      * Aggiorna la forma dei giocatori dopo una partita.
-     * NUOVO SISTEMA basato su prestazioni:
-     * - Gol segnato: +1
-     * - Assist: +1
-     * - Clean sheet (portiere): +1
-     * - 20% chance +-1 per titolari
-     * - 10% chance +-1 per tutti
-     * - Panchina consecutiva: probabilita' crescente di -1
+     * NUOVO SISTEMA v2:
+     * - In campo: -1 base
+     * - Panchina: 0
+     * - Fuori rosa: +1
+     * - Vittoria (solo in campo): +1
+     * - Sconfitta (solo in campo): -1
+     * - Pareggio: 0
+     * - Bonus prestazione: +1 se >=2 gol OR >=2 assist OR >=2 blocchi OR >=5 parate
+     * - Random a fine partita: -1, 0, o +1 (33% ciascuno)
+     * - Limiti: normali -4/+4, icone -2/+2
      *
      * @param {string} teamId - ID squadra
      * @param {Object} teamData - Dati squadra con formation e players
-     * @param {Object} matchResult - Risultato partita {scorers, assisters, cleanSheet, isHome, goalsAgainst}
+     * @param {string} matchResult - Risultato: 'win', 'loss', 'draw'
+     * @param {Object} playerStats - Statistiche giocatori {playerId: {goals, assists, blocks, saves}}
      * @returns {Promise<Object>} Nuove forme aggiornate
      */
-    async updatePlayerFormAfterMatch(teamId, teamData, matchResult) {
+    async updatePlayerFormAfterMatch(teamId, teamData, matchResult, playerStats = {}) {
         const { doc, getDoc, updateDoc } = window.firestoreTools;
         const db = window.db;
         const appId = window.firestoreTools.appId;
@@ -146,16 +258,6 @@ window.GestioneSquadreUtils = {
         const titolariIds = new Set(titolari.map(p => p.id));
         const panchinaIds = new Set(panchina.map(p => p.id));
 
-        // Estrai scorers e assisters dalla partita
-        const scorersSet = new Set((matchResult.scorers || []).map(s => s.name));
-        const assistersSet = new Set((matchResult.assists || []).map(a => a.name));
-        const isCleanSheet = matchResult.goalsAgainst === 0;
-
-        // Random helper
-        const getRandomInt = window.getRandomInt || ((min, max) => {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        });
-
         const updatedForms = {};
         const formChanges = [];
 
@@ -165,84 +267,67 @@ window.GestioneSquadreUtils = {
 
             const playerId = player.id;
             const playerName = player.name || player.nome || 'Giocatore';
-            const currentForm = playersFormStatus[playerId] || { mod: 0, benchStreak: 0 };
-            let newMod = currentForm.mod || 0;
-            let benchStreak = currentForm.benchStreak || 0;
+            const currentForm = playersFormStatus[playerId] || { mod: 0 };
+            let formChange = 0;
             const changes = [];
 
-            const isTitolare = titolariIds.has(playerId);
-            const isInPanchina = panchinaIds.has(playerId);
-            const isGK = (player.role || player.ruolo || '').toUpperCase() === 'P';
+            const isOnField = titolariIds.has(playerId);
+            const isOnBench = panchinaIds.has(playerId);
+            const isIcona = (player.abilities && player.abilities.includes('Icona')) || player.isCaptain;
 
-            if (isTitolare) {
-                // Reset bench streak per titolari
-                benchStreak = 0;
+            // 1. Modifica BASE per posizione
+            if (isOnField) {
+                formChange -= 1;
+                changes.push('-1 campo');
+            } else if (!isOnBench) {
+                // Fuori rosa (non in panchina)
+                formChange += 1;
+                changes.push('+1 riposo');
+            }
+            // Panchina: 0 (nessuna modifica)
 
-                // Bonus gol
-                if (scorersSet.has(playerName)) {
-                    newMod += 1;
-                    changes.push('+1 gol');
+            // 2. Bonus/Malus RISULTATO (solo in campo)
+            if (isOnField) {
+                if (matchResult === 'win') {
+                    formChange += 1;
+                    changes.push('+1 vittoria');
+                } else if (matchResult === 'loss') {
+                    formChange -= 1;
+                    changes.push('-1 sconfitta');
                 }
-
-                // Bonus assist
-                if (assistersSet.has(playerName)) {
-                    newMod += 1;
-                    changes.push('+1 assist');
-                }
-
-                // Bonus clean sheet portiere
-                if (isGK && isCleanSheet) {
-                    newMod += 1;
-                    changes.push('+1 clean sheet');
-                }
-
-                // 20% chance +-1 random per titolari
-                if (Math.random() < 0.20) {
-                    const randomChange = getRandomInt(0, 1) === 0 ? -1 : 1;
-                    newMod += randomChange;
-                    changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);
-                }
-
-            } else if (isInPanchina) {
-                // In panchina durante la partita: incrementa bench streak
-                benchStreak += 1;
-
-                // Probabilita' perdita forma basata su bench streak
-                let benchPenaltyChance = 0;
-                if (benchStreak === 1) benchPenaltyChance = 0.10;
-                else if (benchStreak === 2) benchPenaltyChance = 0.20;
-                else if (benchStreak >= 3) benchPenaltyChance = 0.30;
-
-                if (benchPenaltyChance > 0 && Math.random() < benchPenaltyChance) {
-                    newMod -= 1;
-                    changes.push(`-1 panchina (streak ${benchStreak})`);
-                } else {
-                    // 10% chance +-1 random per chi non ha gia' preso penalita'
-                    if (Math.random() < 0.10) {
-                        const randomChange = getRandomInt(0, 1) === 0 ? -1 : 1;
-                        newMod += randomChange;
-                        changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);
-                    }
-                }
-
-            } else {
-                // Non in formazione: incrementa bench streak (come in panchina)
-                benchStreak += 1;
-
-                // Stesse probabilita' della panchina
-                let benchPenaltyChance = 0;
-                if (benchStreak === 1) benchPenaltyChance = 0.10;
-                else if (benchStreak === 2) benchPenaltyChance = 0.20;
-                else if (benchStreak >= 3) benchPenaltyChance = 0.30;
-
-                if (benchPenaltyChance > 0 && Math.random() < benchPenaltyChance) {
-                    newMod -= 1;
-                    changes.push(`-1 escluso (streak ${benchStreak})`);
-                }
+                // Pareggio: 0
             }
 
-            // Clamp forma a [-3, +3]
-            newMod = Math.max(-3, Math.min(3, newMod));
+            // 3. Bonus PRESTAZIONE
+            const stats = playerStats[playerId] || {};
+            const goals = stats.goals || 0;
+            const assists = stats.assists || 0;
+            const blocks = stats.blocks || 0;
+            const saves = stats.saves || 0;
+
+            if (goals >= 2 || assists >= 2 || blocks >= 2 || saves >= 5) {
+                formChange += 1;
+                const bonusReasons = [];
+                if (goals >= 2) bonusReasons.push(`${goals} gol`);
+                if (assists >= 2) bonusReasons.push(`${assists} assist`);
+                if (blocks >= 2) bonusReasons.push(`${blocks} blocchi`);
+                if (saves >= 5) bonusReasons.push(`${saves} parate`);
+                changes.push(`+1 prestazione (${bonusReasons.join(', ')})`);
+            }
+
+            // 4. Modifica RANDOM a fine partita (-1, 0, +1)
+            const randomChange = Math.floor(Math.random() * 3) - 1; // -1, 0, o +1
+            if (randomChange !== 0) {
+                formChange += randomChange;
+                changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);
+            }
+
+            // 5. Applica con LIMITI
+            const minForm = isIcona ? -2 : -4;
+            const maxForm = isIcona ? 2 : 4;
+
+            const currentMod = currentForm.mod || 0;
+            const newMod = Math.max(minForm, Math.min(maxForm, currentMod + formChange));
 
             // Calcola nuovo livello
             const baseLevel = player.level || 1;
@@ -251,12 +336,11 @@ window.GestioneSquadreUtils = {
             updatedForms[playerId] = {
                 mod: newMod,
                 icon: this.getFormIcon(newMod),
-                level: newLevel,
-                benchStreak: benchStreak
+                level: newLevel
             };
 
             if (changes.length > 0) {
-                formChanges.push(`${playerName}: ${changes.join(', ')} -> forma ${newMod}`);
+                formChanges.push(`${playerName}: ${changes.join(', ')} -> forma ${currentMod} -> ${newMod}`);
             }
         }
 
@@ -273,6 +357,7 @@ window.GestioneSquadreUtils = {
 
     /**
      * Applica penalita' forma dopo allenamento giocatore (-1)
+     * Limiti: normali -4/+4, icone -2/+2
      * @param {string} teamId - ID squadra
      * @param {string} playerId - ID giocatore allenato
      * @returns {Promise<boolean>} Successo operazione
@@ -296,16 +381,19 @@ window.GestioneSquadreUtils = {
             const player = players.find(p => p.id === playerId);
             if (!player) return false;
 
-            const currentForm = playersFormStatus[playerId] || { mod: 0, benchStreak: 0 };
-            const newMod = Math.max(-3, currentForm.mod - 1);
+            // Limiti basati su icona
+            const isIcona = (player.abilities && player.abilities.includes('Icona')) || player.isCaptain;
+            const minForm = isIcona ? -2 : -4;
+
+            const currentForm = playersFormStatus[playerId] || { mod: 0 };
+            const newMod = Math.max(minForm, currentForm.mod - 1);
             const baseLevel = player.level || 1;
             const newLevel = Math.min(30, Math.max(1, baseLevel + newMod));
 
             playersFormStatus[playerId] = {
                 mod: newMod,
                 icon: this.getFormIcon(newMod),
-                level: newLevel,
-                benchStreak: currentForm.benchStreak || 0
+                level: newLevel
             };
 
             await updateDoc(teamDocRef, { playersFormStatus });

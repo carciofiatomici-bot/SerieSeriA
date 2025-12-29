@@ -828,7 +828,7 @@
                     <!-- Coppa Quasi SeriA -->
                     <div class="bg-gradient-to-b from-amber-900/30 to-amber-950/30 rounded-lg p-1.5 border border-amber-600/30">
                         <div class="text-center mb-1">
-                            <span class="text-lg">🪣</span>
+                            <span class="text-lg">🤡</span>
                             <p class="text-amber-400 font-bold text-[9px]">Quasi</p>
                         </div>
                         <div class="space-y-0.5">
@@ -1192,9 +1192,10 @@
                     </div>
                     <!-- Bottone Tabellone Coppa -->
                     <button id="btn-view-cup-bracket"
-                            class="w-full mt-2 bg-gray-700/80 hover:bg-gray-600/80 text-white font-medium py-2 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm">
+                            class="w-full mt-2 bg-gray-700/80 hover:bg-gray-600/80 text-white font-medium py-2 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm relative">
                         <span>🏆</span>
                         <span>Tabellone Coppa</span>
+                        <span id="cup-eliminated-x" class="hidden absolute right-2 text-red-500 font-bold text-lg">✕</span>
                     </button>
                     <!-- Stato Coppa Utente -->
                     <div id="user-cup-status" class="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs sm:text-sm">
@@ -1209,7 +1210,7 @@
                 <div id="coppa-quasi-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
                     <button id="btn-user-coppa-quasi"
                             class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-amber-500 hover:to-orange-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
-                        <span class="text-lg sm:text-xl">🪣</span>
+                        <span class="text-lg sm:text-xl">🤡</span>
                         <span class="text-sm sm:text-base">Coppa Quasi SeriA</span>
                     </button>
                     <!-- Stato Coppa Quasi Utente -->
@@ -1824,7 +1825,7 @@
              <div class="coppa-quasi-header-nav sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-2 px-1">
                  <div class="flex items-center justify-between">
                      <div class="flex items-center gap-2">
-                         <span class="text-2xl">🪣</span>
+                         <span class="text-2xl">🤡</span>
                          <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">COPPA QUASI</h2>
                      </div>
                      <!-- Status Badge -->
@@ -1942,10 +1943,11 @@
 
         <!-- 10d. CONTENUTO LEGHE PRIVATE - NASCOSTO -->
         <div id="private-leagues-content" class="football-box w-full max-w-2xl transition duration-500 hidden-on-load pb-20">
-            <div class="flex items-center justify-center p-4 border-b border-gray-700">
+            <div class="flex items-center justify-center p-4 border-b border-gray-700 gap-3">
                 <h2 class="text-2xl font-bold text-purple-400">
                     <i class="fas fa-users mr-2"></i>Leghe Private
                 </h2>
+                <span id="pl-wins-counter" class="hidden px-2 py-1 rounded-full text-sm font-bold" title="Leghe vinte">👥 0</span>
             </div>
             <!-- Il contenuto e' iniettato da private-leagues-ui.js -->
             <div id="private-leagues-panel">

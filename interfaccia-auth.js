@@ -1162,11 +1162,13 @@ window.InterfacciaAuth = {
                 return;
             }
 
-            // Mappa le squadre
-            const squadre = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            // Mappa le squadre (escludi serieseria)
+            const squadre = querySnapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                .filter(s => s.teamName?.toLowerCase() !== 'serieseria');
 
             // Ordina per nome squadra
             squadre.sort((a, b) => (a.teamName || '').localeCompare(b.teamName || ''));
@@ -1270,10 +1272,10 @@ window.InterfacciaAuth = {
                                 </div>
                                 ${(squadra.campionatiVinti || squadra.coppeSerieVinte || squadra.supercoppeSerieVinte || squadra.coppeQuasiSerieVinte) ? `
                                 <div class="flex items-center gap-1.5 mt-1 text-xs">
-                                    ${squadra.campionatiVinti > 0 ? `<span class="text-yellow-400" title="Campionati">🏆${squadra.campionatiVinti}</span>` : ''}
-                                    ${squadra.coppeSerieVinte > 0 ? `<span class="text-orange-400" title="Coppe">🏅${squadra.coppeSerieVinte}</span>` : ''}
+                                    ${squadra.campionatiVinti > 0 ? `<span class="text-yellow-400" title="Campionati">🏅${squadra.campionatiVinti}</span>` : ''}
+                                    ${squadra.coppeSerieVinte > 0 ? `<span class="text-orange-400" title="Coppe">🏆${squadra.coppeSerieVinte}</span>` : ''}
                                     ${squadra.supercoppeSerieVinte > 0 ? `<span class="text-purple-400" title="Supercoppe">⭐${squadra.supercoppeSerieVinte}</span>` : ''}
-                                    ${squadra.coppeQuasiSerieVinte > 0 ? `<span class="text-amber-500" title="Coppa Quasi SeriA">🪣${squadra.coppeQuasiSerieVinte}</span>` : ''}
+                                    ${squadra.coppeQuasiSerieVinte > 0 ? `<span class="text-amber-500" title="Coppa Quasi SeriA">🤡${squadra.coppeQuasiSerieVinte}</span>` : ''}
                                 </div>
                                 ` : ''}
                             </div>
@@ -1360,14 +1362,14 @@ window.InterfacciaAuth = {
                     <!-- Bacheca Trofei -->
                     <div class="flex justify-center gap-4 mb-4 p-3 bg-gradient-to-r from-slate-800/50 via-slate-700/30 to-slate-800/50 rounded-xl border border-slate-600/30">
                         <div class="flex flex-col items-center">
-                            <span class="text-2xl">${campionati > 0 ? '🏆' : '🏆'}</span>
+                            <span class="text-2xl">🏅</span>
                             <span class="text-lg font-bold ${campionati > 0 ? 'text-yellow-400' : 'text-gray-500'}">${campionati}</span>
                             <span class="text-[10px] ${campionati > 0 ? 'text-yellow-400/70' : 'text-gray-500'} uppercase">Camp.</span>
                         </div>
                         <div class="flex flex-col items-center">
-                            <span class="text-2xl">${coppe > 0 ? '🥈' : '🥈'}</span>
-                            <span class="text-lg font-bold ${coppe > 0 ? 'text-gray-300' : 'text-gray-500'}">${coppe}</span>
-                            <span class="text-[10px] ${coppe > 0 ? 'text-gray-400' : 'text-gray-500'} uppercase">Coppe</span>
+                            <span class="text-2xl">🏆</span>
+                            <span class="text-lg font-bold ${coppe > 0 ? 'text-orange-400' : 'text-gray-500'}">${coppe}</span>
+                            <span class="text-[10px] ${coppe > 0 ? 'text-orange-400/70' : 'text-gray-500'} uppercase">Coppe</span>
                         </div>
                         <div class="flex flex-col items-center">
                             <span class="text-2xl">${supercoppe > 0 ? '⭐' : '⭐'}</span>
@@ -1375,7 +1377,7 @@ window.InterfacciaAuth = {
                             <span class="text-[10px] ${supercoppe > 0 ? 'text-amber-400/70' : 'text-gray-500'} uppercase">Super.</span>
                         </div>
                         <div class="flex flex-col items-center">
-                            <span class="text-2xl">🪣</span>
+                            <span class="text-2xl">🤡</span>
                             <span class="text-lg font-bold ${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-500'}">${coppeQuasi}</span>
                             <span class="text-[10px] ${coppeQuasi > 0 ? 'text-amber-500/70' : 'text-gray-500'} uppercase">Quasi</span>
                         </div>

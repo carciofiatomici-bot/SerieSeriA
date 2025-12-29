@@ -383,7 +383,7 @@ window.ClubHistory = {
                             <div class="flex flex-wrap gap-2">
                                 ${history.trophies.list.map(t => `
                                     <span class="px-2 py-1 rounded text-xs ${t.type === 'championship' ? 'bg-yellow-800 text-yellow-200' : 'bg-gray-600 text-gray-200'}">
-                                        ${t.type === 'championship' ? '🥇' : '🏆'} Stagione ${t.season}
+                                        ${t.type === 'championship' ? '🏅' : '🏆'} Stagione ${t.season}
                                     </span>
                                 `).join('')}
                             </div>

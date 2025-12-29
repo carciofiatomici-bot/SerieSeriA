@@ -323,6 +323,21 @@ window.Supercoppa = {
             }
         }
 
+        // NUOVO SISTEMA FORMA v2: basato su posizione, risultato e prestazioni
+        if (window.FeatureFlags?.isEnabled('playerForm') && window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+            const homeGoals = matchResult.homeGoals;
+            const awayGoals = matchResult.awayGoals;
+            const homeResult = homeGoals > awayGoals ? 'win' : (homeGoals < awayGoals ? 'loss' : 'draw');
+            const awayResult = awayGoals > homeGoals ? 'win' : (awayGoals < homeGoals ? 'loss' : 'draw');
+
+            const matchEvents = matchResult.matchEvents || [];
+            const homeFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, homeTeamData, true);
+            const awayFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, awayTeamData, false);
+
+            await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(supercoppaBracket.homeTeam.teamId, homeTeamData, homeResult, homeFormStats);
+            await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(supercoppaBracket.awayTeam.teamId, awayTeamData, awayResult, awayFormStats);
+        }
+
         // Applica premio CSS al vincitore (1 CSS)
         await this.applyReward(winner.teamId);
 
@@ -334,12 +349,6 @@ window.Supercoppa = {
 
         // Salva
         await this.saveSupercoppa(supercoppaBracket);
-
-        // Resetta forma giocatori
-        await window.CoppaMain.resetPlayersForm([
-            supercoppaBracket.homeTeam.teamId,
-            supercoppaBracket.awayTeam.teamId
-        ]);
 
         console.log(`Supercoppa completata: ${finalResult}. Vincitore: ${winner.teamName}`);
 

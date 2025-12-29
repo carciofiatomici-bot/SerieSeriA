@@ -40,13 +40,13 @@ window.InterfacciaDashboard = {
 
             // Mostra sempre i trofei, con colori dimmed se 0
             trophiesEl.innerHTML = `
-                <span class="${campionati > 0 ? 'text-yellow-400' : 'text-gray-600'}">🏆${campionati}</span>
+                <span class="${campionati > 0 ? 'text-yellow-400' : 'text-gray-600'}" title="Campionati vinti">🏅${campionati}</span>
                 <span class="text-gray-600">•</span>
-                <span class="${coppe > 0 ? 'text-orange-400' : 'text-gray-600'}">🏅${coppe}</span>
+                <span class="${coppe > 0 ? 'text-orange-400' : 'text-gray-600'}" title="Coppe SeriA vinte">🏆${coppe}</span>
                 <span class="text-gray-600">•</span>
-                <span class="${supercoppe > 0 ? 'text-purple-400' : 'text-gray-600'}">⭐${supercoppe}</span>
+                <span class="${supercoppe > 0 ? 'text-purple-400' : 'text-gray-600'}" title="Supercoppe vinte">⭐${supercoppe}</span>
                 <span class="text-gray-600">•</span>
-                <span class="${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-600'}" title="Coppa Quasi SeriA">🪣${coppeQuasi}</span>
+                <span class="${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-600'}" title="Coppa Quasi SeriA">🤡${coppeQuasi}</span>
             `;
             trophiesEl.classList.remove('hidden');
         }
@@ -3162,11 +3162,18 @@ window.InterfacciaDashboard = {
         const stageEl = document.getElementById('user-cup-stage');
         const eliminatedEl = document.getElementById('user-cup-eliminated');
         const statusContainer = document.getElementById('user-cup-status');
+        const bracketBtn = document.getElementById('btn-view-cup-bracket');
+        const eliminatedX = document.getElementById('cup-eliminated-x');
 
         if (!statusContainer) return;
 
         const currentTeamId = window.InterfacciaCore?.currentTeamId;
         const currentTeamData = window.InterfacciaCore?.currentTeamData;
+
+        // Reset X eliminazione
+        if (eliminatedX) {
+            eliminatedX.classList.add('hidden');
+        }
 
         if (!currentTeamId) {
             statusContainer.classList.add('hidden');
@@ -3178,8 +3185,8 @@ window.InterfacciaDashboard = {
             const isCupParticipating = currentTeamData?.isCupParticipating || false;
 
             if (!isCupParticipating) {
-                if (stageEl) stageEl.textContent = 'Non iscritto';
-                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+                // Non partecipante: nascondi status
+                statusContainer.classList.add('hidden');
                 return;
             }
 
@@ -3285,13 +3292,14 @@ window.InterfacciaDashboard = {
 
             // Aggiorna UI
             if (isEliminated) {
-                if (stageEl) {
-                    stageEl.textContent = `Eliminato - ${eliminatedAtRound}`;
-                    stageEl.classList.remove('text-purple-400', 'text-yellow-400');
-                    stageEl.classList.add('text-red-400');
+                // Eliminato: nascondi status, mostra X rossa
+                statusContainer.classList.add('hidden');
+                if (eliminatedX) {
+                    eliminatedX.classList.remove('hidden');
                 }
-                if (eliminatedEl) eliminatedEl.classList.remove('hidden');
             } else if (currentRound) {
+                // In gioco: mostra status
+                statusContainer.classList.remove('hidden');
                 if (stageEl) {
                     stageEl.textContent = currentRound;
                     stageEl.classList.remove('text-red-400', 'text-yellow-400');
@@ -3299,9 +3307,11 @@ window.InterfacciaDashboard = {
                 }
                 if (eliminatedEl) eliminatedEl.classList.add('hidden');
             } else if (!foundInBracket) {
-                if (stageEl) stageEl.textContent = 'Non nel tabellone';
-                if (eliminatedEl) eliminatedEl.classList.add('hidden');
+                // Non nel tabellone: nascondi status
+                statusContainer.classList.add('hidden');
             } else {
+                // In attesa: mostra status
+                statusContainer.classList.remove('hidden');
                 if (stageEl) stageEl.textContent = 'In attesa';
                 if (eliminatedEl) eliminatedEl.classList.add('hidden');
             }

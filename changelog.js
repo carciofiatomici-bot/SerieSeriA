@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.32',
+    currentVersion: '2.2.33',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,28 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.33',
+            date: '2025-12-29',
+            time: '22:00',
+            title: 'Nuovo Sistema Forma e Miglioramenti UI',
+            changes: [
+                { text: 'NUOVO: Sistema forma rivisitato - basato su posizione, risultato e prestazioni', adminOnly: false },
+                { text: 'Forma: in campo -1 base, panchina 0, fuori rosa +1', adminOnly: false },
+                { text: 'Forma: vittoria +1, sconfitta -1, pareggio 0 (solo in campo)', adminOnly: false },
+                { text: 'Forma: bonus +1 per prestazioni eccellenti (2+ gol/assist/blocchi, 5+ parate)', adminOnly: false },
+                { text: 'Forma: modifica random a fine partita (-1, 0, +1)', adminOnly: false },
+                { text: 'Forma: limiti normali -4/+4, Icone -2/+2', adminOnly: false },
+                { text: 'Forma condivisa tra tutte le competizioni', adminOnly: false },
+                { text: 'Leghe Private: calendario a scomparsa per giornata', adminOnly: false },
+                { text: 'Leghe Private: counter vittorie nell\'header', adminOnly: false },
+                { text: 'Coppa: stato nascosto se eliminato/non partecipante', adminOnly: false },
+                { text: 'Coppa: X rossa sul bottone se eliminato', adminOnly: false },
+                { text: 'Fix emoji trofei: 🏅 campionato, 🏆 coppa, ⭐ supercoppa, 🤡 coppa quasi', adminOnly: false },
+                { text: 'Serieseria nascosta dalla classifica e lista squadre', adminOnly: true }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.32',
             date: '2025-12-29',

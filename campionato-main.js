@@ -361,29 +361,18 @@ window.ChampionshipMain = {
                 }
             }
 
-            // 6. NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
-            if (window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
-                // Prepara dati per home team
-                const homeMatchResult = {
-                    scorers: scorers.filter(s => s.team === homeTeamData.teamName),
-                    assists: assists.filter(a => a.team === homeTeamData.teamName),
-                    goalsAgainst: awayGoals,
-                    isHome: true
-                };
-                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeMatchResult);
+            // 6. NUOVO SISTEMA FORMA v2: basato su posizione, risultato e prestazioni
+            if (window.FeatureFlags?.isEnabled('playerForm') && window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+                // Determina risultato per ogni squadra
+                const homeResult = homeGoals > awayGoals ? 'win' : (homeGoals < awayGoals ? 'loss' : 'draw');
+                const awayResult = awayGoals > homeGoals ? 'win' : (awayGoals < homeGoals ? 'loss' : 'draw');
 
-                // Prepara dati per away team
-                const awayMatchResult = {
-                    scorers: scorers.filter(s => s.team === awayTeamData.teamName),
-                    assists: assists.filter(a => a.team === awayTeamData.teamName),
-                    goalsAgainst: homeGoals,
-                    isHome: false
-                };
-                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayMatchResult);
-            } else {
-                // Fallback: resetta forme se funzione non disponibile
-                await this.resetPlayersFormStatus(match.homeId);
-                await this.resetPlayersFormStatus(match.awayId);
+                // Estrai statistiche giocatori dai matchEvents
+                const homeFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, homeTeamData, true);
+                const awayFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, awayTeamData, false);
+
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeResult, homeFormStats);
+                await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayResult, awayFormStats);
             }
             
             const updatedStandings = Array.from(standingsMap.values()).sort((a, b) => {
@@ -738,23 +727,16 @@ window.ChampionshipMain = {
                     });
                 }
 
-                // NUOVO: Aggiorna forme giocatori basate su prestazioni (gol, assist, clean sheet)
-                if (window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
-                    const homeMatchResult = {
-                        scorers: (scorers || []).filter(s => s.team === homeTeamData.teamName),
-                        assists: (assists || []).filter(a => a.team === homeTeamData.teamName),
-                        goalsAgainst: awayGoals,
-                        isHome: true
-                    };
-                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeMatchResult);
+                // NUOVO SISTEMA FORMA v2: basato su posizione, risultato e prestazioni
+                if (window.FeatureFlags?.isEnabled('playerForm') && window.GestioneSquadreUtils?.updatePlayerFormAfterMatch) {
+                    const homeResult = homeGoals > awayGoals ? 'win' : (homeGoals < awayGoals ? 'loss' : 'draw');
+                    const awayResult = awayGoals > homeGoals ? 'win' : (awayGoals < homeGoals ? 'loss' : 'draw');
 
-                    const awayMatchResult = {
-                        scorers: (scorers || []).filter(s => s.team === awayTeamData.teamName),
-                        assists: (assists || []).filter(a => a.team === awayTeamData.teamName),
-                        goalsAgainst: homeGoals,
-                        isHome: false
-                    };
-                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayMatchResult);
+                    const homeFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, homeTeamData, true);
+                    const awayFormStats = window.GestioneSquadreUtils.extractFormStatsFromEvents(matchEvents, awayTeamData, false);
+
+                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.homeId, homeTeamData, homeResult, homeFormStats);
+                    await window.GestioneSquadreUtils.updatePlayerFormAfterMatch(match.awayId, awayTeamData, awayResult, awayFormStats);
                 }
 
                 // Dispatch evento matchSimulated per notifiche push

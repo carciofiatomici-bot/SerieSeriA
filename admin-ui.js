@@ -154,7 +154,7 @@ window.AdminUI = {
 
                     <!-- Coppa Quasi SeriA -->
                     <div id="coppa-quasi-admin-section" class="p-3 bg-gray-800 rounded-lg border border-amber-500">
-                        <h4 class="text-sm font-bold text-amber-400 mb-1 flex items-center">🪣 Coppa Quasi SeriA</h4>
+                        <h4 class="text-sm font-bold text-amber-400 mb-1 flex items-center">🤡 Coppa Quasi SeriA</h4>
                         <div id="coppa-quasi-admin-container" class="text-gray-400 text-xs">Triangolare ultime 3 classificate</div>
                     </div>
 

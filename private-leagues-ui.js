@@ -10,6 +10,7 @@ window.PrivateLeaguesUI = {
     currentTeamData: null,
     currentLeague: null,
     timerInterval: null,
+    privateLeagueWins: 0,
 
     /**
      * Inizializza l'UI delle leghe private
@@ -27,6 +28,12 @@ window.PrivateLeaguesUI = {
         // Ricarica dati squadra freschi per avere i CS aggiornati
         await this.refreshTeamData();
 
+        // Conta vittorie leghe private
+        this.privateLeagueWins = await this.countPrivateLeagueWins();
+
+        // Aggiorna counter statico nell'header
+        this.updateStaticWinsCounter();
+
         // Carica la lega corrente (se esiste)
         this.currentLeague = await window.PrivateLeagues.getTeamLeague(teamId);
 
@@ -36,6 +43,47 @@ window.PrivateLeaguesUI = {
         }
 
         this.render();
+    },
+
+    /**
+     * Conta quante leghe private ha vinto l'utente
+     */
+    async countPrivateLeagueWins() {
+        try {
+            const { collection, query, where, getDocs } = window.firestoreTools;
+            const db = window.db;
+            const appId = window.firestoreTools.appId;
+
+            const leaguesPath = `artifacts/${appId}/public/data/privateLeagues`;
+            const q = query(
+                collection(db, leaguesPath),
+                where('status', '==', 'completed'),
+                where('winner.teamId', '==', this.currentTeamId)
+            );
+
+            const snapshot = await getDocs(q);
+            return snapshot.size;
+        } catch (error) {
+            console.warn('[PrivateLeaguesUI] Errore conteggio vittorie:', error);
+            return 0;
+        }
+    },
+
+    /**
+     * Aggiorna il counter statico delle vittorie nell'header
+     */
+    updateStaticWinsCounter() {
+        const counter = document.getElementById('pl-wins-counter');
+        if (!counter) return;
+
+        counter.textContent = `👥 ${this.privateLeagueWins}`;
+        counter.classList.remove('hidden');
+
+        if (this.privateLeagueWins === 0) {
+            counter.className = 'px-2 py-1 rounded-full text-sm font-bold bg-gray-600 text-gray-400 opacity-70';
+        } else {
+            counter.className = 'px-2 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-yellow-500 to-amber-500 text-black';
+        }
     },
 
     /**
@@ -146,6 +194,34 @@ window.PrivateLeaguesUI = {
                     background-clip: text;
                     margin-bottom: 6px;
                     letter-spacing: -0.02em;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+
+                .pl-wins-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    -webkit-background-clip: unset;
+                    -webkit-text-fill-color: #1e1b4b;
+                    background-clip: unset;
+                    color: #1e1b4b;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+                }
+
+                .pl-wins-badge.zero {
+                    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+                    -webkit-text-fill-color: #9ca3af;
+                    color: #9ca3af;
+                    box-shadow: none;
+                    opacity: 0.7;
                 }
 
                 .pl-subtitle {
@@ -1384,7 +1460,10 @@ window.PrivateLeaguesUI = {
             <div class="pl-container">
                 <!-- Header -->
                 <div class="pl-header">
-                    <h2 class="pl-title">Leghe Private</h2>
+                    <h2 class="pl-title">
+                        Leghe Private
+                        <span class="pl-wins-badge ${this.privateLeagueWins === 0 ? 'zero' : ''}" title="Leghe vinte">👥 ${this.privateLeagueWins}</span>
+                    </h2>
                     <p class="pl-subtitle">Sfida i tuoi amici in mini-campionati esclusivi</p>
                 </div>
 
@@ -2070,31 +2149,59 @@ window.PrivateLeaguesUI = {
         `;
 
         this.attachInProgressListeners(container);
+        this.attachScheduleCollapseListeners(container);
         this.startTimerUpdate(container);
     },
 
     renderSchedule(schedule, currentRound) {
         return schedule.map(round => {
             const isCurrent = round.round === currentRound;
+            const isOpen = isCurrent; // Solo giornata corrente aperta
+            const hasResult = round.matches.some(m => m.result);
+            const roundStatus = hasResult ? (round.matches.every(m => m.result) ? '✓' : '◐') : '';
 
             return `
-                <div class="pl-schedule-round ${isCurrent ? 'current' : ''}">
-                    <div class="pl-schedule-header">
-                        <span class="pl-schedule-title">G${round.round} - ${round.type}</span>
+                <div class="pl-schedule-round ${isCurrent ? 'current' : ''}" data-round="${round.round}">
+                    <div class="pl-schedule-header collapsible" style="cursor: pointer; user-select: none;">
+                        <span class="pl-schedule-title">
+                            <span class="collapse-icon" style="display: inline-block; width: 16px; transition: transform 0.2s;">${isOpen ? '▼' : '▶'}</span>
+                            G${round.round} - ${round.type} ${roundStatus}
+                        </span>
                         ${isCurrent ? '<span class="pl-schedule-badge">Attuale</span>' : ''}
                     </div>
-                    ${round.matches.map(match => `
-                        <div class="pl-match">
-                            <span class="pl-match-team home ${match.result && match.result.homeGoals > match.result.awayGoals ? 'winner' : ''}">${match.homeName}</span>
-                            <span class="pl-match-score ${match.result ? '' : 'pending'}">
-                                ${match.result ? `${match.result.homeGoals} - ${match.result.awayGoals}` : '- : -'}
-                            </span>
-                            <span class="pl-match-team away ${match.result && match.result.awayGoals > match.result.homeGoals ? 'winner' : ''}">${match.awayName}</span>
-                        </div>
-                    `).join('')}
+                    <div class="pl-schedule-matches" style="${isOpen ? '' : 'display: none;'}">
+                        ${round.matches.map(match => `
+                            <div class="pl-match">
+                                <span class="pl-match-team home ${match.result && match.result.homeGoals > match.result.awayGoals ? 'winner' : ''}">${match.homeName}</span>
+                                <span class="pl-match-score ${match.result ? '' : 'pending'}">
+                                    ${match.result ? `${match.result.homeGoals} - ${match.result.awayGoals}` : '- : -'}
+                                </span>
+                                <span class="pl-match-team away ${match.result && match.result.awayGoals > match.result.homeGoals ? 'winner' : ''}">${match.awayName}</span>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `;
         }).join('');
+    },
+
+    // Aggiungi listener per toggle collapse
+    attachScheduleCollapseListeners(container) {
+        container.querySelectorAll('.pl-schedule-round .pl-schedule-header.collapsible').forEach(header => {
+            header.onclick = function() {
+                const round = this.parentElement;
+                const matches = round.querySelector('.pl-schedule-matches');
+                const icon = this.querySelector('.collapse-icon');
+
+                if (matches.style.display === 'none') {
+                    matches.style.display = '';
+                    icon.textContent = '▼';
+                } else {
+                    matches.style.display = 'none';
+                    icon.textContent = '▶';
+                }
+            };
+        });
     },
 
     attachInProgressListeners(container) {
