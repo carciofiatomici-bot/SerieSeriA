@@ -124,7 +124,7 @@ window.ChampionshipRewards = {
     /**
      * Applica i premi di fine stagione e la progressione allenatori.
      * @param {Array} standings - Classifica finale
-     * @returns {Promise<{totalTeams: number, levelUps: number}>}
+     * @returns {Promise<{totalTeams: number, levelUps: number, championId: string}>}
      */
     async applySeasonEndRewards(standings) {
         const { doc, updateDoc, getDoc, collection, getDocs } = window.firestoreTools;
@@ -134,6 +134,23 @@ window.ChampionshipRewards = {
 
         // Calcola i premi
         const rewardsMap = this.calculateSeasonEndRewards(standings);
+
+        // Assegna trofeo campionato al primo classificato
+        let championId = null;
+        let championName = null;
+        if (standings.length > 0) {
+            championId = standings[0].teamId;
+            championName = standings[0].teamName;
+            const championRef = doc(db, TEAMS_COLLECTION_PATH, championId);
+            const championDoc = await getDoc(championRef);
+            if (championDoc.exists()) {
+                const currentTrophies = championDoc.data().campionatiVinti || 0;
+                await updateDoc(championRef, {
+                    campionatiVinti: currentTrophies + 1
+                });
+                console.log(`[Rewards] Trofeo Campionato assegnato a ${championName} (totale: ${currentTrophies + 1})`);
+            }
+        }
 
         // Identifica le ultime 3 squadre (escluse dal premio CSS)
         const numTeams = standings.length;
@@ -191,7 +208,9 @@ window.ChampionshipRewards = {
 
         return {
             totalTeams: teamsSnapshot.size,
-            cssAwarded: numTeams - bottom3TeamIds.size
+            cssAwarded: numTeams - bottom3TeamIds.size,
+            championId: championId,
+            championName: championName
         };
     }
 };

@@ -700,7 +700,7 @@ window.AdminTeams = {
                         <div class="mt-6 p-4 bg-yellow-900/50 rounded-lg border border-yellow-500">
                             <h4 class="text-lg font-bold text-yellow-400 mb-2">🏆 Bacheca Trofei</h4>
                             <p class="text-sm text-gray-300 mb-3">Modifica manualmente i trofei vinti dalla squadra.</p>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-4 gap-3">
                                 <div class="flex flex-col items-center">
                                     <label class="text-yellow-400 mb-1 text-sm font-bold">🏆 Campionati</label>
                                     <input type="number" id="edit-campionati" value="${teamData.campionatiVinti || 0}" min="0"
@@ -715,6 +715,11 @@ window.AdminTeams = {
                                     <label class="text-purple-400 mb-1 text-sm font-bold">⭐ Supercoppe</label>
                                     <input type="number" id="edit-supercoppe" value="${teamData.supercoppeSerieVinte || 0}" min="0"
                                         class="w-full p-2 rounded-lg bg-gray-700 border border-purple-500 text-white text-center">
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <label class="text-amber-500 mb-1 text-sm font-bold">🥉 C. Quasi</label>
+                                    <input type="number" id="edit-coppe-quasi" value="${teamData.coppeQuasiSerieVinte || 0}" min="0"
+                                        class="w-full p-2 rounded-lg bg-gray-700 border border-amber-500 text-white text-center">
                                 </div>
                             </div>
                         </div>
@@ -1387,7 +1392,8 @@ window.AdminTeams = {
         const campionatiVinti = parseInt(document.getElementById('edit-campionati')?.value) || 0;
         const coppeSerieVinte = parseInt(document.getElementById('edit-coppe')?.value) || 0;
         const supercoppeSerieVinte = parseInt(document.getElementById('edit-supercoppe')?.value) || 0;
-        console.log('[AdminTeams] Salvando trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte });
+        const coppeQuasiSerieVinte = parseInt(document.getElementById('edit-coppe-quasi')?.value) || 0;
+        console.log('[AdminTeams] Salvando trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte, coppeQuasiSerieVinte });
 
         if (!teamName || teamName.length < 3) {
             alert('Il nome squadra deve avere almeno 3 caratteri!');
@@ -1424,12 +1430,13 @@ window.AdminTeams = {
                 campionatiVinti,
                 coppeSerieVinte,
                 supercoppeSerieVinte,
+                coppeQuasiSerieVinte,
                 players: this.currentEditingPlayers,
                 formation: updatedFormation,
                 playersFormStatus: updatedFormStatus
             });
-            
-            console.log('[AdminTeams] Squadra salvata con successo, trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte });
+
+            console.log('[AdminTeams] Squadra salvata con successo, trofei:', { campionatiVinti, coppeSerieVinte, supercoppeSerieVinte, coppeQuasiSerieVinte });
             msgElement.textContent = '✅ Modifiche salvate con successo!';
             msgElement.className = 'text-center text-sm mb-4 text-green-400';
             

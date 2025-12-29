@@ -175,6 +175,22 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
+     * Verifica se c'e' una Coppa Quasi SeriA da simulare
+     */
+    async hasCoppaQuasiToPlay() {
+        try {
+            if (!window.CoppaQuasi) return false;
+
+            const bracket = await window.CoppaQuasi.loadCoppaQuasi();
+            // C'e' una Coppa Quasi da giocare se esiste e non e' completata
+            return bracket && !bracket.isCompleted;
+        } catch (error) {
+            console.error('Errore verifica Coppa Quasi:', error);
+            return false;
+        }
+    },
+
+    /**
      * Verifica se una competizione ha partite disponibili
      */
     async canSimulate(simulationType) {
@@ -213,10 +229,23 @@ window.AutomazioneSimulazioni = {
         // Se campionato E coppa sono entrambi finiti, gestisci fine stagione
         const bothFinished = await this.areBothCompetitionsFinished();
         if (bothFinished) {
-            // Gestisci fine stagione (premi, creazione supercoppa)
+            // Gestisci fine stagione (premi, creazione Coppa Quasi e Supercoppa)
             await this.handleSeasonEnd();
 
-            // Verifica se c'e' una Supercoppa da simulare
+            // NUOVO: Verifica se c'e' una Coppa Quasi SeriA da simulare (PRIMA della Supercoppa)
+            if (await this.hasCoppaQuasiToPlay()) {
+                const now = new Date();
+                const isEveningTime = now.getHours() >= 20;
+
+                if (isEveningTime) {
+                    return 'coppa_quasi';
+                } else {
+                    console.log('[Automazione] Coppa Quasi SeriA disponibile - verra simulata alle 20:30');
+                    return null;
+                }
+            }
+
+            // Verifica se c'e' una Supercoppa da simulare (DOPO la Coppa Quasi)
             // La Supercoppa viene simulata solo alle 20:30 (GitHub Action serale)
             if (await this.hasSupercoppaToPlay()) {
                 const now = new Date();
@@ -259,7 +288,8 @@ window.AutomazioneSimulazioni = {
                 if (leaderboardData?.standings && leaderboardData.standings.length > 0) {
                     // Assegna premi di fine stagione
                     const result = await window.ChampionshipRewards.applySeasonEndRewards(leaderboardData.standings);
-                    console.log(`[Automazione] Premi fine stagione assegnati a ${result.totalTeams} squadre (${result.cssAwarded} CSS assegnati)`);
+                    const championLog = result.championName ? ` Campione: ${result.championName}.` : '';
+                    console.log(`[Automazione] Premi fine stagione assegnati a ${result.totalTeams} squadre (${result.cssAwarded} CSS assegnati).${championLog}`);
 
                     // Decrementa contratti (se sistema attivo)
                     if (window.Contracts?.isEnabled()) {
@@ -279,12 +309,23 @@ window.AutomazioneSimulazioni = {
 
                     // Notifica UI
                     if (window.Toast) {
-                        window.Toast.success('Campionato terminato! Premi assegnati automaticamente.');
+                        const toastMsg = result.championName
+                            ? `Campionato terminato! 🏆 Campione: ${result.championName}. Premi assegnati automaticamente.`
+                            : 'Campionato terminato! Premi assegnati automaticamente.';
+                        window.Toast.success(toastMsg);
                     }
                 }
             }
 
-            // Verifica se creare la Supercoppa automaticamente
+            // NUOVO: Verifica se creare la Coppa Quasi SeriA automaticamente (PRIMA della Supercoppa)
+            if (window.CoppaQuasi?.checkAndCreateCoppaQuasi) {
+                const coppaQuasiResult = await window.CoppaQuasi.checkAndCreateCoppaQuasi();
+                if (coppaQuasiResult.created) {
+                    console.log(`[Automazione] Coppa Quasi SeriA creata automaticamente con ${coppaQuasiResult.bracket.participants.length} partecipanti`);
+                }
+            }
+
+            // Verifica se creare la Supercoppa automaticamente (DOPO la Coppa Quasi)
             if (window.Supercoppa?.checkAndCreateSupercoppa) {
                 const supercoppResult = await window.Supercoppa.checkAndCreateSupercoppa();
                 if (supercoppResult.created) {
@@ -476,6 +517,48 @@ window.AutomazioneSimulazioni = {
     },
 
     /**
+     * Simula la Coppa Quasi SeriA automaticamente
+     */
+    async simulateCoppaQuasiAuto() {
+        try {
+            if (!window.CoppaQuasi) {
+                throw new Error('Modulo Coppa Quasi non disponibile');
+            }
+
+            const bracket = await window.CoppaQuasi.loadCoppaQuasi();
+            if (!bracket) {
+                throw new Error('Nessuna Coppa Quasi in programma');
+            }
+
+            if (bracket.isCompleted) {
+                throw new Error('Coppa Quasi gia completata');
+            }
+
+            console.log(`[Automazione] Simulazione Coppa Quasi SeriA con ${bracket.participants.length} partecipanti`);
+
+            // Simula tutte le partite della Coppa Quasi
+            const result = await window.CoppaQuasi.simulateAllMatches();
+
+            console.log(`[Automazione] Coppa Quasi completata! Vincitore: ${result.winner.teamName}`);
+
+            return {
+                success: true,
+                type: 'coppa_quasi',
+                winner: result.winner.teamName,
+                message: `Coppa Quasi SeriA completata! Vincitore: ${result.winner.teamName}`
+            };
+
+        } catch (error) {
+            console.error('Errore simulazione Coppa Quasi:', error);
+            return {
+                success: false,
+                type: 'coppa_quasi',
+                error: error.message
+            };
+        }
+    },
+
+    /**
      * Esegue la simulazione automatica
      */
     async executeSimulation() {
@@ -516,6 +599,8 @@ window.AutomazioneSimulazioni = {
         let result;
         if (nextType === 'campionato') {
             result = await this.simulateChampionship();
+        } else if (nextType === 'coppa_quasi') {
+            result = await this.simulateCoppaQuasiAuto();
         } else if (nextType === 'supercoppa') {
             result = await this.simulateSupercoppaAuto();
         } else {

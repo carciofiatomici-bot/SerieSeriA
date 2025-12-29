@@ -179,12 +179,8 @@ window.ProactiveNotifications = {
         if (!teamId) return;
 
         try {
-            // Controlla in parallelo
-            await Promise.all([
-                this.checkSchedinaDeadline(),
-                this.checkSimulationTime(),
-                this.checkDraftStatus()
-            ]);
+            // Controlla solo draft (schedina e simulazione notifiche rimosse)
+            await this.checkDraftStatus();
         } catch (error) {
             console.warn('[ProactiveNotifications] Errore check eventi:', error);
         }
@@ -453,42 +449,7 @@ window.ProactiveNotifications = {
             }
         });
 
-        // Risultato partita (gia gestito in notifications.js, ma aggiungo push esplicito)
-        document.addEventListener('matchSimulated', (e) => {
-            const { homeTeam, awayTeam, result, type } = e.detail || {};
-            const myTeamId = window.InterfacciaCore?.currentTeamId;
-
-            if (homeTeam?.id === myTeamId || awayTeam?.id === myTeamId) {
-                const [homeScore, awayScore] = (result || '0-0').split('-').map(s => parseInt(s));
-                const isHome = homeTeam?.id === myTeamId;
-                const myScore = isHome ? homeScore : awayScore;
-                const oppScore = isHome ? awayScore : homeScore;
-                const opponent = isHome ? awayTeam?.name : homeTeam?.name;
-
-                const won = myScore > oppScore;
-                const draw = myScore === oppScore;
-
-                let title, emoji;
-                if (won) {
-                    title = 'Vittoria!';
-                    emoji = '';
-                } else if (draw) {
-                    title = 'Pareggio';
-                    emoji = '';
-                } else {
-                    title = 'Sconfitta';
-                    emoji = '';
-                }
-
-                const matchType = type || 'Partita';
-
-                this.sendBrowserPush(
-                    `${emoji} ${title}`,
-                    `${matchType}: ${result} vs ${opponent}`,
-                    'match_result'
-                );
-            }
-        });
+        // Notifiche risultato partita rimosse (l'utente vede gia' il risultato nel replay)
     },
 
     /**

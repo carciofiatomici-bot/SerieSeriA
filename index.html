@@ -1184,6 +1184,19 @@
                     </div>
                 </div>
 
+                <!-- BOX COPPA QUASI SERIA -->
+                <div id="coppa-quasi-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
+                    <button id="btn-user-coppa-quasi"
+                            class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white font-extrabold py-2.5 sm:py-3 rounded-lg shadow-lg hover:from-amber-500 hover:to-orange-500 transition duration-150 transform hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-lg sm:text-xl">🪣</span>
+                        <span class="text-sm sm:text-base">Coppa Quasi SeriA</span>
+                    </button>
+                    <!-- Stato Coppa Quasi Utente -->
+                    <div id="user-coppa-quasi-status" class="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs sm:text-sm">
+                        <div id="user-coppa-quasi-match" class="text-center text-gray-400">--</div>
+                    </div>
+                </div>
+
                 <!-- BOX SUPER COPPASERIA -->
                 <div id="supercoppa-box" class="competition-box rounded-xl p-3" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--team-primary-color, #22c55e);">
                     <button id="btn-user-supercoppa"
@@ -1784,6 +1797,33 @@
              </div>
         </div>
 
+        <!-- 7D-BIS. CONTENUTO AREA COPPA QUASI SERIA UTENTE -->
+        <div id="user-coppa-quasi-content" class="w-full max-w-4xl transition duration-500 hidden-on-load pb-24">
+             <!-- Header Sticky Mobile-First -->
+             <div class="coppa-quasi-header-nav sticky top-0 z-30 bg-gradient-to-b from-slate-900 via-slate-900/98 to-transparent pb-3 pt-2 px-1">
+                 <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-2">
+                         <span class="text-2xl">🪣</span>
+                         <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">COPPA QUASI</h2>
+                     </div>
+                     <!-- Status Badge -->
+                     <div id="coppa-quasi-status-badge" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-500/50">
+                         <span class="text-amber-400">--</span>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Main Content -->
+             <div id="user-coppa-quasi-container" class="px-1 space-y-3">
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="w-12 h-12 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-3"></div>
+                        <p class="text-gray-400 text-sm">Caricamento Coppa Quasi...</p>
+                    </div>
+                </div>
+             </div>
+        </div>
+
         <!-- 7E. CONTENUTO AREA CAMPIONATO UTENTE (VECCHIO - DA RIMUOVERE) -->
         <div id="user-championship-content" class="football-box w-full max-w-4xl transition duration-500 hidden-on-load pb-20">
              <h2 class="text-4xl font-extrabold text-purple-400 text-center mb-4 border-b-4 border-purple-700 pb-2">🏆 Gestione Campionato</h2>
@@ -2281,6 +2321,7 @@
                 document.getElementById('user-championship-content'), // Campionato Utente (vecchio)
                 document.getElementById('user-campionato-content'), // SerieSeriA Utente
                 document.getElementById('user-coppa-content'), // CoppaSeriA Utente
+                document.getElementById('user-coppa-quasi-content'), // Coppa Quasi SeriA Utente
                 document.getElementById('user-supercoppa-content'), // Super CoppaSeriA Utente
                 document.getElementById('campionato-leaderboard-content'), // Classifica Campionato
                 document.getElementById('cup-bracket-content'), // Tabellone Coppa
@@ -2494,6 +2535,10 @@
     <!-- 8. SUPERCOPPA (Dipende da Campionato e Coppa) -->
     <script src="supercoppa.js"></script>
     <script src="supercoppa-ui.js"></script>
+
+    <!-- 8b. COPPA QUASI SERIA (Torneo ultime 3 classificate) -->
+    <script src="coppa-quasi.js"></script>
+    <script src="coppa-quasi-ui.js"></script>
 
     <!-- 9. ORCHESTRATORE FINALE (Avvia l'app) -->
     <script src="interfaccia.js"></script>

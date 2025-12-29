@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const standings = leaderboardData.standings;
             
             const result = await window.ChampionshipRewards.applySeasonEndRewards(standings);
-            const { totalTeams, cssAwarded } = result;
+            const { totalTeams, cssAwarded, championName } = result;
 
             // Decrementa contratti di tutti i giocatori (se sistema contratti attivo)
             let contractsMessage = '';
@@ -116,8 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            const championMsg = championName ? ` 🏆 Campione: ${championName}!` : '';
             displayConfigMessage(
-                `Campionato TERMINATO! Assegnati premi a ${totalTeams} squadre. ${cssAwarded} squadre hanno ricevuto 1 CSS.${contractsMessage}${supercoppaMess} Calendario eliminato.`,
+                `Campionato TERMINATO!${championMsg} Assegnati premi a ${totalTeams} squadre. ${cssAwarded} squadre hanno ricevuto 1 CSS.${contractsMessage}${supercoppaMess} Calendario eliminato.`,
                 'success'
             );
 
@@ -512,6 +513,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
+                    <!-- SEZIONE: Fine Coppa Quasi SeriA -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-amber-700">
+                        <h3 class="text-xl font-bold text-amber-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
+                            <span class="mr-2">🏅</span> Fine Stagione - Coppa Quasi SeriA
+                        </h3>
+                        <div class="space-y-3" id="coppa-quasi-end-actions">
+                            <div id="coppa-quasi-end-status" class="text-center text-gray-400 text-sm">Caricamento stato Coppa Quasi...</div>
+                        </div>
+                    </div>
+
                     <!-- SEZIONE: Fine Supercoppa -->
                     <div class="bg-gray-900 rounded-lg p-4 border border-yellow-700">
                         <h3 class="text-xl font-bold text-yellow-400 border-b border-gray-600 pb-2 mb-4 flex items-center">
@@ -542,6 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Carica stato e UI per Coppa
             loadCupEndSection();
+
+            // Carica stato e UI per Coppa Quasi SeriA
+            loadCoppaQuasiEndSection();
 
             // Carica stato e UI per Supercoppa
             loadSupercoppEndSection();
@@ -665,6 +679,76 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Errore caricamento sezione fine coppa:', error);
             container.innerHTML = '<p class="text-red-400 text-center">Errore caricamento stato coppa.</p>';
+        }
+    };
+
+    /**
+     * Carica la sezione Fine Stagione per la Coppa Quasi SeriA
+     */
+    const loadCoppaQuasiEndSection = async () => {
+        const container = document.getElementById('coppa-quasi-end-actions');
+        if (!container) return;
+
+        // Se il modulo non e' caricato, mostra messaggio
+        if (!window.CoppaQuasi) {
+            container.innerHTML = '<p class="text-gray-500 text-center text-sm">Modulo Coppa Quasi non disponibile.</p>';
+            return;
+        }
+
+        try {
+            const bracket = await window.CoppaQuasi.loadCoppaQuasi();
+
+            if (!bracket) {
+                const canCreate = await window.CoppaQuasi.canCreateCoppaQuasi();
+                container.innerHTML = `
+                    <p class="text-gray-400 text-center">Nessuna Coppa Quasi in corso.</p>
+                    ${canCreate.canCreate
+                        ? '<p class="text-green-400 text-center text-sm">✅ Pronta per essere creata (ultime 3 classificate).</p>'
+                        : '<p class="text-amber-400 text-center text-sm">⚠️ ' + canCreate.reason + '</p>'
+                    }
+                `;
+                return;
+            }
+
+            if (bracket.isCompleted) {
+                container.innerHTML = `
+                    <p class="text-green-400 text-center mb-3">✅ Coppa Quasi completata! Vincitore: <strong>${bracket.winner?.teamName || 'N/A'}</strong></p>
+                    <p class="text-gray-400 text-center text-sm mb-3">Il premio (${window.CoppaQuasi.REWARD_CSS} CSS) e stato assegnato.</p>
+                    <button id="btn-delete-coppa-quasi-end"
+                            class="w-full bg-red-600 text-white font-extrabold py-2 rounded-lg shadow-md hover:bg-red-700 transition">
+                        🗑️ ELIMINA COPPA QUASI
+                    </button>
+                `;
+
+                document.getElementById('btn-delete-coppa-quasi-end').addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    if (confirm('Eliminare la Coppa Quasi SeriA?\n\nI premi sono gia stati assegnati.')) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-pulse">Eliminazione...</span>';
+                        try {
+                            await window.CoppaQuasi.deleteCoppaQuasi();
+                            alert('Coppa Quasi eliminata.');
+                            loadCoppaQuasiEndSection();
+                        } catch (error) {
+                            alert('Errore: ' + error.message);
+                            btn.disabled = false;
+                            btn.textContent = '🗑️ ELIMINA COPPA QUASI';
+                        }
+                    }
+                });
+
+            } else {
+                const pendingMatches = bracket.matches.filter(m => !m.isCompleted).length;
+                container.innerHTML = `
+                    <p class="text-amber-400 text-center">⏳ Coppa Quasi in corso</p>
+                    <p class="text-gray-400 text-center text-sm">${bracket.participants.map(p => p.teamName).join(' vs ')}</p>
+                    <p class="text-gray-500 text-center text-xs mt-2">${pendingMatches} partite rimanenti su 3.</p>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento sezione fine Coppa Quasi:', error);
+            container.innerHTML = '<p class="text-red-400 text-center">Errore caricamento stato Coppa Quasi.</p>';
         }
     };
 

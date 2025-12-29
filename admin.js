@@ -1245,6 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSerieSeriaNextRound();
         loadCupStatus();
         loadSupercoppPanel();
+        loadCoppaQuasiPanel();
         // loadAutomationPanel(); // Non caricare automaticamente, si carica al click sul menu
     };
 
@@ -3109,6 +3110,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('supercoppa-admin-section');
         if (container && window.Supercoppa) {
             window.Supercoppa.renderAdminUI(container);
+        }
+    };
+
+    /**
+     * Carica il pannello Coppa Quasi SeriA
+     */
+    const loadCoppaQuasiPanel = () => {
+        const container = document.getElementById('coppa-quasi-admin-container');
+        if (container && window.CoppaQuasiUI) {
+            window.CoppaQuasiUI.renderAdminUI(container);
+        } else if (container && window.CoppaQuasi) {
+            window.CoppaQuasi.renderAdminUI(container);
         }
     };
 

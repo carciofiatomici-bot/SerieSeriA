@@ -708,7 +708,7 @@ window.SupercoppaUI = {
                             <span class="supercoppa-winner-text">VINCITORE:</span>
                             <span class="supercoppa-winner-name">${bracket.winner.teamName}</span>
                         </p>
-                        <p class="supercoppa-prize">Premio: ${window.Supercoppa.REWARD_CSS} CSS</p>
+                        <p class="supercoppa-prize">Premio: ${window.Supercoppa.REWARD_CSS} CSS + Trofeo</p>
                     </div>
                 ` : ''}
 

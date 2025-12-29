@@ -152,6 +152,15 @@ window.AdminUI = {
                         <p class="text-gray-400 text-xs">Campione vs Vincitore Coppa</p>
                     </div>
 
+                    <!-- Coppa Quasi SeriA -->
+                    <div id="coppa-quasi-admin-section" class="p-4 bg-gray-800 rounded-lg border border-amber-500">
+                        <h4 class="text-lg font-bold text-amber-400 mb-3 flex items-center">🪣 Coppa Quasi SeriA</h4>
+                        <p class="text-gray-400 text-xs mb-3">Triangolare ultime 3 classificate</p>
+                        <div id="coppa-quasi-admin-container">
+                            <p class="text-gray-400 text-center text-xs">Caricamento stato...</p>
+                        </div>
+                    </div>
+
                     <!-- Automazione -->
                     <div id="automation-admin-section" class="p-4 bg-gray-800 rounded-lg border border-teal-500">
                         <h4 class="text-lg font-bold text-teal-400 mb-3 flex items-center">🤖 Automazione Simulazioni</h4>

@@ -32,6 +32,7 @@ window.Breadcrumb = {
         // Sotto-schermate Gare (da tab-competitions)
         'user-campionato-content': { label: 'Campionato', icon: '⚽', parent: 'tab-competitions' },
         'user-coppa-content': { label: 'CoppaSeriA', icon: '🏆', parent: 'tab-competitions' },
+        'user-coppa-quasi-content': { label: 'Coppa Quasi', icon: '🪣', parent: 'tab-competitions' },
         'user-supercoppa-content': { label: 'SuperCoppa', icon: '⭐', parent: 'tab-competitions' },
         'leaderboard-content': { label: 'Classifica', icon: '📊', parent: 'tab-competitions' },
         'campionato-leaderboard-content': { label: 'Classifica Campionato', icon: '📊', parent: 'tab-competitions' },

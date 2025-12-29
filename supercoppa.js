@@ -9,7 +9,7 @@
 // Se sono la stessa squadra: 1° vs 2° classificato
 //
 // Formato: Partita secca, rigori in caso di pareggio
-// Premio: 3 CSS al vincitore
+// Premio: 3 CSS + Trofeo Supercoppa al vincitore
 //
 
 window.Supercoppa = {
@@ -471,7 +471,7 @@ window.Supercoppa = {
     // applyMatchCredits rimossa - ora usa window.MatchCredits.applyMatchCredits()
 
     /**
-     * Applica il premio CSS al vincitore
+     * Applica il premio CSS e il trofeo al vincitore
      */
     async applyReward(teamId) {
         const { appId, doc, getDoc, updateDoc } = window.firestoreTools;
@@ -481,10 +481,15 @@ window.Supercoppa = {
         const teamDoc = await getDoc(teamRef);
 
         if (teamDoc.exists()) {
+            const teamData = teamDoc.data();
+            const currentCSS = teamData.creditiSuperSeri || 0;
+            const currentTrophies = teamData.supercoppeSerieVinte || 0;
+
             await updateDoc(teamRef, {
-                creditiSuperSeri: (teamDoc.data().creditiSuperSeri || 0) + this.REWARD_CSS
+                creditiSuperSeri: currentCSS + this.REWARD_CSS,
+                supercoppeSerieVinte: currentTrophies + 1
             });
-            console.log(`Premio Supercoppa (${this.REWARD_CSS} CSS) assegnato.`);
+            console.log(`Premio Supercoppa (${this.REWARD_CSS} CSS) e trofeo assegnati (totale supercoppe: ${currentTrophies + 1}).`);
         }
     },
 
@@ -612,7 +617,7 @@ window.Supercoppa = {
                                     <p class="text-green-400 font-extrabold text-lg">
                                         🏆 VINCITORE: ${bracket.winner.teamName}
                                     </p>
-                                    <p class="text-green-300 text-sm">Premio: 1 CSS</p>
+                                    <p class="text-green-300 text-sm">Premio: ${this.REWARD_CSS} CSS + Trofeo</p>
                                 </div>
                             ` : ''}
                         </div>
@@ -651,7 +656,7 @@ window.Supercoppa = {
                         try {
                             const result = await this.simulateSupercoppa();
                             // Mostra messaggio di successo
-                            alert(`Supercoppa completata!\n\n${result.homeTeam.teamName} vs ${result.awayTeam.teamName}\nRisultato: ${result.result}\n\n🏆 Vincitore: ${result.winner.teamName}\nPremio: 1 CSS assegnato!`);
+                            alert(`Supercoppa completata!\n\n${result.homeTeam.teamName} vs ${result.awayTeam.teamName}\nRisultato: ${result.result}\n\n🏆 Vincitore: ${result.winner.teamName}\nPremio: ${this.REWARD_CSS} CSS + Trofeo Supercoppa assegnati!`);
                             this.renderAdminUI(container);
                         } catch (error) {
                             alert('Errore: ' + error.message);

@@ -35,7 +35,8 @@ window.InterfacciaDashboard = {
             const campionati = currentTeamData.campionatiVinti || 0;
             const coppe = currentTeamData.coppeSerieVinte || 0;
             const supercoppe = currentTeamData.supercoppeSerieVinte || 0;
-            console.log('[Dashboard] Trofei squadra:', { campionati, coppe, supercoppe, teamName });
+            const coppeQuasi = currentTeamData.coppeQuasiSerieVinte || 0;
+            console.log('[Dashboard] Trofei squadra:', { campionati, coppe, supercoppe, coppeQuasi, teamName });
 
             // Mostra sempre i trofei, con colori dimmed se 0
             trophiesEl.innerHTML = `
@@ -44,6 +45,8 @@ window.InterfacciaDashboard = {
                 <span class="${coppe > 0 ? 'text-orange-400' : 'text-gray-600'}">🏅${coppe}</span>
                 <span class="text-gray-600">•</span>
                 <span class="${supercoppe > 0 ? 'text-purple-400' : 'text-gray-600'}">⭐${supercoppe}</span>
+                <span class="text-gray-600">•</span>
+                <span class="${coppeQuasi > 0 ? 'text-amber-500' : 'text-gray-600'}" title="Coppa Quasi SeriA">🥉${coppeQuasi}</span>
             `;
             trophiesEl.classList.remove('hidden');
         }
@@ -161,6 +164,9 @@ window.InterfacciaDashboard = {
 
         // Aggiorna stato supercoppa utente
         this.updateUserSupercoppaStatus();
+
+        // Aggiorna stato Coppa Quasi SeriA utente
+        this.updateUserCoppaQuasiStatus();
 
         // Aggiorna cooldown sfida amichevole
         this.updateChallengeCooldownAlert();
@@ -3355,6 +3361,85 @@ window.InterfacciaDashboard = {
 
         } catch (error) {
             console.error('[UserSupercoppaStatus] Errore:', error);
+            matchEl.textContent = '--';
+        }
+    },
+
+    /**
+     * Aggiorna lo stato della Coppa Quasi SeriA per l'utente
+     */
+    async updateUserCoppaQuasiStatus() {
+        const matchEl = document.getElementById('user-coppa-quasi-match');
+        const statusContainer = document.getElementById('user-coppa-quasi-status');
+
+        if (!statusContainer || !matchEl) return;
+
+        const currentTeamId = window.InterfacciaCore?.currentTeamId;
+        if (!currentTeamId) {
+            matchEl.textContent = '--';
+            return;
+        }
+
+        try {
+            if (!window.CoppaQuasi) {
+                statusContainer.classList.add('hidden');
+                return;
+            }
+
+            const bracket = await window.CoppaQuasi.loadCoppaQuasi();
+
+            if (!bracket) {
+                statusContainer.classList.add('hidden');
+                return;
+            }
+
+            // Mostra il container
+            statusContainer.classList.remove('hidden');
+
+            // Verifica se la squadra partecipa
+            const participant = bracket.participants?.find(p => p.teamId === currentTeamId);
+
+            if (!participant) {
+                matchEl.textContent = 'Non qualificato';
+                matchEl.classList.add('text-gray-400');
+                return;
+            }
+
+            // La squadra partecipa
+            if (bracket.isCompleted) {
+                // Torneo completato
+                const standings = bracket.standings || [];
+                const sortedStandings = [...standings].sort((a, b) => {
+                    if (b.points !== a.points) return b.points - a.points;
+                    if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
+                    return b.goalsFor - a.goalsFor;
+                });
+
+                const position = sortedStandings.findIndex(s => s.teamId === currentTeamId) + 1;
+                const won = position === 1;
+
+                matchEl.innerHTML = `
+                    <div class="text-center">
+                        <span class="${won ? 'text-amber-400 font-bold' : 'text-gray-400'}">
+                            ${won ? '🏆 VINCITORE!' : `${position}° posto`}
+                        </span>
+                    </div>
+                `;
+            } else {
+                // Torneo in corso
+                const completedMatches = bracket.matches?.filter(m => m.isCompleted).length || 0;
+                const totalMatches = bracket.matches?.length || 3;
+
+                matchEl.innerHTML = `
+                    <div class="text-center text-amber-400">
+                        <span>In corso</span>
+                        <span class="text-gray-500 text-xs ml-1">(${completedMatches}/${totalMatches} partite)</span>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error('[UserCoppaQuasiStatus] Errore:', error);
             matchEl.textContent = '--';
         }
     }

@@ -1486,6 +1486,176 @@ window.UserCompetitions = {
     },
 
     // ================================================================
+    // COPPA QUASI SERIA
+    // ================================================================
+
+    /**
+     * Carica e renderizza la schermata Coppa Quasi SeriA utente
+     */
+    async loadCoppaQuasiScreen() {
+        const container = document.getElementById('user-coppa-quasi-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-amber-500 mx-auto mb-4"></div>
+                <p class="text-white">Caricamento Coppa Quasi SeriA...</p>
+            </div>
+        `;
+
+        try {
+            if (!window.CoppaQuasi) {
+                container.innerHTML = `<p class="text-amber-400 text-center py-8">Modulo Coppa Quasi non disponibile</p>`;
+                return;
+            }
+
+            const bracket = await window.CoppaQuasi.loadCoppaQuasi();
+
+            if (window.CoppaQuasiUI) {
+                window.CoppaQuasiUI.injectStyles();
+            }
+
+            this.renderCoppaQuasiScreen(container, bracket);
+        } catch (error) {
+            console.error('Errore caricamento Coppa Quasi:', error);
+            const safeMsg = window.escapeHtml ? window.escapeHtml(error.message) : error.message;
+            container.innerHTML = `<p class="text-red-400 text-center">Errore: ${safeMsg}</p>`;
+        }
+    },
+
+    /**
+     * Renderizza la schermata Coppa Quasi SeriA (Mobile-First)
+     */
+    renderCoppaQuasiScreen(container, bracket) {
+        if (!bracket) {
+            container.innerHTML = `
+                <div class="coppa-quasi-container p-6 text-center">
+                    <div class="text-4xl mb-4">🪣</div>
+                    <h3 class="text-xl font-bold text-amber-400 mb-2">Coppa Quasi SeriA</h3>
+                    <p class="text-gray-400">Nessuna Coppa Quasi attiva al momento.</p>
+                    <p class="text-gray-500 text-sm mt-2">Il triangolare per le ultime 3 classificate sara creato a fine campionato.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Ordinamento partecipanti per classifica
+        const standings = bracket.standings || [];
+        const sortedStandings = [...standings].sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
+            return b.goalsFor - a.goalsFor;
+        });
+
+        const completedMatches = bracket.matches?.filter(m => m.isCompleted) || [];
+        const pendingMatches = bracket.matches?.filter(m => !m.isCompleted) || [];
+
+        let html = `
+            <div class="coppa-quasi-container">
+                <!-- Header -->
+                <div class="coppa-quasi-header">
+                    <div class="text-4xl mb-2">🪣</div>
+                    <h2 class="coppa-quasi-title">Coppa Quasi SeriA</h2>
+                    <p class="text-amber-300/70 text-sm">Triangolare Ultime 3 Classificate</p>
+                </div>
+
+                <div class="p-4 space-y-4">
+        `;
+
+        // Classifica mini-torneo
+        if (sortedStandings.length > 0) {
+            html += `
+                <div class="bg-gray-800/50 rounded-lg p-3">
+                    <h4 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
+                        <span>📊</span> Classifica
+                    </h4>
+                    <div class="space-y-2">
+            `;
+
+            sortedStandings.forEach((team, index) => {
+                const isWinner = bracket.isCompleted && index === 0;
+                html += `
+                    <div class="flex items-center justify-between p-2 rounded ${isWinner ? 'bg-amber-600/30 border border-amber-500' : 'bg-gray-700/50'}">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-bold ${isWinner ? 'text-amber-400' : 'text-gray-400'}">${index + 1}</span>
+                            <span class="font-medium ${isWinner ? 'text-amber-300' : 'text-white'}">${team.teamName}</span>
+                            ${isWinner ? '<span class="text-amber-400">👑</span>' : ''}
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="text-amber-400 font-bold">${team.points} pt</span>
+                            <span class="text-gray-400">${team.goalsDiff >= 0 ? '+' : ''}${team.goalsDiff}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+        }
+
+        // Partite completate
+        if (completedMatches.length > 0) {
+            html += `
+                <div class="bg-gray-800/50 rounded-lg p-3">
+                    <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
+                        <span>✅</span> Partite Giocate
+                    </h4>
+                    <div class="space-y-2">
+            `;
+
+            completedMatches.forEach(match => {
+                html += `
+                    <div class="bg-gray-700/50 rounded p-2 flex items-center justify-between">
+                        <span class="text-white text-sm flex-1 text-right truncate">${match.homeTeam?.name || 'TBD'}</span>
+                        <span class="mx-3 font-mono font-bold text-amber-400">${match.result?.homeGoals ?? '-'} - ${match.result?.awayGoals ?? '-'}</span>
+                        <span class="text-white text-sm flex-1 text-left truncate">${match.awayTeam?.name || 'TBD'}</span>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+        }
+
+        // Partite da giocare
+        if (pendingMatches.length > 0) {
+            html += `
+                <div class="bg-gray-800/50 rounded-lg p-3">
+                    <h4 class="text-gray-400 font-bold mb-3 flex items-center gap-2">
+                        <span>⏳</span> Prossime Partite
+                    </h4>
+                    <div class="space-y-2">
+            `;
+
+            pendingMatches.forEach(match => {
+                html += `
+                    <div class="bg-gray-700/30 rounded p-2 flex items-center justify-between opacity-70">
+                        <span class="text-gray-300 text-sm flex-1 text-right truncate">${match.homeTeam?.name || 'TBD'}</span>
+                        <span class="mx-3 font-mono text-gray-500">vs</span>
+                        <span class="text-gray-300 text-sm flex-1 text-left truncate">${match.awayTeam?.name || 'TBD'}</span>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+        }
+
+        // Vincitore
+        if (bracket.isCompleted && bracket.winner) {
+            html += `
+                <div class="bg-gradient-to-r from-amber-600/30 to-orange-600/30 rounded-lg p-4 text-center border border-amber-500/50">
+                    <div class="text-3xl mb-2">🏆</div>
+                    <h4 class="text-amber-400 font-bold mb-1">Vincitore Coppa Quasi SeriA</h4>
+                    <p class="text-xl font-bold text-white">${bracket.winner.teamName}</p>
+                    <p class="text-amber-300/70 text-sm mt-2">Premio: +1 CSS 💰</p>
+                </div>
+            `;
+        }
+
+        html += `</div></div>`;
+
+        container.innerHTML = html;
+    },
+
+    // ================================================================
     // INIZIALIZZAZIONE EVENT LISTENERS
     // ================================================================
 
@@ -1535,6 +1705,15 @@ window.UserCompetitions = {
             btnSupercoppa.addEventListener('click', () => {
                 window.showScreen(document.getElementById('user-supercoppa-content'));
                 this.loadSupercoppScreen();
+            });
+        }
+
+        // Bottone Coppa Quasi SeriA
+        const btnCoppaQuasi = document.getElementById('btn-user-coppa-quasi');
+        if (btnCoppaQuasi) {
+            btnCoppaQuasi.addEventListener('click', () => {
+                window.showScreen(document.getElementById('user-coppa-quasi-content'));
+                this.loadCoppaQuasiScreen();
             });
         }
 
