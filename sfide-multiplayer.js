@@ -276,11 +276,19 @@ window.SfideMultiplayer = (function() {
 
     async function abandonMatch(matchId) {
         try {
-            const { doc, updateDoc } = window.firestoreTools;
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
             const path = getMinigameChallengesPath();
 
-            // Chi abbandona perde
-            const myTeamLetter = state.myTeamId === state.challengerId ? 'A' : 'B';
+            // Leggi match per sapere il mio ruolo
+            const matchDoc = await getDoc(doc(window.db, path, matchId));
+            if (!matchDoc.exists()) {
+                if (window.Toast) window.Toast.info('Partita non trovata');
+                return;
+            }
+            const matchData = matchDoc.data();
+
+            // Chi abbandona perde - determina team dalla partita
+            const myTeamLetter = state.myTeamId === matchData.challengerId ? 'A' : 'B';
             const winnerId = myTeamLetter === 'A' ? 'B' : 'A';
 
             await updateDoc(doc(window.db, path, matchId), {
@@ -806,7 +814,7 @@ window.SfideMultiplayer = (function() {
 
                 <div class="bg-gray-900/50 rounded-lg p-3 mb-4">
                     <p class="text-sm text-gray-400 text-center">
-                        3 mosse per turno • 20 sec per mossa • Primo a 3 gol
+                        3 mosse per turno • 30 sec per mossa • Primo a 3 gol
                     </p>
                 </div>
 

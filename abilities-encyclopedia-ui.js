@@ -2,15 +2,18 @@
 // ====================================================================
 // ABILITIES-ENCYCLOPEDIA-UI.JS - Interfaccia Enciclopedia Abilita
 // ====================================================================
-// Mobile-First Premium Design with Touch Gestures
+// Mobile-First v2 - Bottom Tab Navigation + Simplified Cards
 //
 
 window.AbilitiesUI = {
 
     currentFilter: 'all',
     currentSearch: '',
-    displayLimit: 15,
-    currentDisplayCount: 15,
+    displayLimit: 20,
+    currentDisplayCount: 20,
+    searchVisible: false,
+    expandedCard: null,
+    statsVisible: false,
 
     // Touch gesture state
     touchStartY: 0,
@@ -20,226 +23,456 @@ window.AbilitiesUI = {
     bottomSheetElement: null,
 
     /**
-     * Inject custom styles for animations and mobile UX
+     * Inject custom styles for mobile UX v2
      */
     injectStyles() {
-        if (document.getElementById('abilities-ui-styles')) return;
+        if (document.getElementById('abilities-ui-styles-v2')) return;
 
         const styles = document.createElement('style');
-        styles.id = 'abilities-ui-styles';
+        styles.id = 'abilities-ui-styles-v2';
         styles.textContent = `
-            /* Custom scrollbar for webkit */
-            .abilities-scroll::-webkit-scrollbar {
-                width: 4px;
-            }
-            .abilities-scroll::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .abilities-scroll::-webkit-scrollbar-thumb {
-                background: rgba(139, 92, 246, 0.3);
-                border-radius: 4px;
+            /* ===== ENCICLOPEDIA MOBILE V2 ===== */
+
+            @keyframes slideUp {
+                from { transform: translateY(100%); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
             }
 
-            /* Overlay animations */
-            @keyframes overlaySlideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(100%);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+            @keyframes slideDown {
+                from { transform: translateY(0); opacity: 1; }
+                to { transform: translateY(100%); opacity: 0; }
             }
 
-            @keyframes overlaySlideDown {
-                from {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateY(100%);
-                }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(8px); }
+                to { opacity: 1; transform: translateY(0); }
             }
 
-            @keyframes bottomSheetUp {
-                from {
-                    transform: translateY(100%);
-                }
-                to {
-                    transform: translateY(0);
-                }
+            @keyframes expandCard {
+                from { max-height: 0; opacity: 0; }
+                to { max-height: 500px; opacity: 1; }
             }
 
-            @keyframes bottomSheetDown {
-                from {
-                    transform: translateY(0);
-                }
-                to {
-                    transform: translateY(100%);
-                }
+            @keyframes collapseCard {
+                from { max-height: 500px; opacity: 1; }
+                to { max-height: 0; opacity: 0; }
             }
 
-            @keyframes cardFadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px) scale(0.95);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
+            @keyframes pulseRing {
+                0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+                70% { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
             }
 
             @keyframes shimmer {
-                0% {
-                    background-position: -200% 0;
-                }
-                100% {
-                    background-position: 200% 0;
-                }
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
             }
 
-            @keyframes pulseGlow {
-                0%, 100% {
-                    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
-                }
-                50% {
-                    box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
-                }
+            .enc-overlay-enter {
+                animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
 
-            .abilities-overlay-enter {
-                animation: overlaySlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            .enc-overlay-exit {
+                animation: slideDown 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
             }
 
-            .abilities-overlay-exit {
-                animation: overlaySlideDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+            .enc-card-enter {
+                animation: fadeIn 0.3s ease-out forwards;
             }
 
-            .bottom-sheet-enter {
-                animation: bottomSheetUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            .enc-expand-enter {
+                animation: expandCard 0.3s ease-out forwards;
+                overflow: hidden;
             }
 
-            .bottom-sheet-exit {
-                animation: bottomSheetDown 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+            .enc-expand-exit {
+                animation: collapseCard 0.2s ease-in forwards;
+                overflow: hidden;
             }
 
-            .ability-card-animate {
-                animation: cardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            /* Drag handle area */
+            .enc-drag-zone {
+                cursor: grab;
+                touch-action: pan-y;
+            }
+
+            .enc-drag-zone:active {
+                cursor: grabbing;
+            }
+
+            .enc-drag-bar {
+                width: 48px;
+                height: 5px;
+                background: rgba(255,255,255,0.25);
+                border-radius: 3px;
+                margin: 0 auto;
+                transition: background 0.2s, width 0.2s;
+            }
+
+            .enc-drag-zone:active .enc-drag-bar {
+                background: rgba(139, 92, 246, 0.6);
+                width: 64px;
+            }
+
+            /* Bottom filter bar */
+            .enc-bottom-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 60;
+                background: linear-gradient(to top, rgba(15,15,25,0.98) 0%, rgba(15,15,25,0.95) 100%);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-top: 1px solid rgba(139, 92, 246, 0.2);
+                padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px;
+            }
+
+            .enc-filter-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                min-height: 52px;
+                padding: 6px 8px;
+                border-radius: 12px;
+                transition: all 0.2s ease;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                flex: 1;
+            }
+
+            .enc-filter-btn:active {
+                transform: scale(0.92);
+            }
+
+            .enc-filter-btn.active {
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(109, 40, 217, 0.2));
+                animation: pulseRing 2s infinite;
+            }
+
+            .enc-filter-icon {
+                font-size: 20px;
+                line-height: 1;
+                margin-bottom: 2px;
+            }
+
+            .enc-filter-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: rgba(255,255,255,0.5);
+                transition: color 0.2s;
+            }
+
+            .enc-filter-btn.active .enc-filter-label {
+                color: #a78bfa;
+            }
+
+            /* Simplified ability card */
+            .enc-ability-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 14px 16px;
+                background: rgba(30, 30, 45, 0.6);
+                border: 1px solid rgba(255,255,255,0.06);
+                border-radius: 16px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                min-height: 56px;
+            }
+
+            .enc-ability-item:active {
+                transform: scale(0.98);
+                background: rgba(40, 40, 60, 0.8);
+            }
+
+            .enc-ability-item.expanded {
+                background: rgba(50, 40, 70, 0.6);
+                border-color: rgba(139, 92, 246, 0.3);
+            }
+
+            .enc-ability-icon {
+                width: 44px;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0,0,0,0.3);
+                border-radius: 12px;
+                font-size: 24px;
+                flex-shrink: 0;
+            }
+
+            .enc-ability-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .enc-ability-name {
+                font-size: 15px;
+                font-weight: 700;
+                color: white;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .enc-ability-meta {
+                font-size: 12px;
+                color: rgba(255,255,255,0.4);
+                margin-top: 2px;
+            }
+
+            .enc-rarity-badge {
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 10px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+            }
+
+            .enc-rarity-comune { background: rgba(100,100,120,0.3); color: #9ca3af; }
+            .enc-rarity-rara { background: rgba(139,92,246,0.2); color: #a78bfa; }
+            .enc-rarity-leggendaria { background: rgba(239,68,68,0.2); color: #f87171; }
+            .enc-rarity-unica { background: rgba(234,179,8,0.2); color: #fbbf24; }
+
+            /* Expanded detail section */
+            .enc-detail-section {
+                padding: 16px;
+                margin-top: 12px;
+                background: rgba(0,0,0,0.2);
+                border-radius: 12px;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+
+            .enc-detail-row {
+                margin-bottom: 12px;
+            }
+
+            .enc-detail-row:last-child {
+                margin-bottom: 0;
+            }
+
+            .enc-detail-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: rgba(139, 92, 246, 0.7);
+                margin-bottom: 4px;
+            }
+
+            .enc-detail-value {
+                font-size: 14px;
+                color: rgba(255,255,255,0.85);
+                line-height: 1.5;
+            }
+
+            /* Search bar */
+            .enc-search-container {
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .enc-search-container.hidden {
+                max-height: 0;
+                opacity: 0;
+                padding: 0;
+                margin: 0;
+            }
+
+            .enc-search-container.visible {
+                max-height: 60px;
+                opacity: 1;
+                padding: 0 16px 12px;
+            }
+
+            .enc-search-input {
+                width: 100%;
+                padding: 12px 16px 12px 44px;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                color: white;
+                font-size: 15px;
+                outline: none;
+                transition: all 0.2s;
+            }
+
+            .enc-search-input:focus {
+                background: rgba(255,255,255,0.08);
+                border-color: rgba(139, 92, 246, 0.5);
+            }
+
+            .enc-search-input::placeholder {
+                color: rgba(255,255,255,0.3);
+            }
+
+            /* Stats toggle */
+            .enc-stats-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 10px 16px;
+                margin: 0 16px 8px;
+                background: rgba(139, 92, 246, 0.1);
+                border: 1px solid rgba(139, 92, 246, 0.2);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .enc-stats-toggle:active {
+                transform: scale(0.98);
+            }
+
+            .enc-stats-panel {
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .enc-stats-panel.hidden {
+                max-height: 0;
                 opacity: 0;
             }
 
-            .skeleton-shimmer {
-                background: linear-gradient(90deg,
-                    rgba(30, 30, 40, 0.8) 0%,
-                    rgba(50, 50, 65, 0.8) 50%,
-                    rgba(30, 30, 40, 0.8) 100%);
+            .enc-stats-panel.visible {
+                max-height: 200px;
+                opacity: 1;
+            }
+
+            /* Skeleton loader */
+            .enc-skeleton {
+                background: linear-gradient(90deg, rgba(40,40,55,0.5) 0%, rgba(60,60,80,0.5) 50%, rgba(40,40,55,0.5) 100%);
                 background-size: 200% 100%;
-                animation: shimmer 1.5s infinite;
+                animation: shimmer 1.2s infinite;
+                border-radius: 12px;
             }
 
-            /* Touch feedback */
-            .touch-feedback {
-                transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-                            box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Touch button base */
+            .enc-touch-btn {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.15s;
+                border: none;
+                background: transparent;
             }
 
-            .touch-feedback:active {
-                transform: scale(0.97);
+            .enc-touch-btn:active {
+                transform: scale(0.9);
             }
 
-            /* Filter chip active state */
-            .filter-chip-active {
-                animation: pulseGlow 2s infinite;
+            /* Content area with bottom padding for filter bar */
+            .enc-content-area {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
             }
 
-            /* Smooth scroll */
-            .smooth-scroll {
-                scroll-behavior: smooth;
-                -webkit-overflow-scrolling: touch;
-                overscroll-behavior-y: contain;
-            }
-
-            /* Glass effect */
-            .glass-effect {
-                background: rgba(15, 15, 25, 0.85);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-            }
-
-            /* Drag indicator */
-            .drag-indicator {
-                width: 40px;
-                height: 5px;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 3px;
-                margin: 0 auto;
-            }
-
-            /* Hide scrollbar utility */
-            .hide-scrollbar {
+            /* Hide scrollbar */
+            .enc-scroll-hide {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
             }
-            .hide-scrollbar::-webkit-scrollbar {
+            .enc-scroll-hide::-webkit-scrollbar {
                 display: none;
+            }
+
+            /* Section header */
+            .enc-section-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 16px 16px 8px;
+            }
+
+            .enc-section-icon {
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+                font-size: 16px;
+            }
+
+            .enc-section-title {
+                font-size: 14px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .enc-section-count {
+                font-size: 12px;
+                color: rgba(255,255,255,0.4);
+                margin-left: auto;
             }
         `;
         document.head.appendChild(styles);
     },
 
     /**
-     * Apre l'enciclopedia in un overlay con animazione
+     * Apre l'enciclopedia
      */
     open() {
         this.injectStyles();
+        this.searchVisible = false;
+        this.expandedCard = null;
+        this.statsVisible = false;
+        this.currentDisplayCount = this.displayLimit;
 
         let overlay = document.getElementById('abilities-encyclopedia-overlay');
 
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'abilities-encyclopedia-overlay';
-            overlay.className = 'fixed inset-0 z-50 hidden overflow-y-auto overscroll-contain';
-            overlay.style.cssText = 'background: linear-gradient(to bottom, #020617, #0f172a, #020617);';
+            overlay.className = 'fixed inset-0 z-50 hidden overflow-hidden';
+            overlay.style.cssText = 'background: linear-gradient(180deg, #0c0a1a 0%, #1a1528 50%, #0c0a1a 100%);';
             document.body.appendChild(overlay);
         }
 
         this.overlayElement = overlay;
 
-        // Show skeleton first, then render
         this.renderSkeleton();
         overlay.classList.remove('hidden');
-        overlay.classList.remove('abilities-overlay-exit');
-        overlay.classList.add('abilities-overlay-enter');
+        overlay.classList.remove('enc-overlay-exit');
+        overlay.classList.add('enc-overlay-enter');
         document.body.style.overflow = 'hidden';
 
-        // Setup touch gestures
-        this.setupTouchGestures(overlay);
-
-        // Render actual content after brief delay for smooth animation
-        setTimeout(() => this.render(), 150);
+        setTimeout(() => this.render(), 100);
     },
 
     /**
-     * Chiude l'enciclopedia con animazione
+     * Chiude l'enciclopedia
      */
     close() {
         const overlay = document.getElementById('abilities-encyclopedia-overlay');
         if (overlay) {
-            overlay.classList.remove('abilities-overlay-enter');
-            overlay.classList.add('abilities-overlay-exit');
+            overlay.classList.remove('enc-overlay-enter');
+            overlay.classList.add('enc-overlay-exit');
 
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 document.body.style.overflow = '';
-            }, 300);
+            }, 250);
         }
     },
 
     /**
-     * Toggle apri/chiudi l'enciclopedia
+     * Toggle
      */
     toggle() {
         const overlay = document.getElementById('abilities-encyclopedia-overlay');
@@ -251,82 +484,27 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Setup touch gestures for swipe-to-close
-     */
-    setupTouchGestures(element) {
-        const header = element.querySelector('.swipe-handle');
-        if (!header) return;
-
-        header.addEventListener('touchstart', (e) => {
-            if (!e.touches || e.touches.length === 0) return;
-            this.touchStartY = e.touches[0].clientY;
-            this.isDragging = true;
-        }, { passive: true });
-
-        header.addEventListener('touchmove', (e) => {
-            if (!this.isDragging || !e.touches || e.touches.length === 0) return;
-            this.touchCurrentY = e.touches[0].clientY;
-            const deltaY = this.touchCurrentY - this.touchStartY;
-
-            if (deltaY > 0) {
-                element.style.transform = `translateY(${deltaY}px)`;
-                element.style.opacity = Math.max(0.5, 1 - deltaY / 400);
-            }
-        }, { passive: true });
-
-        header.addEventListener('touchend', () => {
-            const deltaY = this.touchCurrentY - this.touchStartY;
-
-            if (deltaY > 120) {
-                this.close();
-            } else {
-                element.style.transform = '';
-                element.style.opacity = '';
-            }
-
-            this.isDragging = false;
-            this.touchStartY = 0;
-            this.touchCurrentY = 0;
-        }, { passive: true });
-    },
-
-    /**
-     * Render skeleton loading state
+     * Skeleton loader
      */
     renderSkeleton() {
         const overlay = document.getElementById('abilities-encyclopedia-overlay');
         if (!overlay) return;
 
         overlay.innerHTML = `
-            <div class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-                <!-- Skeleton Header -->
-                <div class="sticky top-0 z-30 glass-effect border-b border-white/5 px-4 py-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="skeleton-shimmer h-8 w-32 rounded-lg"></div>
-                        <div class="skeleton-shimmer h-11 w-11 rounded-full"></div>
-                    </div>
-                    <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+            <div class="h-full flex flex-col">
+                <div class="p-4">
+                    <div class="enc-skeleton h-6 w-32 mb-4"></div>
+                    <div class="enc-skeleton h-12 w-full mb-4"></div>
                 </div>
-
-                <!-- Skeleton Filters -->
-                <div class="flex gap-3 px-4 py-4">
-                    ${[1,2,3,4,5].map(() => `
-                        <div class="skeleton-shimmer h-11 w-20 rounded-full flex-shrink-0"></div>
-                    `).join('')}
-                </div>
-
-                <!-- Skeleton Cards -->
-                <div class="px-4 space-y-3">
-                    ${[1,2,3,4,5].map(() => `
-                        <div class="skeleton-shimmer h-28 w-full rounded-2xl"></div>
-                    `).join('')}
+                <div class="flex-1 px-4 space-y-3">
+                    ${[1,2,3,4,5,6].map(() => `<div class="enc-skeleton h-16 w-full"></div>`).join('')}
                 </div>
             </div>
         `;
     },
 
     /**
-     * Render principale (Mobile-First Premium)
+     * Render principale - Mobile First v2
      */
     render() {
         const overlay = document.getElementById('abilities-encyclopedia-overlay');
@@ -339,448 +517,389 @@ window.AbilitiesUI = {
         const hasMore = totalCount > this.currentDisplayCount;
 
         overlay.innerHTML = `
-            <div class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 smooth-scroll abilities-scroll">
+            <div class="h-full flex flex-col">
 
-                <!-- Header with Swipe Handle -->
-                <div class="sticky top-0 z-30 glass-effect border-b border-white/5 swipe-handle">
-                    <!-- Drag Indicator -->
+                <!-- HEADER MINIMALE -->
+                <div class="enc-drag-zone flex-shrink-0" id="enc-header-drag">
                     <div class="pt-3 pb-2">
-                        <div class="drag-indicator"></div>
+                        <div class="enc-drag-bar"></div>
                     </div>
 
-                    <div class="px-4 pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                                    <span class="text-xl">📔</span>
-                                </div>
-                                <div>
-                                    <h1 class="text-lg font-black text-white tracking-tight">Enciclopedia</h1>
-                                    <p class="text-xs text-violet-400 font-medium">${stats.total} Abilita</p>
-                                </div>
+                    <div class="flex items-center justify-between px-4 pb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📔</span>
+                            <div>
+                                <h1 class="text-lg font-black text-white">Enciclopedia</h1>
+                                <p class="text-xs text-violet-400">${stats.total} abilita</p>
                             </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <!-- Search Toggle -->
+                            <button onclick="window.AbilitiesUI.toggleSearch()"
+                                    class="enc-touch-btn ${this.searchVisible ? 'bg-violet-500/20' : 'bg-white/5'}">
+                                <svg class="w-5 h-5 ${this.searchVisible ? 'text-violet-400' : 'text-white/60'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </button>
+
+                            <!-- Close -->
                             <button onclick="window.AbilitiesUI.close()"
-                                    class="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-red-500/20 hover:border-red-500/30 transition-all touch-feedback">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="enc-touch-btn bg-white/5 hover:bg-red-500/20">
+                                <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Search Bar Premium -->
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <!-- SEARCH BAR (Collapsible) -->
+                <div class="enc-search-container ${this.searchVisible ? 'visible' : 'hidden'}">
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text"
+                               id="enc-search-input"
+                               class="enc-search-input"
+                               dir="ltr"
+                               autocomplete="off"
+                               autocorrect="off"
+                               autocapitalize="off"
+                               spellcheck="false"
+                               placeholder="Cerca abilita..."
+                               value="${this.currentSearch}"
+                               oninput="window.AbilitiesUI.handleSearch(this.value)">
+                        ${this.currentSearch ? `
+                            <button onclick="window.AbilitiesUI.clearSearch()"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 enc-touch-btn w-8 h-8">
+                                <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
-                            </div>
-                            <input type="text"
-                                   id="ability-search-input"
-                                   placeholder="Cerca abilita..."
-                                   value="${this.currentSearch}"
-                                   oninput="window.AbilitiesUI.handleSearch(this.value)"
-                                   class="w-full bg-white/5 text-white text-base pl-12 pr-4 py-3.5 rounded-2xl border border-white/10 focus:border-violet-500/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-violet-500/20 placeholder-white/30 transition-all">
-                            ${this.currentSearch ? `
-                                <button onclick="window.AbilitiesUI.clearSearch()"
-                                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            ` : ''}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- STATS TOGGLE (Collapsed by default) -->
+                <div onclick="window.AbilitiesUI.toggleStats()" class="enc-stats-toggle">
+                    <span class="text-sm">📊</span>
+                    <span class="text-xs font-bold text-violet-300">Statistiche</span>
+                    <svg class="w-4 h-4 text-violet-400 transition-transform ${this.statsVisible ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+
+                <!-- STATS PANEL -->
+                <div class="enc-stats-panel ${this.statsVisible ? 'visible' : 'hidden'}">
+                    <div class="grid grid-cols-4 gap-2 px-4 pb-3">
+                        <div class="text-center p-3 bg-violet-500/10 rounded-xl border border-violet-500/20">
+                            <div class="text-lg font-black text-violet-400">${stats.total}</div>
+                            <div class="text-[10px] text-violet-300/50 font-bold">TOTALI</div>
+                        </div>
+                        <div class="text-center p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+                            <div class="text-lg font-black text-red-400">${stats.byRarity.Leggendaria || 0}</div>
+                            <div class="text-[10px] text-red-300/50 font-bold">LEGEND.</div>
+                        </div>
+                        <div class="text-center p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                            <div class="text-lg font-black text-purple-400">${stats.byRarity.Rara || 0}</div>
+                            <div class="text-[10px] text-purple-300/50 font-bold">RARE</div>
+                        </div>
+                        <div class="text-center p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                            <div class="text-lg font-black text-yellow-400">${stats.byRarity.Unica || 0}</div>
+                            <div class="text-[10px] text-yellow-300/50 font-bold">ICONE</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Filter Chips (Large Touch Targets) -->
-                <div class="flex gap-2.5 overflow-x-auto hide-scrollbar py-4 px-4">
-                    ${this.renderFilterChip('all', 'Tutte', '✨', 'from-violet-500 to-purple-600', 'violet')}
-                    ${this.renderFilterChip('P', 'POR', '🧤', 'from-blue-500 to-blue-600', 'blue')}
-                    ${this.renderFilterChip('D', 'DIF', '🛡️', 'from-emerald-500 to-green-600', 'emerald')}
-                    ${this.renderFilterChip('C', 'CEN', '⚽', 'from-amber-500 to-yellow-600', 'amber')}
-                    ${this.renderFilterChip('A', 'ATT', '⚡', 'from-rose-500 to-red-600', 'rose')}
-                    ${this.renderFilterChip('Multi', 'Multi', '🌟', 'from-pink-500 to-fuchsia-600', 'pink')}
-                    ${this.renderFilterChip('Icone', 'Icone', '👑', 'from-yellow-400 to-amber-500', 'yellow')}
-                </div>
-
-                <!-- Stats Summary (Compact) -->
-                <div class="flex gap-2 px-4 mb-4">
-                    <div class="flex-1 bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 rounded-xl p-3 text-center">
-                        <div class="text-xl font-black text-purple-400">${stats.total}</div>
-                        <div class="text-[11px] text-purple-300/60 font-medium">Totali</div>
-                    </div>
-                    <div class="flex-1 bg-gradient-to-br from-red-500/10 to-transparent border border-red-500/20 rounded-xl p-3 text-center">
-                        <div class="text-xl font-black text-red-400">${stats.byRarity.Leggendaria || 0}</div>
-                        <div class="text-[11px] text-red-300/60 font-medium">Leggend.</div>
-                    </div>
-                    <div class="flex-1 bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20 rounded-xl p-3 text-center">
-                        <div class="text-xl font-black text-violet-400">${stats.byRarity.Rara || 0}</div>
-                        <div class="text-[11px] text-violet-300/60 font-medium">Rare</div>
-                    </div>
-                    <div class="flex-1 bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl p-3 text-center">
-                        <div class="text-xl font-black text-yellow-400">${stats.byRarity.Unica || 0}</div>
-                        <div class="text-[11px] text-yellow-300/60 font-medium">Icone</div>
-                    </div>
-                </div>
-
-                <!-- Results Count -->
-                ${this.currentSearch || this.currentFilter !== 'all' ? `
-                    <div class="px-4 mb-3">
-                        <p class="text-sm text-white/40">
+                <!-- RESULTS COUNT -->
+                <div id="enc-results-count" class="${this.currentSearch || this.currentFilter !== 'all' ? 'px-4 py-2' : 'hidden'}">
+                    ${this.currentSearch || this.currentFilter !== 'all' ? `
+                        <span class="text-sm text-white/40">
                             <span class="text-violet-400 font-bold">${totalCount}</span> risultat${totalCount === 1 ? 'o' : 'i'}
                             ${this.currentSearch ? ` per "${this.currentSearch}"` : ''}
-                        </p>
-                    </div>
-                ` : ''}
+                        </span>
+                    ` : ''}
+                </div>
 
-                <!-- Abilities Grid -->
-                <div class="px-4 pb-32">
+                <!-- CONTENT AREA -->
+                <div class="flex-1 overflow-y-auto enc-scroll-hide enc-content-area" id="enc-scroll-area">
                     ${displayedAbilities.length > 0 ? `
-                        ${this.renderAbilitiesByType(displayedAbilities)}
+                        ${this.renderAbilitiesList(displayedAbilities)}
 
                         ${hasMore ? `
-                            <div class="text-center py-6">
+                            <div class="p-4 text-center">
                                 <button onclick="window.AbilitiesUI.loadMore()"
-                                        class="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-base rounded-2xl shadow-lg shadow-purple-500/30 transition-all touch-feedback">
+                                        class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm rounded-xl transition-all active:scale-95">
                                     Mostra altre ${Math.min(this.displayLimit, totalCount - this.currentDisplayCount)}
-                                    <span class="text-white/60 ml-2">(${totalCount - this.currentDisplayCount} rimanenti)</span>
                                 </button>
+                                <p class="text-xs text-white/30 mt-2">${totalCount - this.currentDisplayCount} rimanenti</p>
                             </div>
                         ` : `
-                            <div class="text-center py-6">
-                                <p class="text-sm text-white/30">Hai visualizzato tutte le abilita</p>
+                            <div class="p-4 text-center">
+                                <p class="text-xs text-white/20">Fine lista</p>
                             </div>
                         `}
                     ` : `
-                        <div class="text-center py-16">
-                            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                                <span class="text-4xl">😢</span>
-                            </div>
-                            <p class="text-lg text-white/60 font-medium mb-2">Nessuna abilita trovata</p>
-                            <p class="text-sm text-white/30">Prova con un'altra ricerca o filtro</p>
+                        <div class="flex flex-col items-center justify-center h-64 px-8">
+                            <span class="text-5xl mb-4">🔍</span>
+                            <p class="text-white/60 font-medium text-center mb-2">Nessuna abilita trovata</p>
+                            <p class="text-white/30 text-sm text-center mb-4">Prova con altri filtri</p>
                             <button onclick="window.AbilitiesUI.resetFilters()"
-                                    class="mt-4 px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl transition-all touch-feedback">
-                                Resetta filtri
+                                    class="px-5 py-2 bg-white/10 text-white text-sm font-medium rounded-lg active:scale-95">
+                                Reset filtri
                             </button>
                         </div>
                     `}
                 </div>
 
+                <!-- BOTTOM FILTER BAR -->
+                <div class="enc-bottom-bar">
+                    <div class="flex justify-around">
+                        ${this.renderFilterButton('all', '✨', 'Tutte')}
+                        ${this.renderFilterButton('P', '🧤', 'POR')}
+                        ${this.renderFilterButton('D', '🛡️', 'DIF')}
+                        ${this.renderFilterButton('C', '⚽', 'CEN')}
+                        ${this.renderFilterButton('A', '⚡', 'ATT')}
+                        ${this.renderFilterButton('Multi', '🌟', 'Multi')}
+                        ${this.renderFilterButton('Icone', '👑', 'Icone')}
+                    </div>
+                </div>
+
             </div>
         `;
 
-        // Add staggered animation to cards
-        requestAnimationFrame(() => {
-            const cards = overlay.querySelectorAll('.ability-card-animate');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 50}ms`;
-            });
-        });
+        // Setup drag to close
+        this.setupDragToClose();
 
-        // Re-setup touch gestures after render
-        this.setupTouchGestures(overlay);
+        // Focus search if visible
+        if (this.searchVisible) {
+            setTimeout(() => {
+                const input = document.getElementById('enc-search-input');
+                if (input) input.focus();
+            }, 100);
+        }
     },
 
     /**
-     * Render filter chip with proper touch target
+     * Render filter button for bottom bar
      */
-    renderFilterChip(filter, label, icon, gradient, color) {
+    renderFilterButton(filter, icon, label) {
         const isActive = this.currentFilter === filter;
-
         return `
             <button onclick="window.AbilitiesUI.filter('${filter}')"
-                    class="flex-shrink-0 flex items-center gap-2 min-h-[44px] px-4 py-2.5 rounded-full font-bold text-sm transition-all touch-feedback
-                           ${isActive
-                               ? `bg-gradient-to-r ${gradient} text-white shadow-lg shadow-${color}-500/30 filter-chip-active`
-                               : `bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white`}">
-                <span class="text-base">${icon}</span>
-                <span>${label}</span>
+                    class="enc-filter-btn ${isActive ? 'active' : ''}">
+                <span class="enc-filter-icon">${icon}</span>
+                <span class="enc-filter-label">${label}</span>
             </button>
         `;
     },
 
     /**
-     * Carica altre abilita
+     * Render abilities list with sections
      */
-    loadMore() {
-        this.currentDisplayCount += this.displayLimit;
-        this.render();
+    renderAbilitiesList(abilities) {
+        // Separate by type
+        const unique = abilities.filter(a => a.rarity === 'Unica');
+        const normalAbilities = abilities.filter(a => a.rarity !== 'Unica');
+        const positive = normalAbilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
+        const negative = normalAbilities.filter(a => a.type === 'Negativa');
+
+        let html = '';
+
+        // Unique abilities section
+        if (unique.length > 0) {
+            html += `
+                <div class="enc-section-header">
+                    <div class="enc-section-icon bg-yellow-500/20">👑</div>
+                    <span class="enc-section-title text-yellow-400">Abilita Icone</span>
+                    <span class="enc-section-count">${unique.length}</span>
+                </div>
+                <div class="px-4 space-y-2">
+                    ${unique.map(a => this.renderAbilityItem(a)).join('')}
+                </div>
+            `;
+        }
+
+        // Positive abilities section
+        if (positive.length > 0) {
+            html += `
+                <div class="enc-section-header">
+                    <div class="enc-section-icon bg-emerald-500/20">✅</div>
+                    <span class="enc-section-title text-emerald-400">Positive</span>
+                    <span class="enc-section-count">${positive.length}</span>
+                </div>
+                <div class="px-4 space-y-2">
+                    ${this.sortByRarity(positive).map(a => this.renderAbilityItem(a)).join('')}
+                </div>
+            `;
+        }
+
+        // Negative abilities section
+        if (negative.length > 0) {
+            html += `
+                <div class="enc-section-header">
+                    <div class="enc-section-icon bg-rose-500/20">❌</div>
+                    <span class="enc-section-title text-rose-400">Negative</span>
+                    <span class="enc-section-count">${negative.length}</span>
+                </div>
+                <div class="px-4 space-y-2">
+                    ${this.sortByRarity(negative).map(a => this.renderAbilityItem(a)).join('')}
+                </div>
+            `;
+        }
+
+        return html;
     },
 
     /**
-     * Clear search
+     * Render single ability item (simplified)
      */
-    clearSearch() {
-        this.currentSearch = '';
-        this.currentDisplayCount = this.displayLimit;
-        this.render();
-
-        // Focus input after clear
-        setTimeout(() => {
-            const input = document.getElementById('ability-search-input');
-            if (input) input.focus();
-        }, 100);
-    },
-
-    /**
-     * Reset all filters
-     */
-    resetFilters() {
-        this.currentFilter = 'all';
-        this.currentSearch = '';
-        this.currentDisplayCount = this.displayLimit;
-        this.render();
-    },
-
-    /**
-     * Render singola card Abilita (Mobile-First - Large Touch Target)
-     */
-    renderAbilityCard(ability, index = 0) {
-        const rarityStyles = {
-            'Comune': {
-                border: 'border-slate-600/30',
-                bg: 'from-slate-800/40',
-                badge: 'bg-slate-700/80 text-slate-300',
-                glow: ''
-            },
-            'Rara': {
-                border: 'border-violet-500/30',
-                bg: 'from-violet-900/20',
-                badge: 'bg-violet-500/20 text-violet-300',
-                glow: 'shadow-violet-500/10'
-            },
-            'Leggendaria': {
-                border: 'border-red-500/30',
-                bg: 'from-red-900/20',
-                badge: 'bg-red-500/20 text-red-300',
-                glow: 'shadow-red-500/10'
-            },
-            'Unica': {
-                border: 'border-yellow-500/40',
-                bg: 'from-yellow-900/20',
-                badge: 'bg-yellow-500/20 text-yellow-300',
-                glow: 'shadow-yellow-500/20'
-            }
-        };
-
-        const style = rarityStyles[ability.rarity] || rarityStyles['Comune'];
+    renderAbilityItem(ability) {
+        const isExpanded = this.expandedCard === ability.name;
+        const rarityClass = `enc-rarity-${(ability.rarity || 'comune').toLowerCase()}`;
         const safeName = (ability.name || '').replace(/'/g, "\\'");
 
         return `
-            <div class="ability-card-animate ability-card bg-gradient-to-br ${style.bg} to-slate-900/60 rounded-2xl p-4 border ${style.border} hover:border-white/20 transition-all touch-feedback shadow-lg ${style.glow} cursor-pointer min-h-[100px]"
-                 onclick="window.AbilitiesUI.showDetails('${safeName}')">
-
-                <!-- Header with large tap area -->
-                <div class="flex items-start gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center flex-shrink-0">
-                        <span class="text-2xl">${ability.icon}</span>
+            <div class="enc-card-enter" style="animation-delay: ${Math.random() * 0.1}s">
+                <div onclick="window.AbilitiesUI.toggleCard('${safeName}')"
+                     class="enc-ability-item ${isExpanded ? 'expanded' : ''}">
+                    <div class="enc-ability-icon">${ability.icon}</div>
+                    <div class="enc-ability-info">
+                        <div class="enc-ability-name ${ability.color}">${ability.name}</div>
+                        <div class="enc-ability-meta">${this.getRoleLabel(ability.role)}</div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-2">
-                            <h3 class="text-base font-bold ${ability.color} truncate">${ability.name}</h3>
-                            <span class="text-xs ${style.badge} px-2.5 py-1 rounded-full font-bold flex-shrink-0">
-                                ${ability.rarity === 'Leggendaria' ? 'LEG' : ability.rarity === 'Unica' ? 'UNICA' : ability.rarity.toUpperCase().slice(0,3)}
-                            </span>
-                        </div>
-                        <p class="text-sm text-white/40 mt-0.5">${this.getRoleLabel(ability.role)}</p>
-                    </div>
+                    <span class="${rarityClass} enc-rarity-badge">
+                        ${ability.rarity === 'Leggendaria' ? 'LEG' : ability.rarity === 'Unica' ? 'UNICA' : (ability.rarity || 'COM').slice(0,3).toUpperCase()}
+                    </span>
                 </div>
 
-                <!-- Tap hint -->
-                <div class="flex items-center justify-end mt-2 text-white/20">
-                    <span class="text-xs">Tocca per dettagli</span>
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Mostra dettagli completi Abilita (Bottom Sheet Mobile Pattern)
-     */
-    showDetails(abilityName) {
-        const ability = window.AbilitiesEncyclopedia.abilities[abilityName];
-        if (!ability) return;
-
-        const rarityStyles = {
-            'Comune': { border: 'border-slate-600', text: 'text-slate-400', bg: 'from-slate-800/80', accent: 'slate' },
-            'Rara': { border: 'border-violet-500', text: 'text-violet-400', bg: 'from-violet-900/40', accent: 'violet' },
-            'Leggendaria': { border: 'border-red-500', text: 'text-red-400', bg: 'from-red-900/40', accent: 'red' },
-            'Unica': { border: 'border-yellow-500', text: 'text-yellow-400', bg: 'from-yellow-900/40', accent: 'yellow' }
-        };
-
-        const style = rarityStyles[ability.rarity] || rarityStyles['Comune'];
-
-        // Remove existing bottom sheet if any
-        const existing = document.getElementById('ability-detail-sheet');
-        if (existing) existing.remove();
-
-        // Create backdrop
-        const backdrop = document.createElement('div');
-        backdrop.id = 'ability-detail-backdrop';
-        backdrop.className = 'fixed inset-0 bg-black/60 z-[9999] transition-opacity';
-        backdrop.onclick = () => this.closeDetails();
-
-        // Create bottom sheet
-        const sheet = document.createElement('div');
-        sheet.id = 'ability-detail-sheet';
-        sheet.className = 'fixed bottom-0 left-0 right-0 z-[10000] max-h-[90vh] bottom-sheet-enter';
-
-        this.bottomSheetElement = sheet;
-
-        sheet.innerHTML = `
-            <div class="bg-gradient-to-b ${style.bg} to-slate-900 rounded-t-3xl border-t ${style.border} overflow-hidden">
-
-                <!-- Drag Handle -->
-                <div class="sticky top-0 z-10 glass-effect pt-3 pb-4 px-4 detail-swipe-handle">
-                    <div class="drag-indicator mb-4"></div>
-
-                    <!-- Header -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${style.bg} border ${style.border} flex items-center justify-center shadow-lg">
-                            <span class="text-3xl">${ability.icon}</span>
-                        </div>
-                        <div class="flex-1">
-                            <h2 class="text-xl font-black ${ability.color}">${ability.name}</h2>
-                            <div class="flex items-center gap-3 mt-1">
-                                <span class="text-sm text-white/50">${this.getRoleLabel(ability.role)}</span>
-                                <span class="text-sm ${style.text} font-bold">${ability.rarity}</span>
+                ${isExpanded ? `
+                    <div class="enc-expand-enter mx-4 mb-2">
+                        <div class="enc-detail-section">
+                            <div class="enc-detail-row">
+                                <div class="enc-detail-label">Descrizione</div>
+                                <div class="enc-detail-value">${ability.description}</div>
                             </div>
-                        </div>
-                        <button onclick="window.AbilitiesUI.closeDetails()"
-                                class="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 text-white/60 hover:text-white hover:bg-red-500/20 transition-all touch-feedback">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Scrollable Content -->
-                <div class="overflow-y-auto max-h-[calc(90vh-120px)] px-4 pb-8 smooth-scroll abilities-scroll">
-                    <div class="space-y-4">
-
-                        <!-- Descrizione -->
-                        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
-                            <p class="text-xs text-white/40 uppercase tracking-wider font-bold mb-2">Descrizione</p>
-                            <p class="text-base text-white/80 leading-relaxed">${ability.description}</p>
-                        </div>
-
-                        <!-- Effetto (Highlighted) -->
-                        <div class="bg-gradient-to-br from-violet-500/15 to-purple-500/5 rounded-2xl p-4 border border-violet-500/30">
-                            <p class="text-xs text-violet-400 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
-                                <span>⚡</span> Effetto in Partita
-                            </p>
-                            <p class="text-base text-white font-semibold leading-relaxed">${ability.effect}</p>
-                        </div>
-
-                        <!-- Come Funziona -->
-                        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
-                            <p class="text-xs text-blue-400 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
-                                <span>⚙️</span> Meccanica
-                            </p>
-                            <p class="text-base text-white/70 leading-relaxed">${ability.mechanics}</p>
-                        </div>
-
-                        <!-- Esempio -->
-                        <div class="bg-gradient-to-br from-emerald-500/10 to-green-500/5 rounded-2xl p-4 border border-emerald-500/20">
-                            <p class="text-xs text-emerald-400 uppercase tracking-wider font-bold mb-2">📝 Esempio</p>
-                            <div class="bg-black/30 rounded-xl p-3">
-                                <p class="text-sm text-white/60 font-mono leading-relaxed">${ability.example}</p>
+                            <div class="enc-detail-row">
+                                <div class="enc-detail-label text-violet-400">⚡ Effetto</div>
+                                <div class="enc-detail-value font-semibold">${ability.effect}</div>
                             </div>
-                        </div>
-
-                        <!-- Stats Grid -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
-                                <p class="text-xs text-white/40 uppercase font-bold mb-1">Attivazione</p>
-                                <p class="text-base text-white font-bold">${ability.activation}</p>
+                            <div class="enc-detail-row">
+                                <div class="enc-detail-label text-blue-400">⚙️ Meccanica</div>
+                                <div class="enc-detail-value">${ability.mechanics}</div>
                             </div>
-                            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
-                                <p class="text-xs text-white/40 uppercase font-bold mb-1">Fase</p>
-                                <p class="text-base text-white font-bold">${ability.phase || 'Tutte'}</p>
-                            </div>
-                        </div>
-
-                        ${ability.warning ? `
-                            <div class="bg-gradient-to-br from-red-500/15 to-rose-500/5 rounded-2xl p-4 border border-red-500/30">
-                                <p class="text-xs text-red-400 uppercase tracking-wider font-bold mb-2">⚠️ Attenzione</p>
-                                <p class="text-base text-white/70 leading-relaxed">${ability.warning}</p>
-                            </div>
-                        ` : ''}
-
-                        ${ability.synergy ? `
-                            <div class="bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 rounded-2xl p-4 border border-purple-500/20">
-                                <p class="text-xs text-purple-400 uppercase tracking-wider font-bold mb-3">🔗 Sinergie</p>
-                                <div class="space-y-2">
-                                    ${ability.synergy.map(s => `
-                                        <div class="flex items-start gap-3 text-base text-white/70">
-                                            <span class="text-purple-400 mt-1">•</span>
-                                            <span class="leading-relaxed">${s}</span>
-                                        </div>
-                                    `).join('')}
+                            ${ability.example ? `
+                                <div class="enc-detail-row">
+                                    <div class="enc-detail-label text-emerald-400">📝 Esempio</div>
+                                    <div class="enc-detail-value text-sm opacity-70 font-mono">${ability.example}</div>
+                                </div>
+                            ` : ''}
+                            <div class="flex gap-4 mt-3 pt-3 border-t border-white/5">
+                                <div>
+                                    <div class="enc-detail-label">Attivazione</div>
+                                    <div class="text-sm text-white font-medium">${ability.activation || '-'}</div>
+                                </div>
+                                <div>
+                                    <div class="enc-detail-label">Fase</div>
+                                    <div class="text-sm text-white font-medium">${ability.phase || 'Tutte'}</div>
                                 </div>
                             </div>
-                        ` : ''}
-
-                        ${ability.impact ? `
-                            <div class="bg-gradient-to-br from-yellow-500/15 to-amber-500/5 rounded-2xl p-4 border border-yellow-500/30 text-center">
-                                <p class="text-xs text-yellow-400 uppercase tracking-wider font-bold mb-2">💥 Impatto</p>
-                                <p class="text-3xl text-white font-black">${ability.impact}</p>
-                            </div>
-                        ` : ''}
-
+                            ${ability.warning ? `
+                                <div class="mt-3 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                    <div class="text-xs font-bold text-red-400 mb-1">⚠️ Attenzione</div>
+                                    <div class="text-sm text-white/70">${ability.warning}</div>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
-                </div>
+                ` : ''}
             </div>
         `;
-
-        document.body.appendChild(backdrop);
-        document.body.appendChild(sheet);
-
-        // Setup swipe to close for bottom sheet
-        this.setupBottomSheetGestures(sheet, backdrop);
     },
 
     /**
-     * Setup swipe gestures for bottom sheet
+     * Toggle card expansion
      */
-    setupBottomSheetGestures(sheet, backdrop) {
-        const handle = sheet.querySelector('.detail-swipe-handle');
-        if (!handle) return;
+    toggleCard(name) {
+        if (this.expandedCard === name) {
+            this.expandedCard = null;
+        } else {
+            this.expandedCard = name;
+        }
+        this.updateResultsOnly();
+
+        // Scroll to card
+        if (this.expandedCard) {
+            setTimeout(() => {
+                const scrollArea = document.getElementById('enc-scroll-area');
+                const card = scrollArea?.querySelector('.expanded');
+                if (card && scrollArea) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+    },
+
+    /**
+     * Toggle search visibility
+     */
+    toggleSearch() {
+        this.searchVisible = !this.searchVisible;
+        if (!this.searchVisible) {
+            this.currentSearch = '';
+            this.currentDisplayCount = this.displayLimit;
+        }
+        this.render();
+    },
+
+    /**
+     * Toggle stats panel
+     */
+    toggleStats() {
+        this.statsVisible = !this.statsVisible;
+        this.render();
+    },
+
+    /**
+     * Setup drag to close
+     */
+    setupDragToClose() {
+        const header = document.getElementById('enc-header-drag');
+        const overlay = document.getElementById('abilities-encyclopedia-overlay');
+        if (!header || !overlay) return;
 
         let startY = 0;
         let currentY = 0;
         let isDragging = false;
 
-        handle.addEventListener('touchstart', (e) => {
+        header.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
             isDragging = true;
-            sheet.style.transition = 'none';
+            overlay.style.transition = 'none';
         }, { passive: true });
 
-        handle.addEventListener('touchmove', (e) => {
+        header.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
             currentY = e.touches[0].clientY;
             const deltaY = currentY - startY;
 
             if (deltaY > 0) {
-                sheet.style.transform = `translateY(${deltaY}px)`;
-                backdrop.style.opacity = Math.max(0.3, 1 - deltaY / 300);
+                overlay.style.transform = `translateY(${deltaY}px)`;
+                overlay.style.opacity = Math.max(0.3, 1 - deltaY / 300);
             }
         }, { passive: true });
 
-        handle.addEventListener('touchend', () => {
-            sheet.style.transition = '';
+        header.addEventListener('touchend', () => {
+            overlay.style.transition = '';
             const deltaY = currentY - startY;
 
             if (deltaY > 100) {
-                this.closeDetails();
+                this.close();
             } else {
-                sheet.style.transform = '';
-                backdrop.style.opacity = '';
+                overlay.style.transform = '';
+                overlay.style.opacity = '';
             }
 
             isDragging = false;
@@ -790,66 +909,143 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Close details bottom sheet
+     * Load more abilities
      */
-    closeDetails() {
-        const sheet = document.getElementById('ability-detail-sheet');
-        const backdrop = document.getElementById('ability-detail-backdrop');
-
-        if (sheet) {
-            sheet.classList.remove('bottom-sheet-enter');
-            sheet.classList.add('bottom-sheet-exit');
-        }
-        if (backdrop) {
-            backdrop.style.opacity = '0';
-        }
-
-        setTimeout(() => {
-            sheet?.remove();
-            backdrop?.remove();
-        }, 250);
+    loadMore() {
+        this.currentDisplayCount += this.displayLimit;
+        this.updateResultsOnly();
     },
 
     /**
-     * Filtra Abilita per ruolo
+     * Clear search
+     */
+    clearSearch() {
+        this.currentSearch = '';
+        this.currentDisplayCount = this.displayLimit;
+        this.render();
+        setTimeout(() => {
+            const input = document.getElementById('enc-search-input');
+            if (input) input.focus();
+        }, 50);
+    },
+
+    /**
+     * Reset all filters
+     */
+    resetFilters() {
+        this.currentFilter = 'all';
+        this.currentSearch = '';
+        this.searchVisible = false;
+        this.expandedCard = null;
+        this.currentDisplayCount = this.displayLimit;
+        this.render();
+    },
+
+    /**
+     * Filter by role
      */
     filter(role) {
         this.currentFilter = role;
+        this.expandedCard = null;
         this.currentDisplayCount = this.displayLimit;
         this.render();
+
+        // Scroll to top
+        const scrollArea = document.getElementById('enc-scroll-area');
+        if (scrollArea) scrollArea.scrollTop = 0;
     },
 
     /**
-     * Gestisce ricerca
+     * Handle search input - aggiorna solo i risultati senza ricreare l'input
      */
     handleSearch(query) {
         this.currentSearch = query;
+        this.expandedCard = null;
         this.currentDisplayCount = this.displayLimit;
-        this.render();
+        this.updateResultsOnly();
     },
 
     /**
-     * Ottieni Abilita filtrate
+     * Aggiorna solo l'area risultati (per evitare di ricreare l'input durante la digitazione)
+     */
+    updateResultsOnly() {
+        const scrollArea = document.getElementById('enc-scroll-area');
+        const resultsCountEl = document.getElementById('enc-results-count');
+        if (!scrollArea) return;
+
+        const abilities = this.getFilteredAbilities();
+        const totalCount = abilities.length;
+        const displayedAbilities = abilities.slice(0, this.currentDisplayCount);
+        const hasMore = totalCount > this.currentDisplayCount;
+
+        // Aggiorna conteggio risultati
+        if (resultsCountEl) {
+            if (this.currentSearch || this.currentFilter !== 'all') {
+                resultsCountEl.innerHTML = `
+                    <span class="text-sm text-white/40">
+                        <span class="text-violet-400 font-bold">${totalCount}</span> risultat${totalCount === 1 ? 'o' : 'i'}
+                        ${this.currentSearch ? ` per "${this.currentSearch}"` : ''}
+                    </span>
+                `;
+                resultsCountEl.className = 'px-4 py-2';
+            } else {
+                resultsCountEl.className = 'hidden';
+                resultsCountEl.innerHTML = '';
+            }
+        }
+
+        // Aggiorna lista risultati
+        if (displayedAbilities.length > 0) {
+            scrollArea.innerHTML = `
+                ${this.renderAbilitiesList(displayedAbilities)}
+
+                ${hasMore ? `
+                    <div class="p-4 text-center">
+                        <button onclick="window.AbilitiesUI.loadMore()"
+                                class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm rounded-xl transition-all active:scale-95">
+                            Mostra altre ${Math.min(this.displayLimit, totalCount - this.currentDisplayCount)}
+                        </button>
+                        <p class="text-xs text-white/30 mt-2">${totalCount - this.currentDisplayCount} rimanenti</p>
+                    </div>
+                ` : `
+                    <div class="p-4 text-center">
+                        <p class="text-xs text-white/20">Fine lista</p>
+                    </div>
+                `}
+            `;
+        } else {
+            scrollArea.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-64 px-8">
+                    <span class="text-5xl mb-4">🔍</span>
+                    <p class="text-white/60 font-medium text-center mb-2">Nessuna abilita trovata</p>
+                    <p class="text-white/30 text-sm text-center mb-4">Prova con altri filtri</p>
+                    <button onclick="window.AbilitiesUI.resetFilters()"
+                            class="px-5 py-2 bg-white/10 text-white text-sm font-medium rounded-lg active:scale-95">
+                        Reset filtri
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    /**
+     * Get filtered abilities
      */
     getFilteredAbilities() {
         let abilities = [];
 
-        // Filtro ruolo
         if (this.currentFilter === 'all') {
             abilities = Object.values(window.AbilitiesEncyclopedia.abilities);
         } else if (this.currentFilter === 'Multi') {
-            // Mostra solo abilita Multi-ruolo (non Uniche)
             abilities = Object.values(window.AbilitiesEncyclopedia.abilities)
                 .filter(a => a.role === 'Multi' && a.rarity !== 'Unica');
         } else if (this.currentFilter === 'Icone') {
-            // Mostra solo abilita Uniche (Abilita Icone)
             abilities = Object.values(window.AbilitiesEncyclopedia.abilities)
                 .filter(a => a.rarity === 'Unica');
         } else {
             abilities = window.AbilitiesEncyclopedia.getAbilitiesByRole(this.currentFilter);
         }
 
-        // Filtro ricerca
         if (this.currentSearch) {
             const search = this.currentSearch.toLowerCase();
             abilities = abilities.filter(a =>
@@ -863,114 +1059,15 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Ordina abilita per rarita: Comune, Rara, Epica, Leggendaria, Unica
+     * Sort by rarity
      */
     sortByRarity(abilities) {
-        const rarityOrder = {
-            'Comune': 1,
-            'Rara': 2,
-            'Epica': 3,
-            'Leggendaria': 4,
-            'Unica': 5
-        };
-        return [...abilities].sort((a, b) => {
-            const orderA = rarityOrder[a.rarity] || 0;
-            const orderB = rarityOrder[b.rarity] || 0;
-            return orderA - orderB;
-        });
+        const order = { 'Comune': 1, 'Rara': 2, 'Epica': 3, 'Leggendaria': 4, 'Unica': 5 };
+        return [...abilities].sort((a, b) => (order[a.rarity] || 0) - (order[b.rarity] || 0));
     },
 
     /**
-     * Renderizza Abilita separate per tipo (positive/negative) - Mobile-First
-     */
-    renderAbilitiesByType(abilities) {
-        // Separa abilita uniche dalle altre
-        const unique = abilities.filter(a => a.rarity === 'Unica');
-        const normalAbilities = abilities.filter(a => a.rarity !== 'Unica');
-
-        const positive = normalAbilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
-        const negative = normalAbilities.filter(a => a.type === 'Negativa');
-
-        // Ordina per rarita
-        const sortedPositive = this.sortByRarity(positive);
-        const sortedNegative = this.sortByRarity(negative);
-
-        let html = '';
-
-        // Sezione Abilita Uniche (ICONE)
-        if (unique.length > 0) {
-            const isIconeFilter = this.currentFilter === 'Icone';
-            html += `
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center">
-                            <span class="text-xl">👑</span>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-yellow-400">${isIconeFilter ? 'Abilita Icone' : 'Abilita Uniche'}</h3>
-                            <p class="text-sm text-yellow-400/60">${unique.length} abilita esclusive</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-r from-yellow-500/10 to-transparent rounded-2xl p-4 mb-4 border border-yellow-500/20">
-                        <p class="text-yellow-300 font-bold text-sm">✨ Esclusive delle Icone</p>
-                        <p class="text-white/50 text-sm mt-1">Ogni Icona ha la propria abilita unica che la distingue.</p>
-                    </div>
-                    <div class="space-y-3">
-                        ${unique.map((ability, i) => this.renderAbilityCard(ability, i)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Sezione Abilita Positive
-        if (positive.length > 0) {
-            html += `
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
-                            <span class="text-xl">✅</span>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-emerald-400">Positive</h3>
-                            <p class="text-sm text-emerald-400/60">${positive.length} abilita</p>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        ${sortedPositive.map((ability, i) => this.renderAbilityCard(ability, i)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Sezione Abilita Negative
-        if (negative.length > 0) {
-            html += `
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center">
-                            <span class="text-xl">❌</span>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-rose-400">Negative</h3>
-                            <p class="text-sm text-rose-400/60">${negative.length} abilita</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-r from-red-500/10 to-transparent rounded-2xl p-4 mb-4 border border-red-500/20">
-                        <p class="text-yellow-300 font-bold text-sm">⚠️ Attenzione</p>
-                        <p class="text-white/50 text-sm mt-1">Max 2 abilita negative per giocatore.</p>
-                    </div>
-                    <div class="space-y-3">
-                        ${sortedNegative.map((ability, i) => this.renderAbilityCard(ability, i)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        return html;
-    },
-
-    /**
-     * Helper label ruolo
+     * Get role label
      */
     getRoleLabel(role) {
         const labels = {
@@ -986,4 +1083,4 @@ window.AbilitiesUI = {
     }
 };
 
-console.log("Modulo Abilities Encyclopedia UI (Mobile Premium) caricato.");
+console.log("Modulo Abilities Encyclopedia UI v2 (Mobile-First) caricato.");

@@ -810,7 +810,8 @@
         state.challengeId = options.challengeId || null;
         state.myRole = options.myRole || null;
         // myTeam: A=rosso (challenger), B=blu (challenged) - usa options.myTeam se fornito
-        state.myTeam = options.myTeam || (state.myRole === 'attacker' ? 'A' : 'B');
+        // In testMode senza multiplayer, il giocatore e' sempre Team A (rosso)
+        state.myTeam = options.myTeam || (state.testMode && !state.multiplayer ? 'A' : (state.myRole === 'attacker' ? 'A' : 'B'));
         state.onMove = options.onMove || null;
         state.isMyTurn = true; // Default, aggiornato da updateMultiplayerState
 
@@ -893,8 +894,12 @@
             state.ballPosition = gameState.ballPosition || null;
             state.isGameOver = gameState.isGameOver || false;
 
-            // Aggiorna currentTeam per UI
-            state.currentTeam = isMyTurn ? myTeam : (myTeam === 'A' ? 'B' : 'A');
+            // Usa currentTeam dal gameState se disponibile, altrimenti calcola da isMyTurn
+            if (gameState.currentTeam) {
+                state.currentTeam = gameState.currentTeam;
+            } else {
+                state.currentTeam = isMyTurn ? myTeam : (myTeam === 'A' ? 'B' : 'A');
+            }
 
             if (gameState.players) {
                 players = gameState.players.map(p => ({ ...p }));
@@ -995,6 +1000,14 @@
 
         buildPitch();
         update();
+
+        // In testMode, se il Bot inizia, avvia il suo turno
+        if (state.testMode && !state.multiplayer) {
+            const botTeam = state.myTeam === 'A' ? 'B' : 'A';
+            if (state.currentTeam === botTeam) {
+                setTimeout(() => executeBotTurn(botTeam), 1000);
+            }
+        }
     }
 
     /**
@@ -1824,9 +1837,15 @@
 
     /**
      * Sincronizza stato partita con server (multiplayer)
+     * @param {boolean} endOfTurn - true se il turno e' finito e passa all'avversario
      */
-    function syncMultiplayerState() {
+    function syncMultiplayerState(endOfTurn = false) {
         if (!state.onMove) return;
+
+        // Calcola il prossimo team se e' fine turno
+        const nextTeam = endOfTurn
+            ? (state.currentTeam === 'A' ? 'B' : 'A')
+            : state.currentTeam;
 
         const gameState = {
             players: players.map(p => ({
@@ -1843,10 +1862,12 @@
             })),
             scoreA: state.scoreA,
             scoreB: state.scoreB,
-            movesLeft: state.actionsLeft,
+            movesLeft: endOfTurn ? 3 : state.actionsLeft,
+            currentTeam: nextTeam,
             ballCarrierId: state.ballCarrierId,
             ballPosition: state.ballPosition,
-            isGameOver: state.isGameOver
+            isGameOver: state.isGameOver,
+            lastMoveAt: Date.now()
         };
 
         state.onMove(gameState);
@@ -1861,6 +1882,189 @@
             p.defenseCells = [];
         });
         logMsg(`--- TURNO ${state.currentTeam === 'A' ? 'ROSSO' : 'BLU'} ---`, "text-yellow-500 font-bold");
+
+        // In testMode senza multiplayer, il Bot gioca per la squadra avversaria
+        if (state.testMode && !state.multiplayer) {
+            const botTeam = state.myTeam === 'A' ? 'B' : 'A';
+            if (state.currentTeam === botTeam) {
+                setTimeout(() => executeBotTurn(botTeam), 800);
+            }
+        }
+    }
+
+    // ========================================
+    // BOT AI (per testMode)
+    // ========================================
+
+    /**
+     * Esegue il turno del Bot (3 azioni)
+     */
+    function executeBotTurn(botTeam) {
+        if (state.isGameOver || state.currentTeam !== botTeam) return;
+
+        logMsg("🤖 Bot sta pensando...", "text-cyan-400");
+
+        let actionsRemaining = 3;
+
+        function doNextAction() {
+            if (state.isGameOver || actionsRemaining <= 0 || state.currentTeam !== botTeam) {
+                return;
+            }
+
+            const botPlayers = players.filter(p => p.team === botTeam && !p.isGK);
+            const carrier = players.find(p => p.id === state.ballCarrierId);
+            const hasball = carrier && carrier.team === botTeam;
+
+            if (hasball) {
+                // Bot ha la palla - prova a tirare o passare
+                const goalX = botTeam === 'A' ? GRID_W - 1 : 0;
+                const distanceToGoal = Math.abs(carrier.x - goalX);
+
+                if (distanceToGoal <= 4) {
+                    // Abbastanza vicino - TIRA!
+                    logMsg(`🤖 ${carrier.name} tira!`, "text-cyan-400");
+                    state.selectedPlayer = carrier;
+                    executeShot(carrier, Math.floor(GRID_H / 2));
+                    actionsRemaining = 0; // Shot consuma azione e potrebbe cambiare turno
+                } else {
+                    // Troppo lontano - passa o avanza
+                    const forwardTeammates = botPlayers.filter(p =>
+                        p.id !== carrier.id &&
+                        (botTeam === 'A' ? p.x > carrier.x : p.x < carrier.x)
+                    );
+
+                    if (forwardTeammates.length > 0 && Math.random() < 0.6) {
+                        // Passa a un compagno avanti
+                        const target = forwardTeammates[Math.floor(Math.random() * forwardTeammates.length)];
+                        logMsg(`🤖 ${carrier.name} passa a ${target.name}`, "text-cyan-400");
+                        executePass(carrier, { x: target.x, y: target.y, id: target.id });
+                        actionsRemaining--;
+                    } else {
+                        // Avanza verso la porta
+                        const dx = botTeam === 'A' ? 1 : -1;
+                        const newX = Math.max(0, Math.min(GRID_W - 1, carrier.x + dx));
+                        const newY = carrier.y;
+
+                        if (!players.find(p => p.x === newX && p.y === newY)) {
+                            carrier.x = newX;
+                            logMsg(`🤖 ${carrier.name} avanza!`, "text-cyan-400");
+                            actionsRemaining--;
+                            update();
+                        } else {
+                            // Cella occupata, prova passaggio
+                            const anyTeammate = botPlayers.find(p => p.id !== carrier.id);
+                            if (anyTeammate) {
+                                executePass(carrier, { x: anyTeammate.x, y: anyTeammate.y, id: anyTeammate.id });
+                                actionsRemaining--;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Bot NON ha la palla - difendi o prova a rubarla
+                const enemyCarrier = players.find(p => p.id === state.ballCarrierId);
+
+                if (enemyCarrier) {
+                    // Trova giocatore piu' vicino all'avversario con palla
+                    const closest = botPlayers
+                        .filter(p => !p.defenseMode)
+                        .sort((a, b) => {
+                            const distA = Math.abs(a.x - enemyCarrier.x) + Math.abs(a.y - enemyCarrier.y);
+                            const distB = Math.abs(b.x - enemyCarrier.x) + Math.abs(b.y - enemyCarrier.y);
+                            return distA - distB;
+                        })[0];
+
+                    if (closest) {
+                        const dist = Math.abs(closest.x - enemyCarrier.x) + Math.abs(closest.y - enemyCarrier.y);
+
+                        if (dist === 1) {
+                            // Adiacente - contrasta!
+                            logMsg(`🤖 ${closest.name} contrasta!`, "text-cyan-400");
+                            state.selectedPlayer = closest;
+                            executeContrasto(closest, enemyCarrier);
+                            actionsRemaining--;
+                        } else if (dist <= 3) {
+                            // Vicino - muoviti verso la palla
+                            const dx = enemyCarrier.x > closest.x ? 1 : (enemyCarrier.x < closest.x ? -1 : 0);
+                            const dy = enemyCarrier.y > closest.y ? 1 : (enemyCarrier.y < closest.y ? -1 : 0);
+                            const newX = closest.x + dx;
+                            const newY = closest.y + dy;
+
+                            if (newX >= 0 && newX < GRID_W && newY >= 0 && newY < GRID_H &&
+                                !players.find(p => p.x === newX && p.y === newY)) {
+                                closest.x = newX;
+                                closest.y = newY;
+                                logMsg(`🤖 ${closest.name} si avvicina`, "text-cyan-400");
+                                actionsRemaining--;
+                                update();
+                            } else {
+                                // Non puo' muoversi, metti in difesa
+                                const defenseType = Math.random() < 0.5 ? DEFENSE_MODES.MURA : DEFENSE_MODES.INTERCETTO;
+                                state.selectedPlayer = closest;
+                                performDefense(defenseType);
+                                actionsRemaining--;
+                            }
+                        } else {
+                            // Lontano - metti in difesa
+                            const defender = botPlayers.find(p => !p.defenseMode);
+                            if (defender) {
+                                state.selectedPlayer = defender;
+                                performDefense(DEFENSE_MODES.INTERCETTO);
+                                actionsRemaining--;
+                            }
+                        }
+                    }
+                } else {
+                    // Palla libera - vai a prenderla
+                    if (state.ballPosition) {
+                        const closest = botPlayers
+                            .sort((a, b) => {
+                                const distA = Math.abs(a.x - state.ballPosition.x) + Math.abs(a.y - state.ballPosition.y);
+                                const distB = Math.abs(b.x - state.ballPosition.x) + Math.abs(b.y - state.ballPosition.y);
+                                return distA - distB;
+                            })[0];
+
+                        if (closest) {
+                            const dx = state.ballPosition.x > closest.x ? 1 : (state.ballPosition.x < closest.x ? -1 : 0);
+                            const dy = state.ballPosition.y > closest.y ? 1 : (state.ballPosition.y < closest.y ? -1 : 0);
+                            const newX = closest.x + dx;
+                            const newY = closest.y + dy;
+
+                            if (!players.find(p => p.x === newX && p.y === newY)) {
+                                closest.x = newX;
+                                closest.y = newY;
+                                logMsg(`🤖 ${closest.name} va verso la palla`, "text-cyan-400");
+                                actionsRemaining--;
+
+                                // Controlla se ha raggiunto la palla
+                                if (closest.x === state.ballPosition.x && closest.y === state.ballPosition.y) {
+                                    state.ballCarrierId = closest.id;
+                                    state.ballPosition = null;
+                                    logMsg(`🤖 ${closest.name} prende la palla!`, "text-green-400");
+                                }
+                                update();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Prossima azione con delay
+            if (actionsRemaining > 0 && !state.isGameOver && state.currentTeam === botTeam) {
+                setTimeout(doNextAction, 600);
+            } else if (actionsRemaining <= 0 && state.currentTeam === botTeam) {
+                // Fine turno bot - passa all'umano
+                setTimeout(() => {
+                    if (state.currentTeam === botTeam) {
+                        switchTurn();
+                        update();
+                    }
+                }, 500);
+            }
+        }
+
+        // Inizia la prima azione
+        setTimeout(doNextAction, 500);
     }
 
     function resetPositions() {
@@ -2057,7 +2261,23 @@
         updateMultiplayerState,
         setTurnTimer,
         isMultiplayer: () => state.multiplayer,
-        isMyTurn: () => state.isMyTurn
+        isMyTurn: () => state.isMyTurn,
+
+        /**
+         * Avvia una partita test contro il Bot
+         * Uso: window.SfideMinigame.testVsBot()
+         */
+        testVsBot: function() {
+            open({
+                testMode: true,
+                multiplayer: false,
+                onComplete: (result) => {
+                    console.log('[SfideMinigame] Partita test completata:', result);
+                    const winText = result.winner === 'A' ? 'HAI VINTO!' : (result.winner === 'B' ? 'HAI PERSO...' : 'PAREGGIO');
+                    if (window.Toast) window.Toast.info(`${winText} (${result.scoreA}-${result.scoreB})`);
+                }
+            });
+        }
     };
 
     console.log('[OK] Modulo SfideMinigame (Tattiche Serie) caricato.');
