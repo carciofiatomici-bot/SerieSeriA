@@ -3418,6 +3418,7 @@ window.InterfacciaDashboard = {
 
     /**
      * Aggiorna lo stato della supercoppa per l'utente
+     * Usa il modulo Supercoppa per caricare i dati corretti
      */
     async updateUserSupercoppaStatus() {
         const matchEl = document.getElementById('user-supercoppa-match');
@@ -3425,76 +3426,125 @@ window.InterfacciaDashboard = {
 
         if (!statusContainer || !matchEl) return;
 
-        const currentTeamId = window.InterfacciaCore?.currentTeamId;
-        if (!currentTeamId) {
-            matchEl.textContent = '--';
-            return;
-        }
-
         try {
-            const { doc, getDoc } = window.firestoreTools;
-            const appId = window.firestoreTools.appId;
-            const supercoppaDocRef = doc(window.db, `artifacts/${appId}/public/data/supercoppa`, 'match');
-
-            let supercoppaDoc;
-            if (window.FirestoreCache) {
-                supercoppaDoc = await window.FirestoreCache.getDoc(supercoppaDocRef, 'supercoppa', 'match', 60000);
-            } else {
-                supercoppaDoc = await getDoc(supercoppaDocRef);
-            }
-
-            if (!supercoppaDoc.exists()) {
-                // Nascondi completamente il container se la supercoppa non e' generata
+            // Usa il modulo Supercoppa per caricare i dati
+            if (!window.Supercoppa) {
                 statusContainer.classList.add('hidden');
                 return;
             }
 
-            // Mostra il container (potrebbe essere stato nascosto)
-            statusContainer.classList.remove('hidden');
+            const bracket = await window.Supercoppa.loadSupercoppa();
 
-            const supercoppaData = supercoppaDoc.data();
-
-            // Verifica se la squadra partecipa
-            const isHome = supercoppaData.homeId === currentTeamId;
-            const isAway = supercoppaData.awayId === currentTeamId;
-
-            if (!isHome && !isAway) {
-                matchEl.textContent = 'Non qualificato';
-                matchEl.classList.add('text-gray-400');
+            if (!bracket) {
+                // Nascondi se la supercoppa non esiste
+                statusContainer.classList.add('hidden');
                 return;
             }
 
-            const homeName = supercoppaData.homeName || 'Casa';
-            const awayName = supercoppaData.awayName || 'Ospite';
+            // Mostra il container
+            statusContainer.classList.remove('hidden');
 
-            // Controlla se la partita e' stata giocata
-            if (supercoppaData.result) {
-                const homeScore = supercoppaData.result.homeScore || 0;
-                const awayScore = supercoppaData.result.awayScore || 0;
+            const currentTeamId = window.InterfacciaCore?.currentTeamId;
+            const isParticipant = bracket.homeTeam?.teamId === currentTeamId || bracket.awayTeam?.teamId === currentTeamId;
 
-                // Determina se ha vinto
-                const won = (isHome && homeScore > awayScore) || (isAway && awayScore > homeScore);
-                const draw = homeScore === awayScore;
+            // Se la supercoppa e' completata, mostra grafica accattivante
+            if (bracket.isCompleted && bracket.winner) {
+                const isWinner = bracket.winner.teamId === currentTeamId;
+                const resultParts = (bracket.result || '').split(' ');
+                const score = resultParts[0] || '0-0';
+                const hasPenalties = bracket.penalties || bracket.result?.includes('d.c.r.');
 
                 matchEl.innerHTML = `
-                    <div class="flex items-center justify-center gap-2">
-                        <span class="${isHome ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(homeName)}</span>
-                        <span class="text-white font-bold">${homeScore} - ${awayScore}</span>
-                        <span class="${isAway ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(awayName)}</span>
-                    </div>
-                    <div class="text-center mt-1 ${won ? 'text-green-400' : draw ? 'text-yellow-400' : 'text-red-400'} font-bold">
-                        ${won ? 'VITTORIA!' : draw ? 'PAREGGIO' : 'SCONFITTA'}
+                    <div class="supercoppa-result-display">
+                        <!-- Header con trofeo animato -->
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-2xl animate-pulse" style="filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));">🏆</span>
+                            <span class="text-xs font-bold uppercase tracking-wider"
+                                  style="background: linear-gradient(90deg, #ffd700, #fff8dc, #ffd700); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                                Supercoppa Completata
+                            </span>
+                            <span class="text-2xl animate-pulse" style="filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));">🏆</span>
+                        </div>
+
+                        <!-- Risultato grande -->
+                        <div class="flex items-center justify-center gap-3 py-2">
+                            <div class="text-center flex-1">
+                                <p class="text-xs text-yellow-400/70">${this._escapeHtml(bracket.homeTeam?.qualification || '')}</p>
+                                <p class="font-bold ${bracket.winner.teamId === bracket.homeTeam?.teamId ? 'text-yellow-400' : 'text-gray-300'} text-sm truncate">
+                                    ${this._escapeHtml(bracket.homeTeam?.teamName || '')}
+                                </p>
+                            </div>
+                            <div class="px-3 py-1 rounded-lg" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(218, 165, 32, 0.1));">
+                                <span class="text-xl font-black" style="background: linear-gradient(180deg, #fff, #ffd700); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                                    ${this._escapeHtml(score)}
+                                </span>
+                                ${hasPenalties ? '<p class="text-[10px] text-yellow-400/70 text-center">d.c.r.</p>' : ''}
+                            </div>
+                            <div class="text-center flex-1">
+                                <p class="text-xs text-yellow-400/70">${this._escapeHtml(bracket.awayTeam?.qualification || '')}</p>
+                                <p class="font-bold ${bracket.winner.teamId === bracket.awayTeam?.teamId ? 'text-yellow-400' : 'text-gray-300'} text-sm truncate">
+                                    ${this._escapeHtml(bracket.awayTeam?.teamName || '')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Vincitore -->
+                        <div class="mt-2 py-2 rounded-lg text-center"
+                             style="background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent); border-top: 1px solid rgba(34, 197, 94, 0.3);">
+                            <p class="text-green-400 font-bold flex items-center justify-center gap-2">
+                                <span>👑</span>
+                                <span>${this._escapeHtml(bracket.winner.teamName)}</span>
+                                <span>👑</span>
+                            </p>
+                            ${isParticipant ? `
+                                <p class="text-xs mt-1 ${isWinner ? 'text-green-400' : 'text-red-400'} font-bold">
+                                    ${isWinner ? '🎉 HAI VINTO LA SUPERCOPPA!' : '😔 Sconfitta'}
+                                </p>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
-            } else {
-                // Partita non ancora giocata
+
+                // Aggiungi stile per animazione se non presente
+                if (!document.getElementById('supercoppa-dashboard-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'supercoppa-dashboard-style';
+                    style.textContent = `
+                        .supercoppa-result-display {
+                            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
+                            border-radius: 12px;
+                            padding: 12px;
+                            border: 1px solid rgba(255, 215, 0, 0.3);
+                            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 215, 0, 0.1);
+                        }
+                        @keyframes goldShimmer {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0.7; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+            } else if (!bracket.isCompleted) {
+                // Partita non ancora giocata - mostra anteprima
                 matchEl.innerHTML = `
-                    <div class="flex items-center justify-center gap-2">
-                        <span class="${isHome ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(homeName)}</span>
-                        <span class="text-gray-500">vs</span>
-                        <span class="${isAway ? 'font-bold text-yellow-400' : 'text-gray-300'}">${this._escapeHtml(awayName)}</span>
+                    <div class="text-center py-2">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-lg">⭐</span>
+                            <span class="text-xs text-yellow-400 uppercase tracking-wide font-bold">In Programma</span>
+                            <span class="text-lg">⭐</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="font-bold ${isParticipant && bracket.homeTeam?.teamId === currentTeamId ? 'text-yellow-400' : 'text-gray-300'} text-sm">
+                                ${this._escapeHtml(bracket.homeTeam?.teamName || '')}
+                            </span>
+                            <span class="text-gray-500 font-bold">vs</span>
+                            <span class="font-bold ${isParticipant && bracket.awayTeam?.teamId === currentTeamId ? 'text-yellow-400' : 'text-gray-300'} text-sm">
+                                ${this._escapeHtml(bracket.awayTeam?.teamName || '')}
+                            </span>
+                        </div>
+                        ${isParticipant ? '<p class="text-green-400 text-xs mt-2 font-bold">🎯 Partecipi!</p>' : ''}
                     </div>
-                    <div class="text-center mt-1 text-gray-400 text-xs">In attesa</div>
                 `;
             }
 

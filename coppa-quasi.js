@@ -530,6 +530,11 @@ window.CoppaQuasi = {
         bracket.isCompleted = true;
         bracket.completionDate = new Date().toISOString();
 
+        // IMPORTANTE: Salva SUBITO lo stato completato per evitare risimulazioni
+        // Le operazioni successive possono fallire senza compromettere lo stato
+        await this.saveCoppaQuasi(bracket);
+        console.log(`[CoppaQuasi] Stato salvato: isCompleted=true, Vincitore: ${winner.teamName}`);
+
         // Applica premio
         await this.applyReward(winner.teamId);
 
