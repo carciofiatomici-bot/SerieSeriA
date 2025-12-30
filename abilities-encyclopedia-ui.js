@@ -14,6 +14,7 @@ window.AbilitiesUI = {
     searchVisible: false,
     expandedCard: null,
     statsVisible: false,
+    expandedSections: {}, // Sezioni ruolo espanse (default: tutte chiuse)
 
     // Touch gesture state
     touchStartY: 0,
@@ -424,6 +425,35 @@ window.AbilitiesUI = {
             /* Role section with scroll target */
             .enc-role-section {
                 scroll-margin-top: 8px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+
+            /* Clickable section header */
+            .enc-section-clickable {
+                padding: 14px 16px;
+                margin: 0;
+                border-radius: 0;
+                background: rgba(20, 20, 35, 0.8);
+            }
+
+            .enc-section-clickable:hover {
+                background: rgba(30, 30, 50, 0.9);
+            }
+
+            /* Collapsible content */
+            .enc-section-content {
+                overflow: hidden;
+                transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            }
+
+            .enc-section-closed {
+                max-height: 0;
+                opacity: 0;
+            }
+
+            .enc-section-open {
+                max-height: 5000px;
+                opacity: 1;
             }
 
             /* Highlight animation when scrolling to section */
@@ -453,7 +483,8 @@ window.AbilitiesUI = {
         this.expandedCard = null;
         this.statsVisible = false;
         this.currentFilter = 'all';
-        this.currentDisplayCount = 100; // Mostra tutte le abilita raggruppate per ruolo
+        this.currentDisplayCount = 100;
+        this.expandedSections = {}; // Tutte le sezioni chiuse di default
 
         let overlay = document.getElementById('abilities-encyclopedia-overlay');
 
@@ -780,7 +811,7 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Render abilities grouped by role with scrollable sections
+     * Render abilities grouped by role with collapsible sections
      */
     renderAbilitiesByRole(abilities) {
         const roles = [
@@ -798,21 +829,38 @@ window.AbilitiesUI = {
             const roleAbilities = abilities.filter(role.filter);
             if (roleAbilities.length === 0) continue;
 
+            const isExpanded = this.expandedSections[role.id] === true;
+
             html += `
                 <div id="enc-section-${role.id}" class="enc-role-section">
-                    <div class="enc-section-header sticky top-0 z-10 bg-gradient-to-r from-${role.color}-900/90 to-transparent backdrop-blur-sm">
+                    <div onclick="window.AbilitiesUI.toggleSection('${role.id}')"
+                         class="enc-section-header enc-section-clickable cursor-pointer active:scale-[0.99] transition-transform">
                         <div class="enc-section-icon bg-${role.color}-500/20">${role.icon}</div>
                         <span class="enc-section-title text-${role.color}-400">${role.label}</span>
                         <span class="enc-section-count">${roleAbilities.length}</span>
+                        <svg class="w-5 h-5 text-white/40 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </div>
-                    <div class="px-4 space-y-2 pb-4">
-                        ${this.sortByRarity(roleAbilities).map(a => this.renderAbilityItem(a)).join('')}
+                    <div class="enc-section-content ${isExpanded ? 'enc-section-open' : 'enc-section-closed'}">
+                        <div class="px-4 space-y-2 pb-4">
+                            ${this.sortByRarity(roleAbilities).map(a => this.renderAbilityItem(a)).join('')}
+                        </div>
                     </div>
                 </div>
             `;
         }
 
         return html;
+    },
+
+    /**
+     * Toggle sezione ruolo espansa/chiusa
+     */
+    toggleSection(roleId) {
+        this.expandedSections[roleId] = !this.expandedSections[roleId];
+        this.updateResultsOnly();
     },
 
     /**
