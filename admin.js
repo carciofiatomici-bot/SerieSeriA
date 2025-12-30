@@ -3580,21 +3580,8 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         });
         
-        const levelMinInput = document.getElementById('player-level-min');
-        const levelMaxInput = document.getElementById('player-level-max');
-
-        // Usa la funzione updateCostDisplay di AdminPlayers
-        const updateCostDisplay = () => {
-            window.AdminPlayers.updateCostDisplay();
-        };
-
-        if (levelMaxInput) {
-            levelMaxInput.addEventListener('input', updateCostDisplay);
-        }
-        if (levelMinInput) {
-            levelMinInput.addEventListener('input', updateCostDisplay);
-        }
-        updateCostDisplay();
+        // Aggiorna display costo iniziale
+        window.AdminPlayers.updateCostDisplay();
 
         const draftList = document.getElementById('draft-players-list');
         const marketList = document.getElementById('market-players-list');

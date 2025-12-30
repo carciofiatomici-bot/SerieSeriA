@@ -65,63 +65,65 @@ window.AdminFeatureFlags = {
         };
 
         this.container.innerHTML = `
-            <div class="space-y-6">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <div class="space-y-4 sm:space-y-6">
+                <!-- Header - Compact on mobile -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-3 sm:p-4">
+                    <div class="flex justify-between items-center gap-3">
+                        <div class="min-w-0">
+                            <h2 class="text-base sm:text-xl font-bold text-white flex items-center gap-2">
                                 <span>🎛️</span>
-                                <span>Gestione Feature Flags</span>
+                                <span class="truncate">Feature Flags</span>
                             </h2>
-                            <p class="text-purple-200 text-sm mt-1">Abilita o disabilita funzionalita' dell'applicazione</p>
+                            <p class="text-purple-200 text-xs sm:text-sm mt-0.5 hidden sm:block">Abilita o disabilita funzionalita'</p>
                         </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-white">${Object.values(flags).filter(f => f.enabled).length}/${Object.keys(flags).length}</div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-xl sm:text-2xl font-bold text-white">${Object.values(flags).filter(f => f.enabled).length}/${Object.keys(flags).length}</div>
                             <div class="text-xs text-purple-200">attive</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="flex gap-3">
-                    <button id="enable-all-flags" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-semibold flex items-center gap-2">
-                        <span>✅</span> Abilita Tutte
+                <!-- Quick Actions - Scrollable on mobile -->
+                <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:overflow-visible">
+                    <button id="enable-all-flags" class="flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-2 bg-green-600 hover:bg-green-500 active:bg-green-700 rounded-lg text-white text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px]">
+                        <span>✅</span> <span class="hidden xs:inline">Abilita</span><span class="xs:hidden">ON</span>
                     </button>
-                    <button id="disable-all-flags" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm font-semibold flex items-center gap-2">
-                        <span>❌</span> Disabilita Tutte
+                    <button id="disable-all-flags" class="flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 rounded-lg text-white text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px]">
+                        <span>❌</span> <span class="hidden xs:inline">Disabilita</span><span class="xs:hidden">OFF</span>
                     </button>
-                    <button id="refresh-flags" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm font-semibold flex items-center gap-2">
-                        <span>🔄</span> Ricarica
+                    <button id="refresh-flags" class="flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-2 bg-gray-600 hover:bg-gray-500 active:bg-gray-700 rounded-lg text-white text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px]">
+                        <span>🔄</span> <span class="hidden sm:inline">Ricarica</span>
                     </button>
                 </div>
 
                 <!-- Flags per categoria (collapsibili) -->
                 ${Object.entries(categories).map(([cat, catFlags]) => `
                     <div class="bg-gray-700 rounded-xl overflow-hidden category-section" data-category="${cat}">
-                        <div class="bg-gray-600 px-4 py-3 cursor-pointer hover:bg-gray-550 transition-colors category-header flex items-center justify-between"
+                        <div class="bg-gray-600 px-3 sm:px-4 py-3 cursor-pointer hover:bg-gray-550 active:bg-gray-500 transition-colors category-header flex items-center justify-between min-h-[48px]"
                              onclick="window.AdminFeatureFlags.toggleCategory('${cat}')">
                             <div class="flex items-center gap-2">
-                                <span class="category-toggle-icon text-gray-400 transition-transform duration-200">▶</span>
-                                <h3 class="font-semibold text-white">${categoryNames[cat] || cat}</h3>
+                                <span class="category-toggle-icon text-gray-400 transition-transform duration-200 text-sm">▶</span>
+                                <h3 class="font-semibold text-white text-sm sm:text-base">${categoryNames[cat] || cat}</h3>
                             </div>
-                            <span class="text-gray-400 text-sm">${catFlags.length} flag${catFlags.length !== 1 ? 's' : ''}</span>
+                            <span class="text-gray-400 text-xs sm:text-sm bg-gray-700 px-2 py-0.5 rounded-full">${catFlags.length}</span>
                         </div>
-                        <div class="category-content hidden p-4 space-y-3">
+                        <div class="category-content hidden p-2 sm:p-4 space-y-2 sm:space-y-3">
                             ${catFlags.map(flag => this.renderFlagCard(flag)).join('')}
                         </div>
                     </div>
                 `).join('')}
 
-                <!-- Info -->
-                <div class="bg-blue-900 bg-opacity-30 rounded-xl p-4 border border-blue-500">
-                    <h4 class="font-semibold text-blue-300 mb-2">ℹ️ Informazioni</h4>
-                    <ul class="text-sm text-blue-200 space-y-1">
-                        <li>• Le modifiche vengono salvate automaticamente su Firestore</li>
-                        <li>• Gli utenti vedranno le modifiche al prossimo refresh</li>
-                        <li>• Le feature disabilitate nascondono completamente le relative UI</li>
+                <!-- Info - Collapsible on mobile -->
+                <details class="bg-blue-900 bg-opacity-30 rounded-xl border border-blue-500 overflow-hidden">
+                    <summary class="p-3 sm:p-4 cursor-pointer hover:bg-blue-900 hover:bg-opacity-20 transition-colors flex items-center gap-2 min-h-[44px]">
+                        <span class="text-blue-300 font-semibold text-sm sm:text-base">ℹ️ Informazioni</span>
+                    </summary>
+                    <ul class="text-xs sm:text-sm text-blue-200 space-y-1 px-3 sm:px-4 pb-3 sm:pb-4">
+                        <li>• Modifiche salvate automaticamente</li>
+                        <li>• Utenti vedono modifiche al refresh</li>
+                        <li>• Feature disabilitate = UI nascoste</li>
                     </ul>
-                </div>
+                </details>
             </div>
         `;
 
@@ -522,7 +524,7 @@ window.AdminFeatureFlags = {
     },
 
     /**
-     * Renderizza card singolo flag come accordion collassabile
+     * Renderizza card singolo flag come accordion collassabile - MOBILE OPTIMIZED
      */
     renderFlagCard(flag) {
         const statusClass = flag.enabled ? 'bg-green-500' : 'bg-gray-500';
@@ -541,31 +543,33 @@ window.AdminFeatureFlags = {
         const hasExpandableContent = hasDetails || showAchievementsManager || showInjuriesSettings;
 
         return `
-            <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700" data-flag-card="${flag.id}">
-                <!-- Header sempre visibile -->
-                <div class="flex items-center justify-between p-3 ${hasExpandableContent ? 'cursor-pointer hover:bg-gray-750' : ''} flag-card-header"
+            <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 transition-all duration-200" data-flag-card="${flag.id}">
+                <!-- Header sempre visibile - TOUCH FRIENDLY -->
+                <div class="flex items-center justify-between p-2.5 sm:p-3 ${hasExpandableContent ? 'cursor-pointer hover:bg-gray-750 active:bg-gray-700' : ''} flag-card-header min-h-[56px] sm:min-h-[52px]"
                      data-flag-id="${flag.id}" data-expandable="${hasExpandableContent}">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         ${hasExpandableContent ? `
                             <svg class="w-4 h-4 text-gray-400 transform transition-transform flag-card-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                        ` : '<div class="w-4"></div>'}
-                        <div class="text-2xl flex-shrink-0">${flag.icon || '⚙️'}</div>
+                        ` : '<div class="w-4 hidden sm:block"></div>'}
+                        <div class="text-xl sm:text-2xl flex-shrink-0">${flag.icon || '⚙️'}</div>
                         <div class="min-w-0 flex-1">
-                            <h4 class="font-semibold text-white text-sm truncate">${flag.name}</h4>
+                            <h4 class="font-semibold text-white text-xs sm:text-sm truncate leading-tight">${flag.name}</h4>
+                            <p class="text-gray-500 text-[10px] sm:text-xs truncate mt-0.5 sm:hidden">${flag.description.substring(0, 40)}...</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 flex-shrink-0">
-                        <span class="px-2 py-0.5 ${statusClass} rounded text-xs text-white font-bold">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        <span class="px-1.5 sm:px-2 py-0.5 ${statusClass} rounded text-[10px] sm:text-xs text-white font-bold hidden xs:block">
                             ${statusText}
                         </span>
+                        <!-- TOGGLE GRANDE TOUCH-FRIENDLY -->
                         <label class="relative inline-flex items-center cursor-pointer" onclick="event.stopPropagation()">
                             <input type="checkbox"
                                    class="sr-only peer flag-toggle"
                                    data-flag-id="${flag.id}"
                                    ${flag.enabled ? 'checked' : ''}>
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            <div class="w-14 h-8 sm:w-11 sm:h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 sm:after:top-[2px] after:left-1 sm:after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 sm:after:h-5 sm:after:w-5 after:transition-all after:shadow-md peer-checked:bg-green-500 transition-colors"></div>
                         </label>
                     </div>
                 </div>
@@ -574,12 +578,12 @@ window.AdminFeatureFlags = {
                 ${hasExpandableContent ? `
                     <div class="flag-card-content hidden border-t border-gray-700" data-flag-content="${flag.id}">
                         <!-- Descrizione -->
-                        <div class="px-4 py-3 bg-gray-850">
-                            <p class="text-gray-400 text-sm">${flag.description}</p>
+                        <div class="px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-850">
+                            <p class="text-gray-400 text-xs sm:text-sm">${flag.description}</p>
                         </div>
 
                         ${hasDetails ? `
-                            <div class="px-4 py-3 text-sm text-gray-300 bg-gray-900 bg-opacity-50 border-t border-gray-700">
+                            <div class="px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-300 bg-gray-900 bg-opacity-50 border-t border-gray-700">
                                 ${flag.details}
                             </div>
                         ` : ''}

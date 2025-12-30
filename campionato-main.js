@@ -261,16 +261,23 @@ window.ChampionshipMain = {
             }
 
             // 3.7. Processa infortuni a fine partita (se feature attiva)
-            if (window.ChampionshipSimulation?.processMatchInjuries) {
-                const injuries = await window.ChampionshipSimulation.processMatchInjuries(
-                    match.homeId, homeTeamData,
-                    match.awayId, awayTeamData
-                );
-                if (injuries.homeInjury) {
-                    console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${injuries.homeInjury.playerName} (${injuries.homeInjury.duration} partite)`);
+            if (window.Injuries?.isEnabled()) {
+                // Decrementa infortuni esistenti per entrambe le squadre
+                await window.Injuries.decrementInjuries(match.homeId);
+                await window.Injuries.decrementInjuries(match.awayId);
+
+                // Processa nuovi infortuni
+                const homePlayers = [...(homeTeamData.formation?.titolari || []), ...(homeTeamData.formation?.panchina || [])];
+                const awayPlayers = [...(awayTeamData.formation?.titolari || []), ...(awayTeamData.formation?.panchina || [])];
+
+                const homeInjury = await window.Injuries.processPostMatchInjuries(match.homeId, homePlayers, 'campionato');
+                const awayInjury = await window.Injuries.processPostMatchInjuries(match.awayId, awayPlayers, 'campionato');
+
+                if (homeInjury) {
+                    console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${homeInjury.playerName} (${homeInjury.duration} partite)`);
                 }
-                if (injuries.awayInjury) {
-                    console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${injuries.awayInjury.playerName} (${injuries.awayInjury.duration} partite)`);
+                if (awayInjury) {
+                    console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${awayInjury.playerName} (${awayInjury.duration} partite)`);
                 }
             }
 
@@ -582,16 +589,23 @@ window.ChampionshipMain = {
                 }
 
                 // Processa infortuni a fine partita (se feature attiva)
-                if (window.ChampionshipSimulation?.processMatchInjuries) {
-                    const injuries = await window.ChampionshipSimulation.processMatchInjuries(
-                        match.homeId, homeTeamData,
-                        match.awayId, awayTeamData
-                    );
-                    if (injuries.homeInjury) {
-                        console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${injuries.homeInjury.playerName} (${injuries.homeInjury.duration} partite)`);
+                if (window.Injuries?.isEnabled()) {
+                    // Decrementa infortuni esistenti per entrambe le squadre
+                    await window.Injuries.decrementInjuries(match.homeId);
+                    await window.Injuries.decrementInjuries(match.awayId);
+
+                    // Processa nuovi infortuni
+                    const homePlayers = [...(homeTeamData.formation?.titolari || []), ...(homeTeamData.formation?.panchina || [])];
+                    const awayPlayers = [...(awayTeamData.formation?.titolari || []), ...(awayTeamData.formation?.panchina || [])];
+
+                    const homeInjury = await window.Injuries.processPostMatchInjuries(match.homeId, homePlayers, 'campionato');
+                    const awayInjury = await window.Injuries.processPostMatchInjuries(match.awayId, awayPlayers, 'campionato');
+
+                    if (homeInjury) {
+                        console.log(`[Campionato] Infortunio ${homeTeamData.teamName}: ${homeInjury.playerName} (${homeInjury.duration} partite)`);
                     }
-                    if (injuries.awayInjury) {
-                        console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${injuries.awayInjury.playerName} (${injuries.awayInjury.duration} partite)`);
+                    if (awayInjury) {
+                        console.log(`[Campionato] Infortunio ${awayTeamData.teamName}: ${awayInjury.playerName} (${awayInjury.duration} partite)`);
                     }
                 }
 

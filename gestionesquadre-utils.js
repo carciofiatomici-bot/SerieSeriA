@@ -315,8 +315,9 @@ window.GestioneSquadreUtils = {
                 changes.push(`+1 prestazione (${bonusReasons.join(', ')})`);
             }
 
-            // 4. Modifica RANDOM a fine partita (-1, 0, +1)
-            const randomChange = Math.floor(Math.random() * 3) - 1; // -1, 0, o +1
+            // 4. Modifica RANDOM a fine partita (50% 0, 25% +1, 25% -1)
+            const roll = Math.random();
+            const randomChange = roll < 0.5 ? 0 : (roll < 0.75 ? 1 : -1);
             if (randomChange !== 0) {
                 formChange += randomChange;
                 changes.push(`${randomChange > 0 ? '+1' : '-1'} random`);

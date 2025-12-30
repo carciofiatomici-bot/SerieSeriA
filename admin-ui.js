@@ -720,6 +720,14 @@ window.AdminUI = {
                         </div>
 
                         <div class="flex flex-col">
+                            <label class="text-gray-300 mb-1" for="player-nationality">Nazionalita</label>
+                            <select id="player-nationality" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
+                                <option value="">Seleziona Nazionalita</option>
+                                ${(window.DraftConstants?.NATIONALITIES || []).map(n => `<option value="${n.code}">${n.flag} ${n.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
                             <label class="text-gray-300 mb-1" for="player-role">Ruolo</label>
                             <select id="player-role" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                                 <option value="">Seleziona Ruolo</option>
@@ -741,16 +749,6 @@ window.AdminUI = {
                         <div class="flex flex-col">
                             <label class="text-gray-300 mb-1" for="player-age">Eta (16 - 45)</label>
                             <input type="number" id="player-age" min="16" max="45" placeholder="25" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                        </div>
-
-                        <div class="flex flex-col">
-                            <label class="text-gray-300 mb-1" for="player-level-min">Livello Min (1 - 8)</label>
-                            <input type="number" id="player-level-min" min="1" max="8" value="1" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
-                        </div>
-
-                        <div class="flex flex-col">
-                            <label class="text-gray-300 mb-1" for="player-level-max">Livello Max (1 - 8)</label>
-                            <input type="number" id="player-level-max" min="1" max="8" value="3" class="p-2 rounded-lg bg-gray-600 border border-yellow-600 text-white">
                         </div>
                     </div>
 
@@ -785,59 +783,100 @@ window.AdminUI = {
                 </div>
             </div>
 
-            <!-- LISTE GIOCATORI -->
-            <h3 class="text-2xl font-bold text-red-400 mb-4 border-b border-gray-600 pb-2 pt-6">Elenco Giocatori (Draft & Mercato)</h3>
-
-            <!-- Ordinamento per ruolo -->
-            <div class="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
-                <div class="flex items-center justify-between flex-wrap gap-2">
-                    <span class="text-gray-300 font-semibold">Ordina per ruolo:</span>
-                    <div class="flex gap-2">
-                        <button id="btn-sort-all" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500 font-bold border-2 border-cyan-400">Tutti</button>
-                        <button id="btn-sort-P" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">P</button>
-                        <button id="btn-sort-D" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">D</button>
-                        <button id="btn-sort-C" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">C</button>
-                        <button id="btn-sort-A" class="sort-btn bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-500">A</button>
+            <!-- LISTE GIOCATORI - Accordion Principale -->
+            <div class="mb-6 bg-gray-800 rounded-xl overflow-hidden border border-gray-600 shadow-lg">
+                <!-- Header Accordion Principale -->
+                <div id="players-list-accordion-header"
+                     class="flex items-center justify-between p-4 sm:p-5 cursor-pointer hover:bg-gray-750 transition-all duration-200 active:bg-gray-700 select-none"
+                     onclick="this.parentElement.querySelector('#players-list-accordion-content').classList.toggle('hidden'); this.querySelector('.accordion-arrow').classList.toggle('rotate-90');">
+                    <div class="flex items-center gap-3">
+                        <span class="accordion-arrow text-red-400 transition-transform duration-300 text-lg">▶</span>
+                        <h3 class="text-lg sm:text-2xl font-bold text-red-400">Elenco Giocatori (Draft & Mercato)</h3>
                     </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6 mb-4">
-                <button data-action="clear-collection" data-target="draft"
-                        class="bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition duration-150">
-                    <i class="fas fa-trash-alt mr-2"></i> SVUOTA TUTTO IL DRAFT
-                </button>
-                <button data-action="clear-collection" data-target="market"
-                        class="bg-red-800 text-white font-extrabold py-3 rounded-lg shadow-xl hover:bg-red-700 transition duration-150">
-                    <i class="fas fa-trash-alt mr-2"></i> SVUOTA TUTTO IL MERCATO
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="p-4 bg-gray-700 rounded-lg border border-yellow-500">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-xl font-bold text-yellow-400">Giocatori Draft</h4>
-                        <button id="btn-update-draft-costs" class="bg-orange-600 text-white text-sm font-bold py-1 px-3 rounded hover:bg-orange-500 transition">
-                            🔄 Aggiorna Costi
-                        </button>
-                    </div>
-                    <p id="update-draft-costs-message" class="text-center text-xs mb-2"></p>
-                    <div id="draft-players-list" class="space-y-3 max-h-96 overflow-y-auto" data-collection="draft">
-                         <p class="text-gray-500 text-center">Caricamento Draft...</p>
-                    </div>
+                    <span class="text-gray-500 text-xs sm:text-sm hidden sm:inline">Tocca per espandere</span>
                 </div>
 
-                <div class="p-4 bg-gray-700 rounded-lg border border-blue-500">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-xl font-bold text-blue-400">Giocatori Mercato</h4>
-                        <button id="btn-update-market-costs" class="bg-orange-600 text-white text-sm font-bold py-1 px-3 rounded hover:bg-orange-500 transition">
-                            🔄 Aggiorna Costi
+                <!-- Contenuto Accordion Principale (nascosto di default) -->
+                <div id="players-list-accordion-content" class="hidden border-t border-gray-600">
+
+                    <!-- Ordinamento per ruolo -->
+                    <div class="p-3 sm:p-4 bg-gray-750 border-b border-gray-600">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <span class="text-gray-300 font-semibold text-sm sm:text-base">Ordina per ruolo:</span>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="btn-sort-all" class="sort-btn bg-gray-600 text-white px-3 py-2 sm:py-1 rounded text-sm hover:bg-gray-500 font-bold border-2 border-cyan-400 min-w-[44px]">Tutti</button>
+                                <button id="btn-sort-P" class="sort-btn bg-gray-600 text-white px-3 py-2 sm:py-1 rounded text-sm hover:bg-gray-500 min-w-[44px]">P</button>
+                                <button id="btn-sort-D" class="sort-btn bg-gray-600 text-white px-3 py-2 sm:py-1 rounded text-sm hover:bg-gray-500 min-w-[44px]">D</button>
+                                <button id="btn-sort-C" class="sort-btn bg-gray-600 text-white px-3 py-2 sm:py-1 rounded text-sm hover:bg-gray-500 min-w-[44px]">C</button>
+                                <button id="btn-sort-A" class="sort-btn bg-gray-600 text-white px-3 py-2 sm:py-1 rounded text-sm hover:bg-gray-500 min-w-[44px]">A</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottoni Svuota (responsive) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 sm:p-4 bg-gray-750 border-b border-gray-600">
+                        <button data-action="clear-collection" data-target="draft"
+                                class="bg-red-800 text-white font-bold py-3 sm:py-2 rounded-lg shadow-lg hover:bg-red-700 active:bg-red-900 transition duration-150 text-sm sm:text-base">
+                            <i class="fas fa-trash-alt mr-2"></i> SVUOTA DRAFT
+                        </button>
+                        <button data-action="clear-collection" data-target="market"
+                                class="bg-red-800 text-white font-bold py-3 sm:py-2 rounded-lg shadow-lg hover:bg-red-700 active:bg-red-900 transition duration-150 text-sm sm:text-base">
+                            <i class="fas fa-trash-alt mr-2"></i> SVUOTA MERCATO
                         </button>
                     </div>
-                    <p id="update-market-costs-message" class="text-center text-xs mb-2"></p>
-                    <div id="market-players-list" class="space-y-3 max-h-96 overflow-y-auto" data-collection="market">
-                         <p class="text-gray-500 text-center">Caricamento Mercato...</p>
+
+                    <!-- Sub-Accordion: DRAFT -->
+                    <div class="border-b border-gray-600">
+                        <div id="draft-accordion-header"
+                             class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-700 transition-all duration-200 active:bg-gray-650 select-none bg-gray-750"
+                             onclick="this.parentElement.querySelector('#draft-accordion-content').classList.toggle('hidden'); this.querySelector('.accordion-arrow').classList.toggle('rotate-90');">
+                            <div class="flex items-center gap-3">
+                                <span class="accordion-arrow text-yellow-400 transition-transform duration-300">▶</span>
+                                <h4 class="text-base sm:text-xl font-bold text-yellow-400">Giocatori Draft</h4>
+                                <span id="draft-count-badge" class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-update-draft-costs"
+                                        onclick="event.stopPropagation();"
+                                        class="bg-orange-600 text-white text-xs sm:text-sm font-bold py-2 px-3 rounded hover:bg-orange-500 active:bg-orange-700 transition min-h-[44px] sm:min-h-0">
+                                    🔄 Costi
+                                </button>
+                            </div>
+                        </div>
+                        <div id="draft-accordion-content" class="hidden bg-gray-800 p-3 sm:p-4">
+                            <p id="update-draft-costs-message" class="text-center text-xs mb-2"></p>
+                            <div id="draft-players-list" class="space-y-2 max-h-[50vh] overflow-y-auto overscroll-contain" data-collection="draft">
+                                <p class="text-gray-500 text-center py-4">Caricamento Draft...</p>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Sub-Accordion: MERCATO -->
+                    <div>
+                        <div id="market-accordion-header"
+                             class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-700 transition-all duration-200 active:bg-gray-650 select-none bg-gray-750"
+                             onclick="this.parentElement.querySelector('#market-accordion-content').classList.toggle('hidden'); this.querySelector('.accordion-arrow').classList.toggle('rotate-90');">
+                            <div class="flex items-center gap-3">
+                                <span class="accordion-arrow text-blue-400 transition-transform duration-300">▶</span>
+                                <h4 class="text-base sm:text-xl font-bold text-blue-400">Giocatori Mercato</h4>
+                                <span id="market-count-badge" class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-update-market-costs"
+                                        onclick="event.stopPropagation();"
+                                        class="bg-orange-600 text-white text-xs sm:text-sm font-bold py-2 px-3 rounded hover:bg-orange-500 active:bg-orange-700 transition min-h-[44px] sm:min-h-0">
+                                    🔄 Costi
+                                </button>
+                            </div>
+                        </div>
+                        <div id="market-accordion-content" class="hidden bg-gray-800 p-3 sm:p-4">
+                            <p id="update-market-costs-message" class="text-center text-xs mb-2"></p>
+                            <div id="market-players-list" class="space-y-2 max-h-[50vh] overflow-y-auto overscroll-contain" data-collection="market">
+                                <p class="text-gray-500 text-center py-4">Caricamento Mercato...</p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         `;

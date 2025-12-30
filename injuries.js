@@ -14,7 +14,7 @@
 window.Injuries = {
 
     // Costanti (valori default, sovrascritti da Firestore se disponibili)
-    INJURY_CHANCE: 0.01, // 1% per giocatore
+    INJURY_CHANCE: 0.03, // 3% per giocatore
     MIN_INJURY_DURATION: 1,
     MAX_INJURY_DURATION: 10,
     MAX_INJURIES_COUNT: 99, // Nessun limite infortuni per squadra

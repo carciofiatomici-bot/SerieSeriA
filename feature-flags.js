@@ -363,11 +363,11 @@ window.FeatureFlags = {
             name: 'Sistema Infortuni',
             description: 'I giocatori possono infortunarsi dopo le partite e saltare da 1 a 10 giornate',
             icon: '🏥',
-            enabled: false,
+            enabled: true,
             category: 'gameplay',
             details: `<strong>Cosa include:</strong>
                 <ul class="list-disc list-inside mt-2 space-y-1">
-                    <li>1% di probabilita di infortunio per ogni giocatore schierato</li>
+                    <li>3% di probabilita di infortunio per ogni giocatore schierato</li>
                     <li>Massimo 1 infortunio per partita per squadra</li>
                     <li>Massimo infortuni contemporanei: 1/4 della rosa</li>
                     <li>Durata infortunio: da 1 a 10 partite (casuale)</li>

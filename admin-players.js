@@ -162,27 +162,19 @@ window.AdminPlayers = {
     },
 
     updateCostDisplay() {
-        const levelMinInput = document.getElementById('player-level-min');
-        const levelMaxInput = document.getElementById('player-level-max');
         const costDisplayInput = document.getElementById('player-cost-display');
-        if (!levelMinInput || !levelMaxInput || !costDisplayInput) return;
+        if (!costDisplayInput) return;
 
-        const levelMinVal = parseInt(levelMinInput.value) || 1;
-        const levelMaxVal = parseInt(levelMaxInput.value) || 1;
-
-        // Ottieni i nomi delle abilita selezionate
+        // Livelli generati random (1-10), calcola range costo possibile
         const selectedAbilities = [];
         document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked').forEach(checkbox => {
             selectedAbilities.push(checkbox.value);
         });
 
-        const { costMin, costMax } = this.calculateCostRange(levelMinVal, levelMaxVal, selectedAbilities);
+        // Calcola il range di costo per livelli 1-10
+        const { costMin, costMax } = this.calculateCostRange(1, 10, selectedAbilities);
 
-        if (levelMinVal === levelMaxVal) {
-            costDisplayInput.value = `Costo: ${costMin} CS`;
-        } else {
-            costDisplayInput.value = `Costo: ${costMin} - ${costMax} CS`;
-        }
+        costDisplayInput.value = `Costo: ${costMin} - ${costMax} CS (Lv random)`;
 
         // Salva entrambi i valori per riferimento
         costDisplayInput.dataset.calculatedCostMin = costMin;
@@ -336,14 +328,12 @@ window.AdminPlayers = {
 
         const roles = ['P', 'D', 'C', 'A'];
         const types = ['Potenza', 'Tecnica', 'Velocita'];
+        const nationalities = window.DraftConstants?.NATIONALITIES || [{ code: 'IT' }];
 
         const randomRole = roles[getRandomInt(0, roles.length - 1)];
         const randomType = types[getRandomInt(0, types.length - 1)];
+        const randomNationality = nationalities[getRandomInt(0, nationalities.length - 1)];
         const randomAge = getRandomInt(18, 35);
-
-        // Livello max limitato a 8
-        const randomLevelMax = getRandomInt(1, 8);
-        const randomLevelMin = getRandomInt(1, randomLevelMax);
 
         // Genera abilita casuali (max 3 positive + 2 negative)
         const roleAbilities = this.ROLE_ABILITIES_SEPARATED[randomRole] || { positive: [], negative: [] };
@@ -357,11 +347,11 @@ window.AdminPlayers = {
         const selectedNegative = shuffledNegative.slice(0, numNegative);
 
         // Imposta i valori nei campi
+        const nationalitySelect = document.getElementById('player-nationality');
+        if (nationalitySelect) nationalitySelect.value = randomNationality.code;
         document.getElementById('player-role').value = randomRole;
         document.getElementById('player-type').value = randomType;
         document.getElementById('player-age').value = randomAge;
-        document.getElementById('player-level-min').value = randomLevelMin;
-        document.getElementById('player-level-max').value = randomLevelMax;
 
         // Aggiorna le checkbox delle abilita
         this.updateAbilitiesChecklist();
@@ -398,23 +388,24 @@ window.AdminPlayers = {
 
         const targetCollection = document.getElementById('target-collection').value;
         const name = document.getElementById('player-name').value.trim();
+        const nationality = document.getElementById('player-nationality')?.value || 'IT';
         const role = document.getElementById('player-role').value;
         const type = document.getElementById('player-type').value;
         const age = parseInt(document.getElementById('player-age').value);
-        const levelMin = parseInt(document.getElementById('player-level-min').value);
-        const levelMax = parseInt(document.getElementById('player-level-max').value);
+
+        // Genera livelli random (1-10)
+        const getRandomInt = window.getRandomInt || ((min, max) => Math.floor(Math.random() * (max - min + 1)) + min);
+        const levelMax = getRandomInt(1, 10);
+        const levelMin = getRandomInt(1, levelMax);
 
         const selectedAbilities = Array.from(document.querySelectorAll('#abilities-checklist input[name="player-ability"]:checked')).map(cb => cb.value);
-        const abilitiesCount = selectedAbilities.length;
-        const { costMin, costMax } = this.calculateCostRange(levelMin, levelMax, abilitiesCount);
+        const { costMin, costMax } = this.calculateCostRange(levelMin, levelMax, selectedAbilities);
         const allowedAbilities = this.ROLE_ABILITIES_MAP[role] || [];
 
-        // Validazione campi (livello max 8)
-        if (!name || !role || !type || isNaN(age) || isNaN(levelMin) || isNaN(levelMax) ||
-            age < 16 || age > 45 || levelMin < 1 || levelMin > 8 || levelMax < 1 || levelMax > 8 ||
-            levelMin > levelMax || costMin < 1) {
+        // Validazione campi
+        if (!name || !role || !type || isNaN(age) || age < 16 || age > 45) {
              if (msgElement) {
-                 msgElement.textContent = "Errore: controlla che tutti i campi siano compilati e validi (livello 1-8, eta 16-45).";
+                 msgElement.textContent = "Errore: controlla che tutti i campi siano compilati e validi (eta 16-45).";
                  msgElement.classList.add('text-red-400');
              }
              return;
@@ -438,11 +429,11 @@ window.AdminPlayers = {
         }
 
         // Genera secretMaxLevel (10-25) per il giocatore
-        const getRandomInt = window.getRandomInt || ((min, max) => Math.floor(Math.random() * (max - min + 1)) + min);
         const secretMaxLevel = getRandomInt(10, 25);
 
         const newPlayer = {
             name,
+            nationality,
             role,
             type,
             age,
@@ -450,7 +441,7 @@ window.AdminPlayers = {
             costRange: [costMin, costMax],
             cost: costMax,
             abilities: selectedAbilities,
-            secretMaxLevel, // Livello massimo nascosto
+            secretMaxLevel,
             isDrafted: false,
             teamId: null,
             creationDate: new Date().toISOString()
@@ -549,6 +540,10 @@ window.AdminPlayers = {
 
             playersListContainer.innerHTML = playersHtml || '<p class="text-center text-gray-400">Nessun giocatore Draft disponibile.</p>';
 
+            // Aggiorna badge conteggio
+            const draftBadge = document.getElementById('draft-count-badge');
+            if (draftBadge) draftBadge.textContent = sortedDocs.length > 0 ? sortedDocs.length : '';
+
         } catch (error) {
             console.error("Errore nel caricamento Draft (tentativo con where fallito):", error);
             this.loadDraftPlayersFallback(DRAFT_PLAYERS_COLLECTION_PATH, playersListContainer);
@@ -603,6 +598,10 @@ window.AdminPlayers = {
          }).join('');
 
          playersListContainer.innerHTML = playersHtml || '<p class="text-center text-red-400">Errore: Indice mancante o collezione vuota. Controlla la console.</p>';
+
+         // Aggiorna badge conteggio (fallback)
+         const draftBadge = document.getElementById('draft-count-badge');
+         if (draftBadge) draftBadge.textContent = sortedDocs.length > 0 ? sortedDocs.length : '';
     },
 
 
@@ -667,6 +666,10 @@ window.AdminPlayers = {
 
             playersListContainer.innerHTML = playersHtml || '<p class="text-center text-gray-400">Nessun giocatore Mercato disponibile.</p>';
 
+            // Aggiorna badge conteggio
+            const marketBadge = document.getElementById('market-count-badge');
+            if (marketBadge) marketBadge.textContent = sortedDocs.length > 0 ? sortedDocs.length : '';
+
         } catch (error) {
             console.error("Errore nel caricamento Mercato (tentativo con where fallito):", error);
             this.loadMarketPlayersFallback(MARKET_PLAYERS_COLLECTION_PATH, playersListContainer);
@@ -721,6 +724,10 @@ window.AdminPlayers = {
          }).join('');
 
          playersListContainer.innerHTML = playersHtml || '<p class="text-center text-red-400">Errore: Indice mancante o collezione vuota. Controlla la console.</p>';
+
+         // Aggiorna badge conteggio (fallback)
+         const marketBadge = document.getElementById('market-count-badge');
+         if (marketBadge) marketBadge.textContent = sortedDocs.length > 0 ? sortedDocs.length : '';
     }
 };
 

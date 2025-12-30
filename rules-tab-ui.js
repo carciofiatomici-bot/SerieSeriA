@@ -742,6 +742,7 @@ window.RulesTabUI = {
                     ${this.renderSquadraSection()}
                     ${this.renderLivelliSection()}
                     ${this.renderPartitaSection()}
+                    ${this.renderSistemaTatticoSection()}
                     ${this.renderFormaSection()}
                     ${this.renderValuteSection()}
                     ${this.renderCompetizioniSection()}
@@ -792,7 +793,17 @@ window.RulesTabUI = {
                     </div>
                     <div class="rules-item">
                         <span class="rules-item-icon">⚙️</span>
-                        <span>Moduli: <strong>1-2-2, 1-1-2-1, 1-3-1, 1-1-3</strong></span>
+                        <span><strong>14 moduli</strong> disponibili (da 1-4-0-0 a 1-0-0-4)</span>
+                    </div>
+
+                    <div class="rules-info-box" style="margin-top: 8px; margin-bottom: 8px;">
+                        <div class="rules-info-label">Esempi moduli:</div>
+                        <div class="rules-info-tags">
+                            <span class="rules-info-tag">1-4-0-0 Bunker</span>
+                            <span class="rules-info-tag">1-2-1-1 Equilibrato</span>
+                            <span class="rules-info-tag">1-1-2-1 Classico</span>
+                            <span class="rules-info-tag">1-0-0-4 All-in</span>
+                        </div>
                     </div>
 
                     <div class="rules-roles">
@@ -803,7 +814,7 @@ window.RulesTabUI = {
                     </div>
 
                     <div class="rules-type-box">
-                        <div class="rules-type-label">Tipologie (vantaggio carta):</div>
+                        <div class="rules-type-label">Tipologie (vantaggio carta: <strong style="color: #4ade80;">+3</strong> / <strong style="color: #f87171;">-3</strong>):</div>
                         <div class="rules-type-chain">
                             <span class="red">Potenza</span>
                             <span class="arrow">></span>
@@ -833,42 +844,70 @@ window.RulesTabUI = {
                     <span class="rules-accordion-arrow">▼</span>
                 </div>
                 <div class="rules-accordion-content">
-                    <div class="rules-type-label" style="padding-top: 12px;">Bonus ai tiri in base al livello:</div>
-                    <div class="rules-level-grid">
+                    <div class="rules-type-label" style="padding-top: 12px;">Bonus ai tiri in base al livello (+0.5 ogni 2 livelli):</div>
+                    <div class="rules-level-grid" style="grid-template-columns: repeat(4, 1fr);">
                         <div class="rules-level-item">
-                            <div class="rules-level-range">1-4</div>
+                            <div class="rules-level-range">1-2</div>
                             <div class="rules-level-bonus">+0.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">5-8</div>
+                            <div class="rules-level-range">3-4</div>
+                            <div class="rules-level-bonus">+1.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">5-6</div>
                             <div class="rules-level-bonus">+1.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">9-12</div>
+                            <div class="rules-level-range">7-8</div>
+                            <div class="rules-level-bonus">+2.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">9-10</div>
                             <div class="rules-level-bonus">+2.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">13-16</div>
+                            <div class="rules-level-range">11-12</div>
+                            <div class="rules-level-bonus">+3.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">13-14</div>
                             <div class="rules-level-bonus">+3.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">17-20</div>
+                            <div class="rules-level-range">15-16</div>
+                            <div class="rules-level-bonus">+4.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">17-18</div>
                             <div class="rules-level-bonus">+4.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">21-24</div>
+                            <div class="rules-level-range">19-20</div>
+                            <div class="rules-level-bonus">+5.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">21-22</div>
                             <div class="rules-level-bonus">+5.5</div>
                         </div>
                         <div class="rules-level-item">
-                            <div class="rules-level-range">25-28</div>
+                            <div class="rules-level-range">23-24</div>
+                            <div class="rules-level-bonus">+6.0</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">25-26</div>
                             <div class="rules-level-bonus">+6.5</div>
+                        </div>
+                        <div class="rules-level-item">
+                            <div class="rules-level-range">27-28</div>
+                            <div class="rules-level-bonus">+7.0</div>
                         </div>
                         <div class="rules-level-item gold">
                             <div class="rules-level-range">29</div>
                             <div class="rules-level-bonus">+8.0</div>
                         </div>
-                        <div class="rules-level-item gold" style="grid-column: span 2;">
-                            <div class="rules-level-range">30 MAX</div>
+                        <div class="rules-level-item gold">
+                            <div class="rules-level-range">30</div>
                             <div class="rules-level-bonus">+9.0</div>
                         </div>
                     </div>
@@ -919,6 +958,69 @@ window.RulesTabUI = {
         `;
     },
 
+    renderSistemaTatticoSection() {
+        return `
+            <div class="rules-accordion" style="--section-color: rgba(6, 182, 212, 0.4);">
+                <div class="rules-accordion-header">
+                    <div class="rules-accordion-left">
+                        <div class="rules-accordion-icon" style="--icon-bg: rgba(6, 182, 212, 0.2);">⚔️</div>
+                        <div class="rules-accordion-info">
+                            <h3 style="color: #22d3ee;">Sistema Tattico</h3>
+                            <p>Bonus/malus per ruolo e fase</p>
+                        </div>
+                    </div>
+                    <span class="rules-accordion-arrow">▼</span>
+                </div>
+                <div class="rules-accordion-content">
+                    <div class="rules-type-label" style="padding-top: 10px;">I giocatori ricevono bonus/malus in base al ruolo e alla fase:</div>
+
+                    <!-- Fase 1 -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #22d3ee;">🏗️ Fase 1 - Costruzione</div>
+                        <div class="rules-info-tags" style="margin-top: 6px;">
+                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">P +0.5</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">D -0.5</span>
+                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">C +0.5</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">A -1.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Fase 2 -->
+                    <div class="rules-info-box" style="margin-top: 8px;">
+                        <div class="rules-info-label" style="color: #fb923c;">⚡ Fase 2 - Attacco/Difesa</div>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.65rem; color: #64748b; margin-bottom: 4px;">IN ATTACCO:</div>
+                                <div class="rules-info-tags">
+                                    <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">D -1.0</span>
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.65rem; color: #64748b; margin-bottom: 4px;">IN DIFESA:</div>
+                                <div class="rules-info-tags">
+                                    <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">D +1.0</span>
+                                    <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">A -2.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fase 3 -->
+                    <div class="rules-info-box" style="margin-top: 8px;">
+                        <div class="rules-info-label" style="color: #f87171;">🎯 Fase 3 - Tiro</div>
+                        <div class="rules-info-tags" style="margin-top: 6px;">
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.3); color: #fca5a5;">D -2.0</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.15); color: #fecaca;">C -0.5</span>
+                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">A +1.0</span>
+                        </div>
+                    </div>
+
+                    <p class="rules-hint" style="margin-top: 12px;">I Centrocampisti sono i piu versatili: nessun malus in Fase 2!</p>
+                </div>
+            </div>
+        `;
+    },
+
     renderFormaSection() {
         return `
             <div class="rules-accordion orange">
@@ -943,18 +1045,29 @@ window.RulesTabUI = {
                         <span class="rules-forma-item pos-3">+3</span>
                     </div>
 
+                    <div class="rules-type-label" style="padding-top: 10px; margin-bottom: 6px;">Modifica base dopo partita:</div>
+                    <div class="rules-info-tags" style="margin-bottom: 10px;">
+                        <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">In campo: -1</span>
+                        <span class="rules-info-tag" style="background: rgba(71, 85, 105, 0.4); color: #94a3b8;">Panchina: 0</span>
+                        <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">Fuori rosa: +1</span>
+                    </div>
+
                     <div class="rules-forma-effects">
                         <div class="rules-forma-effect green">
-                            <span class="rules-forma-effect-label">Gol / Assist / Clean sheet</span>
+                            <span class="rules-forma-effect-label">Vittoria (solo titolari)</span>
                             <span class="rules-forma-effect-value">+1</span>
                         </div>
                         <div class="rules-forma-effect red">
-                            <span class="rules-forma-effect-label">Panchina consecutiva</span>
-                            <span class="rules-forma-effect-value">-1 (prob.)</span>
+                            <span class="rules-forma-effect-label">Sconfitta (solo titolari)</span>
+                            <span class="rules-forma-effect-value">-1</span>
+                        </div>
+                        <div class="rules-forma-effect green">
+                            <span class="rules-forma-effect-label">Prestazione eccellente (2+ gol/assist)</span>
+                            <span class="rules-forma-effect-value">+1</span>
                         </div>
                         <div class="rules-forma-effect purple">
                             <span class="rules-forma-effect-label">Evento random post-partita</span>
-                            <span class="rules-forma-effect-value">±1 (20%)</span>
+                            <span class="rules-forma-effect-value">-1/0/+1</span>
                         </div>
                     </div>
                 </div>
@@ -1015,7 +1128,7 @@ window.RulesTabUI = {
                         <div class="rules-accordion-icon">🏆</div>
                         <div class="rules-accordion-info">
                             <h3>Competizioni</h3>
-                            <p>Campionato, Coppa, Supercoppa</p>
+                            <p>4 trofei in palio ogni stagione</p>
                         </div>
                     </div>
                     <span class="rules-accordion-arrow">▼</span>
@@ -1033,7 +1146,14 @@ window.RulesTabUI = {
                             <span class="rules-competition-icon">🏆</span>
                             <div>
                                 <div class="rules-competition-name">CoppaSeriA</div>
-                                <div class="rules-competition-desc">Eliminazione diretta con andata/ritorno o partita secca.</div>
+                                <div class="rules-competition-desc">Eliminazione diretta per le migliori squadre in classifica.</div>
+                            </div>
+                        </div>
+                        <div class="rules-competition" style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.25);">
+                            <span class="rules-competition-icon">🤡</span>
+                            <div>
+                                <div class="rules-competition-name" style="color: #fb923c;">Coppa Quasi SeriA</div>
+                                <div class="rules-competition-desc">Torneo di consolazione per chi non si qualifica alla Coppa.</div>
                             </div>
                         </div>
                         <div class="rules-competition yellow">

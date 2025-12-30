@@ -328,7 +328,7 @@ window.GestioneSquadreFormazione = {
                     <!-- Mini Stats -->
                     <div class="bg-gray-700 rounded-lg p-3 mb-4">
                         <p class="text-gray-400 text-xs mb-2 text-center font-semibold">STATISTICHE STAGIONE</p>
-                        <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="grid grid-cols-5 gap-2 text-center">
                             <div>
                                 <p id="player-info-goals" class="text-white font-bold text-lg">-</p>
                                 <p class="text-gray-400 text-xs">Gol</p>
@@ -336,6 +336,10 @@ window.GestioneSquadreFormazione = {
                             <div>
                                 <p id="player-info-assists" class="text-white font-bold text-lg">-</p>
                                 <p class="text-gray-400 text-xs">Assist</p>
+                            </div>
+                            <div>
+                                <p id="player-info-blocks" class="text-white font-bold text-lg">-</p>
+                                <p class="text-gray-400 text-xs">Blocchi</p>
                             </div>
                             <div>
                                 <p id="player-info-saves" class="text-white font-bold text-lg">-</p>
@@ -2334,12 +2338,14 @@ window.GestioneSquadreFormazione = {
     async loadPlayerInfoStats(playerId, teamData) {
         const goalsEl = document.getElementById('player-info-goals');
         const assistsEl = document.getElementById('player-info-assists');
+        const blocksEl = document.getElementById('player-info-blocks');
         const savesEl = document.getElementById('player-info-saves');
         const ratingEl = document.getElementById('player-info-rating');
 
         // Reset a loading
         goalsEl.textContent = '...';
         assistsEl.textContent = '...';
+        blocksEl.textContent = '...';
         savesEl.textContent = '...';
         ratingEl.textContent = '...';
 
@@ -2348,6 +2354,7 @@ window.GestioneSquadreFormazione = {
             if (!teamId || !window.PlayerStats) {
                 goalsEl.textContent = '-';
                 assistsEl.textContent = '-';
+                blocksEl.textContent = '-';
                 savesEl.textContent = '-';
                 ratingEl.textContent = '-';
                 return;
@@ -2358,6 +2365,7 @@ window.GestioneSquadreFormazione = {
             if (stats) {
                 goalsEl.textContent = stats.goals || 0;
                 assistsEl.textContent = stats.assists || 0;
+                blocksEl.textContent = stats.blocks || 0;
                 savesEl.textContent = stats.saves || 0;
                 // Calcola media voto
                 const avgRating = stats.matchesPlayed > 0
@@ -2367,6 +2375,7 @@ window.GestioneSquadreFormazione = {
             } else {
                 goalsEl.textContent = '0';
                 assistsEl.textContent = '0';
+                blocksEl.textContent = '0';
                 savesEl.textContent = '0';
                 ratingEl.textContent = '-';
             }
@@ -2374,6 +2383,7 @@ window.GestioneSquadreFormazione = {
             console.error('Errore caricamento stats giocatore:', error);
             goalsEl.textContent = '-';
             assistsEl.textContent = '-';
+            blocksEl.textContent = '-';
             savesEl.textContent = '-';
             ratingEl.textContent = '-';
         }
