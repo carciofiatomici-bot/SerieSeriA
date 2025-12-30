@@ -46,10 +46,18 @@ window.Supercoppa = {
             return { canCreate: false, reason: 'La CoppaSeriA non e ancora terminata.' };
         }
 
-        // Verifica che non ci sia gia una supercoppa in corso
+        // Verifica che non ci sia gia una supercoppa in corso o completata
         const supercoppaBracket = await this.loadSupercoppa();
         if (supercoppaBracket && !supercoppaBracket.isCompleted) {
             return { canCreate: false, reason: 'Una Supercoppa e gia in corso.' };
+        }
+        if (supercoppaBracket && supercoppaBracket.isCompleted) {
+            return { canCreate: false, reason: 'La Supercoppa e gia stata giocata.' };
+        }
+
+        // Verifica flag supercoppPlayed (per quando viene eliminata dopo completamento)
+        if (config.supercoppaPlayed) {
+            return { canCreate: false, reason: 'La Supercoppa e gia stata giocata questa stagione.' };
         }
 
         return { canCreate: true, reason: null };
@@ -218,6 +226,25 @@ window.Supercoppa = {
         // Le operazioni successive possono fallire senza compromettere lo stato
         await this.saveSupercoppa(supercoppaBracket);
         console.log(`[Supercoppa] Stato salvato: ${finalResult}, Vincitore: ${winner.teamName}`);
+
+        // Imposta flag supercoppaPlayed e salva risultato per visualizzazione dopo eliminazione
+        try {
+            const configRef = doc(db, `artifacts/${appId}/public/data/config`, 'settings');
+            await window.firestoreTools.setDoc(configRef, {
+                supercoppaPlayed: true,
+                lastSupercoppaResult: {
+                    homeTeam: supercoppaBracket.homeTeam,
+                    awayTeam: supercoppaBracket.awayTeam,
+                    homeScore: matchResult.homeGoals,
+                    awayScore: matchResult.awayGoals,
+                    result: finalResult,
+                    winner: winner,
+                    isCompleted: true
+                }
+            }, { merge: true });
+        } catch (flagErr) {
+            console.warn('[Supercoppa] Errore impostazione flag:', flagErr);
+        }
 
         // Registra statistiche stagionali per la supercoppa
         if (window.PlayerSeasonStats) {

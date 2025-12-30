@@ -150,8 +150,12 @@ window.ChampionshipSchedule = {
             console.log('ChampionshipSchedule: Forme giocatori resettate a 0 per nuova stagione.');
         }
 
-        // Imposta stagione IN CORSO
-        await setDoc(configDocRef, { isSeasonOver: false }, { merge: true });
+        // Imposta stagione IN CORSO e resetta flag competizioni
+        await setDoc(configDocRef, {
+            isSeasonOver: false,
+            supercoppaPlayed: false,
+            coppaQuasiPlayed: false
+        }, { merge: true });
 
         return {
             totalRounds: schedule.length,

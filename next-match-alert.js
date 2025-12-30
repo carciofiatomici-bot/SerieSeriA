@@ -54,31 +54,30 @@ window.NextMatchAlert = {
                 const config = configDoc.exists() ? configDoc.data() : {};
 
                 if (config.isSeasonOver) {
-                    // Stagione terminata
-                    if (contentContainer) {
-                        contentContainer.innerHTML = `
-                            <div class="text-center py-4">
-                                <p class="text-yellow-400 text-sm font-bold">🏆 Stagione Terminata</p>
-                                <p class="text-gray-500 text-xs mt-1">In attesa della nuova stagione</p>
-                            </div>
-                        `;
-                    }
+                    // Stagione terminata - usa container direttamente
+                    container.innerHTML = `
+                        <div class="text-center py-6 px-4">
+                            <p class="text-yellow-400 text-lg font-bold mb-2">🏆 Stagione Terminata</p>
+                            <p class="text-gray-400 text-sm">In attesa della nuova stagione</p>
+                        </div>
+                    `;
+                    // Mostra comunque il bottone schedina se abilitato
+                    this.updateSchedinaButton();
                     return;
                 }
             } catch (err) {
                 console.warn('[NextMatchAlert] Errore verifica isSeasonOver:', err);
             }
-        }
-        if (!nextMatch) {
-            // Mostra messaggio "nessuna partita" nel content container
-            if (contentContainer) {
-                contentContainer.innerHTML = `
-                    <div class="text-center py-4">
-                        <p class="text-gray-500 text-sm">Nessuna partita in programma</p>
-                        <p class="text-gray-600 text-xs mt-1">Iscriviti a SerieSeriA o CoppaSeriA</p>
-                    </div>
-                `;
-            }
+
+            // Nessuna partita e stagione non terminata
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">Nessuna partita in programma</p>
+                    <p class="text-gray-600 text-xs mt-1">Iscriviti a SerieSeriA o CoppaSeriA</p>
+                </div>
+            `;
+            // Mostra comunque il bottone schedina se abilitato
+            this.updateSchedinaButton();
             return;
         }
 

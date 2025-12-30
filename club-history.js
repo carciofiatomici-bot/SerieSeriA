@@ -45,8 +45,10 @@ window.ClubHistory = {
             trophies: {
                 championships: 0,
                 cups: 0,
+                supercoppe: 0,
+                coppeQuasi: 0,
                 // Dettaglio trofei con stagione
-                list: []  // [{ type: 'championship'|'cup', season: 1, date: '...' }]
+                list: []  // [{ type: 'championship'|'cup'|'supercoppa'|'coppa_quasi', season: 1, date: '...' }]
             },
 
             // Storico stagioni
@@ -197,6 +199,10 @@ window.ClubHistory = {
             history.trophies.championships++;
         } else if (trophyType === 'cup') {
             history.trophies.cups++;
+        } else if (trophyType === 'supercoppa') {
+            history.trophies.supercoppe = (history.trophies.supercoppe || 0) + 1;
+        } else if (trophyType === 'coppa_quasi') {
+            history.trophies.coppeQuasi = (history.trophies.coppeQuasi || 0) + 1;
         }
 
         history.trophies.list.push({
@@ -367,7 +373,7 @@ window.ClubHistory = {
                     <h3 class="text-lg font-bold text-white mb-3 border-b border-gray-700 pb-2">
                         <span class="mr-2">🏆</span> Bacheca Trofei
                     </h3>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div class="bg-gradient-to-br from-yellow-900 to-yellow-700 p-4 rounded-lg text-center">
                             <p class="text-4xl font-bold text-yellow-300">${history.trophies.championships}</p>
                             <p class="text-sm text-yellow-100">Campionati</p>
@@ -376,16 +382,30 @@ window.ClubHistory = {
                             <p class="text-4xl font-bold text-gray-200">${history.trophies.cups}</p>
                             <p class="text-sm text-gray-300">Coppe</p>
                         </div>
+                        <div class="bg-gradient-to-br from-amber-800 to-amber-600 p-4 rounded-lg text-center">
+                            <p class="text-4xl font-bold text-amber-200">${history.trophies.supercoppe || 0}</p>
+                            <p class="text-sm text-amber-100">Supercoppe</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-900 to-purple-700 p-4 rounded-lg text-center">
+                            <p class="text-4xl font-bold text-purple-200">${history.trophies.coppeQuasi || 0}</p>
+                            <p class="text-sm text-purple-100">Coppe Quasi</p>
+                        </div>
                     </div>
                     ${history.trophies.list.length > 0 ? `
                         <div class="bg-gray-800 p-3 rounded-lg">
                             <p class="text-xs text-gray-400 mb-2">Dettaglio:</p>
                             <div class="flex flex-wrap gap-2">
-                                ${history.trophies.list.map(t => `
-                                    <span class="px-2 py-1 rounded text-xs ${t.type === 'championship' ? 'bg-yellow-800 text-yellow-200' : 'bg-gray-600 text-gray-200'}">
-                                        ${t.type === 'championship' ? '🏅' : '🏆'} Stagione ${t.season}
-                                    </span>
-                                `).join('')}
+                                ${history.trophies.list.map(t => {
+                                    const style = {
+                                        championship: { bg: 'bg-yellow-800 text-yellow-200', icon: '🏅' },
+                                        cup: { bg: 'bg-gray-600 text-gray-200', icon: '🏆' },
+                                        supercoppa: { bg: 'bg-amber-700 text-amber-100', icon: '⭐' },
+                                        coppa_quasi: { bg: 'bg-purple-700 text-purple-100', icon: '🤡' }
+                                    }[t.type] || { bg: 'bg-gray-600 text-gray-200', icon: '🏆' };
+                                    return `<span class="px-2 py-1 rounded text-xs ${style.bg}">
+                                        ${style.icon} ${t.type === 'championship' ? 'Campionato' : t.type === 'cup' ? 'Coppa' : t.type === 'supercoppa' ? 'Supercoppa' : 'Coppa Quasi'} S${t.season}
+                                    </span>`;
+                                }).join('')}
                             </div>
                         </div>
                     ` : '<p class="text-gray-500 text-center text-sm">Nessun trofeo ancora vinto</p>'}

@@ -126,6 +126,7 @@ window.QuickWins = {
     
     /**
      * QUICK WIN 2: Preview ultima partita (carica da matchHistory)
+     * A stagione terminata mostra il risultato della Supercoppa se disponibile
      */
     async showLastMatchPreview() {
         const lastMatchEl = document.getElementById('last-match-preview');
@@ -136,6 +137,76 @@ window.QuickWins = {
         if (!lastMatchEl || !currentTeamId) {
             console.log('[QuickWins] showLastMatchPreview - mancano dati, esco');
             return;
+        }
+
+        // Verifica se la stagione e' terminata e mostra Supercoppa
+        try {
+            const { doc, getDoc, appId } = window.firestoreTools;
+            const configRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
+            const configDoc = await getDoc(configRef);
+            const config = configDoc.exists() ? configDoc.data() : {};
+
+            if (config.isSeasonOver) {
+                // Prima prova a caricare la Supercoppa dal documento
+                let supercoppa = window.Supercoppa ? await window.Supercoppa.loadSupercoppa() : null;
+
+                // Se non esiste il documento ma abbiamo il risultato salvato nel config, usalo
+                if (!supercoppa && config.lastSupercoppaResult) {
+                    supercoppa = config.lastSupercoppaResult;
+                }
+
+                if (supercoppa?.isCompleted && supercoppa?.winner) {
+                    // Mostra risultato Supercoppa
+                    const homeScore = supercoppa.homeScore ?? 0;
+                    const awayScore = supercoppa.awayScore ?? 0;
+                    const isUserHome = supercoppa.homeTeam?.teamId === currentTeamId;
+                    const isUserAway = supercoppa.awayTeam?.teamId === currentTeamId;
+                    const userParticipated = isUserHome || isUserAway;
+
+                    let resultText, scoreColor;
+                    if (userParticipated) {
+                        const myGoals = isUserHome ? homeScore : awayScore;
+                        const theirGoals = isUserHome ? awayScore : homeScore;
+                        const won = supercoppa.winner.teamId === currentTeamId;
+                        resultText = won ? 'Vittoria Supercoppa!' : 'Finale Supercoppa';
+                        scoreColor = won ? 'text-yellow-400' : 'text-gray-400';
+                    } else {
+                        resultText = 'Supercoppa';
+                        scoreColor = 'text-yellow-400';
+                    }
+
+                    this.lastMatchData = {
+                        homeTeam: { id: supercoppa.homeTeam?.teamId, name: supercoppa.homeTeam?.teamName },
+                        awayTeam: { id: supercoppa.awayTeam?.teamId, name: supercoppa.awayTeam?.teamName },
+                        homeScore,
+                        awayScore,
+                        type: 'supercoppa'
+                    };
+
+                    lastMatchEl.innerHTML = `
+                        <div class="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 transition-colors rounded-lg -m-2 p-2">
+                            <div class="text-3xl">⭐</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold ${scoreColor} truncate">${resultText}</p>
+                                <p class="text-xs text-gray-300 truncate">${supercoppa.homeTeam?.teamName} vs ${supercoppa.awayTeam?.teamName}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-extrabold ${scoreColor}">${homeScore} - ${awayScore}</p>
+                            </div>
+                            <div class="text-gray-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                    lastMatchEl.classList.remove('hidden');
+                    lastMatchEl.onclick = () => this.openLastMatchHighlights();
+                    return;
+                }
+            }
+        } catch (err) {
+            console.warn('[QuickWins] Errore verifica Supercoppa:', err);
         }
 
         // Verifica se MatchHistory è disponibile

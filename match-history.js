@@ -219,7 +219,7 @@ window.MatchHistory = {
      * @returns {Object} - Trofei
      */
     async loadTrophies(teamId) {
-        if (!teamId) return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0 };
+        if (!teamId) return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0, coppeQuasiSerieVinte: 0 };
 
         try {
             const { doc, getDoc } = window.firestoreTools;
@@ -229,18 +229,19 @@ window.MatchHistory = {
             const teamDocRef = doc(window.db, TEAMS_COLLECTION_PATH, teamId);
             const teamDoc = await getDoc(teamDocRef);
 
-            if (!teamDoc.exists()) return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0 };
+            if (!teamDoc.exists()) return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0, coppeQuasiSerieVinte: 0 };
 
             const data = teamDoc.data();
             return {
                 campionatiVinti: data.campionatiVinti || 0,
                 coppeSerieVinte: data.coppeSerieVinte || 0,
-                supercoppeSerieVinte: data.supercoppeSerieVinte || 0
+                supercoppeSerieVinte: data.supercoppeSerieVinte || 0,
+                coppeQuasiSerieVinte: data.coppeQuasiSerieVinte || 0
             };
 
         } catch (error) {
             console.error("MatchHistory: errore caricamento trofei", error);
-            return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0 };
+            return { campionatiVinti: 0, coppeSerieVinte: 0, supercoppeSerieVinte: 0, coppeQuasiSerieVinte: 0 };
         }
     },
 
@@ -307,7 +308,8 @@ window.MatchHistory = {
         const trophyData = trophies || this.cachedTrophies || {
             campionatiVinti: 0,
             coppeSerieVinte: 0,
-            supercoppeSerieVinte: 0
+            supercoppeSerieVinte: 0,
+            coppeQuasiSerieVinte: 0
         };
 
         // Conteggi per tipo
@@ -339,27 +341,34 @@ window.MatchHistory = {
 
                 <!-- Bacheca Trofei (Compatta) -->
                 <div class="mb-3">
-                    <div class="flex gap-2">
+                    <div class="grid grid-cols-4 gap-2">
                         <!-- Campionato -->
-                        <div class="flex-1 bg-gradient-to-br from-yellow-900/40 to-gray-900/60 border border-yellow-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                        <div class="bg-gradient-to-br from-yellow-900/40 to-gray-900/60 border border-yellow-500/40 rounded-xl p-2 text-center relative overflow-hidden">
                             <div class="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500/10 rounded-full blur-lg"></div>
-                            <span class="text-2xl drop-shadow-lg">🏅</span>
-                            <p class="text-xl font-black text-yellow-400">${trophyData.campionatiVinti}</p>
-                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Serie</p>
+                            <span class="text-xl drop-shadow-lg">🏅</span>
+                            <p class="text-lg font-black text-yellow-400">${trophyData.campionatiVinti}</p>
+                            <p class="text-[7px] text-gray-400 uppercase tracking-wider">Serie</p>
                         </div>
                         <!-- Coppa -->
-                        <div class="flex-1 bg-gradient-to-br from-amber-900/40 to-gray-900/60 border border-amber-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                        <div class="bg-gradient-to-br from-amber-900/40 to-gray-900/60 border border-amber-500/40 rounded-xl p-2 text-center relative overflow-hidden">
                             <div class="absolute -top-2 -right-2 w-8 h-8 bg-amber-500/10 rounded-full blur-lg"></div>
-                            <span class="text-2xl drop-shadow-lg">🏆</span>
-                            <p class="text-xl font-black text-amber-400">${trophyData.coppeSerieVinte}</p>
-                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Coppa</p>
+                            <span class="text-xl drop-shadow-lg">🏆</span>
+                            <p class="text-lg font-black text-amber-400">${trophyData.coppeSerieVinte}</p>
+                            <p class="text-[7px] text-gray-400 uppercase tracking-wider">Coppa</p>
                         </div>
                         <!-- Supercoppa -->
-                        <div class="flex-1 bg-gradient-to-br from-orange-900/40 to-gray-900/60 border border-orange-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                        <div class="bg-gradient-to-br from-orange-900/40 to-gray-900/60 border border-orange-500/40 rounded-xl p-2 text-center relative overflow-hidden">
                             <div class="absolute -top-2 -right-2 w-8 h-8 bg-orange-500/10 rounded-full blur-lg"></div>
-                            <span class="text-2xl drop-shadow-lg">⭐</span>
-                            <p class="text-xl font-black text-orange-400">${trophyData.supercoppeSerieVinte}</p>
-                            <p class="text-[8px] text-gray-400 uppercase tracking-wider">Super</p>
+                            <span class="text-xl drop-shadow-lg">⭐</span>
+                            <p class="text-lg font-black text-orange-400">${trophyData.supercoppeSerieVinte}</p>
+                            <p class="text-[7px] text-gray-400 uppercase tracking-wider">Super</p>
+                        </div>
+                        <!-- Coppa Quasi -->
+                        <div class="bg-gradient-to-br from-purple-900/40 to-gray-900/60 border border-purple-500/40 rounded-xl p-2 text-center relative overflow-hidden">
+                            <div class="absolute -top-2 -right-2 w-8 h-8 bg-purple-500/10 rounded-full blur-lg"></div>
+                            <span class="text-xl drop-shadow-lg">🤡</span>
+                            <p class="text-lg font-black text-purple-400">${trophyData.coppeQuasiSerieVinte || 0}</p>
+                            <p class="text-[7px] text-gray-400 uppercase tracking-wider">Quasi</p>
                         </div>
                     </div>
                 </div>
@@ -922,7 +931,8 @@ window.MatchHistory = {
                     const newTrophies = {
                         campionatiVinti: data.campionatiVinti || 0,
                         coppeSerieVinte: data.coppeSerieVinte || 0,
-                        supercoppeSerieVinte: data.supercoppeSerieVinte || 0
+                        supercoppeSerieVinte: data.supercoppeSerieVinte || 0,
+                        coppeQuasiSerieVinte: data.coppeQuasiSerieVinte || 0
                     };
 
                     // Aggiorna cache

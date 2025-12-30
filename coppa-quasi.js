@@ -44,10 +44,18 @@ window.CoppaQuasi = {
             return { canCreate: false, reason: 'Il campionato non e ancora terminato.' };
         }
 
-        // Verifica che non ci sia gia una Coppa Quasi in corso
+        // Verifica che non ci sia gia una Coppa Quasi in corso o completata
         const coppaQuasiBracket = await this.loadCoppaQuasi();
         if (coppaQuasiBracket && !coppaQuasiBracket.isCompleted) {
             return { canCreate: false, reason: 'Una Coppa Quasi SeriA e gia in corso.' };
+        }
+        if (coppaQuasiBracket && coppaQuasiBracket.isCompleted) {
+            return { canCreate: false, reason: 'La Coppa Quasi SeriA e gia stata giocata.' };
+        }
+
+        // Verifica flag coppaQuasiPlayed (per quando viene eliminata dopo completamento)
+        if (config.coppaQuasiPlayed) {
+            return { canCreate: false, reason: 'La Coppa Quasi SeriA e gia stata giocata questa stagione.' };
         }
 
         // Verifica almeno 3 squadre in classifica
@@ -534,6 +542,15 @@ window.CoppaQuasi = {
         // Le operazioni successive possono fallire senza compromettere lo stato
         await this.saveCoppaQuasi(bracket);
         console.log(`[CoppaQuasi] Stato salvato: isCompleted=true, Vincitore: ${winner.teamName}`);
+
+        // Imposta flag coppaQuasiPlayed per evitare ricreazione dopo eliminazione
+        try {
+            const { appId, doc } = window.firestoreTools;
+            const configRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
+            await window.firestoreTools.setDoc(configRef, { coppaQuasiPlayed: true }, { merge: true });
+        } catch (flagErr) {
+            console.warn('[CoppaQuasi] Errore impostazione flag:', flagErr);
+        }
 
         // Applica premio
         await this.applyReward(winner.teamId);
