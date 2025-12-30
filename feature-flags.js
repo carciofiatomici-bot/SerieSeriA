@@ -733,6 +733,23 @@ window.FeatureFlags = {
                     <li>Forma puo' cambiare dopo ogni partita</li>
                 </ul>
                 <p class="mt-2 text-orange-400">Sistema in revisione - attiva solo per test!</p>`
+        },
+        mvpDelGiorno: {
+            id: 'mvpDelGiorno',
+            name: 'MVP del Giorno',
+            description: 'Premia il miglior giocatore dopo ogni 2 partite simulate con bonus +5% XP',
+            icon: '🏆',
+            enabled: false,
+            category: 'gameplay',
+            details: `<strong>Cosa include:</strong>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Calcolo automatico dopo ogni 2 partite (Campionato + Coppa SeriA)</li>
+                    <li>Formula: Gol x3 + Assist x2 + CleanSheet x2 + Parate x1.5 + Vittorie x1.5 + (Media-6)</li>
+                    <li>Banner visibile nella dashboard di tutti gli utenti</li>
+                    <li>Bonus +5% XP per l'MVP fino al prossimo calcolo</li>
+                    <li>Storico MVP salvato (ultimi 365 giorni)</li>
+                </ul>
+                <p class="mt-2 text-yellow-400">L'MVP cambia ogni giorno dopo la simulazione!</p>`
         }
     },
 

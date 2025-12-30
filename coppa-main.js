@@ -610,6 +610,7 @@ window.CoppaMain = {
         }
 
         const results = [];
+        const simulatedMatches = []; // Per MVP del Giorno
 
         for (let matchIndex = 0; matchIndex < round.matches.length; matchIndex++) {
             const match = round.matches[matchIndex];
@@ -632,8 +633,47 @@ window.CoppaMain = {
                     result: result.resultString,
                     winner: result.winner ? result.winner.teamName : null
                 });
+
+                // Raccoglie dati per MVP del Giorno
+                if (result.resultString) {
+                    const resultParts = (result.resultString.split(' ')[0] || '').split('-');
+                    const homeGoals = parseInt(resultParts[0]) || 0;
+                    const awayGoals = parseInt(resultParts[1]) || 0;
+
+                    simulatedMatches.push({
+                        homeTeamId: match.homeTeam.teamId,
+                        awayTeamId: match.awayTeam.teamId,
+                        homeTeam: {
+                            id: match.homeTeam.teamId,
+                            name: match.homeTeam.teamName,
+                            teamName: match.homeTeam.teamName,
+                            formation: result.homeFormation || null
+                        },
+                        awayTeam: {
+                            id: match.awayTeam.teamId,
+                            name: match.awayTeam.teamName,
+                            teamName: match.awayTeam.teamName,
+                            formation: result.awayFormation || null
+                        },
+                        result: { homeGoals, awayGoals },
+                        matchLog: result.highlights || [],
+                        matchEvents: result.matchEvents || []
+                    });
+                }
             } catch (error) {
                 console.error(`Errore simulazione match ${matchIndex}:`, error);
+            }
+        }
+
+        // Calcola MVP del Giorno (se feature attiva e almeno 2 partite simulate)
+        if (window.MvpDelGiorno?.isEnabled() && simulatedMatches.length >= 2) {
+            try {
+                const mvp = await window.MvpDelGiorno.calculateAndSaveMvp(simulatedMatches, 'coppa');
+                if (mvp) {
+                    console.log(`[CoppaSeriA] MVP del Giorno: ${mvp.playerName} (${mvp.teamName}) - Score: ${mvp.score}`);
+                }
+            } catch (mvpError) {
+                console.error('[CoppaSeriA] Errore calcolo MVP:', mvpError);
             }
         }
 

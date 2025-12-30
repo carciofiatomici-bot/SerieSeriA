@@ -7,7 +7,7 @@
 window.ChampionshipMain = {
 
     // Numero di giornate recenti da mantenere con dati completi (matchLog, matchEvents)
-    KEEP_RECENT_ROUNDS: 2,
+    KEEP_RECENT_ROUNDS: 5,
 
     /**
      * Pulisce i dati pesanti (matchLog, matchEvents) dallo schedule, mantenendo solo le ultime N giornate.
@@ -477,6 +477,9 @@ window.ChampionshipMain = {
         // Raccoglie tutti gli ID delle squadre coinvolte nella giornata per il reset finale
         const teamsInRound = new Set();
 
+        // Raccoglie dati partite per calcolo MVP del Giorno
+        const simulatedMatches = [];
+
         if (matchesToSimulate.length === 0) {
             console.log(`[ChampionshipMain] Nessuna partita da simulare nella giornata ${round.round}`);
             console.log(`[ChampionshipMain] Stato partite:`, round.matches.map(m => `${m.homeName} vs ${m.awayName}: ${m.result}`));
@@ -762,6 +765,27 @@ window.ChampionshipMain = {
                         type: 'Campionato'
                     }
                 }));
+
+                // Raccoglie dati per MVP del Giorno
+                simulatedMatches.push({
+                    homeTeamId: match.homeId,
+                    awayTeamId: match.awayId,
+                    homeTeam: {
+                        id: match.homeId,
+                        name: homeTeamData.teamName,
+                        teamName: homeTeamData.teamName,
+                        formation: homeTeamData.formation
+                    },
+                    awayTeam: {
+                        id: match.awayId,
+                        name: awayTeamData.teamName,
+                        teamName: awayTeamData.teamName,
+                        formation: awayTeamData.formation
+                    },
+                    result: { homeGoals, awayGoals },
+                    matchLog: highlights || [],
+                    matchEvents: matchEvents || []
+                });
             }
 
             // RIMOSSO: Il reset forme non è più necessario con il nuovo sistema basato su prestazioni
@@ -837,6 +861,18 @@ window.ChampionshipMain = {
             // Sincronizza con automazione (avanza tipo simulazione)
             if (window.AutomazioneSimulazioni?.advanceSimulationType) {
                 await window.AutomazioneSimulazioni.advanceSimulationType('campionato');
+            }
+
+            // Calcola MVP del Giorno (se feature attiva e almeno 2 partite simulate)
+            if (window.MvpDelGiorno?.isEnabled() && simulatedMatches.length >= 2) {
+                try {
+                    const mvp = await window.MvpDelGiorno.calculateAndSaveMvp(simulatedMatches, 'campionato');
+                    if (mvp) {
+                        console.log(`[Campionato] MVP del Giorno: ${mvp.playerName} (${mvp.teamName}) - Score: ${mvp.score}`);
+                    }
+                } catch (mvpError) {
+                    console.error('[Campionato] Errore calcolo MVP:', mvpError);
+                }
             }
 
             // Riabilita il pulsante dopo il successo

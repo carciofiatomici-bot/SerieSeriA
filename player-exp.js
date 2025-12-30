@@ -239,6 +239,12 @@
             exp = Math.floor(exp * expBonusMultiplier);
         }
 
+        // Bonus MVP del Giorno (+5% XP)
+        const playerId = player.id || player.visitorId;
+        if (playerId && window.MvpDelGiorno?.isCurrentMvpSync?.(playerId)) {
+            exp = Math.floor(exp * 1.05);
+        }
+
         return exp;
     }
 
