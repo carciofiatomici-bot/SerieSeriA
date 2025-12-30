@@ -547,6 +547,15 @@ window.CoppaQuasi = {
         if (window.Toast) {
             window.Toast.success(`Coppa Quasi SeriA vinta da ${winner.teamName}!`);
         }
+
+        // Auto-elimina la Coppa Quasi dopo completamento (premi già assegnati)
+        // Questo prepara automaticamente per la nuova stagione
+        try {
+            await this.deleteCoppaQuasi();
+            console.log('[CoppaQuasi] Eliminata automaticamente dopo completamento');
+        } catch (deleteError) {
+            console.warn('[CoppaQuasi] Errore auto-eliminazione:', deleteError);
+        }
     },
 
     /**
