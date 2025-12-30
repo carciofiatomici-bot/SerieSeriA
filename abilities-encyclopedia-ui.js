@@ -1004,34 +1004,21 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Filter by role - scorre alla sezione se in vista "all", altrimenti filtra
+     * Filter by role - filtra le abilita per ruolo
      */
     filter(role) {
-        // Se clicco "Tutte", torno alla vista completa
+        // Se clicco "Tutte", torno alla vista completa raggruppata
         if (role === 'all') {
             this.currentFilter = 'all';
             this.expandedCard = null;
-            this.currentDisplayCount = 100; // Mostra piu abilita per la vista raggruppata
+            this.currentDisplayCount = 100;
             this.render();
             const scrollArea = document.getElementById('enc-scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
             return;
         }
 
-        // Se sono gia in vista "all", scrolla alla sezione del ruolo
-        if (this.currentFilter === 'all' && !this.currentSearch) {
-            const sectionId = role === 'Icone' ? 'enc-section-Icone' : `enc-section-${role}`;
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Evidenzia brevemente la sezione
-                section.classList.add('enc-section-highlight');
-                setTimeout(() => section.classList.remove('enc-section-highlight'), 1000);
-                return;
-            }
-        }
-
-        // Altrimenti filtra normalmente
+        // Filtra per ruolo specifico
         this.currentFilter = role;
         this.expandedCard = null;
         this.currentDisplayCount = this.displayLimit;
