@@ -420,6 +420,26 @@ window.AbilitiesUI = {
                 color: rgba(255,255,255,0.4);
                 margin-left: auto;
             }
+
+            /* Role section with scroll target */
+            .enc-role-section {
+                scroll-margin-top: 8px;
+            }
+
+            /* Highlight animation when scrolling to section */
+            @keyframes sectionHighlight {
+                0% { background: transparent; }
+                30% { background: rgba(139, 92, 246, 0.15); }
+                100% { background: transparent; }
+            }
+
+            .enc-section-highlight {
+                animation: sectionHighlight 1s ease-out;
+            }
+
+            .enc-section-highlight .enc-section-header {
+                background: rgba(139, 92, 246, 0.2) !important;
+            }
         `;
         document.head.appendChild(styles);
     },
@@ -432,7 +452,8 @@ window.AbilitiesUI = {
         this.searchVisible = false;
         this.expandedCard = null;
         this.statsVisible = false;
-        this.currentDisplayCount = this.displayLimit;
+        this.currentFilter = 'all';
+        this.currentDisplayCount = 100; // Mostra tutte le abilita raggruppate per ruolo
 
         let overlay = document.getElementById('abilities-encyclopedia-overlay');
 
@@ -697,10 +718,15 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Render abilities list with sections
+     * Render abilities list with sections - grouped by role when viewing all
      */
     renderAbilitiesList(abilities) {
-        // Separate by type
+        // Se stiamo visualizzando tutte le abilita, raggruppa per ruolo
+        if (this.currentFilter === 'all' && !this.currentSearch) {
+            return this.renderAbilitiesByRole(abilities);
+        }
+
+        // Altrimenti usa il layout precedente (per filtri specifici o ricerca)
         const unique = abilities.filter(a => a.rarity === 'Unica');
         const normalAbilities = abilities.filter(a => a.rarity !== 'Unica');
         const positive = normalAbilities.filter(a => a.type === 'Positiva' || a.type === 'Leggendaria' || a.type === 'Epica');
@@ -746,6 +772,42 @@ window.AbilitiesUI = {
                 </div>
                 <div class="px-4 space-y-2">
                     ${this.sortByRarity(negative).map(a => this.renderAbilityItem(a)).join('')}
+                </div>
+            `;
+        }
+
+        return html;
+    },
+
+    /**
+     * Render abilities grouped by role with scrollable sections
+     */
+    renderAbilitiesByRole(abilities) {
+        const roles = [
+            { id: 'Icone', icon: '👑', label: 'Abilita Icone', color: 'yellow', filter: a => a.rarity === 'Unica' },
+            { id: 'P', icon: '🧤', label: 'Portiere', color: 'blue', filter: a => a.role === 'P' && a.rarity !== 'Unica' },
+            { id: 'D', icon: '🛡️', label: 'Difensore', color: 'emerald', filter: a => a.role === 'D' && a.rarity !== 'Unica' },
+            { id: 'C', icon: '⚽', label: 'Centrocampista', color: 'violet', filter: a => a.role === 'C' && a.rarity !== 'Unica' },
+            { id: 'A', icon: '⚡', label: 'Attaccante', color: 'red', filter: a => a.role === 'A' && a.rarity !== 'Unica' },
+            { id: 'Multi', icon: '🌟', label: 'Multi-Ruolo', color: 'amber', filter: a => a.role === 'Multi' && a.rarity !== 'Unica' }
+        ];
+
+        let html = '';
+
+        for (const role of roles) {
+            const roleAbilities = abilities.filter(role.filter);
+            if (roleAbilities.length === 0) continue;
+
+            html += `
+                <div id="enc-section-${role.id}" class="enc-role-section">
+                    <div class="enc-section-header sticky top-0 z-10 bg-gradient-to-r from-${role.color}-900/90 to-transparent backdrop-blur-sm">
+                        <div class="enc-section-icon bg-${role.color}-500/20">${role.icon}</div>
+                        <span class="enc-section-title text-${role.color}-400">${role.label}</span>
+                        <span class="enc-section-count">${roleAbilities.length}</span>
+                    </div>
+                    <div class="px-4 space-y-2 pb-4">
+                        ${this.sortByRarity(roleAbilities).map(a => this.renderAbilityItem(a)).join('')}
+                    </div>
                 </div>
             `;
         }
@@ -942,15 +1004,39 @@ window.AbilitiesUI = {
     },
 
     /**
-     * Filter by role
+     * Filter by role - scorre alla sezione se in vista "all", altrimenti filtra
      */
     filter(role) {
+        // Se clicco "Tutte", torno alla vista completa
+        if (role === 'all') {
+            this.currentFilter = 'all';
+            this.expandedCard = null;
+            this.currentDisplayCount = 100; // Mostra piu abilita per la vista raggruppata
+            this.render();
+            const scrollArea = document.getElementById('enc-scroll-area');
+            if (scrollArea) scrollArea.scrollTop = 0;
+            return;
+        }
+
+        // Se sono gia in vista "all", scrolla alla sezione del ruolo
+        if (this.currentFilter === 'all' && !this.currentSearch) {
+            const sectionId = role === 'Icone' ? 'enc-section-Icone' : `enc-section-${role}`;
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Evidenzia brevemente la sezione
+                section.classList.add('enc-section-highlight');
+                setTimeout(() => section.classList.remove('enc-section-highlight'), 1000);
+                return;
+            }
+        }
+
+        // Altrimenti filtra normalmente
         this.currentFilter = role;
         this.expandedCard = null;
         this.currentDisplayCount = this.displayLimit;
         this.render();
 
-        // Scroll to top
         const scrollArea = document.getElementById('enc-scroll-area');
         if (scrollArea) scrollArea.scrollTop = 0;
     },
