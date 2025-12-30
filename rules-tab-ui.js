@@ -979,9 +979,9 @@ window.RulesTabUI = {
                         <div class="rules-info-label" style="color: #22d3ee;">🏗️ Fase 1 - Costruzione</div>
                         <div class="rules-info-tags" style="margin-top: 6px;">
                             <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">P +0.5</span>
-                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">D -0.5</span>
+                            <span class="rules-info-tag" style="background: rgba(71, 85, 105, 0.3); color: #94a3b8;">D 0</span>
                             <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">C +0.5</span>
-                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">A -1.0</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.15); color: #fecaca;">A -0.5</span>
                         </div>
                     </div>
 
@@ -998,7 +998,7 @@ window.RulesTabUI = {
                             <div style="flex: 1;">
                                 <div style="font-size: 0.65rem; color: #64748b; margin-bottom: 4px;">IN DIFESA:</div>
                                 <div class="rules-info-tags">
-                                    <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">D +1.0</span>
+                                    <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.3); color: #86efac;">D +2.0</span>
                                     <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">A -2.0</span>
                                 </div>
                             </div>
@@ -1009,13 +1009,13 @@ window.RulesTabUI = {
                     <div class="rules-info-box" style="margin-top: 8px;">
                         <div class="rules-info-label" style="color: #f87171;">🎯 Fase 3 - Tiro</div>
                         <div class="rules-info-tags" style="margin-top: 6px;">
-                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.3); color: #fca5a5;">D -2.0</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">D -1.5</span>
                             <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.15); color: #fecaca;">C -0.5</span>
-                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">A +1.0</span>
+                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.3); color: #86efac;">A +1.5</span>
                         </div>
                     </div>
 
-                    <p class="rules-hint" style="margin-top: 12px;">I Centrocampisti sono i piu versatili: nessun malus in Fase 2!</p>
+                    <p class="rules-hint" style="margin-top: 12px;">Sistema simmetrico: D eccelle in difesa, A eccelle in attacco!</p>
                 </div>
             </div>
         `;

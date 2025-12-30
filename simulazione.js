@@ -671,16 +671,16 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
         let mod = calculatePlayerModifier(player, hasIcona, effectiveOpposingTeam);
 
         // ========================================
-        // MODIFICATORI RUOLO/FASE (Sistema Tattico)
+        // MODIFICATORI RUOLO/FASE (Sistema Tattico v2 - Simmetrico)
         // ========================================
         const playerRole = player.role || player.ruolo;
 
         // FASE 1 - COSTRUZIONE
         if (phase === 'construction') {
             if (playerRole === 'P') mod += 0.5;      // Portiere: rilancio
-            else if (playerRole === 'D') mod -= 0.5; // Difensore: non costruttore
+            // D: 0 (neutro - difensori moderni costruiscono)
             else if (playerRole === 'C') mod += 0.5; // Centrocampista: playmaker naturale
-            else if (playerRole === 'A') mod -= 1.0; // Attaccante: non sa costruire
+            else if (playerRole === 'A') mod -= 0.5; // Attaccante: meno coinvolto
         }
 
         // FASE 2 - ATTACCO/DIFESA
@@ -690,16 +690,16 @@ const calculateGroupModifier = (players, isHalf, team, opposingTeam, phase, isAt
                 if (playerRole === 'D') mod -= 1.0;  // Difensore in attacco: -1.0
             } else {
                 // Giocatore in difesa
-                if (playerRole === 'D') mod += 1.0;  // Difensore in difesa: +1.0
+                if (playerRole === 'D') mod += 2.0;  // Difensore in difesa: +2.0 (specialisti)
                 else if (playerRole === 'A') mod -= 2.0; // Attaccante in difesa: -2.0
             }
         }
 
         // FASE 3 - TIRO
         if (phase === 'shot' && isAttacking) {
-            if (playerRole === 'D') mod -= 2.0;      // Difensore che tira: -2.0
+            if (playerRole === 'D') mod -= 1.5;      // Difensore che tira: -1.5
             else if (playerRole === 'C') mod -= 0.5; // Centrocampista: non finalizzatore
-            else if (playerRole === 'A') mod += 1.0; // Attaccante: finalizzatore naturale
+            else if (playerRole === 'A') mod += 1.5; // Attaccante: finalizzatore naturale
         }
 
         // Bonus equipaggiamento fase-specifico (oltre ai bonus "tutte" già applicati in calculatePlayerModifier)
