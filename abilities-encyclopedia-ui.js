@@ -665,6 +665,26 @@ window.AbilitiesUI = {
                     </div>
                 </div>
 
+                <!-- EXPAND/COLLAPSE ALL (solo in vista "all") -->
+                ${this.currentFilter === 'all' && !this.currentSearch ? `
+                    <div class="flex justify-end px-4 py-2">
+                        <button onclick="window.AbilitiesUI.toggleAllSections()"
+                                class="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-medium text-white/60 transition-all active:scale-95">
+                            ${this.areAllSectionsExpanded() ? `
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                </svg>
+                                Chiudi tutto
+                            ` : `
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                                Espandi tutto
+                            `}
+                        </button>
+                    </div>
+                ` : ''}
+
                 <!-- RESULTS COUNT -->
                 <div id="enc-results-count" class="${this.currentSearch || this.currentFilter !== 'all' ? 'px-4 py-2' : 'hidden'}">
                     ${this.currentSearch || this.currentFilter !== 'all' ? `
@@ -861,6 +881,28 @@ window.AbilitiesUI = {
     toggleSection(roleId) {
         this.expandedSections[roleId] = !this.expandedSections[roleId];
         this.updateResultsOnly();
+    },
+
+    /**
+     * Verifica se tutte le sezioni sono espanse
+     */
+    areAllSectionsExpanded() {
+        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi'];
+        return roleIds.every(id => this.expandedSections[id] === true);
+    },
+
+    /**
+     * Espande o chiude tutte le sezioni
+     */
+    toggleAllSections() {
+        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi'];
+        const shouldExpand = !this.areAllSectionsExpanded();
+
+        roleIds.forEach(id => {
+            this.expandedSections[id] = shouldExpand;
+        });
+
+        this.render();
     },
 
     /**
