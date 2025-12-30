@@ -28,23 +28,11 @@ window.MvpDelGiornoUI = {
             return;
         }
 
-        // Trova o crea il container
-        let container = document.getElementById(containerId);
+        // Trova il container (deve esistere nell'HTML)
+        const container = document.getElementById(containerId);
         if (!container) {
-            // Crea container nel dashboard
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard) {
-                container = document.createElement('div');
-                container.id = containerId;
-                container.className = 'mb-4';
-                // Inserisci dopo il primo elemento (solitamente il titolo)
-                const firstChild = dashboard.querySelector('.bg-gray-800, .bg-slate-800');
-                if (firstChild) {
-                    firstChild.parentNode.insertBefore(container, firstChild);
-                } else {
-                    dashboard.prepend(container);
-                }
-            }
+            console.warn('[MVP-UI] Container non trovato:', containerId);
+            return;
         }
 
         this._container = container;
@@ -78,6 +66,62 @@ window.MvpDelGiornoUI = {
     },
 
     /**
+     * Inietta gli stili CSS per le animazioni MVP (una sola volta)
+     */
+    injectStyles() {
+        if (document.getElementById('mvp-celebration-styles')) return;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'mvp-celebration-styles';
+        styleSheet.textContent = `
+            @keyframes mvp-shimmer {
+                0% { background-position: -200% center; }
+                100% { background-position: 200% center; }
+            }
+            @keyframes mvp-glow-pulse {
+                0%, 100% { box-shadow: 0 0 20px var(--team-primary-color, #fbbf24), 0 0 40px rgba(251, 191, 36, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+                50% { box-shadow: 0 0 30px var(--team-primary-color, #fbbf24), 0 0 60px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+            }
+            @keyframes mvp-star-float {
+                0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                50% { transform: translateY(-3px) rotate(10deg); opacity: 0.8; }
+            }
+            @keyframes mvp-crown-bounce {
+                0%, 100% { transform: translateY(0) scale(1); }
+                50% { transform: translateY(-2px) scale(1.1); }
+            }
+            @keyframes mvp-border-dance {
+                0% { border-color: var(--team-primary-color, #fbbf24); }
+                33% { border-color: #fcd34d; }
+                66% { border-color: #f59e0b; }
+                100% { border-color: var(--team-primary-color, #fbbf24); }
+            }
+            .mvp-own-team-box {
+                animation: mvp-glow-pulse 2s ease-in-out infinite, mvp-border-dance 3s linear infinite;
+            }
+            .mvp-shimmer-text {
+                background: linear-gradient(90deg, #fbbf24 0%, #fef3c7 25%, #fbbf24 50%, #fef3c7 75%, #fbbf24 100%);
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: mvp-shimmer 2s linear infinite;
+            }
+            .mvp-crown {
+                animation: mvp-crown-bounce 1.5s ease-in-out infinite;
+                filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.8));
+            }
+            .mvp-star {
+                animation: mvp-star-float 2s ease-in-out infinite;
+            }
+            .mvp-star:nth-child(2) { animation-delay: 0.3s; }
+            .mvp-star:nth-child(3) { animation-delay: 0.6s; }
+            .mvp-star:nth-child(4) { animation-delay: 0.9s; }
+        `;
+        document.head.appendChild(styleSheet);
+    },
+
+    /**
      * Renderizza il banner MVP
      * @param {Object} mvp - Dati MVP (opzionale, se non passato li carica)
      */
@@ -99,6 +143,15 @@ window.MvpDelGiornoUI = {
             const isSeasonOver = await this.checkSeasonOver();
             this.renderPlaceholder(isSeasonOver);
             return;
+        }
+
+        // Verifica se l'MVP e' della squadra corrente
+        const currentTeamId = window.InterfacciaCore?.getCurrentTeam()?.id;
+        const isOwnTeam = currentTeamId && mvp.teamId === currentTeamId;
+
+        // Inietta stili se necessario
+        if (isOwnTeam) {
+            this.injectStyles();
         }
 
         // Icona ruolo
@@ -126,70 +179,97 @@ window.MvpDelGiornoUI = {
         const cleanSheets = stats.cleanSheets || 0;
         const saves = stats.saves || 0;
 
-        // Data formattata
-        const calculatedAt = mvp.calculatedAt ? new Date(mvp.calculatedAt) : new Date();
-        const dateStr = calculatedAt.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+        // Stats compatte
+        const statsArr = [];
+        if (goals > 0) statsArr.push(`${goals}G`);
+        if (assists > 0) statsArr.push(`${assists}A`);
+        if (cleanSheets > 0) statsArr.push(`${cleanSheets}CS`);
+        if (saves > 0) statsArr.push(`${saves}P`);
+        const statsStr = statsArr.length > 0 ? statsArr.join(' ') : '';
 
-        this._container.innerHTML = `
-            <div class="bg-gradient-to-r from-amber-900/40 via-yellow-900/30 to-amber-900/40 rounded-xl border border-yellow-500/50 p-4 shadow-lg relative overflow-hidden">
-                <!-- Decorazione sfondo -->
-                <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        if (isOwnTeam) {
+            // VERSIONE CELEBRATIVA - E' IL TUO GIOCATORE!
+            this._container.innerHTML = `
+                <div class="mvp-own-team-box rounded-xl border-2 p-4 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(120, 53, 15, 0.6) 0%, rgba(180, 83, 9, 0.4) 50%, rgba(120, 53, 15, 0.6) 100%); border-color: var(--team-primary-color, #fbbf24);">
+                    <!-- Stelle decorative -->
+                    <div class="absolute top-2 left-3 text-yellow-400/60 text-xs mvp-star">&#9733;</div>
+                    <div class="absolute top-3 right-4 text-yellow-400/50 text-[10px] mvp-star">&#9733;</div>
+                    <div class="absolute bottom-2 left-6 text-yellow-400/40 text-[8px] mvp-star">&#9733;</div>
+                    <div class="absolute bottom-3 right-8 text-yellow-400/50 text-xs mvp-star">&#9733;</div>
 
-                <div class="relative z-10">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl animate-pulse">&#127942;</span>
-                            <h3 class="text-lg font-bold text-yellow-400">MVP del Giorno</h3>
+                    <!-- Contenuto principale -->
+                    <div class="relative z-10">
+                        <!-- Header celebrativo -->
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="mvp-crown text-lg">&#128081;</span>
+                            <span class="mvp-shimmer-text text-sm font-black uppercase tracking-wider">E' il tuo giocatore!</span>
+                            <span class="mvp-crown text-lg">&#128081;</span>
                         </div>
-                        <span class="text-xs text-gray-400">${dateStr}</span>
-                    </div>
 
-                    <!-- Player Info -->
-                    <div class="flex items-center gap-4">
+                        <!-- Player row -->
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar con glow -->
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg border-2 flex-shrink-0" style="background: linear-gradient(135deg, var(--team-primary-color, #fbbf24) 0%, #f59e0b 100%); border-color: rgba(255,255,255,0.3); box-shadow: 0 0 15px var(--team-primary-color, #fbbf24);">
+                                ${roleIcon}
+                            </div>
+
+                            <!-- Player Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg">&#127942;</span>
+                                    <span class="text-base font-black text-yellow-300 truncate">${this.escapeHtml(mvp.playerName)}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${roleBadgeClass}">${mvp.role}</span>
+                                </div>
+                                <div class="text-xs text-yellow-200/80 flex items-center gap-2 flex-wrap mt-0.5">
+                                    ${statsStr ? `<span class="font-semibold">${statsStr}</span>` : ''}
+                                    <span class="text-green-300 font-bold">+0.5 MOD</span>
+                                    <span class="text-yellow-200">+5% XP</span>
+                                </div>
+                            </div>
+
+                            <!-- Score grande -->
+                            <div class="text-right flex-shrink-0">
+                                <div class="text-2xl font-black mvp-shimmer-text">${mvp.score?.toFixed(1) || '0.0'}</div>
+                                <div class="text-[10px] text-yellow-300/70 uppercase tracking-wide">punti</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // VERSIONE NORMALE - MVP di altra squadra
+            this._container.innerHTML = `
+                <div class="bg-gradient-to-r from-amber-900/40 via-yellow-900/30 to-amber-900/40 rounded-lg border border-yellow-500/50 p-3 relative overflow-hidden">
+                    <div class="relative z-10 flex items-center gap-3">
                         <!-- Avatar/Icon -->
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center text-3xl shadow-lg border-2 border-yellow-400/50">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center text-lg shadow-md border-2 border-yellow-400/50 flex-shrink-0">
                             ${roleIcon}
                         </div>
 
-                        <!-- Details -->
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xl font-bold text-white">${this.escapeHtml(mvp.playerName)}</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold ${roleBadgeClass}">${mvp.role}</span>
+                        <!-- Player Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">&#127942;</span>
+                                <span class="text-sm font-bold text-yellow-400">MVP</span>
+                                <span class="text-sm font-bold text-white truncate">${this.escapeHtml(mvp.playerName)}</span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${roleBadgeClass}">${mvp.role}</span>
                             </div>
-                            <div class="text-sm text-gray-300 mb-2">
-                                <i class="fas fa-shield-alt mr-1 text-gray-500"></i>
-                                ${this.escapeHtml(mvp.teamName)}
-                            </div>
-
-                            <!-- Stats -->
-                            <div class="flex flex-wrap gap-3 text-xs">
-                                ${goals > 0 ? `<span class="flex items-center gap-1 text-green-400"><i class="fas fa-futbol"></i> ${goals} gol</span>` : ''}
-                                ${assists > 0 ? `<span class="flex items-center gap-1 text-blue-400"><i class="fas fa-hands-helping"></i> ${assists} assist</span>` : ''}
-                                ${cleanSheets > 0 ? `<span class="flex items-center gap-1 text-purple-400"><i class="fas fa-ban"></i> ${cleanSheets} CS</span>` : ''}
-                                ${saves > 0 ? `<span class="flex items-center gap-1 text-cyan-400"><i class="fas fa-hand-paper"></i> ${saves} parate</span>` : ''}
+                            <div class="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                <span class="truncate">${this.escapeHtml(mvp.teamName)}</span>
+                                ${statsStr ? `<span class="text-yellow-400/80">${statsStr}</span>` : ''}
+                                <span class="text-green-400/80">+0.5 MOD</span>
+                                <span class="text-yellow-300/60">+5% XP</span>
                             </div>
                         </div>
 
                         <!-- Score -->
-                        <div class="text-right">
-                            <div class="text-3xl font-bold text-yellow-400">${mvp.score?.toFixed(1) || '0.0'}</div>
-                            <div class="text-xs text-gray-400">punti</div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-xl font-bold text-yellow-400">${mvp.score?.toFixed(1) || '0.0'}</div>
                         </div>
                     </div>
-
-                    <!-- Bonus indicator -->
-                    <div class="mt-3 pt-3 border-t border-yellow-500/20 flex items-center justify-center gap-2">
-                        <span class="text-xs text-yellow-300/80">
-                            <i class="fas fa-bolt mr-1"></i>
-                            +5% XP fino al prossimo calcolo
-                        </span>
-                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     },
 
     /**
@@ -199,37 +279,24 @@ window.MvpDelGiornoUI = {
     renderPlaceholder(isSeasonOver) {
         if (!this._container) return;
 
-        const title = isSeasonOver ? 'Stagione Terminata' : 'MVP del Giorno';
-        const subtitle = 'Il giocatore del giorno sara disponibile dopo 2 partite';
-        const icon = isSeasonOver ? '<i class="fas fa-flag-checkered text-gray-400"></i>' : '<i class="fas fa-hourglass-half text-gray-400"></i>';
+        const title = isSeasonOver ? 'Stagione Terminata' : 'In attesa...';
+        const subtitle = 'MVP disponibile dopo 2 partite';
+        const icon = isSeasonOver ? '<i class="fas fa-flag-checkered text-gray-400 text-lg"></i>' : '<i class="fas fa-hourglass-half text-gray-400 text-lg"></i>';
 
         this._container.innerHTML = `
-            <div class="bg-gradient-to-r from-gray-800/60 via-gray-700/40 to-gray-800/60 rounded-xl border border-gray-600/50 p-4 shadow-lg relative overflow-hidden">
-                <!-- Decorazione sfondo -->
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gray-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gray-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-
-                <div class="relative z-10">
-                    <!-- Header -->
-                    <div class="flex items-center justify-center mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl opacity-50">&#127942;</span>
-                            <h3 class="text-lg font-bold text-gray-400">MVP del Giorno</h3>
-                        </div>
+            <div class="bg-gradient-to-r from-gray-800/60 via-gray-700/40 to-gray-800/60 rounded-lg border border-gray-600/50 p-3 relative overflow-hidden">
+                <div class="relative z-10 flex items-center gap-3">
+                    <!-- Icon -->
+                    <div class="w-10 h-10 rounded-full bg-gray-700/50 flex items-center justify-center border border-gray-600/50 flex-shrink-0">
+                        ${icon}
                     </div>
-
-                    <!-- Placeholder Content -->
-                    <div class="flex flex-col items-center justify-center py-4">
-                        <!-- Icon -->
-                        <div class="w-16 h-16 rounded-full bg-gray-700/50 flex items-center justify-center text-3xl mb-3 border-2 border-gray-600/50">
-                            ${icon}
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base opacity-50">&#127942;</span>
+                            <span class="text-sm font-bold text-gray-400">MVP del Giorno</span>
                         </div>
-
-                        <!-- Title -->
-                        <div class="text-xl font-bold text-gray-300 mb-2">${title}</div>
-
-                        <!-- Subtitle -->
-                        <div class="text-sm text-gray-500 text-center">${subtitle}</div>
+                        <div class="text-xs text-gray-500">${title} - ${subtitle}</div>
                     </div>
                 </div>
             </div>

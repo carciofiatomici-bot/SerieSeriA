@@ -136,6 +136,12 @@ window.SimulazioneNuoveRegole = {
             mod += 1;
         }
 
+        // Bonus MVP del Giorno (+0.5)
+        const playerId = player.id || player.visitorId;
+        if (playerId && window.MvpDelGiorno?.isCurrentMvpSync?.(playerId)) {
+            mod += 0.5;
+        }
+
         return mod;
     },
 
