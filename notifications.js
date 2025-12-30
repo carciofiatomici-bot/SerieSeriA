@@ -137,12 +137,12 @@ window.Notifications = {
         this.bellButton = document.createElement('button');
         this.bellButton.id = 'notifications-bell';
         this.bellButton.className = `
-            fixed z-[9998] w-10 h-10
+            fixed z-[35] w-10 h-10 min-w-[44px] min-h-[44px]
             bg-transparent
             flex items-center justify-center
             transition-all duration-200 hover:scale-110
         `.replace(/\s+/g, ' ').trim();
-        this.bellButton.style.bottom = '52px';
+        this.bellButton.style.bottom = 'max(52px, calc(52px + env(safe-area-inset-bottom, 0px)))';
         this.bellButton.style.right = '0px';
 
         this.bellButton.innerHTML = `
@@ -154,7 +154,7 @@ window.Notifications = {
         this.dropdown = document.createElement('div');
         this.dropdown.id = 'notifications-dropdown';
         this.dropdown.className = `
-            fixed z-[9997] w-80 max-h-96
+            fixed z-[36] w-80 max-h-96
             bg-gray-800 rounded-xl shadow-2xl border-2 border-gray-600
             overflow-hidden hidden
         `.replace(/\s+/g, ' ').trim();

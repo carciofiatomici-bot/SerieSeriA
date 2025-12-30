@@ -53,11 +53,11 @@ window.ConfirmDialog = {
             // Crea modal
             const modal = document.createElement('div');
             modal.id = 'confirm-dialog-modal';
-            modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70';
+            modal.className = 'fixed inset-0 z-[50] flex items-center justify-center p-4 bg-black bg-opacity-70';
             modal.style.animation = 'fadeIn 0.2s ease-out';
 
             modal.innerHTML = `
-                <div class="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border-2 ${style.borderColor} transform scale-95 opacity-0 transition-all duration-200" id="confirm-dialog-box">
+                <div class="bg-gray-800 rounded-xl shadow-2xl max-w-[calc(100vw-2rem)] sm:max-w-md w-full border-2 ${style.borderColor} transform scale-95 opacity-0 transition-all duration-200" id="confirm-dialog-box">
                     <div class="p-6">
                         <!-- Header con icona -->
                         <div class="flex items-center gap-4 mb-4">
@@ -82,13 +82,13 @@ window.ConfirmDialog = {
                         ` : ''}
 
                         <!-- Bottoni -->
-                        <div class="flex gap-3 justify-end">
+                        <div class="flex gap-3 justify-end flex-wrap sm:flex-nowrap">
                             <button id="confirm-dialog-cancel"
-                                    class="px-5 py-2.5 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors">
+                                    class="flex-1 sm:flex-initial px-5 py-2.5 min-h-[44px] bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 active:bg-gray-700 transition-colors">
                                 ${cancelText}
                             </button>
                             <button id="confirm-dialog-confirm"
-                                    class="px-5 py-2.5 ${style.confirmBg} text-white font-semibold rounded-lg transition-colors ${requireInput ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    class="flex-1 sm:flex-initial px-5 py-2.5 min-h-[44px] ${style.confirmBg} active:brightness-90 text-white font-semibold rounded-lg transition-colors ${requireInput ? 'opacity-50 cursor-not-allowed' : ''}"
                                     ${requireInput ? 'disabled' : ''}>
                                 ${confirmText}
                             </button>
@@ -124,6 +124,10 @@ window.ConfirmDialog = {
                     confirmBtn.classList.toggle('cursor-not-allowed', !matches);
                 });
                 inputEl.focus();
+                // Scroll input in view su mobile quando si apre la tastiera
+                setTimeout(() => {
+                    inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
             }
 
             // Funzione chiusura
@@ -225,21 +229,21 @@ window.ConfirmDialog = {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
             modal.id = 'alert-dialog-modal';
-            modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70';
+            modal.className = 'fixed inset-0 z-[50] flex items-center justify-center p-4 bg-black bg-opacity-70';
 
             modal.innerHTML = `
-                <div class="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border-2 border-blue-500 transform scale-95 opacity-0 transition-all duration-200" id="alert-dialog-box">
+                <div class="bg-gray-800 rounded-xl shadow-2xl max-w-[calc(100vw-2rem)] sm:max-w-md w-full border-2 border-blue-500 transform scale-95 opacity-0 transition-all duration-200" id="alert-dialog-box">
                     <div class="p-6">
                         <div class="flex items-center gap-4 mb-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl">
                                 ℹ
                             </div>
-                            <h3 class="text-xl font-bold text-white">${title}</h3>
+                            <h3 class="text-lg sm:text-xl font-bold text-white">${title}</h3>
                         </div>
-                        <p class="text-gray-300 mb-6 ml-16">${message}</p>
+                        <p class="text-gray-300 mb-6 ml-14 sm:ml-16">${message}</p>
                         <div class="flex justify-end">
                             <button id="alert-dialog-ok"
-                                    class="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 transition-colors">
+                                    class="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 active:bg-blue-700 transition-colors">
                                 OK
                             </button>
                         </div>

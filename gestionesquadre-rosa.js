@@ -94,7 +94,7 @@ window.GestioneSquadreRosa = {
                 <div id="player-list-message" class="hidden text-center py-1.5 text-sm border-b border-gray-700/30"></div>
 
                 <!-- Lista giocatori -->
-                <div id="player-list" class="p-2 space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto overscroll-contain">
+                <div id="player-list" class="p-2 space-y-1 max-h-[calc(100dvh-180px)] sm:max-h-[calc(100dvh-220px)] overflow-y-auto overscroll-contain">
                     ${players.length === 0
                         ? `<div class="text-center py-8 text-gray-400">
                                <div class="text-3xl mb-2">⚽</div>

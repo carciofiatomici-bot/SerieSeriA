@@ -92,7 +92,7 @@
                    ===================================================== */
 
                 :root {
-                    --smg-cell-size: min(calc((95vw - 8px) / 13), calc((60vh - 8px) / 9));
+                    --smg-cell-size: max(24px, min(calc((95vw - 8px) / 13), calc((60dvh - 8px) / 9)));
                     --smg-cols: 13;
                     --smg-rows: 9;
                 }
@@ -148,14 +148,14 @@
                 /* ============ MOBILE LANDSCAPE ============ */
                 @media screen and (max-width: 900px) and (orientation: landscape) {
                     :root {
-                        --smg-cell-size: min(calc((98vw - 8px) / 13), calc((55vh - 8px) / 9));
+                        --smg-cell-size: max(20px, min(calc((98vw - 8px) / 13), calc((55dvh - 8px) / 9)));
                     }
                 }
 
                 /* ============ MOBILE PORTRAIT: Campo ruotato 9x13 ============ */
                 @media screen and (max-width: 768px) and (orientation: portrait) {
                     :root {
-                        --smg-cell-size: min(calc((94vw - 8px) / 9), calc((52vh - 8px) / 13));
+                        --smg-cell-size: max(24px, min(calc((94vw - 8px) / 9), calc((52dvh - 8px) / 13)));
                         --smg-cols: 9;
                         --smg-rows: 13;
                     }

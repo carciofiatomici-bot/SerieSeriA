@@ -25,7 +25,8 @@ window.Toast = {
 
         this.container = document.createElement('div');
         this.container.id = 'toast-container';
-        this.container.className = 'fixed z-[9999] flex flex-col gap-2 pointer-events-none';
+        this.container.className = 'fixed z-[60] flex flex-col gap-2 pointer-events-none';
+        this.container.style.paddingTop = 'env(safe-area-inset-top, 0px)';
         this.setPosition(this.defaults.position);
         document.body.appendChild(this.container);
     },
@@ -129,7 +130,7 @@ window.Toast = {
             </div>
             <div class="flex-1 text-sm font-medium">${message}</div>
             ${showClose ? `
-                <button class="flex-shrink-0 text-gray-400 hover:text-white transition-colors" onclick="window.Toast.dismiss('${id}')">
+                <button class="flex-shrink-0 min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-gray-400 hover:text-white active:bg-white/10 rounded-lg transition-colors" onclick="window.Toast.dismiss('${id}')">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
