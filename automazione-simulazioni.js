@@ -232,21 +232,12 @@ window.AutomazioneSimulazioni = {
             // Gestisci fine stagione (premi, creazione Coppa Quasi e Supercoppa)
             await this.handleSeasonEnd();
 
-            // NUOVO: Verifica se c'e' una Coppa Quasi SeriA da simulare (PRIMA della Supercoppa)
+            // Coppa Quasi SeriA: simula a qualsiasi orario (come campionato/coppa)
             if (await this.hasCoppaQuasiToPlay()) {
-                const now = new Date();
-                const isEveningTime = now.getHours() >= 20;
-
-                if (isEveningTime) {
-                    return 'coppa_quasi';
-                } else {
-                    console.log('[Automazione] Coppa Quasi SeriA disponibile - verra simulata alle 20:30');
-                    return null;
-                }
+                return 'coppa_quasi';
             }
 
-            // Verifica se c'e' una Supercoppa da simulare (DOPO la Coppa Quasi)
-            // La Supercoppa viene simulata solo alle 20:30 (GitHub Action serale)
+            // Supercoppa: simula solo alle 20:30 (evento finale stagione)
             if (await this.hasSupercoppaToPlay()) {
                 const now = new Date();
                 const isEveningTime = now.getHours() >= 20;
