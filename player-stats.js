@@ -1179,6 +1179,46 @@ window.PlayerStats = {
 
         console.log(`[PlayerStats] Reset completato: ${teamsReset} squadre, ${playersReset} giocatori`);
         return { teamsReset, playersReset };
+    },
+
+    /**
+     * Resetta la forma di tutti i giocatori di tutte le squadre.
+     * Utile per l'inizio di un nuovo campionato.
+     * ATTENZIONE: Questa operazione è irreversibile!
+     * @returns {Object} - { teamsReset }
+     */
+    async resetAllPlayerForms() {
+        const { collection, getDocs, doc, updateDoc } = window.firestoreTools;
+        const db = window.db;
+        const appId = window.firestoreTools.appId;
+
+        const teamsPath = `artifacts/${appId}/public/data/teams`;
+        const teamsSnapshot = await getDocs(collection(db, teamsPath));
+
+        let teamsReset = 0;
+
+        for (const teamDoc of teamsSnapshot.docs) {
+            const teamId = teamDoc.id;
+            const teamData = teamDoc.data();
+
+            // Solo se la squadra ha playersFormStatus
+            if (teamData.playersFormStatus && Object.keys(teamData.playersFormStatus).length > 0) {
+                try {
+                    const teamRef = doc(db, teamsPath, teamId);
+                    await updateDoc(teamRef, {
+                        playersFormStatus: {}
+                    });
+                    teamsReset++;
+                    console.log(`[PlayerStats] Forma reset per squadra ${teamData.teamName || teamId}`);
+                } catch (error) {
+                    console.error(`[PlayerStats] Errore reset forma per squadra ${teamId}:`, error);
+                }
+            }
+        }
+
+        console.log(`[PlayerStats] Reset forme completato: ${teamsReset} squadre aggiornate`);
+        window.toast?.success(`Forme resettate per ${teamsReset} squadre!`);
+        return { teamsReset };
     }
 };
 

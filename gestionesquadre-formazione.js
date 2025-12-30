@@ -322,7 +322,7 @@ window.GestioneSquadreFormazione = {
                         <h3 id="player-info-header" class="text-blue-400 font-bold text-lg flex items-center gap-2">
                             <span>📊</span> <span id="player-info-name">Giocatore</span>
                         </h3>
-                        <button id="player-info-close" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                        <button id="player-info-close" class="text-gray-300 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition flex-shrink-0">&times;</button>
                     </div>
 
                     <!-- Mini Stats -->
