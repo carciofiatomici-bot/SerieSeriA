@@ -836,11 +836,12 @@ window.AbilitiesUI = {
     renderAbilitiesByRole(abilities) {
         const roles = [
             { id: 'Icone', icon: '👑', label: 'Abilita Icone', color: 'yellow', filter: a => a.rarity === 'Unica' },
-            { id: 'P', icon: '🧤', label: 'Portiere', color: 'blue', filter: a => a.role === 'P' && a.rarity !== 'Unica' },
-            { id: 'D', icon: '🛡️', label: 'Difensore', color: 'emerald', filter: a => a.role === 'D' && a.rarity !== 'Unica' },
-            { id: 'C', icon: '⚽', label: 'Centrocampista', color: 'violet', filter: a => a.role === 'C' && a.rarity !== 'Unica' },
-            { id: 'A', icon: '⚡', label: 'Attaccante', color: 'red', filter: a => a.role === 'A' && a.rarity !== 'Unica' },
-            { id: 'Multi', icon: '🌟', label: 'Multi-Ruolo', color: 'amber', filter: a => a.role === 'Multi' && a.rarity !== 'Unica' }
+            { id: 'P', icon: '🧤', label: 'Portiere', color: 'blue', filter: a => a.role === 'P' && a.rarity !== 'Unica' && a.type !== 'Negativa' },
+            { id: 'D', icon: '🛡️', label: 'Difensore', color: 'emerald', filter: a => a.role === 'D' && a.rarity !== 'Unica' && a.type !== 'Negativa' },
+            { id: 'C', icon: '⚽', label: 'Centrocampista', color: 'violet', filter: a => a.role === 'C' && a.rarity !== 'Unica' && a.type !== 'Negativa' },
+            { id: 'A', icon: '⚡', label: 'Attaccante', color: 'red', filter: a => a.role === 'A' && a.rarity !== 'Unica' && a.type !== 'Negativa' },
+            { id: 'Multi', icon: '🌟', label: 'Multi-Ruolo', color: 'amber', filter: a => a.role === 'Multi' && a.rarity !== 'Unica' && a.type !== 'Negativa' },
+            { id: 'Negative', icon: '💀', label: 'Abilita Negative', color: 'rose', filter: a => a.type === 'Negativa' && a.rarity !== 'Unica' }
         ];
 
         let html = '';
@@ -887,7 +888,7 @@ window.AbilitiesUI = {
      * Verifica se tutte le sezioni sono espanse
      */
     areAllSectionsExpanded() {
-        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi'];
+        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi', 'Negative'];
         return roleIds.every(id => this.expandedSections[id] === true);
     },
 
@@ -895,7 +896,7 @@ window.AbilitiesUI = {
      * Espande o chiude tutte le sezioni
      */
     toggleAllSections() {
-        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi'];
+        const roleIds = ['Icone', 'P', 'D', 'C', 'A', 'Multi', 'Negative'];
         const shouldExpand = !this.areAllSectionsExpanded();
 
         roleIds.forEach(id => {
