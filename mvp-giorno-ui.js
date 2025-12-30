@@ -61,6 +61,23 @@ window.MvpDelGiornoUI = {
     },
 
     /**
+     * Verifica se la stagione e' terminata
+     */
+    async checkSeasonOver() {
+        try {
+            const { doc, getDoc, appId } = window.firestoreTools || {};
+            if (!doc || !getDoc || !appId || !window.db) return false;
+
+            const configDocRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
+            const configDoc = await getDoc(configDocRef);
+            return configDoc.exists() ? (configDoc.data().isSeasonOver || false) : false;
+        } catch (e) {
+            console.warn('[MVP-UI] Errore verifica isSeasonOver:', e);
+            return false;
+        }
+    },
+
+    /**
      * Renderizza il banner MVP
      * @param {Object} mvp - Dati MVP (opzionale, se non passato li carica)
      */
@@ -78,8 +95,9 @@ window.MvpDelGiornoUI = {
         }
 
         if (!mvp) {
-            // Nessun MVP ancora calcolato
-            this._container.innerHTML = '';
+            // Nessun MVP ancora calcolato - mostra placeholder
+            const isSeasonOver = await this.checkSeasonOver();
+            this.renderPlaceholder(isSeasonOver);
             return;
         }
 
@@ -168,6 +186,50 @@ window.MvpDelGiornoUI = {
                             <i class="fas fa-bolt mr-1"></i>
                             +5% XP fino al prossimo calcolo
                         </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Renderizza il placeholder quando non c'e' MVP
+     * @param {boolean} isSeasonOver - Se la stagione e' terminata
+     */
+    renderPlaceholder(isSeasonOver) {
+        if (!this._container) return;
+
+        const title = isSeasonOver ? 'Stagione Terminata' : 'MVP del Giorno';
+        const subtitle = 'Il giocatore del giorno sara disponibile dopo 2 partite';
+        const icon = isSeasonOver ? '<i class="fas fa-flag-checkered text-gray-400"></i>' : '<i class="fas fa-hourglass-half text-gray-400"></i>';
+
+        this._container.innerHTML = `
+            <div class="bg-gradient-to-r from-gray-800/60 via-gray-700/40 to-gray-800/60 rounded-xl border border-gray-600/50 p-4 shadow-lg relative overflow-hidden">
+                <!-- Decorazione sfondo -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gray-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gray-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+
+                <div class="relative z-10">
+                    <!-- Header -->
+                    <div class="flex items-center justify-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl opacity-50">&#127942;</span>
+                            <h3 class="text-lg font-bold text-gray-400">MVP del Giorno</h3>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder Content -->
+                    <div class="flex flex-col items-center justify-center py-4">
+                        <!-- Icon -->
+                        <div class="w-16 h-16 rounded-full bg-gray-700/50 flex items-center justify-center text-3xl mb-3 border-2 border-gray-600/50">
+                            ${icon}
+                        </div>
+
+                        <!-- Title -->
+                        <div class="text-xl font-bold text-gray-300 mb-2">${title}</div>
+
+                        <!-- Subtitle -->
+                        <div class="text-sm text-gray-500 text-center">${subtitle}</div>
                     </div>
                 </div>
             </div>
