@@ -1453,7 +1453,7 @@ window.AdminTeams = {
             
         } catch (error) {
             console.error('Errore salvataggio:', error);
-            msgElement.textContent = `¢Å’ Errore: ${error.message}`;
+            msgElement.textContent = `Errore: ${error.message}`;
             msgElement.className = 'text-center text-sm mb-4 text-red-400';
         }
     },

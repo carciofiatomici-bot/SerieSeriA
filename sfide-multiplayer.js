@@ -1463,7 +1463,7 @@ window.SfideMultiplayer = (function() {
         const myTeamName = window.InterfacciaCore?.currentTeamData?.teamName || 'La Mia Squadra';
 
         if (!myTeamId) {
-            console.error("[TEST] Nessuna squadra selezionata");
+            console.warn("testIncomingChallenge: Nessuna squadra selezionata");
             return;
         }
 
@@ -1489,7 +1489,7 @@ window.SfideMultiplayer = (function() {
         };
         fakeChallenge.defenderId = fakeChallenge.attackerId === 'test_team_123' ? myTeamId : 'test_team_123';
 
-        console.log("[TEST] Simulazione sfida in arrivo:", fakeChallenge);
+        // Debug: console.log("testIncomingChallenge: Simulazione sfida", fakeChallenge);
 
         // Mostra modal
         showIncomingChallengeModal(fakeChallenge);
@@ -1507,7 +1507,7 @@ window.SfideMultiplayer = (function() {
         const myFormation = window.InterfacciaCore?.currentTeamData?.formation?.titolari?.slice(0, 5) || [];
 
         if (!myTeamId || myFormation.length < 5) {
-            console.error("[TEST] Squadra non valida o formazione incompleta");
+            console.warn("testCreateChallenge: Squadra non valida o formazione incompleta");
             if (window.Toast) window.Toast.error("Imposta prima una formazione con 5 titolari");
             return null;
         }
@@ -1540,13 +1540,13 @@ window.SfideMultiplayer = (function() {
             };
 
             const docRef = await addDoc(collection(window.db, path), challenge);
-            console.log("[TEST] Sfida creata su Firestore:", docRef.id);
+            // Debug: console.log("testCreateChallenge: Sfida creata:", docRef.id);
 
             if (window.Toast) window.Toast.success("Sfida test creata! Controlla le notifiche.");
 
             return { id: docRef.id, ...challenge };
         } catch (error) {
-            console.error("[TEST] Errore creazione sfida:", error);
+            console.error("testCreateChallenge: Errore creazione sfida:", error);
             if (window.Toast) window.Toast.error("Errore creazione sfida test");
             return null;
         }

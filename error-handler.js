@@ -139,7 +139,7 @@ window.ErrorHandler = {
             validation: 'Dati inseriti non validi. Controlla i campi e riprova.',
             timeout: 'Operazione troppo lenta. Riprova tra qualche istante.',
             not_found: 'Elemento non trovato. Potrebbe essere stato eliminato.',
-            generic: originalMessage || 'Si e\' verificato un errore. Riprova.'
+            generic: originalMessage || 'Si e verificato un errore. Riprova.'
         };
 
         return messages[category] || messages.generic;
