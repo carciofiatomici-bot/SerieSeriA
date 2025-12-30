@@ -9,8 +9,8 @@ window.AbilitiesUI = {
 
     currentFilter: 'all',
     currentSearch: '',
-    displayLimit: 20,
-    currentDisplayCount: 20,
+    displayLimit: 999,
+    currentDisplayCount: 999,
     searchVisible: false,
     expandedCard: null,
     statsVisible: false,
@@ -483,7 +483,7 @@ window.AbilitiesUI = {
         this.expandedCard = null;
         this.statsVisible = false;
         this.currentFilter = 'all';
-        this.currentDisplayCount = 100;
+        this.currentDisplayCount = 999;
         this.expandedSections = {}; // Tutte le sezioni chiuse di default
 
         let overlay = document.getElementById('abilities-encyclopedia-overlay');
@@ -1102,7 +1102,7 @@ window.AbilitiesUI = {
         if (role === 'all') {
             this.currentFilter = 'all';
             this.expandedCard = null;
-            this.currentDisplayCount = 100;
+            this.currentDisplayCount = 999;
             this.render();
             const scrollArea = document.getElementById('enc-scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
