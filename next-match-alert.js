@@ -42,31 +42,33 @@ window.NextMatchAlert = {
         const contentContainer = document.getElementById('next-match-content');
         if (!container) return;
 
-        // Controlla se la stagione e' terminata (nessuna partita da mostrare)
-        try {
-            const { doc, getDoc, appId } = window.firestoreTools;
-            const configRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
-            const configDoc = await getDoc(configRef);
-            const config = configDoc.exists() ? configDoc.data() : {};
-
-            if (config.isSeasonOver) {
-                // Stagione terminata - mostra messaggio appropriato
-                if (contentContainer) {
-                    contentContainer.innerHTML = `
-                        <div class="text-center py-4">
-                            <p class="text-yellow-400 text-sm font-bold">🏆 Stagione Terminata</p>
-                            <p class="text-gray-500 text-xs mt-1">In attesa della nuova stagione</p>
-                        </div>
-                    `;
-                }
-                return;
-            }
-        } catch (err) {
-            console.warn('[NextMatchAlert] Errore verifica isSeasonOver:', err);
-        }
-
         // Carica la prossima partita
         const nextMatch = await this.getNextMatch(currentTeamId);
+
+        // Se non ci sono partite, controlla se la stagione e' terminata
+        if (!nextMatch) {
+            try {
+                const { doc, getDoc, appId } = window.firestoreTools;
+                const configRef = doc(window.db, `artifacts/${appId}/public/data/config`, 'settings');
+                const configDoc = await getDoc(configRef);
+                const config = configDoc.exists() ? configDoc.data() : {};
+
+                if (config.isSeasonOver) {
+                    // Stagione terminata
+                    if (contentContainer) {
+                        contentContainer.innerHTML = `
+                            <div class="text-center py-4">
+                                <p class="text-yellow-400 text-sm font-bold">🏆 Stagione Terminata</p>
+                                <p class="text-gray-500 text-xs mt-1">In attesa della nuova stagione</p>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.warn('[NextMatchAlert] Errore verifica isSeasonOver:', err);
+            }
+        }
         if (!nextMatch) {
             // Mostra messaggio "nessuna partita" nel content container
             if (contentContainer) {
