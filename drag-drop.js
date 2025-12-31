@@ -361,7 +361,9 @@ window.DragDropManager = {
 
         zone.classList.remove('drag-over', 'invalid-drop');
 
-        if (!this.draggedData || !this.draggedElement) return;
+        if (!this.draggedData || !this.draggedElement) {
+            return;
+        }
 
         const targetRole = zone.dataset.role;
         const playerRole = this.draggedData.playerRole;
@@ -374,6 +376,12 @@ window.DragDropManager = {
             return;
         }
 
+        // Salva la posizione originale del giocatore trascinato
+        const originalParent = this.draggedElement.parentElement;
+        const originalZone = originalParent?.closest('.role-zone, .bench-zone');
+        const wasInBench = originalParent?.id === 'bench-players' || originalZone?.classList.contains('bench-zone');
+        const wasInField = originalZone?.classList.contains('role-zone');
+
         // Determina destinazione
         const isBenchZone = zone.classList.contains('bench-zone');
         const isRoleZone = zone.classList.contains('role-zone');
@@ -381,13 +389,56 @@ window.DragDropManager = {
         if (isBenchZone) {
             // Sposta in panchina
             const benchPlayers = document.getElementById('bench-players');
+
+            // SCAMBIO: se stiamo droppando su un giocatore in panchina, scambia
+            const dropTarget = e.target?.closest('.player-card-draggable');
+            if (dropTarget && dropTarget !== this.draggedElement) {
+                // Scambia posizioni
+                if (wasInField && originalParent) {
+                    // Il giocatore della panchina va nel campo
+                    dropTarget.dataset.isStarter = 'true';
+                    dropTarget.classList.add('border-green-500');
+                    originalParent.appendChild(dropTarget);
+                } else if (wasInBench) {
+                    // Scambio panchina-panchina: basta scambiare posizioni DOM
+                    const dropTargetParent = dropTarget.parentElement;
+                    dropTargetParent.insertBefore(this.draggedElement, dropTarget);
+                }
+            }
+
             this.draggedElement.dataset.isStarter = 'false';
             this.draggedElement.classList.remove('border-green-500');
             benchPlayers.appendChild(this.draggedElement);
+
         } else if (isRoleZone) {
             // Sposta nel ruolo
             const slot = zone.querySelector('.formation-slots');
             if (slot) {
+                // SCAMBIO: se c'e' gia' un giocatore nello slot, scambia
+                const existingPlayer = slot.querySelector('.player-card-draggable');
+                if (existingPlayer && existingPlayer !== this.draggedElement) {
+                    // Sposta il giocatore esistente nella posizione originale
+                    if (wasInBench) {
+                        // Il giocatore del campo va in panchina
+                        const benchPlayers = document.getElementById('bench-players');
+                        existingPlayer.dataset.isStarter = 'false';
+                        existingPlayer.classList.remove('border-green-500');
+                        benchPlayers.appendChild(existingPlayer);
+                    } else if (wasInField && originalParent) {
+                        // Scambio campo-campo
+                        existingPlayer.dataset.isStarter = 'true';
+                        originalParent.appendChild(existingPlayer);
+                    } else {
+                        // Dalla rosa libera - il giocatore del campo va nella rosa libera
+                        const rosaContainer = document.getElementById('full-squad-list') || document.getElementById('bench-players');
+                        if (rosaContainer) {
+                            existingPlayer.dataset.isStarter = 'false';
+                            existingPlayer.classList.remove('border-green-500');
+                            rosaContainer.appendChild(existingPlayer);
+                        }
+                    }
+                }
+
                 this.draggedElement.dataset.isStarter = 'true';
                 this.draggedElement.classList.add('border-green-500');
                 slot.appendChild(this.draggedElement);

@@ -9,6 +9,184 @@ window.GestioneSquadreFormazione = {
     // Variabile per tracciare il drag target corrente
     currentDragTarget: null,
 
+    // === SISTEMA CLICK-TO-SWAP ===
+    selectedPlayerId: null,
+    selectedSlotId: null,
+    selectedPlayerElement: null,
+
+    /**
+     * Seleziona un giocatore per lo scambio (click-to-swap)
+     */
+    selectPlayerForSwap(playerId, element) {
+        const context = window.GestioneSquadreContext;
+        if (!context) return;
+
+        const { displayMessage } = window.GestioneSquadreUtils;
+
+        // Se clicco sullo stesso giocatore, deseleziona
+        if (this.selectedPlayerId === playerId) {
+            this.clearSelection();
+            displayMessage('formation-message', 'Selezione annullata.', 'info');
+            return;
+        }
+
+        // Estrai slot info dall'elemento (role-index)
+        const slotElement = element?.closest('.slot-target');
+        const slotRole = slotElement?.dataset?.role || null;
+        const slotIndex = slotElement?.dataset?.index || '0';
+        const slotId = slotRole ? `${slotRole}-${slotIndex}` : null;
+
+        // Se c'è già un giocatore selezionato, esegui lo scambio
+        if (this.selectedPlayerId) {
+            this.executeSwap(this.selectedPlayerId, this.selectedSlotId, playerId, slotId, context);
+            return;
+        }
+
+        // Altrimenti seleziona questo giocatore
+        this.selectedPlayerId = playerId;
+        this.selectedSlotId = slotId;
+        this.selectedPlayerElement = element;
+
+        // Evidenzia visivamente
+        if (element) {
+            element.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+        }
+
+        const player = context.currentTeamData.players.find(p => p.id === playerId);
+        displayMessage('formation-message', `${player?.name || 'Giocatore'} selezionato. Clicca su un altro giocatore per scambiare.`, 'info');
+    },
+
+    /**
+     * Pulisce la selezione corrente
+     */
+    clearSelection() {
+        if (this.selectedPlayerElement) {
+            this.selectedPlayerElement.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+        }
+        this.selectedPlayerId = null;
+        this.selectedSlotId = null;
+        this.selectedPlayerElement = null;
+    },
+
+    /**
+     * Esegue lo scambio tra due giocatori
+     * @param {string} player1Id - ID primo giocatore
+     * @param {string} slot1Id - Slot ID primo giocatore (es. 'C-0', 'C-1', 'B-0', null per rosa)
+     * @param {string} player2Id - ID secondo giocatore
+     * @param {string} slot2Id - Slot ID secondo giocatore
+     * @param {Object} context - Contesto
+     */
+    executeSwap(player1Id, slot1Id, player2Id, slot2Id, context) {
+        const { displayMessage, removePlayerFromPosition } = window.GestioneSquadreUtils;
+        const formation = context.currentTeamData.formation;
+        const players = context.currentTeamData.players;
+
+        const player1 = players.find(p => p.id === player1Id);
+        const player2 = players.find(p => p.id === player2Id);
+
+        if (!player1 || !player2) {
+            this.clearSelection();
+            return displayMessage('formation-message', 'Errore: giocatore non trovato.', 'error');
+        }
+
+        // Determina tipo posizione da slot ID
+        const getPositionType = (slotId) => {
+            if (!slotId) return 'rosa';
+            if (slotId.startsWith('B-')) return 'panchina';
+            return 'titolari';
+        };
+
+        const p1Type = getPositionType(slot1Id);
+        const p2Type = getPositionType(slot2Id);
+
+        // Rimuovi entrambi dalle posizioni attuali
+        removePlayerFromPosition(player1Id, context.currentTeamData);
+        removePlayerFromPosition(player2Id, context.currentTeamData);
+
+        // Metti player2 nella posizione di player1
+        if (p1Type === 'titolari' && slot1Id) {
+            player2.assignedPosition = slot1Id; // Usa slot ID completo (es. 'C-0')
+            formation.titolari.push(player2);
+        } else if (p1Type === 'panchina') {
+            formation.panchina.push(player2);
+        }
+
+        // Metti player1 nella posizione di player2
+        if (p2Type === 'titolari' && slot2Id) {
+            player1.assignedPosition = slot2Id; // Usa slot ID completo (es. 'C-1')
+            formation.titolari.push(player1);
+        } else if (p2Type === 'panchina') {
+            formation.panchina.push(player1);
+        }
+
+        this.clearSelection();
+        displayMessage('formation-message', `Scambio: ${player1.name} ↔ ${player2.name}`, 'success');
+        this.renderFieldSlots(context.currentTeamData, context);
+    },
+
+    /**
+     * Click handler per gli slot (campo e panchina)
+     */
+    handleSlotClick(e, slotRole) {
+        const context = window.GestioneSquadreContext;
+        if (!context || !this.selectedPlayerId) return;
+
+        const { displayMessage, removePlayerFromPosition } = window.GestioneSquadreUtils;
+        const formation = context.currentTeamData.formation;
+        const player = context.currentTeamData.players.find(p => p.id === this.selectedPlayerId);
+
+        if (!player) {
+            this.clearSelection();
+            return;
+        }
+
+        // Blocca infortunati
+        if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player) && slotRole !== 'ROSALIBERA') {
+            this.clearSelection();
+            return displayMessage('formation-message', `${player.name} e infortunato.`, 'error');
+        }
+
+        // Trova chi c'è nello slot target
+        let targetPlayer = null;
+        if (slotRole === 'B') {
+            // Non fare nulla se lo slot panchina è vuoto e clicchiamo su di esso
+        } else if (slotRole !== 'ROSALIBERA') {
+            const inSlot = formation.titolari?.find(p => p.assignedPosition === slotRole);
+            if (inSlot && inSlot.id !== this.selectedPlayerId) {
+                targetPlayer = context.currentTeamData.players.find(p => p.id === inSlot.id);
+            }
+        }
+
+        if (targetPlayer) {
+            // C'è un giocatore nello slot - esegui scambio
+            this.executeSwap(this.selectedPlayerId, targetPlayer.id, context);
+        } else {
+            // Slot vuoto - sposta il giocatore selezionato
+            const selectedInTitolari = formation.titolari?.find(p => p.id === this.selectedPlayerId);
+            const selectedInPanchina = formation.panchina?.find(p => p.id === this.selectedPlayerId);
+
+            removePlayerFromPosition(this.selectedPlayerId, context.currentTeamData);
+
+            if (slotRole === 'B') {
+                if (formation.panchina.length < 3) {
+                    formation.panchina.push(player);
+                    displayMessage('formation-message', `${player.name} in panchina.`, 'success');
+                } else {
+                    displayMessage('formation-message', 'Panchina piena.', 'error');
+                }
+            } else if (slotRole === 'ROSALIBERA') {
+                displayMessage('formation-message', `${player.name} rimosso dalla formazione.`, 'success');
+            } else {
+                player.assignedPosition = slotRole;
+                formation.titolari.push(player);
+                displayMessage('formation-message', `${player.name} posizionato come ${slotRole}.`, 'success');
+            }
+
+            this.clearSelection();
+            this.renderFieldSlots(context.currentTeamData, context);
+        }
+    },
+
     /**
      * Renderizza il pannello di gestione formazione
      * @param {Object} teamData - Dati della squadra
@@ -20,7 +198,7 @@ window.GestioneSquadreFormazione = {
         const { displayMessage } = window.GestioneSquadreUtils;
 
         if (squadraMainTitle) squadraMainTitle.textContent = "Gestione Formazione";
-        if (squadraSubtitle) squadraSubtitle.textContent = `Modulo Attuale: ${teamData.formation.modulo} | Trascina i giocatori in campo! (Forma attiva)`;
+        if (squadraSubtitle) squadraSubtitle.textContent = `Modulo: ${teamData.formation.modulo} | Clicca sui giocatori per info. Usa 🔄 Scambia per scambiare posizioni.`;
 
         // Legenda tipologie con badge system
         const legendHtml = `
@@ -120,7 +298,7 @@ window.GestioneSquadreFormazione = {
 
             <div id="formation-message" class="text-center mb-4 text-red-400"></div>
 
-            <!-- Bottoni Auto Formazione e Salva Formazione -->
+            <!-- Bottoni Auto Formazione e Salva -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <button id="btn-auto-formation"
                         class="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold py-3 rounded-lg shadow-xl hover:from-purple-500 hover:to-pink-400 transition duration-150 transform hover:scale-[1.01] flex items-center justify-center gap-2">
@@ -167,7 +345,14 @@ window.GestioneSquadreFormazione = {
             <div class="flex flex-col gap-4">
                 <!-- Campo + Panchina -->
                 <div class="space-y-4">
-                    <div id="field-area" class="rounded-lg shadow-xl p-4 text-center">
+                    <div id="field-area" class="rounded-lg shadow-xl p-4 text-center relative">
+                        <!-- Pulsante Swap in alto a destra -->
+                        <button id="btn-swap-mode"
+                                onclick="window.GestioneSquadreFormazione.toggleSwapMode()"
+                                class="absolute top-2 right-2 z-20 w-10 h-10 rounded-full bg-gray-800 bg-opacity-80 border-2 border-gray-600 hover:border-yellow-400 hover:bg-yellow-600 transition-all duration-200 flex items-center justify-center text-xl"
+                                title="Modalità Scambio">
+                            🔄
+                        </button>
                         <h4 class="text-white font-bold mb-4 z-10 relative">Campo (Titolari) - Modulo: ${teamData.formation.modulo}</h4>
                         <div class="center-circle"></div>
                         <div class="penalty-area-top"></div>
@@ -941,7 +1126,7 @@ window.GestioneSquadreFormazione = {
         const formDataAttr = playerWithForm ? `data-form-modifier="${playerWithForm.formModifier || 0}"` : '';
 
         return `
-            <div data-role="${role}" id="${slotId}" class="slot-target w-full text-center rounded-lg shadow-inner-dark transition duration-150 cursor-pointer relative
+            <div data-role="${role}" data-index="${index}" id="${slotId}" class="slot-target w-full text-center rounded-lg shadow-inner-dark transition duration-150 cursor-pointer relative
                         ${bgColor} ${textColor}
                         ${playerWithForm ? 'player-card' : 'empty-slot hover:border-green-400 hover:bg-gray-600'} z-10 p-1"
                  ondragover="event.preventDefault();"
@@ -985,11 +1170,25 @@ window.GestioneSquadreFormazione = {
 
         let fieldHtml = '';
 
-        const getPlayerForRole = (role) => {
+        const getPlayerForSlot = (role, slotIndex) => {
+            const slotId = `${role}-${slotIndex}`;
+
+            // Prima cerca per slot ID esatto (es. 'C-0', 'C-1')
+            const exactSlotIndex = titolariToRender.findIndex(p => p.assignedPosition === slotId);
+            if (exactSlotIndex !== -1) {
+                return titolariToRender.splice(exactSlotIndex, 1)[0];
+            }
+            // Fallback: cerca per assignedPosition solo ruolo (es. 'C')
+            const assignedIndex = titolariToRender.findIndex(p => p.assignedPosition === role);
+            if (assignedIndex !== -1) {
+                return titolariToRender.splice(assignedIndex, 1)[0];
+            }
+            // Fallback: cerca per ruolo naturale
             const index = titolariToRender.findIndex(p => p.role === role);
             if (index !== -1) {
                 return titolariToRender.splice(index, 1)[0];
             }
+            // Fallback: qualsiasi giocatore disponibile (fuori ruolo)
             const firstAvailableIndex = titolariToRender.findIndex(p => p.role !== 'P' && p.role !== 'B');
             if (role !== 'P' && firstAvailableIndex !== -1) {
                 return titolariToRender.splice(firstAvailableIndex, 1)[0];
@@ -997,9 +1196,15 @@ window.GestioneSquadreFormazione = {
             return null;
         };
 
-        // Portiere
+        // Portiere (cerca prima per slot ID esatto, poi assignedPosition, poi ruolo naturale)
         let portiere = null;
-        const portiereIndex = titolariToRender.findIndex(p => p.role === 'P');
+        let portiereIndex = titolariToRender.findIndex(p => p.assignedPosition === 'P-0');
+        if (portiereIndex === -1) {
+            portiereIndex = titolariToRender.findIndex(p => p.assignedPosition === 'P');
+        }
+        if (portiereIndex === -1) {
+            portiereIndex = titolariToRender.findIndex(p => p.role === 'P');
+        }
         if (portiereIndex !== -1) {
             portiere = titolariToRender.splice(portiereIndex, 1)[0];
         }
@@ -1024,7 +1229,7 @@ window.GestioneSquadreFormazione = {
                     <h5 class="absolute left-2 text-white font-bold text-sm z-0">${role} (${slotsCount})</h5>
                     <div class="flex justify-around w-full px-12">
                         ${Array(slotsCount).fill().map((_, index) => {
-                            const player = getPlayerForRole(role);
+                            const player = getPlayerForSlot(role, index);
                             return `
                                 <div class="jersey-container">
                                     ${this.createPlayerSlot(role, index, player, context)}
@@ -1098,8 +1303,9 @@ window.GestioneSquadreFormazione = {
 
                 return `
                     <div ${draggableAttr} data-id="${player.id}" data-role="${player.role}" data-cost="${player.cost}"
-                         class="player-card p-1.5 ${injuredClass} rounded text-xs shadow transition duration-100 z-10 relative"
+                         class="player-card p-1.5 ${injuredClass} rounded text-xs shadow transition duration-100 z-10 relative cursor-pointer hover:ring-2 hover:ring-blue-400"
                          ${isInjured ? '' : 'ondragstart="window.handleDragStart(event)" ondragend="window.handleDragEnd(event)"'}
+                         onclick="window.GestioneSquadreFormazione.handlePlayerClick(event, '${player.id}')"
                          ${isInjured ? `title="${player.name} e infortunato per ${window.Injuries.getRemainingMatches(player)} partite"` : ''}>
                         <div class="flex items-center justify-between">
                             <span class="truncate font-semibold">${isIcona ? '⭐' : ''}${player.name}</span>
@@ -1141,18 +1347,17 @@ window.GestioneSquadreFormazione = {
     },
 
     /**
-     * Gestisce il drop
+     * Gestisce il drop con scambio automatico delle posizioni
      */
     handleDrop(e, targetRole, context) {
         e.preventDefault();
 
-        // Se context non e definito, usa il contesto globale
         if (!context) {
             context = window.GestioneSquadreContext;
         }
 
         const { displayMessage, removePlayerFromPosition } = window.GestioneSquadreUtils;
-        const droppedId = e.dataTransfer.getData('text/plain');
+        const droppedId = e.dataTransfer?.getData('text/plain');
 
         if (!droppedId) {
             return displayMessage('formation-message', 'Drop fallito: ID Giocatore non trasferito.', 'error');
@@ -1160,95 +1365,88 @@ window.GestioneSquadreFormazione = {
 
         const player = context.currentTeamData.players.find(p => p.id === droppedId);
         if (!player) {
-            return displayMessage('formation-message', 'Errore: Giocatore non trovato nella rosa (ID non valido).', 'error');
+            return displayMessage('formation-message', 'Errore: Giocatore non trovato nella rosa.', 'error');
         }
 
-        // Blocca giocatori infortunati (solo per campo e panchina, non per ROSALIBERA)
-        if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player)) {
+        // Blocca giocatori infortunati
+        if (window.Injuries?.isEnabled() && window.Injuries.isPlayerInjured(player) && targetRole !== 'ROSALIBERA') {
             const remaining = window.Injuries.getRemainingMatches(player);
-            if (targetRole !== 'ROSALIBERA') {
-                return displayMessage('formation-message', `${player.name} e infortunato! Non puo giocare per altre ${remaining} ${remaining === 1 ? 'partita' : 'partite'}.`, 'error');
-            }
+            return displayMessage('formation-message', `${player.name} e infortunato per ${remaining} partite.`, 'error');
         }
 
-        let actualDropSlot = e.target.closest('.slot-target') || e.target.closest('#panchina-slots') || e.target.closest('#full-squad-list');
-
+        const actualDropSlot = e.target.closest('.slot-target') || e.target.closest('.player-card') || e.target.closest('#panchina-slots') || e.target.closest('#full-squad-list');
         if (!actualDropSlot) {
             return displayMessage('formation-message', 'Drop non valido.', 'error');
         }
 
         const finalTargetRole = actualDropSlot.dataset.role || targetRole;
+        const formation = context.currentTeamData.formation;
 
-        // Trova la posizione originale del giocatore trascinato PRIMA di rimuoverlo
-        let originalPosition = null;
-        const wasInTitolari = context.currentTeamData.formation.titolari?.find(p => p.id === droppedId);
-        const wasInPanchina = context.currentTeamData.formation.panchina?.find(p => p.id === droppedId);
-        if (wasInTitolari) {
-            originalPosition = { type: 'titolari', role: wasInTitolari.assignedPosition || player.role };
-        } else if (wasInPanchina) {
-            originalPosition = { type: 'panchina' };
-        }
+        // === TROVA POSIZIONE ORIGINALE DEL GIOCATORE TRASCINATO ===
+        const draggedFromTitolari = formation.titolari?.find(p => p.id === droppedId);
+        const draggedFromPanchina = formation.panchina?.find(p => p.id === droppedId);
+        const originalPosition = draggedFromTitolari
+            ? { type: 'titolari', role: draggedFromTitolari.assignedPosition }
+            : draggedFromPanchina
+                ? { type: 'panchina' }
+                : null; // era in rosa libera
 
-        let playerInSlotBeforeDrop = null;
-        if (actualDropSlot.classList.contains('player-card') || (actualDropSlot.classList.contains('slot-target') && actualDropSlot.dataset.id)) {
-            const occupiedPlayerId = actualDropSlot.dataset.id || droppedId;
-            if (occupiedPlayerId && occupiedPlayerId !== droppedId) {
-                playerInSlotBeforeDrop = context.currentTeamData.players.find(p => p.id === occupiedPlayerId);
+        // === TROVA GIOCATORE NELLA POSIZIONE TARGET ===
+        let targetPlayer = null;
+        let targetPosition = null;
+
+        if (finalTargetRole === 'B') {
+            // Panchina: cerca per data-id o per indice
+            if (actualDropSlot.dataset.id && actualDropSlot.dataset.id !== droppedId) {
+                targetPlayer = context.currentTeamData.players.find(p => p.id === actualDropSlot.dataset.id);
+                targetPosition = { type: 'panchina' };
+            }
+        } else if (finalTargetRole !== 'ROSALIBERA') {
+            // Campo: cerca chi occupa quella posizione
+            const inPosition = formation.titolari?.find(p => p.assignedPosition === finalTargetRole && p.id !== droppedId);
+            if (inPosition) {
+                targetPlayer = context.currentTeamData.players.find(p => p.id === inPosition.id);
+                targetPosition = { type: 'titolari', role: finalTargetRole };
             }
         }
 
-        removePlayerFromPosition(player.id, context.currentTeamData);
+        // === ESEGUI LO SCAMBIO ===
 
+        // Rimuovi entrambi i giocatori dalle loro posizioni
+        removePlayerFromPosition(droppedId, context.currentTeamData);
+        if (targetPlayer) {
+            removePlayerFromPosition(targetPlayer.id, context.currentTeamData);
+        }
+
+        // Posiziona il giocatore trascinato
         if (finalTargetRole === 'ROSALIBERA') {
-            if (playerInSlotBeforeDrop) removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
-            displayMessage('formation-message', `${player.name} liberato da campo/panchina.`, 'success');
-
+            displayMessage('formation-message', `${player.name} rimosso dalla formazione.`, 'success');
         } else if (finalTargetRole === 'B') {
-            // Se c'è un giocatore nella posizione e il giocatore trascinato veniva dal campo, scambia
-            if (playerInSlotBeforeDrop && originalPosition?.type === 'titolari') {
-                removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
-                // Metti il giocatore dello slot nella posizione originale del trascinato
-                playerInSlotBeforeDrop.assignedPosition = originalPosition.role;
-                context.currentTeamData.formation.titolari.push(playerInSlotBeforeDrop);
-                displayMessage('formation-message', `Scambio: ${player.name} ↔ ${playerInSlotBeforeDrop.name}`, 'success');
-            } else if (playerInSlotBeforeDrop) {
-                removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
-                displayMessage('formation-message', `${player.name} in panchina. ${playerInSlotBeforeDrop.name} liberato.`, 'info');
-            } else if (context.currentTeamData.formation.panchina.length >= 3) {
-                return displayMessage('formation-message', 'La panchina e piena (Max 3). Ridisegna per riprovare.', 'error');
-            }
-
-            context.currentTeamData.formation.panchina.push(player);
-            if (!playerInSlotBeforeDrop) {
-                displayMessage('formation-message', `${player.name} spostato in panchina.`, 'success');
-            }
-
-        } else {
-            // Slot in campo
-            if (playerInSlotBeforeDrop) {
-                removePlayerFromPosition(playerInSlotBeforeDrop.id, context.currentTeamData);
-
-                // Se il giocatore trascinato veniva da una posizione (campo o panchina), scambia
-                if (originalPosition) {
-                    if (originalPosition.type === 'titolari') {
-                        // Scambio campo-campo: metti il giocatore dello slot nella posizione originale
-                        playerInSlotBeforeDrop.assignedPosition = originalPosition.role;
-                        context.currentTeamData.formation.titolari.push(playerInSlotBeforeDrop);
-                    } else if (originalPosition.type === 'panchina') {
-                        // Scambio panchina-campo: metti il giocatore dello slot in panchina
-                        context.currentTeamData.formation.panchina.push(playerInSlotBeforeDrop);
-                    }
-                    displayMessage('formation-message', `Scambio: ${player.name} ↔ ${playerInSlotBeforeDrop.name}`, 'success');
-                } else {
-                    displayMessage('formation-message', `${player.name} ha preso il posto di ${playerInSlotBeforeDrop.name}.`, 'info');
-                }
+            if (formation.panchina.length < 3) {
+                formation.panchina.push(player);
             } else {
-                displayMessage('formation-message', `${player.name} messo in campo come ${finalTargetRole}.`, 'success');
+                return displayMessage('formation-message', 'Panchina piena (max 3).', 'error');
             }
-
-            // Salva la posizione assegnata per il calcolo della penalita fuori ruolo
+        } else {
+            // Campo
             player.assignedPosition = finalTargetRole;
-            context.currentTeamData.formation.titolari.push(player);
+            formation.titolari.push(player);
+        }
+
+        // Posiziona il giocatore sostituito nella posizione originale del trascinato
+        if (targetPlayer && originalPosition) {
+            if (originalPosition.type === 'titolari') {
+                targetPlayer.assignedPosition = originalPosition.role;
+                formation.titolari.push(targetPlayer);
+            } else if (originalPosition.type === 'panchina') {
+                formation.panchina.push(targetPlayer);
+            }
+            displayMessage('formation-message', `Scambio: ${player.name} ↔ ${targetPlayer.name}`, 'success');
+        } else if (targetPlayer) {
+            // Il trascinato veniva dalla rosa, il target va in rosa (già rimosso)
+            displayMessage('formation-message', `${player.name} ha sostituito ${targetPlayer.name}`, 'success');
+        } else if (finalTargetRole !== 'ROSALIBERA') {
+            displayMessage('formation-message', `${player.name} posizionato.`, 'success');
         }
 
         this.renderFieldSlots(context.currentTeamData, context);
@@ -1561,7 +1759,8 @@ window.GestioneSquadreFormazione = {
 
     /**
      * Gestisce il click su un giocatore schierato
-     * Apre sempre il modal info giocatore con stats, forma e infortunio
+     * Se la modalità scambio è attiva, esegue lo scambio
+     * Altrimenti apre il modal info giocatore
      * @param {Event} event - Evento click
      * @param {string} playerId - ID del giocatore
      */
@@ -1569,30 +1768,71 @@ window.GestioneSquadreFormazione = {
         // Previeni interferenza con drag
         if (this.touchState?.isDragging) return;
 
+        const element = event.target.closest('.slot-target') || event.target.closest('.player-card');
+
+        // === MODALITA' SCAMBIO ===
+        if (this.swapModeActive) {
+            // Se c'è già un giocatore selezionato, esegui lo scambio
+            if (this.selectedPlayerId && this.selectedPlayerId !== playerId) {
+                this.selectPlayerForSwap(playerId, element);
+                return;
+            }
+
+            // Se clicco sullo stesso giocatore già selezionato, deseleziona
+            if (this.selectedPlayerId === playerId) {
+                this.clearSelection();
+                window.GestioneSquadreUtils.displayMessage('formation-message', 'Selezione annullata.', 'info');
+                return;
+            }
+
+            // Altrimenti seleziona per lo scambio
+            this.selectPlayerForSwap(playerId, element);
+            return;
+        }
+
+        // === MODALITA' NORMALE: apri modal info ===
         const context = window.GestioneSquadreContext;
         const teamData = context.currentTeamData;
 
-        // Cerca il giocatore tra titolari e panchina (con forma applicata)
         const allFieldPlayers = [
             ...teamData.formation.titolari,
             ...teamData.formation.panchina
         ];
 
-        // Cerca nella mappa delle forme
         const formsMap = context.formsMap;
         const formData = formsMap?.get(playerId);
 
-        // Trova il giocatore
         const player = allFieldPlayers.find(p => p.id === playerId) ||
                        teamData.players.find(p => p.id === playerId);
 
         if (!player) return;
 
-        // Determina la forma del giocatore
         const formModifier = formData?.mod ?? player.formModifier ?? 0;
-
-        // Apri sempre il modal info giocatore
         this.openPlayerInfoModal(player, formModifier, teamData);
+    },
+
+    // === MODALITA' SCAMBIO ===
+    swapModeActive: false,
+
+    /**
+     * Attiva/disattiva la modalità scambio
+     */
+    toggleSwapMode() {
+        this.swapModeActive = !this.swapModeActive;
+        this.clearSelection();
+
+        const btn = document.getElementById('btn-swap-mode');
+        const { displayMessage } = window.GestioneSquadreUtils;
+
+        if (this.swapModeActive) {
+            btn?.classList.add('bg-yellow-600', 'ring-2', 'ring-yellow-400');
+            btn?.classList.remove('bg-gray-600');
+            displayMessage('formation-message', 'Modalità SCAMBIO attiva. Clicca su due giocatori per scambiarli.', 'info');
+        } else {
+            btn?.classList.remove('bg-yellow-600', 'ring-2', 'ring-yellow-400');
+            btn?.classList.add('bg-gray-600');
+            displayMessage('formation-message', 'Modalità scambio disattivata.', 'info');
+        }
     },
 
     /**
