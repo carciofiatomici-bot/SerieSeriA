@@ -1113,9 +1113,60 @@ window.SfideMultiplayer = (function() {
                 myRole: state.myRole,
                 myTeam: state.myTeamLetter, // A=rosso, B=blu
                 gameState: challenge.gameState,
+                // Nomi squadre (A=challenger, B=challenged)
+                teamAName: challenge.challengerName || 'Rossa',
+                teamBName: challenge.challengedName || 'Blu',
                 onMove: (move) => sendMove(challengeId, move),
-                onComplete: (result) => handleMatchComplete(challengeId, result)
+                onComplete: (result) => handleMatchComplete(challengeId, result),
+                onAbandon: () => handleAbandonMatch(challengeId)
             });
+        }
+    }
+
+    /**
+     * Gestisce l'abbandono della partita - l'avversario vince 3-0
+     */
+    async function handleAbandonMatch(challengeId) {
+        try {
+            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const path = getMinigameChallengesPath();
+
+            const docRef = doc(window.db, path, challengeId);
+            const snapshot = await getDoc(docRef);
+
+            if (!snapshot.exists()) return;
+
+            const data = snapshot.data();
+            const myTeamLetter = state.myTeamLetter || (state.myTeamId === data.challengerId ? 'A' : 'B');
+            const winnerTeam = myTeamLetter === 'A' ? 'B' : 'A';
+
+            // Chi abbandona perde 3-0
+            const gameState = {
+                ...data.gameState,
+                isGameOver: true,
+                winner: winnerTeam,
+                scoreA: winnerTeam === 'A' ? 3 : 0,
+                scoreB: winnerTeam === 'B' ? 3 : 0,
+                abandonedBy: state.myTeamId
+            };
+
+            await updateDoc(docRef, {
+                gameState,
+                status: 'completed'
+            });
+
+            if (window.Toast) window.Toast.info('Partita abbandonata');
+
+            // Chiudi il minigame
+            if (window.SfideMinigame) {
+                window.SfideMinigame.close?.();
+            }
+
+            endMatch();
+
+        } catch (error) {
+            console.error('[SfideMultiplayer] Errore abbandono partita:', error);
+            if (window.Toast) window.Toast.error('Errore nell\'abbandonare la partita');
         }
     }
 
@@ -1162,7 +1213,12 @@ window.SfideMultiplayer = (function() {
         });
     }
 
-    async function sendMove(challengeId, move) {
+    /**
+     * Invia lo stato aggiornato dal minigame a Firestore
+     * @param {string} challengeId - ID della sfida
+     * @param {Object} newGameState - Stato completo dal minigame (gia' aggiornato con la mossa)
+     */
+    async function sendMove(challengeId, newGameState) {
         if (!state.isMyTurn) {
             console.warn("[SfideMultiplayer] Non e' il mio turno!");
             return;
@@ -1178,27 +1234,45 @@ window.SfideMultiplayer = (function() {
             if (!snapshot.exists()) return;
 
             const data = snapshot.data();
-            let gameState = { ...data.gameState };
+
+            // Il gameState dal minigame e' gia' completo con:
+            // - posizioni giocatori aggiornate
+            // - punteggi aggiornati
+            // - movesLeft corretto (3 se fine turno)
+            // - currentTeam ('A' o 'B') aggiornato
+            let gameState = { ...newGameState };
+
+            // Mantieni skippedTurns dal documento esistente
+            gameState.skippedTurns = data.gameState?.skippedTurns || {};
 
             // Reset turni saltati quando faccio una mossa
-            if (gameState.skippedTurns && gameState.skippedTurns[state.myTeamId]) {
+            if (gameState.skippedTurns[state.myTeamId]) {
                 gameState.skippedTurns[state.myTeamId] = 0;
             }
 
-            // Applica la mossa
-            gameState = applyMove(gameState, move);
+            // Mantieni teamMapping dal documento esistente
+            gameState.teamMapping = data.gameState?.teamMapping || {};
+
+            // Converti currentTeam ('A'/'B') in currentTurn (teamId)
+            // Questo permette all'avversario di sapere quando e' il suo turno
+            if (gameState.currentTeam && gameState.teamMapping) {
+                // Trova il teamId che corrisponde alla lettera del team corrente
+                const teamEntries = Object.entries(gameState.teamMapping);
+                const entry = teamEntries.find(([teamId, letter]) => letter === gameState.currentTeam);
+                if (entry) {
+                    gameState.currentTurn = entry[0]; // teamId
+                }
+            }
 
             // Verifica fine partita
             if (gameState.scoreA >= CONFIG.GOAL_LIMIT || gameState.scoreB >= CONFIG.GOAL_LIMIT) {
                 gameState.isGameOver = true;
-                // A = challenger (rosso), B = challenged (blu)
                 gameState.winner = gameState.scoreA >= CONFIG.GOAL_LIMIT ? 'A' : 'B';
             }
 
             // Aggiorna Firestore
             const updateData = {
-                gameState: gameState,
-                'gameState.lastMoveAt': Date.now()
+                gameState: gameState
             };
 
             if (gameState.isGameOver) {
@@ -1207,31 +1281,15 @@ window.SfideMultiplayer = (function() {
 
             await updateDoc(docRef, updateData);
 
+            console.log('[SfideMultiplayer] Stato inviato:', {
+                movesLeft: gameState.movesLeft,
+                currentTeam: gameState.currentTeam,
+                currentTurn: gameState.currentTurn
+            });
+
         } catch (error) {
             console.error("[SfideMultiplayer] Errore invio mossa:", error);
         }
-    }
-
-    function applyMove(gameState, move) {
-        // Applica la mossa allo stato
-        // Questo viene delegato alla logica di sfide-minigame.js
-        // che chiamera' sendMove con il nuovo stato
-
-        // Decrementa mosse
-        gameState.movesLeft--;
-
-        // Se finite le mosse, passa il turno
-        if (gameState.movesLeft <= 0) {
-            // Trova l'altro team
-            const currentIsAttacker = gameState.currentTurn === state.myTeamId && state.myRole === 'attacker';
-
-            // Il turno passa all'altro
-            // Questo richiede conoscere gli ID delle squadre...
-            // Per ora lasciamo che il minigame gestisca il cambio turno
-            gameState.movesLeft = CONFIG.MOVES_PER_TURN;
-        }
-
-        return gameState;
     }
 
     function startTurnTimer(challengeId, gameState) {

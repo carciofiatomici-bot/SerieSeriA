@@ -43,7 +43,14 @@
         myTeam: null, // 'A' o 'B'
         isMyTurn: true,
         onMove: null, // Callback per inviare mosse
-        turnTimeRemaining: null
+        turnTimeRemaining: null,
+
+        // Nomi squadre
+        teamAName: 'Rossa',
+        teamBName: 'Blu',
+
+        // Callback per abbandono
+        onAbandon: null
     };
 
     // Tipi di azioni difensive
@@ -620,8 +627,8 @@
 
                 <!-- Scoreboard -->
                 <div class="smg-scoreboard flex justify-between items-center max-w-2xl mx-auto w-full p-3 bg-slate-800/50">
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase font-bold">Rossa</div>
+                    <div class="text-center min-w-[80px]">
+                        <div id="smg-team-a-name" class="text-xs text-red-400 uppercase font-bold truncate max-w-[100px]">Rossa</div>
                         <div id="smg-score-a" class="text-3xl font-black text-red-500">0</div>
                     </div>
                     <div class="flex flex-col items-center">
@@ -634,9 +641,12 @@
                             <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
                             <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
                         </div>
+                        <button id="smg-abandon-btn" class="hidden mt-2 px-2 py-1 text-xs bg-red-900/50 hover:bg-red-800 text-red-300 rounded border border-red-700/50 transition">
+                            🏳️ Abbandona
+                        </button>
                     </div>
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase font-bold">Blu</div>
+                    <div class="text-center min-w-[80px]">
+                        <div id="smg-team-b-name" class="text-xs text-blue-400 uppercase font-bold truncate max-w-[100px]">Blu</div>
                         <div id="smg-score-b" class="text-3xl font-black text-blue-500">0</div>
                     </div>
                 </div>
@@ -747,10 +757,30 @@
         document.getElementById('smg-btn-restart').addEventListener('click', resetGame);
         document.getElementById('smg-btn-exit').addEventListener('click', close);
 
+        // Bottone abbandona partita (multiplayer)
+        document.getElementById('smg-abandon-btn').addEventListener('click', handleAbandon);
+
         // Toggle espansione log
         document.getElementById('smg-log').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
         });
+    }
+
+    /**
+     * Gestisce l'abbandono della partita (multiplayer)
+     */
+    function handleAbandon() {
+        if (!state.multiplayer) return;
+
+        // Conferma abbandono
+        if (!confirm('Sei sicuro di voler abbandonare? L\'avversario vincera 3-0!')) {
+            return;
+        }
+
+        // Chiama callback abbandono
+        if (state.onAbandon) {
+            state.onAbandon();
+        }
     }
 
     function isPortrait() {
@@ -813,7 +843,12 @@
         // In testMode senza multiplayer, il giocatore e' sempre Team A (rosso)
         state.myTeam = options.myTeam || (state.testMode && !state.multiplayer ? 'A' : (state.myRole === 'attacker' ? 'A' : 'B'));
         state.onMove = options.onMove || null;
+        state.onAbandon = options.onAbandon || null;
         state.isMyTurn = true; // Default, aggiornato da updateMultiplayerState
+
+        // Nomi squadre (A=challenger=rosso, B=challenged=blu)
+        state.teamAName = options.teamAName || 'Rossa';
+        state.teamBName = options.teamBName || 'Blu';
 
         // Forza landscape su mobile
         if (window.innerWidth < 768) {
@@ -1825,11 +1860,15 @@
         });
         updateActionButtons();
 
-        if (state.actionsLeft <= 0) {
-            // In multiplayer, sincronizza stato solo a FINE TURNO (riduce letture 3x)
-            if (state.multiplayer && state.onMove) {
-                syncMultiplayerState(true); // true = cambio turno
-            }
+        const endOfTurn = state.actionsLeft <= 0;
+
+        // In multiplayer, sincronizza stato DOPO OGNI MOSSA
+        // L'avversario deve vedere le mosse in tempo reale
+        if (state.multiplayer && state.onMove) {
+            syncMultiplayerState(endOfTurn);
+        }
+
+        if (endOfTurn) {
             switchTurn();
         }
         update();
@@ -2084,14 +2123,27 @@
     // ========================================
 
     function update() {
+        // Nomi squadre
+        const teamANameEl = document.getElementById('smg-team-a-name');
+        const teamBNameEl = document.getElementById('smg-team-b-name');
+        if (teamANameEl) teamANameEl.innerText = state.teamAName;
+        if (teamBNameEl) teamBNameEl.innerText = state.teamBName;
+
         // Punteggi
         document.getElementById('smg-score-a').innerText = state.scoreA;
         document.getElementById('smg-score-b').innerText = state.scoreB;
 
         // Turno
         const turnDisp = document.getElementById('smg-turn-display');
-        turnDisp.innerText = `TURNO ${state.currentTeam === 'A' ? 'ROSSO' : 'BLU'}`;
+        const turnTeamName = state.currentTeam === 'A' ? state.teamAName : state.teamBName;
+        turnDisp.innerText = `TURNO ${turnTeamName.toUpperCase()}`;
         turnDisp.className = `px-3 py-1 rounded-full text-xs font-bold ${state.currentTeam === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`;
+
+        // Bottone abbandona (solo multiplayer)
+        const abandonBtn = document.getElementById('smg-abandon-btn');
+        if (abandonBtn) {
+            abandonBtn.classList.toggle('hidden', !state.multiplayer);
+        }
 
         // Azioni rimanenti
         const dots = document.getElementById('smg-actions-display').children;
@@ -2105,10 +2157,14 @@
             const cell = getCell(p.x, p.y);
             if (!cell) return;
 
+            // Estrai iniziale del nome giocatore (es. "Mario Rossi" -> "MR")
+            const playerName = p.playerName || p.name || '?';
+            const initials = playerName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
             const defenseClass = p.defenseMode ? `defense-effect defense-${p.defenseMode}` : '';
             const el = document.createElement('div');
             el.className = `player-token team-${p.team.toLowerCase()} ${state.selectedPlayer?.id === p.id ? 'selected' : ''} ${defenseClass}`;
-            el.innerHTML = `<span>${p.name}</span><div class="mod-tag">+${p.mod}</div>`;
+            el.innerHTML = `<span title="${playerName}">${initials}</span><div class="mod-tag">+${p.mod}</div>`;
             cell.appendChild(el);
         });
 
