@@ -214,7 +214,7 @@ window.GestioneSquadreFormazione = {
                         ${window.GestioneSquadreConstants.getTypeBadgeHtml('Potenza', 'sm')}
                     </div>
                 </div>
-                <div class="text-center text-xs text-gray-500">Bonus: +5% a +25% | Malus: -5% a -25%</div>
+                <div class="text-center text-xs text-gray-500">Bonus: +3 punti | Malus: -3 punti</div>
             </div>
         `;
 
