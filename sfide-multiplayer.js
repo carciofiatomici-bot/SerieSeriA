@@ -16,7 +16,7 @@ window.SfideMultiplayer = (function() {
     // CONFIGURAZIONE
     // ========================================
     const CONFIG = {
-        MOVES_PER_TURN: 3,
+        MOVES_PER_TURN: 1,
         TURN_TIMEOUT_MS: 30000,  // 30 secondi per mossa
         CHALLENGE_EXPIRE_MS: 5 * 60 * 1000, // 5 minuti per accettare
         GOAL_LIMIT: 3,
@@ -588,10 +588,12 @@ window.SfideMultiplayer = (function() {
             const challenge = {
                 challengerId: myTeamId,
                 challengerName: myTeam?.teamName || 'Squadra',
+                challengerColor: myTeam?.primaryColor || '#ef4444', // Rosso default
                 challengerFormation: myTeam?.formation?.titolari?.slice(0, 5) || [],
 
                 challengedId: targetTeamId,
                 challengedName: targetTeam?.teamName || 'Squadra',
+                challengedColor: targetTeam?.primaryColor || '#3b82f6', // Blu default
                 challengedFormation: targetTeam?.formation?.titolari?.slice(0, 5) || [],
 
                 attackerId: challengerIsAttacker ? myTeamId : targetTeamId,
@@ -950,8 +952,8 @@ window.SfideMultiplayer = (function() {
     // STATO INIZIALE PARTITA
     // ========================================
     function createInitialGameState(challenge) {
-        const GRID_W = 13;
-        const GRID_H = 9;
+        const GRID_W = 11;
+        const GRID_H = 7;
         const centerY = Math.floor(GRID_H / 2);
 
         // Team A (Rosso, sinistra) = Challenger (chi sfida)
@@ -1113,9 +1115,11 @@ window.SfideMultiplayer = (function() {
                 myRole: state.myRole,
                 myTeam: state.myTeamLetter, // A=rosso, B=blu
                 gameState: challenge.gameState,
-                // Nomi squadre (A=challenger, B=challenged)
+                // Nomi e colori squadre (A=challenger, B=challenged)
                 teamAName: challenge.challengerName || 'Rossa',
                 teamBName: challenge.challengedName || 'Blu',
+                teamAColor: challenge.challengerColor || '#ef4444',
+                teamBColor: challenge.challengedColor || '#3b82f6',
                 onMove: (move) => sendMove(challengeId, move),
                 onComplete: (result) => handleMatchComplete(challengeId, result),
                 onAbandon: () => handleAbandonMatch(challengeId)
@@ -1238,7 +1242,7 @@ window.SfideMultiplayer = (function() {
             // Il gameState dal minigame e' gia' completo con:
             // - posizioni giocatori aggiornate
             // - punteggi aggiornati
-            // - movesLeft corretto (3 se fine turno)
+            // - movesLeft corretto (1 se fine turno)
             // - currentTeam ('A' o 'B') aggiornato
             let gameState = { ...newGameState };
 

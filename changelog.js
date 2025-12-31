@@ -11,7 +11,7 @@
 window.Changelog = {
 
     // Versione corrente
-    currentVersion: '2.2.33',
+    currentVersion: '2.2.35',
 
     // Numero massimo di versioni da mostrare
     maxEntries: 5,
@@ -23,6 +23,21 @@ window.Changelog = {
     // adminOnly: true = visibile solo nel changelog admin
     // adminOnly: false o assente = visibile a tutti
     entries: [
+        {
+            version: '2.2.35',
+            date: '2025-12-31',
+            time: '16:00',
+            title: 'Tattiche Serie - Nuove Regole e Bilanciamento',
+            changes: [
+                { text: 'NUOVO: Regole Tattiche Serie nel tab Regolamento', adminOnly: false },
+                { text: 'NUOVO: Sistema Fatica - usare lo stesso giocatore consecutive costa -0.5 MOD per azione', adminOnly: false },
+                { text: 'NUOVO: Bonus Ruolo - Difensori +1.5 al contrasto, Centrocampisti +1.5 al passaggio, Attaccanti +1.5 al dribbling', adminOnly: false },
+                { text: 'Tattiche: fatica si resetta usando un altro giocatore', adminOnly: false },
+                { text: 'Tattiche: bonus ruolo visibile nel log azioni', adminOnly: false },
+                { text: 'Fix log azioni con dettaglio modificatori', adminOnly: false }
+            ],
+            type: 'feature'
+        },
         {
             version: '2.2.33',
             date: '2025-12-29',

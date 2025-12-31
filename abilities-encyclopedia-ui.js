@@ -813,7 +813,7 @@ window.AbilitiesUI = {
             `;
         }
 
-        // Negative abilities section
+        // Negative abilities section - ordinate per ruolo (P, D, C, A) poi alfabeticamente
         if (negative.length > 0) {
             html += `
                 <div class="enc-section-header">
@@ -822,7 +822,7 @@ window.AbilitiesUI = {
                     <span class="enc-section-count">${negative.length}</span>
                 </div>
                 <div class="px-4 space-y-2">
-                    ${this.sortByRarity(negative).map(a => this.renderAbilityItem(a)).join('')}
+                    ${this.sortNegativeByRole(negative).map(a => this.renderAbilityItem(a)).join('')}
                 </div>
             `;
         }
@@ -1228,6 +1228,21 @@ window.AbilitiesUI = {
     sortByRarity(abilities) {
         const order = { 'Comune': 1, 'Rara': 2, 'Epica': 3, 'Leggendaria': 4, 'Unica': 5 };
         return [...abilities].sort((a, b) => (order[a.rarity] || 0) - (order[b.rarity] || 0));
+    },
+
+    /**
+     * Sort negative abilities by role (P, D, C, A) then alphabetically
+     */
+    sortNegativeByRole(abilities) {
+        const roleOrder = { 'P': 1, 'D': 2, 'C': 3, 'A': 4 };
+        return [...abilities].sort((a, b) => {
+            // Prima ordina per ruolo
+            const roleA = roleOrder[a.role] || 5;
+            const roleB = roleOrder[b.role] || 5;
+            if (roleA !== roleB) return roleA - roleB;
+            // Poi ordina alfabeticamente per nome
+            return (a.name || '').localeCompare(b.name || '', 'it');
+        });
     },
 
     /**

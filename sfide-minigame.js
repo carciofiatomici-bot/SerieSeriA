@@ -3,9 +3,9 @@
 // SFIDE MINIGAME - Tattiche Serie (Gioco Tattico a Turni)
 // ====================================================================
 // Gioco tattico su griglia per sfide (btn-challenge)
-// - Campo 12x8 celle
+// - Campo 11x7 celle
 // - 5 giocatori per squadra (GK, FIX, ALA, ALA, PIV)
-// - 3 azioni per turno
+// - 1 azione per turno (più tattico)
 // - Primo a 3 gol vince
 // ====================================================================
 //
@@ -16,8 +16,8 @@
     // ========================================
     // CONFIGURAZIONE
     // ========================================
-    const GRID_W = 13;
-    const GRID_H = 9;
+    const GRID_W = 11;
+    const GRID_H = 7;
     const GOAL_LIMIT = 3;
 
     // ========================================
@@ -27,7 +27,7 @@
         scoreA: 0,
         scoreB: 0,
         currentTeam: 'A',
-        actionsLeft: 3,
+        actionsLeft: 1,
         selectedPlayer: null,
         ballCarrierId: 'A5',
         ballPosition: null, // Per palla libera in zona
@@ -45,35 +45,56 @@
         onMove: null, // Callback per inviare mosse
         turnTimeRemaining: null,
 
-        // Nomi squadre
+        // Nomi e colori squadre
         teamAName: 'Rossa',
         teamBName: 'Blu',
+        teamAColor: '#ef4444',
+        teamBColor: '#3b82f6',
 
         // Callback per abbandono
-        onAbandon: null
+        onAbandon: null,
+
+        // Selezione direzione difesa (respinta/intercetto)
+        pendingDefenseType: null, // 'respinta' o 'intercetto' quando in attesa di scegliere direzione
+
+        // Contatore turni portiere con palla
+        gkHoldingBallTurns: 0, // Turni consecutivi che il portiere tiene la palla
+
+        // Contatore turni (limite 100 totali = 50 per giocatore)
+        turnCount: 0,
+
+        // Traccia ultimo dribbling/contrasto per svantaggio se ritenta
+        lastDribbleContrastPlayer: null, // ID del giocatore che ha fatto dribbling/contrasto
+        lastDribbleContrastTurn: -1, // Turno in cui è stato fatto
+
+        // Traccia azioni consecutive dello stesso giocatore (fatica)
+        lastActionPlayerId: null, // ID del giocatore che ha fatto l'ultima azione
+        consecutiveActionCount: 0 // Numero di azioni consecutive (-0.5 per ogni azione dopo la prima)
     };
+
+    const MAX_TURNS = 100; // Limite turni totali
 
     // Tipi di azioni difensive
     const DEFENSE_MODES = {
-        MURA: 'mura',           // Blocca tiri
+        RESPINTA: 'respinta',   // Blocca tiri
         INTERCETTO: 'intercetto', // Blocca passaggi
         BLOCCO: 'blocco'        // Blocca movimento
     };
 
     const initialPlayers = [
-        // Squadra A (sinistra) - campo 13x9
-        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 4, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
-        { id: 'A2', team: 'A', name: 'FIX', x: 3, y: 4, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A3', team: 'A', name: 'ALA', x: 4, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A4', team: 'A', name: 'ALA', x: 4, y: 7, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A5', team: 'A', name: 'PIV', x: 5, y: 4, mod: 7, isGK: false, defenseMode: null, defenseCells: [] },
+        // Squadra A (sinistra) - campo 11x7
+        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
+        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A3', team: 'A', name: 'ALA', x: 3, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A4', team: 'A', name: 'ALA', x: 3, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A5', team: 'A', name: 'PIV', x: 4, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] },
 
-        // Squadra B (destra) - campo 13x9
-        { id: 'B1', team: 'B', name: 'GK', x: 12, y: 4, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
-        { id: 'B2', team: 'B', name: 'FIX', x: 9, y: 4, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B3', team: 'B', name: 'ALA', x: 8, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B4', team: 'B', name: 'ALA', x: 8, y: 7, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B5', team: 'B', name: 'PIV', x: 7, y: 4, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
+        // Squadra B (destra) - campo 11x7
+        { id: 'B1', team: 'B', name: 'GK', x: 10, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
+        { id: 'B2', team: 'B', name: 'FIX', x: 8, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B3', team: 'B', name: 'ALA', x: 7, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B4', team: 'B', name: 'ALA', x: 7, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B5', team: 'B', name: 'PIV', x: 6, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
     ];
 
     let players = [];
@@ -99,9 +120,9 @@
                    ===================================================== */
 
                 :root {
-                    --smg-cell-size: max(24px, min(calc((95vw - 8px) / 13), calc((60dvh - 8px) / 9)));
-                    --smg-cols: 13;
-                    --smg-rows: 9;
+                    --smg-cell-size: max(24px, min(calc((95vw - 8px) / 11), calc((60dvh - 8px) / 7)));
+                    --smg-cols: 11;
+                    --smg-rows: 7;
                 }
 
                 #sfide-minigame-modal .pitch-wrapper {
@@ -155,23 +176,23 @@
                 /* ============ MOBILE LANDSCAPE ============ */
                 @media screen and (max-width: 900px) and (orientation: landscape) {
                     :root {
-                        --smg-cell-size: max(20px, min(calc((98vw - 8px) / 13), calc((55dvh - 8px) / 9)));
+                        --smg-cell-size: max(20px, min(calc((98vw - 8px) / 11), calc((55dvh - 8px) / 7)));
                     }
                 }
 
-                /* ============ MOBILE PORTRAIT: Campo ruotato 9x13 ============ */
+                /* ============ MOBILE PORTRAIT: Campo ruotato 7x11 ============ */
                 @media screen and (max-width: 768px) and (orientation: portrait) {
                     :root {
-                        --smg-cell-size: max(24px, min(calc((94vw - 8px) / 9), calc((52dvh - 8px) / 13)));
-                        --smg-cols: 9;
-                        --smg-rows: 13;
+                        --smg-cell-size: max(24px, min(calc((94vw - 8px) / 7), calc((52dvh - 8px) / 11)));
+                        --smg-cols: 7;
+                        --smg-rows: 11;
                     }
 
                     #sfide-minigame-modal .pitch {
-                        grid-template-columns: repeat(9, var(--smg-cell-size));
-                        grid-template-rows: repeat(13, var(--smg-cell-size));
-                        width: calc(9 * var(--smg-cell-size));
-                        height: calc(13 * var(--smg-cell-size));
+                        grid-template-columns: repeat(7, var(--smg-cell-size));
+                        grid-template-rows: repeat(11, var(--smg-cell-size));
+                        width: calc(7 * var(--smg-cell-size));
+                        height: calc(11 * var(--smg-cell-size));
                     }
 
                     /* Porte ruotate (orizzontali in alto e basso) */
@@ -255,7 +276,7 @@
                     box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.5);
                     animation: smg-shot-pulse 0.8s ease-in-out infinite;
                 }
-                #sfide-minigame-modal .cell.highlight-mura {
+                #sfide-minigame-modal .cell.highlight-respinta {
                     background-color: rgba(99, 102, 241, 0.35);
                     box-shadow: inset 0 0 12px rgba(99, 102, 241, 0.6);
                 }
@@ -323,6 +344,22 @@
                     z-index: 15;
                 }
 
+                /* Effetto pulsante per giocatori del turno attivo */
+                #sfide-minigame-modal .player-token.active-turn {
+                    animation: active-turn-glow 1.5s ease-in-out infinite;
+                }
+
+                @keyframes active-turn-glow {
+                    0%, 100% {
+                        box-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(0,0,0,0.3);
+                        filter: brightness(1);
+                    }
+                    50% {
+                        box-shadow: 0 0 18px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(0,0,0,0.3);
+                        filter: brightness(1.2);
+                    }
+                }
+
                 #sfide-minigame-modal .mod-tag {
                     position: absolute;
                     bottom: -5px;
@@ -358,22 +395,29 @@
 
                 /* ============ PALLA ============ */
                 #sfide-minigame-modal .ball-token {
-                    width: clamp(10px, calc(var(--smg-cell-size) * 0.32), 16px);
-                    height: clamp(10px, calc(var(--smg-cell-size) * 0.32), 16px);
-                    background: radial-gradient(circle at 30% 30%, #ffffff, #e5e5e5 50%, #a3a3a3 100%);
+                    width: clamp(12px, calc(var(--smg-cell-size) * 0.4), 20px);
+                    height: clamp(12px, calc(var(--smg-cell-size) * 0.4), 20px);
+                    background: radial-gradient(circle at 30% 30%, #fef08a, #facc15 40%, #ca8a04 100%);
                     border-radius: 50%;
                     position: absolute;
                     transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
                     z-index: 30;
-                    border: 1.5px solid #404040;
+                    border: 2px solid #854d0e;
                     pointer-events: none;
                     box-shadow:
-                        0 2px 4px rgba(0,0,0,0.4),
-                        inset 0 -2px 4px rgba(0,0,0,0.2);
+                        0 0 8px rgba(250, 204, 21, 0.8),
+                        0 0 16px rgba(250, 204, 21, 0.5),
+                        0 2px 4px rgba(0,0,0,0.4);
+                    animation: ball-glow 1.5s ease-in-out infinite;
+                }
+
+                @keyframes ball-glow {
+                    0%, 100% { box-shadow: 0 0 8px rgba(250, 204, 21, 0.8), 0 0 16px rgba(250, 204, 21, 0.5), 0 2px 4px rgba(0,0,0,0.4); }
+                    50% { box-shadow: 0 0 12px rgba(250, 204, 21, 1), 0 0 24px rgba(250, 204, 21, 0.7), 0 2px 4px rgba(0,0,0,0.4); }
                 }
 
                 /* ============ PORTE ============ */
-                /* Porte: 3 celle centrali su 9 = 33.33% altezza, centrate */
+                /* Porte: 3 celle centrali su 7 = 42.8% altezza, centrate */
                 #sfide-minigame-modal .goal-post {
                     position: absolute;
                     width: 12px;
@@ -442,56 +486,52 @@
                     box-shadow: 0 0 6px rgba(255,255,255,0.4);
                 }
 
-                /* Area portiere sinistra */
+                /* Area portiere sinistra - 2 celle x 5 celle (celle Y: 1-5) */
                 #sfide-minigame-modal .penalty-area-left {
                     position: absolute;
                     left: 0;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: calc(2.5 * var(--smg-cell-size));
+                    top: calc(1 * var(--smg-cell-size));
+                    width: calc(2 * var(--smg-cell-size));
                     height: calc(5 * var(--smg-cell-size));
                     border: 2px solid rgba(255,255,255,0.55);
                     border-left: none;
-                    border-radius: 0 4px 4px 0;
+                    border-radius: 0;
                 }
 
-                /* Area portiere destra */
+                /* Area portiere destra - 2 celle x 5 celle (celle Y: 1-5) */
                 #sfide-minigame-modal .penalty-area-right {
                     position: absolute;
                     right: 0;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: calc(2.5 * var(--smg-cell-size));
+                    top: calc(1 * var(--smg-cell-size));
+                    width: calc(2 * var(--smg-cell-size));
                     height: calc(5 * var(--smg-cell-size));
                     border: 2px solid rgba(255,255,255,0.55);
                     border-right: none;
-                    border-radius: 4px 0 0 4px;
+                    border-radius: 0;
                 }
 
-                /* Area piccola sinistra */
+                /* Area piccola sinistra - 1 cella x 3 celle (celle Y: 2-4) */
                 #sfide-minigame-modal .goal-area-left {
                     position: absolute;
                     left: 0;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: calc(1.2 * var(--smg-cell-size));
+                    top: calc(2 * var(--smg-cell-size));
+                    width: calc(1 * var(--smg-cell-size));
                     height: calc(3 * var(--smg-cell-size));
                     border: 2px solid rgba(255,255,255,0.55);
                     border-left: none;
-                    border-radius: 0 3px 3px 0;
+                    border-radius: 0;
                 }
 
-                /* Area piccola destra */
+                /* Area piccola destra - 1 cella x 3 celle (celle Y: 2-4) */
                 #sfide-minigame-modal .goal-area-right {
                     position: absolute;
                     right: 0;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: calc(1.2 * var(--smg-cell-size));
+                    top: calc(2 * var(--smg-cell-size));
+                    width: calc(1 * var(--smg-cell-size));
                     height: calc(3 * var(--smg-cell-size));
                     border: 2px solid rgba(255,255,255,0.55);
                     border-right: none;
-                    border-radius: 3px 0 0 3px;
+                    border-radius: 0;
                 }
 
                 /* ============ LINEE CAMPO - MOBILE PORTRAIT ============ */
@@ -511,56 +551,54 @@
                         height: calc(4 * var(--smg-cell-size));
                     }
 
+                    /* In portrait: X: 1-5 (5 celle larghezza) */
                     #sfide-minigame-modal .penalty-area-left {
-                        left: 50%;
+                        left: calc(1 * var(--smg-cell-size));
                         top: 0;
-                        transform: translateX(-50%);
+                        transform: none;
                         width: calc(5 * var(--smg-cell-size));
-                        height: calc(2.5 * var(--smg-cell-size));
+                        height: calc(2 * var(--smg-cell-size));
                         border: 2px solid rgba(255,255,255,0.55);
                         border-top: none;
-                        border-left: 2px solid rgba(255,255,255,0.55);
-                        border-radius: 0 0 4px 4px;
+                        border-radius: 0;
                     }
 
                     #sfide-minigame-modal .penalty-area-right {
                         right: auto;
-                        left: 50%;
+                        left: calc(1 * var(--smg-cell-size));
                         top: auto;
                         bottom: 0;
-                        transform: translateX(-50%);
+                        transform: none;
                         width: calc(5 * var(--smg-cell-size));
-                        height: calc(2.5 * var(--smg-cell-size));
+                        height: calc(2 * var(--smg-cell-size));
                         border: 2px solid rgba(255,255,255,0.55);
                         border-bottom: none;
-                        border-right: 2px solid rgba(255,255,255,0.55);
-                        border-radius: 4px 4px 0 0;
+                        border-radius: 0;
                     }
 
+                    /* In portrait: X: 2-4 (3 celle larghezza) */
                     #sfide-minigame-modal .goal-area-left {
-                        left: 50%;
+                        left: calc(2 * var(--smg-cell-size));
                         top: 0;
-                        transform: translateX(-50%);
+                        transform: none;
                         width: calc(3 * var(--smg-cell-size));
-                        height: calc(1.2 * var(--smg-cell-size));
+                        height: calc(1 * var(--smg-cell-size));
                         border: 2px solid rgba(255,255,255,0.55);
                         border-top: none;
-                        border-left: 2px solid rgba(255,255,255,0.55);
-                        border-radius: 0 0 3px 3px;
+                        border-radius: 0;
                     }
 
                     #sfide-minigame-modal .goal-area-right {
                         right: auto;
-                        left: 50%;
+                        left: calc(2 * var(--smg-cell-size));
                         top: auto;
                         bottom: 0;
-                        transform: translateX(-50%);
+                        transform: none;
                         width: calc(3 * var(--smg-cell-size));
-                        height: calc(1.2 * var(--smg-cell-size));
+                        height: calc(1 * var(--smg-cell-size));
                         border: 2px solid rgba(255,255,255,0.55);
                         border-bottom: none;
-                        border-right: 2px solid rgba(255,255,255,0.55);
-                        border-radius: 3px 3px 0 0;
+                        border-radius: 0;
                     }
                 }
 
@@ -635,12 +673,7 @@
                         <div id="smg-turn-display" class="px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
                             TURNO ROSSO
                         </div>
-                        <div id="smg-turn-timer" class="hidden text-lg font-bold text-yellow-400 mt-1">20s</div>
-                        <div id="smg-actions-display" class="flex gap-1 mt-1">
-                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                        </div>
+                        <div id="smg-turn-timer" class="text-sm font-bold text-yellow-400 mt-1">--</div>
                         <button id="smg-abandon-btn" class="hidden mt-2 px-2 py-1 text-xs bg-red-900/50 hover:bg-red-800 text-red-300 rounded border border-red-700/50 transition">
                             🏳️ Abbandona
                         </button>
@@ -687,13 +720,26 @@
                             <!-- Azioni difensive (senza palla) -->
                             <div id="smg-defense-actions" class="flex flex-wrap gap-1 items-center mb-2">
                                 <button id="smg-btn-mura" class="action-btn bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded font-bold text-xs transition text-white">
-                                    🛡️ Mura
+                                    🛡️ Respinta
                                 </button>
                                 <button id="smg-btn-intercetto" class="action-btn bg-emerald-600 hover:bg-emerald-500 px-2 py-1 rounded font-bold text-xs transition text-white">
                                     🖐️ Intercetto
                                 </button>
                                 <button id="smg-btn-blocco" class="action-btn bg-red-600 hover:bg-red-500 px-2 py-1 rounded font-bold text-xs transition text-white">
                                     🚧 Blocco
+                                </button>
+                            </div>
+                            <!-- Selezione direzione difesa -->
+                            <div id="smg-defense-direction" class="hidden flex flex-wrap gap-2 items-center mb-2 p-2 bg-slate-700/50 rounded border border-slate-600">
+                                <span class="text-xs text-slate-300 w-full mb-1">Scegli direzione:</span>
+                                <button id="smg-dir-vertical" class="flex-1 bg-purple-600 hover:bg-purple-500 px-2 py-1.5 rounded font-bold text-xs transition text-white flex items-center justify-center gap-1">
+                                    ↕️ Verticale
+                                </button>
+                                <button id="smg-dir-horizontal" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-2 py-1.5 rounded font-bold text-xs transition text-white flex items-center justify-center gap-1">
+                                    ↔️ Orizzontale
+                                </button>
+                                <button id="smg-dir-cancel" class="w-full bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded text-xs transition text-slate-300 mt-1">
+                                    ✕ Annulla
                                 </button>
                             </div>
                             <div class="text-xs border-t border-slate-600 pt-2">
@@ -732,18 +778,31 @@
 
     function setupEventListeners() {
         document.getElementById('smg-close-btn').addEventListener('click', close);
-        // Azioni difensive
+        // Azioni difensive - MURA e INTERCETTO mostrano selezione direzione
         document.getElementById('smg-btn-mura').addEventListener('click', (e) => {
             e.stopPropagation();
-            performDefense(DEFENSE_MODES.MURA);
+            showDefenseDirectionSelector(DEFENSE_MODES.RESPINTA);
         });
         document.getElementById('smg-btn-intercetto').addEventListener('click', (e) => {
             e.stopPropagation();
-            performDefense(DEFENSE_MODES.INTERCETTO);
+            showDefenseDirectionSelector(DEFENSE_MODES.INTERCETTO);
         });
         document.getElementById('smg-btn-blocco').addEventListener('click', (e) => {
             e.stopPropagation();
-            performDefense(DEFENSE_MODES.BLOCCO);
+            showDefenseDirectionSelector(DEFENSE_MODES.BLOCCO);
+        });
+        // Selezione direzione difesa
+        document.getElementById('smg-dir-vertical').addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmDefenseDirection('vertical');
+        });
+        document.getElementById('smg-dir-horizontal').addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmDefenseDirection('horizontal');
+        });
+        document.getElementById('smg-dir-cancel').addEventListener('click', (e) => {
+            e.stopPropagation();
+            cancelDefenseDirection();
         });
         // Azioni con palla
         document.getElementById('smg-btn-pass').addEventListener('click', (e) => {
@@ -833,6 +892,7 @@
         init();
 
         state.testMode = options.testMode || false;
+        state.noBot = options.noBot || false; // Disabilita bot anche in testMode
         state.onComplete = options.onComplete || null;
 
         // Opzioni multiplayer
@@ -846,9 +906,11 @@
         state.onAbandon = options.onAbandon || null;
         state.isMyTurn = true; // Default, aggiornato da updateMultiplayerState
 
-        // Nomi squadre (A=challenger=rosso, B=challenged=blu)
+        // Nomi e colori squadre (A=challenger, B=challenged)
         state.teamAName = options.teamAName || 'Rossa';
         state.teamBName = options.teamBName || 'Blu';
+        state.teamAColor = options.teamAColor || '#ef4444';
+        state.teamBColor = options.teamBColor || '#3b82f6';
 
         // Forza landscape su mobile
         if (window.innerWidth < 768) {
@@ -882,7 +944,7 @@
 
         state.scoreA = gameState.scoreA || 0;
         state.scoreB = gameState.scoreB || 0;
-        state.actionsLeft = gameState.movesLeft || 3;
+        state.actionsLeft = gameState.movesLeft || 1;
         state.ballCarrierId = gameState.ballCarrierId || null;
         state.ballPosition = gameState.ballPosition || null;
         state.isGameOver = gameState.isGameOver || false;
@@ -924,7 +986,7 @@
         if (gameState) {
             state.scoreA = gameState.scoreA || 0;
             state.scoreB = gameState.scoreB || 0;
-            state.actionsLeft = gameState.movesLeft || 3;
+            state.actionsLeft = gameState.movesLeft || 1;
             state.ballCarrierId = gameState.ballCarrierId || null;
             state.ballPosition = gameState.ballPosition || null;
             state.isGameOver = gameState.isGameOver || false;
@@ -938,6 +1000,15 @@
 
             if (gameState.players) {
                 players = gameState.players.map(p => ({ ...p }));
+            }
+
+            // Resetta difese della squadra che sta per giocare
+            // Questo garantisce che quando torna il tuo turno, puoi muovere i giocatori
+            if (isMyTurn && myTeam) {
+                players.filter(p => p.team === myTeam).forEach(p => {
+                    p.defenseMode = null;
+                    p.defenseCells = [];
+                });
             }
         }
 
@@ -958,7 +1029,8 @@
         const timerEl = document.getElementById('smg-turn-timer');
         if (!timerEl) return;
 
-        if (state.turnTimeRemaining && state.multiplayer) {
+        if (state.multiplayer && state.turnTimeRemaining) {
+            // In multiplayer mostra il countdown
             const seconds = Math.ceil(state.turnTimeRemaining / 1000);
             timerEl.textContent = `${seconds}s`;
             timerEl.classList.remove('hidden');
@@ -967,6 +1039,18 @@
                 timerEl.classList.add('text-red-400', 'animate-pulse');
             } else {
                 timerEl.classList.remove('text-red-400', 'animate-pulse');
+            }
+        } else if (!state.multiplayer) {
+            // In modalità solo mostra il turno corrente
+            const turnsRemaining = MAX_TURNS - state.turnCount;
+            timerEl.textContent = `Turno ${state.turnCount + 1}/${MAX_TURNS}`;
+            timerEl.classList.remove('hidden', 'text-red-400', 'animate-pulse');
+
+            // Avviso quando restano pochi turni
+            if (turnsRemaining <= 10) {
+                timerEl.classList.add('text-orange-400');
+            } else {
+                timerEl.classList.remove('text-orange-400');
             }
         } else {
             timerEl.classList.add('hidden');
@@ -999,8 +1083,12 @@
             screen.orientation?.unlock?.();
         } catch(e) {}
 
-        if (state.onComplete) {
-            state.onComplete({
+        // Salva e azzera onComplete PRIMA di chiamarlo per evitare loop ricorsivi
+        const onCompleteCallback = state.onComplete;
+        state.onComplete = null;
+
+        if (onCompleteCallback) {
+            onCompleteCallback({
                 scoreA: state.scoreA,
                 scoreB: state.scoreB,
                 winner: state.scoreA >= GOAL_LIMIT ? 'A' : (state.scoreB >= GOAL_LIMIT ? 'B' : null)
@@ -1015,11 +1103,12 @@
         state.scoreB = 0;
         // Squadra iniziale random
         state.currentTeam = Math.random() < 0.5 ? 'A' : 'B';
-        state.actionsLeft = 3;
+        state.actionsLeft = 1;
         state.isGameOver = false;
         state.selectedPlayer = null;
         state.actionMode = null;
         state.ballPosition = null;
+        state.turnCount = 0;
 
         // Genera giocatori dalle formazioni
         players = generatePlayersFromFormations();
@@ -1036,8 +1125,8 @@
         buildPitch();
         update();
 
-        // In testMode, se il Bot inizia, avvia il suo turno
-        if (state.testMode && !state.multiplayer) {
+        // In testMode, se il Bot inizia, avvia il suo turno (se non disabilitato)
+        if (state.testMode && !state.multiplayer && !state.noBot) {
             const botTeam = state.myTeam === 'A' ? 'B' : 'A';
             if (state.currentTeam === botTeam) {
                 setTimeout(() => executeBotTurn(botTeam), 1000);
@@ -1050,11 +1139,12 @@
      */
     function generatePlayersFromFormations() {
         const result = [];
-        const teamData = window.InterfacciaCore?.currentTeamData;
+        // In testMode usa sempre posizioni default per consistenza
+        const teamData = state.testMode ? null : window.InterfacciaCore?.currentTeamData;
 
-        // Mappatura ruoli alle posizioni sul campo 13x9
-        // Team A (sinistra): GK a x=0, D a x=2-3, C a x=4-5, A a x=5-6
-        // Team B (destra): GK a x=12, D a x=10-11, C a x=7-8, A a x=6-7
+        // Mappatura ruoli alle posizioni sul campo 11x7
+        // Team A (sinistra): GK a x=0, D a x=2, C a x=3-4, A a x=4-5
+        // Team B (destra): GK a x=10, D a x=8, C a x=6-7, A a x=5-6
 
         const positionsA = getTeamPositions('A', teamData);
         const positionsB = getTeamPositions('B', null); // AI team
@@ -1105,7 +1195,7 @@
     function getTeamPositions(team, teamData) {
         const positions = [];
         const isLeft = team === 'A';
-        const centerY = Math.floor(GRID_H / 2); // 4 per campo 9
+        const centerY = Math.floor(GRID_H / 2); // 3 per campo 7
 
         // Portiere sempre al centro della porta
         positions.push({
@@ -1144,12 +1234,12 @@
                 });
             });
         } else {
-            // Formazione default 1-1-2-1
+            // Formazione default 1-1-2-1 per campo 11x7
             positions.push(
-                { name: 'FIX', x: isLeft ? 3 : GRID_W - 4, y: centerY, mod: 6, isGK: false },
-                { name: 'ALA', x: isLeft ? 4 : GRID_W - 5, y: 1, mod: 5, isGK: false },
-                { name: 'ALA', x: isLeft ? 4 : GRID_W - 5, y: GRID_H - 2, mod: 5, isGK: false },
-                { name: 'PIV', x: isLeft ? 5 : GRID_W - 6, y: centerY, mod: 7, isGK: false }
+                { name: 'FIX', x: isLeft ? 2 : GRID_W - 3, y: centerY, mod: 6, isGK: false },
+                { name: 'ALA', x: isLeft ? 3 : GRID_W - 4, y: 1, mod: 5, isGK: false },
+                { name: 'ALA', x: isLeft ? 3 : GRID_W - 4, y: GRID_H - 2, mod: 5, isGK: false },
+                { name: 'PIV', x: isLeft ? 4 : GRID_W - 5, y: centerY, mod: 7, isGK: false }
             );
         }
 
@@ -1172,14 +1262,14 @@
             y = Math.round(1 + index * (GRID_H - 3) / (count - 1));
         }
 
-        // Calcola X in base al ruolo
+        // Calcola X in base al ruolo (per campo 11x7)
         let x;
         if (ruolo === 'D') {
             x = isLeft ? 2 + Math.floor(index / 2) : GRID_W - 3 - Math.floor(index / 2);
         } else if (ruolo === 'C') {
-            x = isLeft ? 4 + Math.floor(index / 2) : GRID_W - 5 - Math.floor(index / 2);
+            x = isLeft ? 3 + Math.floor(index / 2) : GRID_W - 4 - Math.floor(index / 2);
         } else { // A
-            x = isLeft ? 5 + Math.floor(index / 2) : GRID_W - 6 - Math.floor(index / 2);
+            x = isLeft ? 4 + Math.floor(index / 2) : GRID_W - 5 - Math.floor(index / 2);
         }
 
         return { x, y };
@@ -1188,6 +1278,36 @@
     function getRoleName(ruolo) {
         const names = { D: 'FIX', C: 'ALA', A: 'PIV' };
         return names[ruolo] || ruolo;
+    }
+
+    /**
+     * Ottieni ruolo (P/D/C/A) dal nome posizione
+     */
+    function getRoleFromName(name) {
+        const roleMap = { 'GK': 'P', 'FIX': 'D', 'ALA': 'C', 'PIV': 'A' };
+        return roleMap[name] || 'C'; // Default C
+    }
+
+    /**
+     * Ottieni bonus ruolo per azione specifica
+     * - Difensori (D): +1.5 quando contrastano
+     * - Centrocampisti (C): +1.5 quando passano
+     * - Attaccanti (A): +1.5 quando dribblano
+     */
+    function getRoleBonus(player, actionType) {
+        const role = getRoleFromName(player.name);
+        if (actionType === 'contrasto' && role === 'D') return 1.5;
+        if (actionType === 'passaggio' && role === 'C') return 1.5;
+        if (actionType === 'dribbling' && role === 'A') return 1.5;
+        return 0;
+    }
+
+    function getRoleBonusInfo(bonus, actionType) {
+        if (bonus > 0) {
+            const roleNames = { 'contrasto': 'D', 'passaggio': 'C', 'dribbling': 'A' };
+            return ` [SPEC ${roleNames[actionType]} +${bonus}]`;
+        }
+        return '';
     }
 
     // ========================================
@@ -1236,7 +1356,7 @@
         // Modalita' tiro attiva
         if (state.actionMode === 'shot' && state.selectedPlayer && state.ballCarrierId === state.selectedPlayer.id) {
             const targetGoalX = state.currentTeam === 'A' ? GRID_W - 1 : 0;
-            const goalCenterY = Math.floor(GRID_H / 2); // Centro del campo (4 per campo 9)
+            const goalCenterY = Math.floor(GRID_H / 2); // Centro del campo (3 per campo 7)
             if (x === targetGoalX && y >= goalCenterY - 1 && y <= goalCenterY + 1) {
                 executeShot(state.selectedPlayer, y);
                 state.actionMode = null;
@@ -1261,8 +1381,44 @@
     }
 
     function updateHighlights() {
+        // Rimuovi tutte le classi highlight E gli stili inline delle celle
         document.querySelectorAll('#smg-pitch .cell').forEach(c => {
-            c.classList.remove('highlight-move', 'highlight-target', 'highlight-pass', 'highlight-shot', 'highlight-mura', 'highlight-intercetto', 'highlight-blocco');
+            c.classList.remove('highlight-move', 'highlight-target', 'highlight-pass', 'highlight-shot', 'highlight-respinta', 'highlight-intercetto', 'highlight-blocco');
+            c.style.backgroundColor = '';
+            c.style.boxShadow = '';
+            // Rimuovi eventuale emoji precedente
+            const emojiEl = c.querySelector('.defense-emoji');
+            if (emojiEl) emojiEl.remove();
+        });
+
+        // Mostra SEMPRE le celle difese da azioni difensive (visibili a tutti)
+        const defenseEmojis = {
+            'respinta': '🛡️',
+            'intercetto': '🖐️',
+            'blocco': '🚫'
+        };
+
+        players.filter(p => p.defenseMode && p.defenseCells?.length > 0).forEach(p => {
+            const teamColor = p.team === 'A' ? state.teamAColor : state.teamBColor;
+            p.defenseCells.forEach(dc => {
+                const cell = getCell(dc.x, dc.y);
+                if (cell) {
+                    cell.classList.add(`highlight-${p.defenseMode}`);
+                    // Applica colore squadra con opacità
+                    cell.style.backgroundColor = `${teamColor}40`; // 40 = 25% opacità in hex
+                    cell.style.boxShadow = `inset 0 0 12px ${teamColor}80`;
+
+                    // Aggiungi emoji solo sulla cella centrale (dove sta il giocatore)
+                    if (dc.x === p.x && dc.y === p.y) {
+                        const emoji = document.createElement('div');
+                        emoji.className = 'defense-emoji';
+                        emoji.style.cssText = 'position:absolute;top:1px;right:1px;font-size:10px;z-index:5;opacity:0.8;';
+                        emoji.textContent = defenseEmojis[p.defenseMode] || '?';
+                        cell.style.position = 'relative';
+                        cell.appendChild(emoji);
+                    }
+                }
+            });
         });
 
         if (!state.selectedPlayer) return;
@@ -1272,8 +1428,8 @@
 
         // Modalita' passaggio
         if (state.actionMode === 'pass' && isCarrier) {
-            // Evidenzia tutti i compagni e celle vuote per passaggio
-            players.filter(p => p.team === state.currentTeam && p.id !== sp.id).forEach(p => {
+            // Evidenzia tutti i compagni (eccetto portiere) e celle vuote per passaggio
+            players.filter(p => p.team === state.currentTeam && p.id !== sp.id && !p.isGK).forEach(p => {
                 const cell = getCell(p.x, p.y);
                 if (cell) cell.classList.add('highlight-pass');
             });
@@ -1315,14 +1471,6 @@
                 }
             }
         }
-
-        // Mostra celle difese da azioni difensive
-        players.filter(p => p.defenseMode && p.defenseCells?.length > 0).forEach(p => {
-            const highlightClass = `highlight-${p.defenseMode}`;
-            p.defenseCells.forEach(dc => {
-                getCell(dc.x, dc.y)?.classList.add(highlightClass);
-            });
-        });
     }
 
     function handleAction(tx, ty) {
@@ -1351,6 +1499,46 @@
                 return;
             }
 
+            // Controlla se la cella è coperta da INTERCETTO avversario
+            const interceptor = players.find(p =>
+                p.team !== state.currentTeam &&
+                p.defenseMode === DEFENSE_MODES.INTERCETTO &&
+                p.defenseCells?.some(dc => dc.x === tx && dc.y === ty)
+            );
+
+            // Calcola penalita' fatica PRIMA di eseguire l'azione
+            const fatiguePenalty = getFatiguePenalty(sp.id);
+            const fatigueInfo = getFatiguePenaltyInfo(fatiguePenalty);
+
+            if (interceptor) {
+                // Contrasto: intercettatore 2d20+mod (prendi il più basso) vs 1d20+mod con fatica
+                const roll1 = d20();
+                const roll2 = d20();
+                const interceptorRoll = Math.min(roll1, roll2) + interceptor.mod;
+                const moverDice = d20();
+                const moverRoll = moverDice + sp.mod + fatiguePenalty;
+
+                logMsg(`${sp.name} entra in zona intercetto di ${interceptor.name}!`, "text-orange-400");
+                logMsg(`Contrasto: ${interceptor.name} [2d20: ${roll1},${roll2}→${Math.min(roll1, roll2)}+${interceptor.mod}=${interceptorRoll.toFixed(0)}] vs ${sp.name} [${moverDice}+${sp.mod}${fatiguePenalty < 0 ? fatiguePenalty : ''}=${moverRoll.toFixed(1)}]${fatigueInfo}`);
+
+                if (interceptorRoll >= moverRoll && isCarrier) {
+                    // Intercettatore vince e ruba la palla
+                    logMsg(`${interceptor.name} ruba la palla!`, "text-blue-400");
+                    state.ballCarrierId = interceptor.id;
+                    interceptor.defenseMode = null;
+                    interceptor.defenseCells = [];
+                    consumeAction();
+                    return;
+                } else if (interceptorRoll >= moverRoll) {
+                    // Intercettatore blocca il movimento
+                    logMsg(`${interceptor.name} blocca ${sp.name}!`, "text-blue-400");
+                    consumeAction();
+                    return;
+                }
+                // Altrimenti il giocatore passa
+                logMsg(`${sp.name} evita l'intercetto!`, "text-green-400");
+            }
+
             sp.x = tx;
             sp.y = ty;
             sp.defenseMode = null;
@@ -1360,9 +1548,9 @@
             if (state.ballPosition && tx === state.ballPosition.x && ty === state.ballPosition.y) {
                 state.ballCarrierId = sp.id;
                 state.ballPosition = null;
-                logMsg(`${sp.name} si sposta e prende la palla!`, "text-green-400");
+                logMsg(`${sp.name} si sposta e prende la palla!${fatigueInfo}`, "text-green-400");
             } else {
-                logMsg(`${sp.name} si sposta.`);
+                logMsg(`${sp.name} si sposta.${fatigueInfo}`);
             }
             consumeAction();
             return;
@@ -1395,15 +1583,59 @@
 
     /**
      * DRIBBLING: giocatore CON palla preme su avversario
-     * 1d20+modA vs 1d20+modB
+     * 1d20+modA vs 1d20+modB (o 2d20 prendi il più alto se difensore in BLOCCO)
      * - Vince A: passa alle spalle di B
      * - Vince B: A non può più muoversi (azione persa)
      */
     function executeDribbling(attacker, defender) {
-        const rollAtk = d20() + attacker.mod;
-        const rollDef = d20() + defender.mod;
+        // Controlla se l'attaccante ha già fatto dribbling/contrasto nel turno precedente
+        const hadRecentAction = state.lastDribbleContrastPlayer === attacker.id &&
+                                state.lastDribbleContrastTurn === state.turnCount - 2; // 2 turni fa (suo turno precedente)
 
-        logMsg(`Dribbling: ${attacker.name}(${rollAtk}) vs ${defender.name}(${rollDef})`);
+        // Calcola fatica per azioni consecutive
+        const fatiguePenalty = getFatiguePenalty(attacker.id);
+
+        // Calcola bonus ruolo (Attaccanti +1.5 al dribbling)
+        const roleBonus = getRoleBonus(attacker, 'dribbling');
+
+        let atkDice;
+        let atkRollInfo = '';
+        if (hadRecentAction) {
+            // Svantaggio: 2d20 prendi il più basso
+            const roll1 = d20();
+            const roll2 = d20();
+            atkDice = Math.min(roll1, roll2);
+            atkRollInfo = ` [SVANTAGGIO 2d20: ${roll1},${roll2}→${atkDice}]`;
+        } else {
+            atkDice = d20();
+        }
+        const rollAtk = atkDice + attacker.mod + fatiguePenalty + roleBonus;
+
+        // Se difensore è in BLOCCO, tira 2d20 e prende il più alto (vantaggio)
+        let rollDef;
+        let defDice;
+        let defRollInfo = '';
+        if (defender.defenseMode === DEFENSE_MODES.BLOCCO) {
+            const defRoll1 = d20();
+            const defRoll2 = d20();
+            defDice = Math.max(defRoll1, defRoll2);
+            rollDef = defDice + defender.mod;
+            defRollInfo = ` [BLOCCO 2d20: ${defRoll1},${defRoll2}→${defDice}]`;
+        } else {
+            defDice = d20();
+            rollDef = defDice + defender.mod;
+        }
+
+        // Costruisci stringa modificatori attaccante
+        let atkModStr = `${attacker.mod}`;
+        if (roleBonus > 0) atkModStr += `+${roleBonus}`;
+        if (fatiguePenalty < 0) atkModStr += `${fatiguePenalty}`;
+
+        logMsg(`Dribbling: ${attacker.name} [${atkDice}+${atkModStr}=${rollAtk.toFixed(1)}]${atkRollInfo}${getFatiguePenaltyInfo(fatiguePenalty)}${getRoleBonusInfo(roleBonus, 'dribbling')} vs ${defender.name} [${defDice}+${defender.mod}=${rollDef}]${defRollInfo}`);
+
+        // Salva che questo giocatore ha fatto dribbling in questo turno
+        state.lastDribbleContrastPlayer = attacker.id;
+        state.lastDribbleContrastTurn = state.turnCount;
 
         if (rollAtk > rollDef) {
             // Calcola posizione "alle spalle" del difensore
@@ -1459,24 +1691,49 @@
             return;
         }
 
+        // Controlla se l'attaccante ha già fatto dribbling/contrasto nel turno precedente
+        const hadRecentAction = state.lastDribbleContrastPlayer === attacker.id &&
+                                state.lastDribbleContrastTurn === state.turnCount - 2;
+
+        // Calcola fatica per azioni consecutive
+        const fatiguePenalty = getFatiguePenalty(attacker.id);
+
+        // Calcola bonus ruolo (Difensori +1.5 al contrasto)
+        const roleBonus = getRoleBonus(attacker, 'contrasto');
+
         let rollAtk;
-        if (isRetry) {
-            // Ritenta: 2d20 prende il più basso
+        let atkDice;
+        let atkRollInfo = '';
+
+        // Applica svantaggio se: isRetry OPPURE ha fatto azione recente
+        const hasDisadvantage = isRetry || hadRecentAction;
+
+        if (hasDisadvantage) {
+            // Svantaggio: 2d20 prende il più basso
             const roll1 = d20();
             const roll2 = d20();
-            rollAtk = Math.min(roll1, roll2) + attacker.mod;
-            logMsg(`Ritenta contrasto (${roll1},${roll2}): ${attacker.name}(${rollAtk}) vs...`);
+            atkDice = Math.min(roll1, roll2);
+            const reason = isRetry ? 'RITENTA' : 'SVANTAGGIO';
+            atkRollInfo = ` [${reason} 2d20: ${roll1},${roll2}→${atkDice}]`;
         } else {
-            rollAtk = d20() + attacker.mod;
+            atkDice = d20();
         }
+        rollAtk = atkDice + attacker.mod + fatiguePenalty + roleBonus;
 
-        const rollDef = d20() + defender.mod;
+        const defDice = d20();
+        const rollDef = defDice + defender.mod;
 
-        if (!isRetry) {
-            logMsg(`Contrasto: ${attacker.name}(${rollAtk}) vs ${defender.name}(${rollDef})`);
-        } else {
-            logMsg(`...${defender.name}(${rollDef})`);
-        }
+        // Costruisci stringa modificatori attaccante
+        let atkModStr = `${attacker.mod}`;
+        if (roleBonus > 0) atkModStr += `+${roleBonus}`;
+        if (fatiguePenalty < 0) atkModStr += `${fatiguePenalty}`;
+
+        const actionLabel = isRetry ? 'Ritenta' : 'Contrasto';
+        logMsg(`${actionLabel}: ${attacker.name} [${atkDice}+${atkModStr}=${rollAtk.toFixed(1)}]${atkRollInfo}${getFatiguePenaltyInfo(fatiguePenalty)}${getRoleBonusInfo(roleBonus, 'contrasto')} vs ${defender.name} [${defDice}+${defender.mod}=${rollDef}]`);
+
+        // Salva che questo giocatore ha fatto contrasto in questo turno
+        state.lastDribbleContrastPlayer = attacker.id;
+        state.lastDribbleContrastTurn = state.turnCount;
 
         if (rollAtk > rollDef) {
             // Calcola posizione "alle spalle" del difensore
@@ -1536,13 +1793,40 @@
      * - Successo se risultato > 5
      * - Se risultato <= 0 e intercettato: palla all'intercettatore
      * - Se risultato <= 5 e non intercettato: palla in direzione casuale 1-2 celle
+     * - NON è possibile passare la palla al portiere della propria squadra
      */
     function executePass(from, target) {
+        // Blocca passaggio al portiere della propria squadra
+        if (target.id) {
+            const receiver = players.find(p => p.id === target.id);
+            if (receiver && receiver.isGK && receiver.team === state.currentTeam) {
+                logMsg("Non puoi passare la palla al portiere!", "text-orange-400");
+                return;
+            }
+        }
+
+        // Calcola fatica per azioni consecutive
+        const fatiguePenalty = getFatiguePenalty(from.id);
+
+        // Calcola bonus ruolo (Centrocampisti +1.5 al passaggio)
+        const roleBonus = getRoleBonus(from, 'passaggio');
+
         const path = getLinePath(from.x, from.y, target.x, target.y);
         const distance = path.length;
 
-        // Calcola risultato: 1d20 + MOD - distanza
-        let passResult = d20() + from.mod - distance;
+        // Calcola risultato: se distanza > 2, usa 2d20 e prendi il minore (svantaggio)
+        let diceRoll;
+        let rollInfo = '';
+        if (distance > 2) {
+            const roll1 = d20();
+            const roll2 = d20();
+            diceRoll = Math.min(roll1, roll2);
+            rollInfo = `2d20: ${roll1},${roll2}→${diceRoll}`;
+        } else {
+            diceRoll = d20();
+        }
+
+        let passResult = diceRoll + from.mod + fatiguePenalty + roleBonus - distance;
         let interceptors = [];
         let playersInPath = [];
         let firstInterceptor = null;
@@ -1573,11 +1857,18 @@
         }
 
         const logDetails = [];
+        if (rollInfo) logDetails.push(rollInfo);
         if (interceptors.length > 0) logDetails.push(`Intercetto: ${interceptors.join(', ')}`);
         if (playersInPath.length > 0) logDetails.push(`In traiettoria: ${playersInPath.join(', ')}`);
         const detailStr = logDetails.length > 0 ? ` [${logDetails.join(' | ')}]` : '';
 
-        logMsg(`Passaggio: risultato ${passResult} (serve >5)${detailStr}`);
+        // Costruisci stringa modificatori
+        let modStr = `${from.mod}`;
+        if (roleBonus > 0) modStr += `+${roleBonus}`;
+        if (fatiguePenalty < 0) modStr += `${fatiguePenalty}`;
+
+        // Mostra: dado + mod - distanza = risultato
+        logMsg(`Passaggio: ${from.name} [${diceRoll}+${modStr}-${distance}=${passResult.toFixed(1)}] (serve >5)${detailStr}${getFatiguePenaltyInfo(fatiguePenalty)}${getRoleBonusInfo(roleBonus, 'passaggio')}`);
 
         if (passResult > 5) {
             // Successo!
@@ -1625,6 +1916,16 @@
                 logMsg(`Passaggio impreciso! Palla libera`, "text-orange-400");
             }
         }
+
+        // Se il passante era un portiere, torna al centro della porta
+        if (from.isGK) {
+            const centerY = Math.floor(GRID_H / 2); // Centro Y della porta
+            if (from.y !== centerY) {
+                from.y = centerY;
+                logMsg(`${from.name} torna al centro porta`, "text-cyan-400");
+            }
+        }
+
         consumeAction();
     }
 
@@ -1643,8 +1944,22 @@
         const path = getLinePath(atk.x, atk.y, goalX, targetY);
         const distance = path.length;
 
-        // Calcola risultato: 1d20 + MOD - distanza
-        let shotResult = d20() + atk.mod - distance;
+        // Calcola fatica per azioni consecutive
+        const fatiguePenalty = getFatiguePenalty(atk.id);
+
+        // Calcola risultato: se distanza > 2, usa 2d20 e prendi il minore (svantaggio)
+        let diceRoll;
+        let rollInfo = '';
+        if (distance > 2) {
+            const roll1 = d20();
+            const roll2 = d20();
+            diceRoll = Math.min(roll1, roll2);
+            rollInfo = `2d20: ${roll1},${roll2} → ${diceRoll}`;
+        } else {
+            diceRoll = d20();
+        }
+
+        let shotResult = diceRoll + atk.mod + fatiguePenalty - distance;
         let blockers = [];
         let playersInPath = [];
         let firstBlocker = null;
@@ -1653,7 +1968,7 @@
             // Giocatori che stanno murando (difendono tiri)
             const muraPlayers = players.filter(p =>
                 p.team !== state.currentTeam &&
-                p.defenseMode === DEFENSE_MODES.MURA &&
+                p.defenseMode === DEFENSE_MODES.RESPINTA &&
                 p.defenseCells?.some(dc => dc.x === cell.x && dc.y === cell.y)
             );
             for (const mp of muraPlayers) {
@@ -1666,7 +1981,7 @@
             const enemyInCell = players.find(p =>
                 p.team !== state.currentTeam &&
                 p.x === cell.x && p.y === cell.y &&
-                p.defenseMode !== DEFENSE_MODES.MURA &&
+                p.defenseMode !== DEFENSE_MODES.RESPINTA &&
                 !p.isGK // Non contare il portiere come ostacolo generico
             );
             if (enemyInCell) {
@@ -1676,14 +1991,20 @@
         }
 
         const logDetails = [];
-        if (blockers.length > 0) logDetails.push(`Mura: ${blockers.join(', ')}`);
+        if (rollInfo) logDetails.push(rollInfo);
+        if (blockers.length > 0) logDetails.push(`Respinta: ${blockers.join(', ')}`);
         if (playersInPath.length > 0) logDetails.push(`In traiettoria: ${playersInPath.join(', ')}`);
+        if (fatiguePenalty < 0) logDetails.push(`Fatica: ${fatiguePenalty}`);
         const detailStr = logDetails.length > 0 ? ` [${logDetails.join(' | ')}]` : '';
+
+        // Costruisci stringa modificatori
+        let modStr = `${atk.mod}`;
+        if (fatiguePenalty < 0) modStr += `${fatiguePenalty}`;
 
         // Se risultato <= 0 e c'era un muratore, palla al muratore
         if (shotResult <= 0 && firstBlocker) {
-            logMsg(`Tiro: risultato ${shotResult}${detailStr}`);
-            logMsg(`MURATO da ${firstBlocker.name}!`, "text-blue-400");
+            logMsg(`Tiro: ${atk.name} [${diceRoll}+${modStr}-${distance}=${shotResult.toFixed(1)}]${detailStr}`);
+            logMsg(`RESPINTO da ${firstBlocker.name}!`, "text-blue-400");
             state.ballCarrierId = firstBlocker.id;
             state.ballPosition = null;
             consumeAction();
@@ -1694,9 +2015,28 @@
         const gkInPenaltyArea = gk && isInOwnPenaltyArea(gk);
 
         if (gkInPenaltyArea) {
-            // Portiere para: 1d20 + MOD
-            const saveRoll = d20() + gk.mod;
-            logMsg(`Tiro: ${shotResult} vs GK: ${saveRoll}${detailStr}`);
+            // Calcola distanza Y tra portiere e punto di tiro
+            const gkDistanceY = Math.abs(gk.y - targetY);
+
+            // Modificatore portiere in base alla posizione
+            let gkMod = gk.mod;
+            let modInfo = '';
+            if (gkDistanceY === 0) {
+                // Tiro sul quadretto del portiere - mod pieno
+                modInfo = '(centro)';
+            } else if (gkDistanceY === 1) {
+                // Tiro su quadretto adiacente - mod ridotto casuale
+                const penalty = 0.5 + Math.random() * 2.5; // da -0.5 a -3.0
+                gkMod = Math.max(0, gk.mod - penalty);
+                modInfo = `(-${penalty.toFixed(1)})`;
+            } else {
+                // Tiro troppo lontano - portiere non può parare
+                gkMod = 0;
+                modInfo = '(fuori portata)';
+            }
+
+            const saveRoll = d20() + gkMod;
+            logMsg(`Tiro: ${atk.name} [${diceRoll}+${modStr}-${distance}=${shotResult.toFixed(1)}] vs GK: ${saveRoll.toFixed(1)} ${modInfo}${detailStr}`);
 
             if (shotResult === 0) {
                 // Risultato esatto 0: 50/50
@@ -1709,6 +2049,8 @@
                     if (!state.isGameOver) handleGoalReset();
                 } else {
                     logMsg("PARATA! (50/50)", "text-blue-400");
+                    // Portiere si sposta sul quadretto dove ha parato
+                    gk.y = targetY;
                     state.ballCarrierId = gk.id;
                     consumeAction();
                 }
@@ -1721,13 +2063,15 @@
                 if (!state.isGameOver) handleGoalReset();
             } else {
                 logMsg("PARATA!", "text-blue-400");
+                // Portiere si sposta sul quadretto dove ha parato
+                gk.y = targetY;
                 state.ballCarrierId = gk.id;
                 consumeAction();
             }
         } else {
             // Portiere fuori area - difficoltà fissa 5
             const difficulty = 5;
-            logMsg(`Tiro: ${shotResult} vs ${difficulty} (GK fuori area!)${detailStr}`);
+            logMsg(`Tiro: ${atk.name} [${diceRoll}+${modStr}-${distance}=${shotResult.toFixed(1)}] vs ${difficulty} (GK fuori area!)${detailStr}`);
 
             if (shotResult === 0) {
                 // Risultato esatto 0: 50/50
@@ -1785,6 +2129,40 @@
         }
     }
 
+    /**
+     * Termina la partita per limite turni
+     */
+    function endGameByTurnLimit() {
+        state.isGameOver = true;
+        update();
+
+        const gameOverModal = document.getElementById('smg-game-over');
+        const winText = document.getElementById('smg-win-text');
+
+        let resultText, resultClass;
+        if (state.scoreA > state.scoreB) {
+            resultText = `SQUADRA ROSSA VINCE ${state.scoreA}-${state.scoreB}!`;
+            resultClass = "text-lg font-bold mb-4 text-red-400 uppercase";
+        } else if (state.scoreB > state.scoreA) {
+            resultText = `SQUADRA BLU VINCE ${state.scoreB}-${state.scoreA}!`;
+            resultClass = "text-lg font-bold mb-4 text-blue-400 uppercase";
+        } else {
+            resultText = `PAREGGIO ${state.scoreA}-${state.scoreB}!`;
+            resultClass = "text-lg font-bold mb-4 text-yellow-400 uppercase";
+        }
+
+        winText.innerText = resultText;
+        winText.className = resultClass;
+        gameOverModal.classList.remove('hidden');
+
+        logMsg(resultText, resultClass.includes('red') ? 'text-red-400' : resultClass.includes('blue') ? 'text-blue-400' : 'text-yellow-400');
+
+        // Sync finale partita
+        if (state.multiplayer && state.onMove) {
+            syncMultiplayerState(true);
+        }
+    }
+
     function handleGoalReset() {
         // Resetta posizioni
         resetPositions();
@@ -1800,20 +2178,85 @@
 
         // Il turno passa a chi ha subito il goal
         state.currentTeam = receivingTeam;
-        state.actionsLeft = 3;
+        state.actionsLeft = 1;
         state.selectedPlayer = null;
         state.actionMode = null;
 
+        // Resetta tutte le difese
+        players.forEach(p => {
+            p.defenseMode = null;
+            p.defenseCells = [];
+        });
+
         logMsg(`--- RIPRESA: TURNO ${receivingTeam === 'A' ? 'ROSSO' : 'BLU'} ---`, "text-yellow-500 font-bold");
+
+        // Sincronizza stato dopo goal reset (multiplayer)
+        if (state.multiplayer && state.onMove) {
+            syncMultiplayerState(false);
+        }
 
         update();
     }
 
     /**
-     * Esegue un'azione difensiva (MURA, INTERCETTO, BLOCCO)
-     * Celle difese: sempre orizzontali (x-1, x, x+1) sulla stessa Y
+     * Mostra il selettore di direzione per MURA o INTERCETTO
      */
-    function performDefense(defenseType) {
+    function showDefenseDirectionSelector(defenseType) {
+        const sp = state.selectedPlayer;
+        if (!sp) return;
+
+        // Validazioni base
+        if (!state.isMyTurn) {
+            logMsg("Non e' il tuo turno!", "text-orange-400");
+            return;
+        }
+        if (sp.team !== state.currentTeam) {
+            logMsg("Non puoi controllare questo giocatore!", "text-red-400");
+            return;
+        }
+        if (state.ballCarrierId === sp.id) {
+            logMsg("Chi ha la palla non puo' difendere!", "text-orange-400");
+            return;
+        }
+        // Permetti refresh o cambio difesa (non bloccare chi è già in difesa)
+
+        // Salva il tipo di difesa in attesa e mostra il pannello
+        state.pendingDefenseType = defenseType;
+        document.getElementById('smg-defense-actions').classList.add('hidden');
+        document.getElementById('smg-defense-direction').classList.remove('hidden');
+    }
+
+    /**
+     * Conferma la direzione scelta per la difesa
+     */
+    function confirmDefenseDirection(direction) {
+        if (!state.pendingDefenseType) return;
+
+        const defenseType = state.pendingDefenseType;
+        state.pendingDefenseType = null;
+
+        // Nascondi pannello direzione e mostra azioni
+        document.getElementById('smg-defense-direction').classList.add('hidden');
+        document.getElementById('smg-defense-actions').classList.remove('hidden');
+
+        performDefense(defenseType, direction);
+    }
+
+    /**
+     * Annulla la selezione direzione
+     */
+    function cancelDefenseDirection() {
+        state.pendingDefenseType = null;
+        document.getElementById('smg-defense-direction').classList.add('hidden');
+        document.getElementById('smg-defense-actions').classList.remove('hidden');
+    }
+
+    /**
+     * Esegue un'azione difensiva (MURA, INTERCETTO, BLOCCO)
+     * @param {string} defenseType - Tipo di difesa
+     * @param {string} direction - 'vertical' o 'horizontal'
+     */
+    function performDefense(defenseType, direction = 'vertical') {
         const sp = state.selectedPlayer;
         if (!sp) {
             logMsg("Seleziona un giocatore!", "text-orange-400");
@@ -1827,27 +2270,49 @@
             logMsg("Chi ha la palla non puo' difendere!", "text-orange-400");
             return;
         }
-        if (sp.defenseMode) {
-            logMsg(`Gia' in ${sp.defenseMode}!`, "text-gray-500");
-            return;
-        }
+
+        // Determina se è refresh (stesso tipo) o cambio (tipo diverso)
+        const isRefresh = sp.defenseMode === defenseType;
+        const isChange = sp.defenseMode && sp.defenseMode !== defenseType;
 
         sp.defenseMode = defenseType;
-        // Celle difese: giocatore + cella SOPRA + cella SOTTO
-        // (x, y-1), (x, y), (x, y+1) - stessa colonna X, Y varia
+        sp.defenseTurnsLeft = 2; // Resetta sempre a 2 turni
+
+        // Celle difese in base alla direzione scelta
         sp.defenseCells = [
             { x: sp.x, y: sp.y }
         ];
-        if (sp.y > 0) sp.defenseCells.push({ x: sp.x, y: sp.y - 1 });
-        if (sp.y < GRID_H - 1) sp.defenseCells.push({ x: sp.x, y: sp.y + 1 });
 
+        // In portrait mode, le coordinate visive sono invertite (il campo è ruotato di 90°)
+        // Quindi "orizzontale" (sinistra-destra visivo) diventa cambio Y
+        // E "verticale" (alto-basso visivo) diventa cambio X
+        const portrait = isPortrait();
+        const useHorizontalLogic = portrait ? (direction === 'vertical') : (direction === 'horizontal');
+
+        if (useHorizontalLogic) {
+            // Orizzontale visivo: celle a sinistra/destra
+            if (sp.x > 0) sp.defenseCells.push({ x: sp.x - 1, y: sp.y });
+            if (sp.x < GRID_W - 1) sp.defenseCells.push({ x: sp.x + 1, y: sp.y });
+        } else {
+            // Verticale visivo: celle sopra/sotto
+            if (sp.y > 0) sp.defenseCells.push({ x: sp.x, y: sp.y - 1 });
+            if (sp.y < GRID_H - 1) sp.defenseCells.push({ x: sp.x, y: sp.y + 1 });
+        }
+
+        const dirLabel = direction === 'horizontal' ? '↔️' : '↕️';
         const defenseNames = {
-            [DEFENSE_MODES.MURA]: 'MURA (blocca tiri)',
-            [DEFENSE_MODES.INTERCETTO]: 'INTERCETTO (blocca passaggi)',
-            [DEFENSE_MODES.BLOCCO]: 'BLOCCO (blocca movimento)'
+            [DEFENSE_MODES.RESPINTA]: `RESPINTA ${dirLabel}`,
+            [DEFENSE_MODES.INTERCETTO]: `INTERCETTO ${dirLabel}`,
+            [DEFENSE_MODES.BLOCCO]: `BLOCCO ${dirLabel}`
         };
 
-        logMsg(`${sp.name} in ${defenseNames[defenseType]}!`);
+        if (isRefresh) {
+            logMsg(`${sp.name} rinfresca ${defenseNames[defenseType]}!`, "text-green-400");
+        } else if (isChange) {
+            logMsg(`${sp.name} cambia in ${defenseNames[defenseType]}!`, "text-yellow-400");
+        } else {
+            logMsg(`${sp.name} in ${defenseNames[defenseType]}!`);
+        }
         consumeAction();
     }
 
@@ -1913,17 +2378,84 @@
     }
 
     function switchTurn() {
-        state.currentTeam = state.currentTeam === 'A' ? 'B' : 'A';
-        state.actionsLeft = 3;
-        // Resetta difese della squadra che sta per giocare
-        players.filter(p => p.team === state.currentTeam).forEach(p => {
-            p.defenseMode = null;
-            p.defenseCells = [];
-        });
-        logMsg(`--- TURNO ${state.currentTeam === 'A' ? 'ROSSO' : 'BLU'} ---`, "text-yellow-500 font-bold");
+        // Calcola quale sarà la prossima squadra
+        const nextTeam = state.currentTeam === 'A' ? 'B' : 'A';
 
-        // In testMode senza multiplayer, il Bot gioca per la squadra avversaria
-        if (state.testMode && !state.multiplayer) {
+        // Controlla se un portiere ha la palla
+        const ballCarrier = players.find(p => p.id === state.ballCarrierId);
+
+        if (ballCarrier && ballCarrier.isGK) {
+            // Incrementa il contatore SOLO quando il turno torna alla squadra del portiere
+            // (cioè quando la squadra che sta per giocare è quella del portiere con la palla)
+            if (nextTeam === ballCarrier.team) {
+                state.gkHoldingBallTurns++;
+
+                // Se il portiere ha la palla da 2 turni SUOI, passa automaticamente
+                if (state.gkHoldingBallTurns >= 2) {
+                    logMsg(`${ballCarrier.name} deve passare la palla!`, "text-orange-400");
+
+                    // Trova il compagno più vicino (non portiere)
+                    const teammates = players.filter(p =>
+                        p.team === ballCarrier.team && !p.isGK
+                    );
+
+                    if (teammates.length > 0) {
+                        // Ordina per distanza dal portiere
+                        teammates.sort((a, b) => {
+                            const distA = Math.abs(a.x - ballCarrier.x) + Math.abs(a.y - ballCarrier.y);
+                            const distB = Math.abs(b.x - ballCarrier.x) + Math.abs(b.y - ballCarrier.y);
+                            return distA - distB;
+                        });
+
+                        const closestTeammate = teammates[0];
+                        // Passaggio forzato (diretto, senza sfida, senza consumare azione)
+                        state.ballCarrierId = closestTeammate.id;
+                        state.ballPosition = null;
+                        logMsg(`Passaggio forzato a ${closestTeammate.name}!`, "text-cyan-400");
+                        state.gkHoldingBallTurns = 0;
+
+                        // Portiere torna al centro porta
+                        const centerY = Math.floor(GRID_H / 2);
+                        if (ballCarrier.y !== centerY) {
+                            ballCarrier.y = centerY;
+                        }
+                    }
+                }
+            }
+        } else {
+            // La palla non è in mano a un portiere, resetta contatore
+            state.gkHoldingBallTurns = 0;
+        }
+
+        state.currentTeam = nextTeam;
+        state.actionsLeft = 1;
+        state.turnCount++;
+
+        // Controlla limite turni (100 totali = 50 per giocatore)
+        if (state.turnCount >= MAX_TURNS) {
+            logMsg(`--- TEMPO SCADUTO (${MAX_TURNS} turni) ---`, "text-orange-500 font-bold");
+            endGameByTurnLimit();
+            return;
+        }
+
+        // Decrementa turni difesa della squadra che sta per giocare
+        // e rimuovi difese scadute
+        players.filter(p => p.team === state.currentTeam && p.defenseMode).forEach(p => {
+            p.defenseTurnsLeft = (p.defenseTurnsLeft || 1) - 1;
+            if (p.defenseTurnsLeft <= 0) {
+                logMsg(`${p.name} termina ${p.defenseMode}`, "text-gray-400");
+                p.defenseMode = null;
+                p.defenseCells = [];
+                p.defenseTurnsLeft = 0;
+            }
+        });
+
+        const turnsRemaining = MAX_TURNS - state.turnCount;
+        const turnInfo = turnsRemaining <= 20 ? ` (${turnsRemaining} rimasti)` : '';
+        logMsg(`--- TURNO ${state.currentTeam === 'A' ? 'ROSSO' : 'BLU'}${turnInfo} ---`, "text-yellow-500 font-bold");
+
+        // In testMode senza multiplayer e senza noBot, il Bot gioca per la squadra avversaria
+        if (state.testMode && !state.multiplayer && !state.noBot) {
             const botTeam = state.myTeam === 'A' ? 'B' : 'A';
             if (state.currentTeam === botTeam) {
                 setTimeout(() => executeBotTurn(botTeam), 800);
@@ -1936,14 +2468,14 @@
     // ========================================
 
     /**
-     * Esegue il turno del Bot (3 azioni)
+     * Esegue il turno del Bot (1 azione)
      */
     function executeBotTurn(botTeam) {
         if (state.isGameOver || state.currentTeam !== botTeam) return;
 
         logMsg("🤖 Bot sta pensando...", "text-cyan-400");
 
-        let actionsRemaining = 3;
+        let actionsRemaining = 1;
 
         function doNextAction() {
             if (state.isGameOver || actionsRemaining <= 0 || state.currentTeam !== botTeam) {
@@ -2038,7 +2570,7 @@
                                 update();
                             } else {
                                 // Non puo' muoversi, metti in difesa
-                                const defenseType = Math.random() < 0.5 ? DEFENSE_MODES.MURA : DEFENSE_MODES.INTERCETTO;
+                                const defenseType = Math.random() < 0.5 ? DEFENSE_MODES.RESPINTA : DEFENSE_MODES.INTERCETTO;
                                 state.selectedPlayer = closest;
                                 performDefense(defenseType);
                                 actionsRemaining--;
@@ -2133,22 +2665,18 @@
         document.getElementById('smg-score-a').innerText = state.scoreA;
         document.getElementById('smg-score-b').innerText = state.scoreB;
 
-        // Turno
+        // Turno - usa colore squadra dinamico
         const turnDisp = document.getElementById('smg-turn-display');
         const turnTeamName = state.currentTeam === 'A' ? state.teamAName : state.teamBName;
+        const turnColor = state.currentTeam === 'A' ? state.teamAColor : state.teamBColor;
         turnDisp.innerText = `TURNO ${turnTeamName.toUpperCase()}`;
-        turnDisp.className = `px-3 py-1 rounded-full text-xs font-bold ${state.currentTeam === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`;
+        turnDisp.className = 'px-3 py-1 rounded-full text-xs font-bold text-white';
+        turnDisp.style.backgroundColor = turnColor;
 
         // Bottone abbandona (solo multiplayer)
         const abandonBtn = document.getElementById('smg-abandon-btn');
         if (abandonBtn) {
             abandonBtn.classList.toggle('hidden', !state.multiplayer);
-        }
-
-        // Azioni rimanenti
-        const dots = document.getElementById('smg-actions-display').children;
-        for (let i = 0; i < 3; i++) {
-            dots[i].style.opacity = i < state.actionsLeft ? "1" : "0.2";
         }
 
         // Giocatori
@@ -2161,9 +2689,16 @@
             const playerName = p.playerName || p.name || '?';
             const initials = playerName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
 
+            // Colore squadra dinamico
+            const teamColor = p.team === 'A' ? state.teamAColor : state.teamBColor;
+
             const defenseClass = p.defenseMode ? `defense-effect defense-${p.defenseMode}` : '';
+            const selectedClass = state.selectedPlayer?.id === p.id ? 'selected' : '';
+            const activeTurnClass = p.team === state.currentTeam ? 'active-turn' : '';
             const el = document.createElement('div');
-            el.className = `player-token team-${p.team.toLowerCase()} ${state.selectedPlayer?.id === p.id ? 'selected' : ''} ${defenseClass}`;
+            el.className = `player-token ${selectedClass} ${defenseClass} ${activeTurnClass}`;
+            el.style.backgroundColor = teamColor;
+            el.style.borderColor = teamColor;
             el.innerHTML = `<span title="${playerName}">${initials}</span><div class="mod-tag">+${p.mod}</div>`;
             cell.appendChild(el);
         });
@@ -2222,7 +2757,10 @@
             info.classList.remove('hidden');
         }
 
-        // Aggiorna highlights delle celle mura
+        // Aggiorna timer display
+        updateTimerDisplay();
+
+        // Aggiorna highlights delle celle difese
         updateHighlights();
     }
 
@@ -2239,24 +2777,59 @@
     }
 
     /**
+     * Calcola e applica il malus fatica per azioni consecutive
+     * Restituisce il malus da applicare e aggiorna lo stato
+     * @param {string} playerId - ID del giocatore che sta agendo
+     * @returns {number} malus da applicare (negativo, es: -0.5, -1.0, -1.5, ...)
+     */
+    function getFatiguePenalty(playerId) {
+        if (state.lastActionPlayerId === playerId) {
+            // Stesso giocatore, incrementa il contatore
+            state.consecutiveActionCount++;
+        } else {
+            // Nuovo giocatore, resetta
+            state.lastActionPlayerId = playerId;
+            state.consecutiveActionCount = 1;
+        }
+
+        // Il malus e' -0.5 per ogni azione dopo la prima
+        // Prima azione: 0, seconda: -0.5, terza: -1.0, etc.
+        const penalty = (state.consecutiveActionCount - 1) * -0.5;
+        return penalty;
+    }
+
+    /**
+     * Restituisce stringa info malus fatica per il log
+     */
+    function getFatiguePenaltyInfo(penalty) {
+        if (penalty < 0) {
+            return ` [FATICA ${penalty.toFixed(1)}]`;
+        }
+        return '';
+    }
+
+    /**
      * Verifica se un giocatore e' nella sua area di rigore
-     * Area di rigore: 2.5 celle dalla linea di porta, 5 celle di altezza centrate
+     * Area di rigore: 2 celle di profondità x 5 celle di altezza (Y: 1-5)
+     * Team A: x = 0, 1 (celle 0-1)
+     * Team B: x = 9, 10 (celle 9-10)
      */
     function isInOwnPenaltyArea(player) {
-        const centerY = Math.floor(GRID_H / 2);
-        const penaltyHeight = 2; // +/- 2 celle dal centro
         const penaltyDepth = 2;  // 2 celle dalla linea di porta
+        // Y da 1 a 5 (5 celle centrate, come disegnato nel CSS)
+        const minY = 1;
+        const maxY = 5;
 
         if (player.team === 'A') {
-            // Area sinistra: x <= penaltyDepth, y tra centerY-2 e centerY+2
-            return player.x <= penaltyDepth &&
-                   player.y >= centerY - penaltyHeight &&
-                   player.y <= centerY + penaltyHeight;
+            // Area sinistra: x < penaltyDepth (0, 1), y tra 1 e 5
+            return player.x < penaltyDepth &&
+                   player.y >= minY &&
+                   player.y <= maxY;
         } else {
-            // Area destra: x >= GRID_W-1-penaltyDepth
-            return player.x >= GRID_W - 1 - penaltyDepth &&
-                   player.y >= centerY - penaltyHeight &&
-                   player.y <= centerY + penaltyHeight;
+            // Area destra: x >= GRID_W - penaltyDepth (9, 10), y tra 1 e 5
+            return player.x >= GRID_W - penaltyDepth &&
+                   player.y >= minY &&
+                   player.y <= maxY;
         }
     }
 
@@ -2330,6 +2903,23 @@
                 onComplete: (result) => {
                     console.log('[SfideMinigame] Partita test completata:', result);
                     const winText = result.winner === 'A' ? 'HAI VINTO!' : (result.winner === 'B' ? 'HAI PERSO...' : 'PAREGGIO');
+                    if (window.Toast) window.Toast.info(`${winText} (${result.scoreA}-${result.scoreB})`);
+                }
+            });
+        },
+
+        /**
+         * Avvia una partita test dove controlli entrambe le squadre
+         * Uso: window.SfideMinigame.testSolo()
+         */
+        testSolo: function() {
+            open({
+                testMode: true,
+                noBot: true, // Disabilita bot - controlli entrambe le squadre
+                multiplayer: false,
+                onComplete: (result) => {
+                    console.log('[SfideMinigame] Partita test completata:', result);
+                    const winText = result.winner === 'A' ? 'ROSSO VINCE!' : (result.winner === 'B' ? 'BLU VINCE!' : 'PAREGGIO');
                     if (window.Toast) window.Toast.info(`${winText} (${result.scoreA}-${result.scoreB})`);
                 }
             });

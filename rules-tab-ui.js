@@ -205,6 +205,7 @@ window.RulesTabUI = {
                 .rules-accordion.orange { --section-color: rgba(251, 146, 60, 0.4); }
                 .rules-accordion.amber { --section-color: rgba(245, 158, 11, 0.4); }
                 .rules-accordion.purple { --section-color: rgba(168, 85, 247, 0.4); }
+                .rules-accordion.cyan { --section-color: rgba(6, 182, 212, 0.4); }
 
                 .rules-accordion-header {
                     display: flex;
@@ -247,6 +248,7 @@ window.RulesTabUI = {
                 .rules-accordion.orange .rules-accordion-icon { --icon-bg: rgba(251, 146, 60, 0.2); }
                 .rules-accordion.amber .rules-accordion-icon { --icon-bg: rgba(245, 158, 11, 0.2); }
                 .rules-accordion.purple .rules-accordion-icon { --icon-bg: rgba(168, 85, 247, 0.2); }
+                .rules-accordion.cyan .rules-accordion-icon { --icon-bg: rgba(6, 182, 212, 0.2); }
 
                 .rules-accordion-info h3 {
                     font-family: 'Outfit', sans-serif;
@@ -261,6 +263,7 @@ window.RulesTabUI = {
                 .rules-accordion.orange .rules-accordion-info h3 { color: #fb923c; }
                 .rules-accordion.amber .rules-accordion-info h3 { color: #f59e0b; }
                 .rules-accordion.purple .rules-accordion-info h3 { color: #a855f7; }
+                .rules-accordion.cyan .rules-accordion-info h3 { color: #22d3ee; }
 
                 .rules-accordion-info p {
                     font-family: 'DM Sans', sans-serif;
@@ -746,6 +749,7 @@ window.RulesTabUI = {
                     ${this.renderFormaSection()}
                     ${this.renderValuteSection()}
                     ${this.renderCompetizioniSection()}
+                    ${this.renderTatticheSerieSection()}
                 </div>
             </div>
         `;
@@ -1164,6 +1168,144 @@ window.RulesTabUI = {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderTatticheSerieSection() {
+        return `
+            <div class="rules-accordion cyan">
+                <div class="rules-accordion-header">
+                    <div class="rules-accordion-left">
+                        <div class="rules-accordion-icon">♟️</div>
+                        <div class="rules-accordion-info">
+                            <h3>Tattiche Serie</h3>
+                            <p>Minigame tattico a turni</p>
+                        </div>
+                    </div>
+                    <span class="rules-accordion-arrow">▼</span>
+                </div>
+                <div class="rules-accordion-content">
+                    <!-- Panoramica -->
+                    <div class="rules-item" style="border-bottom: none; padding-bottom: 0;">
+                        <span class="rules-item-icon">🎯</span>
+                        <span>Campo <strong>11x7</strong> caselle, partite a turni alternati</span>
+                    </div>
+                    <div class="rules-item">
+                        <span class="rules-item-icon">⏱️</span>
+                        <span><strong>100 turni</strong> totali, vince chi segna di piu</span>
+                    </div>
+
+                    <!-- Azioni Offensive -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #22d3ee;">⚡ Azioni Offensive (d20 + MOD)</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">🏃</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f1f5f9; font-weight: 600;">Movimento</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">1 casella in qualsiasi direzione</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">⚽</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f1f5f9; font-weight: 600;">Passaggio</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Passa la palla a un compagno <span style="color: #4ade80;">(C +1.5)</span></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">🎯</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f1f5f9; font-weight: 600;">Tiro</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Tira in porta</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">💨</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f1f5f9; font-weight: 600;">Dribbling</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Supera un avversario adiacente <span style="color: #f87171;">(A +1.5)</span></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">💥</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f1f5f9; font-weight: 600;">Contrasto</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Ruba palla a un avversario <span style="color: #60a5fa;">(D +1.5)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Azioni Difensive -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #fb923c;">🛡️ Azioni Difensive (preimpostate)</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">🖐️</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #fbbf24; font-weight: 600;">Respinta</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Blocca tiri in una direzione (H/V)</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">🚫</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #f87171; font-weight: 600;">Blocco</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Impedisce movimento nelle 8 direzioni (vantaggio 2d20)</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">✋</span>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.75rem; color: #4ade80; font-weight: 600;">Intercetto</div>
+                                    <div style="font-size: 0.65rem; color: #64748b;">Intercetta passaggi in una direzione (H/V)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sistema Vantaggio/Svantaggio -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #a855f7;">🎲 Sistema 2d20</div>
+                        <div class="rules-info-tags" style="margin-top: 6px;">
+                            <span class="rules-info-tag" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">Vantaggio: 2d20 prendi il migliore</span>
+                            <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">Svantaggio: 2d20 prendi il peggiore</span>
+                        </div>
+                        <div style="font-size: 0.65rem; color: #64748b; margin-top: 8px;">
+                            Svantaggio se: ritenta dribbling/contrasto consecutivo, BLOCCO attivo
+                        </div>
+                    </div>
+
+                    <!-- Sistema Fatica -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #fb923c;">😓 Fatica (azioni consecutive)</div>
+                        <div style="font-size: 0.7rem; color: #cbd5e1; line-height: 1.5; margin-top: 6px;">
+                            <div style="margin-bottom: 4px;">Usare lo stesso giocatore per piu azioni consecutive applica <strong style="color: #f87171;">-0.5</strong> cumulativo al modificatore:</div>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                                <span class="rules-info-tag" style="background: rgba(71, 85, 105, 0.4);">1a azione: 0</span>
+                                <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5;">2a: -0.5</span>
+                                <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5;">3a: -1.0</span>
+                                <span class="rules-info-tag" style="background: rgba(239, 68, 68, 0.35); color: #f87171;">4a: -1.5</span>
+                            </div>
+                            <div style="margin-top: 6px; color: #64748b;">Il malus si resetta usando un altro giocatore</div>
+                        </div>
+                    </div>
+
+                    <!-- Regole Portiere -->
+                    <div class="rules-info-box" style="margin-top: 10px;">
+                        <div class="rules-info-label" style="color: #38bdf8;">🧤 Regole Portiere</div>
+                        <div style="font-size: 0.7rem; color: #cbd5e1; line-height: 1.5; margin-top: 6px;">
+                            <div style="margin-bottom: 4px;">• Non puo essere contrastato nella propria area</div>
+                            <div style="margin-bottom: 4px;">• Dopo passaggio/tiro torna al centro porta</div>
+                            <div style="margin-bottom: 4px;">• Passa automaticamente dopo 2 turni con palla</div>
+                            <div>• Non si puo passare la palla al proprio portiere</div>
+                        </div>
+                    </div>
+
+                    <p class="rules-hint" style="margin-top: 12px;">Sfida un amico o gioca in solitario per allenarti!</p>
                 </div>
             </div>
         `;
