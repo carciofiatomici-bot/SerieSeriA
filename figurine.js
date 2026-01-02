@@ -149,39 +149,39 @@ window.FigurineSystem = {
         // Esempio: 'allenatore1': { base: 'NomeAllenatore.jpg' }
     },
 
-    // Mapping per collezione Illustrazioni con sottocategorie
+    // Mapping per collezione Illustrazioni - Path: figurine/Giocatori Seri/Illustrazioni/
     ILLUSTRAZIONI_FILES: {
         // === CATEGORIA PRINCIPALE ===
         'wallpaper': { base: 'Wallpaper.jpg', name: 'Wallpaper', category: null },
 
         // === CATEGORIA: VS ===
-        'ame_vs_fosco': { base: 'VS/Ame vs Fosco.jpg', name: 'Ame vs Fosco', category: 'VS' },
-        'antony_vs_croccante': { base: 'VS/Antony vs Croccante.jpg', name: 'Antony vs Croccante', category: 'VS' },
-        'cocco_vs_luka': { base: 'VS/Cocco vs luka.jpg', name: 'Cocco vs Luka', category: 'VS' },
-        'gladio_vs_croccante_fantasy': { base: 'VS/Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy', category: 'VS' },
+        'ame_vs_fosco': { base: 'Ame vs Fosco.jpg', name: 'Ame vs Fosco', category: 'VS' },
+        'antony_vs_croccante': { base: 'Antony vs Croccante.jpg', name: 'Antony vs Croccante', category: 'VS' },
+        'cocco_vs_luka': { base: 'Cocco vs luka.jpg', name: 'Cocco vs Luka', category: 'VS' },
+        'gladio_vs_croccante_fantasy': { base: 'Gladio Vs Croccante Fantasy.jpg', name: 'Gladio vs Croccante Fantasy', category: 'VS' },
 
         // === CATEGORIA: Varie ===
-        'bemolle_trick': { base: 'Varie/Bemolle Trick.jpg', name: 'Bemolle Trick', category: 'Varie' },
-        'contrasto_croccante': { base: 'Varie/Contrasto Croccante.jpg', name: 'Contrasto Croccante', category: 'Varie' },
-        'salvataggio_mark': { base: 'Varie/Salvataggio Mark.jpg', name: 'Salvataggio Mark', category: 'Varie' },
-        'sandro_relax': { base: 'Varie/Sandro Relax.jpg', name: 'Sandro Relax', category: 'Varie' },
-        'tiro_simone': { base: 'Varie/Tiro Simone.jpg', name: 'Tiro Simone', category: 'Varie' },
+        'bemolle_trick': { base: 'Bemolle Trick.jpg', name: 'Bemolle Trick', category: 'Varie' },
+        'contrasto_croccante': { base: 'Contrasto Croccante.jpg', name: 'Contrasto Croccante', category: 'Varie' },
+        'salvataggio_mark': { base: 'Salvataggio Mark.jpg', name: 'Salvataggio Mark', category: 'Varie' },
+        'sandro_relax': { base: 'Sandro Relax.jpg', name: 'Sandro Relax', category: 'Varie' },
+        'tiro_simone': { base: 'Tiro Simone.jpg', name: 'Tiro Simone', category: 'Varie' },
 
-        // === CATEGORIA: Abilita Icone ===
-        'abilita_amedemo': { base: 'Abilità icone/Amedemo - Tiro Dritto.jpg', name: 'Amedemo - Tiro Dritto', category: 'Abilita Icone' },
-        'abilita_antony': { base: 'Abilità icone/Antony - avanti un altro.jpg', name: 'Antony - Avanti un Altro', category: 'Abilita Icone' },
-        'abilita_bemolle': { base: 'Abilità icone/Bemolle - scheggia impazzita.jpg', name: 'Bemolle - Scheggia Impazzita', category: 'Abilita Icone' },
-        'abilita_croccante': { base: 'Abilità icone/Croccante - Fatto d\'acciaio.jpg', name: 'Croccante - Fatto d\'Acciaio', category: 'Abilita Icone' },
-        'abilita_fosco': { base: 'Abilità icone/Fosco - l\'uomo in più.jpg', name: 'Fosco - L\'Uomo in Piu', category: 'Abilita Icone' },
-        'abilita_sandro': { base: 'Abilità icone/Sandro - relax.jpg', name: 'Sandro - Relax', category: 'Abilita Icone' },
-        'abilita_simone': { base: 'Abilità icone/Simone - Parata efficiente.jpg', name: 'Simone - Parata Efficiente', category: 'Abilita Icone' },
-        'abilita_cap': { base: 'Abilità icone/cap - calcolo delle probabilità.jpg', name: 'Cap - Calcolo delle Probabilita', category: 'Abilita Icone' },
-        'abilita_cocco': { base: 'Abilità icone/cocco - stazionario.jpg', name: 'Cocco - Stazionario', category: 'Abilita Icone' },
-        'abilita_gladio': { base: 'Abilità icone/gladio - continua a provare.jpg', name: 'Gladio - Continua a Provare', category: 'Abilita Icone' },
-        'abilita_luka': { base: 'Abilità icone/luka - contrasto di gomito.jpg', name: 'Luka - Contrasto di Gomito', category: 'Abilita Icone' },
-        'abilita_mark': { base: 'Abilità icone/mark falco - osservatore.jpg', name: 'Mark Falco - Osservatore', category: 'Abilita Icone' },
-        'abilita_mel': { base: 'Abilità icone/mel assistman.jpg', name: 'Mel - Assist-man', category: 'Abilita Icone' },
-        'abilita_shikanto': { base: 'Abilità icone/shikanto - amici di panchina.jpg', name: 'Shikanto - Amici di Panchina', category: 'Abilita Icone' }
+        // === CATEGORIA: Abilita Icone === (usa vecchio path)
+        'abilita_amedemo': { base: 'Amedemo - Tiro Dritto.jpg', name: 'Amedemo - Tiro Dritto', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Amedemo%20-%20Tiro%20Dritto.jpg' },
+        'abilita_antony': { base: 'Antony - avanti un altro.jpg', name: 'Antony - Avanti un Altro', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Antony%20-%20avanti%20un%20altro.jpg' },
+        'abilita_bemolle': { base: 'Bemolle - scheggia impazzita.jpg', name: 'Bemolle - Scheggia Impazzita', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Bemolle%20-%20scheggia%20impazzita.jpg' },
+        'abilita_croccante': { base: 'Croccante - Fatto d\'acciaio.jpg', name: 'Croccante - Fatto d\'Acciaio', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Croccante%20-%20Fatto%20d\'acciaio.jpg' },
+        'abilita_fosco': { base: 'Fosco - l\'uomo in piu.jpg', name: 'Fosco - L\'Uomo in Piu', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Fosco%20-%20l\'uomo%20in%20pi%C3%B9.jpg' },
+        'abilita_sandro': { base: 'Sandro - relax.jpg', name: 'Sandro - Relax', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Sandro%20-%20relax.jpg' },
+        'abilita_simone': { base: 'Simone - Parata efficiente.jpg', name: 'Simone - Parata Efficiente', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/Simone%20-%20Parata%20efficiente.jpg' },
+        'abilita_cap': { base: 'cap - calcolo delle probabilita.jpg', name: 'Cap - Calcolo delle Probabilita', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/cap%20-%20calcolo%20delle%20probabilit%C3%A0.jpg' },
+        'abilita_cocco': { base: 'cocco - stazionario.jpg', name: 'Cocco - Stazionario', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/cocco%20-%20stazionario.jpg' },
+        'abilita_gladio': { base: 'gladio - continua a provare.jpg', name: 'Gladio - Continua a Provare', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/gladio%20-%20continua%20a%20provare.jpg' },
+        'abilita_luka': { base: 'luka - contrasto di gomito.jpg', name: 'Luka - Contrasto di Gomito', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/luka%20-%20contrasto%20di%20gomito.jpg' },
+        'abilita_mark': { base: 'mark falco - osservatore.jpg', name: 'Mark Falco - Osservatore', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/mark%20falco%20-%20osservatore.jpg' },
+        'abilita_mel': { base: 'mel assistman.jpg', name: 'Mel - Assist-man', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/mel%20assistman.jpg' },
+        'abilita_shikanto': { base: 'shikanto - amici di panchina.jpg', name: 'Shikanto - Amici di Panchina', category: 'Abilita Icone', customUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/Abilit%C3%A0%20icone/shikanto%20-%20amici%20di%20panchina.jpg' }
     },
 
     // Categorie illustrazioni per UI (ordine e nomi visualizzati)
@@ -239,7 +239,7 @@ window.FigurineSystem = {
             enabled: true,
             hasBonus: false,  // Solo collezionabili
             variants: ['base'],
-            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Illustrazioni/'
+            baseUrl: 'https://raw.githubusercontent.com/carciofiatomici-bot/immaginiserie/main/figurine/Giocatori%20Seri/Illustrazioni/'
         },
         figurine_utenti: {
             id: 'figurine_utenti',

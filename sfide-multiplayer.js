@@ -276,7 +276,7 @@ window.SfideMultiplayer = (function() {
 
     async function abandonMatch(matchId) {
         try {
-            const { doc, getDoc, updateDoc } = window.firestoreTools;
+            const { doc, getDoc, deleteDoc } = window.firestoreTools;
             const path = getMinigameChallengesPath();
 
             // Leggi match per sapere il mio ruolo
@@ -287,18 +287,45 @@ window.SfideMultiplayer = (function() {
             }
             const matchData = matchDoc.data();
 
-            // Chi abbandona perde - determina team dalla partita
+            // Chi abbandona perde 0-3
             const myTeamLetter = state.myTeamId === matchData.challengerId ? 'A' : 'B';
-            const winnerId = myTeamLetter === 'A' ? 'B' : 'A';
+            const winnerId = myTeamLetter === 'A' ? matchData.challengedId : matchData.challengerId;
+            const loserId = state.myTeamId;
 
-            await updateDoc(doc(window.db, path, matchId), {
-                status: 'completed',
-                'gameState.isGameOver': true,
-                'gameState.winner': winnerId,
-                'gameState.abandonedBy': state.myTeamId
-            });
+            // Salva nello storico per entrambi i team
+            if (window.MatchHistory) {
+                const scoreWinner = 3;
+                const scoreLoser = 0;
 
-            if (window.Toast) window.Toast.info('Partita abbandonata');
+                // Storico per il vincitore
+                await window.MatchHistory.saveMatch(winnerId, {
+                    type: 'sfida',
+                    opponent: matchData.challengerId === winnerId ? matchData.challengedName : matchData.challengerName,
+                    opponentId: loserId,
+                    result: 'win',
+                    score: `${scoreWinner}-${scoreLoser}`,
+                    myGoals: scoreWinner,
+                    opponentGoals: scoreLoser,
+                    note: 'Vittoria per abbandono avversario'
+                });
+
+                // Storico per chi ha abbandonato
+                await window.MatchHistory.saveMatch(loserId, {
+                    type: 'sfida',
+                    opponent: matchData.challengerId === loserId ? matchData.challengedName : matchData.challengerName,
+                    opponentId: winnerId,
+                    result: 'loss',
+                    score: `${scoreLoser}-${scoreWinner}`,
+                    myGoals: scoreLoser,
+                    opponentGoals: scoreWinner,
+                    note: 'Sconfitta per abbandono'
+                });
+            }
+
+            // Elimina il documento
+            await deleteDoc(doc(window.db, path, matchId));
+
+            if (window.Toast) window.Toast.info('Partita abbandonata e registrata');
         } catch (error) {
             console.error('[SfideMultiplayer] Errore abbandono:', error);
         }
