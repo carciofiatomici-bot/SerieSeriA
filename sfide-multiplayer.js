@@ -952,7 +952,7 @@ window.SfideMultiplayer = (function() {
     // STATO INIZIALE PARTITA
     // ========================================
     function createInitialGameState(challenge) {
-        const GRID_W = 11;
+        const GRID_W = 12;
         const GRID_H = 7;
         const centerY = Math.floor(GRID_H / 2);
 
@@ -973,7 +973,7 @@ window.SfideMultiplayer = (function() {
         // Chi inizia con la palla? Chi e' stato assegnato come attaccante
         const challengerStarts = challenge.attackerId === challenge.challengerId;
         const startingTeamPlayers = challengerStarts ? challengerPlayers : challengedPlayers;
-        const startingPivot = startingTeamPlayers.find(p => p.name === 'PIV') || startingTeamPlayers[startingTeamPlayers.length - 1];
+        const startingPivot = startingTeamPlayers.find(p => p.name === 'A') || startingTeamPlayers[startingTeamPlayers.length - 1];
 
         return {
             players: [...challengerPlayers, ...challengedPlayers],
@@ -1007,25 +1007,25 @@ window.SfideMultiplayer = (function() {
         // Prendi solo i primi 5 giocatori dalla formazione
         const titolari = formation?.slice(0, 5) || [];
 
-        // Ruoli: P, D, C, C, A (o simili)
+        // Ruoli: P, D, C, C, A - Campo 12x7
         const rolePositions = {
             'A': { // Team A (sinistra - attaccante)
-                'P': { x: 0, y: centerY, name: 'GK', mod: 8, isGK: true },
-                'D': { x: 3, y: centerY, name: 'FIX', mod: 6, isGK: false },
+                'P': { x: 0, y: centerY, name: 'P', mod: 8, isGK: true },
+                'D': { x: 2, y: centerY, name: 'D', mod: 6, isGK: false },
                 'C': [
-                    { x: 4, y: 1, name: 'ALA', mod: 5, isGK: false },
-                    { x: 4, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
+                    { x: 3, y: 1, name: 'C', mod: 5, isGK: false },
+                    { x: 3, y: GRID_H - 2, name: 'C', mod: 5, isGK: false }
                 ],
-                'A': { x: 5, y: centerY, name: 'PIV', mod: 7, isGK: false }
+                'A': { x: 4, y: centerY, name: 'A', mod: 7, isGK: false }
             },
             'B': { // Team B (destra - difensore)
-                'P': { x: GRID_W - 1, y: centerY, name: 'GK', mod: 8, isGK: true },
-                'D': { x: GRID_W - 4, y: centerY, name: 'FIX', mod: 6, isGK: false },
+                'P': { x: GRID_W - 1, y: centerY, name: 'P', mod: 8, isGK: true },
+                'D': { x: GRID_W - 3, y: centerY, name: 'D', mod: 6, isGK: false },
                 'C': [
-                    { x: GRID_W - 5, y: 1, name: 'ALA', mod: 5, isGK: false },
-                    { x: GRID_W - 5, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
+                    { x: GRID_W - 4, y: 1, name: 'C', mod: 5, isGK: false },
+                    { x: GRID_W - 4, y: GRID_H - 2, name: 'C', mod: 5, isGK: false }
                 ],
-                'A': { x: GRID_W - 6, y: centerY, name: 'PIV', mod: 7, isGK: false }
+                'A': { x: GRID_W - 5, y: centerY, name: 'A', mod: 7, isGK: false }
             }
         };
 
@@ -1075,7 +1075,7 @@ window.SfideMultiplayer = (function() {
             players.push({
                 id: `${team}${players.length + 1}`,
                 team: team,
-                name: 'ALA',
+                name: 'C',
                 playerName: 'Riserva',
                 x: defaultPos.x + (players.length % 2),
                 y: defaultPos.y,

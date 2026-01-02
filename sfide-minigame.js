@@ -2685,9 +2685,9 @@
             const cell = getCell(p.x, p.y);
             if (!cell) return;
 
-            // Estrai iniziale del nome giocatore (es. "Mario Rossi" -> "MR")
+            // Mostra il ruolo (P, D, C, A)
             const playerName = p.playerName || p.name || '?';
-            const initials = playerName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            const roleDisplay = p.name || '?'; // p.name contiene il ruolo (P, D, C, A)
 
             // Colore squadra dinamico
             const teamColor = p.team === 'A' ? state.teamAColor : state.teamBColor;
@@ -2699,7 +2699,7 @@
             el.className = `player-token ${selectedClass} ${defenseClass} ${activeTurnClass}`;
             el.style.backgroundColor = teamColor;
             el.style.borderColor = teamColor;
-            el.innerHTML = `<span title="${playerName}">${initials}</span><div class="mod-tag">+${p.mod}</div>`;
+            el.innerHTML = `<span title="${playerName}">${roleDisplay}</span><div class="mod-tag">+${p.mod}</div>`;
             cell.appendChild(el);
         });
 
