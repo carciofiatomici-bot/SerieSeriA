@@ -744,6 +744,7 @@ window.RulesTabUI = {
                 <div class="rules-sections">
                     ${this.renderSquadraSection()}
                     ${this.renderLivelliSection()}
+                    ${this.renderCategorieSection()}
                     ${this.renderPartitaSection()}
                     ${this.renderSistemaTatticoSection()}
                     ${this.renderFormaSection()}
@@ -915,6 +916,53 @@ window.RulesTabUI = {
                             <div class="rules-level-bonus">+9.0</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderCategorieSection() {
+        return `
+            <div class="rules-accordion" style="--section-color: rgba(168, 85, 247, 0.4);">
+                <div class="rules-accordion-header">
+                    <div class="rules-accordion-left">
+                        <div class="rules-accordion-icon" style="--icon-bg: rgba(168, 85, 247, 0.2);">⭐</div>
+                        <div class="rules-accordion-info">
+                            <h3 style="color: #c084fc;">Potenziale Giocatori</h3>
+                            <p>Categorie e livello massimo</p>
+                        </div>
+                    </div>
+                    <span class="rules-accordion-arrow">▼</span>
+                </div>
+                <div class="rules-accordion-content">
+                    <div class="rules-type-label" style="padding-top: 12px;">Il potenziale indica il livello massimo raggiungibile:</div>
+                    <div class="rules-level-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <div class="rules-level-item" style="background: rgba(100, 116, 139, 0.15); border-color: rgba(100, 116, 139, 0.3);">
+                            <div class="rules-level-range" style="color: #94a3b8;">Dilettante</div>
+                            <div class="rules-level-bonus" style="color: #64748b;">Lv. 1-5</div>
+                        </div>
+                        <div class="rules-level-item" style="background: rgba(241, 245, 249, 0.1); border-color: rgba(241, 245, 249, 0.2);">
+                            <div class="rules-level-range" style="color: #f1f5f9;">Accettabile</div>
+                            <div class="rules-level-bonus" style="color: #cbd5e1;">Lv. 6-10</div>
+                        </div>
+                        <div class="rules-level-item" style="background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3);">
+                            <div class="rules-level-range" style="color: #4ade80;">Pro</div>
+                            <div class="rules-level-bonus" style="color: #86efac;">Lv. 11-15</div>
+                        </div>
+                        <div class="rules-level-item" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3);">
+                            <div class="rules-level-range" style="color: #60a5fa;">Fuoriclasse</div>
+                            <div class="rules-level-bonus" style="color: #93c5fd;">Lv. 16-19</div>
+                        </div>
+                        <div class="rules-level-item" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3);">
+                            <div class="rules-level-range" style="color: #c084fc;">Leggenda</div>
+                            <div class="rules-level-bonus" style="color: #d8b4fe;">Lv. 20-24</div>
+                        </div>
+                        <div class="rules-level-item" style="background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(245, 158, 11, 0.15)); border-color: rgba(251, 146, 60, 0.4);">
+                            <div class="rules-level-range" style="color: #fb923c;">GOAT</div>
+                            <div class="rules-level-bonus" style="color: #fdba74;">Lv. 25-30</div>
+                        </div>
+                    </div>
+                    <p class="rules-hint" style="margin-top: 10px;">Il potenziale e visibile nella Gestione Rosa</p>
                 </div>
             </div>
         `;
