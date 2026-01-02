@@ -52,9 +52,9 @@ window.AdminPlayers = {
      * @returns {number} - Valore rarita (1-4)
      */
     getAbilityRarityValue(abilityName) {
-        // Cerca l'abilita nell'enciclopedia
-        const encyclopedia = window.AbilitiesEncyclopedia?.ABILITIES || [];
-        const ability = encyclopedia.find(a => a.name === abilityName);
+        // Cerca l'abilita nell'enciclopedia (oggetto con chiavi = nomi abilita)
+        const encyclopedia = window.AbilitiesEncyclopedia?.abilities || {};
+        const ability = encyclopedia[abilityName];
 
         if (ability && ability.rarity) {
             return this.ABILITY_RARITY_VALUES[ability.rarity] || 1;
