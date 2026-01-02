@@ -955,6 +955,7 @@ window.SfideMultiplayer = (function() {
         const GRID_W = 12;
         const GRID_H = 7;
         const centerY = Math.floor(GRID_H / 2);
+        console.log('[SfideMultiplayer] Creazione gameState con GRID_W=' + GRID_W);
 
         // Team A (Rosso, sinistra) = Challenger (chi sfida)
         // Team B (Blu, destra) = Challenged (chi viene sfidato)
@@ -975,8 +976,11 @@ window.SfideMultiplayer = (function() {
         const startingTeamPlayers = challengerStarts ? challengerPlayers : challengedPlayers;
         const startingPivot = startingTeamPlayers.find(p => p.name === 'A') || startingTeamPlayers[startingTeamPlayers.length - 1];
 
+        const allPlayers = [...challengerPlayers, ...challengedPlayers];
+        console.log('[SfideMultiplayer] Posizioni generate:', allPlayers.map(p => `${p.id}:${p.name}@(${p.x},${p.y})`).join(', '));
+
         return {
-            players: [...challengerPlayers, ...challengedPlayers],
+            players: allPlayers,
             scoreA: 0, // Challenger (rosso) score
             scoreB: 0, // Challenged (blu) score
             currentTurn: challenge.attackerId, // Chi attacca inizia
