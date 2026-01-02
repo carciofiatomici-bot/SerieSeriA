@@ -3,7 +3,7 @@
 // SFIDE MINIGAME - Tattiche Serie (Gioco Tattico a Turni)
 // ====================================================================
 // Gioco tattico su griglia per sfide (btn-challenge)
-// - Campo 11x7 celle
+// - Campo 12x7 celle
 // - 5 giocatori per squadra (GK, FIX, ALA, ALA, PIV)
 // - 1 azione per turno (più tattico)
 // - Primo a 3 gol vince
@@ -16,7 +16,7 @@
     // ========================================
     // CONFIGURAZIONE
     // ========================================
-    const GRID_W = 11;
+    const GRID_W = 12;
     const GRID_H = 7;
     const GOAL_LIMIT = 3;
 
@@ -89,12 +89,12 @@
         { id: 'A4', team: 'A', name: 'ALA', x: 3, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
         { id: 'A5', team: 'A', name: 'PIV', x: 4, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] },
 
-        // Squadra B (destra) - campo 11x7
-        { id: 'B1', team: 'B', name: 'GK', x: 10, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
-        { id: 'B2', team: 'B', name: 'FIX', x: 8, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B3', team: 'B', name: 'ALA', x: 7, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B4', team: 'B', name: 'ALA', x: 7, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B5', team: 'B', name: 'PIV', x: 6, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
+        // Squadra B (destra) - campo 12x7
+        { id: 'B1', team: 'B', name: 'GK', x: 11, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
+        { id: 'B2', team: 'B', name: 'FIX', x: 9, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B3', team: 'B', name: 'ALA', x: 8, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B4', team: 'B', name: 'ALA', x: 8, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B5', team: 'B', name: 'PIV', x: 7, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
     ];
 
     let players = [];
@@ -1234,7 +1234,7 @@
                 });
             });
         } else {
-            // Formazione default 1-1-2-1 per campo 11x7
+            // Formazione default 1-1-2-1 per campo 12x7
             positions.push(
                 { name: 'FIX', x: isLeft ? 2 : GRID_W - 3, y: centerY, mod: 6, isGK: false },
                 { name: 'ALA', x: isLeft ? 3 : GRID_W - 4, y: 1, mod: 5, isGK: false },
@@ -1262,7 +1262,7 @@
             y = Math.round(1 + index * (GRID_H - 3) / (count - 1));
         }
 
-        // Calcola X in base al ruolo (per campo 11x7)
+        // Calcola X in base al ruolo (per campo 12x7)
         let x;
         if (ruolo === 'D') {
             x = isLeft ? 2 + Math.floor(index / 2) : GRID_W - 3 - Math.floor(index / 2);
@@ -2366,7 +2366,7 @@
             })),
             scoreA: state.scoreA,
             scoreB: state.scoreB,
-            movesLeft: endOfTurn ? 3 : state.actionsLeft,
+            movesLeft: endOfTurn ? 1 : state.actionsLeft,
             currentTeam: nextTeam,
             ballCarrierId: state.ballCarrierId,
             ballPosition: state.ballPosition,
