@@ -84,7 +84,7 @@ window.AdminPlayers = {
 
     /**
      * Calcola il costo di un giocatore basato su livello e abilita
-     * Formula: 100 + (livello * 10) + (livello abilita positive * 25) - (25 * numero abilita negative)
+     * Formula: 100 + (livello * 50) + (valore rarita abilita positive * 100)
      * @param {number} level - Livello del giocatore
      * @param {Array} abilities - Array di nomi abilita
      * @returns {number} - Costo calcolato
@@ -95,25 +95,22 @@ window.AdminPlayers = {
             // Vecchia formula per compatibilita
             const abilitiesCount = abilities;
             let totalRarityValue = abilitiesCount * 2; // Assume rarita media "Rara"
-            return 100 + (level * 10) + (totalRarityValue * 25);
+            return 100 + (level * 50) + (totalRarityValue * 100);
         }
 
-        // Nuova formula con rarita e deduzione per abilita negative
+        // Calcola il valore totale delle rarita delle abilita positive
         let positiveRarityValue = 0;
-        let negativeCount = 0;
 
         if (Array.isArray(abilities)) {
             abilities.forEach(abilityName => {
-                if (this.isNegativeAbility(abilityName)) {
-                    negativeCount++;
-                } else {
+                if (!this.isNegativeAbility(abilityName)) {
                     positiveRarityValue += this.getAbilityRarityValue(abilityName);
                 }
             });
         }
 
-        // Formula: 100 + (livello * 10) + (rarita abilita positive * 25) - (25 * numero abilita negative)
-        const baseCost = 100 + (level * 10) + (positiveRarityValue * 25) - (25 * negativeCount);
+        // Formula: 100 + (livello * 50) + (valore rarita * 100)
+        const baseCost = 100 + (level * 50) + (positiveRarityValue * 100);
 
         // Il costo minimo e' 100
         return Math.max(100, baseCost);
