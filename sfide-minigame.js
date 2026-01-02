@@ -4,7 +4,7 @@
 // ====================================================================
 // Gioco tattico su griglia per sfide (btn-challenge)
 // - Campo 12x7 celle
-// - 5 giocatori per squadra (GK, FIX, ALA, ALA, PIV)
+// - 5 giocatori per squadra (P, D, C, C, A)
 // - 1 azione per turno (più tattico)
 // - Primo a 3 gol vince
 // ====================================================================
@@ -82,19 +82,19 @@
     };
 
     const initialPlayers = [
-        // Squadra A (sinistra) - campo 11x7
-        { id: 'A1', team: 'A', name: 'GK', x: 0, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
-        { id: 'A2', team: 'A', name: 'FIX', x: 2, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A3', team: 'A', name: 'ALA', x: 3, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A4', team: 'A', name: 'ALA', x: 3, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'A5', team: 'A', name: 'PIV', x: 4, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] },
+        // Squadra A (sinistra) - campo 12x7
+        { id: 'A1', team: 'A', name: 'P', x: 0, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
+        { id: 'A2', team: 'A', name: 'D', x: 2, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A3', team: 'A', name: 'C', x: 3, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A4', team: 'A', name: 'C', x: 3, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'A5', team: 'A', name: 'A', x: 4, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] },
 
         // Squadra B (destra) - campo 12x7
-        { id: 'B1', team: 'B', name: 'GK', x: 11, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
-        { id: 'B2', team: 'B', name: 'FIX', x: 9, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B3', team: 'B', name: 'ALA', x: 8, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B4', team: 'B', name: 'ALA', x: 8, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
-        { id: 'B5', team: 'B', name: 'PIV', x: 7, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
+        { id: 'B1', team: 'B', name: 'P', x: 11, y: 3, mod: 8, isGK: true, defenseMode: null, defenseCells: [] },
+        { id: 'B2', team: 'B', name: 'D', x: 9, y: 3, mod: 6, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B3', team: 'B', name: 'C', x: 8, y: 1, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B4', team: 'B', name: 'C', x: 8, y: 5, mod: 5, isGK: false, defenseMode: null, defenseCells: [] },
+        { id: 'B5', team: 'B', name: 'A', x: 7, y: 3, mod: 7, isGK: false, defenseMode: null, defenseCells: [] }
     ];
 
     let players = [];
@@ -1113,8 +1113,8 @@
         // Genera giocatori dalle formazioni
         players = generatePlayersFromFormations();
 
-        // Assegna palla al pivot della squadra che inizia
-        const starterPivot = players.find(p => p.team === state.currentTeam && p.name === 'PIV');
+        // Assegna palla all'attaccante della squadra che inizia
+        const starterPivot = players.find(p => p.team === state.currentTeam && p.name === 'A');
         state.ballCarrierId = starterPivot ? starterPivot.id : (state.currentTeam === 'A' ? 'A5' : 'B5');
 
         document.getElementById('smg-game-over').classList.add('hidden');
@@ -1199,7 +1199,7 @@
 
         // Portiere sempre al centro della porta
         positions.push({
-            name: 'GK',
+            name: 'P',
             x: isLeft ? 0 : GRID_W - 1,
             y: centerY,
             mod: 8,
@@ -1236,10 +1236,10 @@
         } else {
             // Formazione default 1-1-2-1 per campo 12x7
             positions.push(
-                { name: 'FIX', x: isLeft ? 2 : GRID_W - 3, y: centerY, mod: 6, isGK: false },
-                { name: 'ALA', x: isLeft ? 3 : GRID_W - 4, y: 1, mod: 5, isGK: false },
-                { name: 'ALA', x: isLeft ? 3 : GRID_W - 4, y: GRID_H - 2, mod: 5, isGK: false },
-                { name: 'PIV', x: isLeft ? 4 : GRID_W - 5, y: centerY, mod: 7, isGK: false }
+                { name: 'D', x: isLeft ? 2 : GRID_W - 3, y: centerY, mod: 6, isGK: false },
+                { name: 'C', x: isLeft ? 3 : GRID_W - 4, y: 1, mod: 5, isGK: false },
+                { name: 'C', x: isLeft ? 3 : GRID_W - 4, y: GRID_H - 2, mod: 5, isGK: false },
+                { name: 'A', x: isLeft ? 4 : GRID_W - 5, y: centerY, mod: 7, isGK: false }
             );
         }
 
@@ -1276,16 +1276,16 @@
     }
 
     function getRoleName(ruolo) {
-        const names = { D: 'FIX', C: 'ALA', A: 'PIV' };
-        return names[ruolo] || ruolo;
+        // Restituisce il ruolo stesso (P, D, C, A)
+        return ruolo;
     }
 
     /**
      * Ottieni ruolo (P/D/C/A) dal nome posizione
      */
     function getRoleFromName(name) {
-        const roleMap = { 'GK': 'P', 'FIX': 'D', 'ALA': 'C', 'PIV': 'A' };
-        return roleMap[name] || 'C'; // Default C
+        // Ora i nomi sono già P, D, C, A
+        return name || 'C'; // Default C
     }
 
     /**
