@@ -332,6 +332,9 @@ window.GestioneSquadreFormazione = {
                                     }).join('')}
                                 </select>
                                 <p id="module-description" class="text-xs text-gray-400 mt-2">${MODULI[teamData.formation.modulo].description}</p>
+                                <div id="module-bonuses" class="flex flex-wrap gap-2 mt-2">
+                                    ${this.getModuleBonusesHtml(teamData.formation.modulo)}
+                                </div>
                             </div>
                             <div class="lg:w-1/3">
                                 ${this.renderFormationXpBarCompact(teamData)}
@@ -606,6 +609,9 @@ window.GestioneSquadreFormazione = {
             this.renderFieldSlots(context.currentTeamData, context);
             displayMessage('formation-message', `Modulo cambiato in ${newModule}. Rischiera i tuoi giocatori.`, 'info');
             document.getElementById('module-description').textContent = MODULI[newModule].description;
+            // Aggiorna badge bonus/malus
+            const moduleBonuses = document.getElementById('module-bonuses');
+            if (moduleBonuses) moduleBonuses.innerHTML = this.getModuleBonusesHtml(newModule);
             const fieldHeader = document.querySelector('#field-area h4');
             if (fieldHeader) fieldHeader.textContent = `Campo (Titolari) - Modulo: ${newModule}`;
             // Aggiorna barra XP formazione (se presente)
@@ -2115,6 +2121,50 @@ window.GestioneSquadreFormazione = {
     },
 
     /**
+     * Genera HTML per i bonus/malus di un modulo (al livello MAX)
+     * @param {string} modulo - Es: '1-1-2-1'
+     * @returns {string} HTML con badge colorati
+     */
+    getModuleBonusesHtml(modulo) {
+        const MODULI = window.GestioneSquadreConstants?.MODULI;
+        if (!MODULI || !MODULI[modulo]) return '';
+
+        const config = MODULI[modulo];
+        const D = config.D || 0;
+        const C = config.C || 0;
+        const A = config.A || 0;
+
+        const badges = [];
+
+        // Fase 1 - Costruzione (dipende da C)
+        if (C > 1) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-900/50 text-cyan-400">Costruzione +${C - 1}</span>`);
+        } else if (C === 0) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-900/50 text-red-400">Costruzione -1</span>`);
+        }
+
+        // Fase 2 - Difesa (dipende da D)
+        if (D > 1) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-green-900/50 text-green-400">Difesa +${D - 1}</span>`);
+        } else if (D === 0) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-900/50 text-red-400">Difesa -1</span>`);
+        }
+
+        // Fase 3 - Tiro (dipende da A)
+        if (A > 1) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-orange-900/50 text-orange-400">Tiro +${A - 1}</span>`);
+        } else if (A === 0) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-900/50 text-red-400">Tiro -1</span>`);
+        }
+
+        if (badges.length === 0) {
+            return '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400">Nessun bonus/malus</span>';
+        }
+
+        return badges.join('');
+    },
+
+    /**
      * Renderizza una versione compatta della barra XP (per inserimento in altri box)
      */
     renderFormationXpBarCompact(teamData) {
@@ -2941,6 +2991,9 @@ window.GestioneSquadreFormazione = {
         if (moduleDescription && MODULI[optimalFormation.modulo]) {
             moduleDescription.textContent = MODULI[optimalFormation.modulo].description;
         }
+        // Aggiorna badge bonus/malus
+        const moduleBonuses = document.getElementById('module-bonuses');
+        if (moduleBonuses) moduleBonuses.innerHTML = this.getModuleBonusesHtml(optimalFormation.modulo);
         const fieldAreaHeader = document.querySelector('#field-area h4');
         if (fieldAreaHeader) {
             fieldAreaHeader.textContent = `Campo (Titolari) - Modulo: ${optimalFormation.modulo}`;
