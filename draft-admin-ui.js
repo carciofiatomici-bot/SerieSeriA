@@ -543,7 +543,7 @@ window.DraftAdminUI = {
 
     /**
      * Aggiorna i costi di tutti i giocatori nel draft usando la nuova formula
-     * Formula: 100 + (livello * 10) + (rarita abilita * 25)
+     * Formula: 100 + (livello * 50) + (rarita abilita * 100)
      * @param {Object} context - Contesto con riferimenti
      */
     async handleUpdateDraftCosts(context) {
@@ -587,9 +587,10 @@ window.DraftAdminUI = {
                     const playerData = playerDoc.data();
                     const playerId = playerDoc.id;
 
-                    // Determina il livello (usa levelMin e levelMax per range, o level se singolo)
-                    const levelMin = playerData.levelMin || playerData.level || 1;
-                    const levelMax = playerData.levelMax || playerData.level || levelMin;
+                    // Determina il livello (usa levelRange array, o level se singolo)
+                    const levelRange = playerData.levelRange || [playerData.level || 1, playerData.level || 1];
+                    const levelMin = levelRange[0] || 1;
+                    const levelMax = levelRange[1] || levelMin;
                     const abilities = playerData.abilities || [];
 
                     // Calcola il nuovo costo usando la formula aggiornata
