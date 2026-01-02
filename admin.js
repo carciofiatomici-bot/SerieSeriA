@@ -4112,8 +4112,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const playerData = playerDoc.data();
                     const playerId = playerDoc.id;
 
-                    const levelMin = playerData.levelMin || playerData.level || 1;
-                    const levelMax = playerData.levelMax || playerData.level || levelMin;
+                    const levelRange = playerData.levelRange || [playerData.level || 1, playerData.level || 1];
+                    const levelMin = levelRange[0] || 1;
+                    const levelMax = levelRange[1] || levelMin;
                     const abilities = playerData.abilities || [];
 
                     const newCostMin = window.AdminPlayers.calculateCost(levelMin, abilities);
