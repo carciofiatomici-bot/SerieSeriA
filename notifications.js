@@ -1046,37 +1046,37 @@ window.Notifications = {
     },
 
     /**
-     * Helper: crea stato iniziale per minigame
+     * Helper: crea stato iniziale per minigame - Campo 12x7
      */
     _createMinigameInitialState(challenge) {
-        const GRID_W = 13;
-        const GRID_H = 9;
+        const GRID_W = 12;
+        const GRID_H = 7;
         const centerY = Math.floor(GRID_H / 2);
 
-        // Genera giocatori per entrambe le squadre
-        const attackerPlayers = this._generateMinigamePlayers(
-            challenge.attackerId === challenge.challengerId
-                ? challenge.challengerFormation
-                : challenge.challengedFormation,
+        // Team A (Rosso, sinistra) = Challenger
+        // Team B (Blu, destra) = Challenged
+        const challengerPlayers = this._generateMinigamePlayers(
+            challenge.challengerFormation,
             'A', GRID_W, GRID_H
         );
 
-        const defenderPlayers = this._generateMinigamePlayers(
-            challenge.defenderId === challenge.challengerId
-                ? challenge.challengerFormation
-                : challenge.challengedFormation,
+        const challengedPlayers = this._generateMinigamePlayers(
+            challenge.challengedFormation,
             'B', GRID_W, GRID_H
         );
 
-        const attackerPivot = attackerPlayers.find(p => p.name === 'PIV') || attackerPlayers[attackerPlayers.length - 1];
+        // Chi inizia con la palla? L'attaccante (A) del team che inizia
+        const challengerStarts = challenge.attackerId === challenge.challengerId;
+        const startingTeamPlayers = challengerStarts ? challengerPlayers : challengedPlayers;
+        const startingPivot = startingTeamPlayers.find(p => p.name === 'A') || startingTeamPlayers[startingTeamPlayers.length - 1];
 
         return {
-            players: [...attackerPlayers, ...defenderPlayers],
+            players: [...challengerPlayers, ...challengedPlayers],
             scoreA: 0,
             scoreB: 0,
             currentTurn: challenge.attackerId,
-            movesLeft: 3,
-            ballCarrierId: attackerPivot.id,
+            movesLeft: 1,
+            ballCarrierId: startingPivot.id,
             ballPosition: null,
             lastMoveAt: Date.now(),
             isGameOver: false,
@@ -1085,86 +1085,49 @@ window.Notifications = {
     },
 
     /**
-     * Helper: genera giocatori per minigame
+     * Helper: genera giocatori per minigame - Posizioni fisse
      */
     _generateMinigamePlayers(formation, team, GRID_W, GRID_H) {
         const players = [];
-        const isLeft = team === 'A';
         const centerY = Math.floor(GRID_H / 2);
 
         const titolari = formation?.slice(0, 5) || [];
 
-        const rolePositions = {
-            'A': {
-                'P': { x: 0, y: centerY, name: 'GK', mod: 8, isGK: true },
-                'D': { x: 3, y: centerY, name: 'FIX', mod: 6, isGK: false },
-                'C': [
-                    { x: 4, y: 1, name: 'ALA', mod: 5, isGK: false },
-                    { x: 4, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
-                ],
-                'A': { x: 5, y: centerY, name: 'PIV', mod: 7, isGK: false }
-            },
-            'B': {
-                'P': { x: GRID_W - 1, y: centerY, name: 'GK', mod: 8, isGK: true },
-                'D': { x: GRID_W - 4, y: centerY, name: 'FIX', mod: 6, isGK: false },
-                'C': [
-                    { x: GRID_W - 5, y: 1, name: 'ALA', mod: 5, isGK: false },
-                    { x: GRID_W - 5, y: GRID_H - 2, name: 'ALA', mod: 5, isGK: false }
-                ],
-                'A': { x: GRID_W - 6, y: centerY, name: 'PIV', mod: 7, isGK: false }
+        // Posizioni fisse per formazione 1-1-2-1 (P, D, C, C, A)
+        const fixedPositions = team === 'A' ? [
+            { x: 0, y: centerY, name: 'P', mod: 8, isGK: true },
+            { x: 2, y: centerY, name: 'D', mod: 6, isGK: false },
+            { x: 3, y: 1, name: 'C', mod: 5, isGK: false },
+            { x: 3, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },
+            { x: 4, y: centerY, name: 'A', mod: 7, isGK: false }
+        ] : [
+            { x: GRID_W - 1, y: centerY, name: 'P', mod: 8, isGK: true },
+            { x: GRID_W - 3, y: centerY, name: 'D', mod: 6, isGK: false },
+            { x: GRID_W - 4, y: 1, name: 'C', mod: 5, isGK: false },
+            { x: GRID_W - 4, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },
+            { x: GRID_W - 5, y: centerY, name: 'A', mod: 7, isGK: false }
+        ];
+
+        // Assegna ogni giocatore a una posizione fissa
+        for (let i = 0; i < 5; i++) {
+            const pos = fixedPositions[i];
+            const p = titolari[i];
+
+            let mod = pos.mod;
+            if (p) {
+                const level = p.level || p.currentLevel || p.livello || 5;
+                mod = Math.min(10, 5 + Math.floor(level / 6));
             }
-        };
-
-        let cIndex = 0;
-        let playerIndex = 1;
-
-        titolari.forEach(p => {
-            const role = p.ruolo || p.assignedPosition || 'C';
-            const pos = rolePositions[team][role];
-
-            let playerPos;
-            if (Array.isArray(pos)) {
-                playerPos = pos[cIndex % pos.length];
-                cIndex++;
-            } else {
-                playerPos = pos;
-            }
-
-            if (!playerPos) {
-                playerPos = rolePositions[team]['C'][0];
-            }
-
-            const level = p.level || p.currentLevel || p.livello || 5;
-            const mod = Math.min(10, 5 + Math.floor(level / 6));
 
             players.push({
-                id: `${team}${playerIndex}`,
+                id: `${team}${i + 1}`,
                 team: team,
-                name: playerPos.name,
-                playerName: p.name || 'Giocatore',
-                x: playerPos.x,
-                y: playerPos.y,
+                name: pos.name,
+                playerName: p?.name || 'Giocatore',
+                x: pos.x,
+                y: pos.y,
                 mod: mod,
-                isGK: playerPos.isGK,
-                defenseMode: null,
-                defenseCells: []
-            });
-
-            playerIndex++;
-        });
-
-        // Riempi fino a 5 giocatori
-        while (players.length < 5) {
-            const defaultPos = rolePositions[team]['C'][players.length % 2];
-            players.push({
-                id: `${team}${players.length + 1}`,
-                team: team,
-                name: 'ALA',
-                playerName: 'Riserva',
-                x: defaultPos.x + (players.length % 2),
-                y: defaultPos.y,
-                mod: 5,
-                isGK: false,
+                isGK: pos.isGK,
                 defenseMode: null,
                 defenseCells: []
             });
