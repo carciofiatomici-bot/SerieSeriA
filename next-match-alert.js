@@ -238,7 +238,8 @@ window.NextMatchAlert = {
                                 awayId: match.awayId,
                                 isHome: match.homeId === teamId,
                                 homeAvg,
-                                awayAvg
+                                awayAvg,
+                                weather: match.weather || 'sereno'
                             };
                         }
                     }
@@ -267,6 +268,8 @@ window.NextMatchAlert = {
                             || nextCupMatch.awayTeam.name
                             || this.getTeamNameById(nextCupMatch.awayTeam.teamId)
                             || 'Squadra B';
+                        // Determina quale leg e' la prossima
+                        const legType = nextCupMatch.leg1Result ? 'leg2' : 'leg1';
                         return {
                             type: 'coppa',
                             round: nextCupMatch.roundName || 'Turno Coppa',
@@ -276,7 +279,10 @@ window.NextMatchAlert = {
                             awayId: nextCupMatch.awayTeam.teamId,
                             isHome: nextCupMatch.homeTeam.teamId === teamId,
                             homeAvg,
-                            awayAvg
+                            awayAvg,
+                            legType,
+                            leg1Weather: nextCupMatch.leg1Weather || 'sereno',
+                            leg2Weather: nextCupMatch.leg2Weather || 'sereno'
                         };
                     }
                 }
@@ -373,6 +379,41 @@ window.NextMatchAlert = {
     },
 
     /**
+     * Renderizza il badge meteo per la partita
+     */
+    renderWeatherBadge(nextMatch) {
+        const WEATHER_TYPES = window.simulationLogic?.WEATHER_TYPES;
+        if (!WEATHER_TYPES) return '';
+
+        // Per campionato: weather, per coppa: leg1Weather o leg2Weather
+        let weather = nextMatch.weather;
+        if (nextMatch.type === 'coppa') {
+            // Mostra il meteo della prossima leg da giocare
+            weather = nextMatch.legType === 'leg2' ? nextMatch.leg2Weather : nextMatch.leg1Weather;
+        }
+
+        if (!weather) return '';
+
+        const weatherData = WEATHER_TYPES[weather];
+        if (!weatherData) return '';
+
+        // Costruisci testo malus
+        let malusText = '';
+        if (weatherData.malus) {
+            const roleNames = { P: 'Portieri', D: 'Difensori', C: 'Centrocampisti', A: 'Attaccanti' };
+            malusText = `(${weatherData.malus.value} ${roleNames[weatherData.malus.role]})`;
+        }
+
+        return `
+            <div class="mt-3 flex items-center justify-center gap-2 bg-gray-800/50 rounded-lg py-2 px-4">
+                <span class="text-xl">${weatherData.icon}</span>
+                <span class="text-sm text-gray-300">${weatherData.name}</span>
+                ${malusText ? `<span class="text-xs text-red-400">${malusText}</span>` : ''}
+            </div>
+        `;
+    },
+
+    /**
      * Crea il contenuto inline nel container (versione espansa diretta)
      */
     createInlineContent(container, nextMatch, automationState) {
@@ -443,6 +484,9 @@ window.NextMatchAlert = {
                     <span class="text-xs text-gray-400 mt-0.5">Lv. ${nextMatch.awayAvg}</span>
                 </div>
             </div>
+
+            <!-- Meteo Partita -->
+            ${this.renderWeatherBadge(nextMatch)}
 
             <!-- Countdown -->
             ${automationState?.isEnabled ? `

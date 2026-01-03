@@ -204,6 +204,9 @@ window.ChampionshipMain = {
                 window._salaryDebtPenalty = { teamA: homeDebtPenalty, teamB: awayDebtPenalty };
             }
 
+            // 2.6 Imposta meteo partita per la simulazione
+            window._currentMatchWeather = match.weather || 'sereno';
+
             // 3. Simula partita con highlights
             const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
             const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;
@@ -535,6 +538,9 @@ window.ChampionshipMain = {
                     const awayDebtPenalty = window.Stipendi.getDebtPenalty(awayTeamData);
                     window._salaryDebtPenalty = { teamA: homeDebtPenalty, teamB: awayDebtPenalty };
                 }
+
+                // Imposta meteo partita per la simulazione
+                window._currentMatchWeather = match.weather || 'sereno';
 
                 const simResult = window.ChampionshipSimulation.runSimulationWithHighlights(homeTeamData, awayTeamData);
                 const { homeGoals, awayGoals, highlights, highlightsText, scorers, assists, matchEvents } = simResult;

@@ -197,6 +197,9 @@ window.Supercoppa = {
             window.PlayerExp.applyExpFromFirestore(awayTeamData);
         }
 
+        // Imposta meteo partita per la simulazione (usa meteo salvato o genera random)
+        window._currentMatchWeather = supercoppaBracket.weather || window.simulationLogic?.getRandomWeather?.() || 'sereno';
+
         // Simula la partita con highlights
         const matchResult = window.CoppaSimulation.runMatchWithHighlights(homeTeamData, awayTeamData);
 

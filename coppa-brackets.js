@@ -42,6 +42,8 @@ window.CoppaBrackets = {
                     awayTeam: shuffledTeams[i + 1],
                     leg1Result: null,      // Risultato andata
                     leg2Result: null,      // Risultato ritorno (se applicabile)
+                    leg1Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
+                    leg2Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
                     aggregateHome: 0,
                     aggregateAway: 0,
                     winner: null,
@@ -105,6 +107,8 @@ window.CoppaBrackets = {
                     awayTeam: null,
                     leg1Result: null,
                     leg2Result: null,
+                    leg1Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
+                    leg2Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
                     aggregateHome: 0,
                     aggregateAway: 0,
                     winner: null,
@@ -294,6 +298,8 @@ window.CoppaBrackets = {
                     awayTeam: null,
                     leg1Result: null,
                     leg2Result: null,
+                    leg1Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
+                    leg2Weather: window.simulationLogic?.getRandomWeather?.() || 'sereno',
                     aggregateHome: 0,
                     aggregateAway: 0,
                     winner: null,

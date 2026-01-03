@@ -123,6 +123,10 @@ window.CoppaMain = {
         // Aggiungi roundName al match per i controlli di sicurezza
         match.roundName = round.roundName;
 
+        // Imposta meteo partita per la simulazione
+        const matchWeather = legType === 'leg2' ? match.leg2Weather : match.leg1Weather;
+        window._currentMatchWeather = matchWeather || 'sereno';
+
         // Simula la partita
         const result = await window.CoppaSimulation.simulateCupMatch(
             match,

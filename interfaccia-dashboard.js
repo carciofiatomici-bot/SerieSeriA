@@ -6,6 +6,16 @@
 
 window.InterfacciaDashboard = {
 
+    // Varianti outfit allenatore
+    COACH_OUTFITS: [
+        { id: 'suit', icon: '👔', name: 'Completo' },
+        { id: 'tracksuit', icon: '🥋', name: 'Tuta' },
+        { id: 'shirt', icon: '👕', name: 'Polo' },
+        { id: 'coat', icon: '🧥', name: 'Cappotto' },
+        { id: 'jersey', icon: '🦺', name: 'Gilet' },
+        { id: 'hoodie', icon: '🧤', name: 'Guanti' }
+    ],
+
     /**
      * Aggiorna l'interfaccia utente con i dati della squadra.
      */
@@ -1519,11 +1529,15 @@ window.InterfacciaDashboard = {
 
         const isMaxed = coachLevel >= maxLevel || expProgress.maxed;
 
+        // Outfit selezionato (default: suit)
+        const currentOutfitId = coach.outfit || 'suit';
+        const currentOutfit = this.COACH_OUTFITS.find(o => o.id === currentOutfitId) || this.COACH_OUTFITS[0];
+
         container.innerHTML = `
             <div>
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
-                        <span class="text-2xl">👔</span>
+                        <span id="coach-outfit-btn" class="text-2xl cursor-pointer hover:scale-110 transition-transform" title="Clicca per cambiare outfit">${currentOutfit.icon}</span>
                         <div>
                             <p class="text-xs text-gray-400">Allenatore</p>
                             <p class="text-sm font-bold text-orange-400">${this._escapeHtml(coachName)}</p>
@@ -1553,6 +1567,145 @@ window.InterfacciaDashboard = {
                 </div>
             </div>
         `;
+
+        // Event listener per cambiare outfit
+        const outfitBtn = document.getElementById('coach-outfit-btn');
+        if (outfitBtn) {
+            outfitBtn.addEventListener('click', () => this.showOutfitSelector());
+        }
+    },
+
+    /**
+     * Mostra il selettore outfit allenatore
+     */
+    showOutfitSelector() {
+        const currentTeamData = window.InterfacciaCore?.currentTeamData;
+        const coach = currentTeamData?.coach;
+        if (!coach) return;
+
+        const currentOutfitId = coach.outfit || 'suit';
+
+        // Crea modal overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'outfit-selector-overlay';
+        overlay.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-gray-800 rounded-xl p-4 max-w-xs w-full mx-4 border border-gray-600">
+                <h3 class="text-lg font-bold text-white mb-4 text-center">Scegli Outfit</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    ${this.COACH_OUTFITS.map(o => `
+                        <button class="outfit-option p-3 rounded-lg border-2 transition-all hover:scale-105 ${o.id === currentOutfitId ? 'border-orange-500 bg-orange-500/20' : 'border-gray-600 bg-gray-700 hover:border-gray-500'}"
+                                data-outfit="${o.id}">
+                            <span class="text-3xl block">${o.icon}</span>
+                            <span class="text-xs text-gray-300 block mt-1">${o.name}</span>
+                        </button>
+                    `).join('')}
+                </div>
+                <button id="outfit-close-btn" class="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 text-sm">
+                    Chiudi
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Event listeners
+        overlay.querySelectorAll('.outfit-option').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const outfitId = btn.dataset.outfit;
+                await this.saveCoachOutfit(outfitId);
+                overlay.remove();
+            });
+        });
+
+        document.getElementById('outfit-close-btn')?.addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+    },
+
+    /**
+     * Salva outfit allenatore su Firestore
+     */
+    async saveCoachOutfit(outfitId) {
+        try {
+            const currentTeamData = window.InterfacciaCore?.currentTeamData;
+            const teamId = window.InterfacciaCore?.currentTeamId;
+            if (!currentTeamData || !teamId) return;
+
+            const coach = currentTeamData.coach || {};
+            coach.outfit = outfitId;
+
+            // Aggiorna Firestore
+            const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+            const db = window.firestoreTools?.db;
+            const appId = window.firestoreTools?.APP_ID;
+            if (!db || !appId) return;
+
+            const teamRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+            await updateDoc(teamRef, { coach });
+
+            // Aggiorna dati locali
+            currentTeamData.coach = coach;
+
+            // Refresh UI
+            this.initCoachBoxWidget();
+            console.log('[Coach] Outfit cambiato:', outfitId);
+        } catch (error) {
+            console.error('[Coach] Errore salvataggio outfit:', error);
+        }
+    },
+
+    // ====================================================================
+    // SISTEMA METEO
+    // ====================================================================
+
+    /**
+     * Aggiorna il display del meteo nella dashboard
+     * @param {string} weather - Tipo di meteo (sereno, nebbia, neve, pioggia, vento)
+     */
+    updateWeatherDisplay(weather) {
+        const container = document.getElementById('weather-display');
+        const iconEl = document.getElementById('weather-icon');
+        const nameEl = document.getElementById('weather-name');
+
+        if (!container) return;
+
+        const WEATHER_TYPES = window.simulationLogic?.WEATHER_TYPES;
+        if (!WEATHER_TYPES) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        const weatherData = WEATHER_TYPES[weather];
+        if (!weatherData) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        // Mostra il container
+        container.classList.remove('hidden');
+
+        // Aggiorna icona
+        if (iconEl) iconEl.textContent = weatherData.icon;
+
+        // Aggiorna nome con eventuale malus
+        if (nameEl) {
+            let text = weatherData.name;
+            if (weatherData.malus) {
+                const roleNames = { P: 'P', D: 'D', C: 'C', A: 'A' };
+                text += ` (${weatherData.malus.value} ${roleNames[weatherData.malus.role]})`;
+            }
+            nameEl.textContent = text;
+        }
+    },
+
+    /**
+     * Nasconde il display del meteo
+     */
+    hideWeatherDisplay() {
+        const container = document.getElementById('weather-display');
+        if (container) container.classList.add('hidden');
     },
 
     /**

@@ -2266,6 +2266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`${awayTeamData.teamName} non ha una formazione impostata`);
                 }
 
+                // Imposta meteo random per il test
+                window._currentMatchWeather = window.simulationLogic?.getRandomWeather?.() || 'sereno';
+
                 // Esegui la simulazione usando ChampionshipSimulation con highlights E debug
                 const result = window.ChampionshipSimulation.runSimulationWithHighlightsAndDebug(homeTeamData, awayTeamData);
 

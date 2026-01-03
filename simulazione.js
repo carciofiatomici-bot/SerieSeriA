@@ -30,6 +30,52 @@ if (typeof window !== "undefined") { window.replayActions = []; }
 // Formato: { teamA: number, teamB: number }
 if (typeof window !== "undefined") { window._salaryDebtPenalty = { teamA: 0, teamB: 0 }; }
 
+// WEATHER - Meteo partita
+// Impostato prima della simulazione, influenza i ruoli
+if (typeof window !== "undefined") { window._currentMatchWeather = null; }
+
+// ====================================================================
+// SISTEMA METEO
+// ====================================================================
+
+/**
+ * Tipi di meteo con malus per ruolo specifico
+ * - Nebbia: -1.0 Portieri (P)
+ * - Neve: -1.0 Difensori (D)
+ * - Pioggia: -1.0 Centrocampisti (C)
+ * - Vento: -1.0 Attaccanti (A)
+ * - Sereno: nessun modificatore
+ */
+const WEATHER_TYPES = {
+    sereno: { name: 'Sereno', icon: '☀️', malus: null },
+    nebbia: { name: 'Nebbia', icon: '🌫️', malus: { role: 'P', value: -1.0 } },
+    neve: { name: 'Neve', icon: '❄️', malus: { role: 'D', value: -1.0 } },
+    pioggia: { name: 'Pioggia', icon: '🌧️', malus: { role: 'C', value: -1.0 } },
+    vento: { name: 'Vento', icon: '💨', malus: { role: 'A', value: -1.0 } }
+};
+
+/**
+ * Genera meteo casuale per una partita
+ */
+function getRandomWeather() {
+    const types = Object.keys(WEATHER_TYPES);
+    return types[Math.floor(Math.random() * types.length)];
+}
+
+/**
+ * Ottiene il modificatore meteo per un giocatore
+ * @param {string} weather - Tipo di meteo
+ * @param {string} playerRole - Ruolo del giocatore (P, D, C, A)
+ * @returns {number} Modificatore (0 o negativo)
+ */
+function getWeatherModifier(weather, playerRole) {
+    const weatherData = WEATHER_TYPES[weather];
+    if (weatherData?.malus && weatherData.malus.role === playerRole) {
+        return weatherData.malus.value;
+    }
+    return 0;
+}
+
 // ====================================================================
 // COSTANTI E CONFIGURAZIONE
 // ====================================================================
@@ -353,6 +399,11 @@ const calculatePlayerModifier = (player, hasIcona, opposingPlayers = [], teamKey
     // MALUS DEBITO STIPENDI - Se la squadra ha debito, applica malus
     if (teamKey && window._salaryDebtPenalty?.[teamKey]) {
         modifier += window._salaryDebtPenalty[teamKey]; // Negativo (es. -1.5)
+    }
+
+    // MALUS METEO - Applica malus basato sul ruolo
+    if (window._currentMatchWeather && player.role) {
+        modifier += getWeatherModifier(window._currentMatchWeather, player.role);
     }
 
     // Lento a carburare: -3 malus nelle prime 5 occasioni
@@ -2756,7 +2807,11 @@ window.simulationLogic = {
     updateScore: (teamKey, goals) => { currentScore[teamKey] = goals; },
     setTotalOccasions: (total) => { totalOccasionsInMatch = total; },
     // Accesso al modulo abilita
-    getAbilitaEffects: () => window.AbilitaEffects
+    getAbilitaEffects: () => window.AbilitaEffects,
+    // Sistema Meteo
+    WEATHER_TYPES,
+    getRandomWeather,
+    getWeatherModifier
 };
 
 console.log("Simulazione.js v3.2 caricato - Integrazione AbilitaEffects");

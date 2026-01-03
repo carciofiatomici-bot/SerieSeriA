@@ -47,7 +47,8 @@ window.ChampionshipSchedule = {
                         awayName: awayTeamName,
                         round: round + 1,
                         type: 'Andata',
-                        result: null 
+                        result: null,
+                        weather: window.simulationLogic?.getRandomWeather?.() || 'sereno'
                     });
                 }
             }
@@ -64,13 +65,14 @@ window.ChampionshipSchedule = {
         const returnSchedule = schedule.map(roundData => ({
             round: roundData.round + totalRounds,
             matches: roundData.matches.map(match => ({
-                homeId: match.awayId, 
+                homeId: match.awayId,
                 awayId: match.homeId,
                 homeName: match.awayName,
                 awayName: match.homeName,
                 round: match.round + totalRounds,
                 type: 'Ritorno',
-                result: null
+                result: null,
+                weather: window.simulationLogic?.getRandomWeather?.() || 'sereno'
             }))
         }));
         
