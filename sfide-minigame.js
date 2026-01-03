@@ -2171,8 +2171,8 @@
         const scoringTeam = state.currentTeam;
         const receivingTeam = scoringTeam === 'A' ? 'B' : 'A';
 
-        // Assegna palla al pivot della squadra che ha subito
-        const pivot = players.find(p => p.team === receivingTeam && p.name === 'PIV');
+        // Assegna palla all'attaccante della squadra che ha subito
+        const pivot = players.find(p => p.team === receivingTeam && p.name === 'A');
         state.ballCarrierId = pivot ? pivot.id : players.find(p => p.team === receivingTeam && !p.isGK)?.id;
         state.ballPosition = null;
 
