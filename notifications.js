@@ -975,8 +975,8 @@ window.Notifications = {
                     // Chiamiamo direttamente la logica di accettazione
                     const { updateDoc, Timestamp } = window.firestoreTools;
 
-                    // Inizializza stato di gioco
-                    const initialGameState = this._createMinigameInitialState(challenge);
+                    // Inizializza stato di gioco (usa SfideMultiplayer come fonte di verita')
+                    const initialGameState = window.SfideMultiplayer.createInitialGameState(challenge);
 
                     await updateDoc(doc(window.db, challengePath, challengeId), {
                         status: 'in_progress',
@@ -1045,96 +1045,9 @@ window.Notifications = {
         this.updateUI();
     },
 
-    /**
-     * Helper: crea stato iniziale per minigame - Campo 12x7
-     */
-    _createMinigameInitialState(challenge) {
-        const GRID_W = 12;
-        const GRID_H = 7;
-        const centerY = Math.floor(GRID_H / 2);
-
-        // Team A (Rosso, sinistra) = Challenger
-        // Team B (Blu, destra) = Challenged
-        const challengerPlayers = this._generateMinigamePlayers(
-            challenge.challengerFormation,
-            'A', GRID_W, GRID_H
-        );
-
-        const challengedPlayers = this._generateMinigamePlayers(
-            challenge.challengedFormation,
-            'B', GRID_W, GRID_H
-        );
-
-        // Chi inizia con la palla? L'attaccante (A) del team che inizia
-        const challengerStarts = challenge.attackerId === challenge.challengerId;
-        const startingTeamPlayers = challengerStarts ? challengerPlayers : challengedPlayers;
-        const startingPivot = startingTeamPlayers.find(p => p.name === 'A') || startingTeamPlayers[startingTeamPlayers.length - 1];
-
-        return {
-            players: [...challengerPlayers, ...challengedPlayers],
-            scoreA: 0,
-            scoreB: 0,
-            currentTurn: challenge.attackerId,
-            movesLeft: 1,
-            ballCarrierId: startingPivot.id,
-            ballPosition: null,
-            lastMoveAt: Date.now(),
-            isGameOver: false,
-            winner: null
-        };
-    },
-
-    /**
-     * Helper: genera giocatori per minigame - Posizioni fisse
-     */
-    _generateMinigamePlayers(formation, team, GRID_W, GRID_H) {
-        const players = [];
-        const centerY = Math.floor(GRID_H / 2);
-
-        const titolari = formation?.slice(0, 5) || [];
-
-        // Posizioni fisse per formazione 1-1-2-1 (P, D, C, C, A)
-        const fixedPositions = team === 'A' ? [
-            { x: 0, y: centerY, name: 'P', mod: 8, isGK: true },
-            { x: 2, y: centerY, name: 'D', mod: 6, isGK: false },
-            { x: 3, y: 1, name: 'C', mod: 5, isGK: false },
-            { x: 3, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },
-            { x: 4, y: centerY, name: 'A', mod: 7, isGK: false }
-        ] : [
-            { x: GRID_W - 1, y: centerY, name: 'P', mod: 8, isGK: true },
-            { x: GRID_W - 3, y: centerY, name: 'D', mod: 6, isGK: false },
-            { x: GRID_W - 4, y: 1, name: 'C', mod: 5, isGK: false },
-            { x: GRID_W - 4, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },
-            { x: GRID_W - 5, y: centerY, name: 'A', mod: 7, isGK: false }
-        ];
-
-        // Assegna ogni giocatore a una posizione fissa
-        for (let i = 0; i < 5; i++) {
-            const pos = fixedPositions[i];
-            const p = titolari[i];
-
-            let mod = pos.mod;
-            if (p) {
-                const level = p.level || p.currentLevel || p.livello || 5;
-                mod = Math.min(10, 5 + Math.floor(level / 6));
-            }
-
-            players.push({
-                id: `${team}${i + 1}`,
-                team: team,
-                name: pos.name,
-                playerName: p?.name || 'Giocatore',
-                x: pos.x,
-                y: pos.y,
-                mod: mod,
-                isGK: pos.isGK,
-                defenseMode: null,
-                defenseCells: []
-            });
-        }
-
-        return players;
-    },
+    // NOTA: Le funzioni _createMinigameInitialState e _generateMinigamePlayers
+    // sono state rimosse - ora si usa window.SfideMultiplayer.createInitialGameState()
+    // come fonte di verita' unica per evitare duplicazione
 
     /**
      * Helper: sincronizza mossa minigame

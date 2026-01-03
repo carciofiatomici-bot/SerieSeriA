@@ -25,6 +25,10 @@ window.SfideMultiplayer = (function() {
         PRESENCE_TIMEOUT_MS: 2 * 60 * 1000 // Considera offline dopo 2 minuti
     };
 
+    // Costanti griglia - FONTE DI VERITA' per tutto il sistema Tattiche Serie
+    const GRID_W = 12;
+    const GRID_H = 7;
+
     // Cache per ridurre letture
     let teamsCache = {
         data: null,
@@ -979,8 +983,7 @@ window.SfideMultiplayer = (function() {
     // STATO INIZIALE PARTITA
     // ========================================
     function createInitialGameState(challenge) {
-        const GRID_W = 12;
-        const GRID_H = 7;
+        // Usa GRID_W e GRID_H a livello di modulo
         const centerY = Math.floor(GRID_H / 2);
         console.log('[SfideMultiplayer] Creazione gameState con GRID_W=' + GRID_W);
 
@@ -1626,7 +1629,13 @@ window.SfideMultiplayer = (function() {
 
         // Test/Debug
         testIncomingChallenge,
-        testCreateChallenge
+        testCreateChallenge,
+
+        // Costanti e funzioni per generazione stato partita (FONTE DI VERITA')
+        GRID_W,
+        GRID_H,
+        generateTeamPlayers,
+        createInitialGameState
     };
 
 })();
