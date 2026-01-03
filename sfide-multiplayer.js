@@ -1032,86 +1032,48 @@ window.SfideMultiplayer = (function() {
 
     function generateTeamPlayers(formation, team, GRID_W, GRID_H) {
         const players = [];
-        const isLeft = team === 'A';
         const centerY = Math.floor(GRID_H / 2);
 
         // Prendi solo i primi 5 giocatori dalla formazione
         const titolari = formation?.slice(0, 5) || [];
 
-        // Ruoli: P, D, C, C, A - Campo 12x7
-        const rolePositions = {
-            'A': { // Team A (sinistra - attaccante)
-                'P': { x: 0, y: centerY, name: 'P', mod: 8, isGK: true },
-                'D': { x: 2, y: centerY, name: 'D', mod: 6, isGK: false },
-                'C': [
-                    { x: 3, y: 1, name: 'C', mod: 5, isGK: false },
-                    { x: 3, y: GRID_H - 2, name: 'C', mod: 5, isGK: false }
-                ],
-                'A': { x: 4, y: centerY, name: 'A', mod: 7, isGK: false }
-            },
-            'B': { // Team B (destra - difensore)
-                'P': { x: GRID_W - 1, y: centerY, name: 'P', mod: 8, isGK: true },
-                'D': { x: GRID_W - 3, y: centerY, name: 'D', mod: 6, isGK: false },
-                'C': [
-                    { x: GRID_W - 4, y: 1, name: 'C', mod: 5, isGK: false },
-                    { x: GRID_W - 4, y: GRID_H - 2, name: 'C', mod: 5, isGK: false }
-                ],
-                'A': { x: GRID_W - 5, y: centerY, name: 'A', mod: 7, isGK: false }
+        // Posizioni fisse per formazione 1-1-2-1 (P, D, C, C, A) - Campo 12x7
+        // Team A a sinistra, Team B a destra
+        const fixedPositions = team === 'A' ? [
+            { x: 0, y: centerY, name: 'P', mod: 8, isGK: true },      // Portiere
+            { x: 2, y: centerY, name: 'D', mod: 6, isGK: false },     // Difensore
+            { x: 3, y: 1, name: 'C', mod: 5, isGK: false },           // Centrocampista alto
+            { x: 3, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },  // Centrocampista basso
+            { x: 4, y: centerY, name: 'A', mod: 7, isGK: false }      // Attaccante
+        ] : [
+            { x: GRID_W - 1, y: centerY, name: 'P', mod: 8, isGK: true },      // Portiere
+            { x: GRID_W - 3, y: centerY, name: 'D', mod: 6, isGK: false },     // Difensore
+            { x: GRID_W - 4, y: 1, name: 'C', mod: 5, isGK: false },           // Centrocampista alto
+            { x: GRID_W - 4, y: GRID_H - 2, name: 'C', mod: 5, isGK: false },  // Centrocampista basso
+            { x: GRID_W - 5, y: centerY, name: 'A', mod: 7, isGK: false }      // Attaccante
+        ];
+
+        // Assegna ogni giocatore a una posizione fissa
+        for (let i = 0; i < 5; i++) {
+            const pos = fixedPositions[i];
+            const p = titolari[i];
+
+            // Calcola modificatore dal livello del giocatore (se disponibile)
+            let mod = pos.mod;
+            if (p) {
+                const level = p.level || p.currentLevel || p.livello || 5;
+                mod = Math.min(10, 5 + Math.floor(level / 6));
             }
-        };
-
-        let cIndex = 0;
-        let playerIndex = 1;
-
-        titolari.forEach(p => {
-            const role = p.ruolo || p.assignedPosition || 'C';
-            const pos = rolePositions[team][role];
-
-            let playerPos;
-            if (Array.isArray(pos)) {
-                playerPos = pos[cIndex % pos.length];
-                cIndex++;
-            } else {
-                playerPos = pos;
-            }
-
-            if (!playerPos) {
-                // Fallback per ruoli non mappati
-                playerPos = rolePositions[team]['C'][0];
-            }
-
-            // Calcola modificatore dal livello del giocatore
-            const level = p.level || p.currentLevel || p.livello || 5;
-            const mod = Math.min(10, 5 + Math.floor(level / 6));
 
             players.push({
-                id: `${team}${playerIndex}`,
+                id: `${team}${i + 1}`,
                 team: team,
-                name: playerPos.name,
-                playerName: p.name || 'Giocatore', // Nome reale
-                x: playerPos.x,
-                y: playerPos.y,
+                name: pos.name,
+                playerName: p?.name || 'Giocatore',
+                x: pos.x,
+                y: pos.y,
                 mod: mod,
-                isGK: playerPos.isGK,
-                defenseMode: null,
-                defenseCells: []
-            });
-
-            playerIndex++;
-        });
-
-        // Se meno di 5 giocatori, aggiungi default
-        while (players.length < 5) {
-            const defaultPos = rolePositions[team]['C'][players.length % 2];
-            players.push({
-                id: `${team}${players.length + 1}`,
-                team: team,
-                name: 'C',
-                playerName: 'Riserva',
-                x: defaultPos.x + (players.length % 2),
-                y: defaultPos.y,
-                mod: 5,
-                isGK: false,
+                isGK: pos.isGK,
                 defenseMode: null,
                 defenseCells: []
             });
