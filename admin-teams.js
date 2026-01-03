@@ -1628,30 +1628,51 @@ window.AdminTeams = {
             const needsLevelFix = currentLevel !== correctLevel;
             const hasObsoleteFields = player.levelRange || player.levelMin !== undefined || player.levelMax !== undefined;
 
-            // FIX ABILITIES ICONE: controlla se l'icona ha abilities incomplete
+            // FIX ICONE: controlla abilities, nome e photoUrl
             let correctAbilities = player.abilities || [];
+            let correctName = player.name;
+            let correctPhotoUrl = player.photoUrl;
             let needsAbilitiesFix = false;
+            let needsNameFix = false;
+            let needsPhotoFix = false;
 
             if (isIcona) {
-                // Cerca l'icona template per nome o id
+                // Cerca l'icona template per id, nome esatto, o nome parziale
                 const iconaTemplate = iconeTemplates.find(t =>
-                    t.id === player.id || t.name === player.name
+                    t.id === player.id ||
+                    t.name === player.name ||
+                    t.name?.toLowerCase().includes(player.name?.toLowerCase()) ||
+                    player.name?.toLowerCase().includes(t.name?.toLowerCase())
                 );
 
-                if (iconaTemplate && iconaTemplate.abilities) {
-                    // Controlla se mancano abilities (es. solo ['Icona'] invece di ['Icona', 'Tiro Dritto'])
-                    const templateAbilities = iconaTemplate.abilities;
-                    const playerAbilities = player.abilities || [];
-                    const missingAbilities = templateAbilities.filter(a => !playerAbilities.includes(a));
+                if (iconaTemplate) {
+                    // Fix abilities
+                    if (iconaTemplate.abilities) {
+                        const templateAbilities = iconaTemplate.abilities;
+                        const playerAbilities = player.abilities || [];
+                        const missingAbilities = templateAbilities.filter(a => !playerAbilities.includes(a));
 
-                    if (missingAbilities.length > 0) {
-                        correctAbilities = [...new Set([...playerAbilities, ...templateAbilities])];
-                        needsAbilitiesFix = true;
+                        if (missingAbilities.length > 0) {
+                            correctAbilities = [...new Set([...playerAbilities, ...templateAbilities])];
+                            needsAbilitiesFix = true;
+                        }
+                    }
+
+                    // Fix nome se diverso dal template
+                    if (iconaTemplate.name && iconaTemplate.name !== player.name) {
+                        correctName = iconaTemplate.name;
+                        needsNameFix = true;
+                    }
+
+                    // Fix photoUrl se mancante o diverso
+                    if (iconaTemplate.photoUrl && (!player.photoUrl || player.photoUrl !== iconaTemplate.photoUrl)) {
+                        correctPhotoUrl = iconaTemplate.photoUrl;
+                        needsPhotoFix = true;
                     }
                 }
             }
 
-            if (needsLevelFix || hasObsoleteFields || needsAbilitiesFix) {
+            if (needsLevelFix || hasObsoleteFields || needsAbilitiesFix || needsNameFix || needsPhotoFix) {
                 let repairNote = `${player.name}: `;
                 const fixes = [];
                 if (needsLevelFix) {
@@ -1665,6 +1686,12 @@ window.AdminTeams = {
                     const added = correctAbilities.filter(a => !originalAbilities.includes(a));
                     fixes.push(`+${added.join(', ')}`);
                 }
+                if (needsNameFix) {
+                    fixes.push(`nome -> ${correctName}`);
+                }
+                if (needsPhotoFix) {
+                    fixes.push('photoUrl aggiornato');
+                }
                 repairNote += fixes.join(', ');
                 repairs.push(repairNote);
             }
@@ -1672,19 +1699,19 @@ window.AdminTeams = {
             // Crea oggetto giocatore pulito
             const repairedPlayer = {
                 id: player.id,
-                name: player.name,
+                name: correctName,
                 role: player.role,
                 type: player.type,
                 age: player.age,
                 cost: player.cost || 0,
                 level: correctLevel,
-                abilities: correctAbilities, // Usa abilities corrette
+                abilities: correctAbilities,
                 isCaptain: player.isCaptain || false
             };
 
-            // Mantieni photoUrl se presente (per Icone)
-            if (player.photoUrl) {
-                repairedPlayer.photoUrl = player.photoUrl;
+            // Aggiungi photoUrl per Icone
+            if (correctPhotoUrl) {
+                repairedPlayer.photoUrl = correctPhotoUrl;
             }
 
             // Mantieni campi EXP se presenti
@@ -1862,26 +1889,66 @@ window.AdminTeams = {
                     const needsLevelFix = currentLevel !== correctLevel;
                     const hasObsoleteFields = player.levelRange || player.levelMin !== undefined || player.levelMax !== undefined;
 
-                    if (needsLevelFix || hasObsoleteFields) {
-                        teamRepairs.push(`${player.name}: Lv ${currentLevel} -> ${correctLevel}`);
+                    // FIX ICONE: nome e photoUrl
+                    let correctAbilities = player.abilities || [];
+                    let correctName = player.name;
+                    let correctPhotoUrl = player.photoUrl;
+                    let needsAbilitiesFix = false;
+                    let needsNameFix = false;
+                    let needsPhotoFix = false;
+
+                    if (isIcona) {
+                        const iconaTemplate = iconeTemplates.find(t =>
+                            t.id === player.id ||
+                            t.name === player.name ||
+                            t.name?.toLowerCase().includes(player.name?.toLowerCase()) ||
+                            player.name?.toLowerCase().includes(t.name?.toLowerCase())
+                        );
+
+                        if (iconaTemplate) {
+                            if (iconaTemplate.abilities) {
+                                const missingAbilities = iconaTemplate.abilities.filter(a => !correctAbilities.includes(a));
+                                if (missingAbilities.length > 0) {
+                                    correctAbilities = [...new Set([...correctAbilities, ...iconaTemplate.abilities])];
+                                    needsAbilitiesFix = true;
+                                }
+                            }
+                            if (iconaTemplate.name && iconaTemplate.name !== player.name) {
+                                correctName = iconaTemplate.name;
+                                needsNameFix = true;
+                            }
+                            if (iconaTemplate.photoUrl && (!player.photoUrl || player.photoUrl !== iconaTemplate.photoUrl)) {
+                                correctPhotoUrl = iconaTemplate.photoUrl;
+                                needsPhotoFix = true;
+                            }
+                        }
+                    }
+
+                    if (needsLevelFix || hasObsoleteFields || needsAbilitiesFix || needsNameFix || needsPhotoFix) {
+                        const fixes = [];
+                        if (needsLevelFix) fixes.push(`Lv ${currentLevel} -> ${correctLevel}`);
+                        if (needsNameFix) fixes.push(`nome -> ${correctName}`);
+                        if (needsPhotoFix) fixes.push('photoUrl');
+                        if (needsAbilitiesFix) fixes.push('abilities');
+                        teamRepairs.push(`${player.name}: ${fixes.join(', ')}`);
                     }
 
                     // Crea oggetto giocatore pulito
                     const repairedPlayer = {
                         id: player.id,
-                        name: player.name,
+                        name: correctName,
                         role: player.role,
                         type: player.type,
                         age: player.age,
                         cost: player.cost || 0,
                         level: correctLevel,
-                        abilities: player.abilities || [],
+                        abilities: correctAbilities,
                         isCaptain: player.isCaptain || false
                     };
 
-                    // Mantieni photoUrl se presente (per Icone)
-                    if (player.photoUrl) {
-                        repairedPlayer.photoUrl = player.photoUrl;
+                    // Aggiungi photoUrl per Icone
+                    if (correctPhotoUrl) {
+                        repairedPlayer.photoUrl = correctPhotoUrl;
                     }
 
                     // Mantieni campi EXP se presenti
