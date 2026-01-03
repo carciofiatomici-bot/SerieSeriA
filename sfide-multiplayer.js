@@ -678,14 +678,15 @@ window.SfideMultiplayer = (function() {
 
         document.body.appendChild(modal);
 
-        // Listener per cancellazione
+        // Ascolta stato sfida e ottieni funzione per unsubscribe
+        const unsubscribe = listenToChallengeStatus(challengeId, modal);
+
+        // Listener per cancellazione - pulisce anche il listener Firestore
         document.getElementById('btn-cancel-waiting').addEventListener('click', async () => {
+            if (unsubscribe) unsubscribe(); // Pulisci listener prima di cancellare
             await cancelChallenge(challengeId);
             modal.remove();
         });
-
-        // Ascolta stato sfida
-        listenToChallengeStatus(challengeId, modal);
     }
 
     async function cancelChallenge(challengeId) {
@@ -728,6 +729,9 @@ window.SfideMultiplayer = (function() {
                 if (window.Toast) window.Toast.warning("La sfida e' scaduta");
             }
         });
+
+        // Restituisce unsubscribe per pulizia esterna
+        return unsubscribe;
     }
 
     // ========================================
